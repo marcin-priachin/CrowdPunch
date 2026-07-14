@@ -1,0 +1,11 @@
+using Unity.Entities;
+
+namespace CrowdPunch.Components
+{
+    /// <summary>
+    /// Enableable marker for enemies that should be returned to a valid spawn position.
+    /// </summary>
+    public struct RespawnRequest : IComponentData, IEnableableComponent
+    {
+    }
+}
