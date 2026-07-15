@@ -55,14 +55,15 @@ Assets/CrowdPunch/Scripts
 | `Systems/Initialization/EnemySpawnSystem.cs` | Owns initial crowd creation. |
 | `Systems/InputBridge/PlayerBridgeSystem.cs` | Copies player bridge data into ECS components. |
 | `Systems/AI/EnemyChaseSystem.cs` | Produces enemy chase movement intent. |
+| `Systems/Movement/EnemyMovementSystem.cs` | Applies enemy movement intent to Unity Physics velocity. |
 | `Systems/Combat/PunchDetectionSystem.cs` | Detects enemies affected by punches. |
 | `Systems/Physics/ApplyImpulseSystem.cs` | Applies gameplay impulses before physics simulation. |
-| `Systems/Physics/EnemyRecoverySystem.cs` | Reconciles knockback recovery after physics. |
+| `Systems/Physics/EnemyRecoverySystem.cs` | Times enemy knockback recovery and returns control to movement. |
 | `Systems/Lifetime/OutOfBoundsSystem.cs` | Marks enemies outside arena bounds. |
 | `Systems/Lifetime/EnemyRespawnSystem.cs` | Resets enemies marked for respawn. |
 | `Systems/Presentation/PresentationBridgeSystem.cs` | Publishes ECS state to presentation-only consumers. |
 | `Aspects/EnemyMovementAspect.cs` | Groups movement components commonly queried together. |
-| `Mono/Player/PlayerEcsBridge.cs` | Dedicated player-to-ECS bridge surface. |
+| `Mono/Player/PlayerEcsBridge.cs` | Dedicated player-to-ECS bridge surface and active bridge registry. |
 | `Mono/Player/PlayerController.cs` | Traditional GameObject player movement shell. |
 | `Mono/Player/PlayerPunch.cs` | Traditional GameObject punch input shell. |
 | `Mono/Camera/CameraFollow.cs` | Traditional camera follow shell. |
@@ -76,11 +77,15 @@ Assets/CrowdPunch/Scripts
 
 Custom system groups make frame order explicit: bridge input, compute intent, apply impulses, simulate physics, reconcile state, then present results. This is clearer for learning than relying on default update order.
 
+Enemy movement is split into intent and application. `EnemyChaseSystem` chooses whether each enemy wanders or charges and writes `DesiredMovement`; `EnemyMovementSystem` consumes that data and writes `PhysicsVelocity`. It also locks pitch and roll through `PhysicsMass.InverseInertia` so enemies remain upright while Unity Physics owns collision and position integration.
+
+Punching follows the same data pipeline. `PlayerPunch` publishes a `PunchRequest` through the bridge; `PunchDetectionSystem` tests enemy positions against the request volume and enables `ExternalImpulse`; `ApplyImpulseSystem` adds that value to `PhysicsVelocity`; `EnemyRecoverySystem` keeps movement from immediately overriding the knockback.
+
 The aspect is intentionally small. It is useful when several systems repeatedly touch the same movement components. A plain `SystemAPI.Query` is still preferable for one-off queries.
 
 Bakers are used instead of runtime setup MonoBehaviours because baking is the normal Entities 1.x conversion path from scene authoring to ECS data. `TransformUsageFlags` are explicit so each baked entity declares whether it needs runtime transform data.
 
-`EntityCommandBuffer` is not implemented yet, but the spawn and combat TODOs call it out because deferred structural changes are the correct extension point for instantiation and enable/disable-heavy workflows inside jobs.
+`EntityCommandBuffer` is used by spawning because deferred structural changes are the correct extension point for entity instantiation. Combat still calls it out as the future path for enable/disable-heavy workflows inside jobs.
 
 Blob assets are not introduced yet because the current settings are tiny scalar values. They become useful later for shared immutable data such as ability tables, animation event windows, or spawn waves.
 

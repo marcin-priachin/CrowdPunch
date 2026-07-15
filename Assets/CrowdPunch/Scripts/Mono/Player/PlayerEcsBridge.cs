@@ -4,6 +4,42 @@ using UnityEngine;
 namespace CrowdPunch.Mono.Player
 {
     /// <summary>
+    /// Process-local registry for the single hybrid player bridge used by ECS bridge systems.
+    /// </summary>
+    public static class PlayerBridgeRegistry
+    {
+        private static PlayerEcsBridge activeBridge;
+
+        /// <summary>
+        /// Registers the active player bridge for ECS input bridge systems.
+        /// </summary>
+        public static void Register(PlayerEcsBridge bridge)
+        {
+            activeBridge = bridge;
+        }
+
+        /// <summary>
+        /// Clears the active player bridge when its scene object is destroyed.
+        /// </summary>
+        public static void Unregister(PlayerEcsBridge bridge)
+        {
+            if (activeBridge == bridge)
+            {
+                activeBridge = null;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to read the currently registered player bridge.
+        /// </summary>
+        public static bool TryGetBridge(out PlayerEcsBridge bridge)
+        {
+            bridge = activeBridge;
+            return bridge != null;
+        }
+    }
+
+    /// <summary>
     /// Dedicated MonoBehaviour-to-ECS bridge for player state and punch requests.
     /// </summary>
     public sealed class PlayerEcsBridge : MonoBehaviour

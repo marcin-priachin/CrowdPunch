@@ -3,6 +3,7 @@ using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Entities;
+using Unity.Physics;
 
 namespace CrowdPunch.Systems.Physics
 {
@@ -23,7 +24,14 @@ namespace CrowdPunch.Systems.Physics
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            // TODO: Apply enabled ExternalImpulse values to PhysicsVelocity, then disable ExternalImpulse after consumption.
+            foreach ((RefRO<ExternalImpulse> externalImpulse, RefRW<PhysicsVelocity> physicsVelocity, Entity enemy) in
+                     SystemAPI.Query<RefRO<ExternalImpulse>, RefRW<PhysicsVelocity>>()
+                         .WithAll<Enemy>()
+                         .WithEntityAccess())
+            {
+                physicsVelocity.ValueRW.Linear += externalImpulse.ValueRO.Value;
+                SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, false);
+            }
         }
     }
 }

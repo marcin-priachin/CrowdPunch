@@ -8,11 +8,23 @@ namespace CrowdPunch.Authoring
     public sealed class EnemyAuthoring : MonoBehaviour
     {
         [SerializeField] private float moveSpeed = 4f;
+        [SerializeField] private float wanderSpeed = 1.5f;
+        [SerializeField] private float chargeDistance = 12f;
+        [SerializeField] private float chargeSpeedMultiplier = 1.75f;
         [SerializeField] private float turnSpeed = 12f;
         [SerializeField] private float stoppingDistance = 1.25f;
 
         /// <summary>Movement speed in world units per second.</summary>
         public float MoveSpeed => moveSpeed;
+
+        /// <summary>Movement speed used while the player is outside charge range.</summary>
+        public float WanderSpeed => wanderSpeed;
+
+        /// <summary>Distance at which the enemy switches from wandering to charging.</summary>
+        public float ChargeDistance => chargeDistance;
+
+        /// <summary>Multiplier applied to movement speed while charging.</summary>
+        public float ChargeSpeedMultiplier => chargeSpeedMultiplier;
 
         /// <summary>Rotation responsiveness while steering toward the player.</summary>
         public float TurnSpeed => turnSpeed;

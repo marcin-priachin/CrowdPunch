@@ -21,7 +21,20 @@ namespace CrowdPunch.Systems.Physics
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            // TODO: Count down enabled KnockbackRecovery timers and re-enable normal chase movement when recovery ends.
+            float deltaTime = SystemAPI.Time.DeltaTime;
+
+            foreach ((RefRW<KnockbackRecovery> recovery, Entity enemy) in
+                     SystemAPI.Query<RefRW<KnockbackRecovery>>()
+                         .WithAll<Enemy>()
+                         .WithEntityAccess())
+            {
+                recovery.ValueRW.RemainingSeconds -= deltaTime;
+
+                if (recovery.ValueRO.RemainingSeconds <= 0f)
+                {
+                    SystemAPI.SetComponentEnabled<KnockbackRecovery>(enemy, false);
+                }
+            }
         }
     }
 }

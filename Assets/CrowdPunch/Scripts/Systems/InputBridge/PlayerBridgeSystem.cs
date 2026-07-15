@@ -1,6 +1,6 @@
 using CrowdPunch.Components;
+using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.Groups;
-using Unity.Burst;
 using Unity.Entities;
 
 namespace CrowdPunch.Systems.InputBridge
@@ -8,20 +8,49 @@ namespace CrowdPunch.Systems.InputBridge
     /// <summary>
     /// Copies MonoBehaviour player bridge data into ECS singleton components.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(GamePrePhysicsGroup), OrderFirst = true)]
     public partial struct PlayerBridgeSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PlayerSnapshot>();
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            // TODO: Read dedicated player bridge data and write PlayerSnapshot and enableable PunchRequest with SystemAPI.
+            if (!PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
+            {
+                return;
+            }
+
+            Entity playerStateEntity = SystemAPI.GetSingletonEntity<PlayerSnapshot>();
+
+            SystemAPI.SetComponent(playerStateEntity, new PlayerSnapshot
+            {
+                Position = bridge.Position,
+                Forward = bridge.Forward,
+                Radius = bridge.Radius,
+                IsAvailable = true
+            });
+
+            if (bridge.HasPendingPunch)
+            {
+                SystemAPI.SetComponent(playerStateEntity, new PunchRequest
+                {
+                    Origin = bridge.PunchOrigin,
+                    Direction = bridge.PunchDirection,
+                    Radius = bridge.PunchRadius,
+                    Range = bridge.PunchRange,
+                    Strength = bridge.PunchStrength,
+                    Sequence = bridge.PunchSequence
+                });
+                SystemAPI.SetComponentEnabled<PunchRequest>(playerStateEntity, true);
+                bridge.ClearPunch();
+            }
+            else
+            {
+                SystemAPI.SetComponentEnabled<PunchRequest>(playerStateEntity, false);
+            }
         }
     }
 }

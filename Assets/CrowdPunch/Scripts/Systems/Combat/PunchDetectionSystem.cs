@@ -2,6 +2,8 @@ using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Combat
 {
@@ -16,13 +18,60 @@ namespace CrowdPunch.Systems.Combat
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<PlayerSnapshot>();
             state.RequireForUpdate<PunchRequest>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            // TODO: When PunchRequest is enabled, detect affected enemies and enable ExternalImpulse and KnockbackRecovery on them.
+            Entity punchEntity = SystemAPI.GetSingletonEntity<PlayerSnapshot>();
+
+            if (!SystemAPI.IsComponentEnabled<PunchRequest>(punchEntity))
+            {
+                return;
+            }
+
+            PunchRequest punchRequest = SystemAPI.GetComponent<PunchRequest>(punchEntity);
+            float3 punchDirection = math.normalizesafe(punchRequest.Direction);
+            float radiusSquared = punchRequest.Radius * punchRequest.Radius;
+
+            foreach ((RefRO<LocalTransform> transform, Entity enemy) in
+                     SystemAPI.Query<RefRO<LocalTransform>>()
+                         .WithAll<Enemy>()
+                         .WithEntityAccess())
+            {
+                float3 toEnemy = transform.ValueRO.Position - punchRequest.Origin;
+                float forwardDistance = math.dot(toEnemy, punchDirection);
+
+                if (forwardDistance < 0f || forwardDistance > punchRequest.Range)
+                {
+                    continue;
+                }
+
+                float3 closestPointOnPunchLine = punchRequest.Origin + punchDirection * forwardDistance;
+                float distanceFromPunchLineSquared = math.lengthsq(transform.ValueRO.Position - closestPointOnPunchLine);
+
+                if (distanceFromPunchLineSquared > radiusSquared)
+                {
+                    continue;
+                }
+
+                float3 impulseDirection = math.normalizesafe(toEnemy, punchDirection);
+                SystemAPI.SetComponent(enemy, new ExternalImpulse
+                {
+                    Value = impulseDirection * punchRequest.Strength
+                });
+                SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, true);
+
+                SystemAPI.SetComponent(enemy, new KnockbackRecovery
+                {
+                    RemainingSeconds = 0.35f
+                });
+                SystemAPI.SetComponentEnabled<KnockbackRecovery>(enemy, true);
+            }
+
+            SystemAPI.SetComponentEnabled<PunchRequest>(punchEntity, false);
         }
     }
 }

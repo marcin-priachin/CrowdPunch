@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace CrowdPunch.Mono.Player
 {
@@ -9,6 +10,8 @@ namespace CrowdPunch.Mono.Player
     public sealed class PlayerPunch : MonoBehaviour
     {
         [SerializeField] private PlayerEcsBridge ecsBridge;
+        [SerializeField] private InputActionReference attackAction;
+        [SerializeField] private Transform punchOrigin;
         [SerializeField] private float punchRadius = 2f;
         [SerializeField] private float punchRange = 3f;
         [SerializeField] private float punchStrength = 12f;
@@ -18,9 +21,28 @@ namespace CrowdPunch.Mono.Player
             ecsBridge = GetComponent<PlayerEcsBridge>();
         }
 
+        private void OnEnable()
+        {
+            attackAction?.action.Enable();
+        }
+
+        private void OnDisable()
+        {
+            attackAction?.action.Disable();
+        }
+
         private void Update()
         {
-            // TODO: Detect punch input and publish punch intent to PlayerEcsBridge without querying ECS enemies.
+            if (attackAction == null || !attackAction.action.WasPressedThisFrame())
+            {
+                return;
+            }
+
+            Transform originTransform = punchOrigin != null ? punchOrigin : transform;
+            Vector3 origin = originTransform.position;
+            Vector3 direction = originTransform.forward;
+
+            ecsBridge.PublishPunch(origin, direction, punchRadius, punchRange, punchStrength);
         }
     }
 }

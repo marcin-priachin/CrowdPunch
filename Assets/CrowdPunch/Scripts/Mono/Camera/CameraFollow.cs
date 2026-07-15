@@ -13,7 +13,16 @@ namespace CrowdPunch.Mono.Camera
 
         private void LateUpdate()
         {
-            // TODO: Follow the player GameObject after player movement has completed.
+            if (target == null)
+            {
+                return;
+            }
+
+            Vector3 desiredPosition = target.position + offset;
+            float interpolation = 1f - Mathf.Exp(-followSharpness * Time.deltaTime);
+
+            transform.position = Vector3.Lerp(transform.position, desiredPosition, interpolation);
+            transform.LookAt(target);
         }
     }
 }

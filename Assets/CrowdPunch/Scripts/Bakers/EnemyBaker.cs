@@ -17,6 +17,9 @@ namespace CrowdPunch.Bakers
             AddComponent(entity, new EnemyMovementSettings
             {
                 MoveSpeed = authoring.MoveSpeed,
+                WanderSpeed = authoring.WanderSpeed,
+                ChargeDistance = authoring.ChargeDistance,
+                ChargeSpeedMultiplier = authoring.ChargeSpeedMultiplier,
                 TurnSpeed = authoring.TurnSpeed,
                 StoppingDistance = authoring.StoppingDistance
             });

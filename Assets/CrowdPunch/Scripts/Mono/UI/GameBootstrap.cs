@@ -12,7 +12,17 @@ namespace CrowdPunch.Mono.UI
 
         private void Awake()
         {
-            // TODO: Register the player bridge with the ECS bridge path without exposing enemy entities to MonoBehaviours.
+            if (playerBridge == null)
+            {
+                playerBridge = FindFirstObjectByType<PlayerEcsBridge>();
+            }
+
+            PlayerBridgeRegistry.Register(playerBridge);
+        }
+
+        private void OnDestroy()
+        {
+            PlayerBridgeRegistry.Unregister(playerBridge);
         }
     }
 }
