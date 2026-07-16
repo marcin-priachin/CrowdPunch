@@ -42,6 +42,7 @@ namespace CrowdPunch.Systems.InputBridge
                     Radius = bridge.PunchRadius,
                     Range = bridge.PunchRange,
                     Strength = bridge.PunchStrength,
+                    PushDirectionPositionWeight = bridge.PunchPushDirectionPositionWeight,
                     Sequence = bridge.PunchSequence
                 });
                 SystemAPI.SetComponentEnabled<PunchRequest>(playerStateEntity, true);

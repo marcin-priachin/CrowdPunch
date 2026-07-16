@@ -35,6 +35,7 @@ namespace CrowdPunch.Systems.Combat
             PunchRequest punchRequest = SystemAPI.GetComponent<PunchRequest>(punchEntity);
             float3 punchDirection = math.normalizesafe(punchRequest.Direction);
             float radiusSquared = punchRequest.Radius * punchRequest.Radius;
+            float pushDirectionPositionWeight = math.saturate(punchRequest.PushDirectionPositionWeight);
 
             foreach ((RefRO<LocalTransform> transform, Entity enemy) in
                      SystemAPI.Query<RefRO<LocalTransform>>()
@@ -57,7 +58,10 @@ namespace CrowdPunch.Systems.Combat
                     continue;
                 }
 
-                float3 impulseDirection = math.normalizesafe(toEnemy, punchDirection);
+                float3 positionDirection = math.normalizesafe(toEnemy, punchDirection);
+                float3 impulseDirection = math.normalizesafe(
+                    math.lerp(punchDirection, positionDirection, pushDirectionPositionWeight),
+                    positionDirection);
                 SystemAPI.SetComponent(enemy, new ExternalImpulse
                 {
                     Value = impulseDirection * punchRequest.Strength

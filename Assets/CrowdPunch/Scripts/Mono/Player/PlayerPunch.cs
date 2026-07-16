@@ -15,10 +15,21 @@ namespace CrowdPunch.Mono.Player
         [SerializeField] private float punchRadius = 2f;
         [SerializeField] private float punchRange = 3f;
         [SerializeField] private float punchStrength = 12f;
+        [SerializeField, Range(0f, 1f)] private float pushDirectionPositionWeight = 1f;
+
+        public float PunchRadius => punchRadius;
 
         private void Reset()
         {
             ecsBridge = GetComponent<PlayerEcsBridge>();
+        }
+
+        private void Awake()
+        {
+            if (ecsBridge == null)
+            {
+                ecsBridge = GetComponent<PlayerEcsBridge>();
+            }
         }
 
         private void OnEnable()
@@ -38,11 +49,16 @@ namespace CrowdPunch.Mono.Player
                 return;
             }
 
+            RequestPunch();
+        }
+
+        public void RequestPunch()
+        {
             Transform originTransform = punchOrigin != null ? punchOrigin : transform;
             Vector3 origin = originTransform.position;
             Vector3 direction = originTransform.forward;
 
-            ecsBridge.PublishPunch(origin, direction, punchRadius, punchRange, punchStrength);
+            ecsBridge.PublishPunch(origin, direction, punchRadius, punchRange, punchStrength, pushDirectionPositionWeight);
         }
     }
 }

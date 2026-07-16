@@ -74,6 +74,9 @@ namespace CrowdPunch.Mono.Player
         /// <summary>Latest punch strength.</summary>
         public float PunchStrength { get; private set; }
 
+        /// <summary>How much punch impulse direction comes from enemy position relative to the punch origin.</summary>
+        public float PunchPushDirectionPositionWeight { get; private set; }
+
         /// <summary>
         /// Publishes current player transform data for ECS systems.
         /// </summary>
@@ -87,13 +90,20 @@ namespace CrowdPunch.Mono.Player
         /// <summary>
         /// Publishes a punch request for ECS systems to consume once.
         /// </summary>
-        public void PublishPunch(Vector3 origin, Vector3 direction, float radius, float range, float strength)
+        public void PublishPunch(
+            Vector3 origin,
+            Vector3 direction,
+            float radius,
+            float range,
+            float strength,
+            float pushDirectionPositionWeight)
         {
             PunchOrigin = new float3(origin.x, origin.y, origin.z);
             PunchDirection = new float3(direction.x, direction.y, direction.z);
             PunchRadius = radius;
             PunchRange = range;
             PunchStrength = strength;
+            PunchPushDirectionPositionWeight = Mathf.Clamp01(pushDirectionPositionWeight);
             PunchSequence++;
             HasPendingPunch = true;
         }
