@@ -149,8 +149,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SpawnerAuthoring
   enemyPrefab: {fileID: 8618196010151164906, guid: 3e70fb2e89b01674f95633e429f13253, type: 3}
-  initialCount: 250
-  spawnRadius: 50
+  initialCount: 500
+  spawnRadius: 100
 --- !u!4 &593808583
 Transform:
   m_ObjectHideFlags: 0
@@ -307,7 +307,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69fb4f90670f984498a51d5c6036ae10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.ArenaAuthoring
-  size: {x: 200, y: 10, z: 200}
+  size: {x: 198, y: 10, z: 198}
 --- !u!4 &1237949701
 Transform:
   m_ObjectHideFlags: 0

@@ -26,6 +26,7 @@ namespace CrowdPunch.Bakers
                 StoppingDistance = authoring.StoppingDistance
             });
             AddComponent<DesiredMovement>(entity);
+            AddComponent<WanderDestination>(entity);
             AddComponent<ExternalImpulse>(entity);
             AddComponent<KnockbackRecovery>(entity);
             AddComponent<RespawnRequest>(entity);

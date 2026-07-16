@@ -6,6 +6,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Movement
 {
@@ -22,14 +23,18 @@ namespace CrowdPunch.Systems.Movement
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<Enemy>();
+            state.RequireForUpdate<ArenaBounds>();
             state.RequireForUpdate<PhysicsVelocity>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            ArenaBounds arenaBounds = SystemAPI.GetSingleton<ArenaBounds>();
+
             new EnemyMovementJob
             {
+                ArenaBounds = arenaBounds,
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel();
         }
@@ -39,12 +44,14 @@ namespace CrowdPunch.Systems.Movement
         [WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
         private partial struct EnemyMovementJob : IJobEntity
         {
+            public ArenaBounds ArenaBounds;
             public float DeltaTime;
 
             private void Execute(
                 ref PhysicsVelocity physicsVelocity,
                 ref PhysicsMass physicsMass,
                 EnabledRefRO<KnockbackRecovery> knockbackRecovery,
+                in LocalTransform transform,
                 in DesiredMovement desiredMovement,
                 in EnemyMovementSettings movementSettings)
             {
@@ -78,6 +85,11 @@ namespace CrowdPunch.Systems.Movement
                     currentVelocity,
                     targetVelocity,
                     math.max(0f, acceleration) * DeltaTime);
+
+                if (IsWandering(desiredMovement, movementSettings))
+                {
+                    physicsVelocity.Linear.xz = RemoveOutwardBoundaryVelocity(transform.Position, physicsVelocity.Linear.xz);
+                }
             }
 
             private static float2 MoveTowards(float2 current, float2 target, float maxDelta)
@@ -91,6 +103,41 @@ namespace CrowdPunch.Systems.Movement
                 }
 
                 return current + delta / distance * maxDelta;
+            }
+
+            private static bool IsWandering(DesiredMovement desiredMovement, EnemyMovementSettings movementSettings)
+            {
+                return desiredMovement.Speed > 0f
+                    && math.abs(desiredMovement.Speed - movementSettings.WanderSpeed) <= 0.001f;
+            }
+
+            private float2 RemoveOutwardBoundaryVelocity(float3 position, float2 velocity)
+            {
+                float2 positionXZ = position.xz;
+                float2 center = ArenaBounds.Center.xz;
+                float2 extents = math.max(ArenaBounds.Extents.xz, new float2(0f));
+                float2 min = center - extents;
+                float2 max = center + extents;
+
+                if (positionXZ.x <= min.x && velocity.x < 0f)
+                {
+                    velocity.x = 0f;
+                }
+                else if (positionXZ.x >= max.x && velocity.x > 0f)
+                {
+                    velocity.x = 0f;
+                }
+
+                if (positionXZ.y <= min.y && velocity.y < 0f)
+                {
+                    velocity.y = 0f;
+                }
+                else if (positionXZ.y >= max.y && velocity.y > 0f)
+                {
+                    velocity.y = 0f;
+                }
+
+                return velocity;
             }
         }
     }
