@@ -11,6 +11,8 @@ namespace CrowdPunch.Authoring
         [SerializeField] private float wanderSpeed = 1.5f;
         [SerializeField] private float chargeDistance = 12f;
         [SerializeField] private float chargeSpeedMultiplier = 1.75f;
+        [SerializeField] private float acceleration = 12f;
+        [SerializeField] private float brakingAcceleration = 8f;
         [SerializeField] private float turnSpeed = 12f;
         [SerializeField] private float stoppingDistance = 1.25f;
 
@@ -25,6 +27,12 @@ namespace CrowdPunch.Authoring
 
         /// <summary>Multiplier applied to movement speed while charging.</summary>
         public float ChargeSpeedMultiplier => chargeSpeedMultiplier;
+
+        /// <summary>How quickly movement intent changes horizontal velocity.</summary>
+        public float Acceleration => acceleration;
+
+        /// <summary>How quickly enemies slow down when they have no movement intent.</summary>
+        public float BrakingAcceleration => brakingAcceleration;
 
         /// <summary>Rotation responsiveness while steering toward the player.</summary>
         public float TurnSpeed => turnSpeed;

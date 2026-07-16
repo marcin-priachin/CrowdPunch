@@ -20,6 +20,8 @@ namespace CrowdPunch.Bakers
                 WanderSpeed = authoring.WanderSpeed,
                 ChargeDistance = authoring.ChargeDistance,
                 ChargeSpeedMultiplier = authoring.ChargeSpeedMultiplier,
+                Acceleration = authoring.Acceleration,
+                BrakingAcceleration = authoring.BrakingAcceleration,
                 TurnSpeed = authoring.TurnSpeed,
                 StoppingDistance = authoring.StoppingDistance
             });

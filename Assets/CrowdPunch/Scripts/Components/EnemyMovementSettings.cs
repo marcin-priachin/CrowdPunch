@@ -11,6 +11,8 @@ namespace CrowdPunch.Components
         public float WanderSpeed;
         public float ChargeDistance;
         public float ChargeSpeedMultiplier;
+        public float Acceleration;
+        public float BrakingAcceleration;
         public float TurnSpeed;
         public float StoppingDistance;
     }
