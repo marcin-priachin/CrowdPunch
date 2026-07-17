@@ -7,5 +7,7 @@ namespace CrowdPunch.Components
     /// </summary>
     public struct RespawnRequest : IComponentData, IEnableableComponent
     {
+        public double RespawnAt;
+        public byte IsPooled;
     }
 }

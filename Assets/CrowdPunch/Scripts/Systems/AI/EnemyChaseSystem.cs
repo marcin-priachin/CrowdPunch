@@ -37,6 +37,7 @@ namespace CrowdPunch.Systems.AI
 
         [BurstCompile]
         [WithAll(typeof(Enemy))]
+        [WithNone(typeof(RespawnRequest))]
         private partial struct EnemyChaseJob : IJobEntity
         {
             public PlayerSnapshot PlayerSnapshot;

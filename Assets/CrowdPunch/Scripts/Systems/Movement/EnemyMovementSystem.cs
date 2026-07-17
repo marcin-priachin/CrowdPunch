@@ -51,6 +51,7 @@ namespace CrowdPunch.Systems.Movement
                 ref PhysicsVelocity physicsVelocity,
                 ref PhysicsMass physicsMass,
                 EnabledRefRO<KnockbackRecovery> knockbackRecovery,
+                EnabledRefRO<RespawnRequest> respawnRequest,
                 in LocalTransform transform,
                 in DesiredMovement desiredMovement,
                 in EnemyMovementSettings movementSettings)
@@ -59,6 +60,12 @@ namespace CrowdPunch.Systems.Movement
                 physicsMass.InverseInertia.z = 0f;
                 physicsVelocity.Angular.x = 0f;
                 physicsVelocity.Angular.z = 0f;
+
+                if (respawnRequest.ValueRO)
+                {
+                    physicsVelocity.Linear = float3.zero;
+                    return;
+                }
 
                 if (knockbackRecovery.ValueRO)
                 {

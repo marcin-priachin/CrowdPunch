@@ -10,6 +10,7 @@ namespace CrowdPunch.Mono.UI
     {
         [SerializeField] private PlayerEcsBridge playerBridge;
         [SerializeField] private PlayerHealth playerHealth;
+        [SerializeField] private PlayerController playerController;
         [SerializeField] private GameObject gameCanvasPrefab;
         [SerializeField] private bool createGameCanvas = true;
 
@@ -20,6 +21,7 @@ namespace CrowdPunch.Mono.UI
                 playerBridge = FindFirstObjectByType<PlayerEcsBridge>();
             }
 
+            EnsurePlayerController();
             EnsurePlayerHealth();
             EnsureGameCanvas();
             BindPlayerHealthBars();
@@ -30,6 +32,28 @@ namespace CrowdPunch.Mono.UI
         private void OnDestroy()
         {
             PlayerBridgeRegistry.Unregister(playerBridge);
+        }
+
+        public void RestartGame()
+        {
+            Time.timeScale = 1f;
+            EnsurePlayerController();
+            EnsurePlayerHealth();
+
+            playerController?.ResetPlayerState();
+            playerHealth?.ResetHealth();
+            GameRestartRegistry.RequestRestart();
+            BindPlayerHealthBars();
+        }
+
+        private void EnsurePlayerController()
+        {
+            if (playerController != null || playerBridge == null)
+            {
+                return;
+            }
+
+            playerController = playerBridge.GetComponent<PlayerController>();
         }
 
         private void EnsurePlayerHealth()

@@ -12,6 +12,8 @@ namespace CrowdPunch.Mono.UI
         [SerializeField] private PlayerHealth playerHealth;
         [SerializeField] private Image fillImage;
 
+        private bool isSubscribed;
+
         public void Bind(PlayerHealth health)
         {
             Bind(health, fillImage);
@@ -19,19 +21,13 @@ namespace CrowdPunch.Mono.UI
 
         public void Bind(PlayerHealth health, Image fill)
         {
-            if (playerHealth != null)
-            {
-                playerHealth.Changed -= UpdateFill;
-            }
+            Unsubscribe();
 
             playerHealth = health;
             fillImage = fill;
 
-            if (isActiveAndEnabled && playerHealth != null)
-            {
-                playerHealth.Changed += UpdateFill;
-                UpdateFill(playerHealth.CurrentHealth, playerHealth.MaxHealth);
-            }
+            Subscribe();
+            Refresh();
         }
 
         private void Awake()
@@ -44,19 +40,57 @@ namespace CrowdPunch.Mono.UI
 
         private void OnEnable()
         {
-            if (playerHealth != null)
-            {
-                playerHealth.Changed += UpdateFill;
-                UpdateFill(playerHealth.CurrentHealth, playerHealth.MaxHealth);
-            }
+            Subscribe();
+            Refresh();
+        }
+
+        private void LateUpdate()
+        {
+            Refresh();
         }
 
         private void OnDisable()
         {
+            Unsubscribe();
+        }
+
+        private void Subscribe()
+        {
+            if (isSubscribed)
+            {
+                return;
+            }
+
+            if (playerHealth != null)
+            {
+                playerHealth.Changed += UpdateFill;
+                isSubscribed = true;
+            }
+        }
+
+        private void Unsubscribe()
+        {
+            if (!isSubscribed)
+            {
+                return;
+            }
+
             if (playerHealth != null)
             {
                 playerHealth.Changed -= UpdateFill;
             }
+
+            isSubscribed = false;
+        }
+
+        private void Refresh()
+        {
+            if (playerHealth == null)
+            {
+                return;
+            }
+
+            UpdateFill(playerHealth.CurrentHealth, playerHealth.MaxHealth);
         }
 
         private void UpdateFill(float current, float max)

@@ -36,6 +36,13 @@ namespace CrowdPunch.Bakers
             {
                 Normalized = 1f
             });
+            AddComponent(entity, new EnemyContactDamageSettings
+            {
+                DamagePercent = authoring.ContactDamagePercent,
+                PushStrength = authoring.ContactPushStrength,
+                PlayerInvincibilitySeconds = authoring.ContactInvincibilitySeconds,
+                ContactRadius = authoring.ContactRadius
+            });
             AddComponent<DamageRequest>(entity);
             AddComponent<DeathRequest>(entity);
             AddComponent<ExternalImpulse>(entity);

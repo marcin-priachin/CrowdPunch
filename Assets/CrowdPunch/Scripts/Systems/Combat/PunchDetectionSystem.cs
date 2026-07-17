@@ -40,6 +40,7 @@ namespace CrowdPunch.Systems.Combat
             foreach ((RefRO<LocalTransform> transform, Entity enemy) in
                      SystemAPI.Query<RefRO<LocalTransform>>()
                          .WithAll<Enemy>()
+                         .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
                 float3 toEnemy = transform.ValueRO.Position - punchRequest.Origin;

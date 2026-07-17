@@ -16,6 +16,10 @@ namespace CrowdPunch.Authoring
         [SerializeField] private float turnSpeed = 12f;
         [SerializeField] private float stoppingDistance = 1.25f;
         [SerializeField] private float maxHealth = 30f;
+        [SerializeField, Range(0f, 1f)] private float contactDamagePercent = 0.05f;
+        [SerializeField] private float contactPushStrength = 10f;
+        [SerializeField] private float contactInvincibilitySeconds = 0.5f;
+        [SerializeField] private float contactRadius = 0.75f;
 
         /// <summary>Movement speed in world units per second.</summary>
         public float MoveSpeed => moveSpeed;
@@ -43,5 +47,17 @@ namespace CrowdPunch.Authoring
 
         /// <summary>Initial and maximum enemy health.</summary>
         public float MaxHealth => maxHealth;
+
+        /// <summary>Fraction of player max health removed on contact.</summary>
+        public float ContactDamagePercent => contactDamagePercent;
+
+        /// <summary>Player push impulse applied on contact.</summary>
+        public float ContactPushStrength => contactPushStrength;
+
+        /// <summary>Player invincibility duration after contact damage.</summary>
+        public float ContactInvincibilitySeconds => contactInvincibilitySeconds;
+
+        /// <summary>Approximate enemy radius used for player contact checks.</summary>
+        public float ContactRadius => contactRadius;
     }
 }

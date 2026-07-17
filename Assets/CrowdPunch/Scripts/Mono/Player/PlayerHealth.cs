@@ -13,8 +13,10 @@ namespace CrowdPunch.Mono.Player
         [SerializeField] private float maxHealth = 100f;
 
         private float currentHealth;
+        private float invincibilityRemainingSeconds;
 
         public event Action<float, float> Changed;
+        public event Action<Vector3> DamageAccepted;
 
         public float CurrentHealth => currentHealth;
 
@@ -29,11 +31,7 @@ namespace CrowdPunch.Mono.Player
 
         private void Awake()
         {
-            if (ecsBridge == null)
-            {
-                ecsBridge = GetComponent<PlayerEcsBridge>();
-            }
-
+            EnsureBridge();
             currentHealth = Mathf.Max(0f, maxHealth);
             Publish();
         }
@@ -43,8 +41,27 @@ namespace CrowdPunch.Mono.Player
             Changed?.Invoke(currentHealth, maxHealth);
         }
 
+        private void OnEnable()
+        {
+            EnsureBridge();
+
+            if (ecsBridge != null)
+            {
+                ecsBridge.EnemyContactHitReceived += TryApplyEnemyContactHit;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (ecsBridge != null)
+            {
+                ecsBridge.EnemyContactHitReceived -= TryApplyEnemyContactHit;
+            }
+        }
+
         private void Update()
         {
+            invincibilityRemainingSeconds = Mathf.Max(0f, invincibilityRemainingSeconds - Time.deltaTime);
             Publish();
         }
 
@@ -56,6 +73,24 @@ namespace CrowdPunch.Mono.Player
         public void Restore(float amount)
         {
             SetHealth(currentHealth + Mathf.Max(0f, amount));
+        }
+
+        public void ResetHealth()
+        {
+            invincibilityRemainingSeconds = 0f;
+            SetHealth(maxHealth);
+        }
+
+        private void TryApplyEnemyContactHit(float damagePercent, float invincibilitySeconds, Vector3 pushImpulse)
+        {
+            if (invincibilityRemainingSeconds > 0f || currentHealth <= 0f)
+            {
+                return;
+            }
+
+            ApplyDamage(maxHealth * Mathf.Clamp01(damagePercent));
+            invincibilityRemainingSeconds = Mathf.Max(0f, invincibilitySeconds);
+            DamageAccepted?.Invoke(pushImpulse);
         }
 
         private void SetHealth(float value)
@@ -73,7 +108,16 @@ namespace CrowdPunch.Mono.Player
 
         private void Publish()
         {
-            ecsBridge.PublishPlayerHealth(currentHealth, maxHealth);
+            EnsureBridge();
+            ecsBridge?.PublishPlayerHealth(currentHealth, maxHealth);
+        }
+
+        private void EnsureBridge()
+        {
+            if (ecsBridge == null)
+            {
+                ecsBridge = GetComponent<PlayerEcsBridge>();
+            }
         }
     }
 }

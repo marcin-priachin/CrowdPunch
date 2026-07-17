@@ -1,3 +1,4 @@
+using System;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -44,6 +45,8 @@ namespace CrowdPunch.Mono.Player
     /// </summary>
     public sealed class PlayerEcsBridge : MonoBehaviour
     {
+        public event Action<float, float, Vector3> EnemyContactHitReceived;
+
         /// <summary>Latest player position published by MonoBehaviour player code.</summary>
         public float3 Position { get; private set; }
 
@@ -134,6 +137,17 @@ namespace CrowdPunch.Mono.Player
         public void ClearPunch()
         {
             HasPendingPunch = false;
+        }
+
+        /// <summary>
+        /// Receives an ECS enemy contact hit for MonoBehaviour-owned player systems.
+        /// </summary>
+        public void ReceiveEnemyContactHit(float damagePercent, float invincibilitySeconds, float3 pushImpulse)
+        {
+            EnemyContactHitReceived?.Invoke(
+                Mathf.Clamp01(damagePercent),
+                Mathf.Max(0f, invincibilitySeconds),
+                new Vector3(pushImpulse.x, pushImpulse.y, pushImpulse.z));
         }
     }
 }

@@ -11,9 +11,11 @@ namespace CrowdPunch.Mono.Player
     {
         [SerializeField] private PlayerEcsBridge ecsBridge;
         [SerializeField] private PlayerPunch playerPunch;
+        [SerializeField] private PlayerHealth playerHealth;
         [SerializeField] private InputActionReference moveAction;
         [SerializeField] private float playerRadius = 1.5f;
         [SerializeField] private float moveSpeed = 6f;
+        [SerializeField] private float knockbackDamping = 14f;
         [SerializeField] private float touchStickRadiusPixels = 140f;
         [SerializeField] private float touchDeadZonePixels = 18f;
         [SerializeField] private float aimLineLength = 3f;
@@ -30,11 +32,15 @@ namespace CrowdPunch.Mono.Player
         private Vector2 rightAimInput;
         private bool rightTouchHadAim;
         private LineRenderer aimLine;
+        private Vector3 knockbackVelocity;
+        private Vector3 initialPosition;
+        private Quaternion initialRotation;
 
         private void Reset()
         {
             ecsBridge = GetComponent<PlayerEcsBridge>();
             playerPunch = GetComponent<PlayerPunch>();
+            playerHealth = GetComponent<PlayerHealth>();
         }
 
         private void Awake()
@@ -49,7 +55,27 @@ namespace CrowdPunch.Mono.Player
                 playerPunch = GetComponent<PlayerPunch>();
             }
 
+            if (playerHealth == null)
+            {
+                playerHealth = GetComponent<PlayerHealth>();
+            }
+
             EnsureAimLine();
+            initialPosition = transform.position;
+            initialRotation = transform.rotation;
+        }
+
+        private void Start()
+        {
+            if (playerHealth == null)
+            {
+                playerHealth = GetComponent<PlayerHealth>();
+            }
+
+            if (playerHealth != null)
+            {
+                playerHealth.DamageAccepted += ApplyKnockback;
+            }
         }
 
         private void OnEnable()
@@ -62,6 +88,14 @@ namespace CrowdPunch.Mono.Player
             moveAction?.action.Disable();
         }
 
+        private void OnDestroy()
+        {
+            if (playerHealth != null)
+            {
+                playerHealth.DamageAccepted -= ApplyKnockback;
+            }
+        }
+
         private void Update()
         {
             Vector2 actionMoveInput = moveAction == null
@@ -72,7 +106,8 @@ namespace CrowdPunch.Mono.Player
 
             Vector2 moveInput = Vector2.ClampMagnitude(actionMoveInput + touchMoveInput, 1f);
             Vector3 movement = new Vector3(moveInput.x, 0f, moveInput.y);
-            transform.position += moveSpeed * Time.deltaTime * movement;
+            transform.position += Time.deltaTime * (moveSpeed * movement + knockbackVelocity);
+            knockbackVelocity = Vector3.MoveTowards(knockbackVelocity, Vector3.zero, knockbackDamping * Time.deltaTime);
 
             if (hasTouchAim)
             {
@@ -90,6 +125,18 @@ namespace CrowdPunch.Mono.Player
 
             UpdateAimLine(hasTouchAim);
 
+            ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, playerRadius);
+        }
+
+        private void ApplyKnockback(Vector3 impulse)
+        {
+            knockbackVelocity += new Vector3(impulse.x, 0f, impulse.z);
+        }
+
+        public void ResetPlayerState()
+        {
+            knockbackVelocity = Vector3.zero;
+            transform.SetPositionAndRotation(initialPosition, initialRotation);
             ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, playerRadius);
         }
 

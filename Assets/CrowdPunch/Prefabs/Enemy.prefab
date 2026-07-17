@@ -109,7 +109,7 @@ CapsuleCollider:
     m_Bits: 0
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
-  m_ProvidesContacts: 0
+  m_ProvidesContacts: 1
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.5
@@ -132,8 +132,15 @@ MonoBehaviour:
   wanderSpeed: 1.5
   chargeDistance: 12
   chargeSpeedMultiplier: 1.75
+  acceleration: 12
+  brakingAcceleration: 8
   turnSpeed: 12
   stoppingDistance: 1.25
+  maxHealth: 30
+  contactDamagePercent: 0.05
+  contactPushStrength: 10
+  contactInvincibilitySeconds: 0.5
+  contactRadius: 0.75
 --- !u!54 &6021746284219461527
 Rigidbody:
   m_ObjectHideFlags: 0

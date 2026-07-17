@@ -461,6 +461,7 @@ MonoBehaviour:
   punchRadius: 2
   punchRange: 3
   punchStrength: 80
+  punchDamage: 10
   pushDirectionPositionWeight: 0
 --- !u!114 &1430478228
 MonoBehaviour:
@@ -476,9 +477,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.PlayerController
   ecsBridge: {fileID: 1430478229}
   playerPunch: {fileID: 0}
+  playerHealth: {fileID: 0}
   moveAction: {fileID: -1680190386980627800, guid: 289c1b55c9541489481df5cc06664110, type: 3}
-  playerRadius: 1.5
+  playerRadius: 0.5
   moveSpeed: 12
+  knockbackDamping: 14
   touchStickRadiusPixels: 140
   touchDeadZonePixels: 18
   aimLineLength: 3
@@ -617,6 +620,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.UI.GameBootstrap
   playerBridge: {fileID: 1430478229}
+  playerHealth: {fileID: 0}
+  gameCanvasPrefab: {fileID: 0}
+  createGameCanvas: 1
 --- !u!4 &1935685715
 Transform:
   m_ObjectHideFlags: 0
