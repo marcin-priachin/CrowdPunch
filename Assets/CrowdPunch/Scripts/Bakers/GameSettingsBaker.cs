@@ -19,6 +19,7 @@ namespace CrowdPunch.Bakers
                 ElapsedSeconds = 0f
             });
             AddComponent<PlayerSnapshot>(entity);
+            AddComponent<PlayerHealthSnapshot>(entity);
             AddComponent<PunchRequest>(entity);
             SetComponentEnabled<PunchRequest>(entity, false);
         }

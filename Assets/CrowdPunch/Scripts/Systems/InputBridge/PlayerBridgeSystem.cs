@@ -32,6 +32,12 @@ namespace CrowdPunch.Systems.InputBridge
                 Radius = bridge.Radius,
                 IsAvailable = true
             });
+            SystemAPI.SetComponent(playerStateEntity, new PlayerHealthSnapshot
+            {
+                Current = bridge.CurrentHealth,
+                Max = bridge.MaxHealth,
+                IsAvailable = bridge.MaxHealth > 0f
+            });
 
             if (bridge.HasPendingPunch)
             {
@@ -42,6 +48,7 @@ namespace CrowdPunch.Systems.InputBridge
                     Radius = bridge.PunchRadius,
                     Range = bridge.PunchRange,
                     Strength = bridge.PunchStrength,
+                    Damage = bridge.PunchDamage,
                     PushDirectionPositionWeight = bridge.PunchPushDirectionPositionWeight,
                     Sequence = bridge.PunchSequence
                 });

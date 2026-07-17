@@ -73,6 +73,12 @@ namespace CrowdPunch.Systems.Combat
                     RemainingSeconds = 0.35f
                 });
                 SystemAPI.SetComponentEnabled<KnockbackRecovery>(enemy, true);
+
+                SystemAPI.SetComponent(enemy, new DamageRequest
+                {
+                    Amount = punchRequest.Damage
+                });
+                SystemAPI.SetComponentEnabled<DamageRequest>(enemy, true);
             }
 
             SystemAPI.SetComponentEnabled<PunchRequest>(punchEntity, false);

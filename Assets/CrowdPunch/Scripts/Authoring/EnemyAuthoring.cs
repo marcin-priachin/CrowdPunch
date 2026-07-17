@@ -15,6 +15,7 @@ namespace CrowdPunch.Authoring
         [SerializeField] private float brakingAcceleration = 8f;
         [SerializeField] private float turnSpeed = 12f;
         [SerializeField] private float stoppingDistance = 1.25f;
+        [SerializeField] private float maxHealth = 30f;
 
         /// <summary>Movement speed in world units per second.</summary>
         public float MoveSpeed => moveSpeed;
@@ -39,5 +40,8 @@ namespace CrowdPunch.Authoring
 
         /// <summary>Distance from the player where the enemy should stop closing in.</summary>
         public float StoppingDistance => stoppingDistance;
+
+        /// <summary>Initial and maximum enemy health.</summary>
+        public float MaxHealth => maxHealth;
     }
 }

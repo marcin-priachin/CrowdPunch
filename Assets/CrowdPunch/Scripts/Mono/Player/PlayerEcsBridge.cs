@@ -53,6 +53,12 @@ namespace CrowdPunch.Mono.Player
         /// <summary>Approximate player radius for ECS distance checks.</summary>
         public float Radius { get; private set; }
 
+        /// <summary>Latest player health value published by MonoBehaviour player code.</summary>
+        public float CurrentHealth { get; private set; }
+
+        /// <summary>Latest player max health value published by MonoBehaviour player code.</summary>
+        public float MaxHealth { get; private set; }
+
         /// <summary>Whether a punch request is waiting for ECS consumption.</summary>
         public bool HasPendingPunch { get; private set; }
 
@@ -74,6 +80,9 @@ namespace CrowdPunch.Mono.Player
         /// <summary>Latest punch strength.</summary>
         public float PunchStrength { get; private set; }
 
+        /// <summary>Latest punch damage.</summary>
+        public float PunchDamage { get; private set; }
+
         /// <summary>How much punch impulse direction comes from enemy position relative to the punch origin.</summary>
         public float PunchPushDirectionPositionWeight { get; private set; }
 
@@ -88,6 +97,15 @@ namespace CrowdPunch.Mono.Player
         }
 
         /// <summary>
+        /// Publishes current player health for ECS presentation or gameplay systems.
+        /// </summary>
+        public void PublishPlayerHealth(float currentHealth, float maxHealth)
+        {
+            MaxHealth = Mathf.Max(0f, maxHealth);
+            CurrentHealth = Mathf.Clamp(currentHealth, 0f, MaxHealth);
+        }
+
+        /// <summary>
         /// Publishes a punch request for ECS systems to consume once.
         /// </summary>
         public void PublishPunch(
@@ -96,6 +114,7 @@ namespace CrowdPunch.Mono.Player
             float radius,
             float range,
             float strength,
+            float damage,
             float pushDirectionPositionWeight)
         {
             PunchOrigin = new float3(origin.x, origin.y, origin.z);
@@ -103,6 +122,7 @@ namespace CrowdPunch.Mono.Player
             PunchRadius = radius;
             PunchRange = range;
             PunchStrength = strength;
+            PunchDamage = Mathf.Max(0f, damage);
             PunchPushDirectionPositionWeight = Mathf.Clamp01(pushDirectionPositionWeight);
             PunchSequence++;
             HasPendingPunch = true;
