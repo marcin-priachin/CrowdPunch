@@ -49,7 +49,7 @@ namespace CrowdPunch.Authoring
         /// <summary>Distance from the player where the enemy should stop closing in.</summary>
         public float StoppingDistance => stoppingDistance;
 
-        /// <summary>Preferred distance from the player while charging.</summary>
+        /// <summary>Outer lane distance used to distribute enemies around the player while charging.</summary>
         public float SurroundDistance => surroundDistance;
 
         /// <summary>Offset between deterministic surrounding rings.</summary>

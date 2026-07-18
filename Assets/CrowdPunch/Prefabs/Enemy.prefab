@@ -100,7 +100,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8618196010151164906}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 48908e1f002f24f4187ef62a2fadddba, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -136,6 +136,10 @@ MonoBehaviour:
   brakingAcceleration: 8
   turnSpeed: 12
   stoppingDistance: 1.25
+  surroundDistance: 3.5
+  surroundRingSpacing: 0.75
+  separationDistance: 1.35
+  separationWeight: 1.4
   maxHealth: 30
   contactDamagePercent: 0.05
   contactPushStrength: 10

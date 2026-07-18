@@ -37,6 +37,7 @@ namespace CrowdPunch.Mono.UI
         public void RestartGame()
         {
             Time.timeScale = 1f;
+            ReactivatePlayerObject();
             EnsurePlayerController();
             EnsurePlayerHealth();
 
@@ -44,6 +45,29 @@ namespace CrowdPunch.Mono.UI
             playerHealth?.ResetHealth();
             GameRestartRegistry.RequestRestart();
             BindPlayerHealthBars();
+        }
+
+        private void ReactivatePlayerObject()
+        {
+            GameObject playerObject = null;
+
+            if (playerBridge != null)
+            {
+                playerObject = playerBridge.gameObject;
+            }
+            else if (playerHealth != null)
+            {
+                playerObject = playerHealth.gameObject;
+            }
+            else if (playerController != null)
+            {
+                playerObject = playerController.gameObject;
+            }
+
+            if (playerObject != null && !playerObject.activeSelf)
+            {
+                playerObject.SetActive(true);
+            }
         }
 
         private void EnsurePlayerController()

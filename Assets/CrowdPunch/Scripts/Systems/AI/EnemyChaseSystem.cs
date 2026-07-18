@@ -82,7 +82,7 @@ namespace CrowdPunch.Systems.AI
 
                 if (distanceToPlayer <= movementSettings.ChargeDistance)
                 {
-                    float3 surroundTarget = GetSurroundTarget(entity, transform.Position.y, movementSettings);
+                    float3 surroundTarget = GetSurroundContactTarget(entity, transform.Position.y, movementSettings);
                     float3 toTarget = surroundTarget - transform.Position;
                     toTarget.y = 0f;
 
@@ -109,17 +109,17 @@ namespace CrowdPunch.Systems.AI
                 desiredMovement.Speed = movementSettings.WanderSpeed;
             }
 
-            private float3 GetSurroundTarget(Entity entity, float y, EnemyMovementSettings movementSettings)
+            private float3 GetSurroundContactTarget(Entity entity, float y, EnemyMovementSettings movementSettings)
             {
                 const float goldenAngle = 2.3999631f;
 
                 int slotIndex = math.max(0, entity.Index);
                 float angle = slotIndex * goldenAngle;
+                float contactRadius = math.max(0f, movementSettings.StoppingDistance);
                 int ringIndex = slotIndex % 3;
-                float radius = math.max(
-                    movementSettings.StoppingDistance + 0.25f,
-                    movementSettings.SurroundDistance + ringIndex * math.max(0f, movementSettings.SurroundRingSpacing));
-                float2 offset = new float2(math.cos(angle), math.sin(angle)) * radius;
+                float maxLaneOffset = math.max(0f, movementSettings.SurroundDistance - contactRadius);
+                float laneOffset = math.min(maxLaneOffset, ringIndex * math.max(0f, movementSettings.SurroundRingSpacing)) * 0.35f;
+                float2 offset = new float2(math.cos(angle), math.sin(angle)) * (contactRadius + laneOffset);
 
                 return new float3(
                     PlayerSnapshot.Position.x + offset.x,

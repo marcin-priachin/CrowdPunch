@@ -55,20 +55,30 @@ namespace CrowdPunch.Systems.Initialization
                     SystemAPI.SetComponent(enemy, new PhysicsVelocity());
                 }
 
-                DisableIfPresent<DamageRequest>(enemy);
-                DisableIfPresent<DeathRequest>(enemy);
-                DisableIfPresent<ExternalImpulse>(enemy);
-                DisableIfPresent<KnockbackRecovery>(enemy);
-                DisableIfPresent<RespawnRequest>(enemy);
-            }
-        }
+                if (SystemAPI.HasComponent<DamageRequest>(enemy))
+                {
+                    SystemAPI.SetComponentEnabled<DamageRequest>(enemy, false);
+                }
 
-        private void DisableIfPresent<T>(Entity entity)
-            where T : unmanaged, IComponentData, IEnableableComponent
-        {
-            if (SystemAPI.HasComponent<T>(entity))
-            {
-                SystemAPI.SetComponentEnabled<T>(entity, false);
+                if (SystemAPI.HasComponent<DeathRequest>(enemy))
+                {
+                    SystemAPI.SetComponentEnabled<DeathRequest>(enemy, false);
+                }
+
+                if (SystemAPI.HasComponent<ExternalImpulse>(enemy))
+                {
+                    SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, false);
+                }
+
+                if (SystemAPI.HasComponent<KnockbackRecovery>(enemy))
+                {
+                    SystemAPI.SetComponentEnabled<KnockbackRecovery>(enemy, false);
+                }
+
+                if (SystemAPI.HasComponent<RespawnRequest>(enemy))
+                {
+                    SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, false);
+                }
             }
         }
 

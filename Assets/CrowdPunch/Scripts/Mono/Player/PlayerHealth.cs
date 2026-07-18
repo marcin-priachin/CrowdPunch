@@ -95,6 +95,7 @@ namespace CrowdPunch.Mono.Player
 
         private void SetHealth(float value)
         {
+            bool wasAlive = currentHealth > 0f;
             float clampedHealth = Mathf.Clamp(value, 0f, Mathf.Max(0f, maxHealth));
             if (Mathf.Approximately(currentHealth, clampedHealth))
             {
@@ -104,6 +105,11 @@ namespace CrowdPunch.Mono.Player
             currentHealth = clampedHealth;
             Publish();
             Changed?.Invoke(currentHealth, maxHealth);
+
+            if (wasAlive && currentHealth <= 0f)
+            {
+                gameObject.SetActive(false);
+            }
         }
 
         private void Publish()
