@@ -460,7 +460,7 @@ MonoBehaviour:
   punchOrigin: {fileID: 1430478226}
   punchRadius: 2
   punchRange: 3
-  punchStrength: 80
+  punchStrength: 60
   punchDamage: 10
   pushDirectionPositionWeight: 0
 --- !u!114 &1430478228
@@ -621,6 +621,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.UI.GameBootstrap
   playerBridge: {fileID: 1430478229}
   playerHealth: {fileID: 0}
+  playerController: {fileID: 0}
   gameCanvasPrefab: {fileID: 0}
   createGameCanvas: 1
 --- !u!4 &1935685715

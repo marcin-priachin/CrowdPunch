@@ -4,22 +4,20 @@ using CrowdPunch.Systems.Lifetime;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Physics.Systems;
 
 namespace CrowdPunch.Systems.Combat
 {
     /// <summary>
-    /// Returns fast enemy-enemy collisions to the respawn pool.
+    /// Propagates player-punch pool requests through enemy-enemy collisions.
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
     [UpdateBefore(typeof(EnemyRespawnSystem))]
     public partial struct EnemyEnemyCollisionRespawnSystem : ISystem
     {
-        private const float CollisionSpeedThreshold = 20f;
-        private const double RespawnDelaySeconds = 5d;
+        private const double MaxPendingPoolSeconds = 2d;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -35,10 +33,8 @@ namespace CrowdPunch.Systems.Combat
             EnemyCollisionJob job = new EnemyCollisionJob
             {
                 EnemyLookup = SystemAPI.GetComponentLookup<Enemy>(true),
-                VelocityLookup = SystemAPI.GetComponentLookup<PhysicsVelocity>(true),
                 RespawnLookup = SystemAPI.GetComponentLookup<RespawnRequest>(),
-                RespawnAt = SystemAPI.Time.ElapsedTime + RespawnDelaySeconds,
-                CollisionSpeedThresholdSq = CollisionSpeedThreshold * CollisionSpeedThreshold
+                ForcePoolAt = SystemAPI.Time.ElapsedTime + MaxPendingPoolSeconds
             };
 
             state.Dependency = job.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
@@ -48,11 +44,9 @@ namespace CrowdPunch.Systems.Combat
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
             [ReadOnly] public ComponentLookup<Enemy> EnemyLookup;
-            [ReadOnly] public ComponentLookup<PhysicsVelocity> VelocityLookup;
             public ComponentLookup<RespawnRequest> RespawnLookup;
 
-            public double RespawnAt;
-            public float CollisionSpeedThresholdSq;
+            public double ForcePoolAt;
 
             public void Execute(CollisionEvent collisionEvent)
             {
@@ -61,16 +55,13 @@ namespace CrowdPunch.Systems.Combat
 
                 if (!EnemyLookup.HasComponent(entityA)
                     || !EnemyLookup.HasComponent(entityB)
-                    || !VelocityLookup.HasComponent(entityA)
-                    || !VelocityLookup.HasComponent(entityB)
                     || !RespawnLookup.HasComponent(entityA)
                     || !RespawnLookup.HasComponent(entityB))
                 {
                     return;
                 }
 
-                float3 relativeVelocity = VelocityLookup[entityA].Linear - VelocityLookup[entityB].Linear;
-                if (math.lengthsq(relativeVelocity) <= CollisionSpeedThresholdSq)
+                if (!IsPlayerPunchPending(entityA) && !IsPlayerPunchPending(entityB))
                 {
                     return;
                 }
@@ -79,12 +70,40 @@ namespace CrowdPunch.Systems.Combat
                 RequestRespawn(entityB);
             }
 
+            private bool IsPlayerPunchPending(Entity entity)
+            {
+                if (!RespawnLookup.IsComponentEnabled(entity))
+                {
+                    return false;
+                }
+
+                RespawnRequest respawnRequest = RespawnLookup[entity];
+                return respawnRequest.IsPooled == 0 && respawnRequest.FromPlayerPunch != 0;
+            }
+
             private void RequestRespawn(Entity entity)
             {
+                double forcePoolAt = ForcePoolAt;
+                if (RespawnLookup.IsComponentEnabled(entity))
+                {
+                    RespawnRequest existingRequest = RespawnLookup[entity];
+                    if (existingRequest.IsPooled != 0)
+                    {
+                        return;
+                    }
+
+                    if (existingRequest.ForcePoolAt > 0d && existingRequest.ForcePoolAt < forcePoolAt)
+                    {
+                        forcePoolAt = existingRequest.ForcePoolAt;
+                    }
+                }
+
                 RespawnLookup[entity] = new RespawnRequest
                 {
-                    RespawnAt = RespawnAt,
-                    IsPooled = 0
+                    RespawnAt = 0d,
+                    IsPooled = 0,
+                    ForcePoolAt = forcePoolAt,
+                    FromPlayerPunch = 1
                 };
                 RespawnLookup.SetComponentEnabled(entity, true);
             }

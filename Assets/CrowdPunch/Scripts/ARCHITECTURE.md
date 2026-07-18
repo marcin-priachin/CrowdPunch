@@ -47,7 +47,7 @@ Assets/CrowdPunch/Scripts
 | `Components/PlayerSnapshot.cs` | ECS-readable player state from MonoBehaviour code. |
 | `Components/PlayerHealthSnapshot.cs` | ECS-readable player health state from MonoBehaviour code. |
 | `Components/PunchRequest.cs` | Enableable one-frame punch request. |
-| `Components/EnemyMovementSettings.cs` | Enemy movement tuning data. |
+| `Components/EnemyMovementSettings.cs` | Enemy movement, surround, and separation tuning data. |
 | `Components/EnemyContactDamageSettings.cs` | Enemy touch damage, push, and player invincibility tuning data. |
 | `Components/DesiredMovement.cs` | AI-produced movement intent. |
 | `Components/ExternalImpulse.cs` | Enableable pending physics impulse. |
@@ -65,7 +65,7 @@ Assets/CrowdPunch/Scripts
 | `Systems/Combat/PunchDetectionSystem.cs` | Detects enemies affected by punches. |
 | `Systems/Combat/DamageApplicationSystem.cs` | Applies pending damage requests to ECS health values. |
 | `Systems/Combat/PlayerContactDamageSystem.cs` | Detects ECS enemy overlap against the player snapshot and reports contact hits through the player bridge. |
-| `Systems/Combat/EnemyEnemyCollisionRespawnSystem.cs` | Detects high-speed enemy-enemy physics collisions and requests delayed respawn. |
+| `Systems/Combat/EnemyEnemyCollisionRespawnSystem.cs` | Propagates player-punch pending pool state through enemy-enemy physics collisions. |
 | `Systems/Physics/ApplyImpulseSystem.cs` | Applies gameplay impulses before physics simulation. |
 | `Systems/Physics/EnemyRecoverySystem.cs` | Times enemy knockback recovery and returns control to movement. |
 | `Systems/Lifetime/OutOfBoundsSystem.cs` | Marks enemies outside arena bounds. |
@@ -92,15 +92,15 @@ Assets/CrowdPunch/Scripts
 
 Custom system groups make frame order explicit: bridge input, compute intent, apply impulses, simulate physics, reconcile state, then present results. This is clearer for learning than relying on default update order.
 
-Enemy movement is split into intent and application. `EnemyChaseSystem` chooses whether each enemy wanders or charges and writes `DesiredMovement`; `EnemyMovementSystem` consumes that data and steers `PhysicsVelocity` toward the desired velocity instead of overwriting it instantly. This lets collision impulses survive long enough to affect other enemies. It also locks pitch and roll through `PhysicsMass.InverseInertia` so enemies remain upright while Unity Physics owns collision and position integration.
+Enemy movement is split into intent and application. `EnemyChaseSystem` chooses whether each enemy wanders or charges and writes `DesiredMovement`; while charging, enemies choose deterministic slots around the player and blend in short-range separation from nearby enemies. `EnemyMovementSystem` consumes that data and steers `PhysicsVelocity` toward the desired velocity instead of overwriting it instantly. This lets collision impulses survive long enough to affect other enemies. It also locks pitch and roll through `PhysicsMass.InverseInertia` so enemies remain upright while Unity Physics owns collision and position integration.
 
-Punching follows the same data pipeline. `PlayerPunch` publishes a `PunchRequest` through the bridge; `PunchDetectionSystem` tests enemy positions against the request volume and enables `ExternalImpulse` and `DamageRequest`; `DamageApplicationSystem` applies the damage to `Health`; `ApplyImpulseSystem` adds the impulse value to `PhysicsVelocity`; `EnemyRecoverySystem` keeps movement from immediately overriding the knockback.
+Punching follows the same data pipeline. `PlayerPunch` publishes a `PunchRequest` through the bridge; `PunchDetectionSystem` tests enemy positions against the request volume and enables `ExternalImpulse`, `DamageRequest`, and a punch-sourced `RespawnRequest`; `DamageApplicationSystem` applies the damage to `Health`; `ApplyImpulseSystem` adds the impulse value to `PhysicsVelocity`; `EnemyRecoverySystem` keeps movement from immediately overriding the knockback.
 
 Player health remains GameObject-owned through `PlayerHealth` because the large player is outside ECS. `PlayerEcsBridge` publishes it into `PlayerHealthSnapshot` for ECS-readable presentation or later gameplay systems. Enemy health is ECS-owned through `Health`, with `HealthBarPresentationSystem` deriving a normalized `HealthBar` value so visual bars can consume presentation data without MonoBehaviours querying enemy entities.
 
 Enemy contact damage is detected in ECS by comparing enemy transforms with `PlayerSnapshot`. `PlayerContactDamageSystem` sends only the resulting hit event through `PlayerEcsBridge`; `PlayerHealth` owns damage and the invincibility timer, while `PlayerController` owns the GameObject knockback motion.
 
-Enemy-enemy collision respawn stays ECS-owned. `EnemyEnemyCollisionRespawnSystem` listens to Unity Physics collision events after simulation and enables `RespawnRequest` when enemy relative velocity exceeds the gameplay threshold. `EnemyRespawnSystem` treats enabled `RespawnRequest` as a short pool state, keeps the enemy inert off-arena, then returns it after the delay to a random arena edge that avoids the current player snapshot.
+Enemy-enemy collision respawn stays ECS-owned. `EnemyEnemyCollisionRespawnSystem` listens to Unity Physics collision events after simulation and propagates `RespawnRequest` only when at least one enemy is already pending from a player punch. Collision speed is not a gameplay qualifier. `EnemyRespawnSystem` treats enabled `RespawnRequest` first as a pending-pool state, allowing punch/collision movement to settle while normal AI and combat ignore the enemy. Once knockback recovery is over and horizontal speed is low, it moves the enemy to the off-arena pool, starts the respawn delay, then returns it to a random arena edge that avoids the current player snapshot. A short force-pool timeout prevents enemies from staying pending forever if physics never fully settles.
 
 Restart is a soft reset because the Bootstrap scene contains an auto-loaded SubScene. UI restart code should not reload the active Unity scene during play mode; `GameBootstrap` resets Mono-owned player state and `GameRestartSystem` resets ECS-owned enemy state.
 

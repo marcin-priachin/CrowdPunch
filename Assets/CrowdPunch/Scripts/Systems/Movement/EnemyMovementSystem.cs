@@ -52,6 +52,7 @@ namespace CrowdPunch.Systems.Movement
                 ref PhysicsMass physicsMass,
                 EnabledRefRO<KnockbackRecovery> knockbackRecovery,
                 EnabledRefRO<RespawnRequest> respawnRequest,
+                in RespawnRequest respawnState,
                 in LocalTransform transform,
                 in DesiredMovement desiredMovement,
                 in EnemyMovementSettings movementSettings)
@@ -63,7 +64,11 @@ namespace CrowdPunch.Systems.Movement
 
                 if (respawnRequest.ValueRO)
                 {
-                    physicsVelocity.Linear = float3.zero;
+                    if (respawnState.IsPooled != 0)
+                    {
+                        physicsVelocity.Linear = float3.zero;
+                    }
+
                     return;
                 }
 

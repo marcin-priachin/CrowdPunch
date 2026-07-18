@@ -15,6 +15,8 @@ namespace CrowdPunch.Systems.Combat
     [UpdateAfter(typeof(InputBridge.PlayerBridgeSystem))]
     public partial struct PunchDetectionSystem : ISystem
     {
+        private const double MaxPendingPoolSeconds = 2d;
+
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
@@ -36,11 +38,12 @@ namespace CrowdPunch.Systems.Combat
             float3 punchDirection = math.normalizesafe(punchRequest.Direction);
             float radiusSquared = punchRequest.Radius * punchRequest.Radius;
             float pushDirectionPositionWeight = math.saturate(punchRequest.PushDirectionPositionWeight);
+            double forcePoolAt = SystemAPI.Time.ElapsedTime + MaxPendingPoolSeconds;
 
             foreach ((RefRO<LocalTransform> transform, Entity enemy) in
                      SystemAPI.Query<RefRO<LocalTransform>>()
                          .WithAll<Enemy>()
-                         .WithNone<RespawnRequest>()
+                         .WithNone<RespawnRequest, KnockbackRecovery>()
                          .WithEntityAccess())
             {
                 float3 toEnemy = transform.ValueRO.Position - punchRequest.Origin;
@@ -80,6 +83,15 @@ namespace CrowdPunch.Systems.Combat
                     Amount = punchRequest.Damage
                 });
                 SystemAPI.SetComponentEnabled<DamageRequest>(enemy, true);
+
+                SystemAPI.SetComponent(enemy, new RespawnRequest
+                {
+                    RespawnAt = 0d,
+                    IsPooled = 0,
+                    ForcePoolAt = forcePoolAt,
+                    FromPlayerPunch = 1
+                });
+                SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, true);
             }
 
             SystemAPI.SetComponentEnabled<PunchRequest>(punchEntity, false);

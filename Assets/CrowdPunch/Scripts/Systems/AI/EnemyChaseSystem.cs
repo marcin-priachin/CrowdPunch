@@ -1,7 +1,9 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
@@ -27,12 +29,27 @@ namespace CrowdPunch.Systems.AI
         {
             PlayerSnapshot playerSnapshot = SystemAPI.GetSingleton<PlayerSnapshot>();
             ArenaBounds arenaBounds = SystemAPI.GetSingleton<ArenaBounds>();
+            NativeList<float3> activeEnemyPositions = new NativeList<float3>(Allocator.TempJob);
 
-            new EnemyChaseJob
+            foreach ((RefRO<LocalTransform> transform, EnabledRefRO<RespawnRequest> respawnRequest) in
+                     SystemAPI.Query<RefRO<LocalTransform>, EnabledRefRO<RespawnRequest>>()
+                         .WithAll<Enemy>()
+                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
+            {
+                if (!respawnRequest.ValueRO)
+                {
+                    activeEnemyPositions.Add(transform.ValueRO.Position);
+                }
+            }
+
+            JobHandle chaseJob = new EnemyChaseJob
             {
                 PlayerSnapshot = playerSnapshot,
-                ArenaBounds = arenaBounds
-            }.ScheduleParallel();
+                ArenaBounds = arenaBounds,
+                EnemyPositions = activeEnemyPositions.AsDeferredJobArray()
+            }.ScheduleParallel(state.Dependency);
+
+            state.Dependency = activeEnemyPositions.Dispose(chaseJob);
         }
 
         [BurstCompile]
@@ -42,6 +59,7 @@ namespace CrowdPunch.Systems.AI
         {
             public PlayerSnapshot PlayerSnapshot;
             public ArenaBounds ArenaBounds;
+            [ReadOnly] public NativeArray<float3> EnemyPositions;
 
             private void Execute(
                 Entity entity,
@@ -62,17 +80,24 @@ namespace CrowdPunch.Systems.AI
 
                 float distanceToPlayer = math.length(toPlayer);
 
-                if (distanceToPlayer <= movementSettings.StoppingDistance)
-                {
-                    desiredMovement.Direction = float3.zero;
-                    desiredMovement.Speed = 0f;
-                    return;
-                }
-
                 if (distanceToPlayer <= movementSettings.ChargeDistance)
                 {
-                    desiredMovement.Direction = math.normalizesafe(toPlayer);
-                    desiredMovement.Speed = movementSettings.MoveSpeed * movementSettings.ChargeSpeedMultiplier;
+                    float3 surroundTarget = GetSurroundTarget(entity, transform.Position.y, movementSettings);
+                    float3 toTarget = surroundTarget - transform.Position;
+                    toTarget.y = 0f;
+
+                    float3 separation = GetSeparation(transform.Position, movementSettings);
+                    float targetDistance = math.length(toTarget);
+                    float3 targetDirection = targetDistance <= movementSettings.StoppingDistance
+                        ? float3.zero
+                        : toTarget / math.max(0.0001f, targetDistance);
+
+                    desiredMovement.Direction = math.normalizesafe(
+                        targetDirection + separation * math.max(0f, movementSettings.SeparationWeight),
+                        separation);
+                    desiredMovement.Speed = desiredMovement.Direction.Equals(float3.zero)
+                        ? 0f
+                        : movementSettings.MoveSpeed * movementSettings.ChargeSpeedMultiplier;
                     return;
                 }
 
@@ -82,6 +107,54 @@ namespace CrowdPunch.Systems.AI
                     movementSettings,
                     ref wanderDestination);
                 desiredMovement.Speed = movementSettings.WanderSpeed;
+            }
+
+            private float3 GetSurroundTarget(Entity entity, float y, EnemyMovementSettings movementSettings)
+            {
+                const float goldenAngle = 2.3999631f;
+
+                int slotIndex = math.max(0, entity.Index);
+                float angle = slotIndex * goldenAngle;
+                int ringIndex = slotIndex % 3;
+                float radius = math.max(
+                    movementSettings.StoppingDistance + 0.25f,
+                    movementSettings.SurroundDistance + ringIndex * math.max(0f, movementSettings.SurroundRingSpacing));
+                float2 offset = new float2(math.cos(angle), math.sin(angle)) * radius;
+
+                return new float3(
+                    PlayerSnapshot.Position.x + offset.x,
+                    y,
+                    PlayerSnapshot.Position.z + offset.y);
+            }
+
+            private float3 GetSeparation(float3 position, EnemyMovementSettings movementSettings)
+            {
+                float separationDistance = math.max(0f, movementSettings.SeparationDistance);
+                float separationDistanceSq = separationDistance * separationDistance;
+                float3 separation = float3.zero;
+
+                if (separationDistanceSq <= 0f)
+                {
+                    return separation;
+                }
+
+                for (int index = 0; index < EnemyPositions.Length; index++)
+                {
+                    float3 away = position - EnemyPositions[index];
+                    away.y = 0f;
+                    float distanceSq = math.lengthsq(away);
+
+                    if (distanceSq <= 0.0001f || distanceSq >= separationDistanceSq)
+                    {
+                        continue;
+                    }
+
+                    float distance = math.sqrt(distanceSq);
+                    float strength = 1f - distance / separationDistance;
+                    separation += away / math.max(0.0001f, distance) * strength;
+                }
+
+                return math.normalizesafe(separation);
             }
 
             private float3 GetWanderDirection(

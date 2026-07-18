@@ -23,7 +23,11 @@ namespace CrowdPunch.Bakers
                 Acceleration = authoring.Acceleration,
                 BrakingAcceleration = authoring.BrakingAcceleration,
                 TurnSpeed = authoring.TurnSpeed,
-                StoppingDistance = authoring.StoppingDistance
+                StoppingDistance = authoring.StoppingDistance,
+                SurroundDistance = authoring.SurroundDistance,
+                SurroundRingSpacing = authoring.SurroundRingSpacing,
+                SeparationDistance = authoring.SeparationDistance,
+                SeparationWeight = authoring.SeparationWeight
             });
             AddComponent<DesiredMovement>(entity);
             AddComponent<WanderDestination>(entity);

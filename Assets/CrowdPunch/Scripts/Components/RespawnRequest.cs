@@ -9,5 +9,7 @@ namespace CrowdPunch.Components
     {
         public double RespawnAt;
         public byte IsPooled;
+        public double ForcePoolAt;
+        public byte FromPlayerPunch;
     }
 }

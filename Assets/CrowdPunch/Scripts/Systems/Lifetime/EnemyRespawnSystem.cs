@@ -16,6 +16,10 @@ namespace CrowdPunch.Systems.Lifetime
     [UpdateAfter(typeof(OutOfBoundsSystem))]
     public partial struct EnemyRespawnSystem : ISystem
     {
+        private const double RespawnDelaySeconds = 5d;
+        private const float PoolSpeedThreshold = 0.75f;
+        private const float PendingPoolBrakingAcceleration = 18f;
+
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
@@ -37,7 +41,6 @@ namespace CrowdPunch.Systems.Lifetime
                          RefRW<Health> health,
                          RefRW<HealthBar> healthBar,
                          RefRW<DesiredMovement> desiredMovement,
-                         RefRW<WanderDestination> wanderDestination,
                          RefRW<PhysicsVelocity> physicsVelocity,
                          Entity enemy) in
                      SystemAPI.Query<RefRW<RespawnRequest>,
@@ -45,26 +48,36 @@ namespace CrowdPunch.Systems.Lifetime
                              RefRW<Health>,
                              RefRW<HealthBar>,
                              RefRW<DesiredMovement>,
-                             RefRW<WanderDestination>,
                              RefRW<PhysicsVelocity>>()
                          .WithAll<Enemy>()
                          .WithEntityAccess())
             {
-                physicsVelocity.ValueRW = default;
                 desiredMovement.ValueRW = default;
-                wanderDestination.ValueRW = default;
 
                 if (respawnRequest.ValueRO.IsPooled == 0)
                 {
+                    if (!IsReadyToPool(
+                            elapsedTime,
+                            respawnRequest.ValueRO,
+                            SystemAPI.IsComponentEnabled<KnockbackRecovery>(enemy),
+                            ref physicsVelocity.ValueRW,
+                            SystemAPI.Time.DeltaTime))
+                    {
+                        continue;
+                    }
+
                     transform.ValueRW.Position = GetPoolPosition(arenaBounds);
+                    physicsVelocity.ValueRW = default;
                     health.ValueRW.Current = health.ValueRO.Max;
                     healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
                     respawnRequest.ValueRW.IsPooled = 1;
+                    respawnRequest.ValueRW.RespawnAt = elapsedTime + RespawnDelaySeconds;
                     DisableTransientState(ref state, enemy);
                 }
 
                 if (elapsedTime < respawnRequest.ValueRO.RespawnAt)
                 {
+                    physicsVelocity.ValueRW = default;
                     transform.ValueRW.Position = GetPoolPosition(arenaBounds);
                     continue;
                 }
@@ -75,9 +88,41 @@ namespace CrowdPunch.Systems.Lifetime
                 Random random = Random.CreateFromIndex(seed);
 
                 transform.ValueRW.Position = GetRespawnPosition(ref random, arenaBounds, playerSnapshot);
+                physicsVelocity.ValueRW = default;
                 respawnRequest.ValueRW = default;
                 SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, false);
             }
+        }
+
+        private static bool IsReadyToPool(
+            double elapsedTime,
+            RespawnRequest respawnRequest,
+            bool isRecoveringFromKnockback,
+            ref PhysicsVelocity physicsVelocity,
+            float deltaTime)
+        {
+            if (elapsedTime >= respawnRequest.ForcePoolAt)
+            {
+                return true;
+            }
+
+            if (isRecoveringFromKnockback)
+            {
+                return false;
+            }
+
+            float2 horizontalVelocity = physicsVelocity.Linear.xz;
+            float speed = math.length(horizontalVelocity);
+            if (speed <= PoolSpeedThreshold)
+            {
+                physicsVelocity.Linear.xz = float2.zero;
+                return true;
+            }
+
+            float nextSpeed = math.max(0f, speed - PendingPoolBrakingAcceleration * deltaTime);
+            physicsVelocity.Linear.xz = horizontalVelocity / math.max(0.0001f, speed) * nextSpeed;
+
+            return false;
         }
 
         private void DisableTransientState(ref SystemState state, Entity enemy)

@@ -15,5 +15,9 @@ namespace CrowdPunch.Components
         public float BrakingAcceleration;
         public float TurnSpeed;
         public float StoppingDistance;
+        public float SurroundDistance;
+        public float SurroundRingSpacing;
+        public float SeparationDistance;
+        public float SeparationWeight;
     }
 }

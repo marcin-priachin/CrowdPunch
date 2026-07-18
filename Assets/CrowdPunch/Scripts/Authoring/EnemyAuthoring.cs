@@ -15,6 +15,10 @@ namespace CrowdPunch.Authoring
         [SerializeField] private float brakingAcceleration = 8f;
         [SerializeField] private float turnSpeed = 12f;
         [SerializeField] private float stoppingDistance = 1.25f;
+        [SerializeField] private float surroundDistance = 3.5f;
+        [SerializeField] private float surroundRingSpacing = 0.75f;
+        [SerializeField] private float separationDistance = 1.35f;
+        [SerializeField] private float separationWeight = 1.4f;
         [SerializeField] private float maxHealth = 30f;
         [SerializeField, Range(0f, 1f)] private float contactDamagePercent = 0.05f;
         [SerializeField] private float contactPushStrength = 10f;
@@ -44,6 +48,18 @@ namespace CrowdPunch.Authoring
 
         /// <summary>Distance from the player where the enemy should stop closing in.</summary>
         public float StoppingDistance => stoppingDistance;
+
+        /// <summary>Preferred distance from the player while charging.</summary>
+        public float SurroundDistance => surroundDistance;
+
+        /// <summary>Offset between deterministic surrounding rings.</summary>
+        public float SurroundRingSpacing => surroundRingSpacing;
+
+        /// <summary>Preferred minimum distance from nearby enemies.</summary>
+        public float SeparationDistance => separationDistance;
+
+        /// <summary>Strength of local enemy separation while chasing.</summary>
+        public float SeparationWeight => separationWeight;
 
         /// <summary>Initial and maximum enemy health.</summary>
         public float MaxHealth => maxHealth;
