@@ -226,7 +226,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Camera.CameraFollow
   target: {fileID: 1430478226}
-  offset: {x: 0, y: 20, z: -18}
+  offset: {x: 0, y: 6, z: -18}
+  targetOffset: {x: 0, y: 2.59, z: 0}
+  horizontalLookSensitivity: 0.15
   followSharpness: 12
 --- !u!114 &963194230
 MonoBehaviour:
@@ -476,18 +478,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.PlayerController
   ecsBridge: {fileID: 1430478229}
-  playerPunch: {fileID: 0}
   playerHealth: {fileID: 0}
   moveAction: {fileID: -1680190386980627800, guid: 289c1b55c9541489481df5cc06664110, type: 3}
+  movementCamera: {fileID: 0}
   playerRadius: 0.5
   moveSpeed: 12
   knockbackDamping: 14
-  touchStickRadiusPixels: 140
-  touchDeadZonePixels: 18
-  aimLineLength: 3
-  aimLineHeight: 0.08
-  fallbackAimLineWidth: 0.08
-  aimLineColor: {r: 0, g: 0.18087423, b: 0.754717, a: 0.5176471}
 --- !u!114 &1430478229
 MonoBehaviour:
   m_ObjectHideFlags: 0
