@@ -1,6 +1,17 @@
-# CrowdPunch Agent Guide
+# Crowd Punch Agent Guide
 
-This repository is a Unity 6 learning project for hybrid DOTS architecture. The goal is to keep a traditional GameObject player and simulate many small enemies with Entities 1.x and Unity Physics.
+## Sources Of Truth
+
+Read the relevant documents before implementing gameplay:
+
+1. `Docs/Design/GDD.md` defines accepted gameplay rules.
+2. `Docs/Design/OpenQuestions.md` lists decisions that are intentionally unresolved.
+3. `Docs/Architecture/CurrentArchitecture.md` describes the repository as it exists now.
+4. This file defines how agents work in the repository.
+
+Use requirement IDs from the GDD in plans, implementation notes, and tests. `Must` rules are mandatory, `Should` rules are defaults that require an explicit reason to deviate, and `May` rules are permitted rather than required. Never silently resolve an open question. Ask the user when it blocks the requested slice; otherwise keep the implementation neutral and record the dependency.
+
+This repository began as a Unity 6 hybrid DOTS learning project and is now the implementation base for Crowd Punch. Keep the traditional GameObject player and simulate large enemy crowds with Entities 1.x and Unity Physics.
 
 Future agents should preserve the architecture first. Do not turn this into a finished game by collapsing responsibilities into large scripts.
 
@@ -9,7 +20,7 @@ Future agents should preserve the architecture first. Do not turn this into a fi
 - Unity version target: Unity 6.
 - ECS packages: Entities 1.x, Unity Physics, Burst, Mathematics.
 - Hybrid boundary: the large player, camera, and UI stay as MonoBehaviours; enemies are ECS entities.
-- Learning goal: code should clearly demonstrate ECS concepts and update flow.
+- Architecture goal: code should keep ECS ownership and update flow explicit enough to inspect, profile, and extend safely.
 - Avoid packages not already part of the architecture: Netcode, Havok, CharacterController package, and third-party gameplay libraries.
 
 ## Source Layout
@@ -152,6 +163,23 @@ When changing code:
 - If adding new files and the project file is stale, tell the user to let Unity refresh assets and confirm in the Unity Console.
 - For scene/prefab setup issues, inspect serialized scene/prefab files when possible, but clearly separate code problems from Unity Editor configuration problems.
 
+For gameplay work:
+
+- Implement the smallest vertical behavior slice that proves the requested rule.
+- Verify direction, timing, collision propagation, and recovery independently when applicable.
+- Profile changes that affect crowd queries, collision events, spawning, or presentation at representative crowd sizes.
+- Do not treat a successful C# build as proof of correct Unity baking, system order, physics, or scene wiring.
+- Update `Docs/Architecture/CurrentArchitecture.md` when component ownership, bridge data, system ordering, or major data flow changes.
+- Update the GDD only when the user has made a design decision, not merely because an implementation happens to behave a certain way.
+
 ## Design Bias
 
 Prefer simple, explicit ECS data flow over clever abstractions. This project exists to teach architecture, so each system should make ownership and timing obvious.
+
+Protect the game's design constraints while implementing:
+
+- The core verb is launching enemies into other enemies and environmental opportunities.
+- Normal enemies remain readable through behavior and appearance, without individual health bars, markers, or status UI.
+- Keep controls and non-crowd mechanics clean and simple; complexity should emerge primarily from physical crowd interactions and effect combinations.
+- Do not add conventional attack-combo strings, automatic attacks on dash contact, direct boss damage, permanent weapon ownership, progression systems, or additional HUD elements unless an accepted GDD rule requires them.
+- The player should normally have access to the game's fundamental mechanics from the beginning. Weapons are the explicit exception and remain design-dependent.
