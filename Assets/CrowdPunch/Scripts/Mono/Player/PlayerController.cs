@@ -1,3 +1,4 @@
+using CrowdPunch.Configuration;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -11,14 +12,9 @@ namespace CrowdPunch.Mono.Player
     {
         [SerializeField] private PlayerEcsBridge ecsBridge;
         [SerializeField] private PlayerHealth playerHealth;
-        [SerializeField] private InputActionReference moveAction;
         [SerializeField] private Transform movementCamera;
-        [SerializeField] private float playerRadius = 1.5f;
-        [SerializeField] private float moveSpeed = 6f;
-        [SerializeField] private float dashDistance = 5f;
-        [SerializeField] private float dashDuration = 0.15f;
-        [SerializeField] private float dashCooldown = 0.1f;
-        [SerializeField] private float knockbackDamping = 14f;
+        [SerializeField] private PlayerMovementSettings settings;
+        private InputAction moveAction;
         private InputAction dashAction;
         private Vector3 dashDirection;
         private float dashTimeRemaining;
@@ -36,6 +32,13 @@ namespace CrowdPunch.Mono.Player
 
         private void Awake()
         {
+            if (settings == null)
+            {
+                Debug.LogError($"{nameof(PlayerController)} requires {nameof(PlayerMovementSettings)}.", this);
+                enabled = false;
+                return;
+            }
+
             if (ecsBridge == null)
             {
                 ecsBridge = GetComponent<PlayerEcsBridge>();
@@ -51,7 +54,8 @@ namespace CrowdPunch.Mono.Player
                 movementCamera = UnityEngine.Camera.main.transform;
             }
 
-            dashAction = InputSystem.actions?.FindAction("Player/Dash");
+            moveAction = settings.FindMoveAction();
+            dashAction = settings.FindDashAction();
 
             initialPosition = transform.position;
             initialRotation = transform.rotation;
@@ -72,13 +76,13 @@ namespace CrowdPunch.Mono.Player
 
         private void OnEnable()
         {
-            moveAction?.action.Enable();
+            moveAction?.Enable();
             dashAction?.Enable();
         }
 
         private void OnDisable()
         {
-            moveAction?.action.Disable();
+            moveAction?.Disable();
             dashAction?.Disable();
         }
 
@@ -94,7 +98,7 @@ namespace CrowdPunch.Mono.Player
         {
             Vector2 moveInput = moveAction == null
                 ? Vector2.zero
-                : moveAction.action.ReadValue<Vector2>();
+                : moveAction.ReadValue<Vector2>();
 
             Vector3 cameraForward = movementCamera == null ? Vector3.forward : movementCamera.forward;
             cameraForward.y = 0f;
@@ -111,28 +115,28 @@ namespace CrowdPunch.Mono.Player
             if (dashAction != null && dashAction.WasPressedThisFrame() && Time.time >= nextDashTime)
             {
                 dashDirection = movement.sqrMagnitude > 0.001f ? movement.normalized : cameraForward;
-                dashTimeRemaining = Mathf.Max(0f, dashDuration);
-                nextDashTime = Time.time + dashTimeRemaining + Mathf.Max(0f, dashCooldown);
+                dashTimeRemaining = settings.DashDuration;
+                nextDashTime = Time.time + dashTimeRemaining + settings.DashCooldown;
             }
 
-            Vector3 playerDisplacement = Time.deltaTime * moveSpeed * movement;
+            Vector3 playerDisplacement = Time.deltaTime * settings.MoveSpeed * movement;
             if (dashTimeRemaining > 0f)
             {
-                float safeDashDuration = Mathf.Max(0.001f, dashDuration);
+                float safeDashDuration = Mathf.Max(0.001f, settings.DashDuration);
                 float dashStep = Mathf.Min(Time.deltaTime, dashTimeRemaining);
-                playerDisplacement = dashStep * (dashDistance / safeDashDuration) * dashDirection;
+                playerDisplacement = dashStep * (settings.DashDistance / safeDashDuration) * dashDirection;
                 dashTimeRemaining -= dashStep;
             }
 
             transform.position += playerDisplacement + Time.deltaTime * knockbackVelocity;
-            knockbackVelocity = Vector3.MoveTowards(knockbackVelocity, Vector3.zero, knockbackDamping * Time.deltaTime);
+            knockbackVelocity = Vector3.MoveTowards(knockbackVelocity, Vector3.zero, settings.KnockbackDamping * Time.deltaTime);
 
             if (cameraForward.sqrMagnitude > 0.001f)
             {
                 transform.forward = cameraForward;
             }
 
-            ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, playerRadius);
+            ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, settings.PlayerRadius);
         }
 
         private void ApplyKnockback(Vector3 impulse)
@@ -147,7 +151,7 @@ namespace CrowdPunch.Mono.Player
             nextDashTime = 0f;
             knockbackVelocity = Vector3.zero;
             transform.SetPositionAndRotation(initialPosition, initialRotation);
-            ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, playerRadius);
+            ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, settings.PlayerRadius);
         }
     }
 }

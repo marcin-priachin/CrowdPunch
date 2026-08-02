@@ -11,22 +11,28 @@ namespace CrowdPunch.Bakers
     {
         public override void Bake(GameSettingsAuthoring authoring)
         {
+            if (authoring.Settings == null)
+            {
+                return;
+            }
+
+            DependsOn(authoring.Settings);
             Entity entity = GetEntity(TransformUsageFlags.None);
 
             AddComponent(entity, new MatchState
             {
-                IsRunning = authoring.StartRunning,
+                IsRunning = authoring.Settings.StartRunning,
                 ElapsedSeconds = 0f
             });
             AddComponent<PlayerSnapshot>(entity);
             AddComponent<PlayerHealthSnapshot>(entity);
             AddComponent(entity, new EnemyLaunchSettings
             {
-                MinimumPropagationRelativeSpeed = authoring.MinimumPropagationRelativeSpeed,
-                PropagatedVelocityFactor = authoring.PropagatedVelocityFactor,
-                UsefulMomentumSpeed = authoring.UsefulMomentumSpeed,
-                LowMomentumPeriod = authoring.LowMomentumPeriod,
-                RecoveryDuration = authoring.RecoveryDuration
+                MinimumPropagationRelativeSpeed = authoring.Settings.MinimumPropagationRelativeSpeed,
+                PropagatedVelocityFactor = authoring.Settings.PropagatedVelocityFactor,
+                UsefulMomentumSpeed = authoring.Settings.UsefulMomentumSpeed,
+                LowMomentumPeriod = authoring.Settings.LowMomentumPeriod,
+                RecoveryDuration = authoring.Settings.RecoveryDuration
             });
             AddComponent<PunchRequest>(entity);
             SetComponentEnabled<PunchRequest>(entity, false);

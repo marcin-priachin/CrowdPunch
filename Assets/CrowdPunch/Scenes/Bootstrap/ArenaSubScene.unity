@@ -148,9 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 497bdcffb85c07a43919e5357daef23d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SpawnerAuthoring
-  enemyPrefab: {fileID: 8618196010151164906, guid: 3e70fb2e89b01674f95633e429f13253, type: 3}
-  initialCount: 500
-  spawnRadius: 100
+  settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
 --- !u!4 &593808583
 Transform:
   m_ObjectHideFlags: 0
@@ -352,12 +350,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 539b143591e3f2c4995b89defcb5128d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GameSettingsAuthoring
-  startRunning: 1
-  minimumPropagationRelativeSpeed: 1.5
-  propagatedVelocityFactor: 0.8
-  usefulMomentumSpeed: 2
-  lowMomentumPeriod: 0.25
-  recoveryDuration: 0.6
+  settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000024, type: 2}
 --- !u!4 &1438744935
 Transform:
   m_ObjectHideFlags: 0

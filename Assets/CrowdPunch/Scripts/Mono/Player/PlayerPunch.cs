@@ -1,3 +1,4 @@
+using CrowdPunch.Configuration;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,17 +11,13 @@ namespace CrowdPunch.Mono.Player
     public sealed class PlayerPunch : MonoBehaviour
     {
         [SerializeField] private PlayerEcsBridge ecsBridge;
-        [SerializeField] private InputActionReference attackAction;
         [SerializeField] private Transform punchOrigin;
-        [SerializeField] private float punchRadius = 2f;
-        [SerializeField] private float punchRange = 3f;
-        [SerializeField] private float punchStrength = 12f;
-        [SerializeField] private float punchDamage = 10f;
-        [SerializeField, Range(0f, 1f)] private float pushDirectionPositionWeight = 1f;
+        [SerializeField] private PlayerPunchSettings settings;
 
         private PunchTrajectoryPreview trajectoryPreview;
+        private InputAction attackAction;
 
-        public float PunchRadius => punchRadius;
+        public float PunchRadius => settings == null ? 0f : settings.Radius;
 
         private void Reset()
         {
@@ -29,10 +26,19 @@ namespace CrowdPunch.Mono.Player
 
         private void Awake()
         {
+            if (settings == null)
+            {
+                Debug.LogError($"{nameof(PlayerPunch)} requires {nameof(PlayerPunchSettings)}.", this);
+                enabled = false;
+                return;
+            }
+
             if (ecsBridge == null)
             {
                 ecsBridge = GetComponent<PlayerEcsBridge>();
             }
+
+            attackAction = settings.FindAttackAction();
 
             trajectoryPreview = GetComponent<PunchTrajectoryPreview>();
             if (trajectoryPreview == null)
@@ -43,12 +49,12 @@ namespace CrowdPunch.Mono.Player
 
         private void OnEnable()
         {
-            attackAction?.action.Enable();
+            attackAction?.Enable();
         }
 
         private void OnDisable()
         {
-            attackAction?.action.Disable();
+            attackAction?.Disable();
             ecsBridge?.ClearPunchPreview();
         }
 
@@ -56,7 +62,7 @@ namespace CrowdPunch.Mono.Player
         {
             PublishPunchPreview();
 
-            if (attackAction == null || !attackAction.action.WasPressedThisFrame())
+            if (attackAction == null || !attackAction.WasPressedThisFrame())
             {
                 return;
             }
@@ -70,10 +76,10 @@ namespace CrowdPunch.Mono.Player
             ecsBridge.PublishPunchPreview(
                 originTransform.position,
                 originTransform.forward,
-                punchRadius,
-                punchRange,
+                settings.Radius,
+                settings.Range,
                 trajectoryPreview.LineLength,
-                pushDirectionPositionWeight);
+                settings.DirectionPositionWeight);
         }
 
         public void RequestPunch()
@@ -85,11 +91,11 @@ namespace CrowdPunch.Mono.Player
             ecsBridge.PublishPunch(
                 origin,
                 direction,
-                punchRadius,
-                punchRange,
-                punchStrength,
-                punchDamage,
-                pushDirectionPositionWeight);
+                settings.Radius,
+                settings.Range,
+                settings.Strength,
+                settings.Damage,
+                settings.DirectionPositionWeight);
         }
     }
 }

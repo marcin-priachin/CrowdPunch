@@ -459,13 +459,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.PlayerPunch
   ecsBridge: {fileID: 1430478229}
-  attackAction: {fileID: 1120369429361536294, guid: 289c1b55c9541489481df5cc06664110, type: 3}
   punchOrigin: {fileID: 1430478226}
-  punchRadius: 2
-  punchRange: 8
-  punchStrength: 90
-  punchDamage: 10
-  pushDirectionPositionWeight: 0
+  settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000022, type: 2}
 --- !u!114 &1430478228
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -480,14 +475,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.PlayerController
   ecsBridge: {fileID: 1430478229}
   playerHealth: {fileID: 0}
-  moveAction: {fileID: -1680190386980627800, guid: 289c1b55c9541489481df5cc06664110, type: 3}
   movementCamera: {fileID: 0}
-  playerRadius: 0.5
-  moveSpeed: 12
-  dashDistance: 5
-  dashDuration: 0.15
-  dashCooldown: 0.1
-  knockbackDamping: 14
+  settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000021, type: 2}
 --- !u!114 &1430478229
 MonoBehaviour:
   m_ObjectHideFlags: 0

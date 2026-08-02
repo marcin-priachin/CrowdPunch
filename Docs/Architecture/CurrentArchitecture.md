@@ -26,6 +26,7 @@ All game code is under `Assets/CrowdPunch/Scripts`:
 
 - `Mono` — GameObject player, camera, UI, and bridge registry.
 - `Authoring` — inspector-facing baking inputs.
+- `Configuration` — reusable ScriptableObject tuning consumed by scene-facing MonoBehaviours and bakers.
 - `Bakers` — conversion from authoring objects to ECS components.
 - `Components` — data-only ECS state and requests.
 - `Systems` — initialization, bridge, AI, movement, combat, physics, lifetime, and presentation.
@@ -110,7 +111,7 @@ Frequently toggled state is represented by enableable components to avoid archet
 
 Enemy launch lifecycle is represented by the non-enableable `EnemyLaunchState` component because every enemy is always in exactly one of `Active`, `Launched`, or `Recovering`. Its last cause and propagated-launch count are retained as lightweight development-facing data visible in the Entities inspector. `Defeated` is intentionally absent because OQ-004 does not yet define defeat or health/lifecycle semantics.
 
-`EnemyLaunchSettings` is baked as scene-level singleton configuration by `GameSettingsAuthoring`. Its values are provisional sandbox tuning for OQ-004/OQ-005: minimum propagation relative speed, propagated velocity factor, useful-momentum threshold and dwell, and recovery duration.
+`GameSettingsAuthoring` reads reusable `GameRuntimeSettings` ScriptableObject data and bakes `EnemyLaunchSettings` as scene-level singleton configuration. Its launch values are provisional sandbox tuning for OQ-004/OQ-005: minimum propagation relative speed, propagated velocity factor, useful-momentum threshold and dwell, and recovery duration. Player movement and punch settings assets also own their Input System asset/action selection, while `EnemySpawnSettings` owns the enemy prefab and initial crowd tuning. Scene MonoBehaviours retain only scene-instance wiring such as bridges, cameras, and origin transforms.
 
 Systems get the entity for mixed singleton state through a non-enableable component such as `PlayerSnapshot` or `MatchState`, then inspect or toggle enableable state explicitly.
 
