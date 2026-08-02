@@ -90,7 +90,7 @@ The player should be able to use every fundamental mechanic from the beginning o
 
 Status: Must
 
-The player can move freely and use a directional dash for rapid repositioning.
+The player can move freely and use a directional dash for rapid repositioning. While dashing, the player faces the committed dash direction rather than camera-forward.
 
 ### PLAYER-003 — Attack Direction Preview
 
@@ -109,8 +109,12 @@ When an attack is committed, the player should not be uncertain about its initia
 Status: Must
 
 - Punch input during dash is buffered.
-- A dash punch cannot begin before the midpoint of the dash.
+- A punch requested before the dash midpoint is buffered and begins once normalized dash progress reaches `0.5`.
+- A punch requested at or after the midpoint begins immediately when normal punch eligibility permits it.
+- A punch begun during a dash uses the committed dash direction as its attack direction.
+- Dash punches have independently configurable launch strength and damage from normal punches while retaining the normal targeting and resolution pipeline.
 - Beginning the dash punch ends dash movement.
+- A buffered punch is discarded if the dash ends or is interrupted before it can execute, and cannot carry into a later dash.
 - Merely contacting an enemy while dashing does not automatically attack it.
 
 ### PLAYER-006 — Conventional Combos
@@ -124,6 +128,12 @@ Do not add conventional multi-button or timing-string attack combos. Combination
 Status: Must
 
 Movement, aiming, weapons, progression, and other non-crowd mechanics must not accumulate complexity merely to match the depth produced by crowd combinations.
+
+### PLAYER-008 — Punch Area Feedback
+
+Status: Must
+
+When a normal or dash-buffered punch begins, show a semitransparent world-space shape matching the committed punch area for `0.5` seconds. The shape retains the punch's committed world-space origin and direction for its full display interval, including the committed dash direction for a dash punch.
 
 ## Combat And Crowd Physics
 

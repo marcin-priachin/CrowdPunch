@@ -17,7 +17,8 @@ MonoBehaviour:
   dashActionName: Player/Dash
   playerRadius: 0.5
   moveSpeed: 12
-  dashDistance: 5
-  dashDuration: 0.15
+  dashDistance: 10
+  dashDuration: 0.3
+  dashPunchMidpointNormalized: 1
   dashCooldown: 0.1
   knockbackDamping: 14

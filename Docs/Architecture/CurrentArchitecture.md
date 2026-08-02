@@ -40,7 +40,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 
 | Concern | Current owner | Boundary/data |
 |---|---|---|
-| Input and player transform | GameObject | `PlayerController`, `PlayerPunch` |
+| Input, player transform, and dash-punch coordination | GameObject | `PlayerController` owns dash timing/cancellation; `PlayerPunch` owns attack input/buffering |
 | Player health and invincibility | GameObject | `PlayerHealth` |
 | Camera | GameObject | `CameraFollow` |
 | Scene bootstrap and UI | GameObject | `GameBootstrap`, UI MonoBehaviours |
@@ -51,6 +51,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Enemy intent and movement | ECS | `DesiredMovement`, Unity Physics velocity |
 | Enemy combat state | ECS | health, damage, impulse, explicit launch lifecycle, death/respawn requests |
 | Punch trajectory preview | ECS → bridge → GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
+| Committed punch-area feedback | GameObject | `PlayerPunch` triggers `PunchAreaFeedback` from the same origin, direction, radius, and range published to ECS |
 
 MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exposes the one active `PlayerEcsBridge` to the few managed systems that cross the boundary.
 
@@ -121,7 +122,7 @@ The current implementation proves architecture and basic interactions, but sever
 
 - Punch detection uses a line/capsule-like distance test and immediately assigns impulse, damage, and launched state.
 - Player movement and dash are transform-driven MonoBehaviour movement.
-- Dash exists, but the accepted buffered dash-punch rule is not implemented yet.
+- Dash-punch coordination stays on the player GameObject: `PlayerPunch` buffers an early press, while `PlayerController` reports normalized progress from its existing dash timer and ends dash movement when the punch is consumed at or after the configured `0.5` midpoint. Dash punches select independently configured damage and launch strength, then use the ordinary bridge and ECS punch pipeline.
 - A launched enemy can propagate launched state to an active or recovering enemy when Unity Physics reports a solver-estimated contact impulse above the authored threshold. Unity Physics exclusively owns the resulting velocities; the gameplay system does not add a second synthetic transfer. The target becomes launched immediately, which also prevents a sustained contact from propagating repeatedly. The final damage/effect grammar remains unresolved.
 - Enemy chasing and contact damage exist as prototype behavior.
 - A player health bar exists and is consistent with the GDD; ECS enemy health-bar presentation data exists but conflicts with the no-normal-enemy-UI rule if displayed.

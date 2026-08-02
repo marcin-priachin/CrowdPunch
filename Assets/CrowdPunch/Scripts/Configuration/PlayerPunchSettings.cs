@@ -14,13 +14,19 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float range = 3f;
         [SerializeField, Min(0f)] private float strength = 12f;
         [SerializeField, Min(0f)] private float damage = 10f;
+        [SerializeField, Min(0f)] private float dashStrength = 12f;
+        [SerializeField, Min(0f)] private float dashDamage = 10f;
         [SerializeField, Range(0f, 1f)] private float directionPositionWeight = 1f;
+        [SerializeField, Min(0f)] private float areaFeedbackDuration = 0.5f;
 
         public float Radius => radius;
         public float Range => range;
         public float Strength => strength;
         public float Damage => damage;
+        public float DashStrength => dashStrength;
+        public float DashDamage => dashDamage;
         public float DirectionPositionWeight => directionPositionWeight;
+        public float AreaFeedbackDuration => areaFeedbackDuration;
 
         public InputAction FindAttackAction()
         {

@@ -1,3 +1,4 @@
+using System;
 using CrowdPunch.Configuration;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -8,6 +9,7 @@ namespace CrowdPunch.Mono.Player
     /// Traditional GameObject player movement controller.
     /// </summary>
     [RequireComponent(typeof(PlayerEcsBridge))]
+    [DefaultExecutionOrder(-100)]
     public sealed class PlayerController : MonoBehaviour
     {
         [SerializeField] private PlayerEcsBridge ecsBridge;
@@ -18,10 +20,26 @@ namespace CrowdPunch.Mono.Player
         private InputAction dashAction;
         private Vector3 dashDirection;
         private float dashTimeRemaining;
+        private bool dashActive;
         private float nextDashTime;
         private Vector3 knockbackVelocity;
         private Vector3 initialPosition;
         private Quaternion initialRotation;
+
+        public event Action DashStarted;
+        public event Action DashPunchMidpointReached;
+        public event Action DashEnded;
+
+        public bool IsDashing => dashActive;
+
+        public float NormalizedDashProgress
+        {
+            get
+            {
+                float duration = settings == null ? 0f : settings.DashDuration;
+                return duration <= 0f ? 1f : Mathf.Clamp01(1f - dashTimeRemaining / duration);
+            }
+        }
 
         private void Reset()
         {
@@ -84,6 +102,7 @@ namespace CrowdPunch.Mono.Player
         {
             moveAction?.Disable();
             dashAction?.Disable();
+            EndDash();
         }
 
         private void OnDestroy()
@@ -116,24 +135,59 @@ namespace CrowdPunch.Mono.Player
             {
                 dashDirection = movement.sqrMagnitude > 0.001f ? movement.normalized : cameraForward;
                 dashTimeRemaining = settings.DashDuration;
+                dashActive = true;
                 nextDashTime = Time.time + dashTimeRemaining + settings.DashCooldown;
+                DashStarted?.Invoke();
             }
 
+            Vector3 facingDirection = IsDashing ? dashDirection : cameraForward;
             Vector3 playerDisplacement = Time.deltaTime * settings.MoveSpeed * movement;
-            if (dashTimeRemaining > 0f)
+            if (IsDashing && dashTimeRemaining <= 0f)
+            {
+                DashPunchMidpointReached?.Invoke();
+                EndDash();
+            }
+            else if (IsDashing)
             {
                 float safeDashDuration = Mathf.Max(0.001f, settings.DashDuration);
+                float previousProgress = NormalizedDashProgress;
                 float dashStep = Mathf.Min(Time.deltaTime, dashTimeRemaining);
-                playerDisplacement = dashStep * (settings.DashDistance / safeDashDuration) * dashDirection;
-                dashTimeRemaining -= dashStep;
+                float midpoint = settings.DashPunchMidpointNormalized;
+                float stepBeforeMidpoint = dashStep;
+                if (previousProgress < midpoint)
+                {
+                    float secondsUntilMidpoint = (midpoint - previousProgress) * safeDashDuration;
+                    stepBeforeMidpoint = Mathf.Min(dashStep, secondsUntilMidpoint);
+                }
+
+                float dashSpeed = settings.DashDistance / safeDashDuration;
+                playerDisplacement = stepBeforeMidpoint * dashSpeed * dashDirection;
+                dashTimeRemaining -= stepBeforeMidpoint;
+
+                if (previousProgress < midpoint && NormalizedDashProgress >= midpoint)
+                {
+                    DashPunchMidpointReached?.Invoke();
+                }
+
+                if (IsDashing)
+                {
+                    float stepAfterMidpoint = dashStep - stepBeforeMidpoint;
+                    playerDisplacement += stepAfterMidpoint * dashSpeed * dashDirection;
+                    dashTimeRemaining -= stepAfterMidpoint;
+
+                    if (dashTimeRemaining <= 0f)
+                    {
+                        EndDash();
+                    }
+                }
             }
 
             transform.position += playerDisplacement + Time.deltaTime * knockbackVelocity;
             knockbackVelocity = Vector3.MoveTowards(knockbackVelocity, Vector3.zero, settings.KnockbackDamping * Time.deltaTime);
 
-            if (cameraForward.sqrMagnitude > 0.001f)
+            if (facingDirection.sqrMagnitude > 0.001f)
             {
-                transform.forward = cameraForward;
+                transform.forward = facingDirection;
             }
 
             ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, settings.PlayerRadius);
@@ -144,10 +198,36 @@ namespace CrowdPunch.Mono.Player
             knockbackVelocity += new Vector3(impulse.x, 0f, impulse.z);
         }
 
-        public void ResetPlayerState()
+        public bool TryCancelDashForPunch(out Vector3 committedDashDirection)
         {
+            if (!IsDashing || NormalizedDashProgress < settings.DashPunchMidpointNormalized)
+            {
+                committedDashDirection = Vector3.zero;
+                return false;
+            }
+
+            committedDashDirection = dashDirection;
+            EndDash();
+            return true;
+        }
+
+        private void EndDash()
+        {
+            if (!IsDashing)
+            {
+                return;
+            }
+
             dashDirection = Vector3.zero;
             dashTimeRemaining = 0f;
+            dashActive = false;
+            DashEnded?.Invoke();
+        }
+
+        public void ResetPlayerState()
+        {
+            EndDash();
+            dashDirection = Vector3.zero;
             nextDashTime = 0f;
             knockbackVelocity = Vector3.zero;
             transform.SetPositionAndRotation(initialPosition, initialRotation);

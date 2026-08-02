@@ -16,6 +16,9 @@ MonoBehaviour:
   attackActionName: Player/Attack
   radius: 2
   range: 8
-  strength: 120
+  strength: 90
   damage: 10
+  dashStrength: 130
+  dashDamage: 15
   directionPositionWeight: 0
+  areaFeedbackDuration: 0.1

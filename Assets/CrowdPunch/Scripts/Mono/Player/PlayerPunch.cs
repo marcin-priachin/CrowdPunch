@@ -11,17 +11,21 @@ namespace CrowdPunch.Mono.Player
     public sealed class PlayerPunch : MonoBehaviour
     {
         [SerializeField] private PlayerEcsBridge ecsBridge;
+        [SerializeField] private PlayerController playerController;
         [SerializeField] private Transform punchOrigin;
         [SerializeField] private PlayerPunchSettings settings;
 
         private PunchTrajectoryPreview trajectoryPreview;
+        private PunchAreaFeedback areaFeedback;
         private InputAction attackAction;
+        private bool hasBufferedDashPunch;
 
         public float PunchRadius => settings == null ? 0f : settings.Radius;
 
         private void Reset()
         {
             ecsBridge = GetComponent<PlayerEcsBridge>();
+            playerController = GetComponent<PlayerController>();
         }
 
         private void Awake()
@@ -38,6 +42,11 @@ namespace CrowdPunch.Mono.Player
                 ecsBridge = GetComponent<PlayerEcsBridge>();
             }
 
+            if (playerController == null)
+            {
+                playerController = GetComponent<PlayerController>();
+            }
+
             attackAction = settings.FindAttackAction();
 
             trajectoryPreview = GetComponent<PunchTrajectoryPreview>();
@@ -45,16 +54,37 @@ namespace CrowdPunch.Mono.Player
             {
                 trajectoryPreview = gameObject.AddComponent<PunchTrajectoryPreview>();
             }
+
+            areaFeedback = GetComponent<PunchAreaFeedback>();
+            if (areaFeedback == null)
+            {
+                areaFeedback = gameObject.AddComponent<PunchAreaFeedback>();
+            }
         }
 
         private void OnEnable()
         {
             attackAction?.Enable();
+            if (playerController != null)
+            {
+                playerController.DashStarted += ClearBufferedDashPunch;
+                playerController.DashPunchMidpointReached += TryConsumeBufferedDashPunch;
+                playerController.DashEnded += ClearBufferedDashPunch;
+            }
         }
 
         private void OnDisable()
         {
             attackAction?.Disable();
+            if (playerController != null)
+            {
+                playerController.DashStarted -= ClearBufferedDashPunch;
+                playerController.DashPunchMidpointReached -= TryConsumeBufferedDashPunch;
+                playerController.DashEnded -= ClearBufferedDashPunch;
+            }
+
+            ClearBufferedDashPunch();
+            areaFeedback?.Hide();
             ecsBridge?.ClearPunchPreview();
         }
 
@@ -84,17 +114,70 @@ namespace CrowdPunch.Mono.Player
 
         public void RequestPunch()
         {
+            if (!isActiveAndEnabled || ecsBridge == null)
+            {
+                ClearBufferedDashPunch();
+                return;
+            }
+
+            if (playerController != null && playerController.IsDashing)
+            {
+                if (!playerController.TryCancelDashForPunch(out Vector3 dashPunchDirection))
+                {
+                    hasBufferedDashPunch = true;
+                    return;
+                }
+
+                ClearBufferedDashPunch();
+                PublishPunch(dashPunchDirection, true);
+                return;
+            }
+
+            ClearBufferedDashPunch();
+            PublishPunch();
+        }
+
+        private void TryConsumeBufferedDashPunch()
+        {
+            if (!hasBufferedDashPunch)
+            {
+                return;
+            }
+
+            hasBufferedDashPunch = false;
+            if (playerController == null || !playerController.TryCancelDashForPunch(out Vector3 dashPunchDirection))
+            {
+                return;
+            }
+
+            PublishPunch(dashPunchDirection, true);
+        }
+
+        private void ClearBufferedDashPunch()
+        {
+            hasBufferedDashPunch = false;
+        }
+
+        private void PublishPunch(Vector3? directionOverride = null, bool isDashPunch = false)
+        {
             Transform originTransform = punchOrigin != null ? punchOrigin : transform;
             Vector3 origin = originTransform.position;
-            Vector3 direction = originTransform.forward;
+            Vector3 direction = directionOverride ?? originTransform.forward;
+
+            areaFeedback.Show(
+                origin,
+                direction,
+                settings.Radius,
+                settings.Range,
+                settings.AreaFeedbackDuration);
 
             ecsBridge.PublishPunch(
                 origin,
                 direction,
                 settings.Radius,
                 settings.Range,
-                settings.Strength,
-                settings.Damage,
+                isDashPunch ? settings.DashStrength : settings.Strength,
+                isDashPunch ? settings.DashDamage : settings.Damage,
                 settings.DirectionPositionWeight);
         }
     }
