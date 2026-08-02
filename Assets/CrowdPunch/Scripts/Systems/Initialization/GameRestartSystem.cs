@@ -37,8 +37,9 @@ namespace CrowdPunch.Systems.Initialization
             SpawnSettings spawnSettings = SystemAPI.GetSingleton<SpawnSettings>();
             Random random = Random.CreateFromIndex(1);
 
-            foreach ((RefRW<LocalTransform> transform, RefRW<Health> health, RefRW<HealthBar> healthBar, Entity enemy) in
-                     SystemAPI.Query<RefRW<LocalTransform>, RefRW<Health>, RefRW<HealthBar>>()
+            foreach ((RefRW<LocalTransform> transform, RefRW<Health> health, RefRW<HealthBar> healthBar,
+                         RefRW<EnemyDamageState> damageState, Entity enemy) in
+                     SystemAPI.Query<RefRW<LocalTransform>, RefRW<Health>, RefRW<HealthBar>, RefRW<EnemyDamageState>>()
                          .WithAll<Enemy>()
                          .WithEntityAccess())
             {
@@ -49,6 +50,7 @@ namespace CrowdPunch.Systems.Initialization
 
                 health.ValueRW.Current = health.ValueRO.Max;
                 healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
+                damageState.ValueRW = default;
 
                 if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
                 {

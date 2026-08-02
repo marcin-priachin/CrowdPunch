@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-08-01
+Last updated: 2026-08-02
 
 ## How To Read This Document
 
@@ -190,6 +190,18 @@ Bosses and elite enemies may use dedicated UI or stronger telegraphs because the
 Status: Should
 
 Introduce new tuning variables only when an existing rule cannot express the desired behavior. The game already depends on many physical variables; additional parameters must earn their complexity.
+
+### COMBAT-010 — Enemy Health And Defeat
+
+Status: Must
+
+Ordinary enemies have current and maximum health. Valid damage reduces current health, clamped at zero. An enemy at zero health enters `Defeated`, no longer acts, attacks, receives ordinary damage, becomes launched, or participates as an active target, and is removed through the established pooling lifecycle. Numerical health and damage values are provisional tuning rather than final balance requirements.
+
+### COMBAT-011 — Deferred Defeat While Launched
+
+Status: Must
+
+An enemy whose health reaches zero while `Launched` remains a physical launched projectile and may continue eligible launch propagation under the normal collision rules. When its launch would otherwise end, it enters `Defeated` directly instead of `Recovering`; it must never return to `Active`. Launch propagation and damage are separate outcomes, so an ordinary enemy collision does not implicitly deal damage.
 
 ## Effects And Combinations
 

@@ -12,7 +12,7 @@ namespace CrowdPunch.Systems.Physics
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(GamePrePhysicsGroup))]
-    [UpdateAfter(typeof(PunchDetectionSystem))]
+    [UpdateAfter(typeof(DamageApplicationSystem))]
     public partial struct ApplyImpulseSystem : ISystem
     {
         [BurstCompile]

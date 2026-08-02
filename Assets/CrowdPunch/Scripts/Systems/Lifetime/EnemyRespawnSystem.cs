@@ -14,6 +14,7 @@ namespace CrowdPunch.Systems.Lifetime
     [BurstCompile]
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
     [UpdateAfter(typeof(OutOfBoundsSystem))]
+    [UpdateAfter(typeof(DefeatedEnemyLifecycleSystem))]
     public partial struct EnemyRespawnSystem : ISystem
     {
         private const double RespawnDelaySeconds = 5d;
@@ -40,6 +41,7 @@ namespace CrowdPunch.Systems.Lifetime
                          RefRW<LocalTransform> transform,
                          RefRW<Health> health,
                          RefRW<HealthBar> healthBar,
+                         RefRW<EnemyDamageState> damageState,
                          RefRW<DesiredMovement> desiredMovement,
                          RefRW<PhysicsVelocity> physicsVelocity,
                          Entity enemy) in
@@ -47,6 +49,7 @@ namespace CrowdPunch.Systems.Lifetime
                              RefRW<LocalTransform>,
                              RefRW<Health>,
                              RefRW<HealthBar>,
+                             RefRW<EnemyDamageState>,
                              RefRW<DesiredMovement>,
                              RefRW<PhysicsVelocity>>()
                          .WithAll<Enemy>()
@@ -70,6 +73,7 @@ namespace CrowdPunch.Systems.Lifetime
                     physicsVelocity.ValueRW = default;
                     health.ValueRW.Current = health.ValueRO.Max;
                     healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
+                    damageState.ValueRW = default;
                     if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
                     {
                         SystemAPI.SetComponent(enemy, new EnemyLaunchState

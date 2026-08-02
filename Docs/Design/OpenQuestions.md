@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-08-01
+Last updated: 2026-08-02
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -17,10 +17,6 @@ Which four enemy types best prove crowd composition without creating excessive p
 ### OQ-003 — First Two Weapons
 
 Which two weapons provide meaningfully different launch geometry while preserving one coherent physical combat language?
-
-### OQ-004 — Base Hit Outcome
-
-What exact states can an ordinary enemy enter after a hit: airborne, staggered, effect-carrying, defeated, recoverable, or another minimal set? How are health and physical defeat related?
 
 ### OQ-005 — Chain Eligibility
 
@@ -101,6 +97,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-08-02 — OQ-004
+
+Decision: Ordinary enemies use the minimal `Active`, `Launched`, `Recovering`, and `Defeated` lifecycle. Damage reduces health and zero health causes defeat, except that defeat is deferred while launched. A zero-health launched enemy remains an eligible physical projectile and enters `Defeated` directly when launch ends instead of recovering. Launch propagation does not itself imply damage.
+
+Rationale: Deferring defeat preserves the launched body as the core physical projectile and keeps health resolution consistent without interrupting valid chain reactions.
+
+GDD rules: COMBAT-001, COMBAT-003, COMBAT-004, COMBAT-010, COMBAT-011
 
 ### 2026-08-01 — OQ-006
 

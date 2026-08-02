@@ -1,5 +1,6 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
+using CrowdPunch.Systems.Combat;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -12,6 +13,7 @@ namespace CrowdPunch.Systems.Physics
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
+    [UpdateAfter(typeof(EnemyLaunchCollisionSystem))]
     public partial struct EnemyRecoverySystem : ISystem
     {
         [BurstCompile]
@@ -26,11 +28,18 @@ namespace CrowdPunch.Systems.Physics
             float deltaTime = SystemAPI.Time.DeltaTime;
             EnemyLaunchSettings settings = SystemAPI.GetSingleton<EnemyLaunchSettings>();
 
-            foreach ((RefRW<EnemyLaunchState> launchState, RefRO<PhysicsVelocity> velocity) in
-                     SystemAPI.Query<RefRW<EnemyLaunchState>, RefRO<PhysicsVelocity>>()
-                         .WithAll<Enemy>())
+            foreach ((RefRW<EnemyLaunchState> launchState,
+                         RefRO<PhysicsVelocity> velocity,
+                         RefRO<Health> health,
+                         RefRW<EnemyDamageState> damageState,
+                         Entity enemy) in
+                     SystemAPI.Query<RefRW<EnemyLaunchState>, RefRO<PhysicsVelocity>, RefRO<Health>, RefRW<EnemyDamageState>>()
+                         .WithAll<Enemy>()
+                         .WithNone<RespawnRequest>()
+                         .WithEntityAccess())
             {
-                if (launchState.ValueRO.Phase == EnemyLaunchPhase.Active)
+                if (launchState.ValueRO.Phase == EnemyLaunchPhase.Active
+                    || launchState.ValueRO.Phase == EnemyLaunchPhase.Defeated)
                 {
                     continue;
                 }
@@ -47,6 +56,15 @@ namespace CrowdPunch.Systems.Physics
                     launchState.ValueRW.BelowUsefulMomentumSeconds += deltaTime;
                     if (launchState.ValueRO.BelowUsefulMomentumSeconds < math.max(0f, settings.LowMomentumPeriod))
                     {
+                        continue;
+                    }
+
+                    if (health.ValueRO.Current <= 0f)
+                    {
+                        launchState.ValueRW.Phase = EnemyLaunchPhase.Defeated;
+                        launchState.ValueRW.RecoverySecondsRemaining = 0f;
+                        damageState.ValueRW.IsDefeatDeferred = 0;
+                        SystemAPI.SetComponentEnabled<DeathRequest>(enemy, true);
                         continue;
                     }
 

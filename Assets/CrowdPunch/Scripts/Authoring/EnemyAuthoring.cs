@@ -19,7 +19,7 @@ namespace CrowdPunch.Authoring
         [SerializeField] private float surroundRingSpacing = 0.75f;
         [SerializeField] private float separationDistance = 1.35f;
         [SerializeField] private float separationWeight = 1.4f;
-        [SerializeField] private float maxHealth = 30f;
+        [SerializeField, Min(0.01f)] private float maxHealth = 30f;
         [SerializeField, Range(0f, 1f)] private float contactDamagePercent = 0.05f;
         [SerializeField] private float contactPushStrength = 10f;
         [SerializeField] private float contactInvincibilitySeconds = 0.5f;

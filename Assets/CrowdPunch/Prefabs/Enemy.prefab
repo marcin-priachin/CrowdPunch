@@ -131,16 +131,16 @@ MonoBehaviour:
   moveSpeed: 4
   wanderSpeed: 1.5
   chargeDistance: 1
-  chargeSpeedMultiplier: 1.75
+  chargeSpeedMultiplier: 1
   acceleration: 12
   brakingAcceleration: 8
   turnSpeed: 12
-  stoppingDistance: 2
+  stoppingDistance: 1
   surroundDistance: 3.5
   surroundRingSpacing: 0.75
   separationDistance: 1.35
   separationWeight: 1.4
-  maxHealth: 30
+  maxHealth: 0.5
   contactDamagePercent: 0.05
   contactPushStrength: 10
   contactInvincibilitySeconds: 0.5

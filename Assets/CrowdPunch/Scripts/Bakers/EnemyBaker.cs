@@ -52,6 +52,7 @@ namespace CrowdPunch.Bakers
                 ContactRadius = authoring.ContactRadius
             });
             AddComponent<DamageRequest>(entity);
+            AddComponent<EnemyDamageState>(entity);
             AddComponent<DeathRequest>(entity);
             AddComponent<ExternalImpulse>(entity);
             AddComponent<KnockbackRecovery>(entity);

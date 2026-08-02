@@ -6,7 +6,8 @@ namespace CrowdPunch.Components
     {
         Active,
         Launched,
-        Recovering
+        Recovering,
+        Defeated
     }
 
     public enum EnemyLaunchCause : byte
