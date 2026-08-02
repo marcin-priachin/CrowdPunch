@@ -15,8 +15,6 @@ namespace CrowdPunch.Systems.Combat
     [UpdateAfter(typeof(InputBridge.PlayerBridgeSystem))]
     public partial struct PunchDetectionSystem : ISystem
     {
-        private const double MaxPendingPoolSeconds = 2d;
-
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
@@ -38,14 +36,17 @@ namespace CrowdPunch.Systems.Combat
             float3 punchDirection = math.normalizesafe(punchRequest.Direction);
             float radiusSquared = punchRequest.Radius * punchRequest.Radius;
             float pushDirectionPositionWeight = math.saturate(punchRequest.PushDirectionPositionWeight);
-            double forcePoolAt = SystemAPI.Time.ElapsedTime + MaxPendingPoolSeconds;
-
-            foreach ((RefRO<LocalTransform> transform, Entity enemy) in
-                     SystemAPI.Query<RefRO<LocalTransform>>()
+            foreach ((RefRO<LocalTransform> transform, RefRW<EnemyLaunchState> launchState, Entity enemy) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRW<EnemyLaunchState>>()
                          .WithAll<Enemy>()
-                         .WithNone<RespawnRequest, KnockbackRecovery>()
+                         .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
+                if (launchState.ValueRO.Phase != EnemyLaunchPhase.Active)
+                {
+                    continue;
+                }
+
                 float3 toEnemy = transform.ValueRO.Position - punchRequest.Origin;
                 float forwardDistance = math.dot(toEnemy, punchDirection);
 
@@ -71,12 +72,10 @@ namespace CrowdPunch.Systems.Combat
                     Value = impulseDirection * punchRequest.Strength
                 });
                 SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, true);
-
-                SystemAPI.SetComponent(enemy, new KnockbackRecovery
-                {
-                    RemainingSeconds = 0.35f
-                });
-                SystemAPI.SetComponentEnabled<KnockbackRecovery>(enemy, true);
+                launchState.ValueRW.Phase = EnemyLaunchPhase.Launched;
+                launchState.ValueRW.LastCause = EnemyLaunchCause.PlayerPunch;
+                launchState.ValueRW.BelowUsefulMomentumSeconds = 0f;
+                launchState.ValueRW.RecoverySecondsRemaining = 0f;
 
                 SystemAPI.SetComponent(enemy, new DamageRequest
                 {
@@ -84,14 +83,6 @@ namespace CrowdPunch.Systems.Combat
                 });
                 SystemAPI.SetComponentEnabled<DamageRequest>(enemy, true);
 
-                SystemAPI.SetComponent(enemy, new RespawnRequest
-                {
-                    RespawnAt = 0d,
-                    IsPooled = 0,
-                    ForcePoolAt = forcePoolAt,
-                    FromPlayerPunch = 1
-                });
-                SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, true);
             }
 
             SystemAPI.SetComponentEnabled<PunchRequest>(punchEntity, false);

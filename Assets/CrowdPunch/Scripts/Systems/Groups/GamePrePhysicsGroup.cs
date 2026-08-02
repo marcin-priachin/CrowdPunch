@@ -6,7 +6,7 @@ namespace CrowdPunch.Systems.Groups
     /// <summary>
     /// Runs gameplay intent systems before Unity Physics steps the world.
     /// </summary>
-    [UpdateInGroup(typeof(GameSimulationGroup))]
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(PhysicsSystemGroup))]
     public partial class GamePrePhysicsGroup : ComponentSystemGroup
     {

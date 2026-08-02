@@ -353,6 +353,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GameSettingsAuthoring
   startRunning: 1
+  minimumPropagationRelativeSpeed: 1.5
+  propagatedVelocityFactor: 0.8
+  usefulMomentumSpeed: 2
+  lowMomentumPeriod: 0.25
+  recoveryDuration: 0.6
 --- !u!4 &1438744935
 Transform:
   m_ObjectHideFlags: 0

@@ -30,6 +30,10 @@ namespace CrowdPunch.Bakers
                 SeparationWeight = authoring.SeparationWeight
             });
             AddComponent<DesiredMovement>(entity);
+            AddComponent(entity, new EnemyLaunchState
+            {
+                Phase = EnemyLaunchPhase.Active
+            });
             AddComponent<WanderDestination>(entity);
             AddComponent(entity, new Health
             {

@@ -39,11 +39,16 @@ namespace CrowdPunch.Systems.Presentation
             float radiusSquared = bridge.PunchPreviewRadius * bridge.PunchPreviewRadius;
             float positionWeight = math.saturate(bridge.PunchPreviewPositionWeight);
 
-            foreach (RefRO<LocalTransform> transform in
-                     SystemAPI.Query<RefRO<LocalTransform>>()
+            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>>()
                          .WithAll<Enemy>()
-                         .WithNone<RespawnRequest, KnockbackRecovery>())
+                         .WithNone<RespawnRequest>())
             {
+                if (launchState.ValueRO.Phase != EnemyLaunchPhase.Active)
+                {
+                    continue;
+                }
+
                 float3 enemyPosition = transform.ValueRO.Position;
                 float3 toEnemy = enemyPosition - origin;
                 float forwardDistance = math.dot(toEnemy, punchDirection);

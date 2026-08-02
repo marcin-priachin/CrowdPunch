@@ -31,12 +31,13 @@ namespace CrowdPunch.Systems.AI
             ArenaBounds arenaBounds = SystemAPI.GetSingleton<ArenaBounds>();
             NativeList<float3> activeEnemyPositions = new NativeList<float3>(Allocator.TempJob);
 
-            foreach ((RefRO<LocalTransform> transform, EnabledRefRO<RespawnRequest> respawnRequest) in
-                     SystemAPI.Query<RefRO<LocalTransform>, EnabledRefRO<RespawnRequest>>()
+            foreach ((RefRO<LocalTransform> transform, EnabledRefRO<RespawnRequest> respawnRequest,
+                         RefRO<EnemyLaunchState> launchState) in
+                     SystemAPI.Query<RefRO<LocalTransform>, EnabledRefRO<RespawnRequest>, RefRO<EnemyLaunchState>>()
                          .WithAll<Enemy>()
                          .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
             {
-                if (!respawnRequest.ValueRO)
+                if (!respawnRequest.ValueRO && launchState.ValueRO.Phase == EnemyLaunchPhase.Active)
                 {
                     activeEnemyPositions.Add(transform.ValueRO.Position);
                 }
@@ -66,8 +67,15 @@ namespace CrowdPunch.Systems.AI
                 ref DesiredMovement desiredMovement,
                 ref WanderDestination wanderDestination,
                 in LocalTransform transform,
-                in EnemyMovementSettings movementSettings)
+                in EnemyMovementSettings movementSettings,
+                in EnemyLaunchState launchState)
             {
+                if (launchState.Phase != EnemyLaunchPhase.Active)
+                {
+                    desiredMovement = default;
+                    return;
+                }
+
                 if (!PlayerSnapshot.IsAvailable)
                 {
                     desiredMovement.Direction = float3.zero;

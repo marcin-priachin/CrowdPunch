@@ -6,7 +6,7 @@ namespace CrowdPunch.Systems.Groups
     /// <summary>
     /// Runs cleanup and state reconciliation after Unity Physics has simulated.
     /// </summary>
-    [UpdateInGroup(typeof(GameSimulationGroup))]
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(PhysicsSystemGroup))]
     public partial class GamePostPhysicsGroup : ComponentSystemGroup
     {

@@ -48,7 +48,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Enemy contact reported to player | ECS → bridge event | `EnemyContactHitReceived` |
 | Enemy spawn and pooling | ECS | spawn settings and respawn systems |
 | Enemy intent and movement | ECS | `DesiredMovement`, Unity Physics velocity |
-| Enemy combat state | ECS | health, damage, impulse, recovery, death/respawn requests |
+| Enemy combat state | ECS | health, damage, impulse, explicit launch lifecycle, death/respawn requests |
 | Punch trajectory preview | ECS → bridge → GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
 
 MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exposes the one active `PlayerEcsBridge` to the few managed systems that cross the boundary.
@@ -65,12 +65,12 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 
 ### Pre-Physics Simulation
 
-`GamePrePhysicsGroup` runs inside `GameSimulationGroup` before `PhysicsSystemGroup`:
+`GamePrePhysicsGroup` runs as a direct child of `SimulationSystemGroup` before `PhysicsSystemGroup`:
 
 1. `PlayerBridgeSystem` copies the latest GameObject player snapshot, health, and punch request into ECS.
 2. `EnemyChaseSystem` produces enemy movement intent.
 3. `EnemyMovementSystem` steers Unity Physics velocity toward that intent.
-4. `PunchDetectionSystem` finds enemies inside the punch volume and enables impulse, damage, recovery, and respawn-related requests.
+4. `PunchDetectionSystem` finds active enemies inside the punch volume, transitions them to `Launched`, and enables impulse and damage requests.
 5. `DamageApplicationSystem` applies enabled damage requests.
 6. `ApplyImpulseSystem` adds gameplay impulse to `PhysicsVelocity`.
 7. Unity Physics simulates motion and collisions.
@@ -79,11 +79,11 @@ Ordering between systems that share only a group should be made explicit when co
 
 ### Post-Physics Simulation
 
-`GamePostPhysicsGroup` runs after Unity Physics:
+`GamePostPhysicsGroup` runs as a direct child of `SimulationSystemGroup` after `PhysicsSystemGroup`:
 
-- `EnemyRecoverySystem` advances temporary knockback recovery.
+- `EnemyLaunchCollisionSystem` interprets qualifying enemy collision events and propagates attenuated launch velocity.
+- `EnemyRecoverySystem` advances `Launched` enemies through low-momentum dwell and `Recovering` back to `Active`.
 - `PlayerContactDamageSystem` detects enemy proximity/contact and reports the closest accepted hit through the bridge.
-- `EnemyEnemyCollisionRespawnSystem` currently propagates player-punch pooling intent through enemy collision events.
 - `OutOfBoundsSystem` requests recovery for escaped enemies.
 - `EnemyRespawnSystem` pools and respawns enemies.
 
@@ -108,16 +108,20 @@ Frequently toggled state is represented by enableable components to avoid archet
 - `DeathRequest`
 - `RespawnRequest`
 
+Enemy launch lifecycle is represented by the non-enableable `EnemyLaunchState` component because every enemy is always in exactly one of `Active`, `Launched`, or `Recovering`. Its last cause and propagated-launch count are retained as lightweight development-facing data visible in the Entities inspector. `Defeated` is intentionally absent because OQ-004 does not yet define defeat or health/lifecycle semantics.
+
+`EnemyLaunchSettings` is baked as scene-level singleton configuration by `GameSettingsAuthoring`. Its values are provisional sandbox tuning for OQ-004/OQ-005: minimum propagation relative speed, propagated velocity factor, useful-momentum threshold and dwell, and recovery duration.
+
 Systems get the entity for mixed singleton state through a non-enableable component such as `PlayerSnapshot` or `MatchState`, then inspect or toggle enableable state explicitly.
 
 ## Current Prototype Behavior Versus Design
 
 The current implementation proves architecture and basic interactions, but several behaviors are placeholders:
 
-- Punch detection uses a line/capsule-like distance test and immediately assigns impulse, damage, recovery, and respawn intent.
+- Punch detection uses a line/capsule-like distance test and immediately assigns impulse, damage, and launched state.
 - Player movement and dash are transform-driven MonoBehaviour movement.
 - Dash exists, but the accepted buffered dash-punch rule is not implemented yet.
-- Enemy-enemy collision currently propagates respawn/pooling from a player-punched enemy; the final chain damage/effect grammar is unresolved.
+- A launched enemy can propagate an attenuated velocity transfer to an active or recovering enemy when relative speed exceeds the authored threshold. The target becomes launched immediately, which also prevents a sustained contact from propagating repeatedly. The final damage/effect grammar remains unresolved.
 - Enemy chasing and contact damage exist as prototype behavior.
 - A player health bar exists and is consistent with the GDD; ECS enemy health-bar presentation data exists but conflicts with the no-normal-enemy-UI rule if displayed.
 - The current scene is an arena sandbox, not the required route-based 15–20 minute run.

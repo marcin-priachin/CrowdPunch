@@ -70,6 +70,13 @@ namespace CrowdPunch.Systems.Lifetime
                     physicsVelocity.ValueRW = default;
                     health.ValueRW.Current = health.ValueRO.Max;
                     healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
+                    if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
+                    {
+                        SystemAPI.SetComponent(enemy, new EnemyLaunchState
+                        {
+                            Phase = EnemyLaunchPhase.Active
+                        });
+                    }
                     respawnRequest.ValueRW.IsPooled = 1;
                     respawnRequest.ValueRW.RespawnAt = elapsedTime + RespawnDelaySeconds;
                     DisableTransientState(ref state, enemy);

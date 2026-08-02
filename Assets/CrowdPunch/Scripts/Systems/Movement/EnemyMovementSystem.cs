@@ -50,9 +50,9 @@ namespace CrowdPunch.Systems.Movement
             private void Execute(
                 ref PhysicsVelocity physicsVelocity,
                 ref PhysicsMass physicsMass,
-                EnabledRefRO<KnockbackRecovery> knockbackRecovery,
                 EnabledRefRO<RespawnRequest> respawnRequest,
                 in RespawnRequest respawnState,
+                in EnemyLaunchState launchState,
                 in LocalTransform transform,
                 in DesiredMovement desiredMovement,
                 in EnemyMovementSettings movementSettings)
@@ -72,7 +72,7 @@ namespace CrowdPunch.Systems.Movement
                     return;
                 }
 
-                if (knockbackRecovery.ValueRO)
+                if (launchState.Phase != EnemyLaunchPhase.Active)
                 {
                     return;
                 }

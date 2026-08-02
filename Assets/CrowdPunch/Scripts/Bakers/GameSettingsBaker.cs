@@ -20,6 +20,14 @@ namespace CrowdPunch.Bakers
             });
             AddComponent<PlayerSnapshot>(entity);
             AddComponent<PlayerHealthSnapshot>(entity);
+            AddComponent(entity, new EnemyLaunchSettings
+            {
+                MinimumPropagationRelativeSpeed = authoring.MinimumPropagationRelativeSpeed,
+                PropagatedVelocityFactor = authoring.PropagatedVelocityFactor,
+                UsefulMomentumSpeed = authoring.UsefulMomentumSpeed,
+                LowMomentumPeriod = authoring.LowMomentumPeriod,
+                RecoveryDuration = authoring.RecoveryDuration
+            });
             AddComponent<PunchRequest>(entity);
             SetComponentEnabled<PunchRequest>(entity, false);
         }

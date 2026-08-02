@@ -50,6 +50,14 @@ namespace CrowdPunch.Systems.Initialization
                 health.ValueRW.Current = health.ValueRO.Max;
                 healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
 
+                if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
+                {
+                    SystemAPI.SetComponent(enemy, new EnemyLaunchState
+                    {
+                        Phase = EnemyLaunchPhase.Active
+                    });
+                }
+
                 if (SystemAPI.HasComponent<PhysicsVelocity>(enemy))
                 {
                     SystemAPI.SetComponent(enemy, new PhysicsVelocity());

@@ -38,11 +38,17 @@ namespace CrowdPunch.Systems.Combat
             float hitInvincibilitySeconds = 0f;
             float3 hitPushImpulse = float3.zero;
 
-            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyContactDamageSettings> contactSettings) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyContactDamageSettings>>()
+            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyContactDamageSettings> contactSettings,
+                         RefRO<EnemyLaunchState> launchState) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyContactDamageSettings>, RefRO<EnemyLaunchState>>()
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>())
             {
+                if (launchState.ValueRO.Phase != EnemyLaunchPhase.Active)
+                {
+                    continue;
+                }
+
                 float3 toPlayer = playerSnapshot.Position - transform.ValueRO.Position;
                 toPlayer.y = 0f;
 
