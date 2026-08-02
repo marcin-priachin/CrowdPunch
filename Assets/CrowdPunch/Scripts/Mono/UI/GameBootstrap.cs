@@ -23,6 +23,7 @@ namespace CrowdPunch.Mono.UI
 
             EnsurePlayerController();
             EnsurePlayerHealth();
+            EnsurePunchTrajectoryPreview();
             EnsureGameCanvas();
             BindPlayerHealthBars();
 
@@ -91,6 +92,14 @@ namespace CrowdPunch.Mono.UI
             if (playerHealth == null)
             {
                 playerHealth = playerBridge.gameObject.AddComponent<PlayerHealth>();
+            }
+        }
+
+        private void EnsurePunchTrajectoryPreview()
+        {
+            if (playerBridge != null && playerBridge.GetComponent<PunchTrajectoryPreview>() == null)
+            {
+                playerBridge.gameObject.AddComponent<PunchTrajectoryPreview>();
             }
         }
 

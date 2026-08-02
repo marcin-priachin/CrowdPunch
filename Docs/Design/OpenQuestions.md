@@ -26,10 +26,6 @@ What exact states can an ordinary enemy enter after a hit: airborne, staggered, 
 
 Which collisions propagate damage, impulse, and effects? Possible variables include relative velocity, source state, mass, angle, and time since the player launch.
 
-### OQ-006 — Trajectory Indicator
-
-What exact visual form communicates the first few metres of direction without becoming screen noise: ground arrow, short arc, projected line, target wedge, or another form?
-
 ## Priority 2 — Needed For A Complete MVP Run
 
 ### OQ-007 — Boss Interaction
@@ -106,4 +102,10 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
-None recorded in this file yet; accepted decisions from earlier design work are already represented in `GDD.md`.
+### 2026-08-01 — OQ-006
+
+Decision: When an enemy is inside the player's punch volume, show a short semitransparent line from the enemy in its initial post-hit direction. Show a line for each enemy the punch would affect, and do not predict later collisions.
+
+Rationale: This gives immediate directional certainty at the decision point while keeping the preview local and honest about downstream crowd physics.
+
+GDD rules: PLAYER-003, PLAYER-004, INFO-005

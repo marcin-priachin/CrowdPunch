@@ -342,6 +342,7 @@ GameObject:
   - component: {fileID: 1430478229}
   - component: {fileID: 1430478228}
   - component: {fileID: 1430478227}
+  - component: {fileID: 1430478230}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -461,8 +462,8 @@ MonoBehaviour:
   attackAction: {fileID: 1120369429361536294, guid: 289c1b55c9541489481df5cc06664110, type: 3}
   punchOrigin: {fileID: 1430478226}
   punchRadius: 2
-  punchRange: 4
-  punchStrength: 60
+  punchRange: 8
+  punchStrength: 90
   punchDamage: 10
   pushDirectionPositionWeight: 0
 --- !u!114 &1430478228
@@ -483,6 +484,9 @@ MonoBehaviour:
   movementCamera: {fileID: 0}
   playerRadius: 0.5
   moveSpeed: 12
+  dashDistance: 5
+  dashDuration: 0.15
+  dashCooldown: 0.1
   knockbackDamping: 14
 --- !u!114 &1430478229
 MonoBehaviour:
@@ -496,6 +500,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b12a74b68a31b7548b3855218fce0c12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.PlayerEcsBridge
+--- !u!114 &1430478230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1430478222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0af6aec62b634c00ad6023f5db42f7d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.PunchTrajectoryPreview
+  lineColor: {r: 1, g: 1, b: 1, a: 0.45}
+  lineLength: 10
+  lineWidth: 0.12
+  verticalOffset: 0.15
 --- !u!1 &1715643237
 GameObject:
   m_ObjectHideFlags: 0

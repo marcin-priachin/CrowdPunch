@@ -49,6 +49,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Enemy spawn and pooling | ECS | spawn settings and respawn systems |
 | Enemy intent and movement | ECS | `DesiredMovement`, Unity Physics velocity |
 | Enemy combat state | ECS | health, damage, impulse, recovery, death/respawn requests |
+| Punch trajectory preview | ECS → bridge → GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
 
 MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exposes the one active `PlayerEcsBridge` to the few managed systems that cross the boundary.
 
@@ -92,6 +93,7 @@ Ordering between systems that share only a group should be made explicit when co
 
 - `HealthBarPresentationSystem` updates ECS health-bar presentation data.
 - `PresentationBridgeSystem` is the explicit ECS presentation bridge point.
+- `PresentationBridgeSystem` selects enemies currently inside the live punch volume and publishes their initial launch segments through `PlayerEcsBridge`; `PunchTrajectoryPreview` renders those segments as pooled semitransparent world-space lines.
 
 The GDD now prohibits normal-enemy health UI, so the existing ECS `HealthBar` path should be treated as prototype/legacy behavior and reviewed when presentation is next changed.
 

@@ -96,7 +96,7 @@ The player can move freely and use a directional dash for rapid repositioning.
 
 Status: Must
 
-Before an attack, show a small trajectory preview covering only the first few metres. It must clearly communicate initial launch direction without attempting to predict the full collision chain.
+Before an attack, when an enemy is inside the player's punch volume, show a short semitransparent line from that enemy along its initial post-hit trajectory. Show one line per enemy that the punch would affect. Each line covers only the first few metres and must not attempt to predict the full collision chain.
 
 ### PLAYER-004 — Directional Certainty
 

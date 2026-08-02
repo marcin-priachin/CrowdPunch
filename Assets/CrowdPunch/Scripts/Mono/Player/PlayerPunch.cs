@@ -18,6 +18,8 @@ namespace CrowdPunch.Mono.Player
         [SerializeField] private float punchDamage = 10f;
         [SerializeField, Range(0f, 1f)] private float pushDirectionPositionWeight = 1f;
 
+        private PunchTrajectoryPreview trajectoryPreview;
+
         public float PunchRadius => punchRadius;
 
         private void Reset()
@@ -31,6 +33,12 @@ namespace CrowdPunch.Mono.Player
             {
                 ecsBridge = GetComponent<PlayerEcsBridge>();
             }
+
+            trajectoryPreview = GetComponent<PunchTrajectoryPreview>();
+            if (trajectoryPreview == null)
+            {
+                trajectoryPreview = gameObject.AddComponent<PunchTrajectoryPreview>();
+            }
         }
 
         private void OnEnable()
@@ -41,16 +49,31 @@ namespace CrowdPunch.Mono.Player
         private void OnDisable()
         {
             attackAction?.action.Disable();
+            ecsBridge?.ClearPunchPreview();
         }
 
         private void Update()
         {
+            PublishPunchPreview();
+
             if (attackAction == null || !attackAction.action.WasPressedThisFrame())
             {
                 return;
             }
 
             RequestPunch();
+        }
+
+        private void PublishPunchPreview()
+        {
+            Transform originTransform = punchOrigin != null ? punchOrigin : transform;
+            ecsBridge.PublishPunchPreview(
+                originTransform.position,
+                originTransform.forward,
+                punchRadius,
+                punchRange,
+                trajectoryPreview.LineLength,
+                pushDirectionPositionWeight);
         }
 
         public void RequestPunch()

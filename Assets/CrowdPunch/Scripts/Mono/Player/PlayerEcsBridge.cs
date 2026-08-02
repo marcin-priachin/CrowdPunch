@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -45,6 +46,20 @@ namespace CrowdPunch.Mono.Player
     /// </summary>
     public sealed class PlayerEcsBridge : MonoBehaviour
     {
+        public readonly struct TrajectoryPreviewSegment
+        {
+            public TrajectoryPreviewSegment(float3 start, float3 end)
+            {
+                Start = start;
+                End = end;
+            }
+
+            public float3 Start { get; }
+            public float3 End { get; }
+        }
+
+        private readonly List<TrajectoryPreviewSegment> trajectoryPreviewSegments = new List<TrajectoryPreviewSegment>();
+
         public event Action<float, float, Vector3> EnemyContactHitReceived;
 
         /// <summary>Latest player position published by MonoBehaviour player code.</summary>
@@ -64,6 +79,17 @@ namespace CrowdPunch.Mono.Player
 
         /// <summary>Whether a punch request is waiting for ECS consumption.</summary>
         public bool HasPendingPunch { get; private set; }
+
+        /// <summary>Whether ECS should calculate punch trajectory previews.</summary>
+        public bool IsPunchPreviewAvailable { get; private set; }
+
+        public float3 PunchPreviewOrigin { get; private set; }
+        public float3 PunchPreviewDirection { get; private set; }
+        public float PunchPreviewRadius { get; private set; }
+        public float PunchPreviewRange { get; private set; }
+        public float PunchPreviewLength { get; private set; }
+        public float PunchPreviewPositionWeight { get; private set; }
+        public IReadOnlyList<TrajectoryPreviewSegment> TrajectoryPreviewSegments => trajectoryPreviewSegments;
 
         /// <summary>Monotonic request id used to distinguish repeated punches.</summary>
         public uint PunchSequence { get; private set; }
@@ -129,6 +155,39 @@ namespace CrowdPunch.Mono.Player
             PunchPushDirectionPositionWeight = Mathf.Clamp01(pushDirectionPositionWeight);
             PunchSequence++;
             HasPendingPunch = true;
+        }
+
+        public void PublishPunchPreview(
+            Vector3 origin,
+            Vector3 direction,
+            float radius,
+            float range,
+            float previewLength,
+            float pushDirectionPositionWeight)
+        {
+            PunchPreviewOrigin = new float3(origin.x, origin.y, origin.z);
+            PunchPreviewDirection = new float3(direction.x, direction.y, direction.z);
+            PunchPreviewRadius = Mathf.Max(0f, radius);
+            PunchPreviewRange = Mathf.Max(0f, range);
+            PunchPreviewLength = Mathf.Max(0f, previewLength);
+            PunchPreviewPositionWeight = Mathf.Clamp01(pushDirectionPositionWeight);
+            IsPunchPreviewAvailable = isActiveAndEnabled;
+        }
+
+        public void ClearPunchPreview()
+        {
+            IsPunchPreviewAvailable = false;
+            trajectoryPreviewSegments.Clear();
+        }
+
+        public void BeginTrajectoryPreview()
+        {
+            trajectoryPreviewSegments.Clear();
+        }
+
+        public void AddTrajectoryPreview(float3 start, float3 end)
+        {
+            trajectoryPreviewSegments.Add(new TrajectoryPreviewSegment(start, end));
         }
 
         /// <summary>

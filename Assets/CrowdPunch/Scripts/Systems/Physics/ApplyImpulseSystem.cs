@@ -29,7 +29,7 @@ namespace CrowdPunch.Systems.Physics
                          .WithAll<Enemy>()
                          .WithEntityAccess())
             {
-                physicsVelocity.ValueRW.Linear += externalImpulse.ValueRO.Value;
+                    physicsVelocity.ValueRW.Linear += externalImpulse.ValueRO.Value;
                 SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, false);
             }
         }

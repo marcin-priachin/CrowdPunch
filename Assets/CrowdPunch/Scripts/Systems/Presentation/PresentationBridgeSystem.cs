@@ -2,13 +2,15 @@ using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
+using CrowdPunch.Mono.Player;
 
 namespace CrowdPunch.Systems.Presentation
 {
     /// <summary>
     /// Bridges ECS simulation results to presentation-only GameObject or rendering state.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(GamePresentationGroup))]
     public partial struct PresentationBridgeSystem : ISystem
     {
@@ -18,10 +20,53 @@ namespace CrowdPunch.Systems.Presentation
             state.RequireForUpdate<Enemy>();
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            // TODO: Publish read-only ECS presentation data without allowing MonoBehaviours to directly mutate enemy entities.
+            if (!PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
+            {
+                return;
+            }
+
+            bridge.BeginTrajectoryPreview();
+
+            if (!bridge.IsPunchPreviewAvailable || bridge.PunchPreviewLength <= 0f)
+            {
+                return;
+            }
+
+            float3 origin = bridge.PunchPreviewOrigin;
+            float3 punchDirection = math.normalizesafe(bridge.PunchPreviewDirection);
+            float radiusSquared = bridge.PunchPreviewRadius * bridge.PunchPreviewRadius;
+            float positionWeight = math.saturate(bridge.PunchPreviewPositionWeight);
+
+            foreach (RefRO<LocalTransform> transform in
+                     SystemAPI.Query<RefRO<LocalTransform>>()
+                         .WithAll<Enemy>()
+                         .WithNone<RespawnRequest, KnockbackRecovery>())
+            {
+                float3 enemyPosition = transform.ValueRO.Position;
+                float3 toEnemy = enemyPosition - origin;
+                float forwardDistance = math.dot(toEnemy, punchDirection);
+
+                if (forwardDistance < 0f || forwardDistance > bridge.PunchPreviewRange)
+                {
+                    continue;
+                }
+
+                float3 closestPoint = origin + punchDirection * forwardDistance;
+                if (math.lengthsq(enemyPosition - closestPoint) > radiusSquared)
+                {
+                    continue;
+                }
+
+                float3 positionDirection = math.normalizesafe(toEnemy, punchDirection);
+                float3 launchDirection = math.normalizesafe(
+                    math.lerp(punchDirection, positionDirection, positionWeight),
+                    positionDirection);
+                bridge.AddTrajectoryPreview(
+                    enemyPosition,
+                    enemyPosition + launchDirection * bridge.PunchPreviewLength);
+            }
         }
     }
 }
