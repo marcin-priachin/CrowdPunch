@@ -8,15 +8,14 @@ namespace CrowdPunch.Configuration
     {
         [SerializeField] private bool startRunning = true;
         [Header("Enemy Launch (Provisional)")]
-        [SerializeField, Min(0f)] private float minimumPropagationRelativeSpeed = 1.5f;
-        [SerializeField, Range(0f, 1f)] private float propagatedVelocityFactor = 0.8f;
+        [Tooltip("Minimum solver-estimated contact impulse required for a launched enemy to launch another enemy.")]
+        [SerializeField, Min(0f)] private float minimumPropagationImpulse = 1.5f;
         [SerializeField, Min(0f)] private float usefulMomentumSpeed = 2f;
         [SerializeField, Min(0f)] private float lowMomentumPeriod = 0.25f;
         [SerializeField, Min(0f)] private float recoveryDuration = 0.6f;
 
         public bool StartRunning => startRunning;
-        public float MinimumPropagationRelativeSpeed => minimumPropagationRelativeSpeed;
-        public float PropagatedVelocityFactor => propagatedVelocityFactor;
+        public float MinimumPropagationImpulse => minimumPropagationImpulse;
         public float UsefulMomentumSpeed => usefulMomentumSpeed;
         public float LowMomentumPeriod => lowMomentumPeriod;
         public float RecoveryDuration => recoveryDuration;

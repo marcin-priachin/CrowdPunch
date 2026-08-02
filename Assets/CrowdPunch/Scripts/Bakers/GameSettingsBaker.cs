@@ -28,8 +28,7 @@ namespace CrowdPunch.Bakers
             AddComponent<PlayerHealthSnapshot>(entity);
             AddComponent(entity, new EnemyLaunchSettings
             {
-                MinimumPropagationRelativeSpeed = authoring.Settings.MinimumPropagationRelativeSpeed,
-                PropagatedVelocityFactor = authoring.Settings.PropagatedVelocityFactor,
+                MinimumPropagationImpulse = authoring.Settings.MinimumPropagationImpulse,
                 UsefulMomentumSpeed = authoring.Settings.UsefulMomentumSpeed,
                 LowMomentumPeriod = authoring.Settings.LowMomentumPeriod,
                 RecoveryDuration = authoring.Settings.RecoveryDuration

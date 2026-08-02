@@ -65,7 +65,7 @@ Assets/CrowdPunch/Scripts
 | `Systems/Combat/PunchDetectionSystem.cs` | Detects enemies affected by punches. |
 | `Systems/Combat/DamageApplicationSystem.cs` | Applies pending damage requests to ECS health values. |
 | `Systems/Combat/PlayerContactDamageSystem.cs` | Detects ECS enemy overlap against the player snapshot and reports contact hits through the player bridge. |
-| `Systems/Combat/EnemyLaunchCollisionSystem.cs` | Propagates attenuated launch motion through qualifying enemy-enemy physics collisions. |
+| `Systems/Combat/EnemyLaunchCollisionSystem.cs` | Propagates launched state through qualifying solver-resolved enemy impacts. |
 | `Systems/Physics/ApplyImpulseSystem.cs` | Applies gameplay impulses before physics simulation. |
 | `Systems/Physics/EnemyRecoverySystem.cs` | Times enemy knockback recovery and returns control to movement. |
 | `Systems/Lifetime/OutOfBoundsSystem.cs` | Marks enemies outside arena bounds. |
@@ -94,13 +94,13 @@ Custom system groups make frame order explicit: bridge input, compute intent, ap
 
 Enemy movement is split into intent and application. `EnemyChaseSystem` chooses whether each enemy wanders or charges and writes `DesiredMovement`; while charging, enemies choose deterministic slots around the player and blend in short-range separation from nearby enemies. `EnemyMovementSystem` consumes that data and steers `PhysicsVelocity` toward the desired velocity instead of overwriting it instantly. This lets collision impulses survive long enough to affect other enemies. It also locks pitch and roll through `PhysicsMass.InverseInertia` so enemies remain upright while Unity Physics owns collision and position integration.
 
-Punching follows the same data pipeline. `PlayerPunch` publishes a `PunchRequest` through the bridge; `PunchDetectionSystem` tests active enemy positions against the request volume, transitions hits to `Launched`, and enables `ExternalImpulse` and `DamageRequest`; `DamageApplicationSystem` applies damage to `Health`; `ApplyImpulseSystem` adds the impulse to `PhysicsVelocity`. Post-physics collision and recovery systems propagate attenuated physical motion and advance `Launched` through `Recovering` to `Active`.
+Punching follows the same data pipeline. `PlayerPunch` publishes a `PunchRequest` through the bridge; `PunchDetectionSystem` tests active enemy positions against the request volume, transitions hits to `Launched`, and enables `ExternalImpulse` and `DamageRequest`; `DamageApplicationSystem` applies damage to `Health`; `ApplyImpulseSystem` adds the impulse to `PhysicsVelocity`. Post-physics collision interpretation propagates launched state while leaving collision velocity resolution to Unity Physics, and recovery advances `Launched` through `Recovering` to `Active`.
 
 Player health remains GameObject-owned through `PlayerHealth` because the large player is outside ECS. `PlayerEcsBridge` publishes it into `PlayerHealthSnapshot` for ECS-readable presentation or later gameplay systems. Enemy health is ECS-owned through `Health`, with `HealthBarPresentationSystem` deriving a normalized `HealthBar` value so visual bars can consume presentation data without MonoBehaviours querying enemy entities.
 
 Enemy contact damage is detected in ECS by comparing enemy transforms with `PlayerSnapshot`. `PlayerContactDamageSystem` sends only the resulting hit event through `PlayerEcsBridge`; `PlayerHealth` owns damage and the invincibility timer, while `PlayerController` owns the GameObject knockback motion.
 
-Enemy launch collision stays ECS-owned. `EnemyLaunchCollisionSystem` listens to Unity Physics collision events after simulation and propagates only from a `Launched` source to an `Active` or `Recovering` target above the authored relative-speed threshold. The velocity transfer is derived from relative body motion and attenuated so chains decay. Collision no longer requests pooling. `RespawnRequest` remains available for explicit lifecycle cleanup, though out-of-bounds detection is still a TODO.
+Enemy launch collision stays ECS-owned. `EnemyLaunchCollisionSystem` listens to Unity Physics collision events after simulation and propagates only from a `Launched` source to an `Active` or `Recovering` target above the authored solver-estimated impulse threshold. Unity Physics owns the resulting velocity; gameplay does not add a second synthetic transfer. Collision no longer requests pooling. `RespawnRequest` remains available for explicit lifecycle cleanup, though out-of-bounds detection is still a TODO.
 
 Restart is a soft reset because the Bootstrap scene contains an auto-loaded SubScene. UI restart code should not reload the active Unity scene during play mode; `GameBootstrap` resets Mono-owned player state and `GameRestartSystem` resets ECS-owned enemy state.
 

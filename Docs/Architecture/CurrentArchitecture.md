@@ -82,7 +82,7 @@ Ordering between systems that share only a group should be made explicit when co
 
 `GamePostPhysicsGroup` runs as a direct child of `SimulationSystemGroup` after `PhysicsSystemGroup`:
 
-- `EnemyLaunchCollisionSystem` interprets qualifying enemy collision events and propagates attenuated launch velocity.
+- `EnemyLaunchCollisionSystem` interprets solver-resolved enemy impacts and propagates launched state without rewriting velocity.
 - `EnemyRecoverySystem` advances `Launched` enemies through low-momentum dwell and `Recovering` back to `Active`.
 - `PlayerContactDamageSystem` detects enemy proximity/contact and reports the closest accepted hit through the bridge.
 - `OutOfBoundsSystem` requests recovery for escaped enemies.
@@ -111,7 +111,7 @@ Frequently toggled state is represented by enableable components to avoid archet
 
 Enemy launch lifecycle is represented by the non-enableable `EnemyLaunchState` component because every enemy is always in exactly one of `Active`, `Launched`, or `Recovering`. Its last cause and propagated-launch count are retained as lightweight development-facing data visible in the Entities inspector. `Defeated` is intentionally absent because OQ-004 does not yet define defeat or health/lifecycle semantics.
 
-`GameSettingsAuthoring` reads reusable `GameRuntimeSettings` ScriptableObject data and bakes `EnemyLaunchSettings` as scene-level singleton configuration. Its launch values are provisional sandbox tuning for OQ-004/OQ-005: minimum propagation relative speed, propagated velocity factor, useful-momentum threshold and dwell, and recovery duration. Player movement and punch settings assets also own their Input System asset/action selection, while `EnemySpawnSettings` owns the enemy prefab and initial crowd tuning. Scene MonoBehaviours retain only scene-instance wiring such as bridges, cameras, and origin transforms.
+`GameSettingsAuthoring` reads reusable `GameRuntimeSettings` ScriptableObject data and bakes `EnemyLaunchSettings` as scene-level singleton configuration. Its launch values are provisional sandbox tuning for OQ-004/OQ-005: minimum solver-estimated propagation impulse, useful-momentum threshold and dwell, and recovery duration. Player movement and punch settings assets also own their Input System asset/action selection, while `EnemySpawnSettings` owns the enemy prefab and initial crowd tuning. Scene MonoBehaviours retain only scene-instance wiring such as bridges, cameras, and origin transforms.
 
 Systems get the entity for mixed singleton state through a non-enableable component such as `PlayerSnapshot` or `MatchState`, then inspect or toggle enableable state explicitly.
 
@@ -122,7 +122,7 @@ The current implementation proves architecture and basic interactions, but sever
 - Punch detection uses a line/capsule-like distance test and immediately assigns impulse, damage, and launched state.
 - Player movement and dash are transform-driven MonoBehaviour movement.
 - Dash exists, but the accepted buffered dash-punch rule is not implemented yet.
-- A launched enemy can propagate an attenuated velocity transfer to an active or recovering enemy when relative speed exceeds the authored threshold. The target becomes launched immediately, which also prevents a sustained contact from propagating repeatedly. The final damage/effect grammar remains unresolved.
+- A launched enemy can propagate launched state to an active or recovering enemy when Unity Physics reports a solver-estimated contact impulse above the authored threshold. Unity Physics exclusively owns the resulting velocities; the gameplay system does not add a second synthetic transfer. The target becomes launched immediately, which also prevents a sustained contact from propagating repeatedly. The final damage/effect grammar remains unresolved.
 - Enemy chasing and contact damage exist as prototype behavior.
 - A player health bar exists and is consistent with the GDD; ECS enemy health-bar presentation data exists but conflicts with the no-normal-enemy-UI rule if displayed.
 - The current scene is an arena sandbox, not the required route-based 15–20 minute run.

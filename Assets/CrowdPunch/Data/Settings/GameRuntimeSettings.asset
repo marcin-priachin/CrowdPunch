@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: GameRuntimeSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.GameRuntimeSettings
   startRunning: 1
-  minimumPropagationRelativeSpeed: 1.5
-  propagatedVelocityFactor: 0.8
+  minimumPropagationImpulse: 1.5
   usefulMomentumSpeed: 2
   lowMomentumPeriod: 0.25
   recoveryDuration: 0.6

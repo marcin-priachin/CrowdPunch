@@ -6,12 +6,11 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Physics.Systems;
-using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Combat
 {
     /// <summary>
-    /// Propagates launched state and attenuated physical motion through qualifying enemy collisions.
+    /// Interprets solver-resolved enemy impacts and propagates launched state without altering velocity.
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
@@ -22,6 +21,7 @@ namespace CrowdPunch.Systems.Combat
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<SimulationSingleton>();
+            state.RequireForUpdate<PhysicsWorldSingleton>();
             state.RequireForUpdate<Enemy>();
             state.RequireForUpdate<EnemyLaunchSettings>();
         }
@@ -34,10 +34,8 @@ namespace CrowdPunch.Systems.Combat
             {
                 EnemyLookup = SystemAPI.GetComponentLookup<Enemy>(true),
                 LaunchStateLookup = SystemAPI.GetComponentLookup<EnemyLaunchState>(),
-                VelocityLookup = SystemAPI.GetComponentLookup<PhysicsVelocity>(),
-                TransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
-                MinimumRelativeSpeed = math.max(0f, settings.MinimumPropagationRelativeSpeed),
-                VelocityFactor = math.clamp(settings.PropagatedVelocityFactor, 0f, 1f)
+                World = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
+                MinimumImpulse = math.max(0f, settings.MinimumPropagationImpulse)
             };
 
             state.Dependency = job.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
@@ -48,10 +46,8 @@ namespace CrowdPunch.Systems.Combat
         {
             [ReadOnly] public ComponentLookup<Enemy> EnemyLookup;
             public ComponentLookup<EnemyLaunchState> LaunchStateLookup;
-            public ComponentLookup<PhysicsVelocity> VelocityLookup;
-            [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
-            public float MinimumRelativeSpeed;
-            public float VelocityFactor;
+            [ReadOnly] public PhysicsWorld World;
+            public float MinimumImpulse;
 
             public void Execute(CollisionEvent collisionEvent)
             {
@@ -61,11 +57,7 @@ namespace CrowdPunch.Systems.Combat
                 if (!EnemyLookup.HasComponent(entityA)
                     || !EnemyLookup.HasComponent(entityB)
                     || !LaunchStateLookup.HasComponent(entityA)
-                    || !LaunchStateLookup.HasComponent(entityB)
-                    || !VelocityLookup.HasComponent(entityA)
-                    || !VelocityLookup.HasComponent(entityB)
-                    || !TransformLookup.HasComponent(entityA)
-                    || !TransformLookup.HasComponent(entityB))
+                    || !LaunchStateLookup.HasComponent(entityB))
                 {
                     return;
                 }
@@ -75,17 +67,17 @@ namespace CrowdPunch.Systems.Combat
 
                 if (phaseA == EnemyLaunchPhase.Launched && phaseB != EnemyLaunchPhase.Launched)
                 {
-                    TryPropagate(entityA, entityB);
+                    TryPropagate(collisionEvent, entityB);
                     return;
                 }
 
                 if (phaseB == EnemyLaunchPhase.Launched && phaseA != EnemyLaunchPhase.Launched)
                 {
-                    TryPropagate(entityB, entityA);
+                    TryPropagate(collisionEvent, entityA);
                 }
             }
 
-            private void TryPropagate(Entity source, Entity target)
+            private void TryPropagate(CollisionEvent collisionEvent, Entity target)
             {
                 EnemyLaunchPhase targetPhase = LaunchStateLookup[target].Phase;
                 if (targetPhase != EnemyLaunchPhase.Active && targetPhase != EnemyLaunchPhase.Recovering)
@@ -93,28 +85,11 @@ namespace CrowdPunch.Systems.Combat
                     return;
                 }
 
-                float3 sourceVelocity = VelocityLookup[source].Linear;
-                float3 targetVelocity = VelocityLookup[target].Linear;
-                float relativeSpeed = math.length(sourceVelocity - targetVelocity);
-                if (relativeSpeed < MinimumRelativeSpeed)
+                CollisionEvent.Details details = collisionEvent.CalculateDetails(ref World);
+                if (details.EstimatedImpulse < MinimumImpulse)
                 {
                     return;
                 }
-
-                float3 sourceToTarget = TransformLookup[target].Position - TransformLookup[source].Position;
-                float3 relativeVelocity = sourceVelocity - targetVelocity;
-                float3 fallbackDirection = math.normalizesafe(sourceToTarget);
-                float3 transferredVelocity = math.normalizesafe(relativeVelocity, fallbackDirection)
-                    * math.length(relativeVelocity)
-                    * VelocityFactor;
-                if (math.lengthsq(transferredVelocity) <= 0f)
-                {
-                    return;
-                }
-
-                PhysicsVelocity targetPhysicsVelocity = VelocityLookup[target];
-                targetPhysicsVelocity.Linear += transferredVelocity;
-                VelocityLookup[target] = targetPhysicsVelocity;
 
                 EnemyLaunchState targetState = LaunchStateLookup[target];
                 targetState.Phase = EnemyLaunchPhase.Launched;
@@ -122,6 +97,7 @@ namespace CrowdPunch.Systems.Combat
                 targetState.BelowUsefulMomentumSeconds = 0f;
                 targetState.RecoverySecondsRemaining = 0f;
                 targetState.PropagatedLaunchCount++;
+                targetState.LastPropagationImpulse = details.EstimatedImpulse;
                 LaunchStateLookup[target] = targetState;
             }
         }

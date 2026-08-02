@@ -7,8 +7,7 @@ namespace CrowdPunch.Components
     /// </summary>
     public struct EnemyLaunchSettings : IComponentData
     {
-        public float MinimumPropagationRelativeSpeed;
-        public float PropagatedVelocityFactor;
+        public float MinimumPropagationImpulse;
         public float UsefulMomentumSpeed;
         public float LowMomentumPeriod;
         public float RecoveryDuration;
