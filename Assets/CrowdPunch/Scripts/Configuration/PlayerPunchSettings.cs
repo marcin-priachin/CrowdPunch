@@ -16,6 +16,7 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float damage = 10f;
         [SerializeField, Min(0f)] private float dashStrength = 12f;
         [SerializeField, Min(0f)] private float dashDamage = 10f;
+        [SerializeField, Min(0f)] private float cooldown = 0.5f;
         [SerializeField, Range(0f, 1f)] private float directionPositionWeight = 1f;
         [SerializeField, Min(0f)] private float areaFeedbackDuration = 0.5f;
 
@@ -25,6 +26,7 @@ namespace CrowdPunch.Configuration
         public float Damage => damage;
         public float DashStrength => dashStrength;
         public float DashDamage => dashDamage;
+        public float Cooldown => cooldown;
         public float DirectionPositionWeight => directionPositionWeight;
         public float AreaFeedbackDuration => areaFeedbackDuration;
 

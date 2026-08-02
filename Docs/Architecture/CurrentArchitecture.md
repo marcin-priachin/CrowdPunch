@@ -40,7 +40,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 
 | Concern | Current owner | Boundary/data |
 |---|---|---|
-| Input, player transform, and dash-punch coordination | GameObject | `PlayerController` owns dash timing/cancellation; `PlayerPunch` owns attack input/buffering |
+| Input, player transform, and dash-punch coordination | GameObject | `PlayerController` owns dash timing/cancellation; `PlayerPunch` owns attack input, buffering, and cooldown |
 | Player health and invincibility | GameObject | `PlayerHealth` |
 | Camera | GameObject | `CameraFollow` |
 | Scene bootstrap and UI | GameObject | `GameBootstrap`, UI MonoBehaviours |

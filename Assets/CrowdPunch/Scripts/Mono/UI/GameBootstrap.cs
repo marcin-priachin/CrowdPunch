@@ -11,6 +11,7 @@ namespace CrowdPunch.Mono.UI
         [SerializeField] private PlayerEcsBridge playerBridge;
         [SerializeField] private PlayerHealth playerHealth;
         [SerializeField] private PlayerController playerController;
+        [SerializeField] private PlayerPunch playerPunch;
         [SerializeField] private GameObject gameCanvasPrefab;
         [SerializeField] private bool createGameCanvas = true;
 
@@ -22,6 +23,7 @@ namespace CrowdPunch.Mono.UI
             }
 
             EnsurePlayerController();
+            EnsurePlayerPunch();
             EnsurePlayerHealth();
             EnsurePunchTrajectoryPreview();
             EnsureGameCanvas();
@@ -41,9 +43,11 @@ namespace CrowdPunch.Mono.UI
             Time.timeScale = 1f;
             ReactivatePlayerObject();
             EnsurePlayerController();
+            EnsurePlayerPunch();
             EnsurePlayerHealth();
 
             playerController?.ResetPlayerState();
+            playerPunch?.ResetPunchState();
             playerHealth?.ResetHealth();
             GameRestartRegistry.RequestRestart();
             BindPlayerHealthBars();
@@ -80,6 +84,16 @@ namespace CrowdPunch.Mono.UI
             }
 
             playerController = playerBridge.GetComponent<PlayerController>();
+        }
+
+        private void EnsurePlayerPunch()
+        {
+            if (playerPunch != null || playerBridge == null)
+            {
+                return;
+            }
+
+            playerPunch = playerBridge.GetComponent<PlayerPunch>();
         }
 
         private void EnsurePlayerHealth()

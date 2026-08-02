@@ -19,6 +19,7 @@ namespace CrowdPunch.Mono.Player
         private PunchAreaFeedback areaFeedback;
         private InputAction attackAction;
         private bool hasBufferedDashPunch;
+        private float nextPunchTime;
 
         public float PunchRadius => settings == null ? 0f : settings.Radius;
 
@@ -114,7 +115,7 @@ namespace CrowdPunch.Mono.Player
 
         public void RequestPunch()
         {
-            if (!isActiveAndEnabled || ecsBridge == null)
+            if (!CanPunch())
             {
                 ClearBufferedDashPunch();
                 return;
@@ -145,7 +146,8 @@ namespace CrowdPunch.Mono.Player
             }
 
             hasBufferedDashPunch = false;
-            if (playerController == null || !playerController.TryCancelDashForPunch(out Vector3 dashPunchDirection))
+            if (!CanPunch() || playerController == null ||
+                !playerController.TryCancelDashForPunch(out Vector3 dashPunchDirection))
             {
                 return;
             }
@@ -156,6 +158,19 @@ namespace CrowdPunch.Mono.Player
         private void ClearBufferedDashPunch()
         {
             hasBufferedDashPunch = false;
+        }
+
+        public void ResetPunchState()
+        {
+            nextPunchTime = 0f;
+            ClearBufferedDashPunch();
+            areaFeedback?.Hide();
+            ecsBridge?.ClearPunch();
+        }
+
+        private bool CanPunch()
+        {
+            return isActiveAndEnabled && ecsBridge != null && settings != null && Time.time >= nextPunchTime;
         }
 
         private void PublishPunch(Vector3? directionOverride = null, bool isDashPunch = false)
@@ -179,6 +194,7 @@ namespace CrowdPunch.Mono.Player
                 isDashPunch ? settings.DashStrength : settings.Strength,
                 isDashPunch ? settings.DashDamage : settings.Damage,
                 settings.DirectionPositionWeight);
+            nextPunchTime = Time.time + settings.Cooldown;
         }
     }
 }

@@ -135,6 +135,12 @@ Status: Must
 
 When a normal or dash-buffered punch begins, show a semitransparent world-space shape matching the committed punch area for `0.5` seconds. The shape retains the punch's committed world-space origin and direction for its full display interval, including the committed dash direction for a dash punch.
 
+### PLAYER-009 — Punch Cooldown
+
+Status: Must
+
+Normal and dash punches share a configurable cooldown that begins when a punch is committed. Punch input rejected by cooldown does not cancel dash movement or leave a buffered request.
+
 ## Combat And Crowd Physics
 
 ### COMBAT-001 — Enemies As Projectiles
