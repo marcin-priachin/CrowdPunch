@@ -44,6 +44,7 @@ namespace CrowdPunch.Bakers
             {
                 Normalized = 1f
             });
+            AddComponent<EnemyHealthBarVisibility>(entity);
             AddComponent(entity, new EnemyContactDamageSettings
             {
                 DamagePercent = authoring.ContactDamagePercent,
@@ -52,6 +53,7 @@ namespace CrowdPunch.Bakers
                 ContactRadius = authoring.ContactRadius
             });
             AddComponent<DamageRequest>(entity);
+            AddBuffer<CollisionDamageHistory>(entity);
             AddComponent<EnemyDamageState>(entity);
             AddComponent<DeathRequest>(entity);
             AddComponent<ExternalImpulse>(entity);
@@ -59,6 +61,7 @@ namespace CrowdPunch.Bakers
             AddComponent<RespawnRequest>(entity);
 
             SetComponentEnabled<DamageRequest>(entity, false);
+            SetComponentEnabled<EnemyHealthBarVisibility>(entity, false);
             SetComponentEnabled<DeathRequest>(entity, false);
             SetComponentEnabled<ExternalImpulse>(entity, false);
             SetComponentEnabled<KnockbackRecovery>(entity, false);

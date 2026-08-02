@@ -2,6 +2,7 @@ using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace CrowdPunch.Systems.Presentation
 {
@@ -25,6 +26,22 @@ namespace CrowdPunch.Systems.Presentation
                      SystemAPI.Query<RefRO<Health>, RefRW<HealthBar>>())
             {
                 healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
+            }
+
+            float deltaTime = SystemAPI.Time.DeltaTime;
+            foreach ((RefRW<EnemyHealthBarVisibility> visibility, Entity enemy) in
+                     SystemAPI.Query<RefRW<EnemyHealthBarVisibility>>()
+                         .WithAll<Enemy>()
+                         .WithEntityAccess())
+            {
+                visibility.ValueRW.SecondsRemaining = math.max(
+                    0f,
+                    visibility.ValueRO.SecondsRemaining - deltaTime);
+
+                if (visibility.ValueRO.SecondsRemaining <= 0f)
+                {
+                    SystemAPI.SetComponentEnabled<EnemyHealthBarVisibility>(enemy, false);
+                }
             }
         }
     }

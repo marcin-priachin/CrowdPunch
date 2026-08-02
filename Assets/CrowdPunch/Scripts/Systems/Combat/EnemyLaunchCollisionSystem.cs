@@ -10,7 +10,7 @@ using Unity.Physics.Systems;
 namespace CrowdPunch.Systems.Combat
 {
     /// <summary>
-    /// Interprets solver-resolved enemy impacts and propagates launched state without altering velocity.
+    /// Interprets solver-resolved enemy impacts, independently resolving launch propagation and damage.
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
@@ -34,8 +34,15 @@ namespace CrowdPunch.Systems.Combat
             {
                 EnemyLookup = SystemAPI.GetComponentLookup<Enemy>(true),
                 LaunchStateLookup = SystemAPI.GetComponentLookup<EnemyLaunchState>(),
+                RespawnLookup = SystemAPI.GetComponentLookup<RespawnRequest>(true),
+                DamageRequestLookup = SystemAPI.GetComponentLookup<DamageRequest>(),
+                DamageHistoryLookup = SystemAPI.GetBufferLookup<CollisionDamageHistory>(),
                 World = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
-                MinimumImpulse = math.max(0f, settings.MinimumPropagationImpulse)
+                MinimumPropagationImpulse = math.max(0f, settings.MinimumPropagationImpulse),
+                MinimumDamageImpulse = math.max(0f, settings.MinimumDamageImpulse),
+                BaseDamageMultiplier = math.max(0f, settings.BaseCollisionDamageMultiplier),
+                DamageMultiplierPerExcessImpulse = math.max(0f, settings.DamageMultiplierPerExcessImpulse),
+                MaximumDamageMultiplier = math.max(0f, settings.MaximumCollisionDamageMultiplier)
             };
 
             state.Dependency = job.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
@@ -46,8 +53,15 @@ namespace CrowdPunch.Systems.Combat
         {
             [ReadOnly] public ComponentLookup<Enemy> EnemyLookup;
             public ComponentLookup<EnemyLaunchState> LaunchStateLookup;
+            [ReadOnly] public ComponentLookup<RespawnRequest> RespawnLookup;
+            public ComponentLookup<DamageRequest> DamageRequestLookup;
+            public BufferLookup<CollisionDamageHistory> DamageHistoryLookup;
             [ReadOnly] public PhysicsWorld World;
-            public float MinimumImpulse;
+            public float MinimumPropagationImpulse;
+            public float MinimumDamageImpulse;
+            public float BaseDamageMultiplier;
+            public float DamageMultiplierPerExcessImpulse;
+            public float MaximumDamageMultiplier;
 
             public void Execute(CollisionEvent collisionEvent)
             {
@@ -57,7 +71,9 @@ namespace CrowdPunch.Systems.Combat
                 if (!EnemyLookup.HasComponent(entityA)
                     || !EnemyLookup.HasComponent(entityB)
                     || !LaunchStateLookup.HasComponent(entityA)
-                    || !LaunchStateLookup.HasComponent(entityB))
+                    || !LaunchStateLookup.HasComponent(entityB)
+                    || IsUnavailable(entityA)
+                    || IsUnavailable(entityB))
                 {
                     return;
                 }
@@ -67,38 +83,102 @@ namespace CrowdPunch.Systems.Combat
 
                 if (phaseA == EnemyLaunchPhase.Launched && phaseB != EnemyLaunchPhase.Launched)
                 {
-                    TryPropagate(collisionEvent, entityB);
+                    ResolveImpact(collisionEvent, entityA, entityB, phaseB);
                     return;
                 }
 
                 if (phaseB == EnemyLaunchPhase.Launched && phaseA != EnemyLaunchPhase.Launched)
                 {
-                    TryPropagate(collisionEvent, entityA);
+                    ResolveImpact(collisionEvent, entityB, entityA, phaseA);
                 }
             }
 
-            private void TryPropagate(CollisionEvent collisionEvent, Entity target)
+            private bool IsUnavailable(Entity entity)
             {
-                EnemyLaunchPhase targetPhase = LaunchStateLookup[target].Phase;
+                return RespawnLookup.HasComponent(entity) && RespawnLookup.IsComponentEnabled(entity);
+            }
+
+            private void ResolveImpact(
+                CollisionEvent collisionEvent,
+                Entity source,
+                Entity target,
+                EnemyLaunchPhase targetPhase)
+            {
                 if (targetPhase != EnemyLaunchPhase.Active && targetPhase != EnemyLaunchPhase.Recovering)
                 {
                     return;
                 }
 
                 CollisionEvent.Details details = collisionEvent.CalculateDetails(ref World);
-                if (details.EstimatedImpulse < MinimumImpulse)
+                float estimatedImpulse = math.max(0f, details.EstimatedImpulse);
+
+                // Establish launch before queuing damage so lethal collision damage is deferred deterministically.
+                if (estimatedImpulse >= MinimumPropagationImpulse)
                 {
-                    return;
+                    PropagateLaunch(source, target, estimatedImpulse);
                 }
 
+                TryQueueDamage(source, target, estimatedImpulse);
+            }
+
+            private void PropagateLaunch(Entity source, Entity target, float estimatedImpulse)
+            {
+                EnemyLaunchState sourceState = LaunchStateLookup[source];
                 EnemyLaunchState targetState = LaunchStateLookup[target];
                 targetState.Phase = EnemyLaunchPhase.Launched;
                 targetState.LastCause = EnemyLaunchCause.EnemyCollision;
                 targetState.BelowUsefulMomentumSeconds = 0f;
                 targetState.RecoverySecondsRemaining = 0f;
+                targetState.LaunchSequence++;
+                targetState.LaunchDamage = sourceState.LaunchDamage;
                 targetState.PropagatedLaunchCount++;
-                targetState.LastPropagationImpulse = details.EstimatedImpulse;
+                targetState.LastPropagationImpulse = estimatedImpulse;
                 LaunchStateLookup[target] = targetState;
+            }
+
+            private void TryQueueDamage(Entity source, Entity target, float estimatedImpulse)
+            {
+                if (estimatedImpulse < MinimumDamageImpulse
+                    || !DamageRequestLookup.HasComponent(target)
+                    || !DamageHistoryLookup.HasBuffer(target))
+                {
+                    return;
+                }
+
+                uint sourceLaunchSequence = LaunchStateLookup[source].LaunchSequence;
+                DynamicBuffer<CollisionDamageHistory> history = DamageHistoryLookup[target];
+                for (int index = 0; index < history.Length; index++)
+                {
+                    CollisionDamageHistory entry = history[index];
+                    if (entry.Source == source && entry.SourceLaunchSequence == sourceLaunchSequence)
+                    {
+                        return;
+                    }
+                }
+
+                float launchDamage = math.max(0f, LaunchStateLookup[source].LaunchDamage);
+                float damageMultiplier = math.min(
+                    MaximumDamageMultiplier,
+                    BaseDamageMultiplier
+                    + (estimatedImpulse - MinimumDamageImpulse) * DamageMultiplierPerExcessImpulse);
+                float damage = launchDamage * damageMultiplier;
+                if (damage <= 0f)
+                {
+                    return;
+                }
+
+                history.Add(new CollisionDamageHistory
+                {
+                    Source = source,
+                    SourceLaunchSequence = sourceLaunchSequence
+                });
+
+                DamageRequest pendingDamage = DamageRequestLookup.IsComponentEnabled(target)
+                    ? DamageRequestLookup[target]
+                    : default;
+                pendingDamage.Amount += damage;
+                DamageRequestLookup[target] = pendingDamage;
+                DamageRequestLookup.SetComponentEnabled(target, true);
             }
         }
     }

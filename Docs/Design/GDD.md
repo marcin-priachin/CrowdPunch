@@ -203,6 +203,12 @@ Status: Must
 
 An enemy whose health reaches zero while `Launched` remains a physical launched projectile and may continue eligible launch propagation under the normal collision rules. When its launch would otherwise end, it enters `Defeated` directly instead of `Recovering`; it must never return to `Active`. Launch propagation and damage are separate outcomes, so an ordinary enemy collision does not implicitly deal damage.
 
+### COMBAT-012 — Launched-Enemy Collision Damage
+
+Status: Must
+
+A sufficiently forceful collision from one `Launched` enemy into an `Active` or `Recovering` enemy deals damage scaled from the player punch damage that originated the launch chain. Solver-estimated impulse determines eligibility and increases the damage multiplier up to a cap. Launch propagation and damage use independent thresholds and outcomes. During one continuous source launch, a source-target pair may deal collision damage once, while that source may damage multiple different targets. Collisions between two already-launched enemies do not deal this damage. Propagated enemies inherit the originating punch damage, and propagation is established before collision damage is evaluated so lethal damage on the target follows deferred-defeat rules. Numerical thresholds and multipliers are provisional.
+
 ## Effects And Combinations
 
 ### EFFECT-001 — Collision Propagation
@@ -237,11 +243,11 @@ If the final combination set becomes too large to learn naturally, provide a com
 
 ## Enemies And Information
 
-### INFO-001 — No Normal-Enemy UI
+### INFO-001 — No Persistent Normal-Enemy UI
 
 Status: Must
 
-Do not attach health bars, names, status icons, targeting markers, or other persistent UI to normal enemies. There will be too many of them, and such UI would add noise to an already busy screen.
+Do not attach persistent health bars, names, status icons, targeting markers, or other persistent UI to normal enemies. There will be too many of them, and such UI would add noise to an already busy screen. A normal enemy may show a temporary health bar for one second after receiving damage; another damaging hit refreshes that interval.
 
 ### INFO-002 — Minimal HUD
 
@@ -328,7 +334,7 @@ The MVP must support a start-to-boss-to-win-or-loss run rather than only a comba
 ## Explicit Non-Goals For The Current Baseline
 
 - Conventional attack combo strings.
-- Individual UI for normal enemies.
+- Persistent individual UI for normal enemies.
 - A large encyclopaedia before the number of effect combinations justifies it.
 - Unlocking basic movement or core crowd-manipulation mechanics during a run.
 - Direct ordinary attacks as the complete boss solution.

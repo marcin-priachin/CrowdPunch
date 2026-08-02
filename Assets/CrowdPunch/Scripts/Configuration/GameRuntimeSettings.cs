@@ -10,12 +10,22 @@ namespace CrowdPunch.Configuration
         [Header("Enemy Launch (Provisional)")]
         [Tooltip("Minimum solver-estimated contact impulse required for a launched enemy to launch another enemy.")]
         [SerializeField, Min(0f)] private float minimumPropagationImpulse = 1.5f;
+        [Tooltip("Minimum solver-estimated contact impulse required for a launched enemy to damage another enemy.")]
+        [SerializeField, Min(0f)] private float minimumDamageImpulse = 2f;
+        [Tooltip("Fraction of the originating punch damage dealt at the minimum damaging impulse.")]
+        [SerializeField, Min(0f)] private float baseCollisionDamageMultiplier = 0.25f;
+        [SerializeField, Min(0f)] private float damageMultiplierPerExcessImpulse = 0.05f;
+        [SerializeField, Min(0f)] private float maximumCollisionDamageMultiplier = 0.75f;
         [SerializeField, Min(0f)] private float usefulMomentumSpeed = 2f;
         [SerializeField, Min(0f)] private float lowMomentumPeriod = 0.25f;
         [SerializeField, Min(0f)] private float recoveryDuration = 0.6f;
 
         public bool StartRunning => startRunning;
         public float MinimumPropagationImpulse => minimumPropagationImpulse;
+        public float MinimumDamageImpulse => minimumDamageImpulse;
+        public float BaseCollisionDamageMultiplier => baseCollisionDamageMultiplier;
+        public float DamageMultiplierPerExcessImpulse => damageMultiplierPerExcessImpulse;
+        public float MaximumCollisionDamageMultiplier => maximumCollisionDamageMultiplier;
         public float UsefulMomentumSpeed => usefulMomentumSpeed;
         public float LowMomentumPeriod => lowMomentumPeriod;
         public float RecoveryDuration => recoveryDuration;

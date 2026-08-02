@@ -76,11 +76,14 @@ namespace CrowdPunch.Systems.Combat
                 launchState.ValueRW.LastCause = EnemyLaunchCause.PlayerPunch;
                 launchState.ValueRW.BelowUsefulMomentumSeconds = 0f;
                 launchState.ValueRW.RecoverySecondsRemaining = 0f;
+                launchState.ValueRW.LaunchSequence++;
+                launchState.ValueRW.LaunchDamage = math.max(0f, punchRequest.Damage);
 
-                SystemAPI.SetComponent(enemy, new DamageRequest
-                {
-                    Amount = punchRequest.Damage
-                });
+                DamageRequest pendingDamage = SystemAPI.IsComponentEnabled<DamageRequest>(enemy)
+                    ? SystemAPI.GetComponent<DamageRequest>(enemy)
+                    : default;
+                pendingDamage.Amount += punchRequest.Damage;
+                SystemAPI.SetComponent(enemy, pendingDamage);
                 SystemAPI.SetComponentEnabled<DamageRequest>(enemy, true);
 
             }

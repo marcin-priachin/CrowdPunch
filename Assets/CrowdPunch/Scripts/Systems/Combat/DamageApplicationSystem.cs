@@ -14,6 +14,8 @@ namespace CrowdPunch.Systems.Combat
     [UpdateAfter(typeof(PunchDetectionSystem))]
     public partial struct DamageApplicationSystem : ISystem
     {
+        private const float DamagedHealthBarDurationSeconds = 1f;
+
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
@@ -48,6 +50,15 @@ namespace CrowdPunch.Systems.Combat
                     0f,
                     math.max(0f, health.ValueRO.Max));
                 damageState.ValueRW.LastDamageReceived = appliedDamage;
+
+                if (appliedDamage > 0f)
+                {
+                    SystemAPI.SetComponent(entity, new EnemyHealthBarVisibility
+                    {
+                        SecondsRemaining = DamagedHealthBarDurationSeconds
+                    });
+                    SystemAPI.SetComponentEnabled<EnemyHealthBarVisibility>(entity, true);
+                }
 
                 SystemAPI.SetComponentEnabled<DamageRequest>(entity, false);
 

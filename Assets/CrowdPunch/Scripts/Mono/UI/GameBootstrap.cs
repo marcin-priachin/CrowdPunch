@@ -25,6 +25,7 @@ namespace CrowdPunch.Mono.UI
             EnsurePlayerHealth();
             EnsurePunchTrajectoryPreview();
             EnsureGameCanvas();
+            EnsureEnemyHealthBarCanvas();
             BindPlayerHealthBars();
 
             PlayerBridgeRegistry.Register(playerBridge);
@@ -130,6 +131,20 @@ namespace CrowdPunch.Mono.UI
             foreach (PlayerHealthBar healthBar in FindObjectsByType<PlayerHealthBar>(FindObjectsSortMode.None))
             {
                 healthBar.Bind(playerHealth);
+            }
+        }
+
+        private static void EnsureEnemyHealthBarCanvas()
+        {
+            if (FindFirstObjectByType<EnemyHealthBarCanvas>() != null)
+            {
+                return;
+            }
+
+            Canvas canvas = FindFirstObjectByType<Canvas>();
+            if (canvas != null)
+            {
+                canvas.gameObject.AddComponent<EnemyHealthBarCanvas>();
             }
         }
     }

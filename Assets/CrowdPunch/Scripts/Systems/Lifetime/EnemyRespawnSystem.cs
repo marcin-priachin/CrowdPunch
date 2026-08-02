@@ -74,6 +74,7 @@ namespace CrowdPunch.Systems.Lifetime
                     health.ValueRW.Current = health.ValueRO.Max;
                     healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
                     damageState.ValueRW = default;
+                    SystemAPI.GetBuffer<CollisionDamageHistory>(enemy).Clear();
                     if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
                     {
                         SystemAPI.SetComponent(enemy, new EnemyLaunchState
@@ -151,6 +152,11 @@ namespace CrowdPunch.Systems.Lifetime
             if (SystemAPI.HasComponent<ExternalImpulse>(enemy))
             {
                 SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, false);
+            }
+
+            if (SystemAPI.HasComponent<EnemyHealthBarVisibility>(enemy))
+            {
+                SystemAPI.SetComponentEnabled<EnemyHealthBarVisibility>(enemy, false);
             }
 
             if (SystemAPI.HasComponent<KnockbackRecovery>(enemy))

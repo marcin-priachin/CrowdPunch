@@ -18,10 +18,6 @@ Which four enemy types best prove crowd composition without creating excessive p
 
 Which two weapons provide meaningfully different launch geometry while preserving one coherent physical combat language?
 
-### OQ-005 — Chain Eligibility
-
-Which collisions propagate damage, impulse, and effects? Possible variables include relative velocity, source state, mass, angle, and time since the player launch.
-
 ## Priority 2 — Needed For A Complete MVP Run
 
 ### OQ-007 — Boss Interaction
@@ -97,6 +93,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-08-02 — OQ-005
+
+Decision: A solver-estimated impulse threshold independently determines whether one launched enemy damages an active or recovering target. Collision damage is a multiplier of the player punch damage that originated the launch chain; impulse increases that multiplier up to a cap, and propagated enemies inherit the originating value. A source-target pair can deal collision damage once per continuous source launch, while the source can damage multiple targets. Launched-versus-launched collisions are initially excluded. Launch propagation resolves before damage and uses its own threshold.
+
+Rationale: This creates readable, physically grounded chain damage while preventing sustained-contact damage loops and preserving launch propagation as a distinct outcome.
+
+GDD rules: COMBAT-002, COMBAT-003, COMBAT-004, COMBAT-009, COMBAT-011, COMBAT-012
 
 ### 2026-08-02 — OQ-004
 

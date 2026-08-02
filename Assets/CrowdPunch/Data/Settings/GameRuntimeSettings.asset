@@ -14,6 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.GameRuntimeSettings
   startRunning: 1
   minimumPropagationImpulse: 1.5
+  minimumDamageImpulse: 2
+  baseCollisionDamageMultiplier: 0.25
+  damageMultiplierPerExcessImpulse: 0.05
+  maximumCollisionDamageMultiplier: 0.75
   usefulMomentumSpeed: 2
   lowMomentumPeriod: 0.25
   recoveryDuration: 0.6

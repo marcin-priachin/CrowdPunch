@@ -52,6 +52,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Enemy combat state | ECS | health, damage, impulse, explicit launch lifecycle, death/respawn requests |
 | Punch trajectory preview | ECS → bridge → GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
 | Committed punch-area feedback | GameObject | `PlayerPunch` triggers `PunchAreaFeedback` from the same origin, direction, radius, and range published to ECS |
+| Temporary enemy health bars | ECS → presentation registry → Canvas | `EnemyHealthBarVisibility`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas` |
 
 MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exposes the one active `PlayerEcsBridge` to the few managed systems that cross the boundary.
 
@@ -83,7 +84,7 @@ Ordering between systems that share only a group should be made explicit when co
 
 `GamePostPhysicsGroup` runs as a direct child of `SimulationSystemGroup` after `PhysicsSystemGroup`:
 
-- `EnemyLaunchCollisionSystem` interprets solver-resolved enemy impacts and propagates launched state without rewriting velocity.
+- `EnemyLaunchCollisionSystem` interprets solver-resolved enemy impacts, resolves launch propagation first, and independently queues eligible impulse-scaled collision damage without rewriting velocity.
 - `EnemyRecoverySystem` advances living `Launched` enemies through low-momentum dwell and `Recovering` back to `Active`; a zero-health launched enemy enters `Defeated` directly when launch ends.
 - `PlayerContactDamageSystem` detects enemy proximity/contact and reports the closest accepted hit through the bridge.
 - `OutOfBoundsSystem` requests recovery for escaped enemies.
@@ -94,11 +95,12 @@ Ordering between systems that share only a group should be made explicit when co
 
 `GamePresentationGroup` runs in Unity's presentation phase:
 
-- `HealthBarPresentationSystem` updates ECS health-bar presentation data.
+- `HealthBarPresentationSystem` updates ECS health-bar presentation data and expires one-second post-damage visibility.
+- `EnemyHealthBarBridgeSystem` publishes only currently visible enemy position/health snapshots to the registered screen-space Canvas.
 - `PresentationBridgeSystem` is the explicit ECS presentation bridge point.
 - `PresentationBridgeSystem` selects enemies currently inside the live punch volume and publishes their initial launch segments through `PlayerEcsBridge`; `PunchTrajectoryPreview` renders those segments as pooled semitransparent world-space lines.
 
-The GDD now prohibits normal-enemy health UI, so the existing ECS `HealthBar` path should be treated as prototype/legacy behavior and reviewed when presentation is next changed.
+Normal-enemy health bars are transient damage feedback only. `EnemyHealthBarCanvas` pools screen-space bar objects and hides each one after ECS disables `EnemyHealthBarVisibility`; the Canvas never queries or stores enemy entities.
 
 ## Transient State Pattern
 
@@ -110,12 +112,15 @@ Frequently toggled state is represented by enableable components to avoid archet
 - `DamageRequest`
 - `DeathRequest`
 - `RespawnRequest`
+- `EnemyHealthBarVisibility`
 
 Enemy lifecycle is represented by the non-enableable `EnemyLaunchState` component because every enemy is always in exactly one of `Active`, `Launched`, `Recovering`, or `Defeated`. Its phase, last launch cause, and propagated-launch count remain visible in the Entities inspector. `Health` exposes current and maximum health, while `EnemyDamageState` records the last applied damage and whether zero-health defeat is currently deferred for development inspection.
 
 `DamageApplicationSystem` is the explicit pre-physics health stage after punch detection. Punch detection establishes `Launched` before damage is evaluated, so a same-frame lethal launching punch deterministically defers defeat and still receives its impulse. After physics and collision propagation, `EnemyRecoverySystem` chooses either normal recovery for a living projectile or direct defeat for a zero-health projectile. `DeathRequest` is enabled only on the transition to `Defeated`, making the lifetime handoff idempotent; `DefeatedEnemyLifecycleSystem` consumes it once and enables `RespawnRequest`.
 
-`GameSettingsAuthoring` reads reusable `GameRuntimeSettings` ScriptableObject data and bakes `EnemyLaunchSettings` as scene-level singleton configuration. Its launch values are provisional sandbox tuning for OQ-004/OQ-005: minimum solver-estimated propagation impulse, useful-momentum threshold and dwell, and recovery duration. Player movement and punch settings assets also own their Input System asset/action selection, while `EnemySpawnSettings` owns the enemy prefab and initial crowd tuning. Scene MonoBehaviours retain only scene-instance wiring such as bridges, cameras, and origin transforms.
+Collision damage is queued post-physics into the target's existing `DamageRequest` and applied during the next pre-physics damage stage. `EnemyLaunchState.LaunchDamage` carries the originating normal or dash punch damage through every propagated launch; collision impulse selects a configured multiplier of that value up to a cap. `EnemyLaunchState.LaunchSequence` identifies each continuous launch. Each target's `CollisionDamageHistory` buffer suppresses repeat damage from the same source sequence; `CollisionDamageHistoryCleanupSystem` removes entries when the source leaves that launch. Propagation and collision damage have independent impulse thresholds. Only launched-to-active/recovering impacts are damage-eligible, and propagation is written before damage is queued so a lethal propagated target defers defeat.
+
+`GameSettingsAuthoring` reads reusable `GameRuntimeSettings` ScriptableObject data and bakes `EnemyLaunchSettings` as scene-level singleton configuration. Its provisional sandbox tuning includes independent propagation/damage impulse thresholds, base/per-impulse/maximum collision-damage multipliers, useful-momentum threshold and dwell, and recovery duration. Player movement and punch settings assets own normal and dash punch damage as well as their Input System asset/action selection, while `EnemySpawnSettings` owns the enemy prefab and initial crowd tuning. Scene MonoBehaviours retain only scene-instance wiring such as bridges, cameras, and origin transforms.
 
 Systems get the entity for mixed singleton state through a non-enableable component such as `PlayerSnapshot` or `MatchState`, then inspect or toggle enableable state explicitly.
 
@@ -123,10 +128,10 @@ Systems get the entity for mixed singleton state through a non-enableable compon
 
 The current implementation proves architecture and basic interactions, but several behaviors are placeholders:
 
-- Punch detection uses a line/capsule-like distance test and independently assigns impulse, damage, and launched state. Damage is not inferred from enemy collisions.
+- Punch detection uses a line/capsule-like distance test and independently assigns impulse, damage, and launched state. Enemy collision damage is also independently thresholded rather than inferred from propagation.
 - Player movement and dash are transform-driven MonoBehaviour movement.
 - Dash-punch coordination stays on the player GameObject: `PlayerPunch` buffers an early press, while `PlayerController` reports normalized progress from its existing dash timer and ends dash movement when the punch is consumed at or after the configured `0.5` midpoint. Dash punches select independently configured damage and launch strength, then use the ordinary bridge and ECS punch pipeline.
-- A launched enemy, including a zero-health enemy with deferred defeat, can propagate launched state to an active or recovering enemy when Unity Physics reports a solver-estimated contact impulse above the authored threshold. Unity Physics exclusively owns the resulting velocities; the gameplay system does not add a second synthetic transfer. Defeated enemies are neither sources nor targets. The target becomes launched immediately, which also prevents a sustained contact from propagating repeatedly. The final effect grammar and broader chain eligibility remain unresolved.
+- A launched enemy, including a zero-health enemy with deferred defeat, can propagate launched state to and independently damage an active or recovering enemy when Unity Physics reports solver-estimated contact impulse above the respective authored thresholds. Unity Physics exclusively owns velocities; gameplay adds no synthetic transfer. One source launch damages each target at most once but may damage multiple targets. Defeated enemies and launched-versus-launched pairs are ineligible. The final effect grammar remains unresolved.
 - Enemy chasing and contact damage exist as prototype behavior.
 - A player health bar exists and is consistent with the GDD; ECS enemy health-bar presentation data exists but conflicts with the no-normal-enemy-UI rule if displayed.
 - The current scene is an arena sandbox, not the required route-based 15–20 minute run.

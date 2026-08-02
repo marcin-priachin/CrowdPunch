@@ -26,6 +26,8 @@ namespace CrowdPunch.Components
         public EnemyLaunchCause LastCause;
         public float BelowUsefulMomentumSeconds;
         public float RecoverySecondsRemaining;
+        public uint LaunchSequence;
+        public float LaunchDamage;
         public uint PropagatedLaunchCount;
         public float LastPropagationImpulse;
     }
