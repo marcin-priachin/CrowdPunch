@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace CrowdPunch.Authoring
 {
@@ -17,7 +18,9 @@ namespace CrowdPunch.Authoring
         [SerializeField] private float stoppingDistance = 1.25f;
         [SerializeField] private float surroundDistance = 3.5f;
         [SerializeField] private float surroundRingSpacing = 0.75f;
-        [SerializeField] private float separationDistance = 1.35f;
+        [FormerlySerializedAs("separationDistance")]
+        [SerializeField] private float separationDistanceMin = 1.1f;
+        [SerializeField] private float separationDistanceMax = 1.6f;
         [SerializeField] private float separationWeight = 1.4f;
         [SerializeField, Min(0.01f)] private float maxHealth = 30f;
         [SerializeField, Range(0f, 1f)] private float contactDamagePercent = 0.05f;
@@ -55,10 +58,13 @@ namespace CrowdPunch.Authoring
         /// <summary>Offset between deterministic surrounding rings.</summary>
         public float SurroundRingSpacing => surroundRingSpacing;
 
-        /// <summary>Preferred minimum distance from nearby enemies.</summary>
-        public float SeparationDistance => separationDistance;
+        /// <summary>Minimum preferred distance an enemy can select when spawned.</summary>
+        public float SeparationDistanceMin => separationDistanceMin;
 
-        /// <summary>Strength of local enemy separation while chasing.</summary>
+        /// <summary>Maximum preferred distance an enemy can select when spawned.</summary>
+        public float SeparationDistanceMax => separationDistanceMax;
+
+        /// <summary>Strength of local enemy separation during active movement.</summary>
         public float SeparationWeight => separationWeight;
 
         /// <summary>Initial and maximum enemy health.</summary>

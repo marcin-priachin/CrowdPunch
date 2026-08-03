@@ -48,6 +48,7 @@ Assets/CrowdPunch/Scripts
 | `Components/PlayerHealthSnapshot.cs` | ECS-readable player health state from MonoBehaviour code. |
 | `Components/PunchRequest.cs` | Enableable one-frame punch request. |
 | `Components/EnemyMovementSettings.cs` | Enemy movement, surround, and separation tuning data. |
+| `Components/EnemySeparationDistance.cs` | Per-enemy preferred spacing selected from the authored range at spawn. |
 | `Components/EnemyContactDamageSettings.cs` | Enemy touch damage, push, and player invincibility tuning data. |
 | `Components/DesiredMovement.cs` | AI-produced movement intent. |
 | `Components/ExternalImpulse.cs` | Enableable pending physics impulse. |
@@ -92,7 +93,7 @@ Assets/CrowdPunch/Scripts
 
 Custom system groups make frame order explicit: bridge input, compute intent, apply impulses, simulate physics, reconcile state, then present results. This is clearer for learning than relying on default update order.
 
-Enemy movement is split into intent and application. `EnemyChaseSystem` chooses whether each enemy wanders or charges and writes `DesiredMovement`; while charging, enemies choose deterministic slots around the player and blend in short-range separation from nearby enemies. `EnemyMovementSystem` consumes that data and steers `PhysicsVelocity` toward the desired velocity instead of overwriting it instantly. This lets collision impulses survive long enough to affect other enemies. It also locks pitch and roll through `PhysicsMass.InverseInertia` so enemies remain upright while Unity Physics owns collision and position integration.
+Enemy movement is split into intent and application. Each enemy receives a deterministic random `EnemySeparationDistance` from the prefab's authored range when spawned. `EnemyChaseSystem` chooses whether each enemy wanders or charges and writes `DesiredMovement`; active enemies blend their selected short-range separation from nearby active enemies into both behaviors, and charging enemies also choose deterministic slots around the player. `EnemyMovementSystem` consumes that data and steers `PhysicsVelocity` toward the desired velocity instead of overwriting it instantly. This lets collision impulses survive long enough to affect other enemies. It also locks pitch and roll through `PhysicsMass.InverseInertia` so enemies remain upright while Unity Physics owns collision and position integration.
 
 Punching follows the same data pipeline. `PlayerPunch` publishes a `PunchRequest` through the bridge; `PunchDetectionSystem` tests active enemy positions against the request volume, transitions hits to `Launched`, and enables `ExternalImpulse` and `DamageRequest`; `DamageApplicationSystem` applies damage to `Health`; `ApplyImpulseSystem` adds the impulse to `PhysicsVelocity`. Post-physics collision interpretation propagates launched state while leaving collision velocity resolution to Unity Physics, and recovery advances `Launched` through `Recovering` to `Active`.
 

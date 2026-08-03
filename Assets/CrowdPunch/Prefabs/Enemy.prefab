@@ -138,7 +138,8 @@ MonoBehaviour:
   stoppingDistance: 1
   surroundDistance: 3.5
   surroundRingSpacing: 0.75
-  separationDistance: 1.35
+  separationDistanceMin: 6
+  separationDistanceMax: 9
   separationWeight: 1.4
   maxHealth: 20
   contactDamagePercent: 0.05

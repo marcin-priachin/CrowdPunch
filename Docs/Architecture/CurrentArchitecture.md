@@ -71,7 +71,7 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 `GamePrePhysicsGroup` runs as a direct child of `SimulationSystemGroup` before `PhysicsSystemGroup`:
 
 1. `PlayerBridgeSystem` copies the latest GameObject player snapshot, health, and punch request into ECS.
-2. `EnemyChaseSystem` produces enemy movement intent.
+2. `EnemyChaseSystem` produces enemy movement intent, blending each enemy's spawn-selected local separation distance into both wandering and charging.
 3. `EnemyMovementSystem` steers Unity Physics velocity toward that intent.
 4. `PunchDetectionSystem` finds active enemies inside the punch volume, transitions them to `Launched`, and enables impulse and damage requests.
 5. `DamageApplicationSystem` applies enabled damage requests, clamps health, and resolves immediate defeat or records launch-deferred defeat.

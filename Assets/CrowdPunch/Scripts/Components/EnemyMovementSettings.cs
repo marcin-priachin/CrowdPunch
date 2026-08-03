@@ -17,7 +17,8 @@ namespace CrowdPunch.Components
         public float StoppingDistance;
         public float SurroundDistance;
         public float SurroundRingSpacing;
-        public float SeparationDistance;
+        public float SeparationDistanceMin;
+        public float SeparationDistanceMax;
         public float SeparationWeight;
     }
 }

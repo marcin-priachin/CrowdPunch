@@ -215,6 +215,12 @@ Status: Must
 
 A sufficiently forceful collision from one `Launched` enemy into an `Active` or `Recovering` enemy deals damage scaled from the player punch damage that originated the launch chain. Solver-estimated impulse determines eligibility and increases the damage multiplier up to a cap. Launch propagation and damage use independent thresholds and outcomes. During one continuous source launch, a source-target pair may deal collision damage once, while that source may damage multiple different targets. Collisions between two already-launched enemies do not deal this damage. Propagated enemies inherit the originating punch damage, and propagation is established before collision damage is evaluated so lethal damage on the target follows deferred-defeat rules. Numerical thresholds and multipliers are provisional.
 
+### COMBAT-013 — Active Enemy Separation
+
+Status: Must
+
+Active enemies continuously try to maintain local separation from nearby active enemies while wandering and charging. Separation influences movement intent but must not disable enemy-enemy collisions, override launch physics, or prevent crowd compression caused by the arena, the player, or other physical forces.
+
 ## Effects And Combinations
 
 ### EFFECT-001 — Collision Propagation

@@ -37,12 +37,26 @@ namespace CrowdPunch.Systems.Initialization
                     continue;
                 }
 
+                EnemyMovementSettings movementSettings = SystemAPI.GetComponent<EnemyMovementSettings>(
+                    spawnSettings.EnemyPrefab);
+                float separationMin = math.max(0f, math.min(
+                    movementSettings.SeparationDistanceMin,
+                    movementSettings.SeparationDistanceMax));
+                float separationMax = math.max(separationMin, math.max(
+                    movementSettings.SeparationDistanceMin,
+                    movementSettings.SeparationDistanceMax));
+
                 for (int index = 0; index < spawnSettings.InitialCount; index++)
                 {
                     Entity enemy = commandBuffer.Instantiate(spawnSettings.EnemyPrefab);
                     float3 position = GetRandomSpawnPosition(ref random, spawnSettings.Center, spawnSettings.SpawnRadius);
+                    float separationDistance = random.NextFloat(separationMin, separationMax);
 
                     commandBuffer.SetComponent(enemy, LocalTransform.FromPosition(position));
+                    commandBuffer.SetComponent(enemy, new EnemySeparationDistance
+                    {
+                        Value = separationDistance
+                    });
                 }
             }
 

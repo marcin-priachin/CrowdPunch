@@ -68,6 +68,7 @@ namespace CrowdPunch.Systems.AI
                 ref WanderDestination wanderDestination,
                 in LocalTransform transform,
                 in EnemyMovementSettings movementSettings,
+                in EnemySeparationDistance separationDistance,
                 in EnemyLaunchState launchState)
             {
                 if (launchState.Phase != EnemyLaunchPhase.Active)
@@ -87,6 +88,7 @@ namespace CrowdPunch.Systems.AI
                 toPlayer.y = 0f;
 
                 float distanceToPlayer = math.length(toPlayer);
+                float3 separation = GetSeparation(transform.Position, separationDistance.Value);
 
                 if (distanceToPlayer <= movementSettings.ChargeDistance)
                 {
@@ -94,7 +96,6 @@ namespace CrowdPunch.Systems.AI
                     float3 toTarget = surroundTarget - transform.Position;
                     toTarget.y = 0f;
 
-                    float3 separation = GetSeparation(transform.Position, movementSettings);
                     float targetDistance = math.length(toTarget);
                     float3 targetDirection = targetDistance <= movementSettings.StoppingDistance
                         ? float3.zero
@@ -109,12 +110,26 @@ namespace CrowdPunch.Systems.AI
                     return;
                 }
 
-                desiredMovement.Direction = GetWanderDirection(
+                float3 wanderDirection = GetWanderDirection(
                     entity,
                     transform.Position,
                     movementSettings,
                     ref wanderDestination);
+                desiredMovement.Direction = BlendWithSeparation(
+                    wanderDirection,
+                    separation,
+                    movementSettings.SeparationWeight);
                 desiredMovement.Speed = movementSettings.WanderSpeed;
+            }
+
+            private static float3 BlendWithSeparation(
+                float3 movementDirection,
+                float3 separation,
+                float separationWeight)
+            {
+                return math.normalizesafe(
+                    movementDirection + separation * math.max(0f, separationWeight),
+                    separation);
             }
 
             private float3 GetSurroundContactTarget(Entity entity, float y, EnemyMovementSettings movementSettings)
@@ -135,9 +150,9 @@ namespace CrowdPunch.Systems.AI
                     PlayerSnapshot.Position.z + offset.y);
             }
 
-            private float3 GetSeparation(float3 position, EnemyMovementSettings movementSettings)
+            private float3 GetSeparation(float3 position, float preferredDistance)
             {
-                float separationDistance = math.max(0f, movementSettings.SeparationDistance);
+                float separationDistance = math.max(0f, preferredDistance);
                 float separationDistanceSq = separationDistance * separationDistance;
                 float3 separation = float3.zero;
 

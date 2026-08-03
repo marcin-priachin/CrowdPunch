@@ -26,9 +26,11 @@ namespace CrowdPunch.Bakers
                 StoppingDistance = authoring.StoppingDistance,
                 SurroundDistance = authoring.SurroundDistance,
                 SurroundRingSpacing = authoring.SurroundRingSpacing,
-                SeparationDistance = authoring.SeparationDistance,
+                SeparationDistanceMin = authoring.SeparationDistanceMin,
+                SeparationDistanceMax = authoring.SeparationDistanceMax,
                 SeparationWeight = authoring.SeparationWeight
             });
+            AddComponent<EnemySeparationDistance>(entity);
             AddComponent<DesiredMovement>(entity);
             AddComponent(entity, new EnemyLaunchState
             {
