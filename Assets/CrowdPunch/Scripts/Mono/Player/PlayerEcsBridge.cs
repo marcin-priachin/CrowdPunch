@@ -70,6 +70,7 @@ namespace CrowdPunch.Mono.Player
 
         /// <summary>Approximate player radius for ECS distance checks.</summary>
         public float Radius { get; private set; }
+        public uint CollisionLayer { get; private set; }
 
         /// <summary>Latest player health value published by MonoBehaviour player code.</summary>
         public float CurrentHealth { get; private set; }
@@ -123,6 +124,7 @@ namespace CrowdPunch.Mono.Player
             Position = new float3(position.x, position.y, position.z);
             Forward = new float3(forward.x, forward.y, forward.z);
             Radius = radius;
+            CollisionLayer = 1u << gameObject.layer;
         }
 
         /// <summary>
@@ -207,6 +209,13 @@ namespace CrowdPunch.Mono.Player
                 Mathf.Clamp01(damagePercent),
                 Mathf.Max(0f, invincibilitySeconds),
                 new Vector3(pushImpulse.x, pushImpulse.y, pushImpulse.z));
+        }
+
+        /// <summary>Routes configured enemy damage through the existing player health and invulnerability path.</summary>
+        public void ReceiveEnemyHit(float damageAmount, float invincibilitySeconds, float3 pushImpulse)
+        {
+            float damagePercent = MaxHealth <= 0f ? 0f : Mathf.Max(0f, damageAmount) / MaxHealth;
+            ReceiveEnemyContactHit(damagePercent, invincibilitySeconds, pushImpulse);
         }
     }
 }

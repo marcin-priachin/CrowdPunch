@@ -1,7 +1,7 @@
 # Crowd Punch — Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-08-02
+Last inspected: 2026-08-03
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -49,6 +49,8 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Enemy contact reported to player | ECS → bridge event | `EnemyContactHitReceived` |
 | Enemy spawn and pooling | ECS | spawn settings and respawn systems |
 | Enemy intent and movement | ECS | `DesiredMovement`, Unity Physics velocity |
+| Enemy archetype and ranged attack | ECS | `EnemyArchetype`, `RangedEnemySettings`, `RangedPositioningState`, `RangedAttackState` |
+| Ranged projectile trajectory and lifetime | ECS | `RangedProjectile`, fixed fire-time start/target, ECS transform evaluation |
 | Enemy combat state | ECS | health, damage, impulse, explicit launch lifecycle, death/respawn requests |
 | Punch trajectory preview | ECS → bridge → GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
 | Committed punch-area feedback | GameObject | `PlayerPunch` triggers `PunchAreaFeedback` from the same origin, direction, radius, and range published to ECS |
@@ -72,11 +74,13 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 
 1. `PlayerBridgeSystem` copies the latest GameObject player snapshot, health, and punch request into ECS.
 2. `EnemyChaseSystem` produces enemy movement intent, blending each enemy's spawn-selected local separation distance into both wandering and charging.
-3. `EnemyMovementSystem` steers Unity Physics velocity toward that intent.
-4. `PunchDetectionSystem` finds active enemies inside the punch volume, transitions them to `Launched`, and enables impulse and damage requests.
-5. `DamageApplicationSystem` applies enabled damage requests, clamps health, and resolves immediate defeat or records launch-deferred defeat.
-6. `ApplyImpulseSystem` adds gameplay impulse to `PhysicsVelocity`.
-7. Unity Physics simulates motion and collisions.
+3. `RangedEnemyPositioningSystem` replaces baseline intent only for ranged enemies, selecting approach, hold, or retreat and blending the same active-crowd separation input.
+4. `EnemyMovementSystem` steers Unity Physics velocity toward that intent and continues to reject non-`Active` enemies.
+5. `PunchDetectionSystem` finds active enemies inside the punch volume, transitions them to `Launched`, and enables impulse and damage requests.
+6. `DamageApplicationSystem` applies enabled damage requests, clamps health, and resolves immediate defeat or records launch-deferred defeat.
+7. `RangedEnemyAttackSystem` evaluates ranged state after punch and damage resolution, cancels invalid wind-ups, and instantiates a projectile when a valid wind-up completes.
+8. `ApplyImpulseSystem` adds gameplay impulse to `PhysicsVelocity`.
+9. Unity Physics simulates motion and collisions.
 
 Ordering between systems that share only a group should be made explicit when correctness depends on it. The attribute graph, not filename order, is authoritative.
 
@@ -85,6 +89,7 @@ Ordering between systems that share only a group should be made explicit when co
 `GamePostPhysicsGroup` runs as a direct child of `SimulationSystemGroup` after `PhysicsSystemGroup`:
 
 - `EnemyLaunchCollisionSystem` interprets solver-resolved enemy impacts, resolves launch propagation first, and independently queues eligible impulse-scaled collision damage without rewriting velocity.
+- `RangedProjectileSystem` evaluates each fixed trajectory, performs a swept player-radius hit check, forwards one accepted hit through `PlayerEcsBridge`, and destroys the projectile on hit, arrival, or expiry. It does not apply arena-bound cleanup because the unconstrained GameObject player can currently provide a valid target outside `ArenaBounds`; deterministic arrival and lifetime already bound every projectile's lifetime.
 - `EnemyRecoverySystem` advances living `Launched` enemies through low-momentum dwell and `Recovering` back to `Active`; a zero-health launched enemy enters `Defeated` directly when launch ends.
 - `PlayerContactDamageSystem` detects enemy proximity/contact and reports the closest accepted hit through the bridge.
 - `OutOfBoundsSystem` requests recovery for escaped enemies.
@@ -121,6 +126,18 @@ Enemy lifecycle is represented by the non-enableable `EnemyLaunchState` componen
 Collision damage is queued post-physics into the target's existing `DamageRequest` and applied during the next pre-physics damage stage. `EnemyLaunchState.LaunchDamage` carries the originating normal or dash punch damage through every propagated launch; collision impulse selects a configured multiplier of that value up to a cap. `EnemyLaunchState.LaunchSequence` identifies each continuous launch. Each target's `CollisionDamageHistory` buffer suppresses repeat damage from the same source sequence; `CollisionDamageHistoryCleanupSystem` removes entries when the source leaves that launch. Propagation and collision damage have independent impulse thresholds. Only launched-to-active/recovering impacts are damage-eligible, and propagation is written before damage is queued so a lethal propagated target defers defeat.
 
 `GameSettingsAuthoring` reads reusable `GameRuntimeSettings` ScriptableObject data and bakes `EnemyLaunchSettings` as scene-level singleton configuration. Its provisional sandbox tuning includes independent propagation/damage impulse thresholds, base/per-impulse/maximum collision-damage multipliers, useful-momentum threshold and dwell, and recovery duration. Player movement and punch settings assets own normal and dash punch damage as well as their Input System asset/action selection, while `EnemySpawnSettings` owns the enemy prefab and initial crowd tuning. Scene MonoBehaviours retain only scene-instance wiring such as bridges, cameras, and origin transforms.
+
+## Ranged Enemy Archetype
+
+`EnemySpawnSettings.Archetype` explicitly selects `Baseline` or `Ranged`; no prefab, scene-object, or presentation name participates in runtime identification. Every spawned enemy receives `EnemyArchetype`. A ranged selection additionally receives the baked `RangedEnemySettings`, `RangedPositioningState`, and `RangedAttackState`. The existing `EnemySpawnSettings.asset` remains baseline. `RangedEnemySpawnSettings.asset` is used by a second ordinary `SpawnerAuthoring` in the arena subscene to add five ranged enemies without changing the 500-enemy baseline batch.
+
+All ranged numerical settings are provisional and live on the ranged spawn settings asset: preferred minimum/maximum distance, engagement range, approach/retreat speed, initial delay and per-instance variation, wind-up, cooldown, damage, player invulnerability duration, projectile travel duration, arc height, lifetime, and radius. Independent per-enemy cadence plus initial-delay variation is the first-pass multi-attacker control; there is no global simultaneous-attack cap.
+
+`RangedEnemyPositioningSystem` owns the ranged approach/hold/retreat decision. It reuses the baseline active-enemy separation input and writes only `DesiredMovement`; `EnemyMovementSystem` remains the velocity owner and its `Active` gate prevents ranged steering from overwriting launch or recovery velocity. `RangedAttackState` exposes eligibility, lifecycle phase, remaining time, emitted count, and cancelled-wind-up count for Entities inspection. Attack evaluation runs after punch and damage application, so same-frame launch or defeat cancels before emission. Pooling resets both attack and positioning state; already-fired projectiles have no shooter reference and remain independent.
+
+`RangedProjectileSystem` uses a deterministic parametric path. Horizontal/world-space position is `lerp(start, fireTimeTarget, t)` and vertical readability adds `4 * arcHeight * t * (1 - t)`, where `t` advances across the authored travel duration. Every shot therefore takes the same time to reach its fire-time target regardless of distance. The target is never updated after firing. The prefab is a yellow grey-box sphere with a baked kinematic collider on the `RangedProjectile` layer. Its collider explicitly excludes the Default layer used by enemies and the arena, so it produces no enemy collision events or reactions; player contact is checked against the ECS player snapshot because the player remains a GameObject outside the ECS physics world.
+
+Projectile damage calls `PlayerEcsBridge.ReceiveEnemyHit`, which converts the configured amount for the existing `PlayerHealth` event pipeline. `PlayerHealth` remains authoritative for invulnerability, health clamping, damage acceptance, and death. Projectile simulation is data-only and its baked mesh/material is presentation. There was no compatible projectile pool, so this first pass uses command-buffer instantiation and destruction; this should be revisited only if profiling at representative projectile counts shows structural-change cost is material.
 
 Systems get the entity for mixed singleton state through a non-enableable component such as `PlayerSnapshot` or `MatchState`, then inspect or toggle enableable state explicitly.
 

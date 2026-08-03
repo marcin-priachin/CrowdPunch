@@ -5,6 +5,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using Unity.Rendering;
 
 namespace CrowdPunch.Systems.Initialization
 {
@@ -57,6 +58,30 @@ namespace CrowdPunch.Systems.Initialization
                     {
                         Value = separationDistance
                     });
+                    commandBuffer.AddComponent(enemy, new EnemyArchetype
+                    {
+                        Value = spawnSettings.Archetype
+                    });
+
+                    if (spawnSettings.Archetype == EnemyArchetypeKind.Ranged)
+                    {
+                        commandBuffer.AddComponent(enemy, spawnSettings.RangedSettings);
+                        commandBuffer.AddComponent(enemy, new RangedPositioningState
+                        {
+                            Mode = RangedPositioningMode.Hold
+                        });
+                        commandBuffer.AddComponent(enemy, new URPMaterialPropertyBaseColor
+                        {
+                            Value = new float4(0.15f, 0.65f, 1f, 1f)
+                        });
+                        float delayVariation = math.max(0f, spawnSettings.RangedSettings.InitialDelayVariation);
+                        commandBuffer.AddComponent(enemy, new RangedAttackState
+                        {
+                            Phase = RangedAttackPhase.InitialDelay,
+                            SecondsRemaining = math.max(0f, spawnSettings.RangedSettings.InitialAttackDelay)
+                                + random.NextFloat(0f, delayVariation)
+                        });
+                    }
                 }
             }
 

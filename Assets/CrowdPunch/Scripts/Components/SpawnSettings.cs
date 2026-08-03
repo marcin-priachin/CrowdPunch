@@ -9,8 +9,11 @@ namespace CrowdPunch.Components
     public struct SpawnSettings : IComponentData
     {
         public Entity EnemyPrefab;
+        public Entity RangedProjectilePrefab;
+        public EnemyArchetypeKind Archetype;
         public int InitialCount;
         public float SpawnRadius;
         public float3 Center;
+        public RangedEnemySettings RangedSettings;
     }
 }

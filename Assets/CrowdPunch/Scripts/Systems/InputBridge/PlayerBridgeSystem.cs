@@ -30,6 +30,7 @@ namespace CrowdPunch.Systems.InputBridge
                 Position = bridge.Position,
                 Forward = bridge.Forward,
                 Radius = bridge.Radius,
+                CollisionLayer = bridge.CollisionLayer,
                 IsAvailable = true
             });
             SystemAPI.SetComponent(playerStateEntity, new PlayerHealthSnapshot

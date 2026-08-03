@@ -74,6 +74,23 @@ namespace CrowdPunch.Systems.Lifetime
                     health.ValueRW.Current = health.ValueRO.Max;
                     healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
                     damageState.ValueRW = default;
+                    if (SystemAPI.HasComponent<RangedAttackState>(enemy))
+                    {
+                        RangedEnemySettings rangedSettings = SystemAPI.GetComponent<RangedEnemySettings>(enemy);
+                        SystemAPI.SetComponent(enemy, new RangedAttackState
+                        {
+                            Phase = RangedAttackPhase.InitialDelay,
+                            SecondsRemaining = math.max(0f, rangedSettings.InitialAttackDelay)
+                                + GetRangedInitialDelayVariation(enemy, rangedSettings.InitialDelayVariation)
+                        });
+                    }
+                    if (SystemAPI.HasComponent<RangedPositioningState>(enemy))
+                    {
+                        SystemAPI.SetComponent(enemy, new RangedPositioningState
+                        {
+                            Mode = RangedPositioningMode.Hold
+                        });
+                    }
                     SystemAPI.GetBuffer<CollisionDamageHistory>(enemy).Clear();
                     if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
                     {
@@ -168,6 +185,13 @@ namespace CrowdPunch.Systems.Lifetime
         private static float3 GetPoolPosition(ArenaBounds arenaBounds)
         {
             return arenaBounds.Center - new float3(0f, math.max(25f, arenaBounds.Extents.y + 25f), 0f);
+        }
+
+        private static float GetRangedInitialDelayVariation(Entity enemy, float maximumVariation)
+        {
+            uint seed = (uint)math.max(1, enemy.Index + 1) * 747796405u;
+            float normalized = (seed & 0x00ffffffu) / 16777216f;
+            return normalized * math.max(0f, maximumVariation);
         }
 
         private static float3 GetRespawnPosition(ref Random random, ArenaBounds arenaBounds, PlayerSnapshot playerSnapshot)

@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-08-02
+Last updated: 2026-08-03
 
 ## How To Read This Document
 
@@ -254,6 +254,30 @@ Status: May
 If the final combination set becomes too large to learn naturally, provide a compact reference or discovery record. Do not add it during the MVP merely in anticipation of scale.
 
 ## Enemies And Information
+
+### ENEMY-001 — Ranged Enemy Positioning
+
+Status: Must
+
+The ranged enemy maintains a provisional preferred distance band from the player: it retreats when too close, approaches when too far away, and avoids unnecessary forward movement inside the band. It retains normal crowd separation and cannot use normal movement while launched, recovering, defeated, disabled, or pooled. Numerical distance and movement values are provisional.
+
+### ENEMY-002 — Ranged Enemy Attack
+
+Status: Must
+
+While active, in range, and off cooldown, the ranged enemy winds up and fires one visible physical projectile at the player's position sampled when the shot is fired. The shot does not home or lead the player. Entering `Launched`, `Recovering`, or `Defeated`, or becoming disabled or pooled, cancels a pending wind-up. Numerical wind-up, cooldown, damage, and cadence values are provisional.
+
+### ENEMY-003 — Ranged Projectile Counterplay
+
+Status: Must
+
+The ranged projectile follows a readable arc over the crowd. It passes through ordinary enemies without damaging, pushing, launching, or otherwise affecting them, and damages the player at most once through the normal player damage and invulnerability rules. The player avoids the shot by moving out of its fixed trajectory after it is fired. Projectile travel duration, arc height, collision radius, damage, and lifetime are provisional.
+
+### ENEMY-004 — Ranged Enemy Baseline Rules
+
+Status: Must
+
+Except for distance-keeping and its ranged attack, the ranged enemy follows the baseline ordinary-enemy health, mass, launchability, collision-chain participation, recovery, deferred defeat, pooling, and respawn rules.
 
 ### INFO-001 — No Persistent Normal-Enemy UI
 

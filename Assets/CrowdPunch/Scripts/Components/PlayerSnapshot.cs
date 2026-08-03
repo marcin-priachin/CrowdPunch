@@ -11,6 +11,7 @@ namespace CrowdPunch.Components
         public float3 Position;
         public float3 Forward;
         public float Radius;
+        public uint CollisionLayer;
         public bool IsAvailable;
     }
 }
