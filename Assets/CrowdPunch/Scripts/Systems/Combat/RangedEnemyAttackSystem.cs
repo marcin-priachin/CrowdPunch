@@ -34,11 +34,13 @@ namespace CrowdPunch.Systems.Combat
                          RefRO<RangedEnemySettings> settings,
                          RefRO<EnemyLaunchState> launchState,
                          RefRO<LocalTransform> transform,
-                         EnabledRefRO<RespawnRequest> respawnEnabled) in
+                         EnabledRefRO<RespawnRequest> respawnEnabled,
+                         Entity shooter) in
                      SystemAPI.Query<RefRW<RangedAttackState>, RefRO<RangedEnemySettings>, RefRO<EnemyLaunchState>,
                              RefRO<LocalTransform>, EnabledRefRO<RespawnRequest>>()
                          .WithAll<Enemy>()
-                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
+                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
+                         .WithEntityAccess())
             {
                 bool active = launchState.ValueRO.Phase == EnemyLaunchPhase.Active && !respawnEnabled.ValueRO;
                 if (!active || !player.IsAvailable)
@@ -84,9 +86,17 @@ namespace CrowdPunch.Systems.Combat
                     continue;
                 }
 
-                SpawnProjectile(ref commandBuffer, transform.ValueRO.Position, player.Position, settings.ValueRO);
+                uint shotSequence = attack.ValueRO.ProjectilesSpawned + 1;
+                Random random = CreateShotRandom(shooter, shotSequence);
+                SpawnProjectile(
+                    ref commandBuffer,
+                    transform.ValueRO.Position,
+                    player.Position,
+                    settings.ValueRO,
+                    ref random);
                 attack.ValueRW.Phase = RangedAttackPhase.Cooldown;
-                attack.ValueRW.SecondsRemaining = math.max(0f, settings.ValueRO.Cooldown);
+                attack.ValueRW.SecondsRemaining = math.max(0f, settings.ValueRO.Cooldown)
+                    + random.NextFloat(0f, math.max(0f, settings.ValueRO.CooldownVariation));
                 attack.ValueRW.IsAttackEligible = 0;
                 attack.ValueRW.ProjectilesSpawned++;
             }
@@ -111,24 +121,41 @@ namespace CrowdPunch.Systems.Combat
             ref EntityCommandBuffer commandBuffer,
             float3 shooterPosition,
             float3 playerPosition,
-            RangedEnemySettings settings)
+            RangedEnemySettings settings,
+            ref Random random)
         {
             float3 start = shooterPosition + new float3(0f, ProjectileSpawnHeight, 0f);
-            float3 target = playerPosition;
+            float angle = random.NextFloat(0f, math.PI * 2f);
+            float spreadDistance = math.sqrt(random.NextFloat()) * math.max(0f, settings.ProjectileAimSpreadRadius);
+            float3 spread = new float3(math.cos(angle), 0f, math.sin(angle)) * spreadDistance;
+            float3 target = playerPosition
+                + spread
+                + new float3(0f, settings.ProjectileAimTargetYOffset, 0f);
+            float horizontalDistance = math.distance(start.xz, target.xz);
+            float travelDuration = horizontalDistance / math.max(0.01f, settings.ProjectileSpeed);
             Entity projectile = commandBuffer.Instantiate(settings.ProjectilePrefab);
             commandBuffer.SetComponent(projectile, LocalTransform.FromPosition(start));
             commandBuffer.SetComponent(projectile, new RangedProjectile
             {
                 Start = start,
                 Target = target,
-                TravelDuration = math.max(0.01f, settings.ProjectileTravelDuration),
+                TravelDuration = math.max(0.01f, travelDuration),
                 ArcHeight = math.max(0f, settings.ProjectileArcHeight),
+                MinimumAltitude = settings.ProjectileMinimumAltitude,
                 Lifetime = math.max(0.01f, settings.ProjectileLifetime),
                 Radius = math.max(0.01f, settings.ProjectileRadius),
                 Damage = math.max(0f, settings.ProjectileDamage),
                 PlayerInvincibilitySeconds = math.max(0f, settings.PlayerInvincibilitySeconds),
                 PlayerCollisionLayers = settings.ProjectilePlayerLayers
             });
+        }
+
+        private static Random CreateShotRandom(Entity shooter, uint shotSequence)
+        {
+            uint seed = (uint)math.max(1, shooter.Index + 1) * 747796405u;
+            seed ^= (uint)math.max(1, shooter.Version + 1) * 2891336453u;
+            seed ^= math.max(1u, shotSequence) * 277803737u;
+            return Random.CreateFromIndex(seed);
         }
     }
 }

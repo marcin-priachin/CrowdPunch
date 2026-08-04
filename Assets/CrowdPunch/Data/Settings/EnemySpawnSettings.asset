@@ -15,7 +15,7 @@ MonoBehaviour:
   enemyPrefab: {fileID: 8618196010151164906, guid: 3e70fb2e89b01674f95633e429f13253, type: 3}
   rangedProjectilePrefab: {fileID: 710000000000000001, guid: 65a5af48c2854bbd81ddaf3cc9451011, type: 3}
   archetype: 0
-  initialCount: 1
+  initialCount: 200
   radius: 100
   preferredMinimumDistance: 8
   preferredMaximumDistance: 12
@@ -26,10 +26,14 @@ MonoBehaviour:
   initialDelayVariation: 1.5
   windUpDuration: 0.75
   cooldown: 3
+  cooldownVariation: 1.5
   projectileDamage: 10
   playerInvincibilitySeconds: 0.5
-  projectileTravelDuration: 2.25
+  projectileSpeed: 8
+  projectileAimSpreadRadius: 2.5
+  projectileAimTargetYOffset: 0
   projectileArcHeight: 5
+  projectileMinimumAltitude: -2
   projectileLifetime: 5
   projectileRadius: 0.4
   projectilePlayerLayers:

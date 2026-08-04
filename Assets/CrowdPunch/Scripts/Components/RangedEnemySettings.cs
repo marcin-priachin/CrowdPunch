@@ -15,10 +15,14 @@ namespace CrowdPunch.Components
         public float InitialDelayVariation;
         public float WindUpDuration;
         public float Cooldown;
+        public float CooldownVariation;
         public float ProjectileDamage;
         public float PlayerInvincibilitySeconds;
-        public float ProjectileTravelDuration;
+        public float ProjectileSpeed;
+        public float ProjectileAimSpreadRadius;
+        public float ProjectileAimTargetYOffset;
         public float ProjectileArcHeight;
+        public float ProjectileMinimumAltitude;
         public float ProjectileLifetime;
         public float ProjectileRadius;
         public uint ProjectilePlayerLayers;

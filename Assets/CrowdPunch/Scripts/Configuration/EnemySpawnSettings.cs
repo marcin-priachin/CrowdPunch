@@ -31,13 +31,17 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float initialDelayVariation = 1.5f;
         [SerializeField, Min(0f)] private float windUpDuration = 0.75f;
         [SerializeField, Min(0f)] private float cooldown = 3f;
+        [SerializeField, Min(0f)] private float cooldownVariation = 1.5f;
         [SerializeField, Min(0f)] private float projectileDamage = 10f;
         [SerializeField, Min(0f)] private float playerInvincibilitySeconds = 0.5f;
 
         [Header("Ranged projectile (provisional)")]
-        [FormerlySerializedAs("projectileSpeed")]
-        [SerializeField, Min(0.01f)] private float projectileTravelDuration = 2.25f;
+        [FormerlySerializedAs("projectileTravelDuration")]
+        [SerializeField, Min(0.01f)] private float projectileSpeed = 8f;
+        [SerializeField, Min(0f)] private float projectileAimSpreadRadius = 2.5f;
+        [SerializeField] private float projectileAimTargetYOffset;
         [SerializeField, Min(0f)] private float projectileArcHeight = 5f;
+        [SerializeField] private float projectileMinimumAltitude = -2f;
         [SerializeField, Min(0.01f)] private float projectileLifetime = 5f;
         [SerializeField, Min(0.01f)] private float projectileRadius = 0.4f;
         [SerializeField] private LayerMask projectilePlayerLayers = ~0;
@@ -56,10 +60,14 @@ namespace CrowdPunch.Configuration
         public float InitialDelayVariation => initialDelayVariation;
         public float WindUpDuration => windUpDuration;
         public float Cooldown => cooldown;
+        public float CooldownVariation => cooldownVariation;
         public float ProjectileDamage => projectileDamage;
         public float PlayerInvincibilitySeconds => playerInvincibilitySeconds;
-        public float ProjectileTravelDuration => projectileTravelDuration;
+        public float ProjectileSpeed => projectileSpeed;
+        public float ProjectileAimSpreadRadius => projectileAimSpreadRadius;
+        public float ProjectileAimTargetYOffset => projectileAimTargetYOffset;
         public float ProjectileArcHeight => projectileArcHeight;
+        public float ProjectileMinimumAltitude => projectileMinimumAltitude;
         public float ProjectileLifetime => projectileLifetime;
         public float ProjectileRadius => projectileRadius;
         public uint ProjectilePlayerLayers => unchecked((uint)projectilePlayerLayers.value);

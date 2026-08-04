@@ -30,13 +30,12 @@ namespace CrowdPunch.Systems.Combat
             {
                 float3 previousPosition = transform.ValueRO.Position;
                 projectile.ValueRW.ElapsedSeconds += deltaTime;
-                float normalizedTime = math.saturate(
-                    projectile.ValueRO.ElapsedSeconds / math.max(0.01f, projectile.ValueRO.TravelDuration));
+                float normalizedTime = projectile.ValueRO.ElapsedSeconds
+                    / math.max(0.01f, projectile.ValueRO.TravelDuration);
                 float3 position = math.lerp(projectile.ValueRO.Start, projectile.ValueRO.Target, normalizedTime);
                 position.y += 4f * projectile.ValueRO.ArcHeight * normalizedTime * (1f - normalizedTime);
                 transform.ValueRW.Position = position;
 
-                bool reachedTarget = normalizedTime >= 1f;
                 bool playerHit = false;
                 bool acceptsPlayerLayer = (projectile.ValueRO.PlayerCollisionLayers & player.CollisionLayer) != 0;
                 if (projectile.ValueRO.HasAppliedDamage == 0 && player.IsAvailable && acceptsPlayerLayer)
@@ -63,7 +62,8 @@ namespace CrowdPunch.Systems.Combat
                 }
 
                 bool expired = projectile.ValueRO.ElapsedSeconds >= projectile.ValueRO.Lifetime;
-                if (playerHit || reachedTarget || expired)
+                bool belowMinimumAltitude = position.y <= projectile.ValueRO.MinimumAltitude;
+                if (playerHit || belowMinimumAltitude || expired)
                 {
                     commandBuffer.DestroyEntity(entity);
                 }

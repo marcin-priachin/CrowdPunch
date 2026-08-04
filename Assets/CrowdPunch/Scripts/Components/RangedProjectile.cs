@@ -11,6 +11,7 @@ namespace CrowdPunch.Components
         public float TravelDuration;
         public float ElapsedSeconds;
         public float ArcHeight;
+        public float MinimumAltitude;
         public float Lifetime;
         public float Radius;
         public float Damage;
