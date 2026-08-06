@@ -13,7 +13,9 @@ namespace CrowdPunch.Components
         public EnemyArchetypeKind Archetype;
         public int InitialCount;
         public float SpawnRadius;
+        public byte RespawnEnabled;
         public float3 Center;
         public RangedEnemySettings RangedSettings;
+        public ExplosiveEnemySettings ExplosiveSettings;
     }
 }

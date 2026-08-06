@@ -66,6 +66,12 @@ namespace CrowdPunch.Systems.Initialization
                     SystemAPI.SetComponent(enemy, new PhysicsVelocity());
                 }
 
+                if (SystemAPI.HasComponent<ExplosiveEnemyState>(enemy))
+                {
+                    SystemAPI.SetComponent(enemy, new ExplosiveEnemyState());
+                    SystemAPI.SetComponentEnabled<ExplosiveDetonationRequest>(enemy, false);
+                }
+
                 if (SystemAPI.HasComponent<DamageRequest>(enemy))
                 {
                     SystemAPI.SetComponentEnabled<DamageRequest>(enemy, false);

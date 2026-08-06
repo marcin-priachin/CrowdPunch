@@ -61,6 +61,7 @@ namespace CrowdPunch.Mono.Player
         private readonly List<TrajectoryPreviewSegment> trajectoryPreviewSegments = new List<TrajectoryPreviewSegment>();
 
         public event Action<float, float, Vector3> EnemyContactHitReceived;
+        public event Action<Vector3, float, float, float> ExplosionReceived;
 
         /// <summary>Latest player position published by MonoBehaviour player code.</summary>
         public float3 Position { get; private set; }
@@ -216,6 +217,16 @@ namespace CrowdPunch.Mono.Player
         {
             float damagePercent = MaxHealth <= 0f ? 0f : Mathf.Max(0f, damageAmount) / MaxHealth;
             ReceiveEnemyContactHit(damagePercent, invincibilitySeconds, pushImpulse);
+        }
+
+        /// <summary>Publishes a transient explosion presentation event without exposing enemy entities.</summary>
+        public void ReceiveExplosion(float3 position, float radius, float duration, float sizeMultiplier)
+        {
+            ExplosionReceived?.Invoke(
+                new Vector3(position.x, position.y, position.z),
+                Mathf.Max(0f, radius),
+                Mathf.Max(0.01f, duration),
+                Mathf.Max(0f, sizeMultiplier));
         }
     }
 }

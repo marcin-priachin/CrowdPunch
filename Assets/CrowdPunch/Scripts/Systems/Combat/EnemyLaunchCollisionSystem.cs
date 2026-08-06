@@ -125,12 +125,10 @@ namespace CrowdPunch.Systems.Combat
             {
                 EnemyLaunchState sourceState = LaunchStateLookup[source];
                 EnemyLaunchState targetState = LaunchStateLookup[target];
-                targetState.Phase = EnemyLaunchPhase.Launched;
-                targetState.LastCause = EnemyLaunchCause.EnemyCollision;
-                targetState.BelowUsefulMomentumSeconds = 0f;
-                targetState.RecoverySecondsRemaining = 0f;
-                targetState.LaunchSequence++;
-                targetState.LaunchDamage = sourceState.LaunchDamage;
+                EnemyLaunchTransition.Begin(
+                    ref targetState,
+                    EnemyLaunchCause.EnemyCollision,
+                    sourceState.LaunchDamage);
                 targetState.PropagatedLaunchCount++;
                 targetState.LastPropagationImpulse = estimatedImpulse;
                 LaunchStateLookup[target] = targetState;

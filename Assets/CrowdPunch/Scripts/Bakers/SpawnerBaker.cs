@@ -31,11 +31,15 @@ namespace CrowdPunch.Bakers
             {
                 EnemyPrefab = prefab,
                 RangedProjectilePrefab = projectilePrefab,
-                Archetype = authoring.Settings.Archetype == Configuration.EnemyArchetype.Ranged
-                    ? EnemyArchetypeKind.Ranged
-                    : EnemyArchetypeKind.Baseline,
+                Archetype = authoring.Settings.Archetype switch
+                {
+                    Configuration.EnemyArchetype.Ranged => EnemyArchetypeKind.Ranged,
+                    Configuration.EnemyArchetype.Explosive => EnemyArchetypeKind.Explosive,
+                    _ => EnemyArchetypeKind.Baseline
+                },
                 InitialCount = authoring.Settings.InitialCount,
                 SpawnRadius = authoring.Settings.Radius,
+                RespawnEnabled = authoring.Settings.RespawnEnabled ? (byte)1 : (byte)0,
                 Center = new float3(
                     authoring.transform.position.x,
                     authoring.transform.position.y,
@@ -63,6 +67,17 @@ namespace CrowdPunch.Bakers
                     ProjectileLifetime = authoring.Settings.ProjectileLifetime,
                     ProjectileRadius = authoring.Settings.ProjectileRadius,
                     ProjectilePlayerLayers = authoring.Settings.ProjectilePlayerLayers
+                },
+                ExplosiveSettings = new ExplosiveEnemySettings
+                {
+                    Radius = authoring.Settings.ExplosionRadius,
+                    Damage = authoring.Settings.ExplosionDamage,
+                    NormalEnemyKnockbackForce = authoring.Settings.NormalEnemyKnockbackForce,
+                    PlayerEliteKnockbackForce = authoring.Settings.PlayerEliteKnockbackForce,
+                    BossKnockbackForce = authoring.Settings.BossKnockbackForce,
+                    PlayerInvincibilitySeconds = authoring.Settings.ExplosionPlayerInvincibilitySeconds,
+                    VisualDuration = authoring.Settings.ExplosionVisualDuration,
+                    VisualSizeMultiplier = authoring.Settings.ExplosionVisualSizeMultiplier
                 }
             });
         }

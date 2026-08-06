@@ -39,12 +39,14 @@ namespace CrowdPunch.Systems.Combat
             float3 hitPushImpulse = float3.zero;
 
             foreach ((RefRO<LocalTransform> transform, RefRO<EnemyContactDamageSettings> contactSettings,
-                         RefRO<EnemyLaunchState> launchState) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyContactDamageSettings>, RefRO<EnemyLaunchState>>()
+                         RefRO<EnemyLaunchState> launchState,
+                         RefRO<EnemyArchetype> archetype) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyContactDamageSettings>, RefRO<EnemyLaunchState>, RefRO<EnemyArchetype>>()
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>())
             {
-                if (launchState.ValueRO.Phase != EnemyLaunchPhase.Active)
+                if (launchState.ValueRO.Phase != EnemyLaunchPhase.Active
+                    || archetype.ValueRO.Value == EnemyArchetypeKind.Explosive)
                 {
                     continue;
                 }

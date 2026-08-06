@@ -6,7 +6,8 @@ namespace CrowdPunch.Configuration
     public enum EnemyArchetype
     {
         Baseline,
-        Ranged
+        Ranged,
+        Explosive
     }
 
     /// <summary>Reusable tuning for the initial ECS crowd.</summary>
@@ -18,6 +19,7 @@ namespace CrowdPunch.Configuration
         [SerializeField] private EnemyArchetype archetype;
         [SerializeField, Min(0)] private int initialCount = 250;
         [SerializeField, Min(0f)] private float radius = 20f;
+        [SerializeField] private bool respawnEnabled = true;
 
         [Header("Ranged positioning (provisional)")]
         [SerializeField, Min(0f)] private float preferredMinimumDistance = 8f;
@@ -46,11 +48,22 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0.01f)] private float projectileRadius = 0.4f;
         [SerializeField] private LayerMask projectilePlayerLayers = ~0;
 
+        [Header("Explosion (provisional)")]
+        [SerializeField, Min(0f)] private float explosionRadius = 5f;
+        [SerializeField, Min(0f)] private float explosionDamage = 20f;
+        [SerializeField, Min(0f)] private float normalEnemyKnockbackForce = 16f;
+        [SerializeField, Min(0f)] private float playerEliteKnockbackForce = 10f;
+        [SerializeField, Min(0f)] private float bossKnockbackForce = 5f;
+        [SerializeField, Min(0f)] private float explosionPlayerInvincibilitySeconds = 0.5f;
+        [SerializeField, Min(0.01f)] private float explosionVisualDuration = 0.35f;
+        [SerializeField, Min(0f)] private float explosionVisualSizeMultiplier = 1f;
+
         public GameObject EnemyPrefab => enemyPrefab;
         public GameObject RangedProjectilePrefab => rangedProjectilePrefab;
         public EnemyArchetype Archetype => archetype;
         public int InitialCount => initialCount;
         public float Radius => radius;
+        public bool RespawnEnabled => respawnEnabled;
         public float PreferredMinimumDistance => preferredMinimumDistance;
         public float PreferredMaximumDistance => preferredMaximumDistance;
         public float EngagementRange => engagementRange;
@@ -71,5 +84,13 @@ namespace CrowdPunch.Configuration
         public float ProjectileLifetime => projectileLifetime;
         public float ProjectileRadius => projectileRadius;
         public uint ProjectilePlayerLayers => unchecked((uint)projectilePlayerLayers.value);
+        public float ExplosionRadius => explosionRadius;
+        public float ExplosionDamage => explosionDamage;
+        public float NormalEnemyKnockbackForce => normalEnemyKnockbackForce;
+        public float PlayerEliteKnockbackForce => playerEliteKnockbackForce;
+        public float BossKnockbackForce => bossKnockbackForce;
+        public float ExplosionPlayerInvincibilitySeconds => explosionPlayerInvincibilitySeconds;
+        public float ExplosionVisualDuration => explosionVisualDuration;
+        public float ExplosionVisualSizeMultiplier => explosionVisualSizeMultiplier;
     }
 }

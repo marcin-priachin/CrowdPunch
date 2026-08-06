@@ -14,7 +14,8 @@ namespace CrowdPunch.Components
     {
         None,
         PlayerPunch,
-        EnemyCollision
+        EnemyCollision,
+        Explosion
     }
 
     /// <summary>

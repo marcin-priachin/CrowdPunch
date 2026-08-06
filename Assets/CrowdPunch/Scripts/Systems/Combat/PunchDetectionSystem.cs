@@ -72,12 +72,12 @@ namespace CrowdPunch.Systems.Combat
                     Value = impulseDirection * punchRequest.Strength
                 });
                 SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, true);
-                launchState.ValueRW.Phase = EnemyLaunchPhase.Launched;
-                launchState.ValueRW.LastCause = EnemyLaunchCause.PlayerPunch;
-                launchState.ValueRW.BelowUsefulMomentumSeconds = 0f;
-                launchState.ValueRW.RecoverySecondsRemaining = 0f;
-                launchState.ValueRW.LaunchSequence++;
-                launchState.ValueRW.LaunchDamage = math.max(0f, punchRequest.Damage);
+                EnemyLaunchState nextLaunchState = launchState.ValueRO;
+                EnemyLaunchTransition.Begin(
+                    ref nextLaunchState,
+                    EnemyLaunchCause.PlayerPunch,
+                    punchRequest.Damage);
+                launchState.ValueRW = nextLaunchState;
 
                 DamageRequest pendingDamage = SystemAPI.IsComponentEnabled<DamageRequest>(enemy)
                     ? SystemAPI.GetComponent<DamageRequest>(enemy)

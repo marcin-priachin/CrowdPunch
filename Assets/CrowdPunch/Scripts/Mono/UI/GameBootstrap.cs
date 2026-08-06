@@ -26,6 +26,7 @@ namespace CrowdPunch.Mono.UI
             EnsurePlayerPunch();
             EnsurePlayerHealth();
             EnsurePunchTrajectoryPreview();
+            EnsureExplosionFeedback();
             EnsureGameCanvas();
             EnsureEnemyHealthBarCanvas();
             BindPlayerHealthBars();
@@ -115,6 +116,14 @@ namespace CrowdPunch.Mono.UI
             if (playerBridge != null && playerBridge.GetComponent<PunchTrajectoryPreview>() == null)
             {
                 playerBridge.gameObject.AddComponent<PunchTrajectoryPreview>();
+            }
+        }
+
+        private void EnsureExplosionFeedback()
+        {
+            if (playerBridge != null && playerBridge.GetComponent<ExplosionFeedback>() == null)
+            {
+                playerBridge.gameObject.AddComponent<ExplosionFeedback>();
             }
         }
 

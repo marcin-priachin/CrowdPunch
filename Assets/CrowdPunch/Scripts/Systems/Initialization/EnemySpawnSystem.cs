@@ -62,6 +62,10 @@ namespace CrowdPunch.Systems.Initialization
                     {
                         Value = spawnSettings.Archetype
                     });
+                    commandBuffer.AddComponent(enemy, new EnemyRespawnSettings
+                    {
+                        Enabled = spawnSettings.RespawnEnabled
+                    });
 
                     if (spawnSettings.Archetype == EnemyArchetypeKind.Ranged)
                     {
@@ -80,6 +84,17 @@ namespace CrowdPunch.Systems.Initialization
                             Phase = RangedAttackPhase.InitialDelay,
                             SecondsRemaining = math.max(0f, spawnSettings.RangedSettings.InitialAttackDelay)
                                 + random.NextFloat(0f, delayVariation)
+                        });
+                    }
+                    else if (spawnSettings.Archetype == EnemyArchetypeKind.Explosive)
+                    {
+                        commandBuffer.AddComponent(enemy, spawnSettings.ExplosiveSettings);
+                        commandBuffer.AddComponent<ExplosiveEnemyState>(enemy);
+                        commandBuffer.AddComponent<ExplosiveDetonationRequest>(enemy);
+                        commandBuffer.SetComponentEnabled<ExplosiveDetonationRequest>(enemy, false);
+                        commandBuffer.AddComponent(enemy, new URPMaterialPropertyBaseColor
+                        {
+                            Value = new float4(1f, 0.25f, 0.05f, 1f)
                         });
                     }
                 }

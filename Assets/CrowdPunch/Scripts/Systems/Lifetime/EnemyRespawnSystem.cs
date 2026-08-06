@@ -42,7 +42,7 @@ namespace CrowdPunch.Systems.Lifetime
                          RefRW<Health> health,
                          RefRW<HealthBar> healthBar,
                          RefRW<EnemyDamageState> damageState,
-                         RefRW<DesiredMovement> desiredMovement,
+                         RefRO<EnemyRespawnSettings> respawnSettings,
                          RefRW<PhysicsVelocity> physicsVelocity,
                          Entity enemy) in
                      SystemAPI.Query<RefRW<RespawnRequest>,
@@ -50,12 +50,12 @@ namespace CrowdPunch.Systems.Lifetime
                              RefRW<Health>,
                              RefRW<HealthBar>,
                              RefRW<EnemyDamageState>,
-                             RefRW<DesiredMovement>,
+                             RefRO<EnemyRespawnSettings>,
                              RefRW<PhysicsVelocity>>()
                          .WithAll<Enemy>()
                          .WithEntityAccess())
             {
-                desiredMovement.ValueRW = default;
+                SystemAPI.SetComponent(enemy, new DesiredMovement());
 
                 if (respawnRequest.ValueRO.IsPooled == 0)
                 {
@@ -99,8 +99,14 @@ namespace CrowdPunch.Systems.Lifetime
                             Phase = EnemyLaunchPhase.Active
                         });
                     }
+                    if (SystemAPI.HasComponent<ExplosiveEnemyState>(enemy))
+                    {
+                        SystemAPI.SetComponent(enemy, new ExplosiveEnemyState());
+                    }
                     respawnRequest.ValueRW.IsPooled = 1;
-                    respawnRequest.ValueRW.RespawnAt = elapsedTime + RespawnDelaySeconds;
+                    respawnRequest.ValueRW.RespawnAt = respawnSettings.ValueRO.Enabled != 0
+                        ? elapsedTime + RespawnDelaySeconds
+                        : double.MaxValue;
                     DisableTransientState(ref state, enemy);
                 }
 
@@ -179,6 +185,11 @@ namespace CrowdPunch.Systems.Lifetime
             if (SystemAPI.HasComponent<KnockbackRecovery>(enemy))
             {
                 SystemAPI.SetComponentEnabled<KnockbackRecovery>(enemy, false);
+            }
+
+            if (SystemAPI.HasComponent<ExplosiveDetonationRequest>(enemy))
+            {
+                SystemAPI.SetComponentEnabled<ExplosiveDetonationRequest>(enemy, false);
             }
         }
 

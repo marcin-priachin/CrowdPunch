@@ -15,8 +15,9 @@ MonoBehaviour:
   enemyPrefab: {fileID: 8618196010151164906, guid: 3e70fb2e89b01674f95633e429f13253, type: 3}
   rangedProjectilePrefab: {fileID: 710000000000000001, guid: 65a5af48c2854bbd81ddaf3cc9451011, type: 3}
   archetype: 0
-  initialCount: 200
+  initialCount: 100
   radius: 100
+  respawnEnabled: 0
   preferredMinimumDistance: 8
   preferredMaximumDistance: 12
   engagementRange: 18
