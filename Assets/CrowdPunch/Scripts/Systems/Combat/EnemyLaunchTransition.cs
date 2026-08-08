@@ -5,6 +5,14 @@ namespace CrowdPunch.Systems.Combat
     /// <summary>Defines the one normal transition into the launched lifecycle for every launch source.</summary>
     internal static class EnemyLaunchTransition
     {
+        public static bool CanReceivePlayerPunch(in EnemyLaunchState state, in Health health)
+        {
+            return health.Current > 0f
+                && (state.Phase == EnemyLaunchPhase.Active
+                    || state.Phase == EnemyLaunchPhase.Launched
+                    || state.Phase == EnemyLaunchPhase.Recovering);
+        }
+
         public static void Begin(ref EnemyLaunchState state, EnemyLaunchCause cause, float launchDamage)
         {
             state.Phase = EnemyLaunchPhase.Launched;
@@ -13,6 +21,8 @@ namespace CrowdPunch.Systems.Combat
             state.RecoverySecondsRemaining = 0f;
             state.LaunchSequence++;
             state.LaunchDamage = launchDamage < 0f ? 0f : launchDamage;
+            state.PropagatedLaunchCount = 0;
+            state.LastPropagationImpulse = 0f;
         }
     }
 }

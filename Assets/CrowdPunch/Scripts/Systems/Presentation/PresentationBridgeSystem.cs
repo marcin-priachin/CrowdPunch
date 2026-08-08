@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Entities;
@@ -39,12 +40,12 @@ namespace CrowdPunch.Systems.Presentation
             float radiusSquared = bridge.PunchPreviewRadius * bridge.PunchPreviewRadius;
             float positionWeight = math.saturate(bridge.PunchPreviewPositionWeight);
 
-            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>>()
+            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState, RefRO<Health> health) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>>()
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>())
             {
-                if (launchState.ValueRO.Phase != EnemyLaunchPhase.Active)
+                if (!EnemyLaunchTransition.CanReceivePlayerPunch(launchState.ValueRO, health.ValueRO))
                 {
                     continue;
                 }

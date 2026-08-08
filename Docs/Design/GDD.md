@@ -96,7 +96,7 @@ The player can move freely and use a directional dash for rapid repositioning. W
 
 Status: Must
 
-Before an attack, when an enemy is inside the player's punch volume, show a short semitransparent line from that enemy along its initial post-hit trajectory. Show one line per enemy that the punch would affect. Each line covers only the first few metres and must not attempt to predict the full collision chain.
+Before an attack, when an enemy the player can launch is inside the player's punch volume, show a short semitransparent line from that enemy along its initial post-hit trajectory. This includes living enemies in `Active`, `Launched`, or `Recovering`; the indication must not depend on the enemy being `Active`. Show one line per enemy that the punch would affect. Each line covers only the first few metres and must not attempt to predict the full collision chain.
 
 ### PLAYER-004 — Directional Certainty
 
@@ -220,6 +220,12 @@ A sufficiently forceful collision from one `Launched` enemy into an `Active` or 
 Status: Must
 
 Active enemies continuously try to maintain local separation from nearby active enemies while wandering and charging. Separation influences movement intent but must not disable enemy-enemy collisions, override launch physics, or prevent crowd compression caused by the arena, the player, or other physical forces.
+
+### COMBAT-014 — Re-Punching Non-Active Enemies
+
+Status: Must
+
+A living `Launched` or `Recovering` enemy remains a valid player-punch target. A new punch starts a new launch sequence and replaces the prior launch's cause, damage, recovery timing, and propagation inspection data with the new punch data. Enemies awaiting deferred defeat at zero health remain ineligible for further punches.
 
 ## Effects And Combinations
 

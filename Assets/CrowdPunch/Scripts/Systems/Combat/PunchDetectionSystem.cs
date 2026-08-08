@@ -36,13 +36,13 @@ namespace CrowdPunch.Systems.Combat
             float3 punchDirection = math.normalizesafe(punchRequest.Direction);
             float radiusSquared = punchRequest.Radius * punchRequest.Radius;
             float pushDirectionPositionWeight = math.saturate(punchRequest.PushDirectionPositionWeight);
-            foreach ((RefRO<LocalTransform> transform, RefRW<EnemyLaunchState> launchState, Entity enemy) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRW<EnemyLaunchState>>()
+            foreach ((RefRO<LocalTransform> transform, RefRW<EnemyLaunchState> launchState, RefRO<Health> health, Entity enemy) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRW<EnemyLaunchState>, RefRO<Health>>()
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
-                if (launchState.ValueRO.Phase != EnemyLaunchPhase.Active)
+                if (!EnemyLaunchTransition.CanReceivePlayerPunch(launchState.ValueRO, health.ValueRO))
                 {
                     continue;
                 }

@@ -76,7 +76,7 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 2. `EnemyChaseSystem` produces enemy movement intent, blending each enemy's spawn-selected local separation distance into both wandering and charging.
 3. `RangedEnemyPositioningSystem` replaces baseline intent only for ranged enemies, selecting approach, hold, or retreat and blending the same active-crowd separation input.
 4. `EnemyMovementSystem` steers Unity Physics velocity toward that intent and continues to reject non-`Active` enemies.
-5. `PunchDetectionSystem` finds active enemies inside the punch volume, transitions them to `Launched`, and enables impulse and damage requests.
+5. `PunchDetectionSystem` finds living active, launched, or recovering enemies inside the punch volume, starts a fresh `Launched` sequence with the current punch data, and enables impulse and damage requests (COMBAT-014).
 6. `DamageApplicationSystem` applies enabled damage requests, clamps health, and resolves immediate defeat or records launch-deferred defeat.
 7. `RangedEnemyAttackSystem` evaluates ranged state after punch and damage resolution, cancels invalid wind-ups, and instantiates a projectile when a valid wind-up completes.
 8. `ApplyImpulseSystem` adds gameplay impulse to `PhysicsVelocity`.
@@ -120,7 +120,7 @@ Frequently toggled state is represented by enableable components to avoid archet
 - `RespawnRequest`
 - `EnemyHealthBarVisibility`
 
-Enemy lifecycle is represented by the non-enableable `EnemyLaunchState` component because every enemy is always in exactly one of `Active`, `Launched`, `Recovering`, or `Defeated`. Its phase, last launch cause, and propagated-launch count remain visible in the Entities inspector. `Health` exposes current and maximum health, while `EnemyDamageState` records the last applied damage and whether zero-health defeat is currently deferred for development inspection.
+Enemy lifecycle is represented by the non-enableable `EnemyLaunchState` component because every enemy is always in exactly one of `Active`, `Launched`, `Recovering`, or `Defeated`. Its phase, last launch cause, and propagated-launch count remain visible in the Entities inspector. A living launched or recovering enemy can be punched again; the transition increments its launch sequence and resets its cause, damage, recovery timing, propagated-launch count, and last propagation impulse to the new launch. `Health` exposes current and maximum health, while `EnemyDamageState` records the last applied damage and whether zero-health defeat is currently deferred for development inspection.
 
 `DamageApplicationSystem` is the explicit pre-physics health stage after punch detection. Punch detection establishes `Launched` before damage is evaluated, so a same-frame lethal launching punch deterministically defers defeat and still receives its impulse. After physics and collision propagation, `EnemyRecoverySystem` chooses either normal recovery for a living projectile or direct defeat for a zero-health projectile. `DeathRequest` is enabled only on the transition to `Defeated`, making the lifetime handoff idempotent; `DefeatedEnemyLifecycleSystem` consumes it once and enables `RespawnRequest`.
 
