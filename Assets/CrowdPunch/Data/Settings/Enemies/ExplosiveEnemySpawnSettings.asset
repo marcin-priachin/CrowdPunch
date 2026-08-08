@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a12c749ec1ba4b17aac7000000000013, type: 3}
-  m_Name: EnemySpawnSettings
+  m_Name: ExplosiveEnemySpawnSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemySpawnSettings
   enemyPrefab: {fileID: 8618196010151164906, guid: 3e70fb2e89b01674f95633e429f13253, type: 3}
-  rangedProjectilePrefab: {fileID: 710000000000000001, guid: 65a5af48c2854bbd81ddaf3cc9451011, type: 3}
-  archetype: 0
-  initialCount: 100
-  radius: 100
+  rangedProjectilePrefab: {fileID: 0}
+  archetype: 2
+  initialCount: 20
+  radius: 40
   respawnEnabled: 0
   preferredMinimumDistance: 8
   preferredMaximumDistance: 12
@@ -40,3 +40,11 @@ MonoBehaviour:
   projectilePlayerLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  explosionRadius: 10
+  explosionDamage: 20
+  normalEnemyKnockbackForce: 16
+  playerEliteKnockbackForce: 10
+  bossKnockbackForce: 5
+  explosionPlayerInvincibilitySeconds: 0.5
+  explosionVisualDuration: 0.35
+  explosionVisualSizeMultiplier: 1

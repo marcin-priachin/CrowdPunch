@@ -1,6 +1,7 @@
 using CrowdPunch.Components;
 using CrowdPunch.Mono.UI;
 using CrowdPunch.Systems.Groups;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -34,19 +35,24 @@ namespace CrowdPunch.Systems.Initialization
 
             lastRestartSequence = restartSequence;
 
-            SpawnSettings spawnSettings = SystemAPI.GetSingleton<SpawnSettings>();
+            NativeArray<SpawnSettings> spawnSettings = SystemAPI.QueryBuilder()
+                .WithAll<SpawnSettings>()
+                .Build()
+                .ToComponentDataArray<SpawnSettings>(Allocator.Temp);
             Random random = Random.CreateFromIndex(1);
 
             foreach ((RefRW<LocalTransform> transform, RefRW<Health> health, RefRW<HealthBar> healthBar,
-                         RefRW<EnemyDamageState> damageState, Entity enemy) in
-                     SystemAPI.Query<RefRW<LocalTransform>, RefRW<Health>, RefRW<HealthBar>, RefRW<EnemyDamageState>>()
+                         RefRW<EnemyDamageState> damageState, RefRO<EnemyArchetype> archetype, Entity enemy) in
+                     SystemAPI.Query<RefRW<LocalTransform>, RefRW<Health>, RefRW<HealthBar>,
+                             RefRW<EnemyDamageState>, RefRO<EnemyArchetype>>()
                          .WithAll<Enemy>()
                          .WithEntityAccess())
             {
+                SpawnSettings enemySpawnSettings = GetSpawnSettings(spawnSettings, archetype.ValueRO.Value);
                 transform.ValueRW = LocalTransform.FromPosition(GetRandomSpawnPosition(
                     ref random,
-                    spawnSettings.Center,
-                    spawnSettings.SpawnRadius));
+                    enemySpawnSettings.Center,
+                    enemySpawnSettings.SpawnRadius));
 
                 health.ValueRW.Current = health.ValueRO.Max;
                 healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
@@ -102,6 +108,23 @@ namespace CrowdPunch.Systems.Initialization
                     SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, false);
                 }
             }
+
+            spawnSettings.Dispose();
+        }
+
+        private static SpawnSettings GetSpawnSettings(
+            NativeArray<SpawnSettings> spawnSettings,
+            EnemyArchetypeKind archetype)
+        {
+            for (int index = 0; index < spawnSettings.Length; index++)
+            {
+                if (spawnSettings[index].Archetype == archetype)
+                {
+                    return spawnSettings[index];
+                }
+            }
+
+            return spawnSettings[0];
         }
 
         private static float3 GetRandomSpawnPosition(ref Random random, float3 center, float radius)
