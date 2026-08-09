@@ -207,7 +207,7 @@ Ordinary enemies have current and maximum health. Valid damage reduces current h
 
 Status: Must
 
-An enemy whose health reaches zero while `Launched` remains a physical launched projectile and may continue eligible launch propagation under the normal collision rules. When its launch would otherwise end, it enters `Defeated` directly instead of `Recovering`; it must never return to `Active`. Launch propagation and damage are separate outcomes, so an ordinary enemy collision does not implicitly deal damage.
+An enemy whose health reaches zero while `Launched` remains a physical launched projectile and may continue eligible launch propagation under the normal collision rules. It remains eligible for another player punch while launched; that punch starts a new launch sequence but cannot reduce health below zero. When its launch would otherwise end, it enters `Defeated` directly instead of `Recovering`; it must never return to `Active`. Launch propagation and damage are separate outcomes, so an ordinary enemy collision does not implicitly deal damage.
 
 ### COMBAT-012 — Launched-Enemy Collision Damage
 
@@ -225,7 +225,7 @@ Active enemies continuously try to maintain local separation from nearby active 
 
 Status: Must
 
-A living `Launched` or `Recovering` enemy remains a valid player-punch target. A new punch starts a new launch sequence and replaces the prior launch's cause, damage, recovery timing, and propagation inspection data with the new punch data. Enemies awaiting deferred defeat at zero health remain ineligible for further punches.
+A `Launched` enemy remains a valid player-punch target even at zero health while defeat is deferred. A living `Recovering` enemy also remains valid. A new punch starts a new launch sequence and replaces the prior launch's cause, damage, recovery timing, and propagation inspection data with the new punch data. Zero-health enemies in any phase other than `Launched` remain ineligible.
 
 ## Effects And Combinations
 

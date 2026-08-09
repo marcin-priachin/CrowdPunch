@@ -94,6 +94,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-08-09 — Zero-Health Launched Re-Punch
+
+Decision: A zero-health enemy whose defeat is deferred while `Launched` remains eligible for player punches. Each re-punch begins a new launch sequence and extends its physical-projectile opportunity, but health remains clamped at zero and the enemy enters `Defeated` when that launch ends.
+
+Rationale: Re-punching preserves player control over an enemy body while it remains part of the core launch simulation, regardless of whether its ordinary combat health is exhausted.
+
+GDD rules: COMBAT-011, COMBAT-014
+
 ### 2026-08-02 — OQ-005
 
 Decision: A solver-estimated impulse threshold independently determines whether one launched enemy damages an active or recovering target. Collision damage is a multiplier of the player punch damage that originated the launch chain; impulse increases that multiplier up to a cap, and propagated enemies inherit the originating value. A source-target pair can deal collision damage once per continuous source launch, while the source can damage multiple targets. Launched-versus-launched collisions are initially excluded. Launch propagation resolves before damage and uses its own threshold.

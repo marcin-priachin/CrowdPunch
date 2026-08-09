@@ -17,19 +17,42 @@ namespace CrowdPunch.Systems.Presentation
         {
             EnemyHealthBarCanvasRegistry.BeginFrame();
 
-            foreach ((RefRO<LocalTransform> transform, RefRO<HealthBar> healthBar, Entity enemy) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<HealthBar>>()
-                         .WithAll<Enemy, EnemyHealthBarVisibility>()
-                         .WithNone<RespawnRequest>()
+            foreach ((RefRO<LocalTransform> transform,
+                         RefRO<HealthBar> healthBar,
+                         RefRO<EnemyLaunchState> launchState,
+                         EnabledRefRO<EnemyHealthBarVisibility> healthBarVisibility,
+                         EnabledRefRO<RespawnRequest> respawnRequest,
+                         Entity enemy) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<HealthBar>, RefRO<EnemyLaunchState>, EnabledRefRO<EnemyHealthBarVisibility>, EnabledRefRO<RespawnRequest>>()
+                         .WithAll<Enemy>()
+                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
                          .WithEntityAccess())
             {
+                EnemyLaunchPhase phase = launchState.ValueRO.Phase;
+                if (respawnRequest.ValueRO || (!healthBarVisibility.ValueRO && phase == EnemyLaunchPhase.Active))
+                {
+                    continue;
+                }
+
                 EnemyHealthBarCanvasRegistry.Publish(
                     enemy.Index,
                     transform.ValueRO.Position,
-                    healthBar.ValueRO.Normalized);
+                    healthBar.ValueRO.Normalized,
+                    GetStateLabel(phase));
             }
 
             EnemyHealthBarCanvasRegistry.EndFrame();
+        }
+
+        private static string GetStateLabel(EnemyLaunchPhase phase)
+        {
+            return phase switch
+            {
+                EnemyLaunchPhase.Launched => "Launched",
+                EnemyLaunchPhase.Recovering => "Recovering",
+                EnemyLaunchPhase.Defeated => "Defeated",
+                _ => string.Empty
+            };
         }
     }
 }

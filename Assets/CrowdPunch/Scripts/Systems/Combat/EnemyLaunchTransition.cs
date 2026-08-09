@@ -7,10 +7,10 @@ namespace CrowdPunch.Systems.Combat
     {
         public static bool CanReceivePlayerPunch(in EnemyLaunchState state, in Health health)
         {
-            return health.Current > 0f
-                && (state.Phase == EnemyLaunchPhase.Active
-                    || state.Phase == EnemyLaunchPhase.Launched
-                    || state.Phase == EnemyLaunchPhase.Recovering);
+            return state.Phase == EnemyLaunchPhase.Launched
+                || (health.Current > 0f
+                    && (state.Phase == EnemyLaunchPhase.Active
+                        || state.Phase == EnemyLaunchPhase.Recovering));
         }
 
         public static void Begin(ref EnemyLaunchState state, EnemyLaunchCause cause, float launchDamage)

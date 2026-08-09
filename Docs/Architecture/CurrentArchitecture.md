@@ -54,7 +54,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Enemy combat state | ECS | health, damage, impulse, explicit launch lifecycle, death/respawn requests |
 | Punch trajectory preview | ECS → bridge → GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
 | Committed punch-area feedback | GameObject | `PlayerPunch` triggers `PunchAreaFeedback` from the same origin, direction, radius, and range published to ECS |
-| Temporary enemy health bars | ECS → presentation registry → Canvas | `EnemyHealthBarVisibility`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas` |
+| Temporary enemy health and non-active state UI | ECS → presentation registry → Canvas | `EnemyHealthBarVisibility`, `EnemyLaunchState`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas` |
 
 MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exposes the one active `PlayerEcsBridge` to the few managed systems that cross the boundary.
 
@@ -102,11 +102,11 @@ Ordering between systems that share only a group should be made explicit when co
 `GamePresentationGroup` runs in Unity's presentation phase:
 
 - `HealthBarPresentationSystem` updates ECS health-bar presentation data and expires one-second post-damage visibility.
-- `EnemyHealthBarBridgeSystem` publishes only currently visible enemy position/health snapshots to the registered screen-space Canvas.
+- `EnemyHealthBarBridgeSystem` publishes enemy position, health, and launch-phase snapshots while post-damage health visibility is enabled or the enemy is not `Active`.
 - `PresentationBridgeSystem` is the explicit ECS presentation bridge point.
 - `PresentationBridgeSystem` selects enemies currently inside the live punch volume and publishes their initial launch segments through `PlayerEcsBridge`; `PunchTrajectoryPreview` renders those segments as pooled semitransparent world-space lines.
 
-Normal-enemy health bars are transient damage feedback only. `EnemyHealthBarCanvas` pools screen-space bar objects and hides each one after ECS disables `EnemyHealthBarVisibility`; the Canvas never queries or stores enemy entities.
+Normal-enemy health bars are transient damage feedback only while an enemy is `Active`. `EnemyHealthBarCanvas` uses the same pooled screen-space view to label transient `Launched`, `Recovering`, and `Defeated` phases, and hides it once the enemy is active without post-damage visibility; the Canvas never queries or stores enemy entities.
 
 ## Transient State Pattern
 
@@ -120,7 +120,7 @@ Frequently toggled state is represented by enableable components to avoid archet
 - `RespawnRequest`
 - `EnemyHealthBarVisibility`
 
-Enemy lifecycle is represented by the non-enableable `EnemyLaunchState` component because every enemy is always in exactly one of `Active`, `Launched`, `Recovering`, or `Defeated`. Its phase, last launch cause, and propagated-launch count remain visible in the Entities inspector. A living launched or recovering enemy can be punched again; the transition increments its launch sequence and resets its cause, damage, recovery timing, propagated-launch count, and last propagation impulse to the new launch. `Health` exposes current and maximum health, while `EnemyDamageState` records the last applied damage and whether zero-health defeat is currently deferred for development inspection.
+Enemy lifecycle is represented by the non-enableable `EnemyLaunchState` component because every enemy is always in exactly one of `Active`, `Launched`, `Recovering`, or `Defeated`. Its phase, last launch cause, and propagated-launch count remain visible in the Entities inspector. Any launched enemy, including one at zero health with deferred defeat, can be punched again; a recovering enemy must still be alive. The transition increments its launch sequence and resets its cause, damage, recovery timing, propagated-launch count, and last propagation impulse to the new launch. `Health` exposes current and maximum health, while `EnemyDamageState` records the last applied damage and whether zero-health defeat is currently deferred for development inspection.
 
 `DamageApplicationSystem` is the explicit pre-physics health stage after punch detection. Punch detection establishes `Launched` before damage is evaluated, so a same-frame lethal launching punch deterministically defers defeat and still receives its impulse. After physics and collision propagation, `EnemyRecoverySystem` chooses either normal recovery for a living projectile or direct defeat for a zero-health projectile. `DeathRequest` is enabled only on the transition to `Defeated`, making the lifetime handoff idempotent; `DefeatedEnemyLifecycleSystem` consumes it once and enables `RespawnRequest`.
 
@@ -161,7 +161,7 @@ The current implementation proves architecture and basic interactions, but sever
 - Dash-punch coordination stays on the player GameObject: `PlayerPunch` buffers an early press, while `PlayerController` reports normalized progress from its existing dash timer and ends dash movement when the punch is consumed at or after the configured `0.5` midpoint. Dash punches select independently configured damage and launch strength, then use the ordinary bridge and ECS punch pipeline.
 - A launched enemy, including a zero-health enemy with deferred defeat, can propagate launched state to and independently damage an active or recovering enemy when Unity Physics reports solver-estimated contact impulse above the respective authored thresholds. Unity Physics exclusively owns velocities; gameplay adds no synthetic transfer. One source launch damages each target at most once but may damage multiple targets. Defeated enemies and launched-versus-launched pairs are ineligible. The final effect grammar remains unresolved.
 - Enemy chasing and contact damage exist as prototype behavior.
-- A player health bar exists and is consistent with the GDD; ECS enemy health-bar presentation data exists but conflicts with the no-normal-enemy-UI rule if displayed.
+- A player health bar exists. Normal-enemy health is displayed temporarily after damage per `INFO-001`, while non-active launch phases share that pooled view for transient state feedback.
 - The current scene is an arena sandbox, not the required route-based 15–20 minute run.
 
 Do not preserve these details merely because they exist. Preserve the ownership boundary and system timing while evolving behavior toward accepted GDD rules.

@@ -12,12 +12,14 @@ namespace CrowdPunch.Mono.UI
     {
         private const float BarWidth = 64f;
         private const float BarHeight = 7f;
+        private const float StateLabelHeight = 16f;
         private const float WorldHeightOffset = 1.5f;
 
         private sealed class BarView
         {
             public RectTransform Root;
             public RectTransform Fill;
+            public Text StateLabel;
             public bool WasPublished;
         }
 
@@ -52,7 +54,11 @@ namespace CrowdPunch.Mono.UI
             }
         }
 
-        public void Publish(int displayId, Vector3 worldPosition, float normalizedHealth)
+        public void Publish(
+            int displayId,
+            Vector3 worldPosition,
+            float normalizedHealth,
+            string stateLabel)
         {
             worldCamera ??= UnityEngine.Camera.main;
             if (worldCamera == null)
@@ -84,6 +90,8 @@ namespace CrowdPunch.Mono.UI
             view.WasPublished = true;
             view.Root.anchoredPosition = localPosition;
             view.Fill.anchorMax = new Vector2(Mathf.Clamp01(normalizedHealth), 1f);
+            view.StateLabel.text = stateLabel;
+            view.StateLabel.gameObject.SetActive(!string.IsNullOrEmpty(stateLabel));
         }
 
         public void EndFrame()
@@ -121,7 +129,7 @@ namespace CrowdPunch.Mono.UI
             root.SetParent(canvasRect, false);
             root.anchorMin = new Vector2(0.5f, 0.5f);
             root.anchorMax = new Vector2(0.5f, 0.5f);
-            root.sizeDelta = new Vector2(BarWidth, BarHeight);
+            root.sizeDelta = new Vector2(BarWidth, BarHeight + StateLabelHeight);
 
             Image background = rootObject.GetComponent<Image>();
             background.color = new Color(0.04f, 0.04f, 0.04f, 0.85f);
@@ -131,7 +139,7 @@ namespace CrowdPunch.Mono.UI
             fillObject.layer = gameObject.layer;
             RectTransform fill = (RectTransform)fillObject.transform;
             fill.SetParent(root, false);
-            fill.anchorMin = Vector2.zero;
+            fill.anchorMin = new Vector2(0f, StateLabelHeight / (BarHeight + StateLabelHeight));
             fill.anchorMax = Vector2.one;
             fill.offsetMin = new Vector2(1.5f, 1.5f);
             fill.offsetMax = new Vector2(-1.5f, -1.5f);
@@ -141,10 +149,27 @@ namespace CrowdPunch.Mono.UI
             fillImage.color = new Color(0.9f, 0.2f, 0.16f, 0.95f);
             fillImage.raycastTarget = false;
 
+            GameObject labelObject = new GameObject("State", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+            labelObject.layer = gameObject.layer;
+            RectTransform labelTransform = (RectTransform)labelObject.transform;
+            labelTransform.SetParent(root, false);
+            labelTransform.anchorMin = new Vector2(0f, 0f);
+            labelTransform.anchorMax = new Vector2(1f, 0f);
+            labelTransform.pivot = new Vector2(0.5f, 0f);
+            labelTransform.sizeDelta = new Vector2(0f, StateLabelHeight);
+
+            Text stateLabel = labelObject.GetComponent<Text>();
+            stateLabel.alignment = TextAnchor.MiddleCenter;
+            stateLabel.color = Color.white;
+            stateLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            stateLabel.fontSize = 11;
+            stateLabel.raycastTarget = false;
+
             return new BarView
             {
                 Root = root,
                 Fill = fill,
+                StateLabel = stateLabel,
                 WasPublished = true
             };
         }
