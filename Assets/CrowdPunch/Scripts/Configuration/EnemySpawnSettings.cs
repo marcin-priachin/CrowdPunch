@@ -1,3 +1,4 @@
+using CrowdPunch.Components;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -7,7 +8,8 @@ namespace CrowdPunch.Configuration
     {
         Baseline,
         Ranged,
-        Explosive
+        Explosive,
+        Dasher
     }
 
     /// <summary>Reusable tuning for the initial ECS crowd.</summary>
@@ -58,6 +60,37 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0.01f)] private float explosionVisualDuration = 0.35f;
         [SerializeField, Min(0f)] private float explosionVisualSizeMultiplier = 1f;
 
+        [Header("Dasher (provisional)")]
+        [SerializeField, Min(0f)] private float dasherPreferredMinimumDistance = 6f;
+        [SerializeField, Min(0f)] private float dasherPreferredMaximumDistance = 10f;
+        [SerializeField, Min(0f)] private float dasherPreparationMinimumDistance = 5f;
+        [SerializeField, Min(0f)] private float dasherPreparationMaximumDistance = 12f;
+        [SerializeField, Min(0f)] private float dasherApproachSpeed = 3f;
+        [SerializeField, Min(0f)] private float dasherRetreatSpeed = 4f;
+        [SerializeField] private DasherPreparationMovement dasherPreparationMovement = DasherPreparationMovement.ImmediateStop;
+        [SerializeField, Min(0f)] private float dasherTelegraphDuration = 0.5f;
+        [SerializeField, Min(0f)] private float dasherDashSpeed = 18f;
+        [SerializeField, Min(0f)] private float dasherMaximumDistance = 12f;
+        [SerializeField, Min(0f)] private float dasherRecoveryDuration = 1.25f;
+        [SerializeField] private DasherAvoidancePolicy dasherAvoidancePolicy = DasherAvoidancePolicy.BetweenDasherAndPlayer;
+        [SerializeField, Min(0f)] private float dasherCorridorWidth = 1.5f;
+        [SerializeField, Min(0f)] private float dasherBehindPlayerDistance = 4f;
+        [SerializeField, Min(0f)] private float dasherPlayerDamage = 20f;
+        [SerializeField, Min(0f)] private float dasherPlayerKnockback = 18f;
+        [SerializeField, Min(0f)] private float dasherPlayerInvincibilitySeconds = 0.5f;
+        [SerializeField, Min(0f)] private float dasherDashEnemyDamage = 15f;
+        [SerializeField, Min(0f)] private float dasherDashEnemyKnockback = 14f;
+        [SerializeField, Range(0f, 1f)] private float dasherDashImpactPositionWeight = 0.35f;
+        [SerializeField, Min(0f)] private float dasherLaunchedEnemyDamage = 25f;
+        [SerializeField, Min(0f)] private float dasherLaunchedEnemyKnockback = 18f;
+        [SerializeField, Range(0f, 1f)] private float dasherLaunchedImpactPositionWeight = 0.35f;
+        [SerializeField, Min(0f)] private float dasherEliteDamage = 15f;
+        [SerializeField, Min(0f)] private float dasherEliteKnockback = 8f;
+        [SerializeField, Min(0f)] private float dasherBossDamage = 5f;
+        [SerializeField, Min(0f)] private float dasherBossKnockback = 2f;
+        [SerializeField] private bool dasherPreserveMomentumAgainstElites;
+        [SerializeField] private bool dasherPreserveMomentumAgainstBosses;
+
         public GameObject EnemyPrefab => enemyPrefab;
         public GameObject RangedProjectilePrefab => rangedProjectilePrefab;
         public EnemyArchetype Archetype => archetype;
@@ -92,5 +125,22 @@ namespace CrowdPunch.Configuration
         public float ExplosionPlayerInvincibilitySeconds => explosionPlayerInvincibilitySeconds;
         public float ExplosionVisualDuration => explosionVisualDuration;
         public float ExplosionVisualSizeMultiplier => explosionVisualSizeMultiplier;
+        public DasherSettings DasherSettings => new DasherSettings
+        {
+            PreferredMinimumDistance = dasherPreferredMinimumDistance, PreferredMaximumDistance = dasherPreferredMaximumDistance,
+            PreparationMinimumDistance = dasherPreparationMinimumDistance, PreparationMaximumDistance = dasherPreparationMaximumDistance,
+            ApproachSpeed = dasherApproachSpeed, RetreatSpeed = dasherRetreatSpeed, PreparationMovement = dasherPreparationMovement,
+            TelegraphDuration = dasherTelegraphDuration, DashSpeed = dasherDashSpeed, MaximumDistance = dasherMaximumDistance,
+            RecoveryDuration = dasherRecoveryDuration, AvoidancePolicy = dasherAvoidancePolicy, CorridorWidth = dasherCorridorWidth,
+            BehindPlayerDistance = dasherBehindPlayerDistance, PlayerDamage = dasherPlayerDamage, PlayerKnockback = dasherPlayerKnockback,
+            PlayerInvincibilitySeconds = dasherPlayerInvincibilitySeconds, DashEnemyDamage = dasherDashEnemyDamage,
+            DashEnemyKnockback = dasherDashEnemyKnockback, DashImpactPositionWeight = dasherDashImpactPositionWeight,
+            LaunchedEnemyDamage = dasherLaunchedEnemyDamage, LaunchedEnemyKnockback = dasherLaunchedEnemyKnockback,
+            LaunchedImpactPositionWeight = dasherLaunchedImpactPositionWeight,
+            EliteDamage = dasherEliteDamage, EliteKnockback = dasherEliteKnockback,
+            BossDamage = dasherBossDamage, BossKnockback = dasherBossKnockback,
+            PreserveMomentumAgainstElites = dasherPreserveMomentumAgainstElites ? (byte)1 : (byte)0,
+            PreserveMomentumAgainstBosses = dasherPreserveMomentumAgainstBosses ? (byte)1 : (byte)0
+        };
     }
 }

@@ -285,6 +285,30 @@ Status: Must
 
 Except for distance-keeping and its ranged attack, the ranged enemy follows the baseline ordinary-enemy health, mass, launchability, collision-chain participation, recovery, deferred defeat, pooling, and respawn rules.
 
+### ENEMY-005 — Dasher Commitment
+
+Status: Must
+
+The Dasher maintains distance, stops for a readable configurable telegraph, samples and locks its direction when the dash begins, and travels without steering until its maximum distance or a static obstruction. Player and ordinary-enemy contact does not end the dash. It then enters a readable recovery window. Dash-path enemy avoidance is one authored policy: none, between the Dasher and player, or between and behind the player.
+
+### ENEMY-006 — Dasher Impacts
+
+Status: Must
+
+An intentional dash damages and launches each struck enemy at most once per dash and damages and knocks back the player at most once per dash. Player, ordinary-enemy, elite, and boss damage remain independently configurable from knockback where supported. Ordinary enemy contacts do not redirect the committed dash.
+
+### ENEMY-007 — Launched Dasher
+
+Status: Must
+
+A player punch takes priority over every Dasher phase and enters the normal `Launched` lifecycle. While launched, the Dasher uses its own readable dash motion language, deals separately configured collision damage and knockback, launches ordinary targets into the shared chain pipeline, and preserves its trajectory through ordinary enemies. Static geometry still resolves through normal launched physics. Elite and boss momentum preservation is separately configurable.
+
+### ENEMY-008 — Dasher Baseline Rules
+
+Status: Must
+
+Except for its authored dash and launched-impact modifiers, the Dasher follows ordinary-enemy health, damage, deferred defeat, recovery, pooling, and respawn rules.
+
 ### INFO-001 — No Persistent Normal-Enemy UI
 
 Status: Must

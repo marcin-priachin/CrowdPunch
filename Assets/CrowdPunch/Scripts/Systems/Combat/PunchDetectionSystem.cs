@@ -4,6 +4,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using Unity.Physics;
 
 namespace CrowdPunch.Systems.Combat
 {
@@ -67,6 +68,19 @@ namespace CrowdPunch.Systems.Combat
                 float3 impulseDirection = math.normalizesafe(
                     math.lerp(punchDirection, positionDirection, pushDirectionPositionWeight),
                     positionDirection);
+                if (SystemAPI.HasComponent<DasherState>(enemy))
+                {
+                    DasherState interruptedDash = SystemAPI.GetComponent<DasherState>(enemy);
+                    interruptedDash.Phase = DasherPhase.Positioning;
+                    interruptedDash.SecondsRemaining = 0f;
+                    interruptedDash.LockedDirection = impulseDirection;
+                    interruptedDash.LockedRotation = quaternion.LookRotationSafe(impulseDirection, math.up());
+                    interruptedDash.HasLockedRotation = 1;
+                    SystemAPI.SetComponent(enemy, interruptedDash);
+                    PhysicsVelocity interruptedVelocity = SystemAPI.GetComponent<PhysicsVelocity>(enemy);
+                    interruptedVelocity.Linear.xz = float2.zero;
+                    SystemAPI.SetComponent(enemy, interruptedVelocity);
+                }
                 SystemAPI.SetComponent(enemy, new ExternalImpulse
                 {
                     Value = impulseDirection * punchRequest.Strength

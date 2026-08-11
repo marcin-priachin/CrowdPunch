@@ -103,6 +103,11 @@ namespace CrowdPunch.Systems.Lifetime
                     {
                         SystemAPI.SetComponent(enemy, new ExplosiveEnemyState());
                     }
+                    if (SystemAPI.HasComponent<DasherState>(enemy))
+                    {
+                        SystemAPI.SetComponent(enemy, new DasherState { Phase = DasherPhase.Positioning });
+                        SystemAPI.GetBuffer<DasherHitHistory>(enemy).Clear();
+                    }
                     respawnRequest.ValueRW.IsPooled = 1;
                     respawnRequest.ValueRW.RespawnAt = respawnSettings.ValueRO.Enabled != 0
                         ? elapsedTime + RespawnDelaySeconds

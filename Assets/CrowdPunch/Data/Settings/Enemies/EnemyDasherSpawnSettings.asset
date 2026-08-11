@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a12c749ec1ba4b17aac7000000000013, type: 3}
+  m_Name: EnemyDasherSpawnSettings
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemySpawnSettings
+  enemyPrefab: {fileID: 8618196010151164906, guid: 3e70fb2e89b01674f95633e429f13253, type: 3}
+  rangedProjectilePrefab: {fileID: 710000000000000001, guid: 65a5af48c2854bbd81ddaf3cc9451011, type: 3}
+  archetype: 3
+  initialCount: 100
+  radius: 100
+  respawnEnabled: 0
+  preferredMinimumDistance: 8
+  preferredMaximumDistance: 12
+  engagementRange: 18
+  retreatSpeed: 4
+  approachSpeed: 3
+  initialAttackDelay: 1.5
+  initialDelayVariation: 1.5
+  windUpDuration: 0.75
+  cooldown: 3
+  cooldownVariation: 1.5
+  projectileDamage: 10
+  playerInvincibilitySeconds: 0.5
+  projectileSpeed: 8
+  projectileAimSpreadRadius: 2.5
+  projectileAimTargetYOffset: 0
+  projectileArcHeight: 5
+  projectileMinimumAltitude: -2
+  projectileLifetime: 5
+  projectileRadius: 0.4
+  projectilePlayerLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  explosionRadius: 5
+  explosionDamage: 20
+  normalEnemyKnockbackForce: 16
+  playerEliteKnockbackForce: 10
+  bossKnockbackForce: 5
+  explosionPlayerInvincibilitySeconds: 0.5
+  explosionVisualDuration: 0.35
+  explosionVisualSizeMultiplier: 1
+  dasherPreferredMinimumDistance: 6
+  dasherPreferredMaximumDistance: 1
+  dasherPreparationMinimumDistance: 1
+  dasherPreparationMaximumDistance: 24
+  dasherApproachSpeed: 3
+  dasherRetreatSpeed: 4
+  dasherPreparationMovement: 0
+  dasherTelegraphDuration: 0.5
+  dasherDashSpeed: 36
+  dasherMaximumDistance: 24
+  dasherRecoveryDuration: 1.25
+  dasherAvoidancePolicy: 2
+  dasherCorridorWidth: 1.5
+  dasherBehindPlayerDistance: 4
+  dasherPlayerDamage: 20
+  dasherPlayerKnockback: 18
+  dasherPlayerInvincibilitySeconds: 0.5
+  dasherDashEnemyDamage: 15
+  dasherDashEnemyKnockback: 90
+  dasherDashImpactPositionWeight: 0.35
+  dasherLaunchedEnemyDamage: 25
+  dasherLaunchedEnemyKnockback: 90
+  dasherLaunchedImpactPositionWeight: 0.35
+  dasherEliteDamage: 15
+  dasherEliteKnockback: 8
+  dasherBossDamage: 5
+  dasherBossKnockback: 2
+  dasherPreserveMomentumAgainstElites: 0
+  dasherPreserveMomentumAgainstBosses: 0

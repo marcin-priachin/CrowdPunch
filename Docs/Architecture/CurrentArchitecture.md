@@ -154,6 +154,52 @@ The existing player bridge receives explosion damage through the normal `PlayerH
 
 ## Current Prototype Behavior Versus Design
 
+## Dasher Enemy Archetype
+
+`EnemySpawnSettings.Archetype` can select `Dasher`. The existing enemy prefab is instantiated as a variant with
+`DasherSettings`, `DasherState`, and a per-action `DasherHitHistory` buffer. Its explicit phases are `Positioning`,
+`Preparing`, `Dashing`, and `Recovering`; the shared `EnemyLaunchState` remains authoritative for punches, launched
+collision chains, recovery, defeat, and pooling. A punch or defeat therefore interrupts every Dasher phase, and pooling
+resets both state and hit history.
+
+The decision system maintains an authored distance band and evaluates the configured corridor policy only when entering
+preparation. Preparation faces the live player and either stops immediately or brakes using normal movement. Direction is
+resampled and locked when the telegraph expires. Dash movement writes the locked horizontal velocity until maximum travel
+or an obstacle reduces it below the stop threshold. Player hits are limited by a per-dash flag; enemy hits use a source,
+target, and action-sequence history. Both use the existing player bridge, `DamageRequest`, `ExternalImpulse`, and
+`EnemyLaunchTransition` pipelines.
+
+Enemy prefab colliders bake on the dedicated `Enemy` Unity Physics category. Each Dasher receives a unique runtime collider
+with package-owned cleanup data. While intentionally dashing or in the shared `Launched` phase,
+`DasherColliderModeSystem` removes the enemy category from that collider's mask, so enemy contacts never reach the solver
+and therefore cannot deflect, displace, spin, or slow the Dasher. The solid filter is restored on leaving those phases.
+Static geometry stays in the collision mask and remains solver-owned.
+
+Dash commitment also stores a yaw-only `LockedRotation`. Player punch launch stores the punch direction immediately;
+other launch sources capture facing from launch velocity on their first pre-physics update. The rotation is reapplied before
+and after simulation while dashing or launched, and yaw angular velocity is cleared after simulation, preventing visible
+solver-induced turning without disabling static collision response.
+
+On each new shared `LaunchSequence`, `DasherVelocityCaptureSystem` preserves the incoming launch direction but normalizes
+the horizontal launch speed to the Dasher's authored `DashSpeed`. This occurs once per launch, so subsequent static-geometry
+response can still slow or stop the Dasher normally.
+
+Because solver-free enemy pairs do not emit collision events, `DasherEnemyImpactSystem` performs a swept ECS overlap from
+the Dasher's pre-step position to its post-step position using the existing enemy contact radii. It retains per-action,
+per-target deduplication and writes the same `DamageRequest`, `ExternalImpulse`, and `EnemyLaunchTransition` state as before.
+The sweep also prevents fast dashes from tunnelling through gameplay impacts.
+
+Enemy knockback direction blends the Dasher's horizontal travel direction with the horizontal direction from the Dasher
+to the struck target. Separate authored `DashImpactPositionWeight` and `LaunchedImpactPositionWeight` values control the
+blend: `0` produces a straight-ahead push and `1` pushes directly toward the side on which the target was struck.
+
+Dasher impacts have independent intentional-dash and punched-launch tuning. `KnockbackResponse` provides the existing
+three conceptual tiers without introducing elite or boss behavior: ordinary enemies are always momentum-transparent,
+while elite and boss momentum preservation is authored independently. Static geometry remains solver-owned. Grey-box
+feedback uses the existing per-entity material colour and post-transform overrides: warning pulse, bright elongated
+dash/launched motion streak, distinct resting silhouette, and dark recovery. This stays entirely inside ECS rendering;
+the current presentation architecture has no entity-linked GameObject trail renderer.
+
 The current implementation proves architecture and basic interactions, but several behaviors are placeholders:
 
 - Punch detection uses a line/capsule-like distance test and independently assigns impulse, damage, and launched state. Enemy collision damage is also independently thresholded rather than inferred from propagation.

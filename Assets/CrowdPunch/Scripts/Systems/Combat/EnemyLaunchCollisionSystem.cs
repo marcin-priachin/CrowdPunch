@@ -37,6 +37,8 @@ namespace CrowdPunch.Systems.Combat
                 RespawnLookup = SystemAPI.GetComponentLookup<RespawnRequest>(true),
                 DamageRequestLookup = SystemAPI.GetComponentLookup<DamageRequest>(),
                 DamageHistoryLookup = SystemAPI.GetBufferLookup<CollisionDamageHistory>(),
+                DasherSettingsLookup = SystemAPI.GetComponentLookup<DasherSettings>(true),
+                DasherStateLookup = SystemAPI.GetComponentLookup<DasherState>(true),
                 World = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
                 MinimumPropagationImpulse = math.max(0f, settings.MinimumPropagationImpulse),
                 MinimumDamageImpulse = math.max(0f, settings.MinimumDamageImpulse),
@@ -56,6 +58,8 @@ namespace CrowdPunch.Systems.Combat
             [ReadOnly] public ComponentLookup<RespawnRequest> RespawnLookup;
             public ComponentLookup<DamageRequest> DamageRequestLookup;
             public BufferLookup<CollisionDamageHistory> DamageHistoryLookup;
+            [ReadOnly] public ComponentLookup<DasherSettings> DasherSettingsLookup;
+            [ReadOnly] public ComponentLookup<DasherState> DasherStateLookup;
             [ReadOnly] public PhysicsWorld World;
             public float MinimumPropagationImpulse;
             public float MinimumDamageImpulse;
@@ -104,6 +108,9 @@ namespace CrowdPunch.Systems.Combat
                 Entity target,
                 EnemyLaunchPhase targetPhase)
             {
+                if (DasherSettingsLookup.HasComponent(source)) return;
+                if (DasherStateLookup.HasComponent(target)
+                    && DasherStateLookup[target].Phase == DasherPhase.Dashing) return;
                 if (targetPhase != EnemyLaunchPhase.Active && targetPhase != EnemyLaunchPhase.Recovering)
                 {
                     return;

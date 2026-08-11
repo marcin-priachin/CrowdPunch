@@ -17,5 +17,6 @@ namespace CrowdPunch.Components
         public float3 Center;
         public RangedEnemySettings RangedSettings;
         public ExplosiveEnemySettings ExplosiveSettings;
+        public DasherSettings DasherSettings;
     }
 }

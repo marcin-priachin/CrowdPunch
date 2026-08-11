@@ -35,6 +35,7 @@ namespace CrowdPunch.Bakers
                 {
                     Configuration.EnemyArchetype.Ranged => EnemyArchetypeKind.Ranged,
                     Configuration.EnemyArchetype.Explosive => EnemyArchetypeKind.Explosive,
+                    Configuration.EnemyArchetype.Dasher => EnemyArchetypeKind.Dasher,
                     _ => EnemyArchetypeKind.Baseline
                 },
                 InitialCount = authoring.Settings.InitialCount,
@@ -68,6 +69,7 @@ namespace CrowdPunch.Bakers
                     ProjectileRadius = authoring.Settings.ProjectileRadius,
                     ProjectilePlayerLayers = authoring.Settings.ProjectilePlayerLayers
                 },
+                DasherSettings = authoring.Settings.DasherSettings,
                 ExplosiveSettings = new ExplosiveEnemySettings
                 {
                     Radius = authoring.Settings.ExplosionRadius,

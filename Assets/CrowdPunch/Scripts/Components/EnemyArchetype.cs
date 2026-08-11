@@ -6,7 +6,8 @@ namespace CrowdPunch.Components
     {
         Baseline,
         Ranged,
-        Explosive
+        Explosive,
+        Dasher
     }
 
     /// <summary>Explicit spawn selection used without relying on prefab or presentation names.</summary>
