@@ -459,6 +459,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.PlayerPunch
   ecsBridge: {fileID: 1430478229}
+  playerController: {fileID: 0}
   punchOrigin: {fileID: 1430478226}
   settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000022, type: 2}
 --- !u!114 &1430478228
@@ -627,8 +628,11 @@ MonoBehaviour:
   playerBridge: {fileID: 1430478229}
   playerHealth: {fileID: 0}
   playerController: {fileID: 0}
+  playerPunch: {fileID: 0}
   gameCanvasPrefab: {fileID: 0}
   createGameCanvas: 1
+  showEnemyHealthBars: 0
+  showEnemyStates: 0
 --- !u!4 &1935685715
 Transform:
   m_ObjectHideFlags: 0

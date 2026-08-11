@@ -38,6 +38,7 @@ namespace CrowdPunch.Systems.Presentation
                     enemy.Index,
                     transform.ValueRO.Position,
                     healthBar.ValueRO.Normalized,
+                    healthBarVisibility.ValueRO,
                     GetStateLabel(phase));
             }
 

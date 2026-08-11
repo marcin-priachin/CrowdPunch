@@ -106,7 +106,7 @@ Ordering between systems that share only a group should be made explicit when co
 - `PresentationBridgeSystem` is the explicit ECS presentation bridge point.
 - `PresentationBridgeSystem` selects enemies currently inside the live punch volume and publishes their initial launch segments through `PlayerEcsBridge`; `PunchTrajectoryPreview` renders those segments as pooled semitransparent world-space lines.
 
-Normal-enemy health bars are transient damage feedback only while an enemy is `Active`. `EnemyHealthBarCanvas` uses the same pooled screen-space view to label transient `Launched`, `Recovering`, and `Defeated` phases, and hides it once the enemy is active without post-damage visibility; the Canvas never queries or stores enemy entities.
+Normal-enemy health bars are transient damage feedback only. `EnemyHealthBarCanvas` uses the same pooled screen-space view to label transient `Launched`, `Recovering`, and `Defeated` phases, and independently respects the scene-facing health-bar and state-label options configured on `GameBootstrap`. It hides the view when neither enabled channel has content; the Canvas never queries or stores enemy entities.
 
 ## Transient State Pattern
 

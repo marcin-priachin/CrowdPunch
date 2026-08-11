@@ -31,9 +31,10 @@ namespace CrowdPunch.Mono.UI
             int displayId,
             Vector3 worldPosition,
             float normalizedHealth,
+            bool healthVisible,
             string stateLabel)
         {
-            activeCanvas?.Publish(displayId, worldPosition, normalizedHealth, stateLabel);
+            activeCanvas?.Publish(displayId, worldPosition, normalizedHealth, healthVisible, stateLabel);
         }
 
         public static void EndFrame()

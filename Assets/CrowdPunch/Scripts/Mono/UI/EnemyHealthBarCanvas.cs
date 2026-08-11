@@ -18,10 +18,14 @@ namespace CrowdPunch.Mono.UI
         private sealed class BarView
         {
             public RectTransform Root;
+            public GameObject HealthBar;
             public RectTransform Fill;
             public Text StateLabel;
             public bool WasPublished;
         }
+
+        [SerializeField] private bool showHealthBars = true;
+        [SerializeField] private bool showStateLabels = true;
 
         private readonly Dictionary<int, BarView> activeViews = new Dictionary<int, BarView>();
         private readonly Stack<BarView> availableViews = new Stack<BarView>();
@@ -46,6 +50,12 @@ namespace CrowdPunch.Mono.UI
             EnemyHealthBarCanvasRegistry.Unregister(this);
         }
 
+        public void Configure(bool healthBarsVisible, bool stateLabelsVisible)
+        {
+            showHealthBars = healthBarsVisible;
+            showStateLabels = stateLabelsVisible;
+        }
+
         public void BeginFrame()
         {
             foreach (BarView view in activeViews.Values)
@@ -58,8 +68,16 @@ namespace CrowdPunch.Mono.UI
             int displayId,
             Vector3 worldPosition,
             float normalizedHealth,
+            bool healthVisible,
             string stateLabel)
         {
+            bool displayHealth = showHealthBars && healthVisible;
+            bool displayState = showStateLabels && !string.IsNullOrEmpty(stateLabel);
+            if (!displayHealth && !displayState)
+            {
+                return;
+            }
+
             worldCamera ??= UnityEngine.Camera.main;
             if (worldCamera == null)
             {
@@ -91,7 +109,8 @@ namespace CrowdPunch.Mono.UI
             view.Root.anchoredPosition = localPosition;
             view.Fill.anchorMax = new Vector2(Mathf.Clamp01(normalizedHealth), 1f);
             view.StateLabel.text = stateLabel;
-            view.StateLabel.gameObject.SetActive(!string.IsNullOrEmpty(stateLabel));
+            view.HealthBar.SetActive(displayHealth);
+            view.StateLabel.gameObject.SetActive(displayState);
         }
 
         public void EndFrame()
@@ -123,7 +142,7 @@ namespace CrowdPunch.Mono.UI
                 return pooledView;
             }
 
-            GameObject rootObject = new GameObject("Enemy Health Bar", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            GameObject rootObject = new GameObject("Enemy Status", typeof(RectTransform));
             rootObject.layer = gameObject.layer;
             RectTransform root = (RectTransform)rootObject.transform;
             root.SetParent(canvasRect, false);
@@ -131,15 +150,24 @@ namespace CrowdPunch.Mono.UI
             root.anchorMax = new Vector2(0.5f, 0.5f);
             root.sizeDelta = new Vector2(BarWidth, BarHeight + StateLabelHeight);
 
-            Image background = rootObject.GetComponent<Image>();
+            GameObject healthBarObject = new GameObject("Health Bar", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            healthBarObject.layer = gameObject.layer;
+            RectTransform healthBar = (RectTransform)healthBarObject.transform;
+            healthBar.SetParent(root, false);
+            healthBar.anchorMin = new Vector2(0f, StateLabelHeight / (BarHeight + StateLabelHeight));
+            healthBar.anchorMax = Vector2.one;
+            healthBar.offsetMin = Vector2.zero;
+            healthBar.offsetMax = Vector2.zero;
+
+            Image background = healthBarObject.GetComponent<Image>();
             background.color = new Color(0.04f, 0.04f, 0.04f, 0.85f);
             background.raycastTarget = false;
 
             GameObject fillObject = new GameObject("Fill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             fillObject.layer = gameObject.layer;
             RectTransform fill = (RectTransform)fillObject.transform;
-            fill.SetParent(root, false);
-            fill.anchorMin = new Vector2(0f, StateLabelHeight / (BarHeight + StateLabelHeight));
+            fill.SetParent(healthBar, false);
+            fill.anchorMin = Vector2.zero;
             fill.anchorMax = Vector2.one;
             fill.offsetMin = new Vector2(1.5f, 1.5f);
             fill.offsetMax = new Vector2(-1.5f, -1.5f);
@@ -168,6 +196,7 @@ namespace CrowdPunch.Mono.UI
             return new BarView
             {
                 Root = root,
+                HealthBar = healthBarObject,
                 Fill = fill,
                 StateLabel = stateLabel,
                 WasPublished = true

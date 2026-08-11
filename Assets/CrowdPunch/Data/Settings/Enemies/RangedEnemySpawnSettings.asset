@@ -15,8 +15,8 @@ MonoBehaviour:
   enemyPrefab: {fileID: 8618196010151164906, guid: 3e70fb2e89b01674f95633e429f13253, type: 3}
   rangedProjectilePrefab: {fileID: 710000000000000001, guid: 65a5af48c2854bbd81ddaf3cc9451011, type: 3}
   archetype: 1
-  initialCount: 1
-  radius: 50
+  initialCount: 30
+  radius: 100
   respawnEnabled: 0
   preferredMinimumDistance: 8
   preferredMaximumDistance: 12
@@ -48,3 +48,32 @@ MonoBehaviour:
   explosionPlayerInvincibilitySeconds: 0.5
   explosionVisualDuration: 0.35
   explosionVisualSizeMultiplier: 1
+  dasherPreferredMinimumDistance: 6
+  dasherPreferredMaximumDistance: 10
+  dasherPreparationMinimumDistance: 5
+  dasherPreparationMaximumDistance: 12
+  dasherApproachSpeed: 3
+  dasherRetreatSpeed: 4
+  dasherPreparationMovement: 0
+  dasherTelegraphDuration: 0.5
+  dasherDashSpeed: 18
+  dasherMaximumDistance: 12
+  dasherRecoveryDuration: 1.25
+  dasherAvoidancePolicy: 1
+  dasherCorridorWidth: 1.5
+  dasherBehindPlayerDistance: 4
+  dasherPlayerDamage: 20
+  dasherPlayerKnockback: 18
+  dasherPlayerInvincibilitySeconds: 0.5
+  dasherDashEnemyDamage: 15
+  dasherDashEnemyKnockback: 14
+  dasherDashImpactPositionWeight: 0.35
+  dasherLaunchedEnemyDamage: 25
+  dasherLaunchedEnemyKnockback: 18
+  dasherLaunchedImpactPositionWeight: 0.35
+  dasherEliteDamage: 15
+  dasherEliteKnockback: 8
+  dasherBossDamage: 5
+  dasherBossKnockback: 2
+  dasherPreserveMomentumAgainstElites: 0
+  dasherPreserveMomentumAgainstBosses: 0

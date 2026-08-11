@@ -14,6 +14,8 @@ namespace CrowdPunch.Mono.UI
         [SerializeField] private PlayerPunch playerPunch;
         [SerializeField] private GameObject gameCanvasPrefab;
         [SerializeField] private bool createGameCanvas = true;
+        [SerializeField] private bool showEnemyHealthBars = true;
+        [SerializeField] private bool showEnemyStates = true;
 
         private void Awake()
         {
@@ -157,17 +159,20 @@ namespace CrowdPunch.Mono.UI
             }
         }
 
-        private static void EnsureEnemyHealthBarCanvas()
+        private void EnsureEnemyHealthBarCanvas()
         {
-            if (FindFirstObjectByType<EnemyHealthBarCanvas>() != null)
+            EnemyHealthBarCanvas enemyCanvas = FindFirstObjectByType<EnemyHealthBarCanvas>();
+            if (enemyCanvas != null)
             {
+                enemyCanvas.Configure(showEnemyHealthBars, showEnemyStates);
                 return;
             }
 
             Canvas canvas = FindFirstObjectByType<Canvas>();
             if (canvas != null)
             {
-                canvas.gameObject.AddComponent<EnemyHealthBarCanvas>();
+                enemyCanvas = canvas.gameObject.AddComponent<EnemyHealthBarCanvas>();
+                enemyCanvas.Configure(showEnemyHealthBars, showEnemyStates);
             }
         }
     }
