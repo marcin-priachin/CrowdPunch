@@ -1,7 +1,6 @@
 using CrowdPunch.Components;
 using CrowdPunch.Mono.UI;
 using CrowdPunch.Systems.Groups;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -9,9 +8,7 @@ using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Initialization
 {
-    /// <summary>
-    /// Resets ECS-owned gameplay state without reloading scenes or SubScenes.
-    /// </summary>
+    /// <summary>Resets ECS-owned gameplay state without reloading scenes or SubScenes.</summary>
     [UpdateInGroup(typeof(GameInitializationGroup))]
     [UpdateAfter(typeof(EnemySpawnSystem))]
     public partial class GameRestartSystem : SystemBase
@@ -20,7 +17,6 @@ namespace CrowdPunch.Systems.Initialization
 
         protected override void OnCreate()
         {
-            RequireForUpdate<SpawnSettings>();
             RequireForUpdate<Enemy>();
             lastRestartSequence = GameRestartRegistry.Sequence;
         }
@@ -34,29 +30,36 @@ namespace CrowdPunch.Systems.Initialization
             }
 
             lastRestartSequence = restartSequence;
-
-            NativeArray<SpawnSettings> spawnSettings = SystemAPI.QueryBuilder()
-                .WithAll<SpawnSettings>()
-                .Build()
-                .ToComponentDataArray<SpawnSettings>(Allocator.Temp);
             Random random = Random.CreateFromIndex(1);
 
-            foreach ((RefRW<LocalTransform> transform, RefRW<Health> health, RefRW<HealthBar> healthBar,
-                         RefRW<EnemyDamageState> damageState, RefRO<EnemyArchetype> archetype, Entity enemy) in
-                     SystemAPI.Query<RefRW<LocalTransform>, RefRW<Health>, RefRW<HealthBar>,
-                             RefRW<EnemyDamageState>, RefRO<EnemyArchetype>>()
+            foreach ((RefRW<LocalTransform> transform,
+                         RefRW<Health> health,
+                         RefRW<HealthBar> healthBar,
+                         RefRW<EnemyDamageState> damageState,
+                         Entity enemy) in
+                     SystemAPI.Query<RefRW<LocalTransform>, RefRW<Health>, RefRW<HealthBar>, RefRW<EnemyDamageState>>()
                          .WithAll<Enemy>()
                          .WithEntityAccess())
             {
-                SpawnSettings enemySpawnSettings = GetSpawnSettings(spawnSettings, archetype.ValueRO.Value);
-                transform.ValueRW = LocalTransform.FromPosition(GetRandomSpawnPosition(
-                    ref random,
-                    enemySpawnSettings.Center,
-                    enemySpawnSettings.SpawnRadius));
+                if (SystemAPI.HasComponent<AuthoredEnemyInitialPosition>(enemy))
+                {
+                    float3 position = SystemAPI.GetComponent<AuthoredEnemyInitialPosition>(enemy).Value;
+                    transform.ValueRW = LocalTransform.FromPosition(position);
+                }
+                else if (SystemAPI.HasComponent<RandomEnemySpawnRegion>(enemy))
+                {
+                    RandomEnemySpawnRegion region = SystemAPI.GetComponent<RandomEnemySpawnRegion>(enemy);
+                    transform.ValueRW = LocalTransform.FromPosition(GetRandomSpawnPosition(
+                        ref random,
+                        region.Center,
+                        region.Radius));
+                }
 
                 health.ValueRW.Current = health.ValueRO.Max;
                 healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
                 damageState.ValueRW = default;
+                SystemAPI.SetComponent(enemy, new DesiredMovement());
+                SystemAPI.SetComponent(enemy, new WanderDestination());
                 SystemAPI.GetBuffer<CollisionDamageHistory>(enemy).Clear();
 
                 if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
@@ -72,59 +75,87 @@ namespace CrowdPunch.Systems.Initialization
                     SystemAPI.SetComponent(enemy, new PhysicsVelocity());
                 }
 
-                if (SystemAPI.HasComponent<ExplosiveEnemyState>(enemy))
-                {
-                    SystemAPI.SetComponent(enemy, new ExplosiveEnemyState());
-                    SystemAPI.SetComponentEnabled<ExplosiveDetonationRequest>(enemy, false);
-                }
-
-                if (SystemAPI.HasComponent<DamageRequest>(enemy))
-                {
-                    SystemAPI.SetComponentEnabled<DamageRequest>(enemy, false);
-                }
-
-                if (SystemAPI.HasComponent<DeathRequest>(enemy))
-                {
-                    SystemAPI.SetComponentEnabled<DeathRequest>(enemy, false);
-                }
-
-                if (SystemAPI.HasComponent<ExternalImpulse>(enemy))
-                {
-                    SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, false);
-                }
-
-                if (SystemAPI.HasComponent<EnemyHealthBarVisibility>(enemy))
-                {
-                    SystemAPI.SetComponentEnabled<EnemyHealthBarVisibility>(enemy, false);
-                }
-
-                if (SystemAPI.HasComponent<KnockbackRecovery>(enemy))
-                {
-                    SystemAPI.SetComponentEnabled<KnockbackRecovery>(enemy, false);
-                }
-
-                if (SystemAPI.HasComponent<RespawnRequest>(enemy))
-                {
-                    SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, false);
-                }
+                ResetArchetypeState(enemy);
+                ResetTransientState(enemy);
             }
-
-            spawnSettings.Dispose();
         }
 
-        private static SpawnSettings GetSpawnSettings(
-            NativeArray<SpawnSettings> spawnSettings,
-            EnemyArchetypeKind archetype)
+        private void ResetArchetypeState(Entity enemy)
         {
-            for (int index = 0; index < spawnSettings.Length; index++)
+            if (SystemAPI.HasComponent<RangedAttackState>(enemy))
             {
-                if (spawnSettings[index].Archetype == archetype)
+                RangedEnemySettings settings = SystemAPI.GetComponent<RangedEnemySettings>(enemy);
+                SystemAPI.SetComponent(enemy, new RangedAttackState
                 {
-                    return spawnSettings[index];
-                }
+                    Phase = RangedAttackPhase.InitialDelay,
+                    SecondsRemaining = math.max(0f, settings.InitialAttackDelay)
+                        + GetRangedInitialDelayVariation(enemy, settings.InitialDelayVariation)
+                });
+                SystemAPI.SetComponent(enemy, new RangedPositioningState
+                {
+                    Mode = RangedPositioningMode.Hold
+                });
             }
 
-            return spawnSettings[0];
+            if (SystemAPI.HasComponent<ExplosiveEnemyState>(enemy))
+            {
+                SystemAPI.SetComponent(enemy, new ExplosiveEnemyState());
+                SystemAPI.SetComponentEnabled<ExplosiveDetonationRequest>(enemy, false);
+            }
+
+            if (SystemAPI.HasComponent<DasherState>(enemy))
+            {
+                SystemAPI.SetComponent(enemy, new DasherState
+                {
+                    Phase = DasherPhase.Positioning
+                });
+                SystemAPI.GetBuffer<DasherHitHistory>(enemy).Clear();
+            }
+        }
+
+        private void ResetTransientState(Entity enemy)
+        {
+            if (SystemAPI.HasComponent<DamageRequest>(enemy))
+            {
+                SystemAPI.SetComponent(enemy, new DamageRequest());
+                SystemAPI.SetComponentEnabled<DamageRequest>(enemy, false);
+            }
+
+            if (SystemAPI.HasComponent<DeathRequest>(enemy))
+            {
+                SystemAPI.SetComponentEnabled<DeathRequest>(enemy, false);
+            }
+
+            if (SystemAPI.HasComponent<ExternalImpulse>(enemy))
+            {
+                SystemAPI.SetComponent(enemy, new ExternalImpulse());
+                SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, false);
+            }
+
+            if (SystemAPI.HasComponent<EnemyHealthBarVisibility>(enemy))
+            {
+                SystemAPI.SetComponent(enemy, new EnemyHealthBarVisibility());
+                SystemAPI.SetComponentEnabled<EnemyHealthBarVisibility>(enemy, false);
+            }
+
+            if (SystemAPI.HasComponent<KnockbackRecovery>(enemy))
+            {
+                SystemAPI.SetComponent(enemy, new KnockbackRecovery());
+                SystemAPI.SetComponentEnabled<KnockbackRecovery>(enemy, false);
+            }
+
+            if (SystemAPI.HasComponent<RespawnRequest>(enemy))
+            {
+                SystemAPI.SetComponent(enemy, new RespawnRequest());
+                SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, false);
+            }
+        }
+
+        private static float GetRangedInitialDelayVariation(Entity enemy, float maximumVariation)
+        {
+            uint seed = (uint)math.max(1, enemy.Index + 1) * 747796405u;
+            float normalized = (seed & 0x00ffffffu) / 16777216f;
+            return normalized * math.max(0f, maximumVariation);
         }
 
         private static float3 GetRandomSpawnPosition(ref Random random, float3 center, float radius)
@@ -133,7 +164,6 @@ namespace CrowdPunch.Systems.Initialization
             float distance = math.sqrt(random.NextFloat()) * math.max(0f, radius);
             float x = math.cos(angle) * distance;
             float z = math.sin(angle) * distance;
-
             return center + new float3(x, 0f, z);
         }
     }

@@ -33,10 +33,14 @@ Assets/CrowdPunch/Scripts
 | --- | --- |
 | `Authoring/EnemyAuthoring.cs` | Inspector-facing enemy movement settings. |
 | `Authoring/SpawnerAuthoring.cs` | Inspector-facing enemy prefab and spawn counts. |
+| `Authoring/AuthoredEnemyGroupAuthoring.cs` | Organizational parent for explicitly placed combat groups. |
+| `Authoring/AuthoredEnemySpawnPointAuthoring.cs` | One scene-positioned enemy using an existing spawn profile. |
 | `Authoring/ArenaAuthoring.cs` | Inspector-facing arena bounds. |
 | `Authoring/GameSettingsAuthoring.cs` | Inspector-facing match bootstrap settings. |
 | `Bakers/EnemyBaker.cs` | Converts enemy authoring data to enemy ECS components. |
 | `Bakers/SpawnerBaker.cs` | Converts spawner authoring data to `SpawnSettings`. |
+| `Bakers/EnemySpawnProfileBaking.cs` | Shared conversion from `EnemySpawnSettings` to an ECS profile. |
+| `Bakers/AuthoredEnemySpawnPointBaker.cs` | Converts one child point and exact world position into an authored spawn request. |
 | `Bakers/ArenaBaker.cs` | Converts arena authoring data to `ArenaBounds`. |
 | `Bakers/GameSettingsBaker.cs` | Creates match, player snapshot, and punch singleton data. |
 | `Components/Enemy.cs` | Enemy tag component. |
@@ -55,11 +59,16 @@ Assets/CrowdPunch/Scripts
 | `Components/KnockbackRecovery.cs` | Enableable temporary recovery state. |
 | `Components/MatchState.cs` | Match-level singleton state. |
 | `Components/ArenaBounds.cs` | Play-area bounds. |
-| `Components/SpawnSettings.cs` | Enemy spawn configuration. |
+| `Components/EnemySpawnProfile.cs` | Shared baked prefab, archetype, respawn, and archetype-tuning profile. |
+| `Components/SpawnSettings.cs` | Legacy random-radius batch configuration. |
+| `Components/AuthoredEnemySpawnPoint.cs` | One exact-position initial spawn request. |
+| `Components/AuthoredEnemyInitialPosition.cs` | Per-enemy authored position restored by full restart. |
+| `Components/RandomEnemySpawnRegion.cs` | Per-enemy legacy region used for randomized restart placement. |
 | `Components/RespawnRequest.cs` | Enableable timed pool/respawn state for enemies. |
 | `Systems/Groups/*.cs` | Custom update phase boundaries. |
 | `Systems/Initialization/BootstrapSystem.cs` | Validates and initializes ECS match state. |
 | `Systems/Initialization/EnemySpawnSystem.cs` | Owns initial crowd creation. |
+| `Systems/Initialization/EnemySpawnInitialization.cs` | Shared ECS-owned initialization for one enemy from either workflow. |
 | `Systems/InputBridge/PlayerBridgeSystem.cs` | Copies player bridge data into ECS components. |
 | `Systems/AI/EnemyChaseSystem.cs` | Produces enemy chase movement intent. |
 | `Systems/Movement/EnemyMovementSystem.cs` | Applies enemy movement intent to Unity Physics velocity. |
@@ -93,6 +102,8 @@ Assets/CrowdPunch/Scripts
 
 Custom system groups make frame order explicit: bridge input, compute intent, apply impulses, simulate physics, reconcile state, then present results. This is clearer for learning than relying on default update order.
 
+Initial enemy creation supports two coexisting authoring workflows. `SpawnerAuthoring` remains the random circular batch tool. An `AuthoredEnemyGroupAuthoring` parent organizes child `AuthoredEnemySpawnPointAuthoring` objects, each of which creates exactly one enemy at its baked world-space transform from an existing `EnemySpawnSettings` asset. Both bakers produce `EnemySpawnProfile`, and `EnemySpawnInitialization` exclusively owns the shared prefab, separation, respawn-policy, archetype component, material, ranged, explosive, and Dasher setup. Invalid authored points are omitted independently and do not affect valid points or random spawners.
+
 Enemy movement is split into intent and application. Each enemy receives a deterministic random `EnemySeparationDistance` from the prefab's authored range when spawned. `EnemyChaseSystem` chooses whether each enemy wanders or charges and writes `DesiredMovement`; active enemies blend their selected short-range separation from nearby active enemies into both behaviors, and charging enemies also choose deterministic slots around the player. `EnemyMovementSystem` consumes that data and steers `PhysicsVelocity` toward the desired velocity instead of overwriting it instantly. This lets collision impulses survive long enough to affect other enemies. It also locks pitch and roll through `PhysicsMass.InverseInertia` so enemies remain upright while Unity Physics owns collision and position integration.
 
 Punching follows the same data pipeline. `PlayerPunch` publishes a `PunchRequest` through the bridge; `PunchDetectionSystem` tests active enemy positions against the request volume, transitions hits to `Launched`, and enables `ExternalImpulse` and `DamageRequest`; `DamageApplicationSystem` applies damage to `Health`; `ApplyImpulseSystem` adds the impulse to `PhysicsVelocity`. Post-physics collision interpretation propagates launched state while leaving collision velocity resolution to Unity Physics, and recovery advances `Launched` through `Recovering` to `Active`.
@@ -103,7 +114,7 @@ Enemy contact damage is detected in ECS by comparing enemy transforms with `Play
 
 Enemy launch collision stays ECS-owned. `EnemyLaunchCollisionSystem` listens to Unity Physics collision events after simulation and propagates only from a `Launched` source to an `Active` or `Recovering` target above the authored solver-estimated impulse threshold. Unity Physics owns the resulting velocity; gameplay does not add a second synthetic transfer. Collision no longer requests pooling. `RespawnRequest` remains available for explicit lifecycle cleanup, though out-of-bounds detection is still a TODO.
 
-Restart is a soft reset because the Bootstrap scene contains an auto-loaded SubScene. UI restart code should not reload the active Unity scene during play mode; `GameBootstrap` resets Mono-owned player state and `GameRestartSystem` resets ECS-owned enemy state.
+Restart is a soft reset because the Bootstrap scene contains an auto-loaded SubScene. UI restart code should not reload the active Unity scene during play mode; `GameBootstrap` resets Mono-owned player state and `GameRestartSystem` resets ECS-owned enemy state. Random enemies own `RandomEnemySpawnRegion` and are randomized inside that same region on restart. Authored enemies own `AuthoredEnemyInitialPosition` and return exactly there. Normal post-defeat pooling remains independent: `EnemyRespawnSettings.RespawnEnabled` is honored and enabled enemies return at an arena edge, while disabled enemies remain pooled until full restart.
 
 The aspect is intentionally small. It is useful when several systems repeatedly touch the same movement components. A plain `SystemAPI.Query` is still preferable for one-off queries.
 

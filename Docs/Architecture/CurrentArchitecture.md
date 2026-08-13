@@ -47,7 +47,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Player state visible to ECS | Bridge → ECS singleton | `PlayerSnapshot`, `PlayerHealthSnapshot` |
 | Punch command visible to ECS | Bridge → enableable ECS request | `PunchRequest` |
 | Enemy contact reported to player | ECS → bridge event | `EnemyContactHitReceived` |
-| Enemy spawn and pooling | ECS | spawn settings and respawn systems |
+| Enemy initial spawn and pooling | Authoring → baked profile → ECS | random `SpawnSettings`, authored spawn points, shared initialization, and respawn systems |
 | Enemy intent and movement | ECS | `DesiredMovement`, Unity Physics velocity |
 | Enemy archetypes and attacks/effects | ECS | `EnemyArchetype`, ranged state, and explosive settings/state |
 | Ranged projectile trajectory and lifetime | ECS | `RangedProjectile`, fixed fire-time start/target, ECS transform evaluation |
@@ -67,6 +67,17 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 1. `BootstrapSystem` establishes singleton/runtime state.
 2. `EnemySpawnSystem` instantiates the initial enemy pool.
 3. `GameRestartSystem` handles managed restart coordination.
+
+### Initial Spawn Workflows
+
+The arena supports two independent initial-layout inputs, and a SubScene may contain either or both:
+
+- `SpawnerAuthoring` bakes the established `SpawnSettings` random-radius batch. Its center, radius, count, deterministic random sequence, and reusable `EnemySpawnSettings` asset retain their existing meaning.
+- `AuthoredEnemyGroupAuthoring` is an organizational parent. Each child `AuthoredEnemySpawnPointAuthoring` references one existing `EnemySpawnSettings` asset and bakes one `AuthoredEnemySpawnPoint` with the child's exact world-space position, including Y. Each point bakes independently, so a null settings asset or prefab suppresses only that point.
+
+Both inputs bake the same `EnemySpawnProfile`. `EnemySpawnSystem` resolves either a random position or an authored position and delegates prefab instantiation, separation selection, respawn policy, archetype identity, material override, and Baseline/Ranged/Explosive/Dasher component setup to `EnemySpawnInitialization`. Runtime behavior is always selected through `EnemyArchetypeKind`, never names. The one-shot spawn system has no `SpawnSettings` requirement, so authored-only scenes work and initialization cannot repeat on restart.
+
+Each random enemy owns `RandomEnemySpawnRegion`; each authored enemy instead owns `AuthoredEnemyInitialPosition`. A full `GameRestartSystem` reset randomizes legacy enemies inside their own regions and restores authored enemies to their exact initial positions without archetype matching. It also clears velocity, health/damage/launch state, collision histories, ranged attack and positioning state, Dasher action state and hit history, explosive state, movement intent, and enableable transient data. Normal defeat pooling is unchanged: `EnemyRespawnSettings` still controls whether an enemy returns, and enabled enemies respawn at an arena edge rather than at an authored point. Disabled enemies stay pooled until full restart.
 
 ### Pre-Physics Simulation
 
