@@ -40,10 +40,7 @@ namespace CrowdPunch.Systems.Combat
                              RefRO<LocalTransform>, RefRO<EnemyContactDamageSettings>, DynamicBuffer<DasherHitHistory>>()
                          .WithNone<RespawnRequest>().WithEntityAccess())
             {
-                bool intentional = sourceLaunch.ValueRO.Phase == EnemyLaunchPhase.Active
-                    && dash.ValueRO.Phase == DasherPhase.Dashing;
-                bool launched = sourceLaunch.ValueRO.Phase == EnemyLaunchPhase.Launched;
-                if (!intentional && !launched) continue;
+                if (sourceLaunch.ValueRO.Phase != EnemyLaunchPhase.Launched) continue;
 
                 float3 start = dash.ValueRO.PreviousPosition;
                 float3 end = sourceTransform.ValueRO.Position;
@@ -55,7 +52,7 @@ namespace CrowdPunch.Systems.Combat
                     float combinedRadius = math.max(0f, sourceRadius.ValueRO.ContactRadius)
                         + math.max(0f, radii[target].ContactRadius);
                     if (DistanceSqToSegment(transforms[target].Position, start, end) > combinedRadius * combinedRadius) continue;
-                    ResolveImpact(source, target, intentional, sourceTransform.ValueRO.Position,
+                    ResolveImpact(source, target, sourceTransform.ValueRO.Position,
                         transforms[target].Position, dash.ValueRO, settings.ValueRO, history,
                         ref launches, ref tiers, ref damageRequests, ref impulses,
                         ref explosiveStates, ref detonationRequests);
@@ -64,7 +61,7 @@ namespace CrowdPunch.Systems.Combat
             targets.Dispose();
         }
 
-        private static void ResolveImpact(Entity source, Entity target, bool intentional,
+        private static void ResolveImpact(Entity source, Entity target,
             float3 sourcePosition, float3 targetPosition, DasherState dash,
             DasherSettings settings, DynamicBuffer<DasherHitHistory> history,
             ref ComponentLookup<EnemyLaunchState> launches, ref ComponentLookup<KnockbackResponse> tiers,
@@ -74,13 +71,13 @@ namespace CrowdPunch.Systems.Combat
         {
             EnemyLaunchState targetLaunch = launches[target];
             if (targetLaunch.Phase != EnemyLaunchPhase.Active && targetLaunch.Phase != EnemyLaunchPhase.Recovering) return;
-            uint sequence = intentional ? dash.DashSequence : launches[source].LaunchSequence;
-            byte actionKind = intentional ? (byte)0 : (byte)1;
+            uint sequence = launches[source].LaunchSequence;
+            const byte actionKind = 1;
             for (int i = 0; i < history.Length; i++)
                 if (history[i].Target == target && history[i].Sequence == sequence && history[i].ActionKind == actionKind) return;
             history.Add(new DasherHitHistory { Target = target, Sequence = sequence, ActionKind = actionKind });
 
-            if (!intentional && explosiveStates.HasComponent(target)
+            if (explosiveStates.HasComponent(target)
                 && explosiveStates[target].HasExploded == 0
                 && detonationRequests.HasComponent(target))
             {
@@ -90,10 +87,10 @@ namespace CrowdPunch.Systems.Combat
             KnockbackResponseTier tier = tiers[target].Tier;
             float damage = tier == KnockbackResponseTier.Boss ? settings.BossDamage
                 : tier == KnockbackResponseTier.PlayerElite ? settings.EliteDamage
-                : intentional ? settings.DashEnemyDamage : settings.LaunchedEnemyDamage;
+                : settings.LaunchedEnemyDamage;
             float knockback = tier == KnockbackResponseTier.Boss ? settings.BossKnockback
                 : tier == KnockbackResponseTier.PlayerElite ? settings.EliteKnockback
-                : intentional ? settings.DashEnemyKnockback : settings.LaunchedEnemyKnockback;
+                : settings.LaunchedEnemyKnockback;
 
             EnemyLaunchTransition.Begin(ref targetLaunch, EnemyLaunchCause.EnemyCollision, damage);
             launches[target] = targetLaunch;
@@ -106,17 +103,13 @@ namespace CrowdPunch.Systems.Combat
             }
             if (knockback > 0f)
             {
-                float3 travelDirection = intentional
-                    ? math.normalizesafe(dash.LockedDirection)
-                    : math.normalizesafe(dash.PreservedLaunchedVelocity);
+                float3 travelDirection = math.normalizesafe(dash.PreservedLaunchedVelocity);
                 travelDirection.y = 0f;
                 travelDirection = math.normalizesafe(travelDirection, new float3(0f, 0f, 1f));
                 float3 hitSideDirection = targetPosition - sourcePosition;
                 hitSideDirection.y = 0f;
                 hitSideDirection = math.normalizesafe(hitSideDirection, travelDirection);
-                float positionWeight = math.saturate(intentional
-                    ? settings.DashImpactPositionWeight
-                    : settings.LaunchedImpactPositionWeight);
+                float positionWeight = math.saturate(settings.LaunchedImpactPositionWeight);
                 float3 direction = math.normalizesafe(
                     math.lerp(travelDirection, hitSideDirection, positionWeight),
                     travelDirection);

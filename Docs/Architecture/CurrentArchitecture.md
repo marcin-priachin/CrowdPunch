@@ -207,16 +207,18 @@ response can still slow or stop the Dasher normally.
 
 Because solver-free enemy pairs do not emit collision events, `DasherEnemyImpactSystem` performs a swept ECS overlap from
 the Dasher's pre-step position to its post-step position using the existing enemy contact radii. It retains per-action,
-per-target deduplication and writes the same `DamageRequest`, `ExternalImpulse`, and `EnemyLaunchTransition` state as before.
+per-target deduplication for player-launched Dasher impacts and writes `DamageRequest`, `ExternalImpulse`, and
+`EnemyLaunchTransition` state. Intentional dashes are ignored by this enemy-impact path, so they pass through enemies
+without damage, knockback, launch state, or other gameplay effects.
 The sweep also prevents fast dashes from tunnelling through gameplay impacts. When a player-launched Dasher overlaps an
 unexploded explosive enemy, this same contact path queues `ExplosiveDetonationRequest` before `ExplosionResolutionSystem`;
 an intentional enemy dash does not trigger that launched-body interaction.
 
-Enemy knockback direction blends the Dasher's horizontal travel direction with the horizontal direction from the Dasher
-to the struck target. Separate authored `DashImpactPositionWeight` and `LaunchedImpactPositionWeight` values control the
-blend: `0` produces a straight-ahead push and `1` pushes directly toward the side on which the target was struck.
+Launched-Dasher knockback direction blends its horizontal travel direction with the horizontal direction from the Dasher
+to the struck target. The authored `LaunchedImpactPositionWeight` controls the blend: `0` produces a straight-ahead push
+and `1` pushes directly toward the side on which the target was struck.
 
-Dasher impacts have independent intentional-dash and punched-launch tuning. `KnockbackResponse` provides the existing
+Launched-Dasher impacts have independent normal-enemy, elite, and boss tuning. `KnockbackResponse` provides those existing
 three conceptual tiers without introducing elite or boss behavior: ordinary enemies are always momentum-transparent,
 while elite and boss momentum preservation is authored independently. Static geometry remains solver-owned. Grey-box
 feedback uses the existing per-entity material colour and post-transform overrides: warning pulse, bright elongated

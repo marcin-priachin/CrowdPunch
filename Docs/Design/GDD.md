@@ -295,7 +295,7 @@ The Dasher maintains distance, stops for a readable configurable telegraph, samp
 
 Status: Must
 
-An intentional dash damages and launches each struck enemy at most once per dash and damages and knocks back the player at most once per dash. Player, ordinary-enemy, elite, and boss damage remain independently configurable from knockback where supported. Ordinary enemy contacts do not redirect the committed dash.
+An intentional dash passes through enemies without damaging, knocking back, launching, or otherwise affecting them. It damages and knocks back the player at most once per dash. Player damage remains independently configurable from player knockback. Enemy contacts do not redirect or end the committed dash. Only a Dasher in the shared `Launched` phase affects and launches struck enemies.
 
 ### ENEMY-007 — Launched Dasher
 

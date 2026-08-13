@@ -128,10 +128,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 782062cc258f12f469043c785a7c84b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAuthoring
-  moveSpeed: 4
+  moveSpeed: 10
   wanderSpeed: 1.5
-  chargeDistance: 100
-  chargeSpeedMultiplier: 1
+  chargeDistance: 99999
+  chargeSpeedMultiplier: 2
   acceleration: 12
   brakingAcceleration: 8
   turnSpeed: 12

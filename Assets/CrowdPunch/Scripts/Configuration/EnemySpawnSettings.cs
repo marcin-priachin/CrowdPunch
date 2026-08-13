@@ -78,9 +78,6 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float dasherPlayerDamage = 20f;
         [SerializeField, Min(0f)] private float dasherPlayerKnockback = 18f;
         [SerializeField, Min(0f)] private float dasherPlayerInvincibilitySeconds = 0.5f;
-        [SerializeField, Min(0f)] private float dasherDashEnemyDamage = 15f;
-        [SerializeField, Min(0f)] private float dasherDashEnemyKnockback = 14f;
-        [SerializeField, Range(0f, 1f)] private float dasherDashImpactPositionWeight = 0.35f;
         [SerializeField, Min(0f)] private float dasherLaunchedEnemyDamage = 25f;
         [SerializeField, Min(0f)] private float dasherLaunchedEnemyKnockback = 18f;
         [SerializeField, Range(0f, 1f)] private float dasherLaunchedImpactPositionWeight = 0.35f;
@@ -133,8 +130,7 @@ namespace CrowdPunch.Configuration
             TelegraphDuration = dasherTelegraphDuration, DashSpeed = dasherDashSpeed, MaximumDistance = dasherMaximumDistance,
             RecoveryDuration = dasherRecoveryDuration, AvoidancePolicy = dasherAvoidancePolicy, CorridorWidth = dasherCorridorWidth,
             BehindPlayerDistance = dasherBehindPlayerDistance, PlayerDamage = dasherPlayerDamage, PlayerKnockback = dasherPlayerKnockback,
-            PlayerInvincibilitySeconds = dasherPlayerInvincibilitySeconds, DashEnemyDamage = dasherDashEnemyDamage,
-            DashEnemyKnockback = dasherDashEnemyKnockback, DashImpactPositionWeight = dasherDashImpactPositionWeight,
+            PlayerInvincibilitySeconds = dasherPlayerInvincibilitySeconds,
             LaunchedEnemyDamage = dasherLaunchedEnemyDamage, LaunchedEnemyKnockback = dasherLaunchedEnemyKnockback,
             LaunchedImpactPositionWeight = dasherLaunchedImpactPositionWeight,
             EliteDamage = dasherEliteDamage, EliteKnockback = dasherEliteKnockback,

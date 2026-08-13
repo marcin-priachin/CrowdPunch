@@ -20,8 +20,6 @@ namespace CrowdPunch.Components
         public DasherAvoidancePolicy AvoidancePolicy;
         public float CorridorWidth, BehindPlayerDistance;
         public float PlayerDamage, PlayerKnockback, PlayerInvincibilitySeconds;
-        public float DashEnemyDamage, DashEnemyKnockback;
-        public float DashImpactPositionWeight;
         public float LaunchedEnemyDamage, LaunchedEnemyKnockback;
         public float LaunchedImpactPositionWeight;
         public float EliteDamage, EliteKnockback, BossDamage, BossKnockback;
