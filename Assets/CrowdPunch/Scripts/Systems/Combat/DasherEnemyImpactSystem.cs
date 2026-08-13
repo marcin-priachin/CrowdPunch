@@ -11,6 +11,7 @@ namespace CrowdPunch.Systems.Combat
     /// <summary>Resolves swept Dasher overlaps without using solver contacts against ordinary enemies.</summary>
     [BurstCompile]
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
+    [UpdateBefore(typeof(ExplosionResolutionSystem))]
     [UpdateBefore(typeof(Physics.EnemyRecoverySystem))]
     public partial struct DasherEnemyImpactSystem : ISystem
     {
@@ -27,6 +28,9 @@ namespace CrowdPunch.Systems.Combat
             ComponentLookup<EnemyLaunchState> launches = SystemAPI.GetComponentLookup<EnemyLaunchState>();
             ComponentLookup<DamageRequest> damageRequests = SystemAPI.GetComponentLookup<DamageRequest>();
             ComponentLookup<ExternalImpulse> impulses = SystemAPI.GetComponentLookup<ExternalImpulse>();
+            ComponentLookup<ExplosiveEnemyState> explosiveStates = SystemAPI.GetComponentLookup<ExplosiveEnemyState>(true);
+            ComponentLookup<ExplosiveDetonationRequest> detonationRequests =
+                SystemAPI.GetComponentLookup<ExplosiveDetonationRequest>();
 
             foreach ((RefRO<DasherSettings> settings, RefRO<DasherState> dash,
                          RefRO<EnemyLaunchState> sourceLaunch, RefRO<LocalTransform> sourceTransform,
@@ -53,7 +57,8 @@ namespace CrowdPunch.Systems.Combat
                     if (DistanceSqToSegment(transforms[target].Position, start, end) > combinedRadius * combinedRadius) continue;
                     ResolveImpact(source, target, intentional, sourceTransform.ValueRO.Position,
                         transforms[target].Position, dash.ValueRO, settings.ValueRO, history,
-                        ref launches, ref tiers, ref damageRequests, ref impulses);
+                        ref launches, ref tiers, ref damageRequests, ref impulses,
+                        ref explosiveStates, ref detonationRequests);
                 }
             }
             targets.Dispose();
@@ -63,7 +68,9 @@ namespace CrowdPunch.Systems.Combat
             float3 sourcePosition, float3 targetPosition, DasherState dash,
             DasherSettings settings, DynamicBuffer<DasherHitHistory> history,
             ref ComponentLookup<EnemyLaunchState> launches, ref ComponentLookup<KnockbackResponse> tiers,
-            ref ComponentLookup<DamageRequest> damageRequests, ref ComponentLookup<ExternalImpulse> impulses)
+            ref ComponentLookup<DamageRequest> damageRequests, ref ComponentLookup<ExternalImpulse> impulses,
+            ref ComponentLookup<ExplosiveEnemyState> explosiveStates,
+            ref ComponentLookup<ExplosiveDetonationRequest> detonationRequests)
         {
             EnemyLaunchState targetLaunch = launches[target];
             if (targetLaunch.Phase != EnemyLaunchPhase.Active && targetLaunch.Phase != EnemyLaunchPhase.Recovering) return;
@@ -72,6 +79,13 @@ namespace CrowdPunch.Systems.Combat
             for (int i = 0; i < history.Length; i++)
                 if (history[i].Target == target && history[i].Sequence == sequence && history[i].ActionKind == actionKind) return;
             history.Add(new DasherHitHistory { Target = target, Sequence = sequence, ActionKind = actionKind });
+
+            if (!intentional && explosiveStates.HasComponent(target)
+                && explosiveStates[target].HasExploded == 0
+                && detonationRequests.HasComponent(target))
+            {
+                detonationRequests.SetComponentEnabled(target, true);
+            }
 
             KnockbackResponseTier tier = tiers[target].Tier;
             float damage = tier == KnockbackResponseTier.Boss ? settings.BossDamage

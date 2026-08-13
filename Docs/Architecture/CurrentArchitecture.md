@@ -208,7 +208,9 @@ response can still slow or stop the Dasher normally.
 Because solver-free enemy pairs do not emit collision events, `DasherEnemyImpactSystem` performs a swept ECS overlap from
 the Dasher's pre-step position to its post-step position using the existing enemy contact radii. It retains per-action,
 per-target deduplication and writes the same `DamageRequest`, `ExternalImpulse`, and `EnemyLaunchTransition` state as before.
-The sweep also prevents fast dashes from tunnelling through gameplay impacts.
+The sweep also prevents fast dashes from tunnelling through gameplay impacts. When a player-launched Dasher overlaps an
+unexploded explosive enemy, this same contact path queues `ExplosiveDetonationRequest` before `ExplosionResolutionSystem`;
+an intentional enemy dash does not trigger that launched-body interaction.
 
 Enemy knockback direction blends the Dasher's horizontal travel direction with the horizontal direction from the Dasher
 to the struck target. Separate authored `DashImpactPositionWeight` and `LaunchedImpactPositionWeight` values control the
