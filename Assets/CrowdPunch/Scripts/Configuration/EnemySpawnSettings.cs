@@ -23,6 +23,29 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float radius = 20f;
         [SerializeField] private bool respawnEnabled = true;
 
+        [Header("Common movement (provisional)")]
+        [SerializeField, Min(0f)] private float moveSpeed = 4f;
+        [SerializeField, Min(0f)] private float wanderSpeed = 1.5f;
+        [SerializeField, Min(0f)] private float chargeDistance = 12f;
+        [SerializeField, Min(0f)] private float chargeSpeedMultiplier = 1.75f;
+        [SerializeField, Min(0f)] private float acceleration = 12f;
+        [SerializeField, Min(0f)] private float brakingAcceleration = 8f;
+        [SerializeField, Min(0f)] private float turnSpeed = 12f;
+        [SerializeField, Min(0f)] private float stoppingDistance = 1.25f;
+        [SerializeField, Min(0f)] private float surroundDistance = 3.5f;
+        [SerializeField, Min(0f)] private float surroundRingSpacing = 0.75f;
+        [FormerlySerializedAs("separationDistance")]
+        [SerializeField, Min(0f)] private float separationDistanceMin = 1.1f;
+        [SerializeField, Min(0f)] private float separationDistanceMax = 1.6f;
+        [SerializeField, Min(0f)] private float separationWeight = 1.4f;
+
+        [Header("Common health and contact (provisional)")]
+        [SerializeField, Min(0.01f)] private float maxHealth = 30f;
+        [SerializeField, Range(0f, 1f)] private float contactDamagePercent = 0.05f;
+        [SerializeField, Min(0f)] private float contactPushStrength = 10f;
+        [SerializeField, Min(0f)] private float contactInvincibilitySeconds = 0.5f;
+        [SerializeField, Min(0f)] private float contactRadius = 0.75f;
+
         [Header("Ranged positioning (provisional)")]
         [SerializeField, Min(0f)] private float preferredMinimumDistance = 8f;
         [SerializeField, Min(0f)] private float preferredMaximumDistance = 12f;
@@ -65,8 +88,6 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float dasherPreferredMaximumDistance = 10f;
         [SerializeField, Min(0f)] private float dasherPreparationMinimumDistance = 5f;
         [SerializeField, Min(0f)] private float dasherPreparationMaximumDistance = 12f;
-        [SerializeField, Min(0f)] private float dasherApproachSpeed = 3f;
-        [SerializeField, Min(0f)] private float dasherRetreatSpeed = 4f;
         [SerializeField] private DasherPreparationMovement dasherPreparationMovement = DasherPreparationMovement.ImmediateStop;
         [SerializeField, Min(0f)] private float dasherTelegraphDuration = 0.5f;
         [SerializeField, Min(0f)] private float dasherDashSpeed = 18f;
@@ -94,6 +115,21 @@ namespace CrowdPunch.Configuration
         public int InitialCount => initialCount;
         public float Radius => radius;
         public bool RespawnEnabled => respawnEnabled;
+        public EnemyMovementSettings MovementSettings => new EnemyMovementSettings
+        {
+            MoveSpeed = moveSpeed, WanderSpeed = wanderSpeed, ChargeDistance = chargeDistance,
+            ChargeSpeedMultiplier = chargeSpeedMultiplier, Acceleration = acceleration,
+            BrakingAcceleration = brakingAcceleration, TurnSpeed = turnSpeed, StoppingDistance = stoppingDistance,
+            SurroundDistance = surroundDistance, SurroundRingSpacing = surroundRingSpacing,
+            SeparationDistanceMin = separationDistanceMin, SeparationDistanceMax = separationDistanceMax,
+            SeparationWeight = separationWeight
+        };
+        public Health Health => new Health { Current = maxHealth, Max = maxHealth };
+        public EnemyContactDamageSettings ContactDamageSettings => new EnemyContactDamageSettings
+        {
+            DamagePercent = contactDamagePercent, PushStrength = contactPushStrength,
+            PlayerInvincibilitySeconds = contactInvincibilitySeconds, ContactRadius = contactRadius
+        };
         public float PreferredMinimumDistance => preferredMinimumDistance;
         public float PreferredMaximumDistance => preferredMaximumDistance;
         public float EngagementRange => engagementRange;
@@ -126,7 +162,7 @@ namespace CrowdPunch.Configuration
         {
             PreferredMinimumDistance = dasherPreferredMinimumDistance, PreferredMaximumDistance = dasherPreferredMaximumDistance,
             PreparationMinimumDistance = dasherPreparationMinimumDistance, PreparationMaximumDistance = dasherPreparationMaximumDistance,
-            ApproachSpeed = dasherApproachSpeed, RetreatSpeed = dasherRetreatSpeed, PreparationMovement = dasherPreparationMovement,
+            ApproachSpeed = approachSpeed, RetreatSpeed = retreatSpeed, PreparationMovement = dasherPreparationMovement,
             TelegraphDuration = dasherTelegraphDuration, DashSpeed = dasherDashSpeed, MaximumDistance = dasherMaximumDistance,
             RecoveryDuration = dasherRecoveryDuration, AvoidancePolicy = dasherAvoidancePolicy, CorridorWidth = dasherCorridorWidth,
             BehindPlayerDistance = dasherBehindPlayerDistance, PlayerDamage = dasherPlayerDamage, PlayerKnockback = dasherPlayerKnockback,

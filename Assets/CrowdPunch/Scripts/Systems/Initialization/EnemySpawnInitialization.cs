@@ -22,8 +22,7 @@ namespace CrowdPunch.Systems.Initialization
                 return Entity.Null;
             }
 
-            EnemyMovementSettings movementSettings = entityManager.GetComponentData<EnemyMovementSettings>(
-                profile.EnemyPrefab);
+            EnemyMovementSettings movementSettings = profile.MovementSettings;
             float separationMin = math.max(0f, math.min(
                 movementSettings.SeparationDistanceMin,
                 movementSettings.SeparationDistanceMax));
@@ -33,6 +32,9 @@ namespace CrowdPunch.Systems.Initialization
 
             Entity enemy = commandBuffer.Instantiate(profile.EnemyPrefab);
             commandBuffer.SetComponent(enemy, LocalTransform.FromPosition(position));
+            commandBuffer.SetComponent(enemy, movementSettings);
+            commandBuffer.SetComponent(enemy, profile.Health);
+            commandBuffer.SetComponent(enemy, profile.ContactDamageSettings);
             commandBuffer.SetComponent(enemy, new EnemySeparationDistance
             {
                 Value = random.NextFloat(separationMin, separationMax)

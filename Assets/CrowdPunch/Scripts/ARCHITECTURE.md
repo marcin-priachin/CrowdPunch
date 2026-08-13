@@ -31,14 +31,14 @@ Assets/CrowdPunch/Scripts
 
 | File | Responsibility |
 | --- | --- |
-| `Authoring/EnemyAuthoring.cs` | Inspector-facing enemy movement settings. |
+| `Authoring/EnemyAuthoring.cs` | Marker that causes an enemy prefab to bake the common ECS component layout. |
 | `Authoring/SpawnerAuthoring.cs` | Inspector-facing enemy prefab and spawn counts. |
 | `Authoring/AuthoredEnemyGroupAuthoring.cs` | Organizational parent for explicitly placed combat groups. |
 | `Authoring/AuthoredEnemySpawnPointAuthoring.cs` | One scene-positioned enemy using an existing spawn profile. |
 | `Authoring/EnemyWaveSequenceAuthoring.cs` | Ordered wave assets plus sequence-wide deterministic placement settings. |
 | `Authoring/ArenaAuthoring.cs` | Inspector-facing arena bounds. |
 | `Authoring/GameSettingsAuthoring.cs` | Inspector-facing match bootstrap settings. |
-| `Bakers/EnemyBaker.cs` | Converts enemy authoring data to enemy ECS components. |
+| `Bakers/EnemyBaker.cs` | Creates the common ECS component layout that spawn profiles populate per instance. |
 | `Bakers/SpawnerBaker.cs` | Converts spawner authoring data to `SpawnSettings`. |
 | `Bakers/EnemySpawnProfileBaking.cs` | Shared conversion from `EnemySpawnSettings` to an ECS profile. |
 | `Bakers/AuthoredEnemySpawnPointBaker.cs` | Converts one child point and exact world position into an authored spawn request. |
@@ -107,7 +107,7 @@ Assets/CrowdPunch/Scripts
 
 Custom system groups make frame order explicit: bridge input, compute intent, apply impulses, simulate physics, reconcile state, then present results. This is clearer for learning than relying on default update order.
 
-Initial enemy creation supports two coexisting authoring workflows. `SpawnerAuthoring` remains the random circular batch tool. An `AuthoredEnemyGroupAuthoring` parent organizes child `AuthoredEnemySpawnPointAuthoring` objects, each of which creates exactly one enemy at its baked world-space transform from an existing `EnemySpawnSettings` asset. Both bakers produce `EnemySpawnProfile`, and `EnemySpawnInitialization` exclusively owns the shared prefab, separation, respawn-policy, archetype component, material, ranged, explosive, and Dasher setup. Invalid authored points are omitted independently and do not affect valid points or random spawners.
+Initial enemy creation supports two coexisting authoring workflows. `SpawnerAuthoring` remains the random circular batch tool. An `AuthoredEnemyGroupAuthoring` parent organizes child `AuthoredEnemySpawnPointAuthoring` objects, each of which creates exactly one enemy at its baked world-space transform from an existing `EnemySpawnSettings` asset. Both bakers produce `EnemySpawnProfile`, and `EnemySpawnInitialization` exclusively owns the shared prefab, common movement/health/contact tuning, separation, respawn-policy, archetype component, material, ranged, explosive, and Dasher setup. `EnemyAuthoring` only establishes the prefab component layout; it does not own tuning. Invalid authored points are omitted independently and do not affect valid points or random spawners.
 
 Wave spawning is a third coexisting workflow. Separate `EnemyWaveSettings` assets define totals, weighted existing profiles, positive-area world-space rectangles, delays, and all-at-once or batched cadence; `EnemyWaveSequenceAuthoring` supplies their order. Baking flattens these assets into unmanaged buffers and declares asset/prefab dependencies. Profile selection is weighted and deterministic, while rectangle selection is proportional to area followed by uniform sampling. Placement uses prefab-collider-derived conservative clearance, player distance, Unity Physics occupied-space queries, same-update candidate separation, and bounded later-update retries.
 

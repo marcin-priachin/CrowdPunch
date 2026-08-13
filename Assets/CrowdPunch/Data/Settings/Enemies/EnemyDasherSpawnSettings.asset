@@ -18,11 +18,29 @@ MonoBehaviour:
   initialCount: 30
   radius: 100
   respawnEnabled: 0
+  moveSpeed: 10
+  wanderSpeed: 1.5
+  chargeDistance: 99999
+  chargeSpeedMultiplier: 2
+  acceleration: 12
+  brakingAcceleration: 8
+  turnSpeed: 12
+  stoppingDistance: 1
+  surroundDistance: 3.5
+  surroundRingSpacing: 0.75
+  separationDistanceMin: 6
+  separationDistanceMax: 9
+  separationWeight: 1.4
+  maxHealth: 20
+  contactDamagePercent: 0.05
+  contactPushStrength: 10
+  contactInvincibilitySeconds: 0.5
+  contactRadius: 0.75
   preferredMinimumDistance: 8
   preferredMaximumDistance: 12
   engagementRange: 9999
   retreatSpeed: 4
-  approachSpeed: 3
+  approachSpeed: 10
   initialAttackDelay: 1.5
   initialDelayVariation: 1.5
   windUpDuration: 0.75
@@ -52,8 +70,6 @@ MonoBehaviour:
   dasherPreferredMaximumDistance: 1
   dasherPreparationMinimumDistance: 1
   dasherPreparationMaximumDistance: 24
-  dasherApproachSpeed: 3
-  dasherRetreatSpeed: 4
   dasherPreparationMovement: 0
   dasherTelegraphDuration: 0.5
   dasherDashSpeed: 36
@@ -65,9 +81,6 @@ MonoBehaviour:
   dasherPlayerDamage: 20
   dasherPlayerKnockback: 18
   dasherPlayerInvincibilitySeconds: 0.5
-  dasherDashEnemyDamage: 15
-  dasherDashEnemyKnockback: 90
-  dasherDashImpactPositionWeight: 0.35
   dasherLaunchedEnemyDamage: 25
   dasherLaunchedEnemyKnockback: 90
   dasherLaunchedImpactPositionWeight: 0.35

@@ -41,6 +41,9 @@ namespace CrowdPunch.Bakers
                     _ => EnemyArchetypeKind.Baseline
                 },
                 RespawnEnabled = settings.RespawnEnabled ? (byte)1 : (byte)0,
+                MovementSettings = settings.MovementSettings,
+                Health = settings.Health,
+                ContactDamageSettings = settings.ContactDamageSettings,
                 RangedSettings = new RangedEnemySettings
                 {
                     ProjectilePrefab = projectilePrefab,

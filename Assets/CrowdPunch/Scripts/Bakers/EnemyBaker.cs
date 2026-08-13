@@ -15,22 +15,7 @@ namespace CrowdPunch.Bakers
 
             AddComponent<Enemy>(entity);
             AddComponent(entity, new KnockbackResponse { Tier = KnockbackResponseTier.Normal });
-            AddComponent(entity, new EnemyMovementSettings
-            {
-                MoveSpeed = authoring.MoveSpeed,
-                WanderSpeed = authoring.WanderSpeed,
-                ChargeDistance = authoring.ChargeDistance,
-                ChargeSpeedMultiplier = authoring.ChargeSpeedMultiplier,
-                Acceleration = authoring.Acceleration,
-                BrakingAcceleration = authoring.BrakingAcceleration,
-                TurnSpeed = authoring.TurnSpeed,
-                StoppingDistance = authoring.StoppingDistance,
-                SurroundDistance = authoring.SurroundDistance,
-                SurroundRingSpacing = authoring.SurroundRingSpacing,
-                SeparationDistanceMin = authoring.SeparationDistanceMin,
-                SeparationDistanceMax = authoring.SeparationDistanceMax,
-                SeparationWeight = authoring.SeparationWeight
-            });
+            AddComponent<EnemyMovementSettings>(entity);
             AddComponent<EnemySeparationDistance>(entity);
             AddComponent<DesiredMovement>(entity);
             AddComponent(entity, new EnemyLaunchState
@@ -38,23 +23,13 @@ namespace CrowdPunch.Bakers
                 Phase = EnemyLaunchPhase.Active
             });
             AddComponent<WanderDestination>(entity);
-            AddComponent(entity, new Health
-            {
-                Current = authoring.MaxHealth,
-                Max = authoring.MaxHealth
-            });
+            AddComponent<Health>(entity);
             AddComponent(entity, new HealthBar
             {
                 Normalized = 1f
             });
             AddComponent<EnemyHealthBarVisibility>(entity);
-            AddComponent(entity, new EnemyContactDamageSettings
-            {
-                DamagePercent = authoring.ContactDamagePercent,
-                PushStrength = authoring.ContactPushStrength,
-                PlayerInvincibilitySeconds = authoring.ContactInvincibilitySeconds,
-                ContactRadius = authoring.ContactRadius
-            });
+            AddComponent<EnemyContactDamageSettings>(entity);
             AddComponent<DamageRequest>(entity);
             AddBuffer<CollisionDamageHistory>(entity);
             AddComponent<EnemyDamageState>(entity);

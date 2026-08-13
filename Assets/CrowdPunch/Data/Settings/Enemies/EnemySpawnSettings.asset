@@ -18,6 +18,24 @@ MonoBehaviour:
   initialCount: 100
   radius: 100
   respawnEnabled: 0
+  moveSpeed: 10
+  wanderSpeed: 1.5
+  chargeDistance: 99999
+  chargeSpeedMultiplier: 2
+  acceleration: 12
+  brakingAcceleration: 8
+  turnSpeed: 12
+  stoppingDistance: 1
+  surroundDistance: 3.5
+  surroundRingSpacing: 0.75
+  separationDistanceMin: 6
+  separationDistanceMax: 9
+  separationWeight: 1.4
+  maxHealth: 20
+  contactDamagePercent: 0.05
+  contactPushStrength: 10
+  contactInvincibilitySeconds: 0.5
+  contactRadius: 0.75
   preferredMinimumDistance: 8
   preferredMaximumDistance: 12
   engagementRange: 9999
@@ -52,8 +70,6 @@ MonoBehaviour:
   dasherPreferredMaximumDistance: 10
   dasherPreparationMinimumDistance: 5
   dasherPreparationMaximumDistance: 12
-  dasherApproachSpeed: 3
-  dasherRetreatSpeed: 4
   dasherPreparationMovement: 0
   dasherTelegraphDuration: 0.5
   dasherDashSpeed: 18
