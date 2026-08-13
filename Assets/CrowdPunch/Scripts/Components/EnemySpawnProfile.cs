@@ -8,6 +8,7 @@ namespace CrowdPunch.Components
         public Entity EnemyPrefab;
         public EnemyArchetypeKind Archetype;
         public byte RespawnEnabled;
+        public float SpawnClearance;
         public RangedEnemySettings RangedSettings;
         public ExplosiveEnemySettings ExplosiveSettings;
         public DasherSettings DasherSettings;

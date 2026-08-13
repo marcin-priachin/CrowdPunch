@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
+  m_Name: Wave1 1
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
+  totalEnemyCount: 200
+  enemies:
+  - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
+    Weight: 1
+  - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
+    Weight: 1
+  - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
+    Weight: 1
+  - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
+    Weight: 1
+  spawnRectangles:
+  - Center: {x: 110, y: 1, z: 0}
+    Width: 50
+    Depth: 255
+  - Center: {x: -110, y: 1, z: 0}
+    Width: 50
+    Depth: 255
+  - Center: {x: 0, y: 1, z: -110}
+    Width: 255
+    Depth: 50
+  - Center: {x: 0, y: 1, z: 110}
+    Width: 255
+    Depth: 50
+  delayBeforeWave: 0.1
+  spawnMode: 1
+  batchSize: 10
+  batchInterval: 1

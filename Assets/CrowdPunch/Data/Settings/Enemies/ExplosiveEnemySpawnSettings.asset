@@ -20,7 +20,7 @@ MonoBehaviour:
   respawnEnabled: 0
   preferredMinimumDistance: 8
   preferredMaximumDistance: 12
-  engagementRange: 589.9
+  engagementRange: 9999
   retreatSpeed: 4
   approachSpeed: 3
   initialAttackDelay: 1.5
@@ -40,7 +40,7 @@ MonoBehaviour:
   projectilePlayerLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  explosionRadius: 10
+  explosionRadius: 15
   explosionDamage: 20
   normalEnemyKnockbackForce: 16
   playerEliteKnockbackForce: 10

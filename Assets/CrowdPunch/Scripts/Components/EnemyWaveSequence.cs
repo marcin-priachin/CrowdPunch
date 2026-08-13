@@ -1,0 +1,63 @@
+using Unity.Entities;
+using Unity.Mathematics;
+
+namespace CrowdPunch.Components
+{
+    public enum EnemyWaveRuntimePhase : byte { PreWaveDelay, Spawning, AwaitingDefeat, Complete, Invalid }
+
+    public struct EnemyWaveSequence : IComponentData
+    {
+        public uint InitialSeed;
+        public uint RandomState;
+        public uint RunGeneration;
+        public int CurrentWaveIndex;
+        public int SpawnedCount;
+        public int DefeatedCount;
+        public double NextActionAt;
+        public double NextPlacementWarningAt;
+        public float MinimumPlayerDistance;
+        public int PlacementAttemptsPerEnemy;
+        public EnemyWaveRuntimePhase Phase;
+        public byte Initialized;
+    }
+
+    public struct EnemyWaveEncounterComplete : IComponentData, IEnableableComponent { }
+
+    public struct EnemyWaveDefinition : IBufferElementData
+    {
+        public int TotalEnemyCount;
+        public int ProfileStart;
+        public int ProfileCount;
+        public int RangeStart;
+        public int RangeCount;
+        public float TotalProfileWeight;
+        public float TotalRangeArea;
+        public float DelayBeforeWave;
+        public float BatchInterval;
+        public int BatchSize;
+        public byte SpawnMode;
+        public byte IsValid;
+    }
+
+    public struct EnemyWaveProfile : IBufferElementData
+    {
+        public EnemySpawnProfile Profile;
+        public float Weight;
+    }
+
+    public struct EnemyWaveSpawnRange : IBufferElementData
+    {
+        public float3 Center;
+        public float Width;
+        public float Depth;
+        public float Area;
+    }
+
+    public struct EnemyWaveOwnership : IComponentData
+    {
+        public Entity Sequence;
+        public uint RunGeneration;
+        public int WaveIndex;
+        public byte DefeatCounted;
+    }
+}

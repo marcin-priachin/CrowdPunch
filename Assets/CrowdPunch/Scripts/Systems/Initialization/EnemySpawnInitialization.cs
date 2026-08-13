@@ -45,6 +45,10 @@ namespace CrowdPunch.Systems.Initialization
             {
                 Enabled = profile.RespawnEnabled
             });
+            commandBuffer.AddComponent(enemy, new EnemySpawnClearance
+            {
+                Value = profile.SpawnClearance
+            });
 
             AddArchetypeComponents(commandBuffer, enemy, profile, ref random);
             return enemy;

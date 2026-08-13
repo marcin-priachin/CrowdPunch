@@ -17,7 +17,7 @@ namespace CrowdPunch.Systems.Initialization
 
         protected override void OnCreate()
         {
-            RequireForUpdate<Enemy>();
+            RequireForUpdate<MatchState>();
             lastRestartSequence = GameRestartRegistry.Sequence;
         }
 
@@ -30,6 +30,9 @@ namespace CrowdPunch.Systems.Initialization
             }
 
             lastRestartSequence = restartSequence;
+            ResetWaveSequences();
+            EntityQuery oldWaveEnemies = SystemAPI.QueryBuilder().WithAll<EnemyWaveOwnership>().Build();
+            EntityManager.DestroyEntity(oldWaveEnemies);
             Random random = Random.CreateFromIndex(1);
 
             foreach ((RefRW<LocalTransform> transform,
@@ -77,6 +80,25 @@ namespace CrowdPunch.Systems.Initialization
 
                 ResetArchetypeState(enemy);
                 ResetTransientState(enemy);
+            }
+        }
+
+        private void ResetWaveSequences()
+        {
+            foreach ((RefRW<EnemyWaveSequence> sequence, Entity entity) in
+                     SystemAPI.Query<RefRW<EnemyWaveSequence>>().WithEntityAccess())
+            {
+                sequence.ValueRW.RunGeneration++;
+                if (sequence.ValueRW.RunGeneration == 0) sequence.ValueRW.RunGeneration = 1;
+                sequence.ValueRW.RandomState = sequence.ValueRO.InitialSeed == 0 ? 1u : sequence.ValueRO.InitialSeed;
+                sequence.ValueRW.CurrentWaveIndex = 0;
+                sequence.ValueRW.SpawnedCount = 0;
+                sequence.ValueRW.DefeatedCount = 0;
+                sequence.ValueRW.NextActionAt = 0d;
+                sequence.ValueRW.NextPlacementWarningAt = 0d;
+                sequence.ValueRW.Phase = EnemyWaveRuntimePhase.PreWaveDelay;
+                sequence.ValueRW.Initialized = 0;
+                SystemAPI.SetComponentEnabled<EnemyWaveEncounterComplete>(entity, false);
             }
         }
 

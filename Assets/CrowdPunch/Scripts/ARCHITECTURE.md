@@ -35,12 +35,14 @@ Assets/CrowdPunch/Scripts
 | `Authoring/SpawnerAuthoring.cs` | Inspector-facing enemy prefab and spawn counts. |
 | `Authoring/AuthoredEnemyGroupAuthoring.cs` | Organizational parent for explicitly placed combat groups. |
 | `Authoring/AuthoredEnemySpawnPointAuthoring.cs` | One scene-positioned enemy using an existing spawn profile. |
+| `Authoring/EnemyWaveSequenceAuthoring.cs` | Ordered wave assets plus sequence-wide deterministic placement settings. |
 | `Authoring/ArenaAuthoring.cs` | Inspector-facing arena bounds. |
 | `Authoring/GameSettingsAuthoring.cs` | Inspector-facing match bootstrap settings. |
 | `Bakers/EnemyBaker.cs` | Converts enemy authoring data to enemy ECS components. |
 | `Bakers/SpawnerBaker.cs` | Converts spawner authoring data to `SpawnSettings`. |
 | `Bakers/EnemySpawnProfileBaking.cs` | Shared conversion from `EnemySpawnSettings` to an ECS profile. |
 | `Bakers/AuthoredEnemySpawnPointBaker.cs` | Converts one child point and exact world position into an authored spawn request. |
+| `Bakers/EnemyWaveSequenceBaker.cs` | Flattens separate wave assets and reusable profiles into ECS sequence buffers. |
 | `Bakers/ArenaBaker.cs` | Converts arena authoring data to `ArenaBounds`. |
 | `Bakers/GameSettingsBaker.cs` | Creates match, player snapshot, and punch singleton data. |
 | `Components/Enemy.cs` | Enemy tag component. |
@@ -60,6 +62,7 @@ Assets/CrowdPunch/Scripts
 | `Components/MatchState.cs` | Match-level singleton state. |
 | `Components/ArenaBounds.cs` | Play-area bounds. |
 | `Components/EnemySpawnProfile.cs` | Shared baked prefab, archetype, respawn, and archetype-tuning profile. |
+| `Components/EnemyWaveSequence.cs` | Wave definitions, runtime progress, completion state, ranges, profiles, and per-enemy ownership. |
 | `Components/SpawnSettings.cs` | Legacy random-radius batch configuration. |
 | `Components/AuthoredEnemySpawnPoint.cs` | One exact-position initial spawn request. |
 | `Components/AuthoredEnemyInitialPosition.cs` | Per-enemy authored position restored by full restart. |
@@ -69,6 +72,7 @@ Assets/CrowdPunch/Scripts
 | `Systems/Initialization/BootstrapSystem.cs` | Validates and initializes ECS match state. |
 | `Systems/Initialization/EnemySpawnSystem.cs` | Owns initial crowd creation. |
 | `Systems/Initialization/EnemySpawnInitialization.cs` | Shared ECS-owned initialization for one enemy from either workflow. |
+| `Systems/Initialization/EnemyWaveSpawnSystem.cs` | Owns wave delay/cadence, deterministic weighted selection, safe placement, and progression. |
 | `Systems/InputBridge/PlayerBridgeSystem.cs` | Copies player bridge data into ECS components. |
 | `Systems/AI/EnemyChaseSystem.cs` | Produces enemy chase movement intent. |
 | `Systems/Movement/EnemyMovementSystem.cs` | Applies enemy movement intent to Unity Physics velocity. |
@@ -80,6 +84,7 @@ Assets/CrowdPunch/Scripts
 | `Systems/Physics/EnemyRecoverySystem.cs` | Times enemy knockback recovery and returns control to movement. |
 | `Systems/Lifetime/OutOfBoundsSystem.cs` | Marks enemies outside arena bounds. |
 | `Systems/Lifetime/EnemyRespawnSystem.cs` | Resets enemies marked for respawn. |
+| `Systems/Lifetime/EnemyWaveDefeatCountSystem.cs` | Counts each authoritative wave-owned defeat once before pooling. |
 | `Systems/Presentation/PresentationBridgeSystem.cs` | Publishes ECS state to presentation-only consumers. |
 | `Systems/Presentation/HealthBarPresentationSystem.cs` | Derives normalized ECS health bar values. |
 | `Aspects/EnemyMovementAspect.cs` | Groups movement components commonly queried together. |
@@ -103,6 +108,10 @@ Assets/CrowdPunch/Scripts
 Custom system groups make frame order explicit: bridge input, compute intent, apply impulses, simulate physics, reconcile state, then present results. This is clearer for learning than relying on default update order.
 
 Initial enemy creation supports two coexisting authoring workflows. `SpawnerAuthoring` remains the random circular batch tool. An `AuthoredEnemyGroupAuthoring` parent organizes child `AuthoredEnemySpawnPointAuthoring` objects, each of which creates exactly one enemy at its baked world-space transform from an existing `EnemySpawnSettings` asset. Both bakers produce `EnemySpawnProfile`, and `EnemySpawnInitialization` exclusively owns the shared prefab, separation, respawn-policy, archetype component, material, ranged, explosive, and Dasher setup. Invalid authored points are omitted independently and do not affect valid points or random spawners.
+
+Wave spawning is a third coexisting workflow. Separate `EnemyWaveSettings` assets define totals, weighted existing profiles, positive-area world-space rectangles, delays, and all-at-once or batched cadence; `EnemyWaveSequenceAuthoring` supplies their order. Baking flattens these assets into unmanaged buffers and declares asset/prefab dependencies. Profile selection is weighted and deterministic, while rectangle selection is proportional to area followed by uniform sampling. Placement uses prefab-collider-derived conservative clearance, player distance, Unity Physics occupied-space queries, same-update candidate separation, and bounded later-update retries.
+
+Wave enemies use the same `EnemySpawnInitialization` path, then receive sequence/run/wave ownership. Their per-instance respawn policy is disabled without changing the reused profile asset. The post-physics defeat counter observes `EnemyLaunchState.Defeated` exactly once before pooling and ignores every non-wave enemy. A sequence advances only after all configured instances spawned and all owned instances were defeated; final completion enables queryable `EnemyWaveEncounterComplete`. Full restart destroys prior-run wave entities, increments generation, resets seed/counters/completion, and restarts wave zero's delay. Legacy random and authored enemies retain their existing restart and respawn behavior.
 
 Enemy movement is split into intent and application. Each enemy receives a deterministic random `EnemySeparationDistance` from the prefab's authored range when spawned. `EnemyChaseSystem` chooses whether each enemy wanders or charges and writes `DesiredMovement`; active enemies blend their selected short-range separation from nearby active enemies into both behaviors, and charging enemies also choose deterministic slots around the player. `EnemyMovementSystem` consumes that data and steers `PhysicsVelocity` toward the desired velocity instead of overwriting it instantly. This lets collision impulses survive long enough to affect other enemies. It also locks pitch and roll through `PhysicsMass.InverseInertia` so enemies remain upright while Unity Physics owns collision and position integration.
 
