@@ -10,6 +10,7 @@ namespace CrowdPunch.Components
         public byte RespawnEnabled;
         public float SpawnClearance;
         public EnemyMovementSettings MovementSettings;
+        public EnemyArchetypeSeparationSettings ArchetypeSeparationSettings;
         public Health Health;
         public EnemyContactDamageSettings ContactDamageSettings;
         public RangedEnemySettings RangedSettings;

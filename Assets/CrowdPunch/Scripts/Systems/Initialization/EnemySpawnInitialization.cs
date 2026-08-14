@@ -45,6 +45,9 @@ namespace CrowdPunch.Systems.Initialization
             {
                 Value = random.NextFloat(separationMin, separationMax)
             });
+            commandBuffer.SetComponent(enemy, CreateArchetypeSeparationDistances(
+                profile.ArchetypeSeparationSettings,
+                ref random));
             commandBuffer.AddComponent(enemy, new EnemyArchetype
             {
                 Value = profile.Archetype
@@ -60,6 +63,31 @@ namespace CrowdPunch.Systems.Initialization
 
             AddArchetypeComponents(commandBuffer, enemy, profile, ref random);
             return enemy;
+        }
+
+        private static EnemyArchetypeSeparationDistances CreateArchetypeSeparationDistances(
+            EnemyArchetypeSeparationSettings settings,
+            ref Random random)
+        {
+            return new EnemyArchetypeSeparationDistances
+            {
+                OverrideMask = settings.OverrideMask,
+                Baseline = NextDistance(settings.BaselineMin, settings.BaselineMax, ref random),
+                BaselineWeight = math.max(0f, settings.BaselineWeight),
+                Ranged = NextDistance(settings.RangedMin, settings.RangedMax, ref random),
+                RangedWeight = math.max(0f, settings.RangedWeight),
+                Explosive = NextDistance(settings.ExplosiveMin, settings.ExplosiveMax, ref random),
+                ExplosiveWeight = math.max(0f, settings.ExplosiveWeight),
+                Dasher = NextDistance(settings.DasherMin, settings.DasherMax, ref random),
+                DasherWeight = math.max(0f, settings.DasherWeight)
+            };
+        }
+
+        private static float NextDistance(float first, float second, ref Random random)
+        {
+            float minimum = math.max(0f, math.min(first, second));
+            float maximum = math.max(minimum, math.max(first, second));
+            return random.NextFloat(minimum, maximum);
         }
 
         private static void AddArchetypeComponents(

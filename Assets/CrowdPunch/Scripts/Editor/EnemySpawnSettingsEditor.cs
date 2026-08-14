@@ -61,6 +61,7 @@ namespace CrowdPunch.Editor
 
             DrawSection("Spawn", SpawnProperties);
             DrawSection("Common Movement (provisional)", MovementProperties);
+            DrawArchetypeSeparationOverrides();
             DrawSection("Common Health and Contact (provisional)", HealthAndContactProperties);
 
             SerializedProperty archetype = serializedObject.FindProperty("archetype");
@@ -90,6 +91,32 @@ namespace CrowdPunch.Editor
             }
 
             serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawArchetypeSeparationOverrides()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Target Archetype Separation Overrides (provisional)", EditorStyles.boldLabel);
+            SerializedProperty overrides = serializedObject.FindProperty("archetypeSeparationOverrides");
+            EditorGUILayout.PropertyField(overrides, true);
+
+            int seenArchetypes = 0;
+            bool hasDuplicate = false;
+            for (int index = 0; index < overrides.arraySize; index++)
+            {
+                int archetypeIndex = overrides.GetArrayElementAtIndex(index)
+                    .FindPropertyRelative("archetype").enumValueIndex;
+                int bit = 1 << archetypeIndex;
+                hasDuplicate |= (seenArchetypes & bit) != 0;
+                seenArchetypes |= bit;
+            }
+
+            if (hasDuplicate)
+            {
+                EditorGUILayout.HelpBox(
+                    "Each target archetype should appear at most once. Later duplicate entries currently replace earlier ones during baking.",
+                    MessageType.Warning);
+            }
         }
 
         private void DrawSection(string title, string[] propertyNames)

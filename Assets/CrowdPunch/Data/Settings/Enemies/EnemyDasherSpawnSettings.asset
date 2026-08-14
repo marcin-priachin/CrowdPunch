@@ -31,6 +31,15 @@ MonoBehaviour:
   separationDistanceMin: 7
   separationDistanceMax: 12
   separationWeight: 1.4
+  archetypeSeparationOverrides:
+  - archetype: 2
+    separationDistanceMin: 30
+    separationDistanceMax: 50
+    separationWeight: 1.4
+  - archetype: 3
+    separationDistanceMin: 20
+    separationDistanceMax: 50
+    separationWeight: 1.4
   maxHealth: 20
   contactDamagePercent: 0.05
   contactPushStrength: 10

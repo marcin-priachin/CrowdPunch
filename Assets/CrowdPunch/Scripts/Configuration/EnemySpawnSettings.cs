@@ -1,3 +1,4 @@
+using System;
 using CrowdPunch.Components;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -10,6 +11,20 @@ namespace CrowdPunch.Configuration
         Ranged,
         Explosive,
         Dasher
+    }
+
+    [Serializable]
+    public struct EnemyArchetypeSeparationOverride
+    {
+        [SerializeField] private EnemyArchetype archetype;
+        [SerializeField, Min(0f)] private float separationDistanceMin;
+        [SerializeField, Min(0f)] private float separationDistanceMax;
+        [SerializeField, Min(0f)] private float separationWeight;
+
+        public EnemyArchetype Archetype => archetype;
+        public float SeparationDistanceMin => separationDistanceMin;
+        public float SeparationDistanceMax => separationDistanceMax;
+        public float SeparationWeight => separationWeight;
     }
 
     /// <summary>Reusable tuning for the initial ECS crowd.</summary>
@@ -38,6 +53,10 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float separationDistanceMin = 1.1f;
         [SerializeField, Min(0f)] private float separationDistanceMax = 1.6f;
         [SerializeField, Min(0f)] private float separationWeight = 1.4f;
+
+        [Header("Target archetype separation overrides (provisional)")]
+        [SerializeField] private EnemyArchetypeSeparationOverride[] archetypeSeparationOverrides =
+            Array.Empty<EnemyArchetypeSeparationOverride>();
 
         [Header("Common health and contact (provisional)")]
         [SerializeField, Min(0.01f)] private float maxHealth = 30f;
@@ -130,6 +149,26 @@ namespace CrowdPunch.Configuration
             SeparationDistanceMin = separationDistanceMin, SeparationDistanceMax = separationDistanceMax,
             SeparationWeight = separationWeight
         };
+        public EnemyArchetypeSeparationSettings ArchetypeSeparationSettings
+        {
+            get
+            {
+                EnemyArchetypeSeparationSettings settings = default;
+                if (archetypeSeparationOverrides == null)
+                {
+                    return settings;
+                }
+                foreach (EnemyArchetypeSeparationOverride entry in archetypeSeparationOverrides)
+                {
+                    settings.Set(
+                        (EnemyArchetypeKind)entry.Archetype,
+                        entry.SeparationDistanceMin,
+                        entry.SeparationDistanceMax,
+                        entry.SeparationWeight);
+                }
+                return settings;
+            }
+        }
         public Health Health => new Health { Current = maxHealth, Max = maxHealth };
         public EnemyContactDamageSettings ContactDamageSettings => new EnemyContactDamageSettings
         {

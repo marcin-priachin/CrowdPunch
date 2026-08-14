@@ -24,25 +24,30 @@ namespace CrowdPunch.Systems.AI
         public void OnUpdate(ref SystemState state)
         {
             PlayerSnapshot player = SystemAPI.GetSingleton<PlayerSnapshot>();
-            NativeList<float3> activePositions = new NativeList<float3>(Allocator.TempJob);
+            NativeList<EnemySeparationNeighbor> activeEnemies = new NativeList<EnemySeparationNeighbor>(Allocator.TempJob);
 
-            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>>()
+            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState,
+                         RefRO<EnemyArchetype> archetype) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<EnemyArchetype>>()
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>())
             {
                 if (launchState.ValueRO.Phase == EnemyLaunchPhase.Active)
                 {
-                    activePositions.Add(transform.ValueRO.Position);
+                    activeEnemies.Add(new EnemySeparationNeighbor
+                    {
+                        Position = transform.ValueRO.Position,
+                        Archetype = archetype.ValueRO.Value
+                    });
                 }
             }
 
             state.Dependency = new PositioningJob
             {
                 Player = player,
-                ActiveEnemyPositions = activePositions.AsDeferredJobArray()
+                ActiveEnemies = activeEnemies.AsDeferredJobArray()
             }.ScheduleParallel(state.Dependency);
-            state.Dependency = activePositions.Dispose(state.Dependency);
+            state.Dependency = activeEnemies.Dispose(state.Dependency);
         }
 
         [BurstCompile]
@@ -51,7 +56,7 @@ namespace CrowdPunch.Systems.AI
         private partial struct PositioningJob : IJobEntity
         {
             public PlayerSnapshot Player;
-            [ReadOnly] public NativeArray<float3> ActiveEnemyPositions;
+            [ReadOnly] public NativeArray<EnemySeparationNeighbor> ActiveEnemies;
 
             private void Execute(
                 ref DesiredMovement movement,
@@ -59,6 +64,7 @@ namespace CrowdPunch.Systems.AI
                 in RangedEnemySettings settings,
                 in EnemyMovementSettings movementSettings,
                 in EnemySeparationDistance separationDistance,
+                in EnemyArchetypeSeparationDistances archetypeSeparationDistances,
                 in EnemyLaunchState launchState,
                 in LocalTransform transform)
             {
@@ -95,22 +101,36 @@ namespace CrowdPunch.Systems.AI
                     positioning.Mode = RangedPositioningMode.Hold;
                 }
 
-                float3 separation = GetSeparation(transform.Position, separationDistance.Value);
-                float3 combined = primaryDirection + separation * math.max(0f, movementSettings.SeparationWeight);
+                float3 separation = GetSeparation(
+                    transform.Position,
+                    separationDistance.Value,
+                    movementSettings.SeparationWeight,
+                    archetypeSeparationDistances);
+                float3 combined = primaryDirection + separation;
                 movement.Direction = math.normalizesafe(combined);
                 movement.Speed = movement.Direction.Equals(float3.zero)
                     ? 0f
                     : math.max(speed, speed <= 0f ? movementSettings.WanderSpeed : 0f);
             }
 
-            private float3 GetSeparation(float3 position, float preferredDistance)
+            private float3 GetSeparation(
+                float3 position,
+                float defaultDistance,
+                float defaultWeight,
+                EnemyArchetypeSeparationDistances archetypeDistances)
             {
-                float distanceLimit = math.max(0f, preferredDistance);
-                float distanceLimitSq = distanceLimit * distanceLimit;
                 float3 result = float3.zero;
-                for (int index = 0; index < ActiveEnemyPositions.Length; index++)
+                float strongestWeight = 0f;
+                for (int index = 0; index < ActiveEnemies.Length; index++)
                 {
-                    float3 away = position - ActiveEnemyPositions[index];
+                    float distanceLimit = math.max(0f, archetypeDistances.GetDistance(
+                        ActiveEnemies[index].Archetype,
+                        defaultDistance));
+                    float distanceLimitSq = distanceLimit * distanceLimit;
+                    float separationWeight = math.max(0f, archetypeDistances.GetWeight(
+                        ActiveEnemies[index].Archetype,
+                        defaultWeight));
+                    float3 away = position - ActiveEnemies[index].Position;
                     away.y = 0f;
                     float distanceSq = math.lengthsq(away);
                     if (distanceSq <= 0.0001f || distanceSq >= distanceLimitSq)
@@ -119,10 +139,11 @@ namespace CrowdPunch.Systems.AI
                     }
 
                     float distance = math.sqrt(distanceSq);
-                    result += away / distance * (1f - distance / distanceLimit);
+                    result += away / distance * (1f - distance / distanceLimit) * separationWeight;
+                    strongestWeight = math.max(strongestWeight, separationWeight);
                 }
 
-                return math.normalizesafe(result);
+                return math.normalizesafe(result) * strongestWeight;
             }
         }
     }

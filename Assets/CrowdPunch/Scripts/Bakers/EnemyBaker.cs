@@ -17,6 +17,7 @@ namespace CrowdPunch.Bakers
             AddComponent(entity, new KnockbackResponse { Tier = KnockbackResponseTier.Normal });
             AddComponent<EnemyMovementSettings>(entity);
             AddComponent<EnemySeparationDistance>(entity);
+            AddComponent<EnemyArchetypeSeparationDistances>(entity);
             AddComponent<DesiredMovement>(entity);
             AddComponent(entity, new EnemyLaunchState
             {

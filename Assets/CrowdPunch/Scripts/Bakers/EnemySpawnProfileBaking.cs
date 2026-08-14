@@ -42,6 +42,7 @@ namespace CrowdPunch.Bakers
                 },
                 RespawnEnabled = settings.RespawnEnabled ? (byte)1 : (byte)0,
                 MovementSettings = settings.MovementSettings,
+                ArchetypeSeparationSettings = settings.ArchetypeSeparationSettings,
                 Health = settings.Health,
                 ContactDamageSettings = settings.ContactDamageSettings,
                 RangedSettings = new RangedEnemySettings
