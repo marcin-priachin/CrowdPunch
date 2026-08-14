@@ -63,6 +63,10 @@ namespace CrowdPunch.Systems.Initialization
                 damageState.ValueRW = default;
                 SystemAPI.SetComponent(enemy, new DesiredMovement());
                 SystemAPI.SetComponent(enemy, new WanderDestination());
+                if (SystemAPI.HasComponent<EnemyContactAttemptState>(enemy))
+                {
+                    SystemAPI.SetComponent(enemy, new EnemyContactAttemptState());
+                }
                 SystemAPI.GetBuffer<CollisionDamageHistory>(enemy).Clear();
 
                 if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))

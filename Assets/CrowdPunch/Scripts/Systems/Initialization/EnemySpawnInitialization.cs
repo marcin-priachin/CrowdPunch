@@ -35,6 +35,12 @@ namespace CrowdPunch.Systems.Initialization
             commandBuffer.SetComponent(enemy, movementSettings);
             commandBuffer.SetComponent(enemy, profile.Health);
             commandBuffer.SetComponent(enemy, profile.ContactDamageSettings);
+            commandBuffer.SetComponent(enemy, new EnemyContactAttemptState
+            {
+                SecondsRemaining = random.NextFloat(
+                    math.max(0f, math.min(profile.ContactDamageSettings.AttemptIntervalMin, profile.ContactDamageSettings.AttemptIntervalMax)),
+                    math.max(0f, math.max(profile.ContactDamageSettings.AttemptIntervalMin, profile.ContactDamageSettings.AttemptIntervalMax)))
+            });
             commandBuffer.SetComponent(enemy, new EnemySeparationDistance
             {
                 Value = random.NextFloat(separationMin, separationMax)

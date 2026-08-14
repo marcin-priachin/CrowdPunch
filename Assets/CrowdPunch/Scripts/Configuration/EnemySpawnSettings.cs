@@ -45,6 +45,12 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float contactPushStrength = 10f;
         [SerializeField, Min(0f)] private float contactInvincibilitySeconds = 0.5f;
         [SerializeField, Min(0f)] private float contactRadius = 0.75f;
+        [SerializeField, Min(0f)] private float contactAttemptDistance = 5f;
+        [SerializeField, Min(0f)] private float contactAttemptIntervalMin = 2f;
+        [SerializeField, Min(0f)] private float contactAttemptIntervalMax = 5f;
+        [SerializeField, Min(0f)] private float contactAttemptDuration = 0.75f;
+        [SerializeField, Min(0f)] private float contactAttemptSpeedMultiplier = 1.25f;
+        [SerializeField, Min(0f)] private float contactAttemptSeparationWeight = 0.35f;
 
         [Header("Ranged positioning (provisional)")]
         [SerializeField, Min(0f)] private float preferredMinimumDistance = 8f;
@@ -128,7 +134,11 @@ namespace CrowdPunch.Configuration
         public EnemyContactDamageSettings ContactDamageSettings => new EnemyContactDamageSettings
         {
             DamagePercent = contactDamagePercent, PushStrength = contactPushStrength,
-            PlayerInvincibilitySeconds = contactInvincibilitySeconds, ContactRadius = contactRadius
+            PlayerInvincibilitySeconds = contactInvincibilitySeconds, ContactRadius = contactRadius,
+            AttemptDistance = contactAttemptDistance, AttemptIntervalMin = contactAttemptIntervalMin,
+            AttemptIntervalMax = contactAttemptIntervalMax, AttemptDuration = contactAttemptDuration,
+            AttemptSpeedMultiplier = contactAttemptSpeedMultiplier,
+            AttemptSeparationWeight = contactAttemptSeparationWeight
         };
         public float PreferredMinimumDistance => preferredMinimumDistance;
         public float PreferredMaximumDistance => preferredMaximumDistance;

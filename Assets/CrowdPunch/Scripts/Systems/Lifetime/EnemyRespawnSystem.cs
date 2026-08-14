@@ -74,6 +74,10 @@ namespace CrowdPunch.Systems.Lifetime
                     health.ValueRW.Current = health.ValueRO.Max;
                     healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
                     damageState.ValueRW = default;
+                    if (SystemAPI.HasComponent<EnemyContactAttemptState>(enemy))
+                    {
+                        SystemAPI.SetComponent(enemy, new EnemyContactAttemptState());
+                    }
                     if (SystemAPI.HasComponent<RangedAttackState>(enemy))
                     {
                         RangedEnemySettings rangedSettings = SystemAPI.GetComponent<RangedEnemySettings>(enemy);

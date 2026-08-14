@@ -47,6 +47,7 @@ namespace CrowdPunch.Systems.AI
             {
                 PlayerSnapshot = playerSnapshot,
                 ArenaBounds = arenaBounds,
+                DeltaTime = SystemAPI.Time.DeltaTime,
                 EnemyPositions = activeEnemyPositions.AsDeferredJobArray()
             }.ScheduleParallel(state.Dependency);
 
@@ -60,14 +61,17 @@ namespace CrowdPunch.Systems.AI
         {
             public PlayerSnapshot PlayerSnapshot;
             public ArenaBounds ArenaBounds;
+            public float DeltaTime;
             [ReadOnly] public NativeArray<float3> EnemyPositions;
 
             private void Execute(
                 Entity entity,
                 ref DesiredMovement desiredMovement,
                 ref WanderDestination wanderDestination,
+                ref EnemyContactAttemptState contactAttempt,
                 in LocalTransform transform,
                 in EnemyMovementSettings movementSettings,
+                in EnemyContactDamageSettings contactSettings,
                 in EnemySeparationDistance separationDistance,
                 in EnemyLaunchState launchState)
             {
@@ -92,8 +96,11 @@ namespace CrowdPunch.Systems.AI
 
                 if (distanceToPlayer <= movementSettings.ChargeDistance)
                 {
-                    float3 surroundTarget = GetSurroundContactTarget(entity, transform.Position.y, movementSettings);
-                    float3 toTarget = surroundTarget - transform.Position;
+                    UpdateContactAttempt(entity, distanceToPlayer, contactSettings, ref contactAttempt);
+                    float3 target = contactAttempt.IsAttempting != 0
+                        ? new float3(PlayerSnapshot.Position.x, transform.Position.y, PlayerSnapshot.Position.z)
+                        : GetSurroundTarget(entity, transform.Position.y, movementSettings);
+                    float3 toTarget = target - transform.Position;
                     toTarget.y = 0f;
 
                     float targetDistance = math.length(toTarget);
@@ -101,12 +108,16 @@ namespace CrowdPunch.Systems.AI
                         ? float3.zero
                         : toTarget / math.max(0.0001f, targetDistance);
 
+                    float separationWeight = contactAttempt.IsAttempting != 0
+                        ? contactSettings.AttemptSeparationWeight
+                        : movementSettings.SeparationWeight;
                     desiredMovement.Direction = math.normalizesafe(
-                        targetDirection + separation * math.max(0f, movementSettings.SeparationWeight),
+                        targetDirection + separation * math.max(0f, separationWeight),
                         separation);
                     desiredMovement.Speed = desiredMovement.Direction.Equals(float3.zero)
                         ? 0f
-                        : movementSettings.MoveSpeed * movementSettings.ChargeSpeedMultiplier;
+                        : movementSettings.MoveSpeed * movementSettings.ChargeSpeedMultiplier
+                            * (contactAttempt.IsAttempting != 0 ? math.max(0f, contactSettings.AttemptSpeedMultiplier) : 1f);
                     return;
                 }
 
@@ -132,17 +143,54 @@ namespace CrowdPunch.Systems.AI
                     separation);
             }
 
-            private float3 GetSurroundContactTarget(Entity entity, float y, EnemyMovementSettings movementSettings)
+            private void UpdateContactAttempt(
+                Entity entity,
+                float distanceToPlayer,
+                EnemyContactDamageSettings settings,
+                ref EnemyContactAttemptState state)
+            {
+                if (state.IsAttempting == 0 && distanceToPlayer > math.max(0f, settings.AttemptDistance))
+                {
+                    return;
+                }
+
+                state.SecondsRemaining -= math.max(0f, DeltaTime);
+                if (state.SecondsRemaining > 0f)
+                {
+                    return;
+                }
+
+                if (state.IsAttempting != 0)
+                {
+                    state.IsAttempting = 0;
+                    state.Sequence++;
+                    state.SecondsRemaining = GetAttemptInterval(entity, state.Sequence, settings);
+                    return;
+                }
+
+                state.IsAttempting = 1;
+                state.SecondsRemaining = math.max(0f, settings.AttemptDuration);
+            }
+
+            private static float GetAttemptInterval(Entity entity, uint sequence, EnemyContactDamageSettings settings)
+            {
+                float minimum = math.max(0f, math.min(settings.AttemptIntervalMin, settings.AttemptIntervalMax));
+                float maximum = math.max(minimum, math.max(settings.AttemptIntervalMin, settings.AttemptIntervalMax));
+                uint hash = math.hash(new uint3((uint)math.max(1, entity.Index + 1), (uint)math.max(1, entity.Version + 1), sequence + 1u));
+                float normalized = (hash & 0x00ffffffu) / 16777216f;
+                return math.lerp(minimum, maximum, normalized);
+            }
+
+            private float3 GetSurroundTarget(Entity entity, float y, EnemyMovementSettings movementSettings)
             {
                 const float goldenAngle = 2.3999631f;
 
                 int slotIndex = math.max(0, entity.Index);
                 float angle = slotIndex * goldenAngle;
-                float contactRadius = math.max(0f, movementSettings.StoppingDistance);
                 int ringIndex = slotIndex % 3;
-                float maxLaneOffset = math.max(0f, movementSettings.SurroundDistance - contactRadius);
-                float laneOffset = math.min(maxLaneOffset, ringIndex * math.max(0f, movementSettings.SurroundRingSpacing)) * 0.35f;
-                float2 offset = new float2(math.cos(angle), math.sin(angle)) * (contactRadius + laneOffset);
+                float radius = math.max(0f, movementSettings.SurroundDistance)
+                    + ringIndex * math.max(0f, movementSettings.SurroundRingSpacing);
+                float2 offset = new float2(math.cos(angle), math.sin(angle)) * radius;
 
                 return new float3(
                     PlayerSnapshot.Position.x + offset.x,

@@ -11,5 +11,19 @@ namespace CrowdPunch.Components
         public float PushStrength;
         public float PlayerInvincibilitySeconds;
         public float ContactRadius;
+        public float AttemptDistance;
+        public float AttemptIntervalMin;
+        public float AttemptIntervalMax;
+        public float AttemptDuration;
+        public float AttemptSpeedMultiplier;
+        public float AttemptSeparationWeight;
+    }
+
+    /// <summary>Per-enemy cadence for brief attempts to leave the surround ring and contact the player.</summary>
+    public struct EnemyContactAttemptState : IComponentData
+    {
+        public float SecondsRemaining;
+        public uint Sequence;
+        public byte IsAttempting;
     }
 }

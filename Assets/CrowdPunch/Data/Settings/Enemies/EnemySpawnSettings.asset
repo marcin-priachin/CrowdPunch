@@ -25,17 +25,23 @@ MonoBehaviour:
   acceleration: 12
   brakingAcceleration: 8
   turnSpeed: 12
-  stoppingDistance: 1
+  stoppingDistance: 0
   surroundDistance: 3.5
   surroundRingSpacing: 0.75
-  separationDistanceMin: 6
-  separationDistanceMax: 9
+  separationDistanceMin: 7
+  separationDistanceMax: 12
   separationWeight: 1.4
   maxHealth: 20
   contactDamagePercent: 0.05
   contactPushStrength: 10
   contactInvincibilitySeconds: 0.5
   contactRadius: 0.75
+  contactAttemptDistance: 10
+  contactAttemptIntervalMin: 1
+  contactAttemptIntervalMax: 3
+  contactAttemptDuration: 2
+  contactAttemptSpeedMultiplier: 1.25
+  contactAttemptSeparationWeight: 0.35
   preferredMinimumDistance: 8
   preferredMaximumDistance: 12
   engagementRange: 9999
@@ -81,9 +87,6 @@ MonoBehaviour:
   dasherPlayerDamage: 20
   dasherPlayerKnockback: 18
   dasherPlayerInvincibilitySeconds: 0.5
-  dasherDashEnemyDamage: 15
-  dasherDashEnemyKnockback: 14
-  dasherDashImpactPositionWeight: 0.35
   dasherLaunchedEnemyDamage: 25
   dasherLaunchedEnemyKnockback: 18
   dasherLaunchedImpactPositionWeight: 0.35

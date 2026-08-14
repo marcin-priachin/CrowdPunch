@@ -92,7 +92,7 @@ Each random enemy owns `RandomEnemySpawnRegion`; each authored enemy instead own
 `GamePrePhysicsGroup` runs as a direct child of `SimulationSystemGroup` before `PhysicsSystemGroup`:
 
 1. `PlayerBridgeSystem` copies the latest GameObject player snapshot, health, and punch request into ECS.
-2. `EnemyChaseSystem` produces enemy movement intent, blending each enemy's spawn-selected local separation distance into both wandering and charging.
+2. `EnemyChaseSystem` produces enemy movement intent, blending each enemy's spawn-selected local separation distance into both wandering and charging. Close active enemies hold deterministic slots on authored surround rings, then use per-enemy randomized intervals to make brief, speed-scaled contact attempts toward the player. Contact attempts retain separation with an independently authored weight so they can commit more strongly without disabling crowd avoidance or physical collisions. `EnemyContactAttemptState` owns that runtime cadence; its distance, interval range, duration, speed multiplier, and separation weight are baked from `EnemySpawnSettings`.
 3. `RangedEnemyPositioningSystem` replaces baseline intent only for ranged enemies, selecting approach, hold, or retreat and blending the same active-crowd separation input.
 4. `EnemyMovementSystem` steers Unity Physics velocity toward that intent and continues to reject non-`Active` enemies.
 5. `PunchDetectionSystem` finds living active, launched, or recovering enemies inside the punch volume, starts a fresh `Launched` sequence with the current punch data, and enables impulse and damage requests (COMBAT-014).

@@ -30,6 +30,7 @@ namespace CrowdPunch.Bakers
             });
             AddComponent<EnemyHealthBarVisibility>(entity);
             AddComponent<EnemyContactDamageSettings>(entity);
+            AddComponent<EnemyContactAttemptState>(entity);
             AddComponent<DamageRequest>(entity);
             AddBuffer<CollisionDamageHistory>(entity);
             AddComponent<EnemyDamageState>(entity);

@@ -22,7 +22,9 @@ namespace CrowdPunch.Editor
 
         private static readonly string[] HealthAndContactProperties =
         {
-            "maxHealth", "contactDamagePercent", "contactPushStrength", "contactInvincibilitySeconds", "contactRadius"
+            "maxHealth", "contactDamagePercent", "contactPushStrength", "contactInvincibilitySeconds", "contactRadius",
+            "contactAttemptDistance", "contactAttemptIntervalMin", "contactAttemptIntervalMax",
+            "contactAttemptDuration", "contactAttemptSpeedMultiplier", "contactAttemptSeparationWeight"
         };
 
         private static readonly string[] RangedProperties =
