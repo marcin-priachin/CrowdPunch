@@ -3,7 +3,7 @@ using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
-    public enum EnemyWaveRuntimePhase : byte { PreWaveDelay, Spawning, AwaitingDefeat, Complete, Invalid }
+    public enum EnemyWaveRuntimePhase : byte { PreWaveDelay, Spawning, AwaitingActivation, Complete, Invalid }
 
     public struct EnemyWaveSequence : IComponentData
     {
@@ -17,6 +17,7 @@ namespace CrowdPunch.Components
         public double NextPlacementWarningAt;
         public float MinimumPlayerDistance;
         public int PlacementAttemptsPerEnemy;
+        public byte ActivationMode;
         public EnemyWaveRuntimePhase Phase;
         public byte Initialized;
     }
@@ -33,6 +34,7 @@ namespace CrowdPunch.Components
         public float TotalProfileWeight;
         public float TotalRangeArea;
         public float DelayBeforeWave;
+        public float Duration;
         public float BatchInterval;
         public int BatchSize;
         public byte SpawnMode;

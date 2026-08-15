@@ -19,6 +19,7 @@ namespace CrowdPunch.Bakers
                 RunGeneration = 1,
                 MinimumPlayerDistance = math.max(0f, authoring.MinimumPlayerDistance),
                 PlacementAttemptsPerEnemy = math.max(1, authoring.PlacementAttemptsPerEnemy),
+                ActivationMode = (byte)authoring.ActivationMode,
                 Phase = EnemyWaveRuntimePhase.PreWaveDelay
             });
             AddComponent<EnemyWaveEncounterComplete>(entity);
@@ -87,6 +88,7 @@ namespace CrowdPunch.Bakers
                     TotalProfileWeight = totalWeight,
                     TotalRangeArea = totalArea,
                     DelayBeforeWave = math.max(0f, wave.DelayBeforeWave),
+                    Duration = math.max(0f, wave.Duration),
                     BatchInterval = math.max(0f, wave.BatchInterval),
                     BatchSize = math.max(1, wave.BatchSize),
                     SpawnMode = (byte)wave.SpawnMode,

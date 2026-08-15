@@ -4,6 +4,12 @@ using UnityEngine;
 
 namespace CrowdPunch.Configuration
 {
+    public enum EnemyWaveActivationMode : byte
+    {
+        AllEnemiesDefeated,
+        DurationElapsed
+    }
+
     public enum EnemyWaveSpawnMode : byte
     {
         AllAtOnce,
@@ -43,6 +49,8 @@ namespace CrowdPunch.Configuration
 
         [Header("Timing and cadence")]
         [SerializeField, Min(0f)] private float delayBeforeWave;
+        [SerializeField, Min(0f), Tooltip("Time to wait after every enemy in this wave has spawned before activating the next wave when the sequence uses timed activation.")]
+        private float duration;
         [SerializeField] private EnemyWaveSpawnMode spawnMode = EnemyWaveSpawnMode.Batched;
         [SerializeField, Min(1)] private int batchSize = 10;
         [SerializeField, Min(0f)] private float batchInterval = 1f;
@@ -51,13 +59,14 @@ namespace CrowdPunch.Configuration
         public IReadOnlyList<WeightedEnemy> Enemies => enemies;
         public IReadOnlyList<SpawnRectangle> SpawnRectangles => spawnRectangles;
         public float DelayBeforeWave => delayBeforeWave;
+        public float Duration => duration;
         public EnemyWaveSpawnMode SpawnMode => spawnMode;
         public int BatchSize => batchSize;
         public float BatchInterval => batchInterval;
 
         private void OnValidate()
         {
-            if (totalEnemyCount < 0 || delayBeforeWave < 0f || batchInterval < 0f || batchSize <= 0)
+            if (totalEnemyCount < 0 || delayBeforeWave < 0f || duration < 0f || batchInterval < 0f || batchSize <= 0)
             {
                 Debug.LogWarning($"Wave '{name}' contains negative timing/count values or a non-positive batch size; baking clamps them safely.", this);
             }

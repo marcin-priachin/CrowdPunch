@@ -51,9 +51,12 @@ namespace CrowdPunch.Systems.Initialization
                     continue;
 
                 EnemyWaveDefinition wave = waves[sequence.CurrentWaveIndex];
-                if (sequence.Phase == EnemyWaveRuntimePhase.AwaitingDefeat)
+                if (sequence.Phase == EnemyWaveRuntimePhase.AwaitingActivation)
                 {
-                    if (sequence.DefeatedCount >= wave.TotalEnemyCount)
+                    bool shouldAdvance = sequence.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed
+                        ? now >= sequence.NextActionAt
+                        : sequence.DefeatedCount >= wave.TotalEnemyCount;
+                    if (shouldAdvance)
                         Advance(commands, sequenceEntity, waves, ref sequence, now);
                     continue;
                 }
@@ -67,9 +70,14 @@ namespace CrowdPunch.Systems.Initialization
                         sequence.Phase = EnemyWaveRuntimePhase.Invalid;
                         continue;
                     }
-                    sequence.Phase = wave.TotalEnemyCount == 0
-                        ? EnemyWaveRuntimePhase.AwaitingDefeat
-                        : EnemyWaveRuntimePhase.Spawning;
+                    if (wave.TotalEnemyCount == 0)
+                    {
+                        BeginAwaitingActivation(ref sequence, wave, now);
+                    }
+                    else
+                    {
+                        sequence.Phase = EnemyWaveRuntimePhase.Spawning;
+                    }
                 }
 
                 if (sequence.Phase != EnemyWaveRuntimePhase.Spawning || now < sequence.NextActionAt) continue;
@@ -82,7 +90,7 @@ namespace CrowdPunch.Systems.Initialization
 
                 if (sequence.SpawnedCount >= wave.TotalEnemyCount)
                 {
-                    sequence.Phase = EnemyWaveRuntimePhase.AwaitingDefeat;
+                    BeginAwaitingActivation(ref sequence, wave, now);
                 }
                 else if (spawned > 0 && wave.SpawnMode == (byte)EnemyWaveSpawnMode.Batched)
                 {
@@ -97,6 +105,13 @@ namespace CrowdPunch.Systems.Initialization
             commands.Playback(state.EntityManager);
             commands.Dispose();
             occupiedEnemies.Dispose();
+        }
+
+        private static void BeginAwaitingActivation(ref EnemyWaveSequence sequence, EnemyWaveDefinition wave, double now)
+        {
+            sequence.Phase = EnemyWaveRuntimePhase.AwaitingActivation;
+            if (sequence.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed)
+                sequence.NextActionAt = now + math.max(0f, wave.Duration);
         }
 
         private static void InitializeSequence(EntityCommandBuffer commands, Entity entity,
