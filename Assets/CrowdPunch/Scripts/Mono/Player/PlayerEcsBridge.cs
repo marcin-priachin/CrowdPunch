@@ -111,6 +111,9 @@ namespace CrowdPunch.Mono.Player
         /// <summary>Latest punch strength.</summary>
         public float PunchStrength { get; private set; }
 
+        /// <summary>Multiplier applied only when a player punch hits an elite target.</summary>
+        public float PunchEliteKnockbackMultiplier { get; private set; }
+
         /// <summary>Latest punch damage.</summary>
         public float PunchDamage { get; private set; }
 
@@ -146,6 +149,7 @@ namespace CrowdPunch.Mono.Player
             float radius,
             float range,
             float strength,
+            float eliteKnockbackMultiplier,
             float damage,
             float pushDirectionPositionWeight)
         {
@@ -154,6 +158,7 @@ namespace CrowdPunch.Mono.Player
             PunchRadius = radius;
             PunchRange = range;
             PunchStrength = strength;
+            PunchEliteKnockbackMultiplier = Mathf.Max(0f, eliteKnockbackMultiplier);
             PunchDamage = Mathf.Max(0f, damage);
             PunchPushDirectionPositionWeight = Mathf.Clamp01(pushDirectionPositionWeight);
             PunchSequence++;

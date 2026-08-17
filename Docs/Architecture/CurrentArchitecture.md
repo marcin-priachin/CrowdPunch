@@ -186,6 +186,9 @@ All damage continues through `DamageRequest` and `DamageApplicationSystem`. Punc
 explosions, and launched Dashers can therefore defeat an elite normally. `EnemyLaunchTransition` is gated by `EnemyTier`:
 normal targets enter the shared `Launched` lifecycle, while elite targets receive the applicable existing elite-tier
 impulse without changing launch phase. This preserves normal deferred-defeat and future boss-tier behavior.
+Player punches additionally carry `PlayerPunchSettings.EliteKnockbackMultiplier` through the existing Mono-to-ECS punch
+bridge. It scales normal- and dash-punch strength only for `EnemyTier.Elite`; punch damage and all non-punch impulse paths
+remain unchanged. The default multiplier is `1`, preserving existing tuning until explicitly authored.
 
 `EnemyHealthBarPolicy` is the per-entity presentation rule. Normal enemies retain temporary damage bars and existing
 state labels. Elites use `AlwaysWhileAlive`; `EnemyHealthBarBridgeSystem` explicitly bypasses the canvas's global normal
@@ -211,7 +214,8 @@ normals, while `DurationElapsed` starts its duration at that transition. Waves w
 spawn/defeat budget branch.
 
 `EnemyWaveOwnership` records elite/normal role, sequence, wave, generation, and idempotent defeat observation. Restart
-increments the generation, destroys all old wave-owned entities, clears living counts and elite cursors, restores the
+increments the generation, destroys each old wave-owned root individually so its complete prefab `LinkedEntityGroup` is
+removed safely, clears living counts and elite cursors, restores the
 initial seed, and re-enters initialization so the first-wave delay is applied again. Legacy random and authored enemies
 retain their existing in-place restart and pooling behavior.
 

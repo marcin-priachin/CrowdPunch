@@ -192,6 +192,7 @@ namespace CrowdPunch.Mono.Player
                 settings.Radius,
                 settings.Range,
                 isDashPunch ? settings.DashStrength : settings.Strength,
+                settings.EliteKnockbackMultiplier,
                 isDashPunch ? settings.DashDamage : settings.Damage,
                 settings.DirectionPositionWeight);
             nextPunchTime = Time.time + settings.Cooldown;

@@ -13,6 +13,7 @@ namespace CrowdPunch.Components
         public float Radius;
         public float Range;
         public float Strength;
+        public float EliteKnockbackMultiplier;
         public float Damage;
         public float PushDirectionPositionWeight;
         public uint Sequence;

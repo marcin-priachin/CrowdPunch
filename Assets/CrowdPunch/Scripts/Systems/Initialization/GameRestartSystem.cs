@@ -1,6 +1,7 @@
 using CrowdPunch.Components;
 using CrowdPunch.Mono.UI;
 using CrowdPunch.Systems.Groups;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -32,7 +33,19 @@ namespace CrowdPunch.Systems.Initialization
             lastRestartSequence = restartSequence;
             ResetWaveSequences();
             EntityQuery oldWaveEnemies = SystemAPI.QueryBuilder().WithAll<EnemyWaveOwnership>().Build();
-            EntityManager.DestroyEntity(oldWaveEnemies);
+            using (NativeArray<Entity> waveEnemyRoots = oldWaveEnemies.ToEntityArray(Allocator.Temp))
+            {
+                foreach (Entity waveEnemyRoot in waveEnemyRoots)
+                {
+                    // Destroying roots individually lets Entities include every prefab-linked child in its
+                    // LinkedEntityGroup. Query destruction rejects those children because ownership belongs
+                    // only to the spawned root entity.
+                    if (EntityManager.Exists(waveEnemyRoot))
+                    {
+                        EntityManager.DestroyEntity(waveEnemyRoot);
+                    }
+                }
+            }
             Random random = Random.CreateFromIndex(1);
 
             foreach ((RefRW<LocalTransform> transform,

@@ -49,6 +49,7 @@ namespace CrowdPunch.Systems.InputBridge
                     Radius = bridge.PunchRadius,
                     Range = bridge.PunchRange,
                     Strength = bridge.PunchStrength,
+                    EliteKnockbackMultiplier = bridge.PunchEliteKnockbackMultiplier,
                     Damage = bridge.PunchDamage,
                     PushDirectionPositionWeight = bridge.PunchPushDirectionPositionWeight,
                     Sequence = bridge.PunchSequence

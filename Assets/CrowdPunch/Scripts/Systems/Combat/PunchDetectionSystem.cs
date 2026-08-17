@@ -82,9 +82,12 @@ namespace CrowdPunch.Systems.Combat
                     interruptedVelocity.Linear.xz = float2.zero;
                     SystemAPI.SetComponent(enemy, interruptedVelocity);
                 }
+                float targetStrength = tier.ValueRO.Value == EnemyCombatTier.Elite
+                    ? punchRequest.Strength * math.max(0f, punchRequest.EliteKnockbackMultiplier)
+                    : punchRequest.Strength;
                 SystemAPI.SetComponent(enemy, new ExternalImpulse
                 {
-                    Value = impulseDirection * punchRequest.Strength
+                    Value = impulseDirection * targetStrength
                 });
                 SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, true);
                 if (EnemyLaunchTransition.IsLaunchable(tier.ValueRO))
