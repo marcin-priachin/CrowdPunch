@@ -27,12 +27,14 @@ namespace CrowdPunch.Bakers
 
             DynamicBuffer<EnemyWaveDefinition> definitions = AddBuffer<EnemyWaveDefinition>(entity);
             DynamicBuffer<EnemyWaveProfile> profiles = AddBuffer<EnemyWaveProfile>(entity);
+            DynamicBuffer<EnemyWaveEliteProfile> eliteProfiles = AddBuffer<EnemyWaveEliteProfile>(entity);
             DynamicBuffer<EnemyWaveSpawnRange> ranges = AddBuffer<EnemyWaveSpawnRange>(entity);
 
             for (int waveIndex = 0; waveIndex < authoring.Waves.Count; waveIndex++)
             {
                 EnemyWaveSettings wave = authoring.Waves[waveIndex];
                 int profileStart = profiles.Length;
+                int eliteProfileStart = eliteProfiles.Length;
                 int rangeStart = ranges.Length;
                 float totalWeight = 0f;
                 float totalArea = 0f;
@@ -46,7 +48,13 @@ namespace CrowdPunch.Bakers
                 DependsOn(wave);
                 foreach (EnemyWaveSettings.WeightedEnemy entry in wave.Enemies)
                 {
-                    if (entry.Settings == null || entry.Settings.EnemyPrefab == null || entry.Weight <= 0f)
+                    if (entry.Settings != null && entry.Weight > 0f
+                        && entry.Settings.Archetype == Configuration.EnemyArchetype.Elite)
+                    {
+                        Debug.LogError($"Wave '{wave.name}' contains an Elite profile in its weighted normal list; the entry was excluded.", authoring);
+                    }
+                    if (entry.Settings == null || entry.Settings.EnemyPrefab == null || entry.Weight <= 0f
+                        || entry.Settings.Archetype == Configuration.EnemyArchetype.Elite)
                         continue;
                     DependsOn(entry.Settings);
                     DependsOn(entry.Settings.EnemyPrefab);
@@ -55,6 +63,28 @@ namespace CrowdPunch.Bakers
                         continue;
                     profiles.Add(new EnemyWaveProfile { Profile = profile, Weight = entry.Weight });
                     totalWeight += entry.Weight;
+                }
+
+                int totalEliteCount = 0;
+                int requestedEliteCount = 0;
+                foreach (EnemyWaveSettings.FixedEliteEnemy entry in wave.EliteEnemies)
+                {
+                    requestedEliteCount += math.max(0, entry.Count);
+                    if (entry.Count > 0 && (entry.Settings == null || entry.Settings.EnemyPrefab == null
+                        || entry.Settings.Archetype != Configuration.EnemyArchetype.Elite))
+                    {
+                        Debug.LogError($"Wave '{wave.name}' has a positive fixed elite count with a null, prefab-less, or non-Elite profile; the entry was excluded.", authoring);
+                    }
+                    if (entry.Count <= 0 || entry.Settings == null || entry.Settings.EnemyPrefab == null
+                        || entry.Settings.Archetype != Configuration.EnemyArchetype.Elite)
+                        continue;
+                    DependsOn(entry.Settings);
+                    DependsOn(entry.Settings.EnemyPrefab);
+                    if (!EnemySpawnProfileBaking.TryCreate(this, entry.Settings, out EnemySpawnProfile profile)
+                        || profile.SpawnClearance <= 0f)
+                        continue;
+                    eliteProfiles.Add(new EnemyWaveEliteProfile { Profile = profile, Count = entry.Count });
+                    totalEliteCount += entry.Count;
                 }
 
                 foreach (EnemyWaveSettings.SpawnRectangle rectangle in wave.SpawnRectangles)
@@ -74,7 +104,10 @@ namespace CrowdPunch.Bakers
                 }
 
                 int totalCount = math.max(0, wave.TotalEnemyCount);
-                bool valid = totalCount == 0 || (totalWeight > 0f && totalArea > 0f);
+                bool normalValid = totalCount == 0 || totalWeight > 0f;
+                bool eliteValid = totalEliteCount == requestedEliteCount;
+                bool valid = normalValid && eliteValid
+                    && (totalCount + requestedEliteCount == 0 || totalArea > 0f);
                 if (!valid)
                     Debug.LogError($"Wave '{wave.name}' cannot spawn: add a positive-area range and a positive-weight profile with a prefab collider.", authoring);
 
@@ -83,6 +116,9 @@ namespace CrowdPunch.Bakers
                     TotalEnemyCount = totalCount,
                     ProfileStart = profileStart,
                     ProfileCount = profiles.Length - profileStart,
+                    EliteProfileStart = eliteProfileStart,
+                    EliteProfileCount = eliteProfiles.Length - eliteProfileStart,
+                    TotalEliteCount = requestedEliteCount,
                     RangeStart = rangeStart,
                     RangeCount = ranges.Length - rangeStart,
                     TotalProfileWeight = totalWeight,

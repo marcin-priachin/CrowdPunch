@@ -41,6 +41,10 @@ namespace CrowdPunch.Components
                 case EnemyArchetypeKind.Dasher:
                     DasherMin = minimum; DasherMax = maximum; DasherWeight = weight;
                     break;
+                case EnemyArchetypeKind.Elite:
+                    BaselineMin = minimum; BaselineMax = maximum; BaselineWeight = weight;
+                    break;
+                case EnemyArchetypeKind.Baseline:
                 default:
                     BaselineMin = minimum; BaselineMax = maximum; BaselineWeight = weight;
                     break;
@@ -74,6 +78,7 @@ namespace CrowdPunch.Components
                 EnemyArchetypeKind.Ranged => Ranged,
                 EnemyArchetypeKind.Explosive => Explosive,
                 EnemyArchetypeKind.Dasher => Dasher,
+                EnemyArchetypeKind.Elite => Baseline,
                 _ => Baseline
             };
         }
@@ -91,6 +96,7 @@ namespace CrowdPunch.Components
                 EnemyArchetypeKind.Ranged => RangedWeight,
                 EnemyArchetypeKind.Explosive => ExplosiveWeight,
                 EnemyArchetypeKind.Dasher => DasherWeight,
+                EnemyArchetypeKind.Elite => BaselineWeight,
                 _ => BaselineWeight
             };
         }

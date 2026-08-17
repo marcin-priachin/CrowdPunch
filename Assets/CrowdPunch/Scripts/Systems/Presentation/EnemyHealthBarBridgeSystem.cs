@@ -20,16 +20,19 @@ namespace CrowdPunch.Systems.Presentation
             foreach ((RefRO<LocalTransform> transform,
                          RefRO<HealthBar> healthBar,
                          RefRO<EnemyLaunchState> launchState,
+                         RefRO<EnemyHealthBarPolicy> policy,
                          EnabledRefRO<EnemyHealthBarVisibility> healthBarVisibility,
                          EnabledRefRO<RespawnRequest> respawnRequest,
                          Entity enemy) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<HealthBar>, RefRO<EnemyLaunchState>, EnabledRefRO<EnemyHealthBarVisibility>, EnabledRefRO<RespawnRequest>>()
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<HealthBar>, RefRO<EnemyLaunchState>, RefRO<EnemyHealthBarPolicy>, EnabledRefRO<EnemyHealthBarVisibility>, EnabledRefRO<RespawnRequest>>()
                          .WithAll<Enemy>()
                          .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
                          .WithEntityAccess())
             {
                 EnemyLaunchPhase phase = launchState.ValueRO.Phase;
-                if (respawnRequest.ValueRO || (!healthBarVisibility.ValueRO && phase == EnemyLaunchPhase.Active))
+                bool alwaysVisible = policy.ValueRO.Value == EnemyHealthBarPolicyKind.AlwaysWhileAlive;
+                if (respawnRequest.ValueRO || phase == EnemyLaunchPhase.Defeated
+                    || (!alwaysVisible && !healthBarVisibility.ValueRO && phase == EnemyLaunchPhase.Active))
                 {
                     continue;
                 }
@@ -38,8 +41,9 @@ namespace CrowdPunch.Systems.Presentation
                     enemy.Index,
                     transform.ValueRO.Position,
                     healthBar.ValueRO.Normalized,
-                    healthBarVisibility.ValueRO,
-                    GetStateLabel(phase));
+                    alwaysVisible || healthBarVisibility.ValueRO,
+                    alwaysVisible,
+                    alwaysVisible ? string.Empty : GetStateLabel(phase));
             }
 
             EnemyHealthBarCanvasRegistry.EndFrame();

@@ -38,6 +38,7 @@ namespace CrowdPunch.Bakers
                     Configuration.EnemyArchetype.Ranged => EnemyArchetypeKind.Ranged,
                     Configuration.EnemyArchetype.Explosive => EnemyArchetypeKind.Explosive,
                     Configuration.EnemyArchetype.Dasher => EnemyArchetypeKind.Dasher,
+                    Configuration.EnemyArchetype.Elite => EnemyArchetypeKind.Elite,
                     _ => EnemyArchetypeKind.Baseline
                 },
                 RespawnEnabled = settings.RespawnEnabled ? (byte)1 : (byte)0,

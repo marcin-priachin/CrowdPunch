@@ -37,8 +37,9 @@ namespace CrowdPunch.Systems.Combat
             float3 punchDirection = math.normalizesafe(punchRequest.Direction);
             float radiusSquared = punchRequest.Radius * punchRequest.Radius;
             float pushDirectionPositionWeight = math.saturate(punchRequest.PushDirectionPositionWeight);
-            foreach ((RefRO<LocalTransform> transform, RefRW<EnemyLaunchState> launchState, RefRO<Health> health, Entity enemy) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRW<EnemyLaunchState>, RefRO<Health>>()
+            foreach ((RefRO<LocalTransform> transform, RefRW<EnemyLaunchState> launchState, RefRO<Health> health,
+                         RefRO<EnemyTier> tier, Entity enemy) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRW<EnemyLaunchState>, RefRO<Health>, RefRO<EnemyTier>>()
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>()
                          .WithEntityAccess())
@@ -86,12 +87,15 @@ namespace CrowdPunch.Systems.Combat
                     Value = impulseDirection * punchRequest.Strength
                 });
                 SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, true);
-                EnemyLaunchState nextLaunchState = launchState.ValueRO;
-                EnemyLaunchTransition.Begin(
-                    ref nextLaunchState,
-                    EnemyLaunchCause.PlayerPunch,
-                    punchRequest.Damage);
-                launchState.ValueRW = nextLaunchState;
+                if (EnemyLaunchTransition.IsLaunchable(tier.ValueRO))
+                {
+                    EnemyLaunchState nextLaunchState = launchState.ValueRO;
+                    EnemyLaunchTransition.Begin(
+                        ref nextLaunchState,
+                        EnemyLaunchCause.PlayerPunch,
+                        punchRequest.Damage);
+                    launchState.ValueRW = nextLaunchState;
+                }
 
                 DamageRequest pendingDamage = SystemAPI.IsComponentEnabled<DamageRequest>(enemy)
                     ? SystemAPI.GetComponent<DamageRequest>(enemy)

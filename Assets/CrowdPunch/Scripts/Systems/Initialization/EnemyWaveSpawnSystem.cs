@@ -34,10 +34,11 @@ namespace CrowdPunch.Systems.Initialization
             foreach ((RefRW<EnemyWaveSequence> sequenceReference,
                          DynamicBuffer<EnemyWaveDefinition> waves,
                          DynamicBuffer<EnemyWaveProfile> profiles,
+                         DynamicBuffer<EnemyWaveEliteProfile> eliteProfiles,
                          DynamicBuffer<EnemyWaveSpawnRange> ranges,
                          Entity sequenceEntity) in
                      SystemAPI.Query<RefRW<EnemyWaveSequence>, DynamicBuffer<EnemyWaveDefinition>,
-                             DynamicBuffer<EnemyWaveProfile>, DynamicBuffer<EnemyWaveSpawnRange>>()
+                             DynamicBuffer<EnemyWaveProfile>, DynamicBuffer<EnemyWaveEliteProfile>, DynamicBuffer<EnemyWaveSpawnRange>>()
                          .WithEntityAccess())
             {
                 ref EnemyWaveSequence sequence = ref sequenceReference.ValueRW;
@@ -55,7 +56,9 @@ namespace CrowdPunch.Systems.Initialization
                 {
                     bool shouldAdvance = sequence.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed
                         ? now >= sequence.NextActionAt
-                        : sequence.DefeatedCount >= wave.TotalEnemyCount;
+                        : wave.TotalEliteCount > 0
+                            ? sequence.NormalLivingCount == 0
+                            : sequence.DefeatedCount >= wave.TotalEnemyCount;
                     if (shouldAdvance)
                         Advance(commands, sequenceEntity, waves, ref sequence, now);
                     continue;
@@ -70,7 +73,7 @@ namespace CrowdPunch.Systems.Initialization
                         sequence.Phase = EnemyWaveRuntimePhase.Invalid;
                         continue;
                     }
-                    if (wave.TotalEnemyCount == 0)
+                    if (wave.TotalEnemyCount == 0 && wave.TotalEliteCount == 0)
                     {
                         BeginAwaitingActivation(ref sequence, wave, now);
                     }
@@ -81,14 +84,27 @@ namespace CrowdPunch.Systems.Initialization
                 }
 
                 if (sequence.Phase != EnemyWaveRuntimePhase.Spawning || now < sequence.NextActionAt) continue;
-                int remaining = wave.TotalEnemyCount - sequence.SpawnedCount;
+                if (wave.TotalEliteCount > 0
+                    && sequence.EliteSpawnedCount >= wave.TotalEliteCount
+                    && sequence.EliteLivingCount == 0)
+                {
+                    BeginAwaitingActivation(ref sequence, wave, now);
+                    continue;
+                }
+
+                int remainingElites = wave.TotalEliteCount - sequence.EliteSpawnedCount;
+                int remainingNormals = wave.TotalEliteCount > 0
+                    ? math.max(0, wave.TotalEnemyCount - sequence.NormalLivingCount)
+                    : math.max(0, wave.TotalEnemyCount - sequence.SpawnedCount);
+                int remaining = remainingElites + remainingNormals;
+                if (remaining <= 0) continue;
                 int requested = wave.SpawnMode == (byte)EnemyWaveSpawnMode.AllAtOnce
                     ? remaining
                     : math.min(remaining, math.max(1, wave.BatchSize));
-                int spawned = SpawnBatch(commands, state.EntityManager, physicsWorld, player, sequenceEntity, wave, profiles, ranges,
+                int spawned = SpawnBatch(commands, state.EntityManager, physicsWorld, player, sequenceEntity, wave, profiles, eliteProfiles, ranges,
                     occupiedEnemies, ref sequence, requested);
 
-                if (sequence.SpawnedCount >= wave.TotalEnemyCount)
+                if (wave.TotalEliteCount == 0 && sequence.SpawnedCount >= wave.TotalEnemyCount)
                 {
                     BeginAwaitingActivation(ref sequence, wave, now);
                 }
@@ -121,6 +137,11 @@ namespace CrowdPunch.Systems.Initialization
             sequence.CurrentWaveIndex = 0;
             sequence.SpawnedCount = 0;
             sequence.DefeatedCount = 0;
+            sequence.NormalLivingCount = 0;
+            sequence.EliteSpawnedCount = 0;
+            sequence.EliteLivingCount = 0;
+            sequence.EliteProfileCursor = 0;
+            sequence.EliteProfileSpawnedInEntry = 0;
             sequence.RandomState = sequence.InitialSeed == 0 ? 1u : sequence.InitialSeed;
             if (waves.Length == 0)
             {
@@ -139,6 +160,11 @@ namespace CrowdPunch.Systems.Initialization
             sequence.CurrentWaveIndex++;
             sequence.SpawnedCount = 0;
             sequence.DefeatedCount = 0;
+            sequence.NormalLivingCount = 0;
+            sequence.EliteSpawnedCount = 0;
+            sequence.EliteLivingCount = 0;
+            sequence.EliteProfileCursor = 0;
+            sequence.EliteProfileSpawnedInEntry = 0;
             if (sequence.CurrentWaveIndex >= waves.Length)
             {
                 sequence.Phase = EnemyWaveRuntimePhase.Complete;
@@ -152,6 +178,7 @@ namespace CrowdPunch.Systems.Initialization
         private static int SpawnBatch(EntityCommandBuffer commands, EntityManager entityManager,
             PhysicsWorldSingleton physicsWorld, PlayerSnapshot player,
             Entity sequenceEntity, EnemyWaveDefinition wave, DynamicBuffer<EnemyWaveProfile> profiles,
+            DynamicBuffer<EnemyWaveEliteProfile> eliteProfiles,
             DynamicBuffer<EnemyWaveSpawnRange> ranges, NativeList<float4> occupiedEnemies,
             ref EnemyWaveSequence sequence, int requested)
         {
@@ -160,33 +187,68 @@ namespace CrowdPunch.Systems.Initialization
             int spawned = 0;
             for (int index = 0; index < requested; index++)
             {
-                EnemyWaveProfile selected = SelectProfile(ref random, wave, profiles);
+                bool spawningElite = sequence.EliteSpawnedCount < wave.TotalEliteCount;
+                EnemySpawnProfile selectedProfile;
+                if (spawningElite)
+                {
+                    EnemyWaveEliteProfile selectedElite = eliteProfiles[wave.EliteProfileStart + sequence.EliteProfileCursor];
+                    selectedProfile = selectedElite.Profile;
+                }
+                else
+                {
+                    selectedProfile = SelectProfile(ref random, wave, profiles).Profile;
+                }
                 bool found = false;
                 float3 position = default;
                 for (int attempt = 0; attempt < math.max(1, sequence.PlacementAttemptsPerEnemy); attempt++)
                 {
                     position = SelectPosition(ref random, wave, ranges);
-                    if (IsSafe(physicsWorld, player, position, selected.Profile.SpawnClearance,
+                    if (IsSafe(physicsWorld, player, position, selectedProfile.SpawnClearance,
                             sequence.MinimumPlayerDistance, occupiedEnemies, accepted))
                     {
                         found = true;
                         break;
                     }
                 }
-                if (!found) continue;
+                if (!found)
+                {
+                    if (spawningElite) break;
+                    continue;
+                }
 
-                Entity enemy = EnemySpawnInitialization.Create(commands, entityManager, selected.Profile, position, ref random);
-                if (enemy == Entity.Null) continue;
+                Entity enemy = EnemySpawnInitialization.Create(commands, entityManager, selectedProfile, position, ref random);
+                if (enemy == Entity.Null)
+                {
+                    if (spawningElite) break;
+                    continue;
+                }
                 commands.SetComponent(enemy, new EnemyRespawnSettings { Enabled = 0 });
                 commands.AddComponent(enemy, new EnemyWaveOwnership
                 {
                     Sequence = sequenceEntity,
                     RunGeneration = sequence.RunGeneration,
-                    WaveIndex = sequence.CurrentWaveIndex
+                    WaveIndex = sequence.CurrentWaveIndex,
+                    IsElite = spawningElite ? (byte)1 : (byte)0
                 });
-                accepted.Add(new float4(position, selected.Profile.SpawnClearance));
+                accepted.Add(new float4(position, selectedProfile.SpawnClearance));
                 spawned++;
                 sequence.SpawnedCount++;
+                if (spawningElite)
+                {
+                    sequence.EliteSpawnedCount++;
+                    sequence.EliteLivingCount++;
+                    sequence.EliteProfileSpawnedInEntry++;
+                    EnemyWaveEliteProfile current = eliteProfiles[wave.EliteProfileStart + sequence.EliteProfileCursor];
+                    if (sequence.EliteProfileSpawnedInEntry >= current.Count)
+                    {
+                        sequence.EliteProfileCursor++;
+                        sequence.EliteProfileSpawnedInEntry = 0;
+                    }
+                }
+                else
+                {
+                    sequence.NormalLivingCount++;
+                }
             }
             sequence.RandomState = random.state;
             accepted.Dispose();

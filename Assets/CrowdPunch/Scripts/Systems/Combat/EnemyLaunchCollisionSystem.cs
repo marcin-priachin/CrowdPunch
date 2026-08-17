@@ -39,6 +39,7 @@ namespace CrowdPunch.Systems.Combat
                 DamageHistoryLookup = SystemAPI.GetBufferLookup<CollisionDamageHistory>(),
                 DasherSettingsLookup = SystemAPI.GetComponentLookup<DasherSettings>(true),
                 DasherStateLookup = SystemAPI.GetComponentLookup<DasherState>(true),
+                TierLookup = SystemAPI.GetComponentLookup<EnemyTier>(true),
                 World = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
                 MinimumPropagationImpulse = math.max(0f, settings.MinimumPropagationImpulse),
                 MinimumDamageImpulse = math.max(0f, settings.MinimumDamageImpulse),
@@ -60,6 +61,7 @@ namespace CrowdPunch.Systems.Combat
             public BufferLookup<CollisionDamageHistory> DamageHistoryLookup;
             [ReadOnly] public ComponentLookup<DasherSettings> DasherSettingsLookup;
             [ReadOnly] public ComponentLookup<DasherState> DasherStateLookup;
+            [ReadOnly] public ComponentLookup<EnemyTier> TierLookup;
             [ReadOnly] public PhysicsWorld World;
             public float MinimumPropagationImpulse;
             public float MinimumDamageImpulse;
@@ -130,6 +132,8 @@ namespace CrowdPunch.Systems.Combat
 
             private void PropagateLaunch(Entity source, Entity target, float estimatedImpulse)
             {
+                if (!TierLookup.HasComponent(target)
+                    || !EnemyLaunchTransition.IsLaunchable(TierLookup[target])) return;
                 EnemyLaunchState sourceState = LaunchStateLookup[source];
                 EnemyLaunchState targetState = LaunchStateLookup[target];
                 EnemyLaunchTransition.Begin(

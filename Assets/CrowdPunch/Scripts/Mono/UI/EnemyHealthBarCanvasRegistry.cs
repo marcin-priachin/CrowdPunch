@@ -32,9 +32,11 @@ namespace CrowdPunch.Mono.UI
             Vector3 worldPosition,
             float normalizedHealth,
             bool healthVisible,
+            bool ignoreGlobalHealthBarOption,
             string stateLabel)
         {
-            activeCanvas?.Publish(displayId, worldPosition, normalizedHealth, healthVisible, stateLabel);
+            activeCanvas?.Publish(displayId, worldPosition, normalizedHealth, healthVisible,
+                ignoreGlobalHealthBarOption, stateLabel);
         }
 
         public static void EndFrame()

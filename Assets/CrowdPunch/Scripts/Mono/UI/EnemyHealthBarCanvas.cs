@@ -69,9 +69,10 @@ namespace CrowdPunch.Mono.UI
             Vector3 worldPosition,
             float normalizedHealth,
             bool healthVisible,
+            bool ignoreGlobalHealthBarOption,
             string stateLabel)
         {
-            bool displayHealth = showHealthBars && healthVisible;
+            bool displayHealth = (showHealthBars || ignoreGlobalHealthBarOption) && healthVisible;
             bool displayState = showStateLabels && !string.IsNullOrEmpty(stateLabel);
             if (!displayHealth && !displayState)
             {

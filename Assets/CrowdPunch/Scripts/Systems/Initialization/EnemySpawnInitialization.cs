@@ -52,6 +52,24 @@ namespace CrowdPunch.Systems.Initialization
             {
                 Value = profile.Archetype
             });
+            commandBuffer.AddComponent(enemy, new EnemyTier
+            {
+                Value = profile.Archetype == EnemyArchetypeKind.Elite
+                    ? EnemyCombatTier.Elite
+                    : EnemyCombatTier.Normal
+            });
+            commandBuffer.AddComponent(enemy, new EnemyHealthBarPolicy
+            {
+                Value = profile.Archetype == EnemyArchetypeKind.Elite
+                    ? EnemyHealthBarPolicyKind.AlwaysWhileAlive
+                    : EnemyHealthBarPolicyKind.TemporaryAfterDamage
+            });
+            commandBuffer.SetComponent(enemy, new KnockbackResponse
+            {
+                Tier = profile.Archetype == EnemyArchetypeKind.Elite
+                    ? KnockbackResponseTier.PlayerElite
+                    : KnockbackResponseTier.Normal
+            });
             commandBuffer.AddComponent(enemy, new EnemyRespawnSettings
             {
                 Enabled = profile.RespawnEnabled
@@ -96,6 +114,11 @@ namespace CrowdPunch.Systems.Initialization
             in EnemySpawnProfile profile,
             ref Random random)
         {
+            if (profile.Archetype == EnemyArchetypeKind.Baseline
+                || profile.Archetype == EnemyArchetypeKind.Elite)
+            {
+                return;
+            }
             if (profile.Archetype == EnemyArchetypeKind.Ranged)
             {
                 commandBuffer.AddComponent(enemy, profile.RangedSettings);

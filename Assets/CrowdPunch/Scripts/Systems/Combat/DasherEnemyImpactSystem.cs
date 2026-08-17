@@ -26,6 +26,7 @@ namespace CrowdPunch.Systems.Combat
             ComponentLookup<EnemyContactDamageSettings> radii = SystemAPI.GetComponentLookup<EnemyContactDamageSettings>(true);
             ComponentLookup<KnockbackResponse> tiers = SystemAPI.GetComponentLookup<KnockbackResponse>(true);
             ComponentLookup<EnemyLaunchState> launches = SystemAPI.GetComponentLookup<EnemyLaunchState>();
+            ComponentLookup<EnemyTier> enemyTiers = SystemAPI.GetComponentLookup<EnemyTier>(true);
             ComponentLookup<DamageRequest> damageRequests = SystemAPI.GetComponentLookup<DamageRequest>();
             ComponentLookup<ExternalImpulse> impulses = SystemAPI.GetComponentLookup<ExternalImpulse>();
             ComponentLookup<ExplosiveEnemyState> explosiveStates = SystemAPI.GetComponentLookup<ExplosiveEnemyState>(true);
@@ -54,7 +55,7 @@ namespace CrowdPunch.Systems.Combat
                     if (DistanceSqToSegment(transforms[target].Position, start, end) > combinedRadius * combinedRadius) continue;
                     ResolveImpact(source, target, sourceTransform.ValueRO.Position,
                         transforms[target].Position, dash.ValueRO, settings.ValueRO, history,
-                        ref launches, ref tiers, ref damageRequests, ref impulses,
+                        ref launches, ref tiers, ref enemyTiers, ref damageRequests, ref impulses,
                         ref explosiveStates, ref detonationRequests);
                 }
             }
@@ -65,6 +66,7 @@ namespace CrowdPunch.Systems.Combat
             float3 sourcePosition, float3 targetPosition, DasherState dash,
             DasherSettings settings, DynamicBuffer<DasherHitHistory> history,
             ref ComponentLookup<EnemyLaunchState> launches, ref ComponentLookup<KnockbackResponse> tiers,
+            ref ComponentLookup<EnemyTier> enemyTiers,
             ref ComponentLookup<DamageRequest> damageRequests, ref ComponentLookup<ExternalImpulse> impulses,
             ref ComponentLookup<ExplosiveEnemyState> explosiveStates,
             ref ComponentLookup<ExplosiveDetonationRequest> detonationRequests)
@@ -92,8 +94,11 @@ namespace CrowdPunch.Systems.Combat
                 : tier == KnockbackResponseTier.PlayerElite ? settings.EliteKnockback
                 : settings.LaunchedEnemyKnockback;
 
-            EnemyLaunchTransition.Begin(ref targetLaunch, EnemyLaunchCause.EnemyCollision, damage);
-            launches[target] = targetLaunch;
+            if (enemyTiers.HasComponent(target) && EnemyLaunchTransition.IsLaunchable(enemyTiers[target]))
+            {
+                EnemyLaunchTransition.Begin(ref targetLaunch, EnemyLaunchCause.EnemyCollision, damage);
+                launches[target] = targetLaunch;
+            }
             if (damage > 0f)
             {
                 DamageRequest pending = damageRequests.IsComponentEnabled(target) ? damageRequests[target] : default;

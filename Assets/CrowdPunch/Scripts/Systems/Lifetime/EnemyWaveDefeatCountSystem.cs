@@ -24,6 +24,10 @@ namespace CrowdPunch.Systems.Lifetime
                     continue;
                 ownership.ValueRW.DefeatCounted = 1;
                 sequence.DefeatedCount++;
+                if (ownership.ValueRO.IsElite != 0)
+                    sequence.EliteLivingCount = System.Math.Max(0, sequence.EliteLivingCount - 1);
+                else
+                    sequence.NormalLivingCount = System.Math.Max(0, sequence.NormalLivingCount - 1);
                 sequences[owner] = sequence;
             }
         }

@@ -175,6 +175,46 @@ The existing player bridge receives explosion damage through the normal `PlayerH
 
 ## Current Prototype Behavior Versus Design
 
+## Elite Enemy And Elite-Gated Waves
+
+`Elite` is appended after the four original serialized `EnemyArchetype` values. Baking maps it to the explicit
+`EnemyArchetypeKind.Elite` runtime identity and adds `EnemyTier { Elite }`; neither combat nor presentation infers elite
+status from prefab, asset, or object names. Elite profiles reuse `EnemySpawnSettings` for their prefab, health, ordinary
+melee movement/contact behavior, and all common tuning. Their `KnockbackResponse` uses the existing `PlayerElite` tier.
+
+All damage continues through `DamageRequest` and `DamageApplicationSystem`. Punches, launched-body collision damage,
+explosions, and launched Dashers can therefore defeat an elite normally. `EnemyLaunchTransition` is gated by `EnemyTier`:
+normal targets enter the shared `Launched` lifecycle, while elite targets receive the applicable existing elite-tier
+impulse without changing launch phase. This preserves normal deferred-defeat and future boss-tier behavior.
+
+`EnemyHealthBarPolicy` is the per-entity presentation rule. Normal enemies retain temporary damage bars and existing
+state labels. Elites use `AlwaysWhileAlive`; `EnemyHealthBarBridgeSystem` explicitly bypasses the canvas's global normal
+health-bar option for that policy, publishes no normal launch-state label, and withdraws the pooled view on defeat,
+respawn ineligibility, or loss of presentation eligibility.
+
+`EnemyWaveSettings` retains `totalEnemyCount` and its weighted normal list and adds an ordered fixed-count elite list.
+The baker rejects Elite profiles from the weighted pool, rejects non-Elite fixed entries, declares dependencies on the
+wave, profile, and prefab assets, and flattens valid elite entries into `EnemyWaveEliteProfile`. Each wave definition stores
+separate normal and elite profile ranges plus total configured elite count; runtime buffers contain no Unity object
+references.
+
+`EnemyWaveSpawnSystem` consumes the ordered elite counts before making any weighted normal selection. Failed elite safe
+placement remains at the head of the queue. Elites and normals share rectangles, deterministic RNG, player clearance,
+physics overlap checks, bounded retries, batch capacity, batch interval, and warning throttling; a batch may finish the
+elite queue and use remaining capacity for normals.
+
+For waves with elites, `NormalLivingCount` is the target feedback value rather than cumulative `SpawnedCount`. A counted
+normal defeat lowers it and creates replacement demand while `EliteLivingCount` is positive. Replacements are explicit
+wave spawns with `EnemyRespawnSettings` disabled and use the same weighted selection and cadence. The final elite defeat
+stops replacement creation immediately and begins existing activation: `AllEnemiesDefeated` waits for surviving owned
+normals, while `DurationElapsed` starts its duration at that transition. Waves without elites retain their original fixed
+spawn/defeat budget branch.
+
+`EnemyWaveOwnership` records elite/normal role, sequence, wave, generation, and idempotent defeat observation. Restart
+increments the generation, destroys all old wave-owned entities, clears living counts and elite cursors, restores the
+initial seed, and re-enters initialization so the first-wave delay is applied again. Legacy random and authored enemies
+retain their existing in-place restart and pooling behavior.
+
 ## Dasher Enemy Archetype
 
 `EnemySpawnSettings.Archetype` can select `Dasher`. The existing enemy prefab is instantiated as a variant with

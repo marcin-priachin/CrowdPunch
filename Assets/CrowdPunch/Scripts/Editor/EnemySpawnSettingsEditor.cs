@@ -87,6 +87,9 @@ namespace CrowdPunch.Editor
                     case EnemyArchetype.Dasher:
                         DrawSection("Dasher (provisional)", DasherProperties);
                         break;
+                    case EnemyArchetype.Elite:
+                    case EnemyArchetype.Baseline:
+                        break;
                 }
             }
 

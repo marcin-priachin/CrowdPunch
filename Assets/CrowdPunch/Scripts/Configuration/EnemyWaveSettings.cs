@@ -29,6 +29,15 @@ namespace CrowdPunch.Configuration
         }
 
         [Serializable]
+        public struct FixedEliteEnemy
+        {
+            [Tooltip("Elite profile. Its prefab and all common tuning still come from EnemySpawnSettings.")]
+            public EnemySpawnSettings Settings;
+            [Min(0), Tooltip("Exact number of this elite profile to spawn. This is additive to Total Normal Enemy Count.")]
+            public int Count;
+        }
+
+        [Serializable]
         public struct SpawnRectangle
         {
             [Tooltip("World-space center. Its Y value is the spawn height.")]
@@ -38,10 +47,12 @@ namespace CrowdPunch.Configuration
         }
 
         [Header("Enemy composition")]
-        [SerializeField, Min(0), Tooltip("Number of enemies that must be spawned and defeated to complete this wave.")]
+        [SerializeField, Min(0), Tooltip("Target normal-enemy population. Fixed elite counts are additional.")]
         private int totalEnemyCount;
-        [SerializeField, Tooltip("Weighted reusable enemy profiles. Invalid and zero-weight entries are ignored.")]
+        [SerializeField, Tooltip("Weighted normal-enemy profiles. Elite profiles are invalid here.")]
         private List<WeightedEnemy> enemies = new();
+        [SerializeField, Tooltip("Fixed-count elite profiles, spawned in authored list order before normal enemies.")]
+        private List<FixedEliteEnemy> eliteEnemies = new();
 
         [Header("World-space spawn ranges")]
         [SerializeField, Tooltip("Valid rectangles are selected proportionally to area, then sampled uniformly.")]
@@ -57,6 +68,7 @@ namespace CrowdPunch.Configuration
 
         public int TotalEnemyCount => totalEnemyCount;
         public IReadOnlyList<WeightedEnemy> Enemies => enemies;
+        public IReadOnlyList<FixedEliteEnemy> EliteEnemies => eliteEnemies;
         public IReadOnlyList<SpawnRectangle> SpawnRectangles => spawnRectangles;
         public float DelayBeforeWave => delayBeforeWave;
         public float Duration => duration;
@@ -74,11 +86,34 @@ namespace CrowdPunch.Configuration
             bool hasProfile = false;
             foreach (WeightedEnemy entry in enemies)
             {
-                if (entry.Settings != null && entry.Settings.EnemyPrefab != null && entry.Weight > 0f)
+                if (entry.Settings != null && entry.Settings.EnemyPrefab != null && entry.Weight > 0f
+                    && entry.Settings.Archetype != EnemyArchetype.Elite)
                 {
                     hasProfile = true;
                     break;
                 }
+            }
+            for (int index = 0; index < enemies.Count; index++)
+            {
+                WeightedEnemy entry = enemies[index];
+                if (entry.Settings != null && entry.Settings.Archetype == EnemyArchetype.Elite && entry.Weight > 0f)
+                    Debug.LogError($"Wave '{name}' weighted normal entry {index + 1} uses an Elite profile; move it to Fixed Elite Enemies.", this);
+            }
+
+            int eliteCount = 0;
+            for (int index = 0; index < eliteEnemies.Count; index++)
+            {
+                FixedEliteEnemy entry = eliteEnemies[index];
+                if (entry.Count <= 0)
+                {
+                    if (entry.Count < 0) Debug.LogWarning($"Wave '{name}' elite entry {index + 1} has a negative count and will be ignored.", this);
+                    continue;
+                }
+                if (entry.Settings == null || entry.Settings.EnemyPrefab == null)
+                    Debug.LogError($"Wave '{name}' elite entry {index + 1} has count {entry.Count} but no valid profile/prefab.", this);
+                else if (entry.Settings.Archetype != EnemyArchetype.Elite)
+                    Debug.LogError($"Wave '{name}' elite entry {index + 1} must reference an Elite profile.", this);
+                else eliteCount += entry.Count;
             }
             if (totalEnemyCount > 0 && !hasProfile)
             {
@@ -94,7 +129,7 @@ namespace CrowdPunch.Configuration
                     break;
                 }
             }
-            if (totalEnemyCount > 0 && !hasRange)
+            if ((totalEnemyCount > 0 || eliteCount > 0) && !hasRange)
             {
                 Debug.LogError($"Wave '{name}' has enemies to spawn but no positive-area spawn rectangle.", this);
             }

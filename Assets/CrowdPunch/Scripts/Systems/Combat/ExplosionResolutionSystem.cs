@@ -123,11 +123,19 @@ namespace CrowdPunch.Systems.Combat
                 float3 direction = transform.ValueRO.Position - center;
                 direction.y = 0f;
                 direction = math.normalizesafe(direction, new float3(0f, 0f, 1f));
-                QueueImpulse(target, direction * math.max(0f, settings.NormalEnemyKnockbackForce));
+                bool isElite = SystemAPI.HasComponent<EnemyTier>(target)
+                    && SystemAPI.GetComponent<EnemyTier>(target).Value == EnemyCombatTier.Elite;
+                float knockback = isElite
+                    ? settings.PlayerEliteKnockbackForce
+                    : settings.NormalEnemyKnockbackForce;
+                QueueImpulse(target, direction * math.max(0f, knockback));
 
-                EnemyLaunchState nextLaunchState = launchState.ValueRO;
-                EnemyLaunchTransition.Begin(ref nextLaunchState, EnemyLaunchCause.Explosion, settings.Damage);
-                launchState.ValueRW = nextLaunchState;
+                if (!isElite)
+                {
+                    EnemyLaunchState nextLaunchState = launchState.ValueRO;
+                    EnemyLaunchTransition.Begin(ref nextLaunchState, EnemyLaunchCause.Explosion, settings.Damage);
+                    launchState.ValueRW = nextLaunchState;
+                }
             }
 
             DefeatExplosive(explosive);

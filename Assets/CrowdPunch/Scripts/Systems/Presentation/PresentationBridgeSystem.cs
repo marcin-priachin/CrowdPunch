@@ -40,12 +40,14 @@ namespace CrowdPunch.Systems.Presentation
             float radiusSquared = bridge.PunchPreviewRadius * bridge.PunchPreviewRadius;
             float positionWeight = math.saturate(bridge.PunchPreviewPositionWeight);
 
-            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState, RefRO<Health> health) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>>()
+            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState, RefRO<Health> health,
+                         RefRO<EnemyTier> tier) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>, RefRO<EnemyTier>>()
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>())
             {
-                if (!EnemyLaunchTransition.CanReceivePlayerPunch(launchState.ValueRO, health.ValueRO))
+                if (!EnemyLaunchTransition.IsLaunchable(tier.ValueRO)
+                    || !EnemyLaunchTransition.CanReceivePlayerPunch(launchState.ValueRO, health.ValueRO))
                 {
                     continue;
                 }

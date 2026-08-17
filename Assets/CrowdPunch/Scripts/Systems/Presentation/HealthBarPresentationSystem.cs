@@ -29,11 +29,22 @@ namespace CrowdPunch.Systems.Presentation
             }
 
             float deltaTime = SystemAPI.Time.DeltaTime;
-            foreach ((RefRW<EnemyHealthBarVisibility> visibility, Entity enemy) in
-                     SystemAPI.Query<RefRW<EnemyHealthBarVisibility>>()
+            foreach ((RefRW<EnemyHealthBarVisibility> visibility, RefRO<EnemyHealthBarPolicy> policy,
+                         RefRO<EnemyLaunchState> launchState, Entity enemy) in
+                     SystemAPI.Query<RefRW<EnemyHealthBarVisibility>, RefRO<EnemyHealthBarPolicy>, RefRO<EnemyLaunchState>>()
                          .WithAll<Enemy>()
+                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
                          .WithEntityAccess())
             {
+                if (policy.ValueRO.Value == EnemyHealthBarPolicyKind.AlwaysWhileAlive)
+                {
+                    SystemAPI.SetComponentEnabled<EnemyHealthBarVisibility>(enemy,
+                        launchState.ValueRO.Phase != EnemyLaunchPhase.Defeated);
+                    continue;
+                }
+
+                if (!SystemAPI.IsComponentEnabled<EnemyHealthBarVisibility>(enemy)) continue;
+
                 visibility.ValueRW.SecondsRemaining = math.max(
                     0f,
                     visibility.ValueRO.SecondsRemaining - deltaTime);

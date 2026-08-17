@@ -10,7 +10,8 @@ namespace CrowdPunch.Configuration
         Baseline,
         Ranged,
         Explosive,
-        Dasher
+        Dasher,
+        Elite
     }
 
     [Serializable]

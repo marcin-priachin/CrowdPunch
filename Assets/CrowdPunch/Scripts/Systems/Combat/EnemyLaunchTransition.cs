@@ -13,6 +13,11 @@ namespace CrowdPunch.Systems.Combat
                         || state.Phase == EnemyLaunchPhase.Recovering));
         }
 
+        public static bool IsLaunchable(in EnemyTier tier)
+        {
+            return tier.Value == EnemyCombatTier.Normal;
+        }
+
         public static void Begin(ref EnemyLaunchState state, EnemyLaunchCause cause, float launchDamage)
         {
             state.Phase = EnemyLaunchPhase.Launched;
