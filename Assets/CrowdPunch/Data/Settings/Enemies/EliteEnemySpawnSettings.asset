@@ -18,13 +18,13 @@ MonoBehaviour:
   initialCount: 100
   radius: 100
   respawnEnabled: 0
-  moveSpeed: 10
+  moveSpeed: 30
   wanderSpeed: 1.5
   chargeDistance: 99999
   chargeSpeedMultiplier: 2
-  acceleration: 12
-  brakingAcceleration: 8
-  turnSpeed: 12
+  acceleration: 20
+  brakingAcceleration: 40
+  turnSpeed: 20
   stoppingDistance: 0
   surroundDistance: 3.5
   surroundRingSpacing: 0.75
@@ -97,3 +97,48 @@ MonoBehaviour:
   dasherBossKnockback: 2
   dasherPreserveMomentumAgainstElites: 0
   dasherPreserveMomentumAgainstBosses: 0
+  eliteInitialDelay: 0
+  eliteCooldown: 4
+  eliteCooldownVariation: 1
+  eliteMaximumSetupDuration: 5
+  eliteRetargetInterval: 0.25
+  eliteMaximumSearchRange: 20
+  eliteMinimumTargetPlayerDistance: 2
+  eliteMaximumTargetPlayerDistance: 999
+  eliteAllowActiveTargets: 1
+  eliteAllowRecoveringTargets: 1
+  eliteAllowLaunchedTargets: 0
+  eliteAllowSharedTargets: 0
+  eliteMaximumEvaluatedCandidates: 64
+  eliteClearPathTacticProbability: 1
+  eliteClearPathAlignmentWeight: 2
+  eliteClearPathRepositionWeight: 10
+  eliteClearPathDistanceWeight: 0
+  eliteCrowdCorridorRadius: 1.5
+  eliteCrowdDistanceBeyondPlayer: 3
+  eliteCrowdNearPlayerWeight: 1
+  eliteMinimumCrowdScore: 0
+  eliteDesiredPunchDistance: 1
+  elitePositionTolerance: 0.4
+  eliteAimAngleToleranceDegrees: 20
+  elitePlayerMovementInvalidationDistance: 3
+  eliteTargetMovementInvalidationDistance: 2
+  eliteSetupMovementSpeedMultiplier: 1.25
+  eliteApplySeparationDuringSetup: 0
+  elitePunchRange: 1.5
+  elitePunchRadius: 0.75
+  eliteLaunchForce: 80
+  elitePunchDamage: 10
+  elitePushDirectionPositionWeight: 0
+  eliteInteractionMode: 0
+  eliteProjectileReceivesDamage: 1
+  eliteAffectActive: 1
+  eliteAffectRecovering: 1
+  eliteAffectLaunched: 0
+  eliteCanDirectlyHitPlayer: 0
+  eliteDirectPlayerDamage: 10
+  elitePlayerPush: 8
+  elitePlayerInvincibilityDuration: 0.5
+  eliteWindUpDuration: 0
+  eliteEnableTelegraph: 0
+  eliteTelegraphDuration: 0.25

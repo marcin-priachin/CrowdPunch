@@ -81,7 +81,8 @@ namespace CrowdPunch.Bakers
                     VisualDuration = settings.ExplosionVisualDuration,
                     VisualSizeMultiplier = settings.ExplosionVisualSizeMultiplier
                 },
-                DasherSettings = settings.DasherSettings
+                DasherSettings = settings.DasherSettings,
+                ElitePunchSettings = settings.ElitePunchSettings
             };
             return true;
         }

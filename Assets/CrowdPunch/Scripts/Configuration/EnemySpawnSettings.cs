@@ -1,5 +1,6 @@
 using System;
 using CrowdPunch.Components;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -135,6 +136,33 @@ namespace CrowdPunch.Configuration
         [SerializeField] private bool dasherPreserveMomentumAgainstElites;
         [SerializeField] private bool dasherPreserveMomentumAgainstBosses;
 
+        [Header("Elite punch - cadence")]
+        [SerializeField, Min(0f)] private float eliteInitialDelay = 2f, eliteCooldown = 4f, eliteCooldownVariation = 1f;
+        [SerializeField, Min(0f)] private float eliteMaximumSetupDuration = 5f, eliteRetargetInterval = 0.25f;
+        [Header("Elite punch - target eligibility")]
+        [SerializeField, Min(0f)] private float eliteMaximumSearchRange = 20f, eliteMinimumTargetPlayerDistance = 2f, eliteMaximumTargetPlayerDistance = 18f;
+        [SerializeField] private bool eliteAllowActiveTargets = true, eliteAllowRecoveringTargets = true, eliteAllowLaunchedTargets, eliteAllowSharedTargets;
+        [SerializeField, Min(1)] private int eliteMaximumEvaluatedCandidates = 64;
+        [Header("Elite punch - tactic selection")]
+        [SerializeField, Range(0f, 1f)] private float eliteClearPathTacticProbability = 0.5f;
+        [SerializeField, Min(0f)] private float eliteClearPathAlignmentWeight = 2f, eliteClearPathRepositionWeight = 1f, eliteClearPathDistanceWeight = 0.25f;
+        [SerializeField, Min(0f)] private float eliteCrowdCorridorRadius = 1.5f, eliteCrowdDistanceBeyondPlayer = 3f, eliteCrowdNearPlayerWeight = 1f, eliteMinimumCrowdScore;
+        [Header("Elite punch - repositioning")]
+        [SerializeField, Min(0f)] private float eliteDesiredPunchDistance = 1f, elitePositionTolerance = 0.25f, eliteAimAngleToleranceDegrees = 8f;
+        [SerializeField, Min(0f)] private float elitePlayerMovementInvalidationDistance = 1.5f, eliteTargetMovementInvalidationDistance = 1f, eliteSetupMovementSpeedMultiplier = 1.25f;
+        [SerializeField] private bool eliteApplySeparationDuringSetup;
+        [Header("Elite punch - effects")]
+        [SerializeField, Min(0f)] private float elitePunchRange = 1.5f, elitePunchRadius = 0.75f, eliteLaunchForce = 20f, elitePunchDamage = 10f;
+        [SerializeField, Range(0f, 1f)] private float elitePushDirectionPositionWeight = 0.35f;
+        [SerializeField] private ElitePunchInteractionMode eliteInteractionMode = ElitePunchInteractionMode.SelectedTargetOnly;
+        [SerializeField] private bool eliteProjectileReceivesDamage = true, eliteAffectActive = true, eliteAffectRecovering = true, eliteAffectLaunched;
+        [SerializeField] private bool eliteCanDirectlyHitPlayer;
+        [SerializeField, Min(0f)] private float eliteDirectPlayerDamage = 10f, elitePlayerPush = 8f, elitePlayerInvincibilityDuration = 0.5f;
+        [Header("Elite punch - optional wind-up / telegraph")]
+        [SerializeField, Min(0f)] private float eliteWindUpDuration;
+        [SerializeField] private bool eliteEnableTelegraph;
+        [SerializeField, Min(0f)] private float eliteTelegraphDuration = 0.25f;
+
         public GameObject EnemyPrefab => enemyPrefab;
         public GameObject RangedProjectilePrefab => rangedProjectilePrefab;
         public EnemyArchetype Archetype => archetype;
@@ -223,6 +251,21 @@ namespace CrowdPunch.Configuration
             BossDamage = dasherBossDamage, BossKnockback = dasherBossKnockback,
             PreserveMomentumAgainstElites = dasherPreserveMomentumAgainstElites ? (byte)1 : (byte)0,
             PreserveMomentumAgainstBosses = dasherPreserveMomentumAgainstBosses ? (byte)1 : (byte)0
+        };
+        public ElitePunchSettings ElitePunchSettings => new ElitePunchSettings
+        {
+            InitialDelay=eliteInitialDelay, Cooldown=eliteCooldown, CooldownVariation=eliteCooldownVariation, MaximumSetupDuration=eliteMaximumSetupDuration, RetargetInterval=eliteRetargetInterval,
+            MaximumSearchRange=eliteMaximumSearchRange, MinimumTargetPlayerDistance=eliteMinimumTargetPlayerDistance, MaximumTargetPlayerDistance=eliteMaximumTargetPlayerDistance,
+            AllowActiveTargets=eliteAllowActiveTargets?(byte)1:(byte)0, AllowRecoveringTargets=eliteAllowRecoveringTargets?(byte)1:(byte)0, AllowLaunchedTargets=eliteAllowLaunchedTargets?(byte)1:(byte)0, AllowSharedTargets=eliteAllowSharedTargets?(byte)1:(byte)0,
+            ClearPathTacticProbability=math.saturate(eliteClearPathTacticProbability), MaximumEvaluatedCandidates=math.max(1,eliteMaximumEvaluatedCandidates),
+            ClearPathAlignmentWeight=eliteClearPathAlignmentWeight, ClearPathRepositionWeight=eliteClearPathRepositionWeight, ClearPathDistanceWeight=eliteClearPathDistanceWeight,
+            CrowdCorridorRadius=eliteCrowdCorridorRadius, CrowdDistanceBeyondPlayer=eliteCrowdDistanceBeyondPlayer, CrowdNearPlayerWeight=eliteCrowdNearPlayerWeight, MinimumCrowdScore=eliteMinimumCrowdScore,
+            DesiredPunchDistance=eliteDesiredPunchDistance, PositionTolerance=elitePositionTolerance, AimAngleToleranceDegrees=eliteAimAngleToleranceDegrees,
+            PlayerMovementInvalidationDistance=elitePlayerMovementInvalidationDistance, TargetMovementInvalidationDistance=eliteTargetMovementInvalidationDistance, SetupMovementSpeedMultiplier=eliteSetupMovementSpeedMultiplier, ApplySeparationDuringSetup=eliteApplySeparationDuringSetup?(byte)1:(byte)0,
+            PunchRange=elitePunchRange, PunchRadius=elitePunchRadius, LaunchForce=eliteLaunchForce, PunchDamage=elitePunchDamage, PushDirectionPositionWeight=elitePushDirectionPositionWeight,
+            InteractionMode=eliteInteractionMode, ProjectileReceivesDamage=eliteProjectileReceivesDamage?(byte)1:(byte)0, AffectActive=eliteAffectActive?(byte)1:(byte)0, AffectRecovering=eliteAffectRecovering?(byte)1:(byte)0, AffectLaunched=eliteAffectLaunched?(byte)1:(byte)0,
+            CanDirectlyHitPlayer=eliteCanDirectlyHitPlayer?(byte)1:(byte)0, DirectPlayerDamage=eliteDirectPlayerDamage, PlayerPush=elitePlayerPush, PlayerInvincibilityDuration=elitePlayerInvincibilityDuration,
+            WindUpDuration=eliteWindUpDuration, EnableTelegraph=eliteEnableTelegraph?(byte)1:(byte)0, TelegraphDuration=eliteTelegraphDuration
         };
     }
 }

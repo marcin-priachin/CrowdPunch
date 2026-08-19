@@ -78,6 +78,7 @@ namespace CrowdPunch.Systems.Initialization
             {
                 Value = profile.SpawnClearance
             });
+            commandBuffer.AddComponent<ElitePunchReservation>(enemy);
 
             AddArchetypeComponents(commandBuffer, enemy, profile, ref random);
             return enemy;
@@ -114,8 +115,19 @@ namespace CrowdPunch.Systems.Initialization
             in EnemySpawnProfile profile,
             ref Random random)
         {
-            if (profile.Archetype == EnemyArchetypeKind.Baseline
-                || profile.Archetype == EnemyArchetypeKind.Elite)
+            if (profile.Archetype == EnemyArchetypeKind.Elite)
+            {
+                commandBuffer.AddComponent(enemy, profile.ElitePunchSettings);
+                commandBuffer.AddComponent(enemy, new ElitePunchState
+                {
+                    Phase = ElitePunchPhase.InitialDelay,
+                    SecondsRemaining = math.max(0f, profile.ElitePunchSettings.InitialDelay),
+                    Target = Entity.Null,
+                    RandomState = random.NextUInt(1u, uint.MaxValue)
+                });
+                return;
+            }
+            if (profile.Archetype == EnemyArchetypeKind.Baseline)
             {
                 return;
             }

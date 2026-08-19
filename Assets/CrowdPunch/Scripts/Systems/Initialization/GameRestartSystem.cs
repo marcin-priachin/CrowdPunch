@@ -155,6 +155,18 @@ namespace CrowdPunch.Systems.Initialization
                 });
                 SystemAPI.GetBuffer<DasherHitHistory>(enemy).Clear();
             }
+            if (SystemAPI.HasComponent<ElitePunchState>(enemy))
+            {
+                ElitePunchSettings settings = SystemAPI.GetComponent<ElitePunchSettings>(enemy);
+                SystemAPI.SetComponent(enemy, new ElitePunchState
+                {
+                    Phase = ElitePunchPhase.InitialDelay,
+                    SecondsRemaining = math.max(0f, settings.InitialDelay),
+                    RandomState = (uint)math.max(1, enemy.Index + 1)
+                });
+            }
+            if (SystemAPI.HasComponent<ElitePunchReservation>(enemy))
+                SystemAPI.SetComponent(enemy, new ElitePunchReservation());
         }
 
         private void ResetTransientState(Entity enemy)

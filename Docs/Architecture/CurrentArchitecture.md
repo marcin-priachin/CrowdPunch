@@ -175,6 +175,49 @@ The existing player bridge receives explosion damage through the normal `PlayerH
 
 ## Current Prototype Behavior Versus Design
 
+## Elite Projectile Punch
+
+Elite spawn profiles now bake `ElitePunchSettings` and initialize an inspectable `ElitePunchState`; no ordinary enemy
+receives attack state. The explicit phases are `InitialDelay`, `SelectingTarget`, `Repositioning`, optional `WindUp`, and
+`Cooldown`. Each new attempt advances the elite's stored ECS random stream and chooses Clear Path with the authored
+normalized probability, otherwise Crowd Shot. If that tactic produces no candidate, the other tactic is evaluated before
+the elite waits for its next search interval. Evaluation is bounded by the authored candidate cap and occurs only at
+selection/retarget boundaries rather than running a physics simulation for every candidate every frame.
+
+Only normal-tier, health-bearing, non-defeated, non-pooled targets in the configured phase and distance bands qualify.
+Clear Path rejects static-world ray obstruction and normal enemies in the target-to-player corridor, then balances required
+elite repositioning distance and target-to-player distance. Crowd Shot counts normal enemies in a configurable projected
+corridor through and optionally beyond the player, weights intersections nearer the intended end, and rejects world-blocked
+shots. Candidate order is stable for identical entity creation and restart inputs.
+
+During setup, the desired position is behind the projectile relative to the live player, on the elite's movement plane.
+`ElitePunchSystem` runs after `EnemyChaseSystem` and before `EnemyMovementSystem`, making its `DesiredMovement` override
+explicit while leaving velocity integration in the existing movement system. It turns the elite toward the live
+target-to-player launch direction at the profile's existing `TurnSpeed`; ordinary chase facing is not used as a hidden
+attack prerequisite. Search eligibility uses the dedicated active, recovering, and already-launched switches, while final
+punch-effect eligibility is independently rechecked immediately before execution. Setup speed uses the common movement
+acceleration and braking values to calculate an arrival speed from remaining distance, allowing fast traversal while
+decelerating into the authored position tolerance. Outside that tolerance, the requested speed is never allowed below the
+selected target's horizontal speed plus the relative speed needed to cross the tolerance under the same braking model;
+this prevents a moving target from creating a permanent follow gap. Position, facing, the exact shared punch
+volume, target/player displacement, phase eligibility, reservation ownership, setup timeout, and entity existence are
+revalidated through repositioning and wind-up. Zero wind-up executes on the first valid update; invalid wind-up returns to
+setup instead of firing. `TelegraphActive` is presentation-only state and is never required for execution.
+
+`PunchResolution` is the focused common resolver used by both player and elite punches. It owns capsule-like forward/radius
+evaluation, position-weighted impulse direction, Dasher interruption, `ExternalImpulse`, `DamageRequest` accumulation, and
+the authoritative `EnemyLaunchTransition`. Elite-launched normal enemies carry the explicit `ElitePunch` cause and retain
+the existing launch sequence, collision history, collision damage, propagation, deferred-defeat, and recovery pipeline.
+The elite can affect only its selected projectile or every eligible normal-tier enemy in the exact volume. Optional direct
+player contact uses the same ECS-to-Mono hit bridge and remains distinct from later launched-body collision damage.
+
+Every spawned enemy carries a small reservation record. An elite writes ownership only while setting up, and releases it
+on execution or cancellation; stale owners and defeated/pooled targets are cleared independently each update. Shared
+reservations are an authored policy. Restart and pooling reset attack state, random state, target references, telegraph
+state, and reservations, while wave-owned destruction continues to remove the entire old generation. Elite tier gating is
+unchanged, so elites remain damageable and knockback-responsive but never enter `Launched`; normal replenishment remains
+owned by the existing wave counters.
+
 ## Elite Enemy And Elite-Gated Waves
 
 `Elite` is appended after the four original serialized `EnemyArchetype` values. Baking maps it to the explicit

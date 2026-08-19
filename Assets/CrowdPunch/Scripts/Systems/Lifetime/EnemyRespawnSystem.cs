@@ -112,6 +112,18 @@ namespace CrowdPunch.Systems.Lifetime
                         SystemAPI.SetComponent(enemy, new DasherState { Phase = DasherPhase.Positioning });
                         SystemAPI.GetBuffer<DasherHitHistory>(enemy).Clear();
                     }
+                    if (SystemAPI.HasComponent<ElitePunchState>(enemy))
+                    {
+                        ElitePunchSettings eliteSettings = SystemAPI.GetComponent<ElitePunchSettings>(enemy);
+                        SystemAPI.SetComponent(enemy, new ElitePunchState
+                        {
+                            Phase = ElitePunchPhase.InitialDelay,
+                            SecondsRemaining = math.max(0f, eliteSettings.InitialDelay),
+                            RandomState = (uint)math.max(1, enemy.Index + 1)
+                        });
+                    }
+                    if (SystemAPI.HasComponent<ElitePunchReservation>(enemy))
+                        SystemAPI.SetComponent(enemy, new ElitePunchReservation());
                     respawnRequest.ValueRW.IsPooled = 1;
                     respawnRequest.ValueRW.RespawnAt = respawnSettings.ValueRO.Enabled != 0
                         ? elapsedTime + RespawnDelaySeconds

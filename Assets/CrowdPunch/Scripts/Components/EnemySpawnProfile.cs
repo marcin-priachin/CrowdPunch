@@ -16,5 +16,6 @@ namespace CrowdPunch.Components
         public RangedEnemySettings RangedSettings;
         public ExplosiveEnemySettings ExplosiveSettings;
         public DasherSettings DasherSettings;
+        public ElitePunchSettings ElitePunchSettings;
     }
 }

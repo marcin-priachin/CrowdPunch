@@ -34,79 +34,24 @@ namespace CrowdPunch.Systems.Combat
             }
 
             PunchRequest punchRequest = SystemAPI.GetComponent<PunchRequest>(punchEntity);
-            float3 punchDirection = math.normalizesafe(punchRequest.Direction);
-            float radiusSquared = punchRequest.Radius * punchRequest.Radius;
-            float pushDirectionPositionWeight = math.saturate(punchRequest.PushDirectionPositionWeight);
-            foreach ((RefRO<LocalTransform> transform, RefRW<EnemyLaunchState> launchState, RefRO<Health> health,
-                         RefRO<EnemyTier> tier, Entity enemy) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRW<EnemyLaunchState>, RefRO<Health>, RefRO<EnemyTier>>()
+            PunchSpecification punch = new PunchSpecification
+            {
+                Origin = punchRequest.Origin, Direction = punchRequest.Direction, Range = punchRequest.Range,
+                Radius = punchRequest.Radius, Strength = punchRequest.Strength,
+                Damage = punchRequest.Damage, PositionWeight = punchRequest.PushDirectionPositionWeight,
+                Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1, AffectRecovering = 1,
+                AffectLaunched = 1, ApplyDamage = 1
+            };
+            foreach ((RefRO<EnemyTier> tier, Entity enemy) in
+                     SystemAPI.Query<RefRO<EnemyTier>>()
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
-                if (!EnemyLaunchTransition.CanReceivePlayerPunch(launchState.ValueRO, health.ValueRO))
-                {
-                    continue;
-                }
-
-                float3 toEnemy = transform.ValueRO.Position - punchRequest.Origin;
-                float forwardDistance = math.dot(toEnemy, punchDirection);
-
-                if (forwardDistance < 0f || forwardDistance > punchRequest.Range)
-                {
-                    continue;
-                }
-
-                float3 closestPointOnPunchLine = punchRequest.Origin + punchDirection * forwardDistance;
-                float distanceFromPunchLineSquared = math.lengthsq(transform.ValueRO.Position - closestPointOnPunchLine);
-
-                if (distanceFromPunchLineSquared > radiusSquared)
-                {
-                    continue;
-                }
-
-                float3 positionDirection = math.normalizesafe(toEnemy, punchDirection);
-                float3 impulseDirection = math.normalizesafe(
-                    math.lerp(punchDirection, positionDirection, pushDirectionPositionWeight),
-                    positionDirection);
-                if (SystemAPI.HasComponent<DasherState>(enemy))
-                {
-                    DasherState interruptedDash = SystemAPI.GetComponent<DasherState>(enemy);
-                    interruptedDash.Phase = DasherPhase.Positioning;
-                    interruptedDash.SecondsRemaining = 0f;
-                    interruptedDash.LockedDirection = impulseDirection;
-                    interruptedDash.LockedRotation = quaternion.LookRotationSafe(impulseDirection, math.up());
-                    interruptedDash.HasLockedRotation = 1;
-                    SystemAPI.SetComponent(enemy, interruptedDash);
-                    PhysicsVelocity interruptedVelocity = SystemAPI.GetComponent<PhysicsVelocity>(enemy);
-                    interruptedVelocity.Linear.xz = float2.zero;
-                    SystemAPI.SetComponent(enemy, interruptedVelocity);
-                }
-                float targetStrength = tier.ValueRO.Value == EnemyCombatTier.Elite
-                    ? punchRequest.Strength * math.max(0f, punchRequest.EliteKnockbackMultiplier)
-                    : punchRequest.Strength;
-                SystemAPI.SetComponent(enemy, new ExternalImpulse
-                {
-                    Value = impulseDirection * targetStrength
-                });
-                SystemAPI.SetComponentEnabled<ExternalImpulse>(enemy, true);
-                if (EnemyLaunchTransition.IsLaunchable(tier.ValueRO))
-                {
-                    EnemyLaunchState nextLaunchState = launchState.ValueRO;
-                    EnemyLaunchTransition.Begin(
-                        ref nextLaunchState,
-                        EnemyLaunchCause.PlayerPunch,
-                        punchRequest.Damage);
-                    launchState.ValueRW = nextLaunchState;
-                }
-
-                DamageRequest pendingDamage = SystemAPI.IsComponentEnabled<DamageRequest>(enemy)
-                    ? SystemAPI.GetComponent<DamageRequest>(enemy)
-                    : default;
-                pendingDamage.Amount += punchRequest.Damage;
-                SystemAPI.SetComponent(enemy, pendingDamage);
-                SystemAPI.SetComponentEnabled<DamageRequest>(enemy, true);
-
+                PunchSpecification targetPunch = punch;
+                if (tier.ValueRO.Value == EnemyCombatTier.Elite)
+                    targetPunch.Strength *= math.max(0f, punchRequest.EliteKnockbackMultiplier);
+                PunchResolution.TryApply(state.EntityManager, enemy, targetPunch);
             }
 
             SystemAPI.SetComponentEnabled<PunchRequest>(punchEntity, false);
