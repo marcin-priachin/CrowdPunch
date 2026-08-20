@@ -40,10 +40,6 @@ Are weapons permanent unlocks, temporary pickups, run-start choices, replaceable
 
 What is the smallest shippable effect set, and what general transformation/event table governs collisions between those effects?
 
-### OQ-012 — Elite Role
-
-Does the MVP require elites in addition to four normal enemy types and the boss? If so, what decision do they add that a larger normal enemy cannot?
-
 ### OQ-013 — Encounter Pacing
 
 How are traversal, crowd encounters, recovery, choices, and the boss distributed across a 15–20 minute run?
@@ -93,6 +89,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-08-20 — OQ-012
+
+Decision: Elites are supported by the ordinary crowd. While an elite remains active, it always selects and periodically re-evaluates its closest eligible active normal as the projectile, without filtering that choice by player distance or spawn order. That projectile stops to anchor the setup, the elite repositions behind it, and other normal enemies clear the projectile-to-player firing corridor. After a launch, the elite keeps its cooldown but spends it approaching the next closest projectile rather than chasing the player.
+
+Rationale: The elite adds a spatial crowd-management threat: ordinary enemies visibly arrange a shot for it, giving the player a readable opportunity to disrupt or exploit rather than merely fighting a larger normal enemy.
+
+GDD rules: ENEMY-009
 
 ### 2026-08-09 — Zero-Health Launched Re-Punch
 

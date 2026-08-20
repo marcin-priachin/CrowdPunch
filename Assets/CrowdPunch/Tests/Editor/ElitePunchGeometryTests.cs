@@ -64,5 +64,31 @@ namespace CrowdPunch.Tests
             float speed = ElitePunchSystem.CalculateSetupSpeed(0.5f, 0.4f, 37.5f, 20f, 11f);
             Assert.AreEqual(11f, speed);
         }
+
+        [Test]
+        public void EnemyInsideShotCorridorMovesTowardNearestSide()
+        {
+            bool shouldExit = EliteCrowdSupportSystem.TryGetCorridorExitDirection(
+                new float3(4f, 0f, 0.5f),
+                float3.zero,
+                new float3(10f, 0f, 0f),
+                1.5f,
+                out float3 direction);
+
+            Assert.IsTrue(shouldExit);
+            Assert.Greater(direction.z, 0f);
+            Assert.That(direction.x, Is.EqualTo(0f).Within(0.0001f));
+        }
+
+        [Test]
+        public void EnemyOutsideShotSegmentKeepsItsNormalIntent()
+        {
+            Assert.IsFalse(EliteCrowdSupportSystem.TryGetCorridorExitDirection(
+                new float3(12f, 0f, 0f),
+                float3.zero,
+                new float3(10f, 0f, 0f),
+                1.5f,
+                out _));
+        }
     }
 }

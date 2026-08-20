@@ -55,9 +55,52 @@ namespace CrowdPunch.Systems.AI
                     Cancel(elite, ref state.ValueRW); movement.ValueRW = default; continue;
                 }
                 state.ValueRW.SecondsRemaining -= dt;
-                if (state.ValueRO.Phase == ElitePunchPhase.InitialDelay || state.ValueRO.Phase == ElitePunchPhase.Cooldown)
+                if (state.ValueRO.Phase == ElitePunchPhase.InitialDelay)
                 {
                     if (state.ValueRO.SecondsRemaining <= 0f) state.ValueRW.Phase = ElitePunchPhase.SelectingTarget;
+                    continue;
+                }
+                if (state.ValueRO.Phase == ElitePunchPhase.Cooldown)
+                {
+                    if (state.ValueRO.SecondsRemaining <= 0f)
+                    {
+                        state.ValueRW.Phase = ElitePunchPhase.SelectingTarget;
+                        continue;
+                    }
+
+                    Entity nextProjectile = FindClosestActiveCandidate(
+                        elite,
+                        transform.ValueRO.Position,
+                        settings.ValueRO,
+                        all);
+                    if (nextProjectile != Entity.Null)
+                    {
+                        LocalTransform nextTransform = EntityManager.GetComponentData<LocalTransform>(nextProjectile);
+                        EnemyMovementSettings cooldownMovementSettings = SystemAPI.GetComponent<EnemyMovementSettings>(elite);
+                        float3 cooldownLaunchDirection = HorizontalDirection(nextTransform.Position, player.Position);
+                        float3 cooldownDestination = DesiredPosition(
+                            nextTransform.Position,
+                            player.Position,
+                            settings.ValueRO.DesiredPunchDistance);
+                        cooldownDestination.y = transform.ValueRO.Position.y;
+                        float3 toCooldownDestination = cooldownDestination - transform.ValueRO.Position;
+                        toCooldownDestination.y = 0f;
+                        float cooldownSetupDistance = math.length(toCooldownDestination);
+                        movement.ValueRW.Direction = math.normalizesafe(toCooldownDestination);
+                        movement.ValueRW.Speed = CalculateSetupSpeed(
+                            cooldownSetupDistance,
+                            settings.ValueRO.PositionTolerance,
+                            cooldownMovementSettings.MoveSpeed * math.max(0f, settings.ValueRO.SetupMovementSpeedMultiplier),
+                            math.min(
+                                math.max(0f, cooldownMovementSettings.Acceleration),
+                                math.max(0f, cooldownMovementSettings.BrakingAcceleration)),
+                            0f);
+                        transform.ValueRW.Rotation = math.slerp(
+                            transform.ValueRO.Rotation,
+                            quaternion.LookRotationSafe(cooldownLaunchDirection, math.up()),
+                            math.saturate(math.max(0f, cooldownMovementSettings.TurnSpeed) * dt));
+                    }
+
                     continue;
                 }
                 if (state.ValueRO.Phase == ElitePunchPhase.SelectingTarget)
@@ -66,7 +109,7 @@ namespace CrowdPunch.Systems.AI
                     SelectTarget(elite, transform.ValueRO.Position, player, settings.ValueRO, all, ref state.ValueRW);
                     continue;
                 }
-                if (!TryValidateTarget(elite, player, settings.ValueRO, ref state.ValueRW, out LocalTransform targetTransform))
+                if (!TryValidateTarget(elite, settings.ValueRO, ref state.ValueRW, out LocalTransform targetTransform))
                 {
                     Cancel(elite, ref state.ValueRW); state.ValueRW.Phase = ElitePunchPhase.SelectingTarget; continue;
                 }
@@ -79,6 +122,14 @@ namespace CrowdPunch.Systems.AI
                 if (state.ValueRO.RetargetSeconds <= 0f)
                 {
                     state.ValueRW.RetargetSeconds = math.max(0.02f, settings.ValueRO.RetargetInterval);
+                    Entity closest = FindClosestActiveCandidate(elite, transform.ValueRO.Position, settings.ValueRO, all);
+                    if (closest != Entity.Null && closest != state.ValueRO.Target)
+                    {
+                        Cancel(elite, ref state.ValueRW);
+                        SelectTarget(elite, transform.ValueRO.Position, player, settings.ValueRO, all, ref state.ValueRW);
+                        continue;
+                    }
+
                     if (math.distance(player.Position.xz, state.ValueRO.ValidatedPlayerPosition.xz) > settings.ValueRO.PlayerMovementInvalidationDistance
                         || math.distance(targetTransform.Position.xz, state.ValueRO.ValidatedTargetPosition.xz) > settings.ValueRO.TargetMovementInvalidationDistance)
                     {
@@ -152,8 +203,7 @@ namespace CrowdPunch.Systems.AI
             state.AttackSequence++; uint randomState = state.RandomState == 0 ? (uint)math.max(1, elite.Index + 1) : state.RandomState;
             ElitePunchTactic preferred = ChooseTactic(ref randomState, settings.ClearPathTacticProbability);
             state.RandomState = randomState;
-            Entity selected = FindBest(elite, elitePosition, player, settings, all, preferred);
-            if (selected == Entity.Null) { preferred = preferred == ElitePunchTactic.ClearPath ? ElitePunchTactic.CrowdShot : ElitePunchTactic.ClearPath; selected = FindBest(elite, elitePosition, player, settings, all, preferred); }
+            Entity selected = FindClosestActiveCandidate(elite, elitePosition, settings, all);
             if (selected == Entity.Null) { state.SecondsRemaining = math.max(0.02f, settings.RetargetInterval); return; }
             EntityManager.SetComponentData(selected, new ElitePunchReservation { Owner = elite, OwnerAttackSequence = state.AttackSequence });
             state.Target = selected; state.Tactic = preferred; state.Phase = ElitePunchPhase.Repositioning; state.SetupSeconds = 0f;
@@ -161,38 +211,47 @@ namespace CrowdPunch.Systems.AI
             state.ValidatedTargetPosition = EntityManager.GetComponentData<LocalTransform>(selected).Position;
         }
 
-        private Entity FindBest(Entity elite, float3 elitePosition, PlayerSnapshot player, ElitePunchSettings settings, NativeArray<Entity> all, ElitePunchTactic tactic)
+        private Entity FindClosestActiveCandidate(Entity elite, float3 elitePosition,
+            ElitePunchSettings settings, NativeArray<Entity> all)
         {
-            Entity best = Entity.Null; float bestScore = float.NegativeInfinity; int evaluated = 0;
-            for (int i=0; i<all.Length && evaluated<math.max(1, settings.MaximumEvaluatedCandidates); i++)
+            Entity best = Entity.Null;
+            float bestDistanceSq = float.MaxValue;
+            for (int i = 0; i < all.Length; i++)
             {
-                Entity candidate=all[i]; if (!IsCandidate(elite,candidate,elitePosition,player,settings)) continue; evaluated++;
-                float3 p=EntityManager.GetComponentData<LocalTransform>(candidate).Position; float3 dir=HorizontalDirection(p,player.Position);
-                float crowd=CorridorScore(candidate,p,player.Position+dir*settings.CrowdDistanceBeyondPlayer,settings.CrowdCorridorRadius,all,settings.CrowdNearPlayerWeight);
-                bool blocked=HasWorldObstruction(p,player.Position) || HasEnemyBlocker(candidate,p,player.Position,settings.CrowdCorridorRadius,all);
-                float score;
-                if(tactic==ElitePunchTactic.ClearPath) { if(blocked) continue; float3 behind=p-dir*settings.DesiredPunchDistance; score=settings.ClearPathAlignmentWeight-settings.ClearPathRepositionWeight*math.distance(elitePosition.xz,behind.xz)-settings.ClearPathDistanceWeight*math.distance(p.xz,player.Position.xz); }
-                else { if(HasWorldObstruction(p,player.Position)||crowd<settings.MinimumCrowdScore) continue; score=crowd; }
-                if(score>bestScore){bestScore=score;best=candidate;}
+                Entity candidate = all[i];
+                if (!IsCandidate(elite, candidate, settings)
+                    || EntityManager.GetComponentData<EnemyLaunchState>(candidate).Phase != EnemyLaunchPhase.Active)
+                {
+                    continue;
+                }
+
+                float distanceSq = math.distancesq(
+                    elitePosition.xz,
+                    EntityManager.GetComponentData<LocalTransform>(candidate).Position.xz);
+                if (distanceSq < bestDistanceSq
+                    || distanceSq == bestDistanceSq && (best == Entity.Null || candidate.Index < best.Index))
+                {
+                    best = candidate;
+                    bestDistanceSq = distanceSq;
+                }
             }
+
             return best;
         }
 
-        private bool IsCandidate(Entity elite, Entity target, float3 elitePosition, PlayerSnapshot player, ElitePunchSettings s)
+        private bool IsCandidate(Entity elite, Entity target, ElitePunchSettings s)
         {
             if(target==elite || !EntityManager.Exists(target) || EntityManager.GetComponentData<EnemyTier>(target).Value!=EnemyCombatTier.Normal) return false;
             if(EntityManager.HasComponent<RespawnRequest>(target)&&EntityManager.IsComponentEnabled<RespawnRequest>(target)) return false;
             if(EntityManager.HasComponent<ElitePunchReservation>(target)){var r=EntityManager.GetComponentData<ElitePunchReservation>(target);if(r.Owner!=Entity.Null&&r.Owner!=elite&&s.AllowSharedTargets==0&&EntityManager.Exists(r.Owner))return false;}
-            float3 p=EntityManager.GetComponentData<LocalTransform>(target).Position; float ep=math.distance(elitePosition.xz,p.xz),tp=math.distance(p.xz,player.Position.xz);
-            if(ep>s.MaximumSearchRange||tp<s.MinimumTargetPlayerDistance||tp>s.MaximumTargetPlayerDistance)return false;
             return CanSelectTarget(
                 EntityManager.GetComponentData<EnemyLaunchState>(target),
                 EntityManager.GetComponentData<Health>(target),
                 s);
         }
 
-        private bool TryValidateTarget(Entity elite, PlayerSnapshot player, ElitePunchSettings s, ref ElitePunchState state, out LocalTransform transform)
-        { transform=default; if(state.Target==Entity.Null||!IsCandidate(elite,state.Target,EntityManager.GetComponentData<LocalTransform>(elite).Position,player,s))return false; transform=EntityManager.GetComponentData<LocalTransform>(state.Target);return true; }
+        private bool TryValidateTarget(Entity elite, ElitePunchSettings s, ref ElitePunchState state, out LocalTransform transform)
+        { transform=default; if(state.Target==Entity.Null||!IsCandidate(elite,state.Target,s))return false; transform=EntityManager.GetComponentData<LocalTransform>(state.Target);return true; }
         private bool IsLinedUp(LocalTransform elite,float3 target,float3 direction,ElitePunchSettings s)
         { float3 desired=target-direction*s.DesiredPunchDistance; desired.y=elite.Position.y; if(math.distance(elite.Position.xz,desired.xz)>s.PositionTolerance)return false; float3 forward=math.forward(elite.Rotation); forward.y=0f; float cosine=math.cos(math.radians(math.clamp(s.AimAngleToleranceDegrees,0f,180f))); if(math.dot(math.normalizesafe(forward,direction),direction)<cosine)return false; return PunchResolution.Contains(target,Spec(elite.Position,direction,s)); }
         private void ExecutePunch(Entity elite,float3 origin,float3 target,PlayerSnapshot player,ElitePunchSettings s,NativeArray<Entity> all,Entity selected)

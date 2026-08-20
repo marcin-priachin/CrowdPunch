@@ -179,16 +179,14 @@ The existing player bridge receives explosion damage through the normal `PlayerH
 
 Elite spawn profiles now bake `ElitePunchSettings` and initialize an inspectable `ElitePunchState`; no ordinary enemy
 receives attack state. The explicit phases are `InitialDelay`, `SelectingTarget`, `Repositioning`, optional `WindUp`, and
-`Cooldown`. Each new attempt advances the elite's stored ECS random stream and chooses Clear Path with the authored
-normalized probability, otherwise Crowd Shot. If that tactic produces no candidate, the other tactic is evaluated before
-the elite waits for its next search interval. Evaluation is bounded by the authored candidate cap and occurs only at
-selection/retarget boundaries rather than running a physics simulation for every candidate every frame.
+`Cooldown`. Each new attempt advances the elite's stored ECS random stream for its inspectable tactic state, while actual
+projectile selection scans the eligible set and always chooses the closest active normal enemy with a deterministic
+entity-index tie break. It re-evaluates that choice on the existing retarget interval during setup, so a newly closer enemy
+replaces the reservation without requiring per-frame selection.
 
-Only normal-tier, health-bearing, non-defeated, non-pooled targets in the configured phase and distance bands qualify.
-Clear Path rejects static-world ray obstruction and normal enemies in the target-to-player corridor, then balances required
-elite repositioning distance and target-to-player distance. Crowd Shot counts normal enemies in a configurable projected
-corridor through and optionally beyond the player, weights intersections nearer the intended end, and rejects world-blocked
-shots. Candidate order is stable for identical entity creation and restart inputs.
+Only active, normal-tier, health-bearing, non-defeated, non-pooled targets qualify for a coordinated shot. The legacy elite
+search range and target-to-player distance fields do not filter this nearest-enemy rule. Spawn order affects only the
+entity-index tie break when squared distances are exactly equal.
 
 During setup, the desired position is behind the projectile relative to the live player, on the elite's movement plane.
 `ElitePunchSystem` runs after `EnemyChaseSystem` and before `EnemyMovementSystem`, making its `DesiredMovement` override
@@ -217,6 +215,20 @@ reservations are an authored policy. Restart and pooling reset attack state, ran
 state, and reservations, while wave-owned destruction continues to remove the entire old generation. Elite tier gating is
 unchanged, so elites remain damageable and knockback-responsive but never enter `Launched`; normal replenishment remains
 owned by the existing wave counters.
+
+`EliteCrowdSupportSystem` runs after elite target selection and before movement integration. For each active elite, its
+selected projectile (or the closest active normal before selection) overrides ordinary chase intent with zero requested
+speed. This stationary projectile anchors the setup while the elite alone repositions behind it, avoiding a mutual pursuit
+that reads as chasing. Other active normal enemies in the finite projectile-to-player corridor override chase intent with
+lateral movement toward the nearest side.
+Launched, recovering, defeated, disabled, and pooled enemies are excluded. When several elites are active, each normal
+supports its nearest active elite with entity index as the deterministic equal-distance tie break. The support layer only
+writes `DesiredMovement`; physics velocity remains owned by `EnemyMovementSystem`.
+
+After executing a punch, `ElitePunchSystem` clears the launched target and retains the authored cooldown. During that
+cooldown it continuously finds the next closest eligible active normal and uses the same behind-projectile destination and
+arrival-speed calculation as setup. It does not reserve or punch that enemy until cooldown ends. This prevents ordinary
+player-chase intent from visually interrupting the coordinated sequence between consecutive shots.
 
 ## Elite Enemy And Elite-Gated Waves
 
