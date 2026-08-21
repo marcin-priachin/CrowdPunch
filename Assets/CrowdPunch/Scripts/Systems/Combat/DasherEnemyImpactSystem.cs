@@ -96,7 +96,11 @@ namespace CrowdPunch.Systems.Combat
 
             if (enemyTiers.HasComponent(target) && EnemyLaunchTransition.IsLaunchable(enemyTiers[target]))
             {
-                EnemyLaunchTransition.Begin(ref targetLaunch, EnemyLaunchCause.EnemyCollision, damage);
+                EnemyLaunchTransition.Begin(
+                    ref targetLaunch,
+                    EnemyLaunchCause.EnemyCollision,
+                    damage,
+                    launches[source].Owner);
                 launches[target] = targetLaunch;
             }
             if (damage > 0f)

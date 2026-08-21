@@ -19,6 +19,13 @@ namespace CrowdPunch.Components
         ElitePunch
     }
 
+    public enum EnemyLaunchOwner : byte
+    {
+        None,
+        Player,
+        Enemy
+    }
+
     /// <summary>
     /// ECS-owned enemy launch lifecycle. The cause and count are retained for development inspection.
     /// </summary>
@@ -26,11 +33,13 @@ namespace CrowdPunch.Components
     {
         public EnemyLaunchPhase Phase;
         public EnemyLaunchCause LastCause;
+        public EnemyLaunchOwner Owner;
         public float BelowUsefulMomentumSeconds;
         public float RecoverySecondsRemaining;
         public uint LaunchSequence;
         public float LaunchDamage;
         public uint PropagatedLaunchCount;
         public float LastPropagationImpulse;
+        public uint PlayerImpactLaunchSequence;
     }
 }

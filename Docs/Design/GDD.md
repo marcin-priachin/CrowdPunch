@@ -227,6 +227,12 @@ Status: Must
 
 A `Launched` enemy remains a valid player-punch target even at zero health while defeat is deferred. A living `Recovering` enemy also remains valid. A new punch starts a new launch sequence and replaces the prior launch's cause, damage, recovery timing, and propagation inspection data with the new punch data. Zero-health enemies in any phase other than `Launched` remain ineligible.
 
+### COMBAT-015 — Enemy-Owned Launched Bodies
+
+Status: Must
+
+A body launched by an enemy can damage the player as a physical projectile. It uses the same originating launch damage, minimum impact-impulse threshold, impulse-scaled damage multiplier and cap, and once-per-continuous-source-launch rule used when a launched body damages an ordinary enemy. Enemy ownership propagates through qualifying enemy-enemy launch collisions. A player punch on any launched body begins a new player-owned launch sequence and removes this launched-body threat to the player, including from later propagation in that sequence. Independent rules such as explosions remain independently capable of damaging the player.
+
 ## Effects And Combinations
 
 ### EFFECT-001 — Collision Propagation

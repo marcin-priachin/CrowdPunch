@@ -139,7 +139,8 @@ namespace CrowdPunch.Systems.Combat
                 EnemyLaunchTransition.Begin(
                     ref targetState,
                     EnemyLaunchCause.EnemyCollision,
-                    sourceState.LaunchDamage);
+                    sourceState.LaunchDamage,
+                    sourceState.Owner);
                 targetState.PropagatedLaunchCount++;
                 targetState.LastPropagationImpulse = estimatedImpulse;
                 LaunchStateLookup[target] = targetState;
@@ -165,12 +166,16 @@ namespace CrowdPunch.Systems.Combat
                     }
                 }
 
-                float launchDamage = math.max(0f, LaunchStateLookup[source].LaunchDamage);
-                float damageMultiplier = math.min(
-                    MaximumDamageMultiplier,
-                    BaseDamageMultiplier
-                    + (estimatedImpulse - MinimumDamageImpulse) * DamageMultiplierPerExcessImpulse);
-                float damage = launchDamage * damageMultiplier;
+                float damage = EnemyCollisionDamage.Calculate(
+                    LaunchStateLookup[source].LaunchDamage,
+                    estimatedImpulse,
+                    new EnemyLaunchSettings
+                    {
+                        MinimumDamageImpulse = MinimumDamageImpulse,
+                        BaseCollisionDamageMultiplier = BaseDamageMultiplier,
+                        DamageMultiplierPerExcessImpulse = DamageMultiplierPerExcessImpulse,
+                        MaximumCollisionDamageMultiplier = MaximumDamageMultiplier
+                    });
                 if (damage <= 0f)
                 {
                     return;

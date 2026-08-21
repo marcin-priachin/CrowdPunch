@@ -20,8 +20,19 @@ namespace CrowdPunch.Systems.Combat
 
         public static void Begin(ref EnemyLaunchState state, EnemyLaunchCause cause, float launchDamage)
         {
+            EnemyLaunchOwner owner = EnemyLaunchOwnership.FromCause(cause);
+            Begin(ref state, cause, launchDamage, owner);
+        }
+
+        public static void Begin(
+            ref EnemyLaunchState state,
+            EnemyLaunchCause cause,
+            float launchDamage,
+            EnemyLaunchOwner owner)
+        {
             state.Phase = EnemyLaunchPhase.Launched;
             state.LastCause = cause;
+            state.Owner = owner;
             state.BelowUsefulMomentumSeconds = 0f;
             state.RecoverySecondsRemaining = 0f;
             state.LaunchSequence++;
