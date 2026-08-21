@@ -51,5 +51,57 @@ namespace CrowdPunch.Tests
                 LaunchedEnemyPlayerImpactSystem.EstimateImpactImpulse(new float3(4f, 0f, 0f), 0.5f),
                 Is.EqualTo(8f).Within(0.0001f));
         }
+
+        [Test]
+        public void RepunchReplacesExistingLinearAndAngularVelocity()
+        {
+            Unity.Physics.PhysicsVelocity velocity = new Unity.Physics.PhysicsVelocity
+            {
+                Linear = new float3(-12f, 3f, 1f),
+                Angular = new float3(1f, 2f, 3f)
+            };
+
+            EnemyLaunchVelocity.ResetForPlayerPunchReplacement(
+                ref velocity,
+                EnemyLaunchPhase.Launched,
+                EnemyLaunchCause.PlayerPunch);
+
+            Assert.AreEqual(float3.zero, velocity.Linear);
+            Assert.AreEqual(float3.zero, velocity.Angular);
+        }
+
+        [Test]
+        public void FirstPunchDoesNotReplaceActiveEnemyVelocity()
+        {
+            Unity.Physics.PhysicsVelocity velocity = new Unity.Physics.PhysicsVelocity
+            {
+                Linear = new float3(1f, 0f, 0f),
+                Angular = new float3(0f, 1f, 0f)
+            };
+
+            EnemyLaunchVelocity.ResetForPlayerPunchReplacement(
+                ref velocity,
+                EnemyLaunchPhase.Active,
+                EnemyLaunchCause.PlayerPunch);
+
+            Assert.AreEqual(new float3(1f, 0f, 0f), velocity.Linear);
+            Assert.AreEqual(new float3(0f, 1f, 0f), velocity.Angular);
+        }
+
+        [Test]
+        public void EnemyRepunchDoesNotUsePlayerReplacementRule()
+        {
+            Unity.Physics.PhysicsVelocity velocity = new Unity.Physics.PhysicsVelocity
+            {
+                Linear = new float3(1f, 0f, 0f)
+            };
+
+            EnemyLaunchVelocity.ResetForPlayerPunchReplacement(
+                ref velocity,
+                EnemyLaunchPhase.Launched,
+                EnemyLaunchCause.ElitePunch);
+
+            Assert.AreEqual(new float3(1f, 0f, 0f), velocity.Linear);
+        }
     }
 }

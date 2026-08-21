@@ -49,14 +49,26 @@ namespace CrowdPunch.Systems.Combat
             float3 forward = math.normalizesafe(punch.Direction);
             float3 positionDirection = math.normalizesafe(position - punch.Origin, forward);
             float3 impulseDirection = math.normalizesafe(math.lerp(forward, positionDirection, math.saturate(punch.PositionWeight)), positionDirection);
+            if (manager.HasComponent<PhysicsVelocity>(target))
+            {
+                PhysicsVelocity replacementVelocity = manager.GetComponentData<PhysicsVelocity>(target);
+                EnemyLaunchVelocity.ResetForPlayerPunchReplacement(
+                    ref replacementVelocity,
+                    launch.Phase,
+                    punch.Cause);
+                manager.SetComponentData(target, replacementVelocity);
+            }
             if (manager.HasComponent<DasherState>(target))
             {
                 DasherState dash = manager.GetComponentData<DasherState>(target);
                 dash.Phase = DasherPhase.Positioning; dash.SecondsRemaining = 0f; dash.LockedDirection = impulseDirection;
                 dash.LockedRotation = quaternion.LookRotationSafe(impulseDirection, math.up()); dash.HasLockedRotation = 1;
                 manager.SetComponentData(target, dash);
-                PhysicsVelocity velocity = manager.GetComponentData<PhysicsVelocity>(target); velocity.Linear.xz = float2.zero;
-                manager.SetComponentData(target, velocity);
+                if (manager.HasComponent<PhysicsVelocity>(target))
+                {
+                    PhysicsVelocity velocity = manager.GetComponentData<PhysicsVelocity>(target); velocity.Linear.xz = float2.zero;
+                    manager.SetComponentData(target, velocity);
+                }
             }
             manager.SetComponentData(target, new ExternalImpulse { Value = impulseDirection * math.max(0f, punch.Strength) });
             manager.SetComponentEnabled<ExternalImpulse>(target, true);

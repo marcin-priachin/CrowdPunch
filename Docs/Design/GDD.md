@@ -225,7 +225,7 @@ Active enemies continuously try to maintain local separation from nearby active 
 
 Status: Must
 
-A `Launched` enemy remains a valid player-punch target even at zero health while defeat is deferred. A living `Recovering` enemy also remains valid. A new punch starts a new launch sequence and replaces the prior launch's cause, damage, recovery timing, and propagation inspection data with the new punch data. Zero-health enemies in any phase other than `Launched` remain ineligible.
+A `Launched` enemy remains a valid player-punch target even at zero health while defeat is deferred. A living `Recovering` enemy also remains valid. A new punch starts a new launch sequence and replaces the prior launch's cause, damage, recovery timing, propagation inspection data, linear velocity, and angular velocity with the new punch data and impulse. Existing momentum must not add to or cancel the re-punch; the result begins from rest as if the enemy were stationary. Zero-health enemies in any phase other than `Launched` remain ineligible.
 
 ### COMBAT-015 — Enemy-Owned Launched Bodies
 
