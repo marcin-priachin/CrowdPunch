@@ -60,7 +60,7 @@ What camera angle, distance, and dynamic behavior best preserve positioning accu
 
 ### OQ-017 — Input Targets
 
-Which controller and keyboard/mouse schemes are primary, and what aim assistance is appropriate for each?
+Which controller and keyboard/mouse schemes are primary, and should the accepted range-based punch aim assistance vary between them?
 
 ### OQ-018 — Difficulty Scaling
 
@@ -89,6 +89,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-08-22 — Punch Aim Assistance
+
+Decision: For every enemy affected by a player punch, launch and trajectory preview use a persistent ECS-owned target lock. A ray from the source enemy along player facing selects or replaces the lock; misses retain it. If no ray target exists when aiming begins, the smallest-angle candidate within range supplies the initial lock. Leaving the punch volume clears the lock. Aim assistance does not alter the punch hit volume and a zero range disables it. Input-specific tuning remains unresolved under OQ-017.
+
+Rationale: Launches remain deliberate and their previews remain honest while forgiving small directional aiming errors in dense crowds.
+
+GDD rules: PLAYER-003, PLAYER-004
 
 ### 2026-08-20 — OQ-012
 

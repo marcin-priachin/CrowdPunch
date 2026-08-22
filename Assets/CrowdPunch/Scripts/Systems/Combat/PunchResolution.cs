@@ -9,9 +9,10 @@ namespace CrowdPunch.Systems.Combat
     internal struct PunchSpecification
     {
         public float3 Origin, Direction;
+        public float3 AssistedLaunchDirection;
         public float Range, Radius, Strength, Damage, PositionWeight;
         public EnemyLaunchCause Cause;
-        public byte AffectActive, AffectRecovering, AffectLaunched, ApplyDamage;
+        public byte AffectActive, AffectRecovering, AffectLaunched, ApplyDamage, HasAssistedLaunchDirection;
     }
 
     internal static class PunchResolution
@@ -48,7 +49,9 @@ namespace CrowdPunch.Systems.Combat
             if (!IsEligible(launch, health, punch) || !Contains(position, punch)) return false;
             float3 forward = math.normalizesafe(punch.Direction);
             float3 positionDirection = math.normalizesafe(position - punch.Origin, forward);
-            float3 impulseDirection = math.normalizesafe(math.lerp(forward, positionDirection, math.saturate(punch.PositionWeight)), positionDirection);
+            float3 impulseDirection = punch.HasAssistedLaunchDirection != 0
+                ? math.normalizesafe(punch.AssistedLaunchDirection, positionDirection)
+                : math.normalizesafe(math.lerp(forward, positionDirection, math.saturate(punch.PositionWeight)), positionDirection);
             if (manager.HasComponent<PhysicsVelocity>(target))
             {
                 PhysicsVelocity replacementVelocity = manager.GetComponentData<PhysicsVelocity>(target);

@@ -110,7 +110,8 @@ namespace CrowdPunch.Mono.Player
                 settings.Radius,
                 settings.Range,
                 trajectoryPreview.LineLength,
-                settings.DirectionPositionWeight);
+                settings.DirectionPositionWeight,
+                settings.AimAssistRange);
         }
 
         public void RequestPunch()

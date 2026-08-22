@@ -41,10 +41,11 @@ namespace CrowdPunch.Systems.Presentation
             float positionWeight = math.saturate(bridge.PunchPreviewPositionWeight);
 
             foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState, RefRO<Health> health,
-                         RefRO<EnemyTier> tier) in
+                         RefRO<EnemyTier> tier, Entity enemy) in
                      SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>, RefRO<EnemyTier>>()
                          .WithAll<Enemy>()
-                         .WithNone<RespawnRequest>())
+                         .WithNone<RespawnRequest>()
+                         .WithEntityAccess())
             {
                 if (!EnemyLaunchTransition.IsLaunchable(tier.ValueRO)
                     || !EnemyLaunchTransition.CanReceivePlayerPunch(launchState.ValueRO, health.ValueRO))
@@ -68,9 +69,13 @@ namespace CrowdPunch.Systems.Presentation
                 }
 
                 float3 positionDirection = math.normalizesafe(toEnemy, punchDirection);
-                float3 launchDirection = math.normalizesafe(
-                    math.lerp(punchDirection, positionDirection, positionWeight),
-                    positionDirection);
+                float3 launchDirection;
+                if (!PunchAimAssist.TryGetLockedDirection(
+                        state.EntityManager, enemy, enemyPosition, out launchDirection))
+                {
+                    launchDirection = math.normalizesafe(
+                        math.lerp(punchDirection, positionDirection, positionWeight), positionDirection);
+                }
                 bridge.AddTrajectoryPreview(
                     enemyPosition,
                     enemyPosition + launchDirection * bridge.PunchPreviewLength);

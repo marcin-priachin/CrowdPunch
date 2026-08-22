@@ -14,6 +14,7 @@ namespace CrowdPunch.Systems.Combat
     [BurstCompile]
     [UpdateInGroup(typeof(GamePrePhysicsGroup))]
     [UpdateAfter(typeof(InputBridge.PlayerBridgeSystem))]
+    [UpdateAfter(typeof(PunchAimAssistSystem))]
     public partial struct PunchDetectionSystem : ISystem
     {
         [BurstCompile]
@@ -42,13 +43,22 @@ namespace CrowdPunch.Systems.Combat
                 Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1, AffectRecovering = 1,
                 AffectLaunched = 1, ApplyDamage = 1
             };
-            foreach ((RefRO<EnemyTier> tier, Entity enemy) in
-                     SystemAPI.Query<RefRO<EnemyTier>>()
+            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState,
+                         RefRO<Health> health, RefRO<EnemyTier> tier, Entity enemy) in
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>, RefRO<EnemyTier>>()
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
                 PunchSpecification targetPunch = punch;
+                if (PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, punch)
+                    && PunchResolution.Contains(transform.ValueRO.Position, punch)
+                    && PunchAimAssist.TryGetLockedDirection(
+                        state.EntityManager, enemy, transform.ValueRO.Position, out float3 assistedDirection))
+                {
+                    targetPunch.AssistedLaunchDirection = assistedDirection;
+                    targetPunch.HasAssistedLaunchDirection = 1;
+                }
                 if (tier.ValueRO.Value == EnemyCombatTier.Elite)
                     targetPunch.Strength *= math.max(0f, punchRequest.EliteKnockbackMultiplier);
                 PunchResolution.TryApply(state.EntityManager, enemy, targetPunch);

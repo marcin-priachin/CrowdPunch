@@ -104,6 +104,8 @@ Status: Must
 
 When an attack is committed, the player should not be uncertain about its initial launch direction. Later deviations caused by real collisions are desirable physical outcomes, not aiming ambiguity.
 
+Player punches use configurable range-based aim assistance. When an enemy first enters the live punch volume, cast a ray from that enemy along the player's facing direction for the configured assist range. A ray-hit enemy becomes that source enemy's locked launch target; later valid ray-hit enemies replace the lock, while a ray miss retains it. If the initial ray has no enemy target, use the eligible enemy within range with the smallest planar angle from the facing direction as the initial lock. The lock clears when the source leaves the punch volume. Launch and preview both point from the source toward its current locked target. An assist range of zero disables this behavior. Aim assistance changes launch direction only and does not expand or redirect the punch volume.
+
 ### PLAYER-005 — Punch During Dash
 
 Status: Must

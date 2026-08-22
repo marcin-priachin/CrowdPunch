@@ -19,6 +19,7 @@ namespace CrowdPunch.Bakers
             AddComponent<EnemySeparationDistance>(entity);
             AddComponent<EnemyArchetypeSeparationDistances>(entity);
             AddComponent<DesiredMovement>(entity);
+            AddComponent<PunchAimAssistTarget>(entity);
             AddComponent(entity, new EnemyLaunchState
             {
                 Phase = EnemyLaunchPhase.Active
