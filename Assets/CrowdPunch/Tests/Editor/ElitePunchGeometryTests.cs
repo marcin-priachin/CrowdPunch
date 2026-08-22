@@ -90,5 +90,50 @@ namespace CrowdPunch.Tests
                 1.5f,
                 out _));
         }
+
+        [Test]
+        public void ProjectileMovesBeforeWaitingAtClearStagingPosition()
+        {
+            DesiredMovement moving = EliteCrowdSupportSystem.GetStagingMovement(
+                float3.zero,
+                new float3(2f, 0f, 0f),
+                5f,
+                0.25f);
+            DesiredMovement waiting = EliteCrowdSupportSystem.GetStagingMovement(
+                new float3(1.9f, 0f, 0f),
+                new float3(2f, 0f, 0f),
+                5f,
+                0.25f);
+
+            Assert.Greater(moving.Speed, 0f);
+            Assert.Greater(moving.Direction.x, 0f);
+            Assert.AreEqual(0f, waiting.Speed);
+        }
+
+        [Test]
+        public void EliteRoutesAroundTargetWhenDirectApproachCrossesIt()
+        {
+            float3 direction = ElitePunchSystem.GetCollisionAvoidingApproachDirection(
+                new float3(4f, 0f, 0f),
+                float3.zero,
+                new float3(-1f, 0f, 0f),
+                1f);
+
+            Assert.Less(direction.x, 0f);
+            Assert.That(math.abs(direction.z), Is.GreaterThan(0.01f));
+        }
+
+        [Test]
+        public void EliteUsesDirectApproachWhenTargetDoesNotBlockIt()
+        {
+            float3 direction = ElitePunchSystem.GetCollisionAvoidingApproachDirection(
+                new float3(-4f, 0f, 0f),
+                float3.zero,
+                new float3(-1f, 0f, 0f),
+                1f);
+
+            Assert.That(direction.x, Is.EqualTo(1f).Within(0.0001f));
+            Assert.That(direction.z, Is.EqualTo(0f).Within(0.0001f));
+        }
     }
 }

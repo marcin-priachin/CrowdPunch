@@ -3,6 +3,7 @@ using CrowdPunch.Systems.Groups;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Physics;
 using Unity.Transforms;
 
 namespace CrowdPunch.Systems.AI
@@ -75,6 +76,14 @@ namespace CrowdPunch.Systems.AI
                 }
 
                 float3 projectilePosition = EntityManager.GetComponentData<LocalTransform>(projectile).Position;
+                float3 stagingPosition = FindStagingPosition(
+                    elite.Entity,
+                    projectile,
+                    elite.Position,
+                    projectilePosition,
+                    player.Position,
+                    elite.Settings,
+                    normalEnemies);
 
                 for (int index = 0; index < normalEnemies.Length; index++)
                 {
@@ -93,8 +102,17 @@ namespace CrowdPunch.Systems.AI
 
                     if (enemy == projectile)
                     {
-                        // The projectile anchors the setup while the elite alone closes the gap behind it.
-                        movement = default;
+                        movement = GetStagingMovement(
+                            transform.Position,
+                            stagingPosition,
+                            movementSettings.MoveSpeed,
+                            elite.Settings.PositionTolerance);
+                        ElitePunchReservation reservation = EntityManager.GetComponentData<ElitePunchReservation>(enemy);
+                        if (reservation.Owner == elite.Entity)
+                        {
+                            reservation.IsStaged = movement.Speed <= 0f ? (byte)1 : (byte)0;
+                            EntityManager.SetComponentData(enemy, reservation);
+                        }
                     }
                     else if (TryGetCorridorExitDirection(
                                  transform.Position,
@@ -157,6 +175,184 @@ namespace CrowdPunch.Systems.AI
                 && EntityManager.GetComponentData<EnemyLaunchState>(entity).Phase == EnemyLaunchPhase.Active
                 && (!EntityManager.HasComponent<RespawnRequest>(entity)
                     || !EntityManager.IsComponentEnabled<RespawnRequest>(entity));
+        }
+
+        private float3 FindStagingPosition(
+            Entity elite,
+            Entity projectile,
+            float3 elitePosition,
+            float3 projectilePosition,
+            float3 playerPosition,
+            ElitePunchSettings settings,
+            NativeArray<Entity> enemies)
+        {
+            float clearance = math.max(0.1f, settings.CrowdCorridorRadius);
+            if (IsApproachLaneClear(
+                    elite,
+                    projectile,
+                    elitePosition,
+                    projectilePosition,
+                    playerPosition,
+                    clearance,
+                    settings.DesiredPunchDistance,
+                    enemies))
+            {
+                return projectilePosition;
+            }
+
+            float3 shotDirection = ElitePunchSystem.HorizontalDirection(projectilePosition, playerPosition);
+            float3 perpendicular = new float3(-shotDirection.z, 0f, shotDirection.x);
+            for (int ring = 1; ring <= 2; ring++)
+            {
+                float distance = clearance * ring;
+                for (int index = 0; index < 8; index++)
+                {
+                    float3 direction = GetStagingSampleDirection(index, shotDirection, perpendicular);
+                    float3 candidate = projectilePosition + direction * distance;
+                    candidate.y = projectilePosition.y;
+                    if (math.distancesq(candidate.xz, elitePosition.xz) < clearance * clearance
+                        || HasWorldObstruction(projectilePosition, candidate)
+                        || !IsApproachLaneClear(
+                            elite,
+                            projectile,
+                            elitePosition,
+                            candidate,
+                            playerPosition,
+                            clearance,
+                            settings.DesiredPunchDistance,
+                            enemies))
+                    {
+                        continue;
+                    }
+
+                    return candidate;
+                }
+            }
+
+            return projectilePosition;
+        }
+
+        private bool IsApproachLaneClear(
+            Entity elite,
+            Entity projectile,
+            float3 elitePosition,
+            float3 projectilePosition,
+            float3 playerPosition,
+            float clearance,
+            float desiredPunchDistance,
+            NativeArray<Entity> enemies)
+        {
+            float3 desiredElitePosition = ElitePunchSystem.DesiredPosition(
+                projectilePosition,
+                playerPosition,
+                desiredPunchDistance);
+            desiredElitePosition.y = elitePosition.y;
+            if (HasWorldObstruction(elitePosition, desiredElitePosition))
+            {
+                return false;
+            }
+
+            float clearanceSq = clearance * clearance;
+            for (int index = 0; index < enemies.Length; index++)
+            {
+                Entity blocker = enemies[index];
+                if (blocker == elite || blocker == projectile || !EntityManager.Exists(blocker)
+                    || EntityManager.HasComponent<RespawnRequest>(blocker)
+                    && EntityManager.IsComponentEnabled<RespawnRequest>(blocker))
+                {
+                    continue;
+                }
+
+                EnemyLaunchState blockerState = EntityManager.GetComponentData<EnemyLaunchState>(blocker);
+                if (blockerState.Phase == EnemyLaunchPhase.Defeated)
+                {
+                    continue;
+                }
+
+                float3 blockerPosition = EntityManager.GetComponentData<LocalTransform>(blocker).Position;
+                if (math.distancesq(blockerPosition.xz, projectilePosition.xz) < clearanceSq
+                    || DistanceSqToSegment(blockerPosition, elitePosition, desiredElitePosition) < clearanceSq)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool HasWorldObstruction(float3 start, float3 end)
+        {
+            if (math.distancesq(start, end) <= 0.0001f)
+            {
+                return false;
+            }
+
+            if (!SystemAPI.HasSingleton<PhysicsWorldSingleton>())
+            {
+                return false;
+            }
+
+            RaycastInput input = new RaycastInput
+            {
+                Start = start,
+                End = end,
+                Filter = new CollisionFilter
+                {
+                    BelongsTo = uint.MaxValue,
+                    CollidesWith = ~(1u << 7),
+                    GroupIndex = 0
+                }
+            };
+            return SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld.CastRay(input);
+        }
+
+        public static DesiredMovement GetStagingMovement(
+            float3 position,
+            float3 destination,
+            float moveSpeed,
+            float tolerance)
+        {
+            float3 offset = destination - position;
+            offset.y = 0f;
+            float distance = math.length(offset);
+            if (distance <= math.max(0f, tolerance))
+            {
+                return default;
+            }
+
+            return new DesiredMovement
+            {
+                Direction = offset / math.max(0.0001f, distance),
+                Speed = math.max(0f, moveSpeed)
+            };
+        }
+
+        public static float3 GetStagingSampleDirection(
+            int index,
+            float3 shotDirection,
+            float3 perpendicular)
+        {
+            switch (index)
+            {
+                case 0: return perpendicular;
+                case 1: return -perpendicular;
+                case 2: return math.normalizesafe(perpendicular + shotDirection);
+                case 3: return math.normalizesafe(-perpendicular + shotDirection);
+                case 4: return math.normalizesafe(perpendicular - shotDirection);
+                case 5: return math.normalizesafe(-perpendicular - shotDirection);
+                case 6: return shotDirection;
+                default: return -shotDirection;
+            }
+        }
+
+        public static float DistanceSqToSegment(float3 point, float3 start, float3 end)
+        {
+            float2 segment = end.xz - start.xz;
+            float lengthSq = math.lengthsq(segment);
+            float time = lengthSq <= 0.0001f
+                ? 0f
+                : math.saturate(math.dot(point.xz - start.xz, segment) / lengthSq);
+            return math.distancesq(point.xz, start.xz + segment * time);
         }
 
         private static int GetClosestEliteIndex(float3 normalPosition, NativeList<SupportElite> elites)

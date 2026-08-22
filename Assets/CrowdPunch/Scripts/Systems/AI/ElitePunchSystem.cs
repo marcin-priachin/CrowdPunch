@@ -86,7 +86,11 @@ namespace CrowdPunch.Systems.AI
                         float3 toCooldownDestination = cooldownDestination - transform.ValueRO.Position;
                         toCooldownDestination.y = 0f;
                         float cooldownSetupDistance = math.length(toCooldownDestination);
-                        movement.ValueRW.Direction = math.normalizesafe(toCooldownDestination);
+                        movement.ValueRW.Direction = GetCollisionAvoidingApproachDirection(
+                            transform.ValueRO.Position,
+                            nextTransform.Position,
+                            cooldownDestination,
+                            math.max(settings.ValueRO.PunchRadius, settings.ValueRO.PositionTolerance));
                         movement.ValueRW.Speed = CalculateSetupSpeed(
                             cooldownSetupDistance,
                             settings.ValueRO.PositionTolerance,
@@ -112,6 +116,12 @@ namespace CrowdPunch.Systems.AI
                 if (!TryValidateTarget(elite, settings.ValueRO, ref state.ValueRW, out LocalTransform targetTransform))
                 {
                     Cancel(elite, ref state.ValueRW); state.ValueRW.Phase = ElitePunchPhase.SelectingTarget; continue;
+                }
+                ElitePunchReservation targetReservation = EntityManager.GetComponentData<ElitePunchReservation>(state.ValueRO.Target);
+                if (targetReservation.Owner == elite && targetReservation.IsStaged == 0)
+                {
+                    movement.ValueRW = default;
+                    continue;
                 }
                 state.ValueRW.SetupSeconds += dt;
                 state.ValueRW.RetargetSeconds -= dt;
@@ -148,7 +158,11 @@ namespace CrowdPunch.Systems.AI
                 float3 desired = DesiredPosition(targetTransform.Position, player.Position, settings.ValueRO.DesiredPunchDistance);
                 desired.y = transform.ValueRO.Position.y;
                 float3 toDesired = desired - transform.ValueRO.Position; toDesired.y = 0f;
-                float3 setupDirection = math.normalizesafe(toDesired);
+                float3 setupDirection = GetCollisionAvoidingApproachDirection(
+                    transform.ValueRO.Position,
+                    targetTransform.Position,
+                    desired,
+                    math.max(settings.ValueRO.PunchRadius, settings.ValueRO.PositionTolerance));
                 movement.ValueRW.Direction = settings.ValueRO.ApplySeparationDuringSetup != 0
                     ? math.normalizesafe(setupDirection + movement.ValueRO.Direction * 0.35f, setupDirection)
                     : setupDirection;
@@ -277,6 +291,42 @@ namespace CrowdPunch.Systems.AI
             float arrivalSpeed = math.sqrt(2f * math.max(0f, brakingAcceleration) * remainingDistance);
             float requestedSpeed = math.max(arrivalSpeed, math.max(0f, minimumCatchupSpeed));
             return math.min(math.max(0f, maximumSpeed), requestedSpeed);
+        }
+        public static float3 GetCollisionAvoidingApproachDirection(
+            float3 elitePosition,
+            float3 targetPosition,
+            float3 desiredPosition,
+            float clearance)
+        {
+            float3 direct = desiredPosition - elitePosition;
+            direct.y = 0f;
+            float directLengthSq = math.lengthsq(direct);
+            if (directLengthSq <= 0.0001f)
+            {
+                return float3.zero;
+            }
+
+            float3 toTarget = targetPosition - elitePosition;
+            toTarget.y = 0f;
+            float projection = math.dot(toTarget, direct) / directLengthSq;
+            float3 closest = elitePosition + direct * math.saturate(projection);
+            float obstructionDistanceSq = math.distancesq(closest.xz, targetPosition.xz);
+            float clampedClearance = math.max(0f, clearance);
+            if (projection <= 0f || projection >= 1f
+                || obstructionDistanceSq >= clampedClearance * clampedClearance)
+            {
+                return math.normalizesafe(direct);
+            }
+
+            float3 targetToElite = elitePosition - targetPosition;
+            targetToElite.y = 0f;
+            float3 perpendicular = math.normalizesafe(
+                new float3(-direct.z, 0f, direct.x),
+                new float3(1f, 0f, 0f));
+            float side = math.dot(targetToElite, perpendicular) < 0f ? -1f : 1f;
+            float3 waypoint = targetPosition + perpendicular * side * clampedClearance;
+            waypoint.y = elitePosition.y;
+            return math.normalizesafe(waypoint - elitePosition, math.normalizesafe(direct));
         }
         public static bool CanSelectTarget(EnemyLaunchState launch, Health health, ElitePunchSettings settings)
         {

@@ -44,5 +44,6 @@ namespace CrowdPunch.Components
     {
         public Entity Owner;
         public uint OwnerAttackSequence;
+        public byte IsStaged;
     }
 }

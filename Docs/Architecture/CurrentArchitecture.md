@@ -219,10 +219,15 @@ unchanged, so elites remain damageable and knockback-responsive but never enter 
 owned by the existing wave counters.
 
 `EliteCrowdSupportSystem` runs after elite target selection and before movement integration. For each active elite, its
-selected projectile (or the closest active normal before selection) overrides ordinary chase intent with zero requested
-speed. This stationary projectile anchors the setup while the elite alone repositions behind it, avoiding a mutual pursuit
-that reads as chasing. Other active normal enemies in the finite projectile-to-player corridor override chase intent with
-lateral movement toward the nearest side.
+selected projectile (or the closest active normal before selection) first tests its current location as a staging point.
+The test excludes static-world ray obstruction, occupied target space, and non-defeated enemies inside the finite route
+from the elite to its eventual behind-projectile position. If blocked, the projectile checks two deterministic rings of
+eight nearby candidates, preferring lateral displacement, and writes movement toward the first clear candidate. It requests
+zero speed only when its current approach lane is clear. The target reservation publishes `IsStaged`; while it is false,
+`ElitePunchSystem` requests zero elite movement and does not spend setup timeout, preventing two moving goals from chasing
+one another. This avoids per-frame allocations and adds no tuning: sampling and
+clearance reuse the elite's existing crowd-corridor radius and position tolerance. Other active normal enemies in the finite
+projectile-to-player corridor override chase intent with lateral movement toward the nearest side.
 Launched, recovering, defeated, disabled, and pooled enemies are excluded. When several elites are active, each normal
 supports its nearest active elite with entity index as the deterministic equal-distance tie break. The support layer only
 writes `DesiredMovement`; physics velocity remains owned by `EnemyMovementSystem`.
@@ -231,6 +236,11 @@ After executing a punch, `ElitePunchSystem` clears the launched target and retai
 cooldown it continuously finds the next closest eligible active normal and uses the same behind-projectile destination and
 arrival-speed calculation as setup. It does not reserve or punch that enemy until cooldown ends. This prevents ordinary
 player-chase intent from visually interrupting the coordinated sequence between consecutive shots.
+
+Both cooldown approach and reserved-target setup pass their desired direction through the same collision-avoidance helper.
+When the direct segment to the behind-projectile destination crosses the target's punch-radius clearance, the helper chooses
+a deterministic side waypoint around the target; once the target no longer blocks that segment, movement returns directly
+to the desired position. Unity Physics remains responsible for actual collision response.
 
 ## Elite Enemy And Elite-Gated Waves
 
