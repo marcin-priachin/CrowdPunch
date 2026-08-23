@@ -90,6 +90,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-08-23 — Propagated Launch Aim Correction
+
+Decision: An enemy newly launched by ordinary enemy-to-enemy propagation corrects its solver-produced horizontal direction toward the smallest-angle living active or recovering enemy inside a configurable radius. Correction preserves horizontal speed and vertical velocity, and a zero radius disables it.
+
+Rationale: Physical collision transfer remains the source of launch speed while modest directional correction makes intended crowd chains more reliable.
+
+GDD rules: COMBAT-003
+
 ### 2026-08-22 — Punch Aim Assistance
 
 Decision: For every enemy affected by a player punch, launch and trajectory preview use a persistent ECS-owned target lock. A ray from the source enemy along player facing selects or replaces the lock; misses retain it. If no ray target exists when aiming begins, the smallest-angle candidate within range supplies the initial lock. Leaving the punch volume clears the lock. Aim assistance does not alter the punch hit volume and a zero range disables it. Input-specific tuning remains unresolved under OQ-017.

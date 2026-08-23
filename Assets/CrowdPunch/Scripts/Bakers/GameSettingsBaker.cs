@@ -29,6 +29,7 @@ namespace CrowdPunch.Bakers
             AddComponent(entity, new EnemyLaunchSettings
             {
                 MinimumPropagationImpulse = authoring.Settings.MinimumPropagationImpulse,
+                PropagationAimCorrectionRadius = authoring.Settings.PropagationAimCorrectionRadius,
                 MinimumDamageImpulse = authoring.Settings.MinimumDamageImpulse,
                 BaseCollisionDamageMultiplier = authoring.Settings.BaseCollisionDamageMultiplier,
                 DamageMultiplierPerExcessImpulse = authoring.Settings.DamageMultiplierPerExcessImpulse,

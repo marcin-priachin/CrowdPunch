@@ -22,10 +22,20 @@ MonoBehaviour:
     Weight: 0.1
   - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
     Weight: 0.1
+  eliteEnemies: []
   spawnRectangles:
-  - Center: {x: 0, y: 25, z: 0}
-    Width: 255
-    Depth: 255
+  - Center: {x: 140, y: 2, z: 0}
+    Width: 10
+    Depth: 270
+  - Center: {x: -140, y: 2, z: 0}
+    Width: 10
+    Depth: 270
+  - Center: {x: 0, y: 2, z: -140}
+    Width: 270
+    Depth: 10
+  - Center: {x: 0, y: 2, z: 140}
+    Width: 270
+    Depth: 10
   delayBeforeWave: 0.1
   duration: 10
   spawnMode: 0

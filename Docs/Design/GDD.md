@@ -217,6 +217,8 @@ Status: Must
 
 A sufficiently forceful collision from one `Launched` enemy into an `Active` or `Recovering` enemy deals damage scaled from the player punch damage that originated the launch chain. Solver-estimated impulse determines eligibility and increases the damage multiplier up to a cap. Launch propagation and damage use independent thresholds and outcomes. During one continuous source launch, a source-target pair may deal collision damage once, while that source may damage multiple different targets. Collisions between two already-launched enemies do not deal this damage. Propagated enemies inherit the originating punch damage, and propagation is established before collision damage is evaluated so lethal damage on the target follows deferred-defeat rules. Numerical thresholds and multipliers are provisional.
 
+When an enemy becomes `Launched` through ordinary enemy-to-enemy propagation, use its solver-produced horizontal velocity as the initial direction and search within the configured propagation aim-correction radius for a living `Active` or `Recovering` enemy. Rotate horizontal velocity toward the candidate with the smallest planar angle from that initial direction, preserving horizontal speed and vertical velocity. Distance and entity index resolve angular ties. The collision source and newly launched enemy are excluded. A radius of zero disables correction.
+
 ### COMBAT-013 — Active Enemy Separation
 
 Status: Must

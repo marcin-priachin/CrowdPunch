@@ -10,6 +10,8 @@ namespace CrowdPunch.Configuration
         [Header("Enemy Launch (Provisional)")]
         [Tooltip("Minimum solver-estimated contact impulse required for a launched enemy to launch another enemy.")]
         [SerializeField, Min(0f)] private float minimumPropagationImpulse = 1.5f;
+        [Tooltip("Radius around a newly propagated enemy searched for the smallest-angle follow-up target. Set to 0 to preserve its solver-produced direction.")]
+        [SerializeField, Min(0f)] private float propagationAimCorrectionRadius = 8f;
         [Tooltip("Minimum solver-estimated contact impulse required for a launched enemy to damage another enemy.")]
         [SerializeField, Min(0f)] private float minimumDamageImpulse = 2f;
         [Tooltip("Fraction of the originating punch damage dealt at the minimum damaging impulse.")]
@@ -22,6 +24,7 @@ namespace CrowdPunch.Configuration
 
         public bool StartRunning => startRunning;
         public float MinimumPropagationImpulse => minimumPropagationImpulse;
+        public float PropagationAimCorrectionRadius => propagationAimCorrectionRadius;
         public float MinimumDamageImpulse => minimumDamageImpulse;
         public float BaseCollisionDamageMultiplier => baseCollisionDamageMultiplier;
         public float DamageMultiplierPerExcessImpulse => damageMultiplierPerExcessImpulse;

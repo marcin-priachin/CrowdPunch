@@ -6,6 +6,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Physics.Systems;
+using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Combat
 {
@@ -30,6 +31,9 @@ namespace CrowdPunch.Systems.Combat
         public void OnUpdate(ref SystemState state)
         {
             EnemyLaunchSettings settings = SystemAPI.GetSingleton<EnemyLaunchSettings>();
+            EntityQuery correctionCandidateQuery = SystemAPI.QueryBuilder()
+                .WithAll<Enemy, LocalTransform, EnemyLaunchState, Health>()
+                .Build();
             EnemyCollisionJob job = new EnemyCollisionJob
             {
                 EnemyLookup = SystemAPI.GetComponentLookup<Enemy>(true),
@@ -40,8 +44,13 @@ namespace CrowdPunch.Systems.Combat
                 DasherSettingsLookup = SystemAPI.GetComponentLookup<DasherSettings>(true),
                 DasherStateLookup = SystemAPI.GetComponentLookup<DasherState>(true),
                 TierLookup = SystemAPI.GetComponentLookup<EnemyTier>(true),
+                TransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
+                HealthLookup = SystemAPI.GetComponentLookup<Health>(true),
+                VelocityLookup = SystemAPI.GetComponentLookup<PhysicsVelocity>(),
+                CorrectionCandidates = correctionCandidateQuery.ToEntityArray(Allocator.TempJob),
                 World = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
                 MinimumPropagationImpulse = math.max(0f, settings.MinimumPropagationImpulse),
+                PropagationAimCorrectionRadius = math.max(0f, settings.PropagationAimCorrectionRadius),
                 MinimumDamageImpulse = math.max(0f, settings.MinimumDamageImpulse),
                 BaseDamageMultiplier = math.max(0f, settings.BaseCollisionDamageMultiplier),
                 DamageMultiplierPerExcessImpulse = math.max(0f, settings.DamageMultiplierPerExcessImpulse),
@@ -62,8 +71,13 @@ namespace CrowdPunch.Systems.Combat
             [ReadOnly] public ComponentLookup<DasherSettings> DasherSettingsLookup;
             [ReadOnly] public ComponentLookup<DasherState> DasherStateLookup;
             [ReadOnly] public ComponentLookup<EnemyTier> TierLookup;
+            [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
+            [ReadOnly] public ComponentLookup<Health> HealthLookup;
+            public ComponentLookup<PhysicsVelocity> VelocityLookup;
+            [ReadOnly, DeallocateOnJobCompletion] public NativeArray<Entity> CorrectionCandidates;
             [ReadOnly] public PhysicsWorld World;
             public float MinimumPropagationImpulse;
+            public float PropagationAimCorrectionRadius;
             public float MinimumDamageImpulse;
             public float BaseDamageMultiplier;
             public float DamageMultiplierPerExcessImpulse;
@@ -144,6 +158,63 @@ namespace CrowdPunch.Systems.Combat
                 targetState.PropagatedLaunchCount++;
                 targetState.LastPropagationImpulse = estimatedImpulse;
                 LaunchStateLookup[target] = targetState;
+                CorrectPropagatedDirection(source, target);
+            }
+
+            private void CorrectPropagatedDirection(Entity source, Entity launchedTarget)
+            {
+                if (PropagationAimCorrectionRadius <= 0f
+                    || !VelocityLookup.HasComponent(launchedTarget)
+                    || !TransformLookup.HasComponent(launchedTarget)) return;
+
+                PhysicsVelocity velocity = VelocityLookup[launchedTarget];
+                float horizontalSpeed = math.length(velocity.Linear.xz);
+                if (horizontalSpeed <= 0.0001f) return;
+
+                float3 initialDirection = new float3(velocity.Linear.x, 0f, velocity.Linear.z) / horizontalSpeed;
+                float3 launchedPosition = TransformLookup[launchedTarget].Position;
+                float radiusSq = PropagationAimCorrectionRadius * PropagationAimCorrectionRadius;
+                Entity best = Entity.Null;
+                float bestDot = float.MinValue;
+                float bestDistanceSq = float.MaxValue;
+
+                for (int i = 0; i < CorrectionCandidates.Length; i++)
+                {
+                    Entity candidate = CorrectionCandidates[i];
+                    if (candidate == source || candidate == launchedTarget
+                        || IsUnavailable(candidate)
+                        || !LaunchStateLookup.HasComponent(candidate)
+                        || !TransformLookup.HasComponent(candidate)
+                        || !HealthLookup.HasComponent(candidate)) continue;
+
+                    EnemyLaunchState candidateLaunch = LaunchStateLookup[candidate];
+                    if ((candidateLaunch.Phase != EnemyLaunchPhase.Active
+                         && candidateLaunch.Phase != EnemyLaunchPhase.Recovering)
+                        || HealthLookup[candidate].Current <= 0f) continue;
+
+                    float3 offset = TransformLookup[candidate].Position - launchedPosition;
+                    offset.y = 0f;
+                    float distanceSq = math.lengthsq(offset);
+                    if (distanceSq <= 0.000001f || distanceSq > radiusSq) continue;
+
+                    float dot = math.dot(initialDirection, offset * math.rsqrt(distanceSq));
+                    if (dot > bestDot
+                        || dot == bestDot && distanceSq < bestDistanceSq
+                        || dot == bestDot && distanceSq == bestDistanceSq
+                        && (best == Entity.Null || candidate.Index < best.Index))
+                    {
+                        best = candidate;
+                        bestDot = dot;
+                        bestDistanceSq = distanceSq;
+                    }
+                }
+
+                if (best == Entity.Null) return;
+                float3 correctedDirection = TransformLookup[best].Position - launchedPosition;
+                correctedDirection.y = 0f;
+                correctedDirection = math.normalizesafe(correctedDirection, initialDirection);
+                velocity.Linear.xz = correctedDirection.xz * horizontalSpeed;
+                VelocityLookup[launchedTarget] = velocity;
             }
 
             private void TryQueueDamage(Entity source, Entity target, float estimatedImpulse)
