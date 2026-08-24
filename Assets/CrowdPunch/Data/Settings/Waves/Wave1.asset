@@ -24,17 +24,17 @@ MonoBehaviour:
     Weight: 0.1
   eliteEnemies: []
   spawnRectangles:
-  - Center: {x: 140, y: 2, z: 0}
+  - Center: {x: 90, y: 2, z: 0}
     Width: 10
-    Depth: 270
-  - Center: {x: -140, y: 2, z: 0}
+    Depth: 190
+  - Center: {x: -90, y: 2, z: 0}
     Width: 10
-    Depth: 270
-  - Center: {x: 0, y: 2, z: -140}
-    Width: 270
+    Depth: 190
+  - Center: {x: 0, y: 2, z: -90}
+    Width: 190
     Depth: 10
-  - Center: {x: 0, y: 2, z: 140}
-    Width: 270
+  - Center: {x: 0, y: 2, z: 90}
+    Width: 190
     Depth: 10
   delayBeforeWave: 0.1
   duration: 10

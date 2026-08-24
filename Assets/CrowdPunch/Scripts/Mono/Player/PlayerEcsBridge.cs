@@ -72,6 +72,13 @@ namespace CrowdPunch.Mono.Player
         /// <summary>Approximate player radius for ECS distance checks.</summary>
         public float Radius { get; private set; }
         public uint CollisionLayer { get; private set; }
+        public bool HasPendingMovement { get; private set; }
+        public uint MovementSequence { get; private set; }
+        public float3 MovementStart { get; private set; }
+        public float3 MovementEnd { get; private set; }
+        public float MovementRadius { get; private set; }
+        public uint ResolvedMovementSequence { get; private set; }
+        public float3 ResolvedMovementPosition { get; private set; }
 
         /// <summary>Latest player health value published by MonoBehaviour player code.</summary>
         public float CurrentHealth { get; private set; }
@@ -130,6 +137,37 @@ namespace CrowdPunch.Mono.Player
             Forward = new float3(forward.x, forward.y, forward.z);
             Radius = radius;
             CollisionLayer = 1u << gameObject.layer;
+        }
+
+        /// <summary>Submits transform-driven movement for resolution against the ECS collision world.</summary>
+        public uint PublishMovement(Vector3 start, Vector3 end, float radius)
+        {
+            MovementStart = start;
+            MovementEnd = end;
+            MovementRadius = Mathf.Max(0f, radius);
+            MovementSequence++;
+            HasPendingMovement = true;
+            return MovementSequence;
+        }
+
+        public void ResolveMovement(uint sequence, float3 position)
+        {
+            if (sequence != MovementSequence)
+            {
+                return;
+            }
+
+            ResolvedMovementSequence = sequence;
+            ResolvedMovementPosition = position;
+            Position = position;
+            HasPendingMovement = false;
+        }
+
+        public void ClearMovement()
+        {
+            HasPendingMovement = false;
+            ResolvedMovementSequence = MovementSequence;
+            ResolvedMovementPosition = Position;
         }
 
         /// <summary>

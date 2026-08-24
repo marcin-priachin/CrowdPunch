@@ -1,5 +1,6 @@
 using System;
 using CrowdPunch.Configuration;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -25,6 +26,8 @@ namespace CrowdPunch.Mono.Player
         private Vector3 knockbackVelocity;
         private Vector3 initialPosition;
         private Quaternion initialRotation;
+        private uint submittedMovementSequence;
+        private uint appliedMovementSequence;
 
         public event Action DashStarted;
         public event Action DashPunchMidpointReached;
@@ -115,6 +118,8 @@ namespace CrowdPunch.Mono.Player
 
         private void Update()
         {
+            ApplyResolvedMovement(false);
+
             Vector2 moveInput = moveAction == null
                 ? Vector2.zero
                 : moveAction.ReadValue<Vector2>();
@@ -182,7 +187,12 @@ namespace CrowdPunch.Mono.Player
                 }
             }
 
+            Vector3 movementStart = transform.position;
             transform.position += playerDisplacement + Time.deltaTime * knockbackVelocity;
+            submittedMovementSequence = ecsBridge.PublishMovement(
+                movementStart,
+                transform.position,
+                settings.PlayerRadius);
             knockbackVelocity = Vector3.MoveTowards(knockbackVelocity, Vector3.zero, settings.KnockbackDamping * Time.deltaTime);
 
             if (facingDirection.sqrMagnitude > 0.001f)
@@ -190,6 +200,26 @@ namespace CrowdPunch.Mono.Player
                 transform.forward = facingDirection;
             }
 
+            ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, settings.PlayerRadius);
+        }
+
+        private void LateUpdate()
+        {
+            ApplyResolvedMovement(true);
+        }
+
+        private void ApplyResolvedMovement(bool requireLatestSubmission)
+        {
+            uint resolvedSequence = ecsBridge.ResolvedMovementSequence;
+            if (resolvedSequence == appliedMovementSequence
+                || (requireLatestSubmission && resolvedSequence != submittedMovementSequence))
+            {
+                return;
+            }
+
+            float3 resolved = ecsBridge.ResolvedMovementPosition;
+            transform.position = new Vector3(resolved.x, resolved.y, resolved.z);
+            appliedMovementSequence = resolvedSequence;
             ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, settings.PlayerRadius);
         }
 
@@ -232,6 +262,9 @@ namespace CrowdPunch.Mono.Player
             knockbackVelocity = Vector3.zero;
             transform.SetPositionAndRotation(initialPosition, initialRotation);
             ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, settings.PlayerRadius);
+            ecsBridge.ClearMovement();
+            submittedMovementSequence = ecsBridge.MovementSequence;
+            appliedMovementSequence = submittedMovementSequence;
         }
     }
 }
