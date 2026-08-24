@@ -7,6 +7,8 @@ namespace CrowdPunch.Mono.Player
     [RequireComponent(typeof(PlayerEcsBridge))]
     public sealed class ExplosionFeedback : MonoBehaviour
     {
+        private const string ShaderResourcePath = "Shaders/ExplosionFeedback";
+
         private readonly List<Visual> visuals = new List<Visual>();
         private PlayerEcsBridge bridge;
         private Material material;
@@ -22,24 +24,32 @@ namespace CrowdPunch.Mono.Player
         private void Awake()
         {
             bridge = GetComponent<PlayerEcsBridge>();
-            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+            Shader shader = Resources.Load<Shader>(ShaderResourcePath);
             if (shader == null)
             {
-                shader = Shader.Find("Unlit/Color");
+                Debug.LogError($"Explosion feedback shader is missing from Resources/{ShaderResourcePath}.", this);
+                enabled = false;
+                return;
             }
 
             material = new Material(shader);
-            material.color = new Color(1f, 0.35f, 0.05f, 0.28f);
+            material.SetColor("_BaseColor", new Color(1f, 0.35f, 0.05f, 0.28f));
         }
 
         private void OnEnable()
         {
-            bridge.ExplosionReceived += Show;
+            if (bridge != null && material != null)
+            {
+                bridge.ExplosionReceived += Show;
+            }
         }
 
         private void OnDisable()
         {
-            bridge.ExplosionReceived -= Show;
+            if (bridge != null)
+            {
+                bridge.ExplosionReceived -= Show;
+            }
         }
 
         private void Update()
