@@ -15,7 +15,6 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float moveSpeed = 6f;
         [SerializeField, Min(0f)] private float dashDistance = 5f;
         [SerializeField, Min(0f)] private float dashDuration = 0.15f;
-        [SerializeField, Range(0f, 1f)] private float dashPunchMidpointNormalized = 0.5f;
         [SerializeField, Min(0f)] private float dashCooldown = 0.1f;
         [SerializeField, Min(0f)] private float knockbackDamping = 14f;
 
@@ -23,7 +22,6 @@ namespace CrowdPunch.Configuration
         public float MoveSpeed => moveSpeed;
         public float DashDistance => dashDistance;
         public float DashDuration => dashDuration;
-        public float DashPunchMidpointNormalized => dashPunchMidpointNormalized;
         public float DashCooldown => dashCooldown;
         public float KnockbackDamping => knockbackDamping;
 

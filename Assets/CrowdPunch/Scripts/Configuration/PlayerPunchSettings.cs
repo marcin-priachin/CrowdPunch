@@ -13,11 +13,9 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float radius = 2f;
         [SerializeField, Min(0f)] private float range = 3f;
         [SerializeField, Min(0f)] private float strength = 12f;
-        [SerializeField, Min(0f), Tooltip("Multiplier applied to player-punch knockback only when the target is an Elite. A value of 1 preserves the normal or dash punch strength.")]
+        [SerializeField, Min(0f), Tooltip("Multiplier applied to player-punch knockback only when the target is an Elite. A value of 1 preserves the normal punch strength.")]
         private float eliteKnockbackMultiplier = 1f;
         [SerializeField, Min(0f)] private float damage = 10f;
-        [SerializeField, Min(0f)] private float dashStrength = 12f;
-        [SerializeField, Min(0f)] private float dashDamage = 10f;
         [SerializeField, Min(0f)] private float cooldown = 0.5f;
         [SerializeField, Range(0f, 1f)] private float directionPositionWeight = 1f;
         [SerializeField, Min(0f), Tooltip("Maximum distance from a punched enemy to another enemy that aim assist can target. Set to 0 to disable aim assist.")]
@@ -29,8 +27,6 @@ namespace CrowdPunch.Configuration
         public float Strength => strength;
         public float EliteKnockbackMultiplier => eliteKnockbackMultiplier;
         public float Damage => damage;
-        public float DashStrength => dashStrength;
-        public float DashDamage => dashDamage;
         public float Cooldown => cooldown;
         public float DirectionPositionWeight => directionPositionWeight;
         public float AimAssistRange => aimAssistRange;

@@ -90,7 +90,7 @@ The player should be able to use every fundamental mechanic from the beginning o
 
 Status: Must
 
-The player can move freely and use a directional dash for rapid repositioning. While dashing, the player faces the committed dash direction rather than camera-forward.
+The player can move freely and use a directional dash for rapid repositioning. Dash movement remains committed to its initial direction, while the player continues to face camera-forward.
 
 ### PLAYER-003 — Attack Direction Preview
 
@@ -106,17 +106,13 @@ When an attack is committed, the player should not be uncertain about its initia
 
 Player punches use configurable range-based aim assistance. When an enemy first enters the live punch volume, cast a ray from that enemy along the player's facing direction for the configured assist range. A ray-hit enemy becomes that source enemy's locked launch target; later valid ray-hit enemies replace the lock, while a ray miss retains it. If the initial ray has no enemy target, use the eligible enemy within range with the smallest planar angle from the facing direction as the initial lock. The lock clears when the source leaves the punch volume. Launch and preview both point from the source toward its current locked target. An assist range of zero disables this behavior. Aim assistance changes launch direction only and does not expand or redirect the punch volume.
 
-### PLAYER-005 — Punch During Dash
+### PLAYER-005 — Consistent Punch During Dash
 
 Status: Must
 
-- Punch input during dash is buffered.
-- A punch requested before the dash midpoint is buffered and begins once normalized dash progress reaches `0.5`.
-- A punch requested at or after the midpoint begins immediately when normal punch eligibility permits it.
-- A punch begun during a dash uses the committed dash direction as its attack direction.
-- Dash punches have independently configurable launch strength and damage from normal punches while retaining the normal targeting and resolution pipeline.
-- Beginning the dash punch ends dash movement.
-- A buffered punch is discarded if the dash ends or is interrupted before it can execute, and cannot carry into a later dash.
+- Punch input during a dash follows the same eligibility, timing, strength, damage, targeting, and resolution rules as punch input outside a dash.
+- An eligible punch begins immediately and does not interrupt or otherwise alter dash movement.
+- While dashing, camera-forward facing determines the punch direction under the normal punch rule, independently of the committed dash movement direction.
 - Merely contacting an enemy while dashing does not automatically attack it.
 
 ### PLAYER-006 — Conventional Combos
@@ -135,13 +131,13 @@ Movement, aiming, weapons, progression, and other non-crowd mechanics must not a
 
 Status: Must
 
-When a normal or dash-buffered punch begins, show a semitransparent world-space shape matching the committed punch area for `0.5` seconds. The shape retains the punch's committed world-space origin and direction for its full display interval, including the committed dash direction for a dash punch.
+When a punch begins, show a semitransparent world-space shape matching the committed punch area for `0.5` seconds. The shape retains the punch's committed world-space origin and direction for its full display interval.
 
 ### PLAYER-009 — Punch Cooldown
 
 Status: Must
 
-Normal and dash punches share a configurable cooldown that begins when a punch is committed. Punch input rejected by cooldown does not cancel dash movement or leave a buffered request.
+Punches use a configurable cooldown that begins when a punch is committed. Punch input rejected by cooldown does not alter dash movement.
 
 ## Combat And Crowd Physics
 
