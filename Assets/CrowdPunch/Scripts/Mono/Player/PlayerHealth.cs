@@ -24,6 +24,8 @@ namespace CrowdPunch.Mono.Player
 
         public float Normalized => maxHealth <= 0f ? 0f : Mathf.Clamp01(currentHealth / maxHealth);
 
+        public bool IsInvincible => invincibilityRemainingSeconds > 0f;
+
         private void Reset()
         {
             ecsBridge = GetComponent<PlayerEcsBridge>();

@@ -41,7 +41,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Concern | Current owner | Boundary/data |
 |---|---|---|
 | Input, player transform, and dash-punch coordination | GameObject | `PlayerController` owns dash timing/cancellation; `PlayerPunch` owns attack input, buffering, and cooldown |
-| Player health and invincibility | GameObject | `PlayerHealth` |
+| Player health and invincibility | GameObject | `PlayerHealth`; `PlayerInvincibilityFeedback` blinks the player renderer while invulnerability is active |
 | Camera | GameObject | `CameraFollow` |
 | Scene bootstrap and UI | GameObject | `GameBootstrap`, UI MonoBehaviours |
 | Player state visible to ECS | Bridge → ECS singleton | `PlayerSnapshot`, `PlayerHealthSnapshot` |

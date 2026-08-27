@@ -58,7 +58,12 @@ namespace CrowdPunch.Systems.Initialization
                         ? now >= sequence.NextActionAt
                         : sequence.DefeatedCount >= wave.TotalEnemyCount + wave.TotalEliteCount;
                     if (shouldAdvance)
+                    {
+                        Debug.Log($"Wave {sequence.CurrentWaveIndex} activation condition satisfied " +
+                                  $"(spawned {sequence.SpawnedCount}/{wave.TotalEnemyCount + wave.TotalEliteCount}, " +
+                                  $"defeated {sequence.DefeatedCount}/{wave.TotalEnemyCount + wave.TotalEliteCount}); advancing.");
                         Advance(commands, sequenceEntity, waves, ref sequence, now);
+                    }
                     continue;
                 }
 
@@ -95,16 +100,23 @@ namespace CrowdPunch.Systems.Initialization
 
                 if (sequence.SpawnedCount >= wave.TotalEnemyCount + wave.TotalEliteCount)
                 {
+                    Debug.Log($"Wave {sequence.CurrentWaveIndex} finished spawning " +
+                              $"{sequence.SpawnedCount}/{wave.TotalEnemyCount + wave.TotalEliteCount} enemies; " +
+                              $"awaiting {GetActivationDescription(wave)}.");
                     BeginAwaitingActivation(ref sequence, wave, now);
                 }
-                else if (spawned > 0 && wave.SpawnMode == (byte)EnemyWaveSpawnMode.Batched)
+                else
                 {
-                    sequence.NextActionAt = now + math.max(0f, wave.BatchInterval);
-                }
-                else if (spawned == 0 && now >= sequence.NextPlacementWarningAt)
-                {
-                    Debug.LogWarning($"Wave {sequence.CurrentWaveIndex} could not find safe placement after bounded retries; pending enemies will retry.");
-                    sequence.NextPlacementWarningAt = now + 5d;
+                    if (spawned > 0 && wave.SpawnMode == (byte)EnemyWaveSpawnMode.Batched)
+                        sequence.NextActionAt = now + math.max(0f, wave.BatchInterval);
+
+                    if (spawned < requested && now >= sequence.NextPlacementWarningAt)
+                    {
+                        Debug.LogWarning($"Wave {sequence.CurrentWaveIndex} spawned {spawned}/{requested} requested enemies this update " +
+                                         $"({sequence.SpawnedCount}/{wave.TotalEnemyCount + wave.TotalEliteCount} total). " +
+                                         $"Safe placement or prefab initialization failed for the remaining enemies; pending enemies will retry.");
+                        sequence.NextPlacementWarningAt = now + 5d;
+                    }
                 }
             }
             commands.Playback(state.EntityManager);
@@ -117,6 +129,13 @@ namespace CrowdPunch.Systems.Initialization
             sequence.Phase = EnemyWaveRuntimePhase.AwaitingActivation;
             if (wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed)
                 sequence.NextActionAt = now + math.max(0f, wave.Duration);
+        }
+
+        private static string GetActivationDescription(EnemyWaveDefinition wave)
+        {
+            return wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed
+                ? $"the {math.max(0f, wave.Duration):0.###}-second activation delay"
+                : $"{wave.TotalEnemyCount + wave.TotalEliteCount} counted defeats";
         }
 
         private static void InitializeSequence(EntityCommandBuffer commands, Entity entity,
