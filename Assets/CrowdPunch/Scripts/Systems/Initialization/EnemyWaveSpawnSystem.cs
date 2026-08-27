@@ -54,11 +54,9 @@ namespace CrowdPunch.Systems.Initialization
                 EnemyWaveDefinition wave = waves[sequence.CurrentWaveIndex];
                 if (sequence.Phase == EnemyWaveRuntimePhase.AwaitingActivation)
                 {
-                    bool shouldAdvance = sequence.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed
+                    bool shouldAdvance = wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed
                         ? now >= sequence.NextActionAt
-                        : wave.TotalEliteCount > 0
-                            ? sequence.NormalLivingCount == 0
-                            : sequence.DefeatedCount >= wave.TotalEnemyCount;
+                        : sequence.DefeatedCount >= wave.TotalEnemyCount + wave.TotalEliteCount;
                     if (shouldAdvance)
                         Advance(commands, sequenceEntity, waves, ref sequence, now);
                     continue;
@@ -84,18 +82,9 @@ namespace CrowdPunch.Systems.Initialization
                 }
 
                 if (sequence.Phase != EnemyWaveRuntimePhase.Spawning || now < sequence.NextActionAt) continue;
-                if (wave.TotalEliteCount > 0
-                    && sequence.EliteSpawnedCount >= wave.TotalEliteCount
-                    && sequence.EliteLivingCount == 0)
-                {
-                    BeginAwaitingActivation(ref sequence, wave, now);
-                    continue;
-                }
-
                 int remainingElites = wave.TotalEliteCount - sequence.EliteSpawnedCount;
-                int remainingNormals = wave.TotalEliteCount > 0
-                    ? math.max(0, wave.TotalEnemyCount - sequence.NormalLivingCount)
-                    : math.max(0, wave.TotalEnemyCount - sequence.SpawnedCount);
+                int spawnedNormals = sequence.SpawnedCount - sequence.EliteSpawnedCount;
+                int remainingNormals = math.max(0, wave.TotalEnemyCount - spawnedNormals);
                 int remaining = remainingElites + remainingNormals;
                 if (remaining <= 0) continue;
                 int requested = wave.SpawnMode == (byte)EnemyWaveSpawnMode.AllAtOnce
@@ -104,7 +93,7 @@ namespace CrowdPunch.Systems.Initialization
                 int spawned = SpawnBatch(commands, state.EntityManager, physicsWorld, player, sequenceEntity, wave, profiles, eliteProfiles, ranges,
                     occupiedEnemies, ref sequence, requested);
 
-                if (wave.TotalEliteCount == 0 && sequence.SpawnedCount >= wave.TotalEnemyCount)
+                if (sequence.SpawnedCount >= wave.TotalEnemyCount + wave.TotalEliteCount)
                 {
                     BeginAwaitingActivation(ref sequence, wave, now);
                 }
@@ -126,7 +115,7 @@ namespace CrowdPunch.Systems.Initialization
         private static void BeginAwaitingActivation(ref EnemyWaveSequence sequence, EnemyWaveDefinition wave, double now)
         {
             sequence.Phase = EnemyWaveRuntimePhase.AwaitingActivation;
-            if (sequence.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed)
+            if (wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed)
                 sequence.NextActionAt = now + math.max(0f, wave.Duration);
         }
 
@@ -137,9 +126,7 @@ namespace CrowdPunch.Systems.Initialization
             sequence.CurrentWaveIndex = 0;
             sequence.SpawnedCount = 0;
             sequence.DefeatedCount = 0;
-            sequence.NormalLivingCount = 0;
             sequence.EliteSpawnedCount = 0;
-            sequence.EliteLivingCount = 0;
             sequence.EliteProfileCursor = 0;
             sequence.EliteProfileSpawnedInEntry = 0;
             sequence.RandomState = sequence.InitialSeed == 0 ? 1u : sequence.InitialSeed;
@@ -160,9 +147,7 @@ namespace CrowdPunch.Systems.Initialization
             sequence.CurrentWaveIndex++;
             sequence.SpawnedCount = 0;
             sequence.DefeatedCount = 0;
-            sequence.NormalLivingCount = 0;
             sequence.EliteSpawnedCount = 0;
-            sequence.EliteLivingCount = 0;
             sequence.EliteProfileCursor = 0;
             sequence.EliteProfileSpawnedInEntry = 0;
             if (sequence.CurrentWaveIndex >= waves.Length)
@@ -227,8 +212,7 @@ namespace CrowdPunch.Systems.Initialization
                 {
                     Sequence = sequenceEntity,
                     RunGeneration = sequence.RunGeneration,
-                    WaveIndex = sequence.CurrentWaveIndex,
-                    IsElite = spawningElite ? (byte)1 : (byte)0
+                    WaveIndex = sequence.CurrentWaveIndex
                 });
                 accepted.Add(new float4(position, selectedProfile.SpawnClearance));
                 spawned++;
@@ -236,7 +220,6 @@ namespace CrowdPunch.Systems.Initialization
                 if (spawningElite)
                 {
                     sequence.EliteSpawnedCount++;
-                    sequence.EliteLivingCount++;
                     sequence.EliteProfileSpawnedInEntry++;
                     EnemyWaveEliteProfile current = eliteProfiles[wave.EliteProfileStart + sequence.EliteProfileCursor];
                     if (sequence.EliteProfileSpawnedInEntry >= current.Count)
@@ -244,10 +227,6 @@ namespace CrowdPunch.Systems.Initialization
                         sequence.EliteProfileCursor++;
                         sequence.EliteProfileSpawnedInEntry = 0;
                     }
-                }
-                else
-                {
-                    sequence.NormalLivingCount++;
                 }
             }
             sequence.RandomState = random.state;

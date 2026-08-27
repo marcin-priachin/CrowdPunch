@@ -60,7 +60,9 @@ namespace CrowdPunch.Configuration
 
         [Header("Timing and cadence")]
         [SerializeField, Min(0f)] private float delayBeforeWave;
-        [SerializeField, Min(0f), Tooltip("Time to wait after every enemy in this wave has spawned before activating the next wave when the sequence uses timed activation.")]
+        [SerializeField, Tooltip("Condition used to activate the next wave after this wave has finished spawning.")]
+        private EnemyWaveActivationMode activationMode = EnemyWaveActivationMode.AllEnemiesDefeated;
+        [SerializeField, Min(0f), Tooltip("Time to wait after every enemy in this wave has spawned before activating the next wave when using timed activation.")]
         private float duration;
         [SerializeField] private EnemyWaveSpawnMode spawnMode = EnemyWaveSpawnMode.Batched;
         [SerializeField, Min(1)] private int batchSize = 10;
@@ -71,6 +73,7 @@ namespace CrowdPunch.Configuration
         public IReadOnlyList<FixedEliteEnemy> EliteEnemies => eliteEnemies;
         public IReadOnlyList<SpawnRectangle> SpawnRectangles => spawnRectangles;
         public float DelayBeforeWave => delayBeforeWave;
+        public EnemyWaveActivationMode ActivationMode => activationMode;
         public float Duration => duration;
         public EnemyWaveSpawnMode SpawnMode => spawnMode;
         public int BatchSize => batchSize;

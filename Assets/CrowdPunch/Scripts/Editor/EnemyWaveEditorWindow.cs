@@ -136,7 +136,13 @@ namespace CrowdPunch.Editor
 
         private void DrawTiming()
         {
-            DrawSection("Timing and cadence", "delayBeforeWave", "duration", "spawnMode");
+            DrawSection("Timing and cadence", "delayBeforeWave", "activationMode");
+            EnemyWaveActivationMode activationMode =
+                (EnemyWaveActivationMode)serializedWave.FindProperty("activationMode").enumValueIndex;
+            if (activationMode == EnemyWaveActivationMode.DurationElapsed)
+                EditorGUILayout.PropertyField(serializedWave.FindProperty("duration"));
+
+            EditorGUILayout.PropertyField(serializedWave.FindProperty("spawnMode"));
             EnemyWaveSpawnMode mode = (EnemyWaveSpawnMode)serializedWave.FindProperty("spawnMode").enumValueIndex;
             if (mode == EnemyWaveSpawnMode.Batched)
             {

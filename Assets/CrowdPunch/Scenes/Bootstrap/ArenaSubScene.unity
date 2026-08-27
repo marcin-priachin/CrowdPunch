@@ -148,7 +148,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -1, z: -5}
-  m_LocalScale: {x: 10, y: 1, z: 4}
+  m_LocalScale: {x: 10, y: 1, z: 8.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1668319085}
@@ -259,8 +259,8 @@ Transform:
   m_GameObject: {fileID: 460178941}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.9, y: -1, z: 0}
-  m_LocalScale: {x: 4, y: 1, z: 10}
+  m_LocalPosition: {x: 5, y: -1, z: 0}
+  m_LocalScale: {x: 8.5, y: 1, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1668319085}
@@ -448,12 +448,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1112575539}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -1.5, z: 0}
-  m_LocalScale: {x: 200, y: 1, z: 200}
+  m_LocalScale: {x: 50, y: 1, z: 50}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1825431352}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1237949699
 GameObject:
@@ -484,7 +484,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69fb4f90670f984498a51d5c6036ae10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.ArenaAuthoring
-  size: {x: 198, y: 10, z: 198}
+  size: {x: 50, y: 10, z: 50}
 --- !u!4 &1237949701
 Transform:
   m_ObjectHideFlags: 0
@@ -494,7 +494,7 @@ Transform:
   m_GameObject: {fileID: 1237949699}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 20}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -574,7 +574,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -1, z: 5}
-  m_LocalScale: {x: 10, y: 1, z: 4}
+  m_LocalScale: {x: 10, y: 1, z: 8.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1668319085}
@@ -687,15 +687,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyWaveSequenceAuthoring
   waves:
-  - {fileID: 11400000, guid: 4f1613afb81bd394091d82a620512b90, type: 2}
-  - {fileID: 11400000, guid: 4f1613afb81bd394091d82a620512b90, type: 2}
-  - {fileID: 11400000, guid: 4f1613afb81bd394091d82a620512b90, type: 2}
-  - {fileID: 11400000, guid: 4f1613afb81bd394091d82a620512b90, type: 2}
-  - {fileID: 11400000, guid: 4f1613afb81bd394091d82a620512b90, type: 2}
-  - {fileID: 11400000, guid: 4f1613afb81bd394091d82a620512b90, type: 2}
-  - {fileID: 11400000, guid: 4f1613afb81bd394091d82a620512b90, type: 2}
-  - {fileID: 11400000, guid: c0293df7e724e1d4c9ad3076763d6ae4, type: 2}
-  activationMode: 1
+  - {fileID: 11400000, guid: 52a19f70dd01e834fbafe4c33d96df57, type: 2}
+  - {fileID: 11400000, guid: 6b83e46c781b36943a12e4f66da25e54, type: 2}
+  - {fileID: 11400000, guid: aa4d00a4fc5477c429736c05caf83db7, type: 2}
+  - {fileID: 11400000, guid: 73763402edad88746b11585a473ef0f6, type: 2}
+  - {fileID: 11400000, guid: 23ed29e5327c5244381d02bd7fb3d70e, type: 2}
+  - {fileID: 11400000, guid: badbcd6123b12104093a86fe31ff4b8a, type: 2}
   randomSeed: 1
   minimumPlayerDistance: 3
   placementAttemptsPerEnemy: 8
@@ -738,7 +735,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1668319084}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 61.2, z: 0}
   m_LocalScale: {x: 33, y: 57, z: 33}
   m_ConstrainProportionsScale: 0
@@ -747,6 +744,39 @@ Transform:
   - {fileID: 460178942}
   - {fileID: 1584614082}
   - {fileID: 342427118}
+  m_Father: {fileID: 1825431352}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1825431351
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1825431352}
+  m_Layer: 0
+  m_Name: LevelLayout
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1825431352
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1825431351}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 19.98}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1668319085}
+  - {fileID: 1112575543}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2055277725
@@ -905,7 +935,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -5, y: -1, z: 0}
-  m_LocalScale: {x: 4, y: 1, z: 10}
+  m_LocalScale: {x: 8.5, y: 1, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1668319085}
@@ -994,7 +1024,6 @@ SceneRoots:
   m_Roots:
   - {fileID: 1237949701}
   - {fileID: 1438744935}
-  - {fileID: 1112575543}
   - {fileID: 2055277727}
-  - {fileID: 1668319085}
   - {fileID: 1622559398}
+  - {fileID: 1825431352}

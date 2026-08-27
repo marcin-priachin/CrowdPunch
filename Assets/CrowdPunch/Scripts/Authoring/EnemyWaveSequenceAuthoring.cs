@@ -9,8 +9,6 @@ namespace CrowdPunch.Authoring
     {
         [SerializeField, Tooltip("Ordered wave assets. Each asset remains independently reusable and editable.")]
         private List<EnemyWaveSettings> waves = new();
-        [SerializeField, Tooltip("Condition used to activate the next wave after the current wave has finished spawning.")]
-        private EnemyWaveActivationMode activationMode = EnemyWaveActivationMode.AllEnemiesDefeated;
         [SerializeField, Min(1), Tooltip("Deterministic selection and candidate-position seed.")]
         private uint randomSeed = 1;
         [SerializeField, Min(0f), Tooltip("Additional distance required between the candidate and player surface.")]
@@ -19,7 +17,6 @@ namespace CrowdPunch.Authoring
         private int placementAttemptsPerEnemy = 8;
 
         public IReadOnlyList<EnemyWaveSettings> Waves => waves;
-        public EnemyWaveActivationMode ActivationMode => activationMode;
         public uint RandomSeed => randomSeed == 0 ? 1u : randomSeed;
         public float MinimumPlayerDistance => minimumPlayerDistance;
         public int PlacementAttemptsPerEnemy => placementAttemptsPerEnemy;

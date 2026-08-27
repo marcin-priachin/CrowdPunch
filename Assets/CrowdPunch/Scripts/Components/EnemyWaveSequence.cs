@@ -13,16 +13,13 @@ namespace CrowdPunch.Components
         public int CurrentWaveIndex;
         public int SpawnedCount;
         public int DefeatedCount;
-        public int NormalLivingCount;
         public int EliteSpawnedCount;
-        public int EliteLivingCount;
         public int EliteProfileCursor;
         public int EliteProfileSpawnedInEntry;
         public double NextActionAt;
         public double NextPlacementWarningAt;
         public float MinimumPlayerDistance;
         public int PlacementAttemptsPerEnemy;
-        public byte ActivationMode;
         public EnemyWaveRuntimePhase Phase;
         public byte Initialized;
     }
@@ -45,6 +42,7 @@ namespace CrowdPunch.Components
         public float Duration;
         public float BatchInterval;
         public int BatchSize;
+        public byte ActivationMode;
         public byte SpawnMode;
         public byte IsValid;
     }
@@ -75,6 +73,5 @@ namespace CrowdPunch.Components
         public uint RunGeneration;
         public int WaveIndex;
         public byte DefeatCounted;
-        public byte IsElite;
     }
 }
