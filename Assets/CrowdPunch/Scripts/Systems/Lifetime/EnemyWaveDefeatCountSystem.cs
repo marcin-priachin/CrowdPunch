@@ -1,10 +1,12 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
+using CrowdPunch.Systems.Physics;
 using Unity.Entities;
 
 namespace CrowdPunch.Systems.Lifetime
 {
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
+    [UpdateAfter(typeof(EnemyRecoverySystem))]
     [UpdateBefore(typeof(DefeatedEnemyLifecycleSystem))]
     public partial struct EnemyWaveDefeatCountSystem : ISystem
     {
