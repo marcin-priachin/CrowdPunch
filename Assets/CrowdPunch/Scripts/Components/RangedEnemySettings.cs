@@ -19,6 +19,7 @@ namespace CrowdPunch.Components
         public float ProjectileDamage;
         public float PlayerInvincibilitySeconds;
         public float ProjectileSpeed;
+        public float ProjectileMovementLeadMultiplier;
         public float ProjectileAimSpreadRadius;
         public float ProjectileAimTargetYOffset;
         public float ProjectileArcHeight;

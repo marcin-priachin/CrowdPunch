@@ -9,6 +9,7 @@ namespace CrowdPunch.Components
     public struct PlayerSnapshot : IComponentData
     {
         public float3 Position;
+        public float3 Velocity;
         public float3 Forward;
         public float Radius;
         public uint CollisionLayer;

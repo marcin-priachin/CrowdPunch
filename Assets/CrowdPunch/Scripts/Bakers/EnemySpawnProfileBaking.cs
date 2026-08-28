@@ -62,6 +62,7 @@ namespace CrowdPunch.Bakers
                     ProjectileDamage = settings.ProjectileDamage,
                     PlayerInvincibilitySeconds = settings.PlayerInvincibilitySeconds,
                     ProjectileSpeed = settings.ProjectileSpeed,
+                    ProjectileMovementLeadMultiplier = settings.ProjectileMovementLeadMultiplier,
                     ProjectileAimSpreadRadius = settings.ProjectileAimSpreadRadius,
                     ProjectileAimTargetYOffset = settings.ProjectileAimTargetYOffset,
                     ProjectileArcHeight = settings.ProjectileArcHeight,

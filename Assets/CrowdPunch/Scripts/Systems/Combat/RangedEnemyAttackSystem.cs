@@ -92,6 +92,7 @@ namespace CrowdPunch.Systems.Combat
                     ref commandBuffer,
                     transform.ValueRO.Position,
                     player.Position,
+                    player.Velocity,
                     settings.ValueRO,
                     ref random);
                 attack.ValueRW.Phase = RangedAttackPhase.Cooldown;
@@ -121,14 +122,24 @@ namespace CrowdPunch.Systems.Combat
             ref EntityCommandBuffer commandBuffer,
             float3 shooterPosition,
             float3 playerPosition,
+            float3 playerVelocity,
             RangedEnemySettings settings,
             ref Random random)
         {
             float3 start = shooterPosition + new float3(0f, ProjectileSpawnHeight, 0f);
+            float leadTime = CalculateInterceptTime(
+                start.xz,
+                playerPosition.xz,
+                playerVelocity.xz,
+                math.max(0.01f, settings.ProjectileSpeed));
+            float3 movementLead = new float3(playerVelocity.x, 0f, playerVelocity.z)
+                * leadTime
+                * math.saturate(settings.ProjectileMovementLeadMultiplier);
             float angle = random.NextFloat(0f, math.PI * 2f);
             float spreadDistance = math.sqrt(random.NextFloat()) * math.max(0f, settings.ProjectileAimSpreadRadius);
             float3 spread = new float3(math.cos(angle), 0f, math.sin(angle)) * spreadDistance;
             float3 target = playerPosition
+                + movementLead
                 + spread
                 + new float3(0f, settings.ProjectileAimTargetYOffset, 0f);
             float horizontalDistance = math.distance(start.xz, target.xz);
@@ -148,6 +159,42 @@ namespace CrowdPunch.Systems.Combat
                 PlayerInvincibilitySeconds = math.max(0f, settings.PlayerInvincibilitySeconds),
                 PlayerCollisionLayers = settings.ProjectilePlayerLayers
             });
+        }
+
+        internal static float CalculateInterceptTime(
+            float2 shooterPosition,
+            float2 targetPosition,
+            float2 targetVelocity,
+            float projectileSpeed)
+        {
+            float2 offset = targetPosition - shooterPosition;
+            float speed = math.max(0.01f, projectileSpeed);
+            float a = math.lengthsq(targetVelocity) - speed * speed;
+            float b = 2f * math.dot(offset, targetVelocity);
+            float c = math.lengthsq(offset);
+
+            if (math.abs(a) < 0.0001f)
+            {
+                float linearTime = math.abs(b) < 0.0001f ? -1f : -c / b;
+                return linearTime > 0f ? linearTime : math.sqrt(c) / speed;
+            }
+
+            float discriminant = b * b - 4f * a * c;
+            if (discriminant < 0f)
+            {
+                return math.sqrt(c) / speed;
+            }
+
+            float root = math.sqrt(discriminant);
+            float first = (-b - root) / (2f * a);
+            float second = (-b + root) / (2f * a);
+            if (first > 0f && second > 0f)
+            {
+                return math.min(first, second);
+            }
+
+            float interceptTime = math.max(first, second);
+            return interceptTime > 0f ? interceptTime : math.sqrt(c) / speed;
         }
 
         private static Random CreateShotRandom(Entity shooter, uint shotSequence)

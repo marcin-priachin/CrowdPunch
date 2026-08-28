@@ -28,6 +28,7 @@ namespace CrowdPunch.Systems.InputBridge
             SystemAPI.SetComponent(playerStateEntity, new PlayerSnapshot
             {
                 Position = bridge.Position,
+                Velocity = bridge.Velocity,
                 Forward = bridge.Forward,
                 Radius = bridge.Radius,
                 CollisionLayer = bridge.CollisionLayer,

@@ -92,6 +92,7 @@ namespace CrowdPunch.Configuration
         [Header("Ranged projectile (provisional)")]
         [FormerlySerializedAs("projectileTravelDuration")]
         [SerializeField, Min(0.01f)] private float projectileSpeed = 8f;
+        [SerializeField, Range(0f, 1f)] private float projectileMovementLeadMultiplier = 1f;
         [SerializeField, Min(0f)] private float projectileAimSpreadRadius = 2.5f;
         [SerializeField] private float projectileAimTargetYOffset;
         [SerializeField, Min(0f)] private float projectileArcHeight = 5f;
@@ -221,6 +222,7 @@ namespace CrowdPunch.Configuration
         public float ProjectileDamage => projectileDamage;
         public float PlayerInvincibilitySeconds => playerInvincibilitySeconds;
         public float ProjectileSpeed => projectileSpeed;
+        public float ProjectileMovementLeadMultiplier => projectileMovementLeadMultiplier;
         public float ProjectileAimSpreadRadius => projectileAimSpreadRadius;
         public float ProjectileAimTargetYOffset => projectileAimTargetYOffset;
         public float ProjectileArcHeight => projectileArcHeight;

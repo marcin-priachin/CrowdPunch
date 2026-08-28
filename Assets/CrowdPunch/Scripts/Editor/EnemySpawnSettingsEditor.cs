@@ -32,7 +32,7 @@ namespace CrowdPunch.Editor
             "rangedProjectilePrefab", "preferredMinimumDistance", "preferredMaximumDistance", "engagementRange",
             "retreatSpeed", "approachSpeed", "initialAttackDelay", "initialDelayVariation", "windUpDuration",
             "cooldown", "cooldownVariation", "projectileDamage", "playerInvincibilitySeconds", "projectileSpeed",
-            "projectileAimSpreadRadius", "projectileAimTargetYOffset", "projectileArcHeight",
+            "projectileMovementLeadMultiplier", "projectileAimSpreadRadius", "projectileAimTargetYOffset", "projectileArcHeight",
             "projectileMinimumAltitude", "projectileLifetime", "projectileRadius", "projectilePlayerLayers"
         };
 

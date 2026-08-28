@@ -160,7 +160,8 @@ namespace CrowdPunch.Mono.Player
             submittedMovementSequence = ecsBridge.PublishMovement(
                 movementStart,
                 transform.position,
-                settings.PlayerRadius);
+                settings.PlayerRadius,
+                Time.deltaTime);
             knockbackVelocity = Vector3.MoveTowards(knockbackVelocity, Vector3.zero, settings.KnockbackDamping * Time.deltaTime);
 
             if (facingDirection.sqrMagnitude > 0.001f)

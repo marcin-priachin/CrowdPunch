@@ -90,6 +90,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-08-28 — Ranged Projectile Movement Lead
+
+Decision: A ranged enemy predicts a fire-time horizontal intercept from the player's current movement velocity and the projectile's configured speed. An authored multiplier from zero to one blends between the player's sampled position and the full predicted intercept. The resulting target remains fixed after firing, so the projectile does not home.
+
+Rationale: Movement-direction adjustment makes ranged enemies respond to an already-moving player while preserving readable projectile commitment and post-fire dodge counterplay.
+
+GDD rules: ENEMY-002, ENEMY-003
+
 ### 2026-08-23 — Propagated Launch Aim Correction
 
 Decision: An enemy newly launched by ordinary enemy-to-enemy propagation corrects its solver-produced horizontal direction toward the smallest-angle living active or recovering enemy inside a configurable radius. Correction preserves horizontal speed and vertical velocity, and a zero radius disables it.

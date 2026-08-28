@@ -44,13 +44,13 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Player health and invincibility | GameObject | `PlayerHealth`; `PlayerInvincibilityFeedback` blinks the player renderer while invulnerability is active |
 | Camera | GameObject | `CameraFollow` |
 | Scene bootstrap and UI | GameObject | `GameBootstrap`, UI MonoBehaviours |
-| Player state visible to ECS | Bridge → ECS singleton | `PlayerSnapshot`, `PlayerHealthSnapshot` |
+| Player state visible to ECS | Bridge → ECS singleton | `PlayerSnapshot` (including collision-resolved velocity), `PlayerHealthSnapshot` |
 | Punch command visible to ECS | Bridge → enableable ECS request | `PunchRequest` |
 | Enemy contact reported to player | ECS → bridge event | `EnemyContactHitReceived` |
 | Enemy initial spawn, waves, and pooling | Authoring → baked profile → ECS | random `SpawnSettings`, authored spawn points, ordered wave buffers, shared initialization, and respawn systems |
 | Enemy intent and movement | ECS | `DesiredMovement`, Unity Physics velocity |
 | Enemy archetypes and attacks/effects | ECS | `EnemyArchetype`, ranged state, and explosive settings/state |
-| Ranged projectile trajectory and lifetime | ECS | `RangedProjectile`, fixed fire-time start/target, ECS transform evaluation |
+| Ranged projectile trajectory and lifetime | ECS | `RangedProjectile`, velocity-led fixed fire-time start/target, ECS transform evaluation |
 | Enemy combat state | ECS | health, damage, impulse, explicit launch lifecycle, death/respawn requests |
 | Punch trajectory preview | ECS → bridge → GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
 | Committed punch-area feedback | GameObject | `PlayerPunch` triggers `PunchAreaFeedback` from the same origin, direction, radius, and range published to ECS |
@@ -97,7 +97,7 @@ Each random enemy owns `RandomEnemySpawnRegion`; each authored enemy instead own
 4. `EnemyMovementSystem` steers Unity Physics velocity toward that intent and continues to reject non-`Active` enemies.
 5. `PunchAimAssistSystem` maintains an ECS-owned target lock for each punchable enemy in the live punch volume. A physics ray from the source enemy along player facing replaces the lock when it hits another eligible enemy; misses retain the lock, and the previous smallest-angle rule supplies an initial fallback. `PunchDetectionSystem` uses that locked direction for each hit, clears existing linear and angular velocity when a player punch replaces an active launch, starts a fresh `Launched` sequence with the current punch data, and enables impulse and damage requests (PLAYER-003, PLAYER-004, COMBAT-014).
 6. `DamageApplicationSystem` applies enabled damage requests, clamps health, and resolves immediate defeat or records launch-deferred defeat.
-7. `RangedEnemyAttackSystem` evaluates ranged state after punch and damage resolution, cancels invalid wind-ups, and instantiates a projectile when a valid wind-up completes.
+7. `RangedEnemyAttackSystem` evaluates ranged state after punch and damage resolution, cancels invalid wind-ups, predicts a fire-time intercept from the collision-resolved player velocity and configured lead multiplier, and instantiates a projectile when a valid wind-up completes. The projectile locks that target and does not home (ENEMY-002, ENEMY-003).
 8. `ApplyImpulseSystem` adds gameplay impulse to `PhysicsVelocity`.
 9. Unity Physics simulates motion and collisions.
 

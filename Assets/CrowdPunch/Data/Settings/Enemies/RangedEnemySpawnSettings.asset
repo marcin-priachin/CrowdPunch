@@ -43,20 +43,21 @@ MonoBehaviour:
   contactAttemptDuration: 2
   contactAttemptSpeedMultiplier: 1.25
   contactAttemptSeparationWeight: 0.35
-  preferredMinimumDistance: 8
-  preferredMaximumDistance: 20
+  preferredMinimumDistance: 0
+  preferredMaximumDistance: 40
   engagementRange: 80
   retreatSpeed: 4
   approachSpeed: 10
-  initialAttackDelay: 1.5
-  initialDelayVariation: 1.5
+  initialAttackDelay: 1
+  initialDelayVariation: 0.5
   windUpDuration: 0.75
-  cooldown: 3
-  cooldownVariation: 1.5
+  cooldown: 1
+  cooldownVariation: 0.5
   projectileDamage: 10
   playerInvincibilitySeconds: 0.5
   projectileSpeed: 64
-  projectileAimSpreadRadius: 2.5
+  projectileMovementLeadMultiplier: 1
+  projectileAimSpreadRadius: 0.5
   projectileAimTargetYOffset: 0.7
   projectileArcHeight: 5
   projectileMinimumAltitude: -2

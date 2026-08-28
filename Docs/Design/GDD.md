@@ -277,7 +277,7 @@ The ranged enemy maintains a provisional preferred distance band from the player
 
 Status: Must
 
-While active, in range, and off cooldown, the ranged enemy winds up and fires one visible physical projectile around the player's position sampled when the shot is fired. Configurable horizontal spread prevents groups from focusing every shot on exactly one point, and configurable per-shot cooldown variation reduces synchronized group cadence. The shot does not home or lead the player. Entering `Launched`, `Recovering`, or `Defeated`, or becoming disabled or pooled, cancels a pending wind-up. Numerical wind-up, cooldown, spread, damage, and cadence values are provisional.
+While active, in range, and off cooldown, the ranged enemy winds up and fires one visible physical projectile toward a fire-time prediction of the player's position based on the player's current movement velocity and the projectile's configured speed. A configurable movement-lead multiplier adjusts or disables that prediction. Configurable horizontal spread prevents groups from focusing every shot on exactly one point, and configurable per-shot cooldown variation reduces synchronized group cadence. The shot does not home after launch. Entering `Launched`, `Recovering`, or `Defeated`, or becoming disabled or pooled, cancels a pending wind-up. Numerical wind-up, cooldown, movement lead, spread, damage, and cadence values are provisional.
 
 ### ENEMY-003 — Ranged Projectile Counterplay
 

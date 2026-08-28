@@ -66,6 +66,9 @@ namespace CrowdPunch.Mono.Player
         /// <summary>Latest player position published by MonoBehaviour player code.</summary>
         public float3 Position { get; private set; }
 
+        /// <summary>Latest collision-resolved player velocity.</summary>
+        public float3 Velocity { get; private set; }
+
         /// <summary>Latest player forward direction published by MonoBehaviour player code.</summary>
         public float3 Forward { get; private set; }
 
@@ -77,6 +80,7 @@ namespace CrowdPunch.Mono.Player
         public float3 MovementStart { get; private set; }
         public float3 MovementEnd { get; private set; }
         public float MovementRadius { get; private set; }
+        public float MovementDeltaTime { get; private set; }
         public uint ResolvedMovementSequence { get; private set; }
         public float3 ResolvedMovementPosition { get; private set; }
 
@@ -140,11 +144,13 @@ namespace CrowdPunch.Mono.Player
         }
 
         /// <summary>Submits transform-driven movement for resolution against the ECS collision world.</summary>
-        public uint PublishMovement(Vector3 start, Vector3 end, float radius)
+        public uint PublishMovement(Vector3 start, Vector3 end, float radius, float deltaTime)
         {
             MovementStart = start;
             MovementEnd = end;
             MovementRadius = Mathf.Max(0f, radius);
+            MovementDeltaTime = Mathf.Max(0f, deltaTime);
+            Velocity = MovementDeltaTime > 0f ? (MovementEnd - MovementStart) / MovementDeltaTime : float3.zero;
             MovementSequence++;
             HasPendingMovement = true;
             return MovementSequence;
@@ -160,6 +166,7 @@ namespace CrowdPunch.Mono.Player
             ResolvedMovementSequence = sequence;
             ResolvedMovementPosition = position;
             Position = position;
+            Velocity = MovementDeltaTime > 0f ? (position - MovementStart) / MovementDeltaTime : float3.zero;
             HasPendingMovement = false;
         }
 
@@ -168,6 +175,7 @@ namespace CrowdPunch.Mono.Player
             HasPendingMovement = false;
             ResolvedMovementSequence = MovementSequence;
             ResolvedMovementPosition = Position;
+            Velocity = float3.zero;
         }
 
         /// <summary>
