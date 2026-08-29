@@ -8,7 +8,7 @@ using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Combat
 {
-    /// <summary>Applies enemy-owned launched-body collision damage to the hybrid player.</summary>
+    /// <summary>Applies launched-body collision damage to the hybrid player.</summary>
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
     [UpdateAfter(typeof(EnemyLaunchCollisionSystem))]
     [UpdateBefore(typeof(CrowdPunch.Systems.Physics.EnemyRecoverySystem))]
@@ -44,9 +44,7 @@ namespace CrowdPunch.Systems.Combat
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>())
             {
-                if (launchState.ValueRO.Phase != EnemyLaunchPhase.Launched
-                    || launchState.ValueRO.Owner != EnemyLaunchOwner.Enemy
-                    || launchState.ValueRO.PlayerImpactLaunchSequence == launchState.ValueRO.LaunchSequence)
+                if (!CanDamagePlayer(launchState.ValueRO))
                 {
                     continue;
                 }
@@ -101,6 +99,12 @@ namespace CrowdPunch.Systems.Combat
             }
 
             return math.length(linearVelocity) / inverseMass;
+        }
+
+        public static bool CanDamagePlayer(in EnemyLaunchState launchState)
+        {
+            return launchState.Phase == EnemyLaunchPhase.Launched
+                && launchState.PlayerImpactLaunchSequence != launchState.LaunchSequence;
         }
 
         public static bool SegmentIntersectsSphere(

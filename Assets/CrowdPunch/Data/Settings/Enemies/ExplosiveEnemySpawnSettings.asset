@@ -36,7 +36,7 @@ MonoBehaviour:
     separationDistanceMin: 30
     separationDistanceMax: 50
     separationWeight: 1.4
-  maxHealth: 20
+  maxHealth: 5
   contactDamagePercent: 0.05
   contactPushStrength: 10
   contactInvincibilitySeconds: 0.5
@@ -60,6 +60,7 @@ MonoBehaviour:
   projectileDamage: 10
   playerInvincibilitySeconds: 0.5
   projectileSpeed: 8
+  projectileMovementLeadMultiplier: 1
   projectileAimSpreadRadius: 2.5
   projectileAimTargetYOffset: 0
   projectileArcHeight: 5

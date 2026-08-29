@@ -227,11 +227,11 @@ Status: Must
 
 A `Launched` enemy remains a valid player-punch target even at zero health while defeat is deferred. A living `Recovering` enemy also remains valid. A new punch starts a new launch sequence and replaces the prior launch's cause, damage, recovery timing, propagation inspection data, linear velocity, and angular velocity with the new punch data and impulse. Existing momentum must not add to or cancel the re-punch; the result begins from rest as if the enemy were stationary. Zero-health enemies in any phase other than `Launched` remain ineligible.
 
-### COMBAT-015 — Enemy-Owned Launched Bodies
+### COMBAT-015 — Launched Bodies Damage The Player
 
 Status: Must
 
-A body launched by an enemy can damage the player as a physical projectile. It uses the same originating launch damage, minimum impact-impulse threshold, impulse-scaled damage multiplier and cap, and once-per-continuous-source-launch rule used when a launched body damages an ordinary enemy. Enemy ownership propagates through qualifying enemy-enemy launch collisions. A player punch on any launched body begins a new player-owned launch sequence and removes this launched-body threat to the player, including from later propagation in that sequence. Independent rules such as explosions remain independently capable of damaging the player.
+A launched body can damage the player as a physical projectile regardless of whether the player or an enemy originated its current launch sequence. It uses the same originating launch damage, minimum impact-impulse threshold, impulse-scaled damage multiplier and cap, and once-per-continuous-source-launch rule used when a launched body damages an ordinary enemy. Launch ownership continues to propagate through qualifying enemy-enemy launch collisions for rules that depend on ownership, but it does not make the body safe to the player. A player punch on an already-launched body begins a new player-owned launch sequence and resets its once-per-launch player-impact eligibility. Independent rules such as explosions remain independently capable of damaging the player.
 
 ## Effects And Combinations
 

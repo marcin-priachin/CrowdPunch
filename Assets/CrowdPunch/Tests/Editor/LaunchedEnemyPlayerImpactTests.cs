@@ -24,7 +24,7 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void PlayerPunchOwnsAndDisarmsItsNewLaunch()
+        public void LaunchOwnershipStillTracksItsCause()
         {
             Assert.AreEqual(
                 EnemyLaunchOwner.Player,
@@ -32,6 +32,35 @@ namespace CrowdPunch.Tests
             Assert.AreEqual(
                 EnemyLaunchOwner.Enemy,
                 EnemyLaunchOwnership.FromCause(EnemyLaunchCause.ElitePunch));
+        }
+
+        [TestCase(EnemyLaunchOwner.Player)]
+        [TestCase(EnemyLaunchOwner.Enemy)]
+        public void LaunchedBodyCanDamagePlayerRegardlessOfOwner(EnemyLaunchOwner owner)
+        {
+            EnemyLaunchState launchState = new EnemyLaunchState
+            {
+                Phase = EnemyLaunchPhase.Launched,
+                Owner = owner,
+                LaunchSequence = 2,
+                PlayerImpactLaunchSequence = 1
+            };
+
+            Assert.IsTrue(LaunchedEnemyPlayerImpactSystem.CanDamagePlayer(launchState));
+        }
+
+        [Test]
+        public void LaunchedBodyDamagesPlayerOnlyOncePerLaunchSequence()
+        {
+            EnemyLaunchState launchState = new EnemyLaunchState
+            {
+                Phase = EnemyLaunchPhase.Launched,
+                Owner = EnemyLaunchOwner.Player,
+                LaunchSequence = 2,
+                PlayerImpactLaunchSequence = 2
+            };
+
+            Assert.IsFalse(LaunchedEnemyPlayerImpactSystem.CanDamagePlayer(launchState));
         }
 
         [Test]
