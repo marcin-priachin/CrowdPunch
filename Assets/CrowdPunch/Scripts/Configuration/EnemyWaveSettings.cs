@@ -24,6 +24,8 @@ namespace CrowdPunch.Configuration
         {
             [Tooltip("Existing profile that remains the source of prefab, archetype, tuning, and presentation data.")]
             public EnemySpawnSettings Settings;
+            [Min(0), Tooltip("Smallest number of this profile guaranteed to spawn before weighted selection fills the remaining normal-enemy slots.")]
+            public int MinimumCount;
             [Min(0f), Tooltip("Relative random-selection weight. Zero-weight entries are never selected.")]
             public float Weight;
         }
@@ -89,7 +91,8 @@ namespace CrowdPunch.Configuration
             bool hasProfile = false;
             foreach (WeightedEnemy entry in enemies)
             {
-                if (entry.Settings != null && entry.Settings.EnemyPrefab != null && entry.Weight > 0f
+                if (entry.Settings != null && entry.Settings.EnemyPrefab != null
+                    && (entry.Weight > 0f || entry.MinimumCount > 0)
                     && entry.Settings.Archetype != EnemyArchetype.Elite)
                 {
                     hasProfile = true;
@@ -99,9 +102,17 @@ namespace CrowdPunch.Configuration
             for (int index = 0; index < enemies.Count; index++)
             {
                 WeightedEnemy entry = enemies[index];
-                if (entry.Settings != null && entry.Settings.Archetype == EnemyArchetype.Elite && entry.Weight > 0f)
+                if (entry.MinimumCount < 0)
+                    Debug.LogWarning($"Wave '{name}' weighted normal entry {index + 1} has a negative minimum count and baking will clamp it to zero.", this);
+                if (entry.Settings != null && entry.Settings.Archetype == EnemyArchetype.Elite
+                    && (entry.Weight > 0f || entry.MinimumCount > 0))
                     Debug.LogError($"Wave '{name}' weighted normal entry {index + 1} uses an Elite profile; move it to Fixed Elite Enemies.", this);
             }
+
+            int minimumNormalCount = 0;
+            foreach (WeightedEnemy entry in enemies) minimumNormalCount += Mathf.Max(0, entry.MinimumCount);
+            if (minimumNormalCount > Mathf.Max(0, totalEnemyCount))
+                Debug.LogError($"Wave '{name}' guarantees {minimumNormalCount} normal enemies but its total normal-enemy count is only {Mathf.Max(0, totalEnemyCount)}.", this);
 
             int eliteCount = 0;
             for (int index = 0; index < eliteEnemies.Count; index++)

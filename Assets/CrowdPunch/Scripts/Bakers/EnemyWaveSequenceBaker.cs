@@ -37,6 +37,8 @@ namespace CrowdPunch.Bakers
                 int rangeStart = ranges.Length;
                 float totalWeight = 0f;
                 float totalArea = 0f;
+                int requestedMinimumNormalCount = 0;
+                int validMinimumNormalCount = 0;
 
                 if (wave == null)
                 {
@@ -47,12 +49,15 @@ namespace CrowdPunch.Bakers
                 DependsOn(wave);
                 foreach (EnemyWaveSettings.WeightedEnemy entry in wave.Enemies)
                 {
-                    if (entry.Settings != null && entry.Weight > 0f
+                    int minimumCount = math.max(0, entry.MinimumCount);
+                    requestedMinimumNormalCount += minimumCount;
+                    if (entry.Settings != null && (entry.Weight > 0f || minimumCount > 0)
                         && entry.Settings.Archetype == Configuration.EnemyArchetype.Elite)
                     {
                         Debug.LogError($"Wave '{wave.name}' contains an Elite profile in its weighted normal list; the entry was excluded.", authoring);
                     }
-                    if (entry.Settings == null || entry.Settings.EnemyPrefab == null || entry.Weight <= 0f
+                    if (entry.Settings == null || entry.Settings.EnemyPrefab == null
+                        || entry.Weight <= 0f && minimumCount <= 0
                         || entry.Settings.Archetype == Configuration.EnemyArchetype.Elite)
                         continue;
                     DependsOn(entry.Settings);
@@ -60,7 +65,8 @@ namespace CrowdPunch.Bakers
                     if (!EnemySpawnProfileBaking.TryCreate(this, entry.Settings, out EnemySpawnProfile profile)
                         || profile.SpawnClearance <= 0f)
                         continue;
-                    profiles.Add(new EnemyWaveProfile { Profile = profile, Weight = entry.Weight });
+                    profiles.Add(new EnemyWaveProfile { Profile = profile, MinimumCount = minimumCount, Weight = entry.Weight });
+                    validMinimumNormalCount += minimumCount;
                     totalWeight += entry.Weight;
                 }
 
@@ -103,12 +109,15 @@ namespace CrowdPunch.Bakers
                 }
 
                 int totalCount = math.max(0, wave.TotalEnemyCount);
-                bool normalValid = totalCount == 0 || totalWeight > 0f;
+                int weightedNormalCount = totalCount - requestedMinimumNormalCount;
+                bool normalValid = (weightedNormalCount <= 0 || totalWeight > 0f)
+                    && requestedMinimumNormalCount == validMinimumNormalCount
+                    && requestedMinimumNormalCount <= totalCount;
                 bool eliteValid = totalEliteCount == requestedEliteCount;
                 bool valid = normalValid && eliteValid
                     && (totalCount + requestedEliteCount == 0 || totalArea > 0f);
                 if (!valid)
-                    Debug.LogError($"Wave '{wave.name}' cannot spawn: add a positive-area range and a positive-weight profile with a prefab collider.", authoring);
+                    Debug.LogError($"Wave '{wave.name}' cannot spawn: ensure it has a positive-area range, valid positive-weight profiles with prefab colliders, and profile minimums no greater than its normal-enemy total.", authoring);
 
                 definitions.Add(new EnemyWaveDefinition
                 {

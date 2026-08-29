@@ -148,6 +148,8 @@ namespace CrowdPunch.Systems.Initialization
             sequence.EliteSpawnedCount = 0;
             sequence.EliteProfileCursor = 0;
             sequence.EliteProfileSpawnedInEntry = 0;
+            sequence.NormalMinimumProfileCursor = 0;
+            sequence.NormalMinimumSpawnedInEntry = 0;
             sequence.RandomState = sequence.InitialSeed == 0 ? 1u : sequence.InitialSeed;
             if (waves.Length == 0)
             {
@@ -169,6 +171,8 @@ namespace CrowdPunch.Systems.Initialization
             sequence.EliteSpawnedCount = 0;
             sequence.EliteProfileCursor = 0;
             sequence.EliteProfileSpawnedInEntry = 0;
+            sequence.NormalMinimumProfileCursor = 0;
+            sequence.NormalMinimumSpawnedInEntry = 0;
             if (sequence.CurrentWaveIndex >= waves.Length)
             {
                 sequence.Phase = EnemyWaveRuntimePhase.Complete;
@@ -200,7 +204,7 @@ namespace CrowdPunch.Systems.Initialization
                 }
                 else
                 {
-                    selectedProfile = SelectProfile(ref random, wave, profiles).Profile;
+                    selectedProfile = SelectNormalProfile(ref random, wave, profiles, ref sequence).Profile;
                 }
                 bool found = false;
                 float3 position = default;
@@ -247,6 +251,10 @@ namespace CrowdPunch.Systems.Initialization
                         sequence.EliteProfileSpawnedInEntry = 0;
                     }
                 }
+                else
+                {
+                    AdvanceNormalMinimumCursor(wave, profiles, ref sequence);
+                }
             }
             sequence.RandomState = random.state;
             accepted.Dispose();
@@ -264,6 +272,35 @@ namespace CrowdPunch.Systems.Initialization
                 if (selection <= 0f) return profile;
             }
             return profiles[wave.ProfileStart + wave.ProfileCount - 1];
+        }
+
+        private static EnemyWaveProfile SelectNormalProfile(ref MathematicsRandom random, EnemyWaveDefinition wave,
+            DynamicBuffer<EnemyWaveProfile> profiles, ref EnemyWaveSequence sequence)
+        {
+            SkipCompletedNormalMinimums(wave, profiles, ref sequence);
+            if (sequence.NormalMinimumProfileCursor < wave.ProfileCount)
+                return profiles[wave.ProfileStart + sequence.NormalMinimumProfileCursor];
+            return SelectProfile(ref random, wave, profiles);
+        }
+
+        private static void AdvanceNormalMinimumCursor(EnemyWaveDefinition wave,
+            DynamicBuffer<EnemyWaveProfile> profiles, ref EnemyWaveSequence sequence)
+        {
+            if (sequence.NormalMinimumProfileCursor >= wave.ProfileCount) return;
+            sequence.NormalMinimumSpawnedInEntry++;
+            SkipCompletedNormalMinimums(wave, profiles, ref sequence);
+        }
+
+        private static void SkipCompletedNormalMinimums(EnemyWaveDefinition wave,
+            DynamicBuffer<EnemyWaveProfile> profiles, ref EnemyWaveSequence sequence)
+        {
+            while (sequence.NormalMinimumProfileCursor < wave.ProfileCount)
+            {
+                EnemyWaveProfile profile = profiles[wave.ProfileStart + sequence.NormalMinimumProfileCursor];
+                if (sequence.NormalMinimumSpawnedInEntry < profile.MinimumCount) return;
+                sequence.NormalMinimumProfileCursor++;
+                sequence.NormalMinimumSpawnedInEntry = 0;
+            }
         }
 
         internal static float3 SelectPosition(ref MathematicsRandom random, EnemyWaveDefinition wave,

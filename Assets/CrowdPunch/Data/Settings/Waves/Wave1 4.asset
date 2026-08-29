@@ -15,13 +15,14 @@ MonoBehaviour:
   totalEnemyCount: 4
   enemies:
   - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
+    MinimumCount: 0
     Weight: 1
   eliteEnemies: []
   spawnRectangles:
-  - Center: {x: 0, y: 2, z: 39.899975}
+  - Center: {x: 0, y: 2, z: 38.08}
     Width: 40
-    Depth: 5.1312637
-  delayBeforeWave: 1
+    Depth: 10
+  delayBeforeWave: 0.5
   activationMode: 0
   duration: 10
   spawnMode: 0
