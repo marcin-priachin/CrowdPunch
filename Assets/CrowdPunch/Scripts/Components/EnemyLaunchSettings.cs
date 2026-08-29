@@ -9,6 +9,7 @@ namespace CrowdPunch.Components
     {
         public float MinimumPropagationImpulse;
         public float PropagationAimCorrectionRadius;
+        public float LaunchHomingDegreesPerSecond;
         public float MinimumDamageImpulse;
         public float BaseCollisionDamageMultiplier;
         public float DamageMultiplierPerExcessImpulse;

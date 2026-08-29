@@ -89,7 +89,8 @@ namespace CrowdPunch.Mono.Player
                 settings.Range,
                 trajectoryPreview.LineLength,
                 settings.DirectionPositionWeight,
-                settings.AimAssistRange);
+                settings.AimAssistRange,
+                settings.AimAssistMaximumAngleDegrees);
         }
 
         public void RequestPunch()

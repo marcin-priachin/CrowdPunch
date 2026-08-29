@@ -39,6 +39,7 @@ namespace CrowdPunch.Systems.Combat
             state.LaunchDamage = launchDamage < 0f ? 0f : launchDamage;
             state.PropagatedLaunchCount = 0;
             state.LastPropagationImpulse = 0f;
+            state.HomingTarget = default;
         }
     }
 }

@@ -210,6 +210,9 @@ namespace CrowdPunch.Systems.Combat
                 }
 
                 if (best == Entity.Null) return;
+                EnemyLaunchState launchedState = LaunchStateLookup[launchedTarget];
+                launchedState.HomingTarget = best;
+                LaunchStateLookup[launchedTarget] = launchedState;
                 float3 correctedDirection = TransformLookup[best].Position - launchedPosition;
                 correctedDirection.y = 0f;
                 correctedDirection = math.normalizesafe(correctedDirection, initialDirection);

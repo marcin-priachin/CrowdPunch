@@ -30,6 +30,7 @@ namespace CrowdPunch.Bakers
             {
                 MinimumPropagationImpulse = authoring.Settings.MinimumPropagationImpulse,
                 PropagationAimCorrectionRadius = authoring.Settings.PropagationAimCorrectionRadius,
+                LaunchHomingDegreesPerSecond = authoring.Settings.LaunchHomingDegreesPerSecond,
                 MinimumDamageImpulse = authoring.Settings.MinimumDamageImpulse,
                 BaseCollisionDamageMultiplier = authoring.Settings.BaseCollisionDamageMultiplier,
                 DamageMultiplierPerExcessImpulse = authoring.Settings.DamageMultiplierPerExcessImpulse,

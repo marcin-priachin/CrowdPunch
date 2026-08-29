@@ -10,6 +10,7 @@ namespace CrowdPunch.Systems.Combat
     {
         public float3 Origin, Direction;
         public float3 AssistedLaunchDirection;
+        public Entity AssistedLaunchTarget;
         public float Range, Radius, Strength, Damage, PositionWeight;
         public EnemyLaunchCause Cause;
         public byte AffectActive, AffectRecovering, AffectLaunched, ApplyDamage, HasAssistedLaunchDirection;
@@ -78,6 +79,9 @@ namespace CrowdPunch.Systems.Combat
             if (EnemyLaunchTransition.IsLaunchable(tier))
             {
                 EnemyLaunchTransition.Begin(ref launch, punch.Cause, punch.Damage);
+                launch.HomingTarget = punch.HasAssistedLaunchDirection != 0
+                    ? punch.AssistedLaunchTarget
+                    : Entity.Null;
                 manager.SetComponentData(target, launch);
             }
             if (punch.ApplyDamage != 0 && punch.Damage > 0f)

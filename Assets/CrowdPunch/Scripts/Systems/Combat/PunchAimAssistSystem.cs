@@ -69,15 +69,22 @@ namespace CrowdPunch.Systems.Combat
 
                 Entity rayTarget = RaycastTarget(collisionWorld, source, transform.ValueRO.Position, direction,
                     bridge.PunchPreviewAimAssistRange, ref hits);
-                if (PunchAimAssist.IsValidTarget(state.EntityManager, source, rayTarget))
+                if (PunchAimAssist.IsValidTarget(state.EntityManager, source, rayTarget)
+                    && PunchAimAssist.IsWithinAssistLimits(state.EntityManager, rayTarget,
+                        transform.ValueRO.Position, direction, bridge.PunchPreviewAimAssistRange,
+                        bridge.PunchPreviewAimAssistMaximumAngleDegrees))
                 {
                     aimTarget.ValueRW.Target = rayTarget;
                 }
                 else if (aimTarget.ValueRO.IsAiming == 0
-                    || !PunchAimAssist.IsValidTarget(state.EntityManager, source, aimTarget.ValueRO.Target))
+                    || !PunchAimAssist.IsValidTarget(state.EntityManager, source, aimTarget.ValueRO.Target)
+                    || !PunchAimAssist.IsWithinAssistLimits(state.EntityManager, aimTarget.ValueRO.Target,
+                        transform.ValueRO.Position, direction, bridge.PunchPreviewAimAssistRange,
+                        bridge.PunchPreviewAimAssistMaximumAngleDegrees))
                 {
                     PunchAimAssist.TryGetFallbackTarget(state.EntityManager, source, transform.ValueRO.Position,
-                        direction, bridge.PunchPreviewAimAssistRange, allCandidates, out Entity fallback);
+                        direction, bridge.PunchPreviewAimAssistRange,
+                        bridge.PunchPreviewAimAssistMaximumAngleDegrees, allCandidates, out Entity fallback);
                     aimTarget.ValueRW.Target = fallback;
                 }
                 aimTarget.ValueRW.IsAiming = 1;

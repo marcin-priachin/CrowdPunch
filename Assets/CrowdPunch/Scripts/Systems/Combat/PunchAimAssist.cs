@@ -10,7 +10,8 @@ namespace CrowdPunch.Systems.Combat
     internal static class PunchAimAssist
     {
         public static bool TryGetFallbackTarget(EntityManager manager, Entity source, float3 sourcePosition,
-            float3 committedDirection, float range, NativeArray<Entity> candidates, out Entity target)
+            float3 committedDirection, float range, float maximumAngleDegrees,
+            NativeArray<Entity> candidates, out Entity target)
         {
             target = Entity.Null;
             float maximumDistance = math.max(0f, range);
@@ -22,6 +23,7 @@ namespace CrowdPunch.Systems.Combat
             float bestDot = float.MinValue;
             float bestDistanceSq = float.MaxValue;
             float maximumDistanceSq = maximumDistance * maximumDistance;
+            float minimumDot = math.cos(math.radians(math.clamp(maximumAngleDegrees, 0f, 180f)));
             for (int i = 0; i < candidates.Length; i++)
             {
                 Entity candidate = candidates[i];
@@ -32,6 +34,7 @@ namespace CrowdPunch.Systems.Combat
                 if (distanceSq <= 0.000001f || distanceSq > maximumDistanceSq) continue;
 
                 float dot = math.dot(forward, offset * math.rsqrt(distanceSq));
+                if (dot < minimumDot) continue;
                 if (dot > bestDot
                     || dot == bestDot && distanceSq < bestDistanceSq
                     || dot == bestDot && distanceSq == bestDistanceSq
@@ -69,6 +72,21 @@ namespace CrowdPunch.Systems.Combat
             return EnemyLaunchTransition.CanReceivePlayerPunch(
                 manager.GetComponentData<EnemyLaunchState>(target),
                 manager.GetComponentData<Health>(target));
+        }
+
+        public static bool IsWithinAssistLimits(EntityManager manager, Entity target, float3 sourcePosition,
+            float3 committedDirection, float range, float maximumAngleDegrees)
+        {
+            if (target == Entity.Null || !manager.Exists(target)
+                || !manager.HasComponent<LocalTransform>(target)) return false;
+            float2 forward = math.normalizesafe(committedDirection.xz);
+            float2 offset = manager.GetComponentData<LocalTransform>(target).Position.xz - sourcePosition.xz;
+            float distanceSq = math.lengthsq(offset);
+            float maximumDistance = math.max(0f, range);
+            if (math.lengthsq(forward) <= 0f || distanceSq <= 0.000001f
+                || distanceSq > maximumDistance * maximumDistance) return false;
+            float minimumDot = math.cos(math.radians(math.clamp(maximumAngleDegrees, 0f, 180f)));
+            return math.dot(forward, offset * math.rsqrt(distanceSq)) >= minimumDot;
         }
     }
 }

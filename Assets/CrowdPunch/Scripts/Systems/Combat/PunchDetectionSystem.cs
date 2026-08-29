@@ -57,6 +57,7 @@ namespace CrowdPunch.Systems.Combat
                         state.EntityManager, enemy, transform.ValueRO.Position, out float3 assistedDirection))
                 {
                     targetPunch.AssistedLaunchDirection = assistedDirection;
+                    targetPunch.AssistedLaunchTarget = SystemAPI.GetComponent<PunchAimAssistTarget>(enemy).Target;
                     targetPunch.HasAssistedLaunchDirection = 1;
                 }
                 if (tier.ValueRO.Value == EnemyCombatTier.Elite)

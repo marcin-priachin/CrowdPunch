@@ -103,6 +103,7 @@ namespace CrowdPunch.Mono.Player
         public float PunchPreviewLength { get; private set; }
         public float PunchPreviewPositionWeight { get; private set; }
         public float PunchPreviewAimAssistRange { get; private set; }
+        public float PunchPreviewAimAssistMaximumAngleDegrees { get; private set; }
         public IReadOnlyList<TrajectoryPreviewSegment> TrajectoryPreviewSegments => trajectoryPreviewSegments;
 
         /// <summary>Monotonic request id used to distinguish repeated punches.</summary>
@@ -219,7 +220,8 @@ namespace CrowdPunch.Mono.Player
             float range,
             float previewLength,
             float pushDirectionPositionWeight,
-            float aimAssistRange)
+            float aimAssistRange,
+            float aimAssistMaximumAngleDegrees)
         {
             PunchPreviewOrigin = new float3(origin.x, origin.y, origin.z);
             PunchPreviewDirection = new float3(direction.x, direction.y, direction.z);
@@ -228,6 +230,7 @@ namespace CrowdPunch.Mono.Player
             PunchPreviewLength = Mathf.Max(0f, previewLength);
             PunchPreviewPositionWeight = Mathf.Clamp01(pushDirectionPositionWeight);
             PunchPreviewAimAssistRange = Mathf.Max(0f, aimAssistRange);
+            PunchPreviewAimAssistMaximumAngleDegrees = Mathf.Clamp(aimAssistMaximumAngleDegrees, 0f, 180f);
             IsPunchPreviewAvailable = isActiveAndEnabled;
         }
 
