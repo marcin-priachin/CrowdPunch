@@ -54,9 +54,13 @@ namespace CrowdPunch.Systems.Initialization
                 EnemyWaveDefinition wave = waves[sequence.CurrentWaveIndex];
                 if (sequence.Phase == EnemyWaveRuntimePhase.AwaitingActivation)
                 {
-                    bool shouldAdvance = wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed
-                        ? now >= sequence.NextActionAt
-                        : sequence.DefeatedCount >= wave.TotalEnemyCount + wave.TotalEliteCount;
+                    bool shouldAdvance;
+                    if (wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed)
+                        shouldAdvance = now >= sequence.NextActionAt;
+                    else if (wave.ActivationMode == (byte)EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated)
+                        shouldAdvance = sequence.UndefeatedCount == 0;
+                    else
+                        shouldAdvance = sequence.DefeatedCount >= wave.TotalEnemyCount + wave.TotalEliteCount;
                     if (shouldAdvance)
                     {
                         Debug.Log($"Wave {sequence.CurrentWaveIndex} activation condition satisfied " +
@@ -133,9 +137,11 @@ namespace CrowdPunch.Systems.Initialization
 
         private static string GetActivationDescription(EnemyWaveDefinition wave)
         {
-            return wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed
-                ? $"the {math.max(0f, wave.Duration):0.###}-second activation delay"
-                : $"{wave.TotalEnemyCount + wave.TotalEliteCount} counted defeats";
+            if (wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed)
+                return $"the {math.max(0f, wave.Duration):0.###}-second activation delay";
+            if (wave.ActivationMode == (byte)EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated)
+                return "all current and previous wave enemies to be defeated";
+            return $"{wave.TotalEnemyCount + wave.TotalEliteCount} counted defeats";
         }
 
         private static void InitializeSequence(EntityCommandBuffer commands, Entity entity,
@@ -145,6 +151,7 @@ namespace CrowdPunch.Systems.Initialization
             sequence.CurrentWaveIndex = 0;
             sequence.SpawnedCount = 0;
             sequence.DefeatedCount = 0;
+            sequence.UndefeatedCount = 0;
             sequence.EliteSpawnedCount = 0;
             sequence.EliteProfileCursor = 0;
             sequence.EliteProfileSpawnedInEntry = 0;
@@ -240,6 +247,7 @@ namespace CrowdPunch.Systems.Initialization
                 accepted.Add(new float4(position, selectedProfile.SpawnClearance));
                 spawned++;
                 sequence.SpawnedCount++;
+                sequence.UndefeatedCount++;
                 if (spawningElite)
                 {
                     sequence.EliteSpawnedCount++;

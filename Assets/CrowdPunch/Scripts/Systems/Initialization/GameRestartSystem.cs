@@ -112,6 +112,7 @@ namespace CrowdPunch.Systems.Initialization
                 sequence.ValueRW.CurrentWaveIndex = 0;
                 sequence.ValueRW.SpawnedCount = 0;
                 sequence.ValueRW.DefeatedCount = 0;
+                sequence.ValueRW.UndefeatedCount = 0;
                 sequence.ValueRW.EliteSpawnedCount = 0;
                 sequence.ValueRW.EliteProfileCursor = 0;
                 sequence.ValueRW.EliteProfileSpawnedInEntry = 0;

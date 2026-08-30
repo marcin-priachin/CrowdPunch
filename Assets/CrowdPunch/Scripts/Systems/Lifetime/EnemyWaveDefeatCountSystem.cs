@@ -21,11 +21,13 @@ namespace CrowdPunch.Systems.Lifetime
                 Entity owner = ownership.ValueRO.Sequence;
                 if (!sequences.HasComponent(owner)) continue;
                 EnemyWaveSequence sequence = sequences[owner];
-                if (ownership.ValueRO.RunGeneration != sequence.RunGeneration
-                    || ownership.ValueRO.WaveIndex != sequence.CurrentWaveIndex)
+                if (ownership.ValueRO.RunGeneration != sequence.RunGeneration)
                     continue;
                 ownership.ValueRW.DefeatCounted = 1;
-                sequence.DefeatedCount++;
+                if (sequence.UndefeatedCount > 0)
+                    sequence.UndefeatedCount--;
+                if (ownership.ValueRO.WaveIndex == sequence.CurrentWaveIndex)
+                    sequence.DefeatedCount++;
                 sequences[owner] = sequence;
             }
         }

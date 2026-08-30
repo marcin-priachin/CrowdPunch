@@ -13,6 +13,7 @@ namespace CrowdPunch.Components
         public int CurrentWaveIndex;
         public int SpawnedCount;
         public int DefeatedCount;
+        public int UndefeatedCount;
         public int EliteSpawnedCount;
         public int EliteProfileCursor;
         public int EliteProfileSpawnedInEntry;

@@ -7,7 +7,8 @@ namespace CrowdPunch.Configuration
     public enum EnemyWaveActivationMode : byte
     {
         AllEnemiesDefeated,
-        DurationElapsed
+        DurationElapsed,
+        AllCurrentAndPreviousEnemiesDefeated
     }
 
     public enum EnemyWaveSpawnMode : byte
@@ -62,7 +63,7 @@ namespace CrowdPunch.Configuration
 
         [Header("Timing and cadence")]
         [SerializeField, Min(0f)] private float delayBeforeWave;
-        [SerializeField, Tooltip("Condition used to activate the next wave after this wave has finished spawning.")]
+        [SerializeField, Tooltip("Condition used to activate the next wave after this wave has finished spawning. The cumulative option waits for all undefeated enemies owned by this sequence's current run.")]
         private EnemyWaveActivationMode activationMode = EnemyWaveActivationMode.AllEnemiesDefeated;
         [SerializeField, Min(0f), Tooltip("Time to wait after every enemy in this wave has spawned before activating the next wave when using timed activation.")]
         private float duration;
