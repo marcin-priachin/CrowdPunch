@@ -24,10 +24,6 @@ Which two weapons provide meaningfully different launch geometry while preservin
 
 What crowd-mediated physical opportunity damages the first boss, and how does the boss change the crowd state during the fight?
 
-### OQ-008 — Route Structure
-
-What meaningful choice distinguishes the map's two or three paths: enemy composition, effect source, weapon opportunity, risk, reward, or route geometry?
-
 ### OQ-009 — Progression Model
 
 What changes during a run, what persists between runs, and what—if anything—is meta-progression?
@@ -42,7 +38,7 @@ What is the smallest shippable effect set, and what general transformation/event
 
 ### OQ-013 — Encounter Pacing
 
-How are traversal, crowd encounters, recovery, choices, and the boss distributed across a 15–20 minute run?
+How are gauntlet encounters, short transitions, recovery, and the boss distributed across a 15–20 minute run?
 
 ## Priority 3 — Validate After The Core Is Fun
 
@@ -64,7 +60,7 @@ Which controller and keyboard/mouse schemes are primary, and should the accepted
 
 ### OQ-018 — Difficulty Scaling
 
-Should difficulty grow mainly through crowd composition, density, speed, route risk, effect interactions, or boss behavior?
+Should difficulty grow mainly through crowd composition, density, speed, gauntlet layout, effect interactions, or boss behavior?
 
 ### OQ-019 — Audio Language
 
@@ -89,6 +85,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-08-30 — OQ-008
+
+Decision: The run uses a fixed sequence of small, closed gauntlet levels leading to the boss. Open levels, branching routes, and seamless traversal between gauntlets are outside the MVP.
+
+Rationale: Compact authored arenas concentrate play on crowd positioning and physical chain reactions while keeping level production and run pacing tractable.
+
+GDD rules: LOOP-002, LOOP-006, MVP-001
 
 ### 2026-08-28 — Ranged Projectile Movement Lead
 

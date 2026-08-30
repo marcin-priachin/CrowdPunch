@@ -96,8 +96,12 @@ Assets/CrowdPunch/Scripts
 | `Mono/UI/GameBootstrap.cs` | Scene-level hybrid bridge wiring and game canvas prefab bootstrap. |
 | `Mono/UI/PlayerHealthBar.cs` | Scene UI binding for the GameObject-owned player health bar. |
 | `Mono/UI/RestartGameButton.cs` | Game UI restart action and process-local restart request bridge. |
+| `Mono/Levels/GauntletLevel.cs` | Scene-facing gauntlet identity and authored player entry point. |
+| `Mono/Levels/GauntletSequence.cs` | Persistent fixed-order additive gauntlet loading and unloading. |
+| `Mono/Levels/GauntletCompletionRegistry.cs` | Narrow ECS-to-Mono gauntlet-completion handoff. |
 | `Resources/GameCanvas.prefab` | Reusable game UI canvas prefab with the player health bar. |
 | `Systems/Initialization/GameRestartSystem.cs` | Resets ECS-owned enemy state for restart without reloading SubScenes. |
+| `Systems/Presentation/GauntletCompletionSystem.cs` | Reports when every loaded wave encounter is complete. |
 
 ## ECS Feature Choices
 

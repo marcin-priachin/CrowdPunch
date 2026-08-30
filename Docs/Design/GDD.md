@@ -58,7 +58,7 @@ The player approaches or is pressured by a crowd, chooses position and launch di
 
 Status: Must
 
-A run culminates in reaching and defeating a boss. The route to the boss should offer two or three paths rather than one strictly linear corridor.
+A run progresses through a fixed sequence of small, closed gauntlet levels and culminates in defeating a boss. Each gauntlet uses a distinct compact layout and a bounded crowd encounter rather than an open level or branching route.
 
 ### LOOP-003 — Run Duration
 
@@ -77,6 +77,12 @@ The player has health and loses the run when it reaches zero. Taking damage make
 Status: Should
 
 Any pause, selection, or non-action interruption during a run should be very short.
+
+### LOOP-006 — Gauntlet Transition
+
+Status: Must
+
+Completing a gauntlet advances the run to the next authored gauntlet. Level transitions must be short, must not allow enemies or encounter state from the previous level to leak into the next, and must place the player at the next level's authored entry point.
 
 ## Player And Controls
 
@@ -385,7 +391,7 @@ Whether weapons are permanent possessions, temporary run pickups, replace one an
 
 Status: Must
 
-One playable map with two or three routes leading toward the boss.
+A fixed sequence of small, closed gauntlet levels leading to the boss. The MVP does not require open levels, branching routes, or seamless traversal between gauntlets.
 
 ### MVP-002 — Boss
 
@@ -418,4 +424,6 @@ The MVP must support a start-to-boss-to-win-or-loss run rather than only a comba
 - A large encyclopaedia before the number of effect combinations justifies it.
 - Unlocking basic movement or core crowd-manipulation mechanics during a run.
 - Direct ordinary attacks as the complete boss solution.
+- Open-world or large open-level traversal.
+- Branching route selection between gauntlets.
 - Additional maps, bosses, enemy types, or weapons before the MVP loop is proven.

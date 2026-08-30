@@ -222,5 +222,13 @@ namespace CrowdPunch.Mono.Player
             submittedMovementSequence = ecsBridge.MovementSequence;
             appliedMovementSequence = submittedMovementSequence;
         }
+
+        /// <summary>Sets the authored spawn used by subsequent resets and places the player there immediately.</summary>
+        public void SetLevelEntryPoint(Vector3 position, Quaternion rotation)
+        {
+            initialPosition = position;
+            initialRotation = rotation;
+            ResetPlayerState();
+        }
     }
 }

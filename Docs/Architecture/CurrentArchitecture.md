@@ -17,8 +17,10 @@ Crowd Punch uses a hybrid Unity architecture:
 
 ## Scenes
 
-- `Assets/CrowdPunch/Scenes/Bootstrap.unity` — main GameObject scene and application bootstrap.
-- `Assets/CrowdPunch/Scenes/Bootstrap/ArenaSubScene.unity` — arena authoring content baked into entities.
+- `Assets/CrowdPunch/Scenes/Bootstrap.unity` — persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` — first additive gauntlet scene, containing its player entry point and the prototype arena SubScene reference.
+- `Assets/CrowdPunch/Scenes/Bootstrap/ArenaSubScene.unity` — prototype arena authoring content baked into entities.
+- Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
 
@@ -44,6 +46,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Player health and invincibility | GameObject | `PlayerHealth`; `PlayerInvincibilityFeedback` blinks the player renderer while invulnerability is active |
 | Camera | GameObject | `CameraFollow` |
 | Scene bootstrap and UI | GameObject | `GameBootstrap`, UI MonoBehaviours |
+| Fixed gauntlet sequence and additive scene lifecycle | GameObject | `GauntletSequence`, `GauntletLevel` |
 | Player state visible to ECS | Bridge → ECS singleton | `PlayerSnapshot` (including collision-resolved velocity), `PlayerHealthSnapshot` |
 | Punch command visible to ECS | Bridge → enableable ECS request | `PunchRequest` |
 | Enemy contact reported to player | ECS → bridge event | `EnemyContactHitReceived` |
@@ -67,6 +70,12 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 1. `BootstrapSystem` establishes singleton/runtime state.
 2. `EnemySpawnSystem` instantiates the initial enemy pool.
 3. `GameRestartSystem` handles managed restart coordination.
+
+### Gauntlet Level Flow
+
+`GauntletSequence` belongs to the persistent Bootstrap scene and loads one configured gauntlet scene additively at a time. A gauntlet scene owns its presentation layout, one `GauntletLevel` marker with an authored player entry point, and an ECS SubScene for level-specific collision and encounter data. The transition pauses scaled simulation, unloads the previous scene and its baked entities, loads the next scene, places the GameObject player at the authored entry point, and requests the established ECS restart reset. It never queries or retains enemy entities.
+
+`GauntletCompletionSystem` runs in `GamePresentationGroup` and reports completion through the narrow process-local `GauntletCompletionRegistry` only when every loaded `EnemyWaveSequence` has enabled `EnemyWaveEncounterComplete`. Requiring at least one sequence prevents an empty loading interval from advancing the run. The Bootstrap flow consumes that signal and loads the next scene in its fixed sequence (LOOP-002, LOOP-006, MVP-001). Final-run win presentation remains design-dependent.
 
 ### Initial Spawn Workflows
 
@@ -343,7 +352,7 @@ The current implementation proves architecture and basic interactions, but sever
 - A launched enemy, including a zero-health enemy with deferred defeat, can propagate launched state to and independently damage an active or recovering enemy when Unity Physics reports solver-estimated contact impulse above the respective authored thresholds. Unity Physics supplies the transferred velocity; gameplay may rotate newly propagated horizontal velocity toward the smallest-angle eligible target inside the configured correction radius without changing its magnitude or vertical component. One source launch damages each target at most once but may damage multiple targets. Defeated enemies and launched-versus-launched pairs are ineligible. The final effect grammar remains unresolved.
 - Enemy chasing and contact damage exist as prototype behavior.
 - A player health bar exists. Normal-enemy health is displayed temporarily after damage per `INFO-001`, while non-active launch phases share that pooled view for transient state feedback.
-- The current scene is an arena sandbox, not the required route-based 15–20 minute run.
+- `Gauntlet_01` packages the current arena sandbox through the fixed additive gauntlet lifecycle. Additional gauntlets and the complete 15–20 minute run are not yet authored.
 
 Do not preserve these details merely because they exist. Preserve the ownership boundary and system timing while evolving behavior toward accepted GDD rules.
 
