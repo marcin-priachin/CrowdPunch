@@ -121,8 +121,8 @@ Ordering between systems that share only a group should be made explicit when co
 - `ExplosiveCollisionTriggerSystem` requests an explosive detonation when either participant in an enemy collision is `Launched`; `ExplosionResolutionSystem` then resolves explosion overlap chains to a same-frame fixed point before recovery.
 - `RangedProjectileSystem` evaluates each fixed trajectory, performs a swept player-radius hit check, forwards one accepted hit through `PlayerEcsBridge`, and destroys the projectile on hit, after falling below its authored world-space minimum altitude, or on expiry. It does not apply arena-bound cleanup because the unconstrained GameObject player can currently provide a valid target outside `ArenaBounds`.
 - `EnemyRecoverySystem` advances living `Launched` enemies through low-momentum dwell and `Recovering` back to `Active`; a zero-health launched enemy enters `Defeated` directly when launch ends.
-- `PlayerContactDamageSystem` detects enemy proximity/contact and reports the closest accepted hit through the bridge.
-- `OutOfBoundsSystem` requests recovery for escaped enemies.
+- `PlayerContactDamageSystem` uses full three-dimensional enemy/player proximity and reports the closest accepted hit through the bridge, so entities above or below the player cannot produce planar-only contact damage.
+- `OutOfBoundsSystem` compares enemy positions with the baked three-dimensional `ArenaBounds`. Escaped enemies whose profile allows respawning enter the existing pool immediately; fixed wave enemies instead enter terminal `Defeated` state with zero health so their ownership is counted and they cannot block cumulative encounter completion from outside the authored arena.
 - `DefeatedEnemyLifecycleSystem` converts the one-shot defeat marker into the existing respawn request.
 - `EnemyRespawnSystem` brakes, pools, resets, and respawns defeated or otherwise invalid enemies.
 

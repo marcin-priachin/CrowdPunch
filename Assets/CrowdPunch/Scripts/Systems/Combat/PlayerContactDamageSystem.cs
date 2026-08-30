@@ -53,7 +53,6 @@ namespace CrowdPunch.Systems.Combat
                 }
 
                 float3 toPlayer = playerSnapshot.Position - transform.ValueRO.Position;
-                toPlayer.y = 0f;
 
                 float contactDistance = playerSnapshot.Radius + math.max(0f, contactSettings.ValueRO.ContactRadius);
                 float distanceSquared = math.lengthsq(toPlayer);
