@@ -10,4 +10,10 @@ namespace CrowdPunch.Components
         public bool IsRunning;
         public float ElapsedSeconds;
     }
+
+    /// <summary>Global limit on ordinary melee enemies that actively close on the player.</summary>
+    public struct EnemyCrowdPressureSettings : IComponentData
+    {
+        public int MaximumApproachingEnemies;
+    }
 }

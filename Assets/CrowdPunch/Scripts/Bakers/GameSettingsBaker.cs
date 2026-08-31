@@ -26,6 +26,10 @@ namespace CrowdPunch.Bakers
             });
             AddComponent<PlayerSnapshot>(entity);
             AddComponent<PlayerHealthSnapshot>(entity);
+            AddComponent(entity, new EnemyCrowdPressureSettings
+            {
+                MaximumApproachingEnemies = authoring.Settings.MaximumApproachingEnemies
+            });
             AddComponent(entity, new EnemyLaunchSettings
             {
                 MinimumPropagationImpulse = authoring.Settings.MinimumPropagationImpulse,

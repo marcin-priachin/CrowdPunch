@@ -17,15 +17,15 @@ namespace CrowdPunch.Systems.Lifetime
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<ArenaBounds>();
+            state.RequireForUpdate<EnemyDefeatBounds>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            ArenaBounds arenaBounds = SystemAPI.GetSingleton<ArenaBounds>();
-            float3 minimum = arenaBounds.Center - math.max(arenaBounds.Extents, float3.zero);
-            float3 maximum = arenaBounds.Center + math.max(arenaBounds.Extents, float3.zero);
+            EnemyDefeatBounds defeatBounds = SystemAPI.GetSingleton<EnemyDefeatBounds>();
+            float3 minimum = defeatBounds.Center - math.max(defeatBounds.Extents, float3.zero);
+            float3 maximum = defeatBounds.Center + math.max(defeatBounds.Extents, float3.zero);
             double elapsedTime = SystemAPI.Time.ElapsedTime;
 
             foreach ((RefRO<LocalTransform> transform,
@@ -53,7 +53,7 @@ namespace CrowdPunch.Systems.Lifetime
                     continue;
                 }
 
-                // Fixed wave enemies cannot return to play. Treat leaving their authored arena as
+                // Fixed wave enemies cannot return to play. Treat leaving the authored defeat bounds as
                 // terminal defeat so they cannot invisibly block cumulative wave completion.
                 health.ValueRW.Current = 0f;
                 launchState.ValueRW.Phase = EnemyLaunchPhase.Defeated;

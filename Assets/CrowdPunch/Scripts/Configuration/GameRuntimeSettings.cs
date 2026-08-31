@@ -7,6 +7,9 @@ namespace CrowdPunch.Configuration
     public sealed class GameRuntimeSettings : ScriptableObject
     {
         [SerializeField] private bool startRunning = true;
+        [Header("Crowd Pressure (Provisional)")]
+        [Tooltip("Maximum number of closest baseline or explosive enemies that actively approach the player. Other ordinary melee enemies remain distributed across the arena.")]
+        [SerializeField, Min(0)] private int maximumApproachingEnemies = 8;
         [Header("Enemy Launch (Provisional)")]
         [Tooltip("Minimum solver-estimated contact impulse required for a launched enemy to launch another enemy.")]
         [SerializeField, Min(0f)] private float minimumPropagationImpulse = 1.5f;
@@ -25,6 +28,7 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float recoveryDuration = 0.6f;
 
         public bool StartRunning => startRunning;
+        public int MaximumApproachingEnemies => maximumApproachingEnemies;
         public float MinimumPropagationImpulse => minimumPropagationImpulse;
         public float PropagationAimCorrectionRadius => propagationAimCorrectionRadius;
         public float LaunchHomingDegreesPerSecond => launchHomingDegreesPerSecond;

@@ -10,35 +10,50 @@ namespace CrowdPunch.Editor
     [CustomEditor(typeof(ArenaAuthoring))]
     public sealed class ArenaAuthoringEditor : UnityEditor.Editor
     {
-        private static readonly Color BoundsColor = new Color(0.2f, 0.8f, 1f, 0.9f);
+        private static readonly Color SpacingBoundsColor = new Color(0.2f, 0.8f, 1f, 0.9f);
+        private static readonly Color DefeatBoundsColor = new Color(1f, 0.25f, 0.15f, 0.9f);
 
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
 
             ArenaAuthoring arena = (ArenaAuthoring)target;
-            Vector3 size = ToVector3(arena.Size);
-            Vector3 center = arena.transform.position;
+            Vector3 spacingSize = ToVector3(arena.SpacingSize);
+            Vector3 defeatSize = ToVector3(arena.DefeatSize);
+            Vector3 origin = arena.transform.position;
+            Vector3 spacingCenter = origin + ToVector3(arena.SpacingCenterOffset);
+            Vector3 defeatCenter = origin + ToVector3(arena.DefeatCenterOffset);
 
             EditorGUILayout.Space();
             using (new EditorGUI.DisabledScope(true))
             {
-                EditorGUILayout.Vector3Field("Baked Center", center);
-                EditorGUILayout.Vector3Field("Baked Extents", size * 0.5f);
+                EditorGUILayout.Vector3Field("Spacing Baked Center", spacingCenter);
+                EditorGUILayout.Vector3Field("Spacing Baked Extents", spacingSize * 0.5f);
+                EditorGUILayout.Vector3Field("Defeat Baked Center", defeatCenter);
+                EditorGUILayout.Vector3Field("Defeat Baked Extents", defeatSize * 0.5f);
             }
         }
 
         private void OnSceneGUI()
         {
             ArenaAuthoring arena = (ArenaAuthoring)target;
-            Vector3 size = ToVector3(arena.Size);
-            Vector3 center = arena.transform.position;
+            Vector3 spacingSize = ToVector3(arena.SpacingSize);
+            Vector3 defeatSize = ToVector3(arena.DefeatSize);
+            Vector3 origin = arena.transform.position;
+            Vector3 spacingCenter = origin + ToVector3(arena.SpacingCenterOffset);
+            Vector3 defeatCenter = origin + ToVector3(arena.DefeatCenterOffset);
 
-            Handles.color = BoundsColor;
-            Handles.DrawWireCube(center, size);
+            Handles.color = SpacingBoundsColor;
+            Handles.DrawWireCube(spacingCenter, spacingSize);
+            Handles.Label(
+                spacingCenter + new Vector3(0f, spacingSize.y * 0.5f, 0f),
+                $"Enemy Spacing: {FormatSize(spacingSize)}");
 
-            Vector3 labelPosition = center + new Vector3(0f, size.y * 0.5f, 0f);
-            Handles.Label(labelPosition, $"Arena Size: {FormatSize(size)}");
+            Handles.color = DefeatBoundsColor;
+            Handles.DrawWireCube(defeatCenter, defeatSize);
+            Handles.Label(
+                defeatCenter + new Vector3(0f, defeatSize.y * 0.5f, 0f),
+                $"Enemy Defeat: {FormatSize(defeatSize)}");
         }
 
         private static Vector3 ToVector3(Unity.Mathematics.float3 value)

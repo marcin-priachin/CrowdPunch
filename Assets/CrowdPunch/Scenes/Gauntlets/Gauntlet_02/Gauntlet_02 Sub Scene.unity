@@ -380,7 +380,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -1.5, z: 0}
-  m_LocalScale: {x: 130, y: 1, z: 130}
+  m_LocalScale: {x: 132, y: 1, z: 132}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 234160079}
@@ -1000,7 +1000,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69fb4f90670f984498a51d5c6036ae10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.ArenaAuthoring
-  size: {x: 180, y: 100, z: 180}
+  spacingCenterOffset: {x: 0, y: 0, z: 0}
+  spacingSize: {x: 130, y: 100, z: 130}
+  defeatCenterOffset: {x: 0, y: 0, z: 0}
+  defeatSize: {x: 180, y: 100, z: 180}
 --- !u!4 &2070583053
 Transform:
   m_ObjectHideFlags: 0

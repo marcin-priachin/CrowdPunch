@@ -17,11 +17,40 @@ namespace CrowdPunch.Systems.AI
     [UpdateAfter(typeof(InputBridge.PlayerBridgeSystem))]
     public partial struct EnemyChaseSystem : ISystem
     {
+        public static float3 GetArenaRelativeSurroundTargetForTests(
+            int entityIndex,
+            float3 playerPosition,
+            float y,
+            EnemyMovementSettings movementSettings,
+            ArenaBounds arenaBounds)
+        {
+            return EnemyChaseJob.GetArenaRelativeSurroundTarget(
+                entityIndex,
+                playerPosition,
+                y,
+                movementSettings,
+                arenaBounds);
+        }
+
+        public static float3 GetArenaDistributionTargetForTests(
+            int entityIndex,
+            float y,
+            EnemyMovementSettings movementSettings,
+            ArenaBounds arenaBounds)
+        {
+            return EnemyChaseJob.GetArenaDistributionTarget(
+                entityIndex,
+                y,
+                movementSettings,
+                arenaBounds);
+        }
+
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PlayerSnapshot>();
             state.RequireForUpdate<ArenaBounds>();
+            state.RequireForUpdate<EnemyCrowdPressureSettings>();
         }
 
         [BurstCompile]
@@ -29,13 +58,16 @@ namespace CrowdPunch.Systems.AI
         {
             PlayerSnapshot playerSnapshot = SystemAPI.GetSingleton<PlayerSnapshot>();
             ArenaBounds arenaBounds = SystemAPI.GetSingleton<ArenaBounds>();
+            EnemyCrowdPressureSettings pressureSettings = SystemAPI.GetSingleton<EnemyCrowdPressureSettings>();
             NativeList<EnemySeparationNeighbor> activeEnemies = new NativeList<EnemySeparationNeighbor>(Allocator.TempJob);
+            NativeList<PressureCandidate> pressureCandidates = new NativeList<PressureCandidate>(Allocator.TempJob);
 
             foreach ((RefRO<LocalTransform> transform, EnabledRefRO<RespawnRequest> respawnRequest,
-                         RefRO<EnemyLaunchState> launchState, RefRO<EnemyArchetype> archetype) in
+                         RefRO<EnemyLaunchState> launchState, RefRO<EnemyArchetype> archetype, Entity entity) in
                      SystemAPI.Query<RefRO<LocalTransform>, EnabledRefRO<RespawnRequest>, RefRO<EnemyLaunchState>, RefRO<EnemyArchetype>>()
                          .WithAll<Enemy>()
-                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
+                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
+                         .WithEntityAccess())
             {
                 if (!respawnRequest.ValueRO && launchState.ValueRO.Phase == EnemyLaunchPhase.Active)
                 {
@@ -44,6 +76,20 @@ namespace CrowdPunch.Systems.AI
                         Position = transform.ValueRO.Position,
                         Archetype = archetype.ValueRO.Value
                     });
+
+                    if (playerSnapshot.IsAvailable && IsOrdinaryMelee(archetype.ValueRO.Value))
+                    {
+                        float3 toPlayer = transform.ValueRO.Position - playerSnapshot.Position;
+                        toPlayer.y = 0f;
+                        InsertClosestCandidate(
+                            pressureCandidates,
+                            math.max(0, pressureSettings.MaximumApproachingEnemies),
+                            new PressureCandidate
+                            {
+                                Entity = entity,
+                                DistanceSq = math.lengthsq(toPlayer)
+                            });
+                    }
                 }
             }
 
@@ -52,10 +98,67 @@ namespace CrowdPunch.Systems.AI
                 PlayerSnapshot = playerSnapshot,
                 ArenaBounds = arenaBounds,
                 DeltaTime = SystemAPI.Time.DeltaTime,
-                Enemies = activeEnemies.AsDeferredJobArray()
+                Enemies = activeEnemies.AsDeferredJobArray(),
+                PressureEnemies = pressureCandidates.AsDeferredJobArray()
             }.ScheduleParallel(state.Dependency);
 
-            state.Dependency = activeEnemies.Dispose(chaseJob);
+            JobHandle disposePressureCandidates = pressureCandidates.Dispose(chaseJob);
+            state.Dependency = activeEnemies.Dispose(disposePressureCandidates);
+        }
+
+        private static bool IsOrdinaryMelee(EnemyArchetypeKind archetype)
+        {
+            return archetype == EnemyArchetypeKind.Baseline
+                || archetype == EnemyArchetypeKind.Explosive;
+        }
+
+        private static void InsertClosestCandidate(
+            NativeList<PressureCandidate> candidates,
+            int maximumCount,
+            PressureCandidate candidate)
+        {
+            if (maximumCount <= 0)
+            {
+                return;
+            }
+
+            if (candidates.Length < maximumCount)
+            {
+                candidates.Add(candidate);
+                return;
+            }
+
+            int farthestIndex = 0;
+            for (int index = 1; index < candidates.Length; index++)
+            {
+                if (IsFarther(candidates[index], candidates[farthestIndex]))
+                {
+                    farthestIndex = index;
+                }
+            }
+
+            if (IsCloser(candidate, candidates[farthestIndex]))
+            {
+                candidates[farthestIndex] = candidate;
+            }
+        }
+
+        private static bool IsCloser(PressureCandidate candidate, PressureCandidate other)
+        {
+            return candidate.DistanceSq < other.DistanceSq
+                || candidate.DistanceSq == other.DistanceSq && candidate.Entity.Index < other.Entity.Index;
+        }
+
+        private static bool IsFarther(PressureCandidate candidate, PressureCandidate other)
+        {
+            return candidate.DistanceSq > other.DistanceSq
+                || candidate.DistanceSq == other.DistanceSq && candidate.Entity.Index > other.Entity.Index;
+        }
+
+        private struct PressureCandidate
+        {
+            public Entity Entity;
+            public float DistanceSq;
         }
 
         [BurstCompile]
@@ -67,6 +170,7 @@ namespace CrowdPunch.Systems.AI
             public ArenaBounds ArenaBounds;
             public float DeltaTime;
             [ReadOnly] public NativeArray<EnemySeparationNeighbor> Enemies;
+            [ReadOnly] public NativeArray<PressureCandidate> PressureEnemies;
 
             private void Execute(
                 Entity entity,
@@ -78,6 +182,7 @@ namespace CrowdPunch.Systems.AI
                 in EnemyContactDamageSettings contactSettings,
                 in EnemySeparationDistance separationDistance,
                 in EnemyArchetypeSeparationDistances archetypeSeparationDistances,
+                in EnemyArchetype archetype,
                 in EnemyLaunchState launchState)
             {
                 if (launchState.Phase != EnemyLaunchPhase.Active)
@@ -103,12 +208,19 @@ namespace CrowdPunch.Systems.AI
                     movementSettings.SeparationWeight,
                     archetypeSeparationDistances);
 
-                if (distanceToPlayer <= movementSettings.ChargeDistance)
+                bool explosiveInContactRange = archetype.Value == EnemyArchetypeKind.Explosive
+                    && distanceToPlayer <= math.max(0f, contactSettings.AttemptDistance);
+                if (IsPressureEnemy(entity) || explosiveInContactRange)
                 {
                     UpdateContactAttempt(entity, distanceToPlayer, contactSettings, ref contactAttempt);
-                    float3 target = contactAttempt.IsAttempting != 0
+                    float3 target = explosiveInContactRange || contactAttempt.IsAttempting != 0
                         ? new float3(PlayerSnapshot.Position.x, transform.Position.y, PlayerSnapshot.Position.z)
-                        : GetSurroundTarget(entity, transform.Position.y, movementSettings);
+                        : GetArenaRelativeSurroundTarget(
+                            entity.Index,
+                            PlayerSnapshot.Position,
+                            transform.Position.y,
+                            movementSettings,
+                            ArenaBounds);
                     float3 toTarget = target - transform.Position;
                     toTarget.y = 0f;
 
@@ -117,7 +229,9 @@ namespace CrowdPunch.Systems.AI
                         ? float3.zero
                         : toTarget / math.max(0.0001f, targetDistance);
 
-                    float3 appliedSeparation = contactAttempt.IsAttempting != 0
+                    float3 appliedSeparation = explosiveInContactRange
+                        ? float3.zero
+                        : contactAttempt.IsAttempting != 0
                         ? math.normalizesafe(separation) * math.max(0f, contactSettings.AttemptSeparationWeight)
                         : separation;
                     desiredMovement.Direction = math.normalizesafe(
@@ -125,20 +239,50 @@ namespace CrowdPunch.Systems.AI
                         appliedSeparation);
                     desiredMovement.Speed = desiredMovement.Direction.Equals(float3.zero)
                         ? 0f
-                        : movementSettings.MoveSpeed * movementSettings.ChargeSpeedMultiplier
+                        : movementSettings.MoveSpeed
+                            * (distanceToPlayer <= movementSettings.ChargeDistance
+                                ? movementSettings.ChargeSpeedMultiplier
+                                : 1f)
                             * (contactAttempt.IsAttempting != 0 ? math.max(0f, contactSettings.AttemptSpeedMultiplier) : 1f);
                     return;
                 }
 
-                float3 wanderDirection = GetWanderDirection(
+                contactAttempt.IsAttempting = 0;
+
+                float3 distributionDirection = GetDistributionDirection(
                     entity,
                     transform.Position,
                     movementSettings,
-                    ref wanderDestination);
+                    ref wanderDestination,
+                    out float distributionDistance,
+                    out float arrivalDistance);
+                float separationBlend = GetDistributionSeparationBlend(
+                    distributionDistance,
+                    arrivalDistance);
                 desiredMovement.Direction = BlendWithSeparation(
-                    wanderDirection,
-                    separation);
-                desiredMovement.Speed = movementSettings.WanderSpeed;
+                    distributionDirection,
+                    separation * separationBlend);
+                float returnSpeedDistance = math.max(
+                    arrivalDistance * 2f,
+                    separationDistance.Value);
+                desiredMovement.Speed = desiredMovement.Direction.Equals(float3.zero)
+                    ? 0f
+                    : distributionDistance > returnSpeedDistance
+                        ? movementSettings.MoveSpeed
+                        : movementSettings.WanderSpeed;
+            }
+
+            private bool IsPressureEnemy(Entity entity)
+            {
+                for (int index = 0; index < PressureEnemies.Length; index++)
+                {
+                    if (PressureEnemies[index].Entity == entity)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
             }
 
             private static float3 BlendWithSeparation(
@@ -148,6 +292,16 @@ namespace CrowdPunch.Systems.AI
                 return math.normalizesafe(
                     movementDirection + separation,
                     separation);
+            }
+
+            private static float GetDistributionSeparationBlend(float distance, float arrivalDistance)
+            {
+                const float minimumBlend = 0.25f;
+                float fullBlendDistance = math.max(0.0001f, arrivalDistance * 2f);
+                return math.lerp(
+                    minimumBlend,
+                    1f,
+                    math.saturate(1f - distance / fullBlendDistance));
             }
 
             private void UpdateContactAttempt(
@@ -188,21 +342,55 @@ namespace CrowdPunch.Systems.AI
                 return math.lerp(minimum, maximum, normalized);
             }
 
-            private float3 GetSurroundTarget(Entity entity, float y, EnemyMovementSettings movementSettings)
+            internal static float3 GetArenaRelativeSurroundTarget(
+                int entityIndex,
+                float3 playerPosition,
+                float y,
+                EnemyMovementSettings movementSettings,
+                ArenaBounds arenaBounds)
             {
                 const float goldenAngle = 2.3999631f;
+                const int candidateCount = 8;
 
-                int slotIndex = math.max(0, entity.Index);
-                float angle = slotIndex * goldenAngle;
+                int slotIndex = math.max(0, entityIndex);
                 int ringIndex = slotIndex % 3;
                 float radius = math.max(0f, movementSettings.SurroundDistance)
                     + ringIndex * math.max(0f, movementSettings.SurroundRingSpacing);
-                float2 offset = new float2(math.cos(angle), math.sin(angle)) * radius;
+                float2 center = arenaBounds.Center.xz;
+                float2 extents = math.max(arenaBounds.Extents.xz, new float2(0f));
+                float margin = math.min(
+                    math.max(0.5f, movementSettings.StoppingDistance),
+                    math.cmin(extents));
+                float2 minimum = center - extents + margin;
+                float2 maximum = center + extents - margin;
+                float2 playerXZ = math.clamp(playerPosition.xz, minimum, maximum);
+                float2 bestPosition = playerXZ;
+                float bestDistanceSq = -1f;
+
+                // Preserve the normal golden-angle slot when it fits. Near an arena edge,
+                // deterministic alternatives redistribute blocked slots into available space.
+                for (int candidateIndex = 0; candidateIndex < candidateCount; candidateIndex++)
+                {
+                    float angle = (slotIndex + candidateIndex) * goldenAngle;
+                    float2 direction = new float2(math.cos(angle), math.sin(angle));
+                    float2 candidate = math.clamp(playerXZ + direction * radius, minimum, maximum);
+                    float distanceSq = math.distancesq(playerXZ, candidate);
+                    if (distanceSq > bestDistanceSq)
+                    {
+                        bestPosition = candidate;
+                        bestDistanceSq = distanceSq;
+                    }
+
+                    if (distanceSq >= radius * radius - 0.0001f)
+                    {
+                        break;
+                    }
+                }
 
                 return new float3(
-                    PlayerSnapshot.Position.x + offset.x,
+                    bestPosition.x,
                     y,
-                    PlayerSnapshot.Position.z + offset.y);
+                    bestPosition.y);
             }
 
             private float3 GetSeparation(
@@ -241,41 +429,49 @@ namespace CrowdPunch.Systems.AI
                 return math.normalizesafe(separation) * strongestWeight;
             }
 
-            private float3 GetWanderDirection(
+            private float3 GetDistributionDirection(
                 Entity entity,
                 float3 position,
                 EnemyMovementSettings movementSettings,
-                ref WanderDestination wanderDestination)
+                ref WanderDestination wanderDestination,
+                out float distance,
+                out float arrivalDistance)
             {
-                float2 positionXZ = position.xz;
-                float arrivalDistance = math.max(0.75f, movementSettings.WanderSpeed * 0.35f);
+                arrivalDistance = math.max(0.75f, movementSettings.WanderSpeed * 0.35f);
 
-                if (wanderDestination.IsAssigned == 0
-                    || math.distancesq(positionXZ, wanderDestination.Position.xz) <= arrivalDistance * arrivalDistance)
+                if (wanderDestination.IsAssigned == 0)
                 {
-                    wanderDestination.Position = GetNextWanderDestination(entity, position.y, movementSettings, ref wanderDestination.SequenceIndex);
+                    wanderDestination.Position = GetArenaDistributionTarget(
+                        entity.Index,
+                        position.y,
+                        movementSettings,
+                        ArenaBounds);
                     wanderDestination.IsAssigned = 1;
                 }
 
                 float3 toDestination = wanderDestination.Position - position;
                 toDestination.y = 0f;
+                distance = math.length(toDestination);
 
-                return math.normalizesafe(toDestination);
+                if (distance <= arrivalDistance)
+                {
+                    return float3.zero;
+                }
+
+                return toDestination / math.max(0.0001f, distance);
             }
 
-            private float3 GetNextWanderDestination(
-                Entity entity,
+            internal static float3 GetArenaDistributionTarget(
+                int entityIndex,
                 float y,
                 EnemyMovementSettings movementSettings,
-                ref int sequenceIndex)
+                ArenaBounds arenaBounds)
             {
-                sequenceIndex++;
-
-                float2 center = ArenaBounds.Center.xz;
-                float2 extents = math.max(ArenaBounds.Extents.xz, new float2(0f));
+                float2 center = arenaBounds.Center.xz;
+                float2 extents = math.max(arenaBounds.Extents.xz, new float2(0f));
                 float margin = GetWanderMargin(extents, movementSettings);
                 float2 usableExtents = math.max(extents - margin, new float2(0f));
-                int sampleIndex = math.max(1, entity.Index + 1 + sequenceIndex * 4099);
+                int sampleIndex = math.max(1, entityIndex + 1);
                 float2 sample = new float2(Halton(sampleIndex, 2), Halton(sampleIndex, 3));
                 float2 position = center + (sample * 2f - 1f) * usableExtents;
 

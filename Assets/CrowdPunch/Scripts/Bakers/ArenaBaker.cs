@@ -14,12 +14,17 @@ namespace CrowdPunch.Bakers
         {
             Entity entity = GetEntity(TransformUsageFlags.WorldSpace);
             UnityEngine.Vector3 position = authoring.transform.position;
-            float3 center = new float3(position.x, position.y, position.z);
+            float3 origin = new float3(position.x, position.y, position.z);
 
             AddComponent(entity, new ArenaBounds
             {
-                Center = center,
-                Extents = authoring.Size * 0.5f
+                Center = origin + authoring.SpacingCenterOffset,
+                Extents = authoring.SpacingSize * 0.5f
+            });
+            AddComponent(entity, new EnemyDefeatBounds
+            {
+                Center = origin + authoring.DefeatCenterOffset,
+                Extents = authoring.DefeatSize * 0.5f
             });
         }
     }

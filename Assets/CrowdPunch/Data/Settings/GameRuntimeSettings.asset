@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: GameRuntimeSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.GameRuntimeSettings
   startRunning: 1
+  maximumApproachingEnemies: 6
   minimumPropagationImpulse: 1.5
   propagationAimCorrectionRadius: 90
+  launchHomingDegreesPerSecond: 30
   minimumDamageImpulse: 2
   baseCollisionDamageMultiplier: 0.25
   damageMultiplierPerExcessImpulse: 0.05

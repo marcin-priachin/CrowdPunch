@@ -241,6 +241,18 @@ Status: Must
 
 A launched body can damage the player as a physical projectile regardless of whether the player or an enemy originated its current launch sequence. It uses the same originating launch damage, minimum impact-impulse threshold, impulse-scaled damage multiplier and cap, and once-per-continuous-source-launch rule used when a launched body damages an ordinary enemy. Launch ownership continues to propagate through qualifying enemy-enemy launch collisions for rules that depend on ownership, but it does not make the body safe to the player. A player punch on an already-launched body begins a new player-owned launch sequence and resets its once-per-launch player-impact eligibility. Independent rules such as explosions remain independently capable of damaging the player.
 
+### COMBAT-016 — Arena-Wide Crowd Pressure
+
+Status: Must
+
+Ordinary melee enemies remain distributed across the arena while a limited configurable number of the closest eligible enemies actively approach and surround the player. The pressure allocation must retain arena-wide launch opportunities rather than drawing the whole crowd into one group. Ranged positioning, committed Dasher behavior, and elite crowd support override this baseline allocation, and local enemy separation continues to influence movement in both roles.
+
+### COMBAT-017 — Separate Arena And Defeat Bounds
+
+Status: Must
+
+Enemy spacing and arena-wide distribution use an authored movement volume that is independent from the authored out-of-bounds defeat volume. Leaving the spacing volume does not itself defeat an enemy; leaving the defeat volume requests pooling for respawning enemies or terminal defeat for fixed encounter enemies. The two volumes may use different centers and sizes so launched bodies can travel beyond the ordinary crowd area before being removed.
+
 ## Effects And Combinations
 
 ### EFFECT-001 — Collision Propagation
@@ -328,6 +340,12 @@ Except for its authored dash and launched-impact modifiers, the Dasher follows o
 Status: Must
 
 While at least one non-defeated elite is active in the arena, active normal enemies cooperate with the nearest active elite to make its projectile punch easier to execute. The closest eligible active normal enemy to the elite is always selected as its projectile regardless of spawn order or its distance from the player, and that choice is re-evaluated during setup at the elite's retarget interval. Before waiting, the projectile adjusts to the nearest sampled staging position whose path and resulting elite-to-behind-projectile approach lane are not blocked by static geometry or another non-defeated enemy. It stops only once that lane is clear, anchoring a stable setup position; until then, the elite waits and does not consume its setup timeout. The elite then repositions behind it within punch tolerance and steers through a side waypoint whenever a direct approach would cross the target's collision clearance, avoiding premature target contact before alignment. After launching a projectile, the elite retains its attack cooldown but uses that interval to approach the next closest eligible active normal rather than resuming ordinary player chase. Other active normal enemies steer laterally out of the projectile-to-player shot corridor. Launched, recovering, defeated, disabled, and pooled enemies do not perform this support movement. With multiple active elites, each normal enemy supports the nearest elite, with entity index used only as a deterministic exact-distance tie break.
+
+### ENEMY-010 — Explosive Proximity Pressure
+
+Status: Must
+
+An active unexploded explosive enemy inside its authored contact-attempt range continuously approaches the player even when it is not selected by the ordinary crowd-pressure limit. During that close pursuit it targets the player directly and ignores active-enemy separation so crowd avoidance cannot prevent the intended collision. Outside that range it follows normal arena-wide distribution, pressure allocation, contact-attempt cadence, and separation.
 
 ### INFO-001 — No Persistent Normal-Enemy UI
 
