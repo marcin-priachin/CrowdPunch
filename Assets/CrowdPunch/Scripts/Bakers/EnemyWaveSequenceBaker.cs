@@ -122,6 +122,7 @@ namespace CrowdPunch.Bakers
                 definitions.Add(new EnemyWaveDefinition
                 {
                     TotalEnemyCount = totalCount,
+                    TotalMinimumNormalCount = requestedMinimumNormalCount,
                     ProfileStart = profileStart,
                     ProfileCount = profiles.Length - profileStart,
                     EliteProfileStart = eliteProfileStart,

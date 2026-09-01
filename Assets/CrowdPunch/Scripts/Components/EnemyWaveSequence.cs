@@ -18,7 +18,8 @@ namespace CrowdPunch.Components
         public int EliteProfileCursor;
         public int EliteProfileSpawnedInEntry;
         public int NormalMinimumProfileCursor;
-        public int NormalMinimumSpawnedInEntry;
+        public int NormalMinimumRound;
+        public int NormalMinimumSpawnedCount;
         public double NextActionAt;
         public double NextPlacementWarningAt;
         public float MinimumPlayerDistance;
@@ -32,6 +33,7 @@ namespace CrowdPunch.Components
     public struct EnemyWaveDefinition : IBufferElementData
     {
         public int TotalEnemyCount;
+        public int TotalMinimumNormalCount;
         public int ProfileStart;
         public int ProfileCount;
         public int EliteProfileStart;

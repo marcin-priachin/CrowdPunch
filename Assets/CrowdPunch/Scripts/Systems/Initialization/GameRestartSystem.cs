@@ -117,7 +117,8 @@ namespace CrowdPunch.Systems.Initialization
                 sequence.ValueRW.EliteProfileCursor = 0;
                 sequence.ValueRW.EliteProfileSpawnedInEntry = 0;
                 sequence.ValueRW.NormalMinimumProfileCursor = 0;
-                sequence.ValueRW.NormalMinimumSpawnedInEntry = 0;
+                sequence.ValueRW.NormalMinimumRound = 0;
+                sequence.ValueRW.NormalMinimumSpawnedCount = 0;
                 sequence.ValueRW.NextActionAt = 0d;
                 sequence.ValueRW.NextPlacementWarningAt = 0d;
                 sequence.ValueRW.Phase = EnemyWaveRuntimePhase.PreWaveDelay;

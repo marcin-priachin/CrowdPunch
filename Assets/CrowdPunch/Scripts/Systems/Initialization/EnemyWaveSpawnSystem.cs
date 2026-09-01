@@ -156,7 +156,8 @@ namespace CrowdPunch.Systems.Initialization
             sequence.EliteProfileCursor = 0;
             sequence.EliteProfileSpawnedInEntry = 0;
             sequence.NormalMinimumProfileCursor = 0;
-            sequence.NormalMinimumSpawnedInEntry = 0;
+            sequence.NormalMinimumRound = 0;
+            sequence.NormalMinimumSpawnedCount = 0;
             sequence.RandomState = sequence.InitialSeed == 0 ? 1u : sequence.InitialSeed;
             if (waves.Length == 0)
             {
@@ -179,7 +180,8 @@ namespace CrowdPunch.Systems.Initialization
             sequence.EliteProfileCursor = 0;
             sequence.EliteProfileSpawnedInEntry = 0;
             sequence.NormalMinimumProfileCursor = 0;
-            sequence.NormalMinimumSpawnedInEntry = 0;
+            sequence.NormalMinimumRound = 0;
+            sequence.NormalMinimumSpawnedCount = 0;
             if (sequence.CurrentWaveIndex >= waves.Length)
             {
                 sequence.Phase = EnemyWaveRuntimePhase.Complete;
@@ -203,6 +205,7 @@ namespace CrowdPunch.Systems.Initialization
             for (int index = 0; index < requested; index++)
             {
                 bool spawningElite = sequence.EliteSpawnedCount < wave.TotalEliteCount;
+                bool selectedMinimum = false;
                 EnemySpawnProfile selectedProfile;
                 if (spawningElite)
                 {
@@ -211,7 +214,8 @@ namespace CrowdPunch.Systems.Initialization
                 }
                 else
                 {
-                    selectedProfile = SelectNormalProfile(ref random, wave, profiles, ref sequence).Profile;
+                    selectedProfile = SelectNormalProfile(ref random, wave, profiles, ref sequence,
+                        sequence.SpawnedCount - sequence.EliteSpawnedCount, out selectedMinimum).Profile;
                 }
                 bool found = false;
                 float3 position = default;
@@ -261,7 +265,11 @@ namespace CrowdPunch.Systems.Initialization
                 }
                 else
                 {
-                    AdvanceNormalMinimumCursor(wave, profiles, ref sequence);
+                    if (selectedMinimum)
+                    {
+                        sequence.NormalMinimumSpawnedCount++;
+                        AdvanceNormalMinimumCursor(wave, profiles, ref sequence);
+                    }
                 }
             }
             sequence.RandomState = random.state;
@@ -283,10 +291,16 @@ namespace CrowdPunch.Systems.Initialization
         }
 
         private static EnemyWaveProfile SelectNormalProfile(ref MathematicsRandom random, EnemyWaveDefinition wave,
-            DynamicBuffer<EnemyWaveProfile> profiles, ref EnemyWaveSequence sequence)
+            DynamicBuffer<EnemyWaveProfile> profiles, ref EnemyWaveSequence sequence, int normalSpawnedCount,
+            out bool selectedMinimum)
         {
             SkipCompletedNormalMinimums(wave, profiles, ref sequence);
-            if (sequence.NormalMinimumProfileCursor < wave.ProfileCount)
+            int expectedMinimumCount = wave.TotalEnemyCount > 0
+                ? (int)math.ceil((normalSpawnedCount + 1) * (double)wave.TotalMinimumNormalCount / wave.TotalEnemyCount)
+                : 0;
+            selectedMinimum = sequence.NormalMinimumProfileCursor < wave.ProfileCount
+                && sequence.NormalMinimumSpawnedCount < expectedMinimumCount;
+            if (selectedMinimum)
                 return profiles[wave.ProfileStart + sequence.NormalMinimumProfileCursor];
             return SelectProfile(ref random, wave, profiles);
         }
@@ -295,19 +309,35 @@ namespace CrowdPunch.Systems.Initialization
             DynamicBuffer<EnemyWaveProfile> profiles, ref EnemyWaveSequence sequence)
         {
             if (sequence.NormalMinimumProfileCursor >= wave.ProfileCount) return;
-            sequence.NormalMinimumSpawnedInEntry++;
+            sequence.NormalMinimumProfileCursor++;
             SkipCompletedNormalMinimums(wave, profiles, ref sequence);
         }
 
         private static void SkipCompletedNormalMinimums(EnemyWaveDefinition wave,
             DynamicBuffer<EnemyWaveProfile> profiles, ref EnemyWaveSequence sequence)
         {
-            while (sequence.NormalMinimumProfileCursor < wave.ProfileCount)
+            while (true)
             {
-                EnemyWaveProfile profile = profiles[wave.ProfileStart + sequence.NormalMinimumProfileCursor];
-                if (sequence.NormalMinimumSpawnedInEntry < profile.MinimumCount) return;
-                sequence.NormalMinimumProfileCursor++;
-                sequence.NormalMinimumSpawnedInEntry = 0;
+                while (sequence.NormalMinimumProfileCursor < wave.ProfileCount)
+                {
+                    EnemyWaveProfile profile = profiles[wave.ProfileStart + sequence.NormalMinimumProfileCursor];
+                    if (profile.MinimumCount > sequence.NormalMinimumRound) return;
+                    sequence.NormalMinimumProfileCursor++;
+                }
+
+                sequence.NormalMinimumRound++;
+                sequence.NormalMinimumProfileCursor = 0;
+                for (int i = 0; i < wave.ProfileCount; i++)
+                {
+                    if (profiles[wave.ProfileStart + i].MinimumCount > sequence.NormalMinimumRound)
+                    {
+                        sequence.NormalMinimumProfileCursor = i;
+                        return;
+                    }
+                }
+
+                sequence.NormalMinimumProfileCursor = wave.ProfileCount;
+                return;
             }
         }
 
