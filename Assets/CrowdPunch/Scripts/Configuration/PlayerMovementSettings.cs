@@ -9,6 +9,7 @@ namespace CrowdPunch.Configuration
         [Header("Input")]
         [SerializeField] private InputActionAsset inputActions;
         [SerializeField] private string moveActionName = "Player/Move";
+        [SerializeField] private string lookActionName = "Player/Look";
         [SerializeField] private string dashActionName = "Player/Dash";
         [Header("Movement")]
         [SerializeField, Min(0f)] private float playerRadius = 1.5f;
@@ -17,6 +18,7 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float dashDuration = 0.15f;
         [SerializeField, Min(0f)] private float dashCooldown = 0.1f;
         [SerializeField, Min(0f)] private float knockbackDamping = 14f;
+        [SerializeField, Min(0f)] private float joystickRotationSpeed = 180f;
 
         public float PlayerRadius => playerRadius;
         public float MoveSpeed => moveSpeed;
@@ -24,6 +26,7 @@ namespace CrowdPunch.Configuration
         public float DashDuration => dashDuration;
         public float DashCooldown => dashCooldown;
         public float KnockbackDamping => knockbackDamping;
+        public float JoystickRotationSpeed => joystickRotationSpeed;
 
         public InputAction FindMoveAction()
         {
@@ -33,6 +36,11 @@ namespace CrowdPunch.Configuration
         public InputAction FindDashAction()
         {
             return inputActions == null ? null : inputActions.FindAction(dashActionName);
+        }
+
+        public InputAction FindLookAction()
+        {
+            return inputActions == null ? null : inputActions.FindAction(lookActionName);
         }
     }
 

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.PlayerMovementSettings
   inputActions: {fileID: -944628639613478452, guid: 289c1b55c9541489481df5cc06664110, type: 3}
   moveActionName: Player/Move
+  lookActionName: Player/Look
   dashActionName: Player/Dash
   playerRadius: 0.5
   moveSpeed: 12
@@ -21,3 +22,4 @@ MonoBehaviour:
   dashDuration: 0.3
   dashCooldown: 0.1
   knockbackDamping: 14
+  joystickRotationSpeed: 180

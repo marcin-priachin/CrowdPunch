@@ -33,6 +33,7 @@ namespace CrowdPunch.Mono.Player
         public event Action DashEnded;
 
         public bool IsDashing => dashActive;
+        public PlayerMovementSettings MovementSettings => settings;
 
         private void Reset()
         {
