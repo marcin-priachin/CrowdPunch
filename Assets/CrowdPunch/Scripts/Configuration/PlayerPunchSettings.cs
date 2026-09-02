@@ -22,7 +22,6 @@ namespace CrowdPunch.Configuration
         private float aimAssistRange = 8f;
         [SerializeField, Range(0f, 180f), Tooltip("Maximum horizontal angle in degrees from player facing to an aim-assist target.")]
         private float aimAssistMaximumAngleDegrees = 45f;
-        [SerializeField, Min(0f)] private float areaFeedbackDuration = 0.5f;
 
         public float Radius => radius;
         public float Range => range;
@@ -33,7 +32,6 @@ namespace CrowdPunch.Configuration
         public float DirectionPositionWeight => directionPositionWeight;
         public float AimAssistRange => aimAssistRange;
         public float AimAssistMaximumAngleDegrees => aimAssistMaximumAngleDegrees;
-        public float AreaFeedbackDuration => areaFeedbackDuration;
 
         public InputAction FindAttackAction()
         {

@@ -70,6 +70,7 @@ namespace CrowdPunch.Mono.Player
         private void Update()
         {
             PublishPunchPreview();
+            UpdateAreaFeedback();
 
             if (attackAction == null || !attackAction.WasPressedThisFrame())
             {
@@ -91,6 +92,20 @@ namespace CrowdPunch.Mono.Player
                 settings.DirectionPositionWeight,
                 settings.AimAssistRange,
                 settings.AimAssistMaximumAngleDegrees);
+        }
+
+        private void UpdateAreaFeedback()
+        {
+            Transform originTransform = punchOrigin != null ? punchOrigin : transform;
+            float cooldownProgress = settings.Cooldown <= 0f
+                ? 1f
+                : 1f - Mathf.Clamp01((nextPunchTime - Time.time) / settings.Cooldown);
+            areaFeedback.Show(
+                originTransform.position,
+                originTransform.forward,
+                settings.Radius,
+                settings.Range,
+                cooldownProgress);
         }
 
         public void RequestPunch()
@@ -121,13 +136,6 @@ namespace CrowdPunch.Mono.Player
             Vector3 origin = originTransform.position;
             Vector3 direction = originTransform.forward;
 
-            areaFeedback.Show(
-                origin,
-                direction,
-                settings.Radius,
-                settings.Range,
-                settings.AreaFeedbackDuration);
-
             ecsBridge.PublishPunch(
                 origin,
                 direction,
@@ -138,6 +146,7 @@ namespace CrowdPunch.Mono.Player
                 settings.Damage,
                 settings.DirectionPositionWeight);
             nextPunchTime = Time.time + settings.Cooldown;
+            UpdateAreaFeedback();
         }
     }
 }

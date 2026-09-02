@@ -137,7 +137,7 @@ Movement, aiming, weapons, progression, and other non-crowd mechanics must not a
 
 Status: Must
 
-When a punch begins, show a semitransparent world-space shape matching the committed punch area for `0.5` seconds. The shape retains the punch's committed world-space origin and direction for its full display interval.
+Show a semitransparent world-space shape matching the live punch area whenever the player's punch component is active. During punch cooldown, the full shape uses a distinct cooldown color and a ready-color fill grows from the punch origin toward maximum range in proportion to cooldown recovery. The shape follows the current punch origin and direction so it always communicates the area of the next punch.
 
 ### PLAYER-009 — Punch Cooldown
 
