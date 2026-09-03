@@ -31,6 +31,7 @@ namespace CrowdPunch.Mono.UI
             EnsurePunchTrajectoryPreview();
             EnsureExplosionFeedback();
             EnsureGameCanvas();
+            EnsurePauseMenu();
             EnsureEnemyHealthBarCanvas();
             BindPlayerHealthBars();
 
@@ -166,6 +167,21 @@ namespace CrowdPunch.Mono.UI
             {
                 healthBar.Bind(playerHealth);
             }
+        }
+
+        private void EnsurePauseMenu()
+        {
+            PauseMenu pauseMenu = FindFirstObjectByType<PauseMenu>(FindObjectsInactive.Include);
+            if (pauseMenu == null)
+            {
+                Canvas canvas = FindFirstObjectByType<Canvas>();
+                if (canvas != null)
+                {
+                    pauseMenu = canvas.gameObject.AddComponent<PauseMenu>();
+                }
+            }
+
+            pauseMenu?.Configure(playerController?.MovementSettings?.InputActions);
         }
 
         private void EnsureEnemyHealthBarCanvas()

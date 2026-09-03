@@ -27,6 +27,7 @@ namespace CrowdPunch.Configuration
         public float DashCooldown => dashCooldown;
         public float KnockbackDamping => knockbackDamping;
         public float JoystickRotationSpeed => joystickRotationSpeed;
+        public InputActionAsset InputActions => inputActions;
 
         public InputAction FindMoveAction()
         {

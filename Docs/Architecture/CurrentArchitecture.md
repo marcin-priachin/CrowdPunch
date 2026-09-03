@@ -189,6 +189,17 @@ The existing player bridge receives explosion damage through the normal `PlayerH
 
 ## Current Prototype Behavior Versus Design
 
+## Pause And Level Selection
+
+`PauseMenu` is a scene-level MonoBehaviour UI boundary created on the persistent game canvas by `GameBootstrap`. It reads
+the shared `Assets/InputSystem_Actions.inputactions` `Game/Pause` action, toggles `Time.timeScale`, and owns no ECS data.
+Its runtime-built menu restores selection to Resume when opened so the Input System UI module can navigate and submit with
+a gamepad. Level buttons are populated from the fixed `GauntletSequence`; selecting any entry calls the same additive
+level-loading path, and selecting the active entry therefore unloads and reloads that gauntlet. The loader continues to
+reactivate the GameObject player, restore full health, reset player movement and punch state, place it at the authored
+entry point, and request the established ECS restart handoff. The
+old always-visible restart button is disabled; restart is now represented by selecting the active level in the pause menu.
+
 ## Elite Projectile Punch
 
 Elite spawn profiles now bake `ElitePunchSettings` and initialize an inspectable `ElitePunchState`; no ordinary enemy

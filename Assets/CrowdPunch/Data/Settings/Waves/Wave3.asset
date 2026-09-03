@@ -18,8 +18,8 @@ MonoBehaviour:
     MinimumCount: 80
     Weight: 1
   - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
-    MinimumCount: 15
-    Weight: 0.15
+    MinimumCount: 10
+    Weight: 0.1
   - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
     MinimumCount: 10
     Weight: 0.1
@@ -44,5 +44,5 @@ MonoBehaviour:
   activationMode: 2
   duration: 10
   spawnMode: 1
-  batchSize: 20
+  batchSize: 15
   batchInterval: 15

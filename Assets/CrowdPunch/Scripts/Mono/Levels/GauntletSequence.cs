@@ -17,6 +17,10 @@ namespace CrowdPunch.Mono.Levels
         private uint observedCompletionSequence;
         private bool transitionInProgress;
 
+        public int LevelCount => levelSceneNames?.Length ?? 0;
+        public int CurrentLevelIndex => currentLevelIndex;
+        public bool TransitionInProgress => transitionInProgress;
+
         private void Start()
         {
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;
@@ -47,6 +51,24 @@ namespace CrowdPunch.Mono.Levels
             {
                 StartCoroutine(LoadLevel(currentLevelIndex));
             }
+        }
+
+        public string GetLevelName(int levelIndex)
+        {
+            return levelIndex >= 0 && levelIndex < LevelCount
+                ? levelSceneNames[levelIndex]
+                : string.Empty;
+        }
+
+        /// <summary>Loads the selected authored gauntlet. Selecting the active gauntlet restarts it.</summary>
+        public void SelectLevel(int levelIndex)
+        {
+            if (transitionInProgress || levelIndex < 0 || levelIndex >= LevelCount)
+            {
+                return;
+            }
+
+            StartCoroutine(LoadLevel(levelIndex));
         }
 
         private IEnumerator LoadLevel(int levelIndex)
@@ -113,12 +135,27 @@ namespace CrowdPunch.Mono.Levels
 
         private static void PlacePlayer(Transform entryPoint)
         {
-            PlayerEcsBridge bridge = Object.FindFirstObjectByType<PlayerEcsBridge>();
-            PlayerController controller = bridge == null ? null : bridge.GetComponent<PlayerController>();
+            PlayerEcsBridge bridge = Object.FindFirstObjectByType<PlayerEcsBridge>(FindObjectsInactive.Include);
+            if (bridge == null)
+            {
+                Debug.LogError($"Could not place the player because no {nameof(PlayerEcsBridge)} exists.");
+                GameRestartRegistry.RequestRestart();
+                return;
+            }
+
+            if (!bridge.gameObject.activeSelf)
+            {
+                bridge.gameObject.SetActive(true);
+            }
+
+            PlayerController controller = bridge.GetComponent<PlayerController>();
             if (controller != null)
             {
                 controller.SetLevelEntryPoint(entryPoint.position, entryPoint.rotation);
             }
+
+            bridge.GetComponent<PlayerPunch>()?.ResetPunchState();
+            bridge.GetComponent<PlayerHealth>()?.ResetHealth();
 
             GameRestartRegistry.RequestRestart();
         }
