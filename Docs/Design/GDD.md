@@ -347,6 +347,12 @@ Status: Must
 
 An active unexploded explosive enemy inside its authored contact-attempt range continuously approaches the player even when it is not selected by the ordinary crowd-pressure limit. During that close pursuit it targets the player directly and ignores active-enemy separation so crowd avoidance cannot prevent the intended collision. Outside that range it follows normal arena-wide distribution, pressure allocation, contact-attempt cadence, and separation.
 
+### ENEMY-011 — Elite Wave Crowd Replenishment
+
+Status: Must
+
+While at least one elite from an authored wave remains non-defeated, defeated or out-of-bounds normal enemies from that same wave return through the normal pooling lifecycle so the wave maintains its authored normal-enemy count. Elites do not replenish. Once the wave's last elite is defeated, its pooled normal enemies stop returning and the surviving normals can be defeated to complete the wave normally.
+
 ### INFO-001 — No Persistent Normal-Enemy UI
 
 Status: Must

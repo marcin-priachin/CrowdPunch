@@ -10,14 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
-  m_Name: Wave2 3
+  m_Name: Wave4
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 10
+  totalEnemyCount: 15
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 0
+    MinimumCount: 8
     Weight: 1
-  eliteEnemies: []
+  - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
+    MinimumCount: 0
+    Weight: 0.1
+  - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
+    MinimumCount: 0
+    Weight: 0.1
+  - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
+    MinimumCount: 0
+    Weight: 0.1
+  eliteEnemies:
+  - Settings: {fileID: 11400000, guid: 4dd009e167a817e4d8e7746bdc822f1f, type: 2}
+    Count: 1
   spawnRectangles:
   - Center: {x: 40, y: 2, z: 0}
     Width: 10
@@ -32,7 +43,7 @@ MonoBehaviour:
     Width: 90
     Depth: 10
   delayBeforeWave: 0.1
-  activationMode: 1
+  activationMode: 2
   duration: 10
   spawnMode: 0
   batchSize: 10

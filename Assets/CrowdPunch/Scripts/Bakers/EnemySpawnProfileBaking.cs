@@ -111,7 +111,11 @@ namespace CrowdPunch.Bakers
                 {
                     Vector3 corner = center + Vector3.Scale(extents, new Vector3(x, y, z));
                     Vector3 prefabLocalCorner = TransformToPrefabLocal(corner, collider.transform, prefab.transform);
-                    clearance = math.max(clearance, prefabLocalCorner.magnitude);
+                    // Wave placement separates enemies across the ground plane. Including the
+                    // collider's vertical extent turns tall or vertically offset prefabs into a
+                    // large sphere that can overlap the floor at every otherwise-valid spawn.
+                    clearance = math.max(clearance,
+                        math.length(new float2(prefabLocalCorner.x, prefabLocalCorner.z)));
                 }
             }
             return clearance;

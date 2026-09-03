@@ -296,10 +296,12 @@ placement remains at the head of the queue. Elites and normals share rectangles,
 physics overlap checks, bounded retries, batch capacity, batch interval, and warning throttling; a batch may finish the
 elite queue and use remaining capacity for normals.
 
-Elites and normals both count toward the wave's fixed spawn budget. Once every configured elite and normal has spawned,
+Elites and normals both count toward the wave's initial spawn budget. Once every configured elite and normal has spawned,
 the wave begins its authored activation policy: `AllEnemiesDefeated` waits for every owned enemy from the wave, while
-`DurationElapsed` starts its duration immediately. Elite waves do not create replacement normals or impose an additional
-elite-defeat gate.
+`DurationElapsed` starts its duration immediately. Normals in an elite wave use the existing pool to replenish while at
+least one same-wave elite remains non-defeated. A returning normal clears its observed defeat and restores the sequence's
+undefeated/current-wave counters; once the last elite is defeated, pooled normals remain pooled and the surviving crowd
+can be cleared normally (ENEMY-011). Elites never replenish.
 
 `EnemyWaveOwnership` records sequence, wave, generation, and idempotent defeat observation. Restart
 increments the generation, destroys each old wave-owned root individually so its complete prefab `LinkedEntityGroup` is

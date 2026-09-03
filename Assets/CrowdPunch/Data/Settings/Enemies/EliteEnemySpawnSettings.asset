@@ -32,7 +32,7 @@ MonoBehaviour:
   separationDistanceMax: 12
   separationWeight: 1.4
   archetypeSeparationOverrides: []
-  maxHealth: 5000
+  maxHealth: 250
   contactDamagePercent: 0.05
   contactPushStrength: 10
   contactInvincibilitySeconds: 0.5
@@ -56,6 +56,7 @@ MonoBehaviour:
   projectileDamage: 10
   playerInvincibilitySeconds: 0.5
   projectileSpeed: 8
+  projectileMovementLeadMultiplier: 1
   projectileAimSpreadRadius: 2.5
   projectileAimTargetYOffset: 0
   projectileArcHeight: 5

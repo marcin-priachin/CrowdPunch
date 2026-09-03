@@ -138,6 +138,15 @@ namespace CrowdPunch.Systems.Lifetime
                     continue;
                 }
 
+                if (SystemAPI.HasComponent<EliteWaveReplenishment>(enemy)
+                    && respawnSettings.ValueRO.Enabled == 0)
+                {
+                    respawnRequest.ValueRW.RespawnAt = double.MaxValue;
+                    physicsVelocity.ValueRW = default;
+                    transform.ValueRW.Position = GetPoolPosition(arenaBounds);
+                    continue;
+                }
+
                 uint seed = (uint)math.max(1, enemy.Index + 1)
                     ^ ((uint)math.max(1, enemy.Version + 1) * 747796405u)
                     ^ ((uint)math.max(1, (int)math.round((float)elapsedTime * 1000f)) * 2891336453u);
@@ -145,9 +154,34 @@ namespace CrowdPunch.Systems.Lifetime
 
                 transform.ValueRW.Position = GetRespawnPosition(ref random, arenaBounds, playerSnapshot);
                 physicsVelocity.ValueRW = default;
+                RestoreEliteWaveOwnership(ref state, enemy);
                 respawnRequest.ValueRW = default;
                 SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, false);
             }
+        }
+
+        private void RestoreEliteWaveOwnership(ref SystemState state, Entity enemy)
+        {
+            EntityManager entityManager = state.EntityManager;
+            if (!entityManager.HasComponent<EliteWaveReplenishment>(enemy)
+                || !entityManager.HasComponent<EnemyWaveOwnership>(enemy))
+                return;
+
+            EnemyWaveOwnership ownership = entityManager.GetComponentData<EnemyWaveOwnership>(enemy);
+            if (ownership.DefeatCounted == 0
+                || !entityManager.HasComponent<EnemyWaveSequence>(ownership.Sequence))
+                return;
+
+            EnemyWaveSequence sequence = entityManager.GetComponentData<EnemyWaveSequence>(ownership.Sequence);
+            if (ownership.RunGeneration != sequence.RunGeneration)
+                return;
+
+            ownership.DefeatCounted = 0;
+            sequence.UndefeatedCount++;
+            if (ownership.WaveIndex == sequence.CurrentWaveIndex && sequence.DefeatedCount > 0)
+                sequence.DefeatedCount--;
+            entityManager.SetComponentData(enemy, ownership);
+            entityManager.SetComponentData(ownership.Sequence, sequence);
         }
 
         private static bool IsReadyToPool(
