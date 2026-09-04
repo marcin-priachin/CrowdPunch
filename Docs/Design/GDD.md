@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-08-03
+Last updated: 2026-09-04
 
 ## How To Read This Document
 
@@ -144,6 +144,12 @@ Show a semitransparent world-space shape matching the live punch area whenever t
 Status: Must
 
 Punches use a configurable cooldown that begins when a punch is committed. Punch input rejected by cooldown does not alter dash movement.
+
+### PLAYER-010 — Supported Input Methods
+
+Status: Must
+
+The MVP must be fully playable with both keyboard/mouse and gamepad. Movement, camera rotation, punch, and dash must remain available on both input methods. Input-specific tuning, including whether punch aim assistance differs between schemes, remains unresolved under `OQ-017`.
 
 ## Combat And Crowd Physics
 
@@ -353,6 +359,18 @@ Status: Must
 
 While at least one elite from an authored wave remains non-defeated, defeated or out-of-bounds normal enemies from that same wave return through the normal pooling lifecycle so the wave maintains its authored normal-enemy count. Elites do not replenish. Once the wave's last elite is defeated, its pooled normal enemies stop returning and the surviving normals can be defeated to complete the wave normally.
 
+### ENEMY-012 — Baseline Crowd Enemy
+
+Status: Must
+
+The Baseline enemy is the default ordinary crowd body. It uses arena-wide pressure allocation, active-enemy separation, contact damage, and the shared health, launch, collision, recovery, defeat, pooling, and wave rules without an additional archetype-specific attack.
+
+### ENEMY-013 — Explosive Detonation
+
+Status: Must
+
+An unexploded Explosive detonates when it collides with another enemy while either participant is `Launched`, or when it reaches the player while still `Active`. The explosion resolves immediately, deals configured damage throughout its radius, applies the configured knockback for the affected target tier, launches ordinary affected enemies through the shared launch lifecycle, may trigger other unexploded Explosives in range during the same resolution, damages and knocks back the player when in range, and defeats the exploding enemy. An Explosive can detonate only once.
+
 ### INFO-001 — No Persistent Normal-Enemy UI
 
 Status: Must
@@ -427,7 +445,7 @@ One complete boss encounter that proves crowd-mediated boss interaction.
 
 Status: Must
 
-Four enemy types. Their exact identities and distribution remain unresolved.
+Four standard enemy types: Baseline, Explosive, Ranged, and Dasher. Elite enemies are an additional special encounter layer and do not count toward the four standard enemy types. Their distribution across gauntlets remains encounter-pacing and tuning work.
 
 ### MVP-004 — Weapons
 
