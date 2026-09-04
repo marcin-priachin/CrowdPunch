@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-08-02
+Last updated: 2026-09-04
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -9,10 +9,6 @@ These questions are deliberately unresolved. Agents must not infer answers from 
 ### OQ-001 — Prototype Success Criteria
 
 What crowd size, frame-rate target, target hardware, and minimum chain-reaction length should the first representative physics test prove?
-
-### OQ-002 — First Enemy Set
-
-Which four enemy types best prove crowd composition without creating excessive per-enemy complexity?
 
 ### OQ-003 — First Two Weapons
 
@@ -85,6 +81,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-09-04 — OQ-002
+
+Decision: The four standard MVP enemy types are Baseline, Explosive, Ranged, and Dasher. Elite enemies are a separate special encounter tier and do not count toward the four standard enemy slots.
+
+Rationale: These roles are already established in the playable design and provide distinct crowd functions: a neutral chain body, a collision-triggered area threat, positional ranged pressure, and a committed high-mobility threat. Keeping elites separate preserves the intended four-type standard roster while allowing rarer crowd-manipulation threats.
+
+GDD rules: ENEMY-001 through ENEMY-013, MVP-003
 
 ### 2026-08-30 — OQ-008
 
