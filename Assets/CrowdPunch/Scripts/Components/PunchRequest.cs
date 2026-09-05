@@ -17,5 +17,7 @@ namespace CrowdPunch.Components
         public float Damage;
         public float PushDirectionPositionWeight;
         public uint Sequence;
+        public bool IsResolved;
+        public bool HitEnemy;
     }
 }

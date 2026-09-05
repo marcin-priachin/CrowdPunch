@@ -143,7 +143,7 @@ Show a semitransparent world-space shape matching the live punch area whenever t
 
 Status: Must
 
-Punches use a configurable cooldown that begins when a punch is committed. Punch input rejected by cooldown does not alter dash movement.
+Punches use a configurable cooldown that begins only when the punch hits at least one eligible enemy. A missed punch does not activate cooldown. Hitting multiple enemies with one punch starts cooldown only once. Punch input rejected by cooldown does not alter dash movement.
 
 ### PLAYER-010 — Supported Input Methods
 

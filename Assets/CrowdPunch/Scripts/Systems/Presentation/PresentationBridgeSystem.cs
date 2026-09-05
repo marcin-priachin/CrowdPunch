@@ -18,7 +18,7 @@ namespace CrowdPunch.Systems.Presentation
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<Enemy>();
+            state.RequireForUpdate<PlayerSnapshot>();
         }
 
         public void OnUpdate(ref SystemState state)
@@ -26,6 +26,18 @@ namespace CrowdPunch.Systems.Presentation
             if (!PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
             {
                 return;
+            }
+
+            Entity playerEntity = SystemAPI.GetSingletonEntity<PlayerSnapshot>();
+            if (SystemAPI.HasComponent<PunchRequest>(playerEntity))
+            {
+                PunchRequest punch = SystemAPI.GetComponent<PunchRequest>(playerEntity);
+                if (punch.IsResolved)
+                {
+                    bridge.ReceivePunchResult(punch.Sequence, punch.HitEnemy);
+                    punch.IsResolved = false;
+                    SystemAPI.SetComponent(playerEntity, punch);
+                }
             }
 
             bridge.BeginTrajectoryPreview();

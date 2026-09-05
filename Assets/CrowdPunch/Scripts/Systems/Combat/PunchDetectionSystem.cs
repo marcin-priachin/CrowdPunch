@@ -62,9 +62,11 @@ namespace CrowdPunch.Systems.Combat
                 }
                 if (tier.ValueRO.Value == EnemyCombatTier.Elite)
                     targetPunch.Strength *= math.max(0f, punchRequest.EliteKnockbackMultiplier);
-                PunchResolution.TryApply(state.EntityManager, enemy, targetPunch);
+                punchRequest.HitEnemy |= PunchResolution.TryApply(state.EntityManager, enemy, targetPunch);
             }
 
+            punchRequest.IsResolved = true;
+            SystemAPI.SetComponent(punchEntity, punchRequest);
             SystemAPI.SetComponentEnabled<PunchRequest>(punchEntity, false);
         }
     }

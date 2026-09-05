@@ -380,6 +380,16 @@ Do not preserve these details merely because they exist. Preserve the ownership 
 
 Package versions in `Packages/manifest.json` and `packages-lock.json` remain the source of truth.
 
+## Player Punch Cooldown Confirmation
+
+`PunchDetectionSystem` records resolution and whether any `PunchResolution.TryApply` call succeeded on the existing
+`PunchRequest`, then disables the request. `PresentationBridgeSystem` reads that result through the non-enableable
+`PlayerSnapshot` singleton and sends the request sequence and hit flag through `PlayerEcsBridge.PunchResolved`.
+This result is delivered even when there are no enemies or trajectory preview is disabled. `PlayerPunch` waits for its
+matching result before accepting another request and starts its cooldown only on a hit (PLAYER-009). A miss leaves the
+punch ready; a multi-target hit starts one cooldown. Resetting or disabling the punch clears its pending state, so stale
+results cannot apply cooldown to a later request. Enemy detection remains ECS-owned and Burst-compatible.
+
 ## Verification Constraints
 
 - Unity compilation, baking, scene wiring, and play-mode behavior are the final verification sources.

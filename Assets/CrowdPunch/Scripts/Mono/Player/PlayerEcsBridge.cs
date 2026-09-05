@@ -62,6 +62,13 @@ namespace CrowdPunch.Mono.Player
 
         public event Action<float, float, Vector3> EnemyContactHitReceived;
         public event Action<Vector3, float, float, float> ExplosionReceived;
+        public event Action<uint, bool> PunchResolved;
+
+        /// <summary>Returns the ECS hit result without exposing enemy entities.</summary>
+        public void ReceivePunchResult(uint sequence, bool hitEnemy)
+        {
+            PunchResolved?.Invoke(sequence, hitEnemy);
+        }
 
         /// <summary>Latest player position published by MonoBehaviour player code.</summary>
         public float3 Position { get; private set; }

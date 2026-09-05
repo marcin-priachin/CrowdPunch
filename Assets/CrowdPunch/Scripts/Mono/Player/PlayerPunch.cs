@@ -18,6 +18,8 @@ namespace CrowdPunch.Mono.Player
         private PunchAreaFeedback areaFeedback;
         private InputAction attackAction;
         private float nextPunchTime;
+        private bool awaitingPunchResult;
+        private uint pendingPunchSequence;
 
         public float PunchRadius => settings == null ? 0f : settings.Radius;
 
@@ -57,11 +59,17 @@ namespace CrowdPunch.Mono.Player
 
         private void OnEnable()
         {
+            if (ecsBridge != null)
+                ecsBridge.PunchResolved += OnPunchResolved;
             attackAction?.Enable();
         }
 
         private void OnDisable()
         {
+            if (ecsBridge != null)
+                ecsBridge.PunchResolved -= OnPunchResolved;
+            awaitingPunchResult = false;
+            ecsBridge?.ClearPunch();
             attackAction?.Disable();
             areaFeedback?.Hide();
             ecsBridge?.ClearPunchPreview();
@@ -120,6 +128,7 @@ namespace CrowdPunch.Mono.Player
 
         public void ResetPunchState()
         {
+            awaitingPunchResult = false;
             nextPunchTime = 0f;
             areaFeedback?.Hide();
             ecsBridge?.ClearPunch();
@@ -127,7 +136,8 @@ namespace CrowdPunch.Mono.Player
 
         private bool CanPunch()
         {
-            return isActiveAndEnabled && ecsBridge != null && settings != null && Time.time >= nextPunchTime;
+            return isActiveAndEnabled && ecsBridge != null && settings != null
+                && !awaitingPunchResult && Time.time >= nextPunchTime;
         }
 
         private void PublishPunch()
@@ -145,7 +155,19 @@ namespace CrowdPunch.Mono.Player
                 settings.EliteKnockbackMultiplier,
                 settings.Damage,
                 settings.DirectionPositionWeight);
-            nextPunchTime = Time.time + settings.Cooldown;
+            pendingPunchSequence = ecsBridge.PunchSequence;
+            awaitingPunchResult = true;
+        }
+
+        private void OnPunchResolved(uint sequence, bool hitEnemy)
+        {
+            if (!awaitingPunchResult || sequence != pendingPunchSequence)
+                return;
+
+            awaitingPunchResult = false;
+            // PLAYER-009: only confirmed enemy hits spend the punch cooldown.
+            if (hitEnemy)
+                nextPunchTime = Time.time + settings.Cooldown;
             UpdateAreaFeedback();
         }
     }
