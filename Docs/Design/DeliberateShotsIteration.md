@@ -19,6 +19,7 @@ The authored conditions made those opportunities expensive or difficult to read:
 | Bootstrap camera offset `(0,6,-38)`, look offset `(0,5,0)`; the captured baseline frame has compressed ground depth and a large sky/wall area. | Crowd geometry and relative range are hard to compare. The frame is visual evidence, not a human readability test. |
 | Ground uses a high-frequency texture; normal enemies are red capsules; ranged and explosive variants share the capsule silhouette. Ranged wind-up has gameplay state but no corresponding body presentation. | Background detail competes with actors; threats often require watching individual movement. |
 | Punch volume is 4 m wide and 8 m long. Aim assist range is 999999 m with a 45-degree cone. Propagation correction is 90 m, with no angular cap; homing continues at 30 degrees/s. | A wide punch often affects several bodies, and downstream direction can change substantially without a physical collision. A useful initial choice can be diluted by automatic steering. |
+| First punches add an Active enemy's incoming velocity; the preview shows the impulse direction alone. An existing test explicitly preserves that momentum rule. | A moving body can initially depart at a different angle from its arrow. This iteration intentionally revises that behavior for normal player launches (PLAYER-004); it is not treated as an accidental implementation bug. |
 | Baseline pressure is capped at six. Its speed is 16 m/s inside effectively unlimited charge range, with 2-second pursuing contact attempts, no preparation, and a 3.5 m surround ring. Player movement is 12 m/s. | The whole crowd does not chase, but the local decision space still collapses quickly. This is a hypothesis about play, not proof of player frustration. |
 | Explosions have a 15 m radius, greater than the 8 m punch reach. Ranged projectiles travel 64 m/s and engage from 80 m. | Immediate explosive contacts often threaten the initiating player; distant ranged threats leave little post-fire correction time. |
 | Direct punch damage is 10. Ordinary health is 5; elite health is 250. Collision damage caps at 0.75 times originating punch damage. | A strong body impact caps at 7.5 against the elite, less than a direct punch. Setup costs have little damage payoff on the durable target. |
@@ -74,7 +75,12 @@ wave-lifetime behavior were retained.
    Punch width is 2.3 m, range remains 8 m, strength remains 90 and hit-confirmed cooldown is 1.25 s.
    Aim assistance is local (18 m, 12 degrees). Propagation correction and homing are authored to zero;
    their existing implementations and disable controls remain available. Initial assisted direction is
-   still shared with the preview; subsequent motion is physics-owned except intentional Dasher rules.
+   still shared with the preview. A normal player-punched body now starts from rest in Active,
+   Launched and Recovering states, removing incoming linear/angular momentum before the impulse.
+   Elite knockback and enemy-originated punches retain their existing behavior. Subsequent motion
+   is physics-owned except intentional Dasher rules. This deliberately revises the previous
+   test-backed first-punch momentum rule to make moving targets follow the same initial direction
+   contract as re-punched bodies (PLAYER-004, COMBAT-014).
    Strong collision damage now rises from 0.5 to at most 3 times originating punch damage; an impulse
    of 14.5 or greater reaches 30 damage, versus 10 for directly punching the elite. The same curve
    applies to launched bodies striking the player, preserving the danger of careless chains.
@@ -127,9 +133,10 @@ Completed checks:
 | Check | Observed result |
 | --- | --- |
 | Runtime and editor C# builds, `--no-restore` | Pass. Existing package assembly conflicts and deprecated aspect warnings remain; no game-code compile errors. |
-| Unity editor tests | All 33 pass, including five new cadence/commitment/payoff tests and existing launch homing, player-impact, elite-geometry and arena-distribution tests. |
+| Unity editor tests | All 37 pass, including cadence/commitment/payoff tests, three moving-body ECS detection-to-impulse cases, and existing launch homing, player-impact, elite-geometry and arena-distribution tests. The new integration cases verify assisted launch direction in Active/Launched/Recovering states and unchanged additive elite knockback. |
 | Actual prefab baking / mixed elite scene | 49 spawned enemy roots and 49 correctly linked renderers; no Unity errors after correcting renderer-owned baking. |
 | Controlled real-physics body shot into an elite | Elite health 250 -> 220 (30 damage). The matched direct punch gave 250 -> 240 (10 damage). Two immediate requests produced one accepted punch. |
+| Moving body's live preview -> player punch -> physics | After settling the fixture, the body was made Active and given lateral velocity `(12,0,0)` at punch time. Its first observed launched horizontal velocity matched the visible assisted preview (measured angle 0 degrees, sampled 0.013 s after request); the elite again lost 30 health. Other enemies were disabled for this directional check. |
 | Return-path risk and repositioning | Remaining on the body/elite line cost 30 player health from its rebound. Repeating the shot while moving sideways through virtual gamepad input preserved full player health. |
 | Straight four-body chain, correction and homing disabled | All four bodies reached zero health while still Launched; three propagated bodies retained Player ownership and originating damage 10. |
 | Body into an explosive and two adjacent bodies | Detonation flag set once, explosive Defeated, nearby bodies launched with explosion damage; player outside the 7 m blast remained at 100 health at the sampled time. This does not make later returning bodies safe. |
@@ -145,10 +152,12 @@ update at 0.034 ms (p95 0.051), and the new presentation-system update at 0.010 
 System-update markers are not isolated worker-job timings; the standalone presentation worker
 marker returned zero, so its worker cost is **not** established separately. The probe reset player
 health to keep the workload running; these samples are not survival or difficulty measurements.
-No full human-controlled A/B run or shipping hardware benchmark was performed.
+Hands-on interactive player testing was not available; no full human-controlled A/B run or shipping
+hardware benchmark was performed. The live checks above were scripted through the Unity Editor.
 
 The isolated collision fixtures placed subjects in Recovering to hold them for a reproducible
-physics shot and disabled unrelated enemies. The mixed 49/200-body checks ran normal AI separately.
+physics shot and disabled unrelated enemies; the final moving-body check explicitly switched the
+source to Active with lateral velocity at punch time. The mixed 49/200-body checks ran normal AI separately.
 The body/elite fixture placed the player at `(0,0.5,-20)`, the body at `(0,1,-14)`, and the elite at
 `(0,0.5,0)` before allowing gravity/physics to step. These checks establish collision behavior and
 damage payoff, not the success rate of aiming at a moving elite.
@@ -162,6 +171,9 @@ they isolate camera geometry, not the complete previous game or an interactive r
 An integration review also found that elite staging/corridor movement can supersede baseline
 contact intent. Those overrides now cancel pending contact commitment, preventing a misleading
 wind-up pulse for an attack that will not execute.
+
+The temporary command-file editor probe was removed after validation. No health-reset, accelerated
+spawn, disabled-enemy fixture, or virtual input device is shipped as part of the playable iteration.
 
 Manual procedure (Bootstrap, then Pause menu level selector):
 

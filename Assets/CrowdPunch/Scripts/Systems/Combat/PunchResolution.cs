@@ -53,7 +53,9 @@ namespace CrowdPunch.Systems.Combat
             float3 impulseDirection = punch.HasAssistedLaunchDirection != 0
                 ? math.normalizesafe(punch.AssistedLaunchDirection, positionDirection)
                 : math.normalizesafe(math.lerp(forward, positionDirection, math.saturate(punch.PositionWeight)), positionDirection);
-            if (manager.HasComponent<PhysicsVelocity>(target))
+            // PLAYER-004: normal launches follow the preview even when the body is moving.
+            // Non-launchable elites retain their existing additive knockback response.
+            if (EnemyLaunchTransition.IsLaunchable(tier) && manager.HasComponent<PhysicsVelocity>(target))
             {
                 PhysicsVelocity replacementVelocity = manager.GetComponentData<PhysicsVelocity>(target);
                 EnemyLaunchVelocity.ResetForPlayerPunchReplacement(

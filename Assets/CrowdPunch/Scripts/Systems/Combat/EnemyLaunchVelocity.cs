@@ -4,7 +4,7 @@ using Unity.Physics;
 
 namespace CrowdPunch.Systems.Combat
 {
-    /// <summary>Applies velocity replacement semantics when an existing launch is punched again.</summary>
+    /// <summary>Starts player-launched bodies from rest so the impulse matches the direction preview.</summary>
     public static class EnemyLaunchVelocity
     {
         public static void ResetForPlayerPunchReplacement(
@@ -12,7 +12,7 @@ namespace CrowdPunch.Systems.Combat
             EnemyLaunchPhase phase,
             EnemyLaunchCause cause)
         {
-            if (phase != EnemyLaunchPhase.Launched || cause != EnemyLaunchCause.PlayerPunch)
+            if (phase == EnemyLaunchPhase.Defeated || cause != EnemyLaunchCause.PlayerPunch)
             {
                 return;
             }

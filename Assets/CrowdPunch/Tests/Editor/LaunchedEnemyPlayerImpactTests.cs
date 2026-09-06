@@ -99,8 +99,9 @@ namespace CrowdPunch.Tests
             Assert.AreEqual(float3.zero, velocity.Angular);
         }
 
-        [Test]
-        public void FirstPunchDoesNotReplaceActiveEnemyVelocity()
+        [TestCase(EnemyLaunchPhase.Active)]
+        [TestCase(EnemyLaunchPhase.Recovering)]
+        public void Player004_FirstAndRecoveringPunchesReplaceVelocityToMatchPreview(EnemyLaunchPhase phase)
         {
             Unity.Physics.PhysicsVelocity velocity = new Unity.Physics.PhysicsVelocity
             {
@@ -110,11 +111,11 @@ namespace CrowdPunch.Tests
 
             EnemyLaunchVelocity.ResetForPlayerPunchReplacement(
                 ref velocity,
-                EnemyLaunchPhase.Active,
+                phase,
                 EnemyLaunchCause.PlayerPunch);
 
-            Assert.AreEqual(new float3(1f, 0f, 0f), velocity.Linear);
-            Assert.AreEqual(new float3(0f, 1f, 0f), velocity.Angular);
+            Assert.AreEqual(float3.zero, velocity.Linear);
+            Assert.AreEqual(float3.zero, velocity.Angular);
         }
 
         [Test]
