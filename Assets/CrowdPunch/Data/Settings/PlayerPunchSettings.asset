@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.PlayerPunchSettings
   inputActions: {fileID: -944628639613478452, guid: 289c1b55c9541489481df5cc06664110, type: 3}
   attackActionName: Player/Attack
-  radius: 2
+  radius: 1.15
   range: 8
   strength: 90
   eliteKnockbackMultiplier: 0.1
   damage: 10
-  cooldown: 2
+  cooldown: 1.25
   directionPositionWeight: 0
-  aimAssistRange: 999999
-  aimAssistMaximumAngleDegrees: 45
+  aimAssistRange: 18
+  aimAssistMaximumAngleDegrees: 12

@@ -1,7 +1,7 @@
 # Crowd Punch — Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-08-03
+Last inspected: 2026-09-06
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -19,7 +19,7 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` — persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` — first additive gauntlet scene, containing its player entry point and the prototype arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Bootstrap/ArenaSubScene.unity` — prototype arena authoring content baked into entities.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_04` each contain their matching ECS SubScene. All four gauntlets are included in Build Settings and the Bootstrap level selector.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
@@ -42,7 +42,7 @@ There are currently no game-specific assembly definitions; scripts compile into 
 
 | Concern | Current owner | Boundary/data |
 |---|---|---|
-| Input, player transform, and dash-punch coordination | GameObject | `PlayerController` owns dash timing/cancellation; `PlayerPunch` owns attack input, buffering, cooldown, and persistent punch-area cooldown presentation |
+| Input, player transform, and punch | GameObject | `PlayerController` owns movement and committed dash timing; `PlayerPunch` owns immediate attack input, hit-confirmed cooldown, and punch-area cooldown presentation. Punching does not interrupt a dash. |
 | Player health and invincibility | GameObject | `PlayerHealth`; `PlayerInvincibilityFeedback` blinks the player renderer while invulnerability is active |
 | Camera | GameObject | `CameraFollow` |
 | Scene bootstrap and UI | GameObject | `GameBootstrap`, UI MonoBehaviours |
@@ -57,7 +57,8 @@ There are currently no game-specific assembly definitions; scripts compile into 
 | Enemy combat state | ECS | health, damage, impulse, explicit launch lifecycle, death/respawn requests |
 | Punch trajectory preview | ECS → bridge → GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
 | Committed punch-area feedback | GameObject | `PlayerPunch` triggers `PunchAreaFeedback` from the same origin, direction, radius, and range published to ECS |
-| Temporary enemy health and non-active state UI | ECS → presentation registry → Canvas | `EnemyHealthBarVisibility`, `EnemyLaunchState`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas` |
+| Enemy body feedback | ECS rendering | Baked `EnemyVisualOwner` connects root/child renderers to gameplay state; `EnemyReadabilitySystem` writes body color. `DasherPresentationSystem` retains ownership of Dasher color/shape. |
+| Temporary normal health and elite health UI | ECS → presentation registry → Canvas | `EnemyHealthBarVisibility`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas`; no repeated normal launch/recovery text, and zero-health normal bars are suppressed. |
 
 MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exposes the one active `PlayerEcsBridge` to the few managed systems that cross the boundary.
 
@@ -86,7 +87,7 @@ The arena supports two independent initial-layout inputs, and a SubScene may con
 
 Both inputs bake the same `EnemySpawnProfile`. `EnemySpawnSystem` resolves either a random position or an authored position and delegates prefab instantiation, common movement/health/contact tuning, separation selection, respawn policy, archetype identity, material override, and Baseline/Ranged/Explosive/Dasher component setup to `EnemySpawnInitialization`. `EnemyAuthoring` is only the prefab marker that bakes the common component layout; `EnemySpawnSettings` is the single tuning source for each spawned variant. Shared approach and retreat speeds serve both ranged positioning and Dasher positioning instead of maintaining duplicate Dasher values. Runtime behavior is always selected through `EnemyArchetypeKind`, never names. The one-shot spawn system has no `SpawnSettings` requirement, so authored-only scenes work and initialization cannot repeat on restart.
 
-Wave spawning is a third, independently selectable workflow and does not gate either initial-spawn workflow. Each `EnemyWaveSettings` ScriptableObject contains one wave's total count, weighted references to existing `EnemySpawnSettings` profiles with optional guaranteed minimum counts, positive-area world-space XZ rectangles, pre-wave delay, per-wave activation mode and timed-activation duration, and `AllAtOnce` or `Batched` cadence. Guaranteed profile allocations spawn first in authored profile order, then weighted selection fills the remaining normal-enemy slots. Minimums whose sum exceeds the wave's normal total make the wave invalid. `EnemyWaveSequenceAuthoring` holds the ordered wave references plus the deterministic seed, minimum player distance, and bounded placement retry count. Its baker declares dependencies on the sequence, wave assets, profiles, and prefabs, then flattens immutable definitions into ECS buffers; runtime components contain no Unity object references.
+Wave spawning is a third, independently selectable workflow and does not gate either initial-spawn workflow. Each `EnemyWaveSettings` ScriptableObject contains one wave's total count, weighted references to existing `EnemySpawnSettings` profiles with optional guaranteed minimum counts, positive-area world-space XZ rectangles, pre-wave delay, per-wave activation mode and timed-activation duration, and `AllAtOnce` or `Batched` cadence. Guaranteed normal allocations are interleaved in authored profile order and distributed proportionally over the complete wave; weighted selection fills the intervening slots. Minimums whose sum exceeds the wave's normal total make the wave invalid. `EnemyWaveSequenceAuthoring` holds the ordered wave references plus the deterministic seed, minimum player distance, and bounded placement retry count. Its baker declares dependencies on the sequence, wave assets, profiles, and prefabs, then flattens immutable definitions into ECS buffers; runtime components contain no Unity object references.
 
 `ArenaAuthoring` bakes two independent world-space volumes. `ArenaBounds` is the enemy spacing/distribution area consumed by AI, movement containment, pooling, and edge respawn. `EnemyDefeatBounds` is consumed only by `OutOfBoundsSystem`; leaving it requests pooling for respawning enemies or terminal defeat for fixed wave enemies. Each volume has its own authored center offset and size, while an unset defeat size falls back to the spacing size for existing scenes.
 
@@ -124,7 +125,7 @@ Ordering between systems that share only a group should be made explicit when co
 - `RangedProjectileSystem` evaluates each fixed trajectory, performs a swept player-radius hit check, forwards one accepted hit through `PlayerEcsBridge`, and destroys the projectile on hit, after falling below its authored world-space minimum altitude, or on expiry. It does not apply arena-bound cleanup because the unconstrained GameObject player can currently provide a valid target outside `ArenaBounds`.
 - `EnemyRecoverySystem` advances living `Launched` enemies through low-momentum dwell and `Recovering` back to `Active`; a zero-health launched enemy enters `Defeated` directly when launch ends.
 - `PlayerContactDamageSystem` uses full three-dimensional enemy/player proximity and reports the closest accepted hit through the bridge, so entities above or below the player cannot produce planar-only contact damage.
-- `OutOfBoundsSystem` compares enemy positions with the baked three-dimensional `ArenaBounds`. Escaped enemies whose profile allows respawning enter the existing pool immediately; fixed wave enemies instead enter terminal `Defeated` state with zero health so their ownership is counted and they cannot block cumulative encounter completion from outside the authored arena.
+- `OutOfBoundsSystem` compares enemy positions with the separate baked three-dimensional `EnemyDefeatBounds`. Escaped enemies whose profile allows respawning enter the existing pool immediately; fixed wave enemies instead enter terminal `Defeated` state with zero health so their ownership is counted and they cannot block cumulative encounter completion from outside the authored arena.
 - `DefeatedEnemyLifecycleSystem` converts the one-shot defeat marker into the existing respawn request.
 - `EnemyRespawnSystem` brakes, pools, resets, and respawns defeated or otherwise invalid enemies.
 
@@ -133,11 +134,12 @@ Ordering between systems that share only a group should be made explicit when co
 `GamePresentationGroup` runs in Unity's presentation phase:
 
 - `HealthBarPresentationSystem` updates ECS health-bar presentation data and expires one-second post-damage visibility.
-- `EnemyHealthBarBridgeSystem` publishes enemy position, health, and launch-phase snapshots while post-damage health visibility is enabled or the enemy is not `Active`.
+- `EnemyHealthBarBridgeSystem` publishes living normal enemy health while post-damage visibility is enabled, and elite health while alive.
+- `EnemyReadabilitySystem` maps gameplay state to body color through baked renderer ownership. Dasher presentation remains specialized.
 - `PresentationBridgeSystem` is the explicit ECS presentation bridge point.
 - `PresentationBridgeSystem` selects enemies currently inside the live punch volume, reads the same ECS-owned aim-assist target lock used by punch detection, and publishes their initial launch segments through `PlayerEcsBridge`; `PunchTrajectoryPreview` renders those segments as pooled semitransparent world-space lines.
 
-Normal-enemy health bars are transient damage feedback only. `EnemyHealthBarCanvas` uses the same pooled screen-space view to label transient `Launched`, `Recovering`, and `Defeated` phases, and independently respects the scene-facing health-bar and state-label options configured on `GameBootstrap`. It hides the view when neither enabled channel has content; the Canvas never queries or stores enemy entities.
+Normal-enemy health bars are transient damage feedback only. The bridge no longer publishes normal launch/recovery labels or exhausted-health normal bars. `EnemyHealthBarCanvas` retains pooled views and never queries or stores enemy entities. The legacy state-label rendering option remains available in the canvas, but receives no normal labels from this iteration's bridge.
 
 ## Transient State Pattern
 
@@ -363,11 +365,11 @@ The current implementation proves architecture and basic interactions, but sever
 
 - Punch detection uses a line/capsule-like distance test and independently assigns impulse, damage, and launched state. Enemy collision damage is also independently thresholded rather than inferred from propagation.
 - Player movement and dash remain transform-driven MonoBehaviour movement. `PlayerController` submits each intended horizontal displacement through `PlayerEcsBridge`; `PlayerObstacleCollisionSystem` first resolves any shallow overlap, then sphere-casts the configured player radius against baked non-enemy geometry, resolves one wall-slide pass, and returns the corrected position to the controller. Zero-distance contacts permit motion away from their surface so corners cannot trap the player. This keeps SubScene obstacle collision inside the ECS physics world without allowing the MonoBehaviour to query or retain entities.
-- Dash-punch coordination stays on the player GameObject: `PlayerPunch` buffers an early press, while `PlayerController` reports normalized progress from its existing dash timer and ends dash movement when the punch is consumed at or after the configured `0.5` midpoint. Dash punches select independently configured damage and launch strength, then use the ordinary bridge and ECS punch pipeline.
+- Dash punches start immediately through the ordinary punch pipeline, use the same tuning as standing punches, and do not alter committed dash movement (PLAYER-005). Misses do not start cooldown (PLAYER-009).
 - A launched enemy, including a zero-health enemy with deferred defeat, can propagate launched state to and independently damage an active or recovering enemy when Unity Physics reports solver-estimated contact impulse above the respective authored thresholds. Unity Physics supplies the transferred velocity; gameplay may rotate newly propagated horizontal velocity toward the smallest-angle eligible target inside the configured correction radius without changing its magnitude or vertical component. One source launch damages each target at most once but may damage multiple targets. Defeated enemies and launched-versus-launched pairs are ineligible. The final effect grammar remains unresolved.
 - Enemy chasing and contact damage exist as prototype behavior.
-- A player health bar exists. Normal-enemy health is displayed temporarily after damage per `INFO-001`, while non-active launch phases share that pooled view for transient state feedback.
-- `Gauntlet_01` packages the current arena sandbox through the fixed additive gauntlet lifecycle. Additional gauntlets and the complete 15–20 minute run are not yet authored.
+- A player health bar exists. Living damaged normals may display temporary health per INFO-001; body presentation communicates normal launch/recovery state. Elites retain persistent health bars.
+- Four gauntlets are authored through the additive lifecycle. Gauntlet 3 contains the 200-enemy wave; Gauntlet 4 contains a mixed crowd with a replenishing elite. The complete boss-ended 15-20 minute run remains unfinished.
 
 Do not preserve these details merely because they exist. Preserve the ownership boundary and system timing while evolving behavior toward accepted GDD rules.
 
@@ -389,6 +391,38 @@ This result is delivered even when there are no enemies or trajectory preview is
 matching result before accepting another request and starts its cooldown only on a hit (PLAYER-009). A miss leaves the
 punch ready; a multi-target hit starts one cooldown. Resetting or disabling the punch clears its pending state, so stale
 results cannot apply cooldown to a later request. Enemy detection remains ECS-owned and Burst-compatible.
+
+## Deliberate Shot Experiment (2026-09-06)
+
+See [design diagnosis, alternatives, tuning and playtest protocol](../Design/DeliberateShotsIteration.md).
+The GDD remains the accepted baseline; this document records the implemented experiment.
+
+- `EnemyContactDamageSettings.AttemptWindUpDuration` is authored in the existing spawn profile. Baseline
+  `EnemyContactAttemptState` now also owns `IsWindingUp` and `CommittedDirection`. `EnemyContactCommitment`
+  handles prepare/commit/cancel/cadence without physics or presentation writes. `EnemyChaseSystem` emits
+  zero intent during preparation and direction-committed intent during the finite attempt. Committed
+  attempts retain a pressure slot until they finish; otherwise the closest eligible enemies receive it.
+  Launch/recovery interrupts the attempt; pooled reset uses the existing whole-state reset.
+  Elite staging and corridor-clearance overrides also cancel contact commitment so body warnings match actual intent.
+  Setting wind-up to zero selects the previous immediate pursuit behavior. Explosive, ranged, Dasher
+  and elite overrides retain their ownership and timing.
+- `EnemyVisualBaker : Baker<MeshRenderer>` discovers an `EnemyAuthoring` ancestor through dependency-aware
+  baker access. It adds `EnemyVisualOwner` and a URP color override to its **own** renderer entity. A parent
+  baker must not add components to a child's primary entity. Owner references remap during prefab
+  instantiation, so both ordinary root meshes and the elite child mesh follow their correct gameplay entity.
+- `EnemyReadabilitySystem` is a Burst-compatible parallel presentation job over those renderers, with
+  read-only gameplay lookups. It writes body color only. Existing Dasher presentation still owns its
+  specialized color and shape. Ranged/explosive silhouettes are set once in spawn initialization using
+  `PostTransformMatrix`; physics collider geometry is unchanged. No per-enemy GameObject is added.
+- The health bridge now publishes normal bars only for living recently damaged enemies. It does not
+  publish normal launch/recovery labels. Elite health policy remains always-visible while alive.
+- The existing punch pipeline, cooldown acknowledgement, bridge data and physics phase ordering are
+  unchanged. Arrowheads are local preview presentation only. Authored assist is 18 m / 12 degrees;
+  propagation correction and homing are disabled by their existing zero settings. The collision system
+  avoids allocating a full correction-candidate snapshot when correction is disabled.
+- The shared authored impulse damage curve now caps at three times originating damage, including
+  player impacts. This improves durable-target payoff without a separate scoring or reward system.
+  Gauntlet 4 supplies 48 mixed normals plus one replenishing elite. Gauntlet 3's 200-enemy wave is unchanged.
 
 ## Verification Constraints
 

@@ -102,6 +102,7 @@ namespace CrowdPunch.Systems.AI
 
                     if (enemy == projectile)
                     {
+                        CancelContactCommitment(enemy);
                         movement = GetStagingMovement(
                             transform.Position,
                             stagingPosition,
@@ -121,6 +122,7 @@ namespace CrowdPunch.Systems.AI
                                  elite.Settings.CrowdCorridorRadius,
                                  out float3 exitDirection))
                     {
+                        CancelContactCommitment(enemy);
                         movement.Direction = exitDirection;
                         movement.Speed = math.max(0f, movementSettings.MoveSpeed);
                     }
@@ -128,6 +130,15 @@ namespace CrowdPunch.Systems.AI
                     EntityManager.SetComponentData(enemy, movement);
                 }
             }
+        }
+
+        private void CancelContactCommitment(Entity enemy)
+        {
+            // ENEMY-009 overrides contact intent; do not show a contact wind-up that cannot execute.
+            EnemyContactAttemptState contact = EntityManager.GetComponentData<EnemyContactAttemptState>(enemy);
+            EnemyContactCommitment.Cancel(enemy,
+                EntityManager.GetComponentData<EnemyContactDamageSettings>(enemy), ref contact);
+            EntityManager.SetComponentData(enemy, contact);
         }
 
         private Entity FindClosestActiveNormal(

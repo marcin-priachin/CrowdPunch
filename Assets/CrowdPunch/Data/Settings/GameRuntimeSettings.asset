@@ -15,12 +15,12 @@ MonoBehaviour:
   startRunning: 1
   maximumApproachingEnemies: 6
   minimumPropagationImpulse: 1.5
-  propagationAimCorrectionRadius: 90
-  launchHomingDegreesPerSecond: 30
+  propagationAimCorrectionRadius: 0
+  launchHomingDegreesPerSecond: 0
   minimumDamageImpulse: 2
-  baseCollisionDamageMultiplier: 0.25
-  damageMultiplierPerExcessImpulse: 0.05
-  maximumCollisionDamageMultiplier: 0.75
+  baseCollisionDamageMultiplier: 0.5
+  damageMultiplierPerExcessImpulse: 0.2
+  maximumCollisionDamageMultiplier: 3
   usefulMomentumSpeed: 2
   lowMomentumPeriod: 0.25
   recoveryDuration: 0.6

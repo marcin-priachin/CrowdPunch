@@ -63,8 +63,9 @@ namespace CrowdPunch.Systems.AI
             NativeList<PressureCandidate> pressureCandidates = new NativeList<PressureCandidate>(Allocator.TempJob);
 
             foreach ((RefRO<LocalTransform> transform, EnabledRefRO<RespawnRequest> respawnRequest,
-                         RefRO<EnemyLaunchState> launchState, RefRO<EnemyArchetype> archetype, Entity entity) in
-                     SystemAPI.Query<RefRO<LocalTransform>, EnabledRefRO<RespawnRequest>, RefRO<EnemyLaunchState>, RefRO<EnemyArchetype>>()
+                         RefRO<EnemyLaunchState> launchState, RefRO<EnemyArchetype> archetype,
+                         RefRO<EnemyContactAttemptState> contactAttempt, Entity entity) in
+                     SystemAPI.Query<RefRO<LocalTransform>, EnabledRefRO<RespawnRequest>, RefRO<EnemyLaunchState>, RefRO<EnemyArchetype>, RefRO<EnemyContactAttemptState>>()
                          .WithAll<Enemy>()
                          .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
                          .WithEntityAccess())
@@ -87,7 +88,9 @@ namespace CrowdPunch.Systems.AI
                             new PressureCandidate
                             {
                                 Entity = entity,
-                                DistanceSq = math.lengthsq(toPlayer)
+                                // Finish a committed lunge before allocating its pressure slot again.
+                                DistanceSq = archetype.ValueRO.Value == EnemyArchetypeKind.Baseline
+                                    && contactAttempt.ValueRO.IsAttempting != 0 ? -1f : math.lengthsq(toPlayer)
                             });
                     }
                 }
@@ -187,12 +190,14 @@ namespace CrowdPunch.Systems.AI
             {
                 if (launchState.Phase != EnemyLaunchPhase.Active)
                 {
+                    EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
                     desiredMovement = default;
                     return;
                 }
 
                 if (!PlayerSnapshot.IsAvailable)
                 {
+                    EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
                     desiredMovement.Direction = float3.zero;
                     desiredMovement.Speed = 0f;
                     return;
@@ -212,7 +217,19 @@ namespace CrowdPunch.Systems.AI
                     && distanceToPlayer <= math.max(0f, contactSettings.AttemptDistance);
                 if (IsPressureEnemy(entity) || explosiveInContactRange)
                 {
-                    UpdateContactAttempt(entity, distanceToPlayer, contactSettings, ref contactAttempt);
+                    bool usesCommitment = archetype.Value == EnemyArchetypeKind.Baseline
+                        && contactSettings.AttemptWindUpDuration > 0f;
+                    if (usesCommitment)
+                        EnemyContactCommitment.Tick(entity, distanceToPlayer, toPlayer, DeltaTime,
+                            contactSettings, ref contactAttempt);
+                    else
+                        UpdateContactAttempt(entity, distanceToPlayer, contactSettings, ref contactAttempt);
+
+                    if (usesCommitment && contactAttempt.IsWindingUp != 0)
+                    {
+                        desiredMovement = default;
+                        return;
+                    }
                     float3 target = explosiveInContactRange || contactAttempt.IsAttempting != 0
                         ? new float3(PlayerSnapshot.Position.x, transform.Position.y, PlayerSnapshot.Position.z)
                         : GetArenaRelativeSurroundTarget(
@@ -228,6 +245,8 @@ namespace CrowdPunch.Systems.AI
                     float3 targetDirection = targetDistance <= movementSettings.StoppingDistance
                         ? float3.zero
                         : toTarget / math.max(0.0001f, targetDistance);
+                    if (usesCommitment && contactAttempt.IsAttempting != 0)
+                        targetDirection = contactAttempt.CommittedDirection;
 
                     float3 appliedSeparation = explosiveInContactRange
                         ? float3.zero
@@ -247,7 +266,7 @@ namespace CrowdPunch.Systems.AI
                     return;
                 }
 
-                contactAttempt.IsAttempting = 0;
+                EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
 
                 float3 distributionDirection = GetDistributionDirection(
                     entity,

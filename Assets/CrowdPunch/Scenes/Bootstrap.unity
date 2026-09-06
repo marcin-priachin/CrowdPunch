@@ -227,8 +227,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Camera.CameraFollow
   target: {fileID: 1430478226}
   movementSettings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000021, type: 2}
-  offset: {x: 0, y: 6, z: -38}
-  targetOffset: {x: 0, y: 5, z: 0}
+  offset: {x: 0, y: 30, z: -28}
+  targetOffset: {x: 0, y: 1, z: 0}
   horizontalLookSensitivity: 0.15
   followSharpness: 12
 --- !u!114 &963194230
@@ -449,9 +449,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0af6aec62b634c00ad6023f5db42f7d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.PunchTrajectoryPreview
-  lineColor: {r: 1, g: 1, b: 1, a: 0.45}
-  lineLength: 10
-  lineWidth: 0.12
+  lineColor: {r: 1, g: 0.95, b: 0.5, a: 0.8}
+  lineLength: 5
+  lineWidth: 0.18
   verticalOffset: 0.15
 --- !u!1 &1715643237
 GameObject:

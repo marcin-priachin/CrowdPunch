@@ -21,20 +21,20 @@ MonoBehaviour:
   moveSpeed: 8
   wanderSpeed: 1.5
   chargeDistance: 99999
-  chargeSpeedMultiplier: 2
+  chargeSpeedMultiplier: 1.25
   acceleration: 12
   brakingAcceleration: 8
   turnSpeed: 12
   stoppingDistance: 0
   surroundDistance: 3.5
   surroundRingSpacing: 0.75
-  separationDistanceMin: 7
-  separationDistanceMax: 12
+  separationDistanceMin: 3
+  separationDistanceMax: 5
   separationWeight: 1.4
   archetypeSeparationOverrides:
   - archetype: 2
-    separationDistanceMin: 30
-    separationDistanceMax: 50
+    separationDistanceMin: 10
+    separationDistanceMax: 16
     separationWeight: 1.4
   maxHealth: 5
   contactDamagePercent: 0.05
@@ -70,7 +70,7 @@ MonoBehaviour:
   projectilePlayerLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  explosionRadius: 15
+  explosionRadius: 7
   explosionDamage: 20
   normalEnemyKnockbackForce: 16
   playerEliteKnockbackForce: 10

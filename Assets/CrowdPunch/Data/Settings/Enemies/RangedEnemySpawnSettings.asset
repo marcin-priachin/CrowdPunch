@@ -28,8 +28,8 @@ MonoBehaviour:
   stoppingDistance: 0
   surroundDistance: 3.5
   surroundRingSpacing: 0.75
-  separationDistanceMin: 7
-  separationDistanceMax: 12
+  separationDistanceMin: 3
+  separationDistanceMax: 5
   separationWeight: 1.4
   archetypeSeparationOverrides: []
   maxHealth: 5
@@ -43,25 +43,25 @@ MonoBehaviour:
   contactAttemptDuration: 2
   contactAttemptSpeedMultiplier: 1.25
   contactAttemptSeparationWeight: 0.35
-  preferredMinimumDistance: 0
+  preferredMinimumDistance: 12
   preferredMaximumDistance: 40
-  engagementRange: 80
+  engagementRange: 45
   retreatSpeed: 4
   approachSpeed: 10
   initialAttackDelay: 1
   initialDelayVariation: 0.5
-  windUpDuration: 0.75
-  cooldown: 1
-  cooldownVariation: 0.5
+  windUpDuration: 1
+  cooldown: 2
+  cooldownVariation: 1
   projectileDamage: 10
   playerInvincibilitySeconds: 0.5
-  projectileSpeed: 64
+  projectileSpeed: 32
   projectileMovementLeadMultiplier: 1
   projectileAimSpreadRadius: 0.5
   projectileAimTargetYOffset: 0.7
   projectileArcHeight: 5
   projectileMinimumAltitude: -2
-  projectileLifetime: 80
+  projectileLifetime: 6
   projectileRadius: 0.4
   projectilePlayerLayers:
     serializedVersion: 2

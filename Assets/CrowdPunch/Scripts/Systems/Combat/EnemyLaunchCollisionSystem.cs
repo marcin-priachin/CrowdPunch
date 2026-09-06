@@ -47,7 +47,9 @@ namespace CrowdPunch.Systems.Combat
                 TransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
                 HealthLookup = SystemAPI.GetComponentLookup<Health>(true),
                 VelocityLookup = SystemAPI.GetComponentLookup<PhysicsVelocity>(),
-                CorrectionCandidates = correctionCandidateQuery.ToEntityArray(Allocator.TempJob),
+                CorrectionCandidates = settings.PropagationAimCorrectionRadius > 0f
+                    ? correctionCandidateQuery.ToEntityArray(Allocator.TempJob)
+                    : new NativeArray<Entity>(0, Allocator.TempJob),
                 World = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
                 MinimumPropagationImpulse = math.max(0f, settings.MinimumPropagationImpulse),
                 PropagationAimCorrectionRadius = math.max(0f, settings.PropagationAimCorrectionRadius),

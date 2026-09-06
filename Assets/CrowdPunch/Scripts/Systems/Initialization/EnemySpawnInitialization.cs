@@ -133,6 +133,10 @@ namespace CrowdPunch.Systems.Initialization
             }
             if (profile.Archetype == EnemyArchetypeKind.Ranged)
             {
+                commandBuffer.AddComponent(enemy, new PostTransformMatrix
+                {
+                    Value = float4x4.Scale(new float3(0.85f, 1.3f, 0.85f))
+                });
                 commandBuffer.AddComponent(enemy, profile.RangedSettings);
                 commandBuffer.AddComponent(enemy, new RangedPositioningState
                 {
@@ -152,6 +156,10 @@ namespace CrowdPunch.Systems.Initialization
             }
             else if (profile.Archetype == EnemyArchetypeKind.Explosive)
             {
+                commandBuffer.AddComponent(enemy, new PostTransformMatrix
+                {
+                    Value = float4x4.Scale(new float3(1.25f, 0.8f, 1.25f))
+                });
                 commandBuffer.AddComponent(enemy, profile.ExplosiveSettings);
                 commandBuffer.AddComponent<ExplosiveEnemyState>(enemy);
                 commandBuffer.AddComponent<ExplosiveDetonationRequest>(enemy);

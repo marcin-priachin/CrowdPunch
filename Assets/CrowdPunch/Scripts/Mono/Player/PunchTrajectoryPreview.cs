@@ -52,7 +52,13 @@ namespace CrowdPunch.Mono.Player
 
                 PlayerEcsBridge.TrajectoryPreviewSegment segment = segments[i];
                 line.SetPosition(0, ToVector3(segment.Start) + Vector3.up * verticalOffset);
-                line.SetPosition(1, ToVector3(segment.End) + Vector3.up * verticalOffset);
+                Vector3 end = ToVector3(segment.End) + Vector3.up * verticalOffset;
+                Vector3 direction = (ToVector3(segment.End) - ToVector3(segment.Start)).normalized;
+                Vector3 side = Vector3.Cross(Vector3.up, direction) * 0.32f;
+                line.SetPosition(1, end);
+                line.SetPosition(2, end - direction * 0.65f + side);
+                line.SetPosition(3, end);
+                line.SetPosition(4, end - direction * 0.65f - side);
             }
         }
 
@@ -72,7 +78,7 @@ namespace CrowdPunch.Mono.Player
                 lineObject.transform.SetParent(transform, false);
                 LineRenderer line = lineObject.AddComponent<LineRenderer>();
                 line.useWorldSpace = true;
-                line.positionCount = 2;
+                line.positionCount = 5;
                 line.startWidth = lineWidth;
                 line.endWidth = lineWidth;
                 line.startColor = lineColor;

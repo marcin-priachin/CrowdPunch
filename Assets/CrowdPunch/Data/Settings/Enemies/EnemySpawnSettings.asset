@@ -21,15 +21,15 @@ MonoBehaviour:
   moveSpeed: 8
   wanderSpeed: 1.5
   chargeDistance: 99999
-  chargeSpeedMultiplier: 2
+  chargeSpeedMultiplier: 1.25
   acceleration: 12
-  brakingAcceleration: 8
+  brakingAcceleration: 40
   turnSpeed: 12
   stoppingDistance: 0
-  surroundDistance: 3.5
+  surroundDistance: 6
   surroundRingSpacing: 0.75
-  separationDistanceMin: 7
-  separationDistanceMax: 12
+  separationDistanceMin: 3
+  separationDistanceMax: 5
   separationWeight: 1.4
   archetypeSeparationOverrides: []
   maxHealth: 5
@@ -40,7 +40,8 @@ MonoBehaviour:
   contactAttemptDistance: 10
   contactAttemptIntervalMin: 1
   contactAttemptIntervalMax: 3
-  contactAttemptDuration: 2
+  contactAttemptDuration: 1.1
+  contactAttemptWindUpDuration: 0.65
   contactAttemptSpeedMultiplier: 1.25
   contactAttemptSeparationWeight: 0.35
   preferredMinimumDistance: 8

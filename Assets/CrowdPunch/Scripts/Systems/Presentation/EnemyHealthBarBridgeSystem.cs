@@ -32,7 +32,7 @@ namespace CrowdPunch.Systems.Presentation
                 EnemyLaunchPhase phase = launchState.ValueRO.Phase;
                 bool alwaysVisible = policy.ValueRO.Value == EnemyHealthBarPolicyKind.AlwaysWhileAlive;
                 if (respawnRequest.ValueRO || phase == EnemyLaunchPhase.Defeated
-                    || (!alwaysVisible && !healthBarVisibility.ValueRO && phase == EnemyLaunchPhase.Active))
+                    || (!alwaysVisible && (!healthBarVisibility.ValueRO || healthBar.ValueRO.Normalized <= 0f)))
                 {
                     continue;
                 }
@@ -43,21 +43,11 @@ namespace CrowdPunch.Systems.Presentation
                     healthBar.ValueRO.Normalized,
                     alwaysVisible || healthBarVisibility.ValueRO,
                     alwaysVisible,
-                    alwaysVisible ? string.Empty : GetStateLabel(phase));
+                    string.Empty);
             }
 
             EnemyHealthBarCanvasRegistry.EndFrame();
         }
 
-        private static string GetStateLabel(EnemyLaunchPhase phase)
-        {
-            return phase switch
-            {
-                EnemyLaunchPhase.Launched => "Launched",
-                EnemyLaunchPhase.Recovering => "Recovering",
-                EnemyLaunchPhase.Defeated => "Defeated",
-                _ => string.Empty
-            };
-        }
     }
 }

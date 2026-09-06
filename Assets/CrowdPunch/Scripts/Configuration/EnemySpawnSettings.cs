@@ -70,6 +70,8 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float contactAttemptIntervalMin = 2f;
         [SerializeField, Min(0f)] private float contactAttemptIntervalMax = 5f;
         [SerializeField, Min(0f)] private float contactAttemptDuration = 0.75f;
+        [SerializeField, Min(0f), Tooltip("Baseline enemies brake and visibly prepare before a direction-committed contact attempt. Zero restores immediate pursuit.")]
+        private float contactAttemptWindUpDuration = 0.65f;
         [SerializeField, Min(0f)] private float contactAttemptSpeedMultiplier = 1.25f;
         [SerializeField, Min(0f)] private float contactAttemptSeparationWeight = 0.35f;
 
@@ -206,6 +208,7 @@ namespace CrowdPunch.Configuration
             PlayerInvincibilitySeconds = contactInvincibilitySeconds, ContactRadius = contactRadius,
             AttemptDistance = contactAttemptDistance, AttemptIntervalMin = contactAttemptIntervalMin,
             AttemptIntervalMax = contactAttemptIntervalMax, AttemptDuration = contactAttemptDuration,
+            AttemptWindUpDuration = contactAttemptWindUpDuration,
             AttemptSpeedMultiplier = contactAttemptSpeedMultiplier,
             AttemptSeparationWeight = contactAttemptSeparationWeight
         };

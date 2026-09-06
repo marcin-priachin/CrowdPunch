@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
@@ -15,6 +16,7 @@ namespace CrowdPunch.Components
         public float AttemptIntervalMin;
         public float AttemptIntervalMax;
         public float AttemptDuration;
+        public float AttemptWindUpDuration;
         public float AttemptSpeedMultiplier;
         public float AttemptSeparationWeight;
     }
@@ -25,5 +27,7 @@ namespace CrowdPunch.Components
         public float SecondsRemaining;
         public uint Sequence;
         public byte IsAttempting;
+        public byte IsWindingUp;
+        public float3 CommittedDirection;
     }
 }
