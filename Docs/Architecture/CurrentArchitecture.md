@@ -1,7 +1,7 @@
 # Crowd Punch — Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-09-06
+Last inspected: 2026-09-07
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -18,8 +18,8 @@ Crowd Punch uses a hybrid Unity architecture:
 ## Scenes
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` — persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` — first additive gauntlet scene, containing its player entry point and the prototype arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_04` each contain their matching ECS SubScene. All four gauntlets are included in Build Settings and the Bootstrap level selector.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` — First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_10` each contain their matching ECS SubScene. Exactly ten gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first four scene GUIDs are preserved with replacement layouts and encounters.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
@@ -76,7 +76,9 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 
 `GauntletSequence` belongs to the persistent Bootstrap scene and loads one configured gauntlet scene additively at a time. A gauntlet scene owns its presentation layout, one `GauntletLevel` marker with an authored player entry point, and an ECS SubScene for level-specific collision and encounter data. The transition pauses scaled simulation, unloads the previous scene and its baked entities, loads the next scene, places the GameObject player at the authored entry point, and requests the established ECS restart reset. It never queries or retains enemy entities.
 
-`GauntletCompletionSystem` runs in `GamePresentationGroup` and reports completion through the narrow process-local `GauntletCompletionRegistry` only when every loaded `EnemyWaveSequence` has enabled `EnemyWaveEncounterComplete`. Requiring at least one sequence prevents an empty loading interval from advancing the run. The Bootstrap flow consumes that signal and loads the next scene in its fixed sequence (LOOP-002, LOOP-006, MVP-001). Final-run win presentation remains design-dependent.
+`GauntletCompletionSystem` runs in `GamePresentationGroup` and reports completion through the narrow process-local `GauntletCompletionRegistry` only when every loaded `EnemyWaveSequence` has enabled `EnemyWaveEncounterComplete`. Requiring at least one sequence prevents an empty loading interval from advancing the run. The Bootstrap flow consumes that signal and loads the next scene in its fixed sequence (LOOP-002, LOOP-006, MVP-001). The last completion sets `GauntletSequence.RunComplete`; the existing pause menu presents Run Complete, Play Again, and the ten-level selector. This closes the implemented gauntlet sequence; it does not implement the unresolved boss encounter.
+
+`GauntletLevel` owns optional opening-hint text alongside its entry transform. `GauntletSequence` publishes that text and an entry counter to the existing `PauseMenu`, which shows a ten-second hint in levels 1-2 and a two-column selection grid in the menu. This is GameObject presentation metadata, not an enemy bridge. The authored display names are separate from scene-loading names. The existing restart button now delegates through `GameBootstrap` to `RestartCurrentLevel` when a gauntlet is active, resetting final-completion state and reusing the additive reload path. Legacy scenes still use soft restart.
 
 ### Initial Spawn Workflows
 
@@ -369,7 +371,7 @@ The current implementation proves architecture and basic interactions, but sever
 - A launched enemy, including a zero-health enemy with deferred defeat, can propagate launched state to and independently damage an active or recovering enemy when Unity Physics reports solver-estimated contact impulse above the respective authored thresholds. Unity Physics supplies the transferred velocity; gameplay may rotate newly propagated horizontal velocity toward the smallest-angle eligible target inside the configured correction radius without changing its magnitude or vertical component. One source launch damages each target at most once but may damage multiple targets. Defeated enemies and launched-versus-launched pairs are ineligible. The final effect grammar remains unresolved.
 - Enemy chasing and contact damage exist as prototype behavior.
 - A player health bar exists. Living damaged normals may display temporary health per INFO-001; body presentation communicates normal launch/recovery state. Elites retain persistent health bars.
-- Four gauntlets are authored through the additive lifecycle. Gauntlet 3 contains the 200-enemy wave; Gauntlet 4 contains a mixed crowd with a replenishing elite. The complete boss-ended 15-20 minute run remains unfinished.
+- Ten compact gauntlets are authored through the additive lifecycle, replacing the original four encounters. Exact normal compositions, finite timed overlap, and cumulative clear gates bound active populations to 30. Gauntlets 7 and 10 contain one replenishing elite each. The complete boss-ended MVP run remains unfinished.
 
 Do not preserve these details merely because they exist. Preserve the ownership boundary and system timing while evolving behavior toward accepted GDD rules.
 
@@ -434,6 +436,31 @@ The GDD remains the accepted baseline; this document records the implemented exp
   Gauntlet 4 supplies 48 mixed normals plus one replenishing elite. Gauntlet 3's 200-enemy wave is unchanged.
 
 ## Verification Constraints
+
+The ten-gauntlet content uses 39 inspector-editable wave assets under
+`Data/Settings/Waves/Progression`, unchanged enemy profiles, and one existing wave sequence per
+SubScene. No spawning schema was added. Every recovery break and final wave uses cumulative
+clear; timed activation only assembles finite cohorts inside a stage. Elite cohorts drain
+before the next stage. See [the progression and validation record](../Design/TenGauntletProgression.md).
+
+`GauntletProgressionBuilder` is an explicit Editor authoring recipe, not a runtime loader.
+Rebuilding replaces generated content, so ordinary tuning should edit the saved wave assets
+and scenes. Convex floor meshes and low perimeter rails bake into Unity Physics; rail collision
+faces extend above the visible mesh to intersect the elevated hybrid player sphere cast.
+Movement bounds are inset from the perimeter and defeat bounds permit limited launch travel
+outside the court before terminal defeat. There are no internal navigation obstacles.
+
+Two lifecycle corrections support the sequence without changing enemy profiles or attacks:
+`GameRestartSystem` destroys independent fired `RangedProjectile` roots and linked children on
+restart; `EliteWaveReplenishmentSystem` also checks the ownership record's terminal
+`DefeatCounted` flag, because pooling restores an elite's launch phase to Active for generic
+pool bookkeeping. A pooled defeated elite must not re-enable its normal cohort (ENEMY-011).
+
+`GauntletProgressionTests` checks authored references, geometry, bounded compositions, and
+isolated ECS lifecycle regressions. `GauntletSequenceSmokeCheck` is an explicit Editor-only
+probe that keeps an idle player alive and injects `DamageRequest` to clear stages. Its logs
+and gameplay-camera captures go to `Temp/GauntletValidation`; it does not measure player
+skill, intended clear times, or balance.
 
 - Unity compilation, baking, scene wiring, and play-mode behavior are the final verification sources.
 - A generated `Assembly-CSharp.csproj` may be stale until Unity refreshes assets.

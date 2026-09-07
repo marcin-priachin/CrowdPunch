@@ -10,6 +10,7 @@ namespace CrowdPunch.Mono.Levels
     public sealed class GauntletSequence : MonoBehaviour
     {
         [SerializeField] private string[] levelSceneNames;
+        [SerializeField] private string[] levelDisplayNames;
         [SerializeField] private bool loadFirstLevelOnStart = true;
 
         private int currentLevelIndex = -1;
@@ -20,6 +21,9 @@ namespace CrowdPunch.Mono.Levels
         public int LevelCount => levelSceneNames?.Length ?? 0;
         public int CurrentLevelIndex => currentLevelIndex;
         public bool TransitionInProgress => transitionInProgress;
+        public bool RunComplete { get; private set; }
+        public uint LevelEntrySequence { get; private set; }
+        public string OpeningHint { get; private set; }
 
         private void Start()
         {
@@ -43,6 +47,10 @@ namespace CrowdPunch.Mono.Levels
             {
                 StartCoroutine(LoadLevel(currentLevelIndex + 1));
             }
+            else if (currentLevelIndex >= 0)
+            {
+                RunComplete = true;
+            }
         }
 
         public void RestartCurrentLevel()
@@ -55,6 +63,9 @@ namespace CrowdPunch.Mono.Levels
 
         public string GetLevelName(int levelIndex)
         {
+            if (levelIndex >= 0 && levelIndex < LevelCount && levelDisplayNames != null
+                && levelIndex < levelDisplayNames.Length && !string.IsNullOrWhiteSpace(levelDisplayNames[levelIndex]))
+                return levelDisplayNames[levelIndex];
             return levelIndex >= 0 && levelIndex < LevelCount
                 ? levelSceneNames[levelIndex]
                 : string.Empty;
@@ -87,6 +98,7 @@ namespace CrowdPunch.Mono.Levels
             }
 
             transitionInProgress = true;
+            RunComplete = false;
             float previousTimeScale = Time.timeScale;
             Time.timeScale = 0f;
 
@@ -112,6 +124,8 @@ namespace CrowdPunch.Mono.Levels
             else
             {
                 PlacePlayer(level.PlayerEntryPoint);
+                OpeningHint = level.OpeningHint;
+                LevelEntrySequence++;
             }
 
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;

@@ -1,0 +1,28 @@
+# Ten-gauntlet encounter progression
+
+Authored 2026-09-07. This table was recorded before implementation. These are provisional encounter choices authorized for this slice, not resolutions of OQ-001, OQ-007, OQ-013, OQ-015, OQ-016, or OQ-018. Duration estimates are playtest targets, not measurements. The target total is about 16 minutes (LOOP-003).
+
+B = Baseline, R = Ranged, X = Explosive, D = Dasher, E = Elite. All use the existing, unchanged profiles. A plus sign joins an overlapping stage; a semicolon means a complete clear and a short recovery window. Counts are exact, not random special-threat rolls.
+
+| Level | Learning / tactical goal | Layout (interior metres) | Composition / pacing | Target duration | Escalation |
+|---|---|---|---|---|---|
+| 01 First Line | Move, rotate camera to aim, punch a foreground body through the crowd | 26 x 32 launch court, central long stripe and open side aprons; south entry | 1B; 8B; 10B. Three-second clear breaks. Peak 10 | 45-60 s | One target, then choosing a direction through several targets |
+| 02 Side Step | Combine camera-facing aim with lateral movement / committed dash | 38 x 28 wide court, two parallel banks with a broad transverse dash route | 6B west + 6B east after 3 s; 14B in two batches four seconds apart. Peak 14 | 55-75 s | Pressure changes side; reposition to put one bank behind another |
+| 03 Far Bank | Launch a nearby body at a ranged threat instead of chasing blindly | Tapered court, 34-wide south / 26-wide north, 36 deep | 6B + 1R; 12B + 2R. Ranged banks arrive after bodies. Peak 14 | 65-85 s | First projectile threat, then target choice between two shooters |
+| 04 Fuse Court | Hit orange with a launched body while outside its 7 m blast | Clipped 40 x 32 court with diagonal floor lanes and open retreat corners | 10B + 1X; 16B + 1X. Only one explosive at a time. Peak 17 | 75-95 s | A rewarding chain target also closes distance and threatens the player |
+| 05 Runway | Sidestep the committed dash; launch the recovering Dasher down a crowd lane | 28 x 44 long court, 24 m attack runway and lateral aprons | 12B + 1D; 18B + 1D from the opposite end. Peak 19 | 80-100 s | First fast committed threat; direction reversal tests camera and dash control |
+| 06 Two Problems | Choose between a shooter and an approaching explosive | Sheared 34 x 34 court, opposite offset banks and diagonal cross-shot | 16B + 1R + 1X; 20B + 1R + 1X. Specials enter separately. Peak 22 | 90-110 s | Two familiar threat roles compete for the same useful launch body |
+| 07 Borrowed Fist | Disrupt elite setup and feed crowd impacts into its durable body | Open 38 x 38 square, wide cross lanes and clear edges for replenishment | 20B in two batches; 22B + 1E. Four-second elite reveal break. Peak 23 | 100-120 s | First replenishing encounter; clearing ammunition alone cannot finish it |
+| 08 Oblique Angles | Keep a lateral escape while aiming across offset threat banks | Wide clipped 46 x 32 court, staggered diagonal lanes | 18B + 1R + 1D; 22B + 2R. Staggered threat arrivals. Peak 24 | 105-125 s | Ranged trajectory and Dasher commitment must both be read during positioning |
+| 09 Relay | Finish useful chains before a finite reinforcement arrives | Clipped 44 x 40 court, three entry banks around an open centre | 16B + 10B/1X after 6 s + 1R; 22B + 1D/1R. Peak 28 | 110-130 s | First substantial timed crowd overlap; clearing early preserves space |
+| 10 Crowd Punch | Apply the full shot-selection loop, ending with crowd-supported elite | Clipped 48 x 44 amphitheatre, converging lanes and a roomy central exchange | 24B/1D; 28B/1R/1X; 24B/1R/1D/1E. Three- and four-second act breaks. Peak 30 | 130-150 s | Three distinct tests, then durable priority target with two support threats |
+
+Design basis: VISION-001 through VISION-005, LOOP-001/002/006, PLAYER-001 through PLAYER-005, COMBAT-001/003/005/016/017, ENEMY-001 through ENEMY-013, INFO-001/002. No functional boss exists: this task ends with the existing elite, as explicitly authorized, and does not claim to implement MVP-002 or resolve OQ-007.
+
+The actual baseline has six pressure slots, 3-5 m separation, 8 m/s return-to-distribution movement, and 0.65 s contact preparation. Authored formations are therefore initial approaches, not stationary puzzles. Introductory courts stay small enough that distributed bodies remain plausible downstream targets. The player can choose an angle during commitment and recovery, and can dash around the six approaching bodies to shoot outward through the others. There are no frozen enemies or profile overrides.
+
+The camera orbits at the existing (0, 30, -28) offset and 60-degree field of view. Layouts use low perimeter walls, continuous flat floors, and convex interiors. There are no internal pillars, mazes, holes, navigation assumptions, or projectile-cover claims. Ranged projectiles ignore arena geometry. Floor stripes identify useful directions without forcing a shot or adding target markers.
+
+Wave recipes use existing exact minimum counts summing to the normal total, existing timed activation for finite stage assembly, and cumulative-clear activation at every recovery break and final wave. Only the elite's own normal cohort replenishes, using the same instances, at the established cadence; elite stages do not overlap a following act. The finale replenishes at most one R and one D and never replenishes explosives. Safe initial placement remains the existing collision-tested pipeline; later-level sequences require 8 m additional player clearance. Spawns use broad rectangles so camping one point cannot exclude the entire region.
+
+Implementation, validation evidence, and first-playtest tuning notes will be appended after authoring.

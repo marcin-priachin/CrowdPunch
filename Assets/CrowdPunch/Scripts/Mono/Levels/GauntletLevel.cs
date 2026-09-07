@@ -6,7 +6,9 @@ namespace CrowdPunch.Mono.Levels
     public sealed class GauntletLevel : MonoBehaviour
     {
         [SerializeField] private Transform playerEntryPoint;
+        [SerializeField, TextArea] private string openingHint;
 
         public Transform PlayerEntryPoint => playerEntryPoint != null ? playerEntryPoint : transform;
+        public string OpeningHint => openingHint;
     }
 }

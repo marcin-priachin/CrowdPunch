@@ -31,6 +31,13 @@ namespace CrowdPunch.Systems.Initialization
             }
 
             lastRestartSequence = restartSequence;
+            // Fired shots are independent of their shooter and are not owned by a SubScene.
+            EntityQuery oldProjectiles = SystemAPI.QueryBuilder().WithAll<RangedProjectile>().Build();
+            using (NativeArray<Entity> projectileRoots = oldProjectiles.ToEntityArray(Allocator.Temp))
+            {
+                foreach (Entity projectileRoot in projectileRoots)
+                    if (EntityManager.Exists(projectileRoot)) EntityManager.DestroyEntity(projectileRoot);
+            }
             ResetWaveSequences();
             EntityQuery oldWaveEnemies = SystemAPI.QueryBuilder().WithAll<EnemyWaveOwnership>().Build();
             using (NativeArray<Entity> waveEnemyRoots = oldWaveEnemies.ToEntityArray(Allocator.Temp))

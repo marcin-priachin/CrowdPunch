@@ -23,6 +23,8 @@ namespace CrowdPunch.Systems.Lifetime
                      SystemAPI.Query<RefRO<EnemyWaveOwnership>, RefRO<EnemyTier>, RefRO<EnemyLaunchState>>())
             {
                 if (tier.ValueRO.Value == EnemyCombatTier.Elite
+                    // Pooling resets launch phase to Active; counted defeat remains authoritative.
+                    && ownership.ValueRO.DefeatCounted == 0
                     && launchState.ValueRO.Phase != EnemyLaunchPhase.Defeated)
                     livingEliteWaves.Add(ownership.ValueRO);
             }

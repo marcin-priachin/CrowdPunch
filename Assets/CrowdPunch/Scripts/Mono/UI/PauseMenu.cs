@@ -17,6 +17,11 @@ namespace CrowdPunch.Mono.UI
         private GauntletSequence gauntletSequence;
         private GameObject menuRoot;
         private Button firstButton;
+        private Text menuTitle;
+        private bool showingCompletion;
+        private Text openingHint;
+        private uint observedLevelEntry;
+        private float hintSecondsRemaining;
         private float timeScaleBeforePause = 1f;
         private bool isPaused;
 
@@ -77,7 +82,30 @@ namespace CrowdPunch.Mono.UI
 
         private void Update()
         {
-            if (pauseAction != null && pauseAction.WasPressedThisFrame())
+            if (gauntletSequence != null && observedLevelEntry != gauntletSequence.LevelEntrySequence)
+            {
+                observedLevelEntry = gauntletSequence.LevelEntrySequence;
+                openingHint.text = gauntletSequence.OpeningHint;
+                hintSecondsRemaining = 10f;
+            }
+            hintSecondsRemaining = Mathf.Max(0, hintSecondsRemaining - Time.deltaTime);
+            openingHint.gameObject.SetActive(!isPaused && hintSecondsRemaining > 0 && !string.IsNullOrEmpty(openingHint.text));
+            bool complete = gauntletSequence != null && gauntletSequence.RunComplete;
+            if (complete && !showingCompletion)
+            {
+                showingCompletion = true;
+                menuTitle.text = "RUN COMPLETE";
+                firstButton.GetComponentInChildren<Text>().text = "Play Again";
+                SetPaused(true);
+            }
+            else if (!complete && showingCompletion)
+            {
+                showingCompletion = false;
+                menuTitle.text = "PAUSED";
+                firstButton.GetComponentInChildren<Text>().text = "Resume";
+            }
+
+            if (!complete && pauseAction != null && pauseAction.WasPressedThisFrame())
             {
                 SetPaused(!isPaused);
             }
@@ -114,6 +142,13 @@ namespace CrowdPunch.Mono.UI
 
         private void BuildMenu()
         {
+            openingHint = CreateLabel(transform, string.Empty, 20, 44f);
+            openingHint.name = "Opening Hint";
+            openingHint.raycastTarget = false;
+            openingHint.rectTransform.anchorMin = openingHint.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            openingHint.rectTransform.anchoredPosition = new Vector2(0, -36f);
+            openingHint.rectTransform.sizeDelta = new Vector2(1000f, 44f);
+            openingHint.gameObject.SetActive(false);
             menuRoot = CreateUiObject("Pause Menu", transform);
             RectTransform rootRect = menuRoot.GetComponent<RectTransform>();
             rootRect.anchorMin = Vector2.zero;
@@ -126,27 +161,40 @@ namespace CrowdPunch.Mono.UI
 
             GameObject panel = CreateUiObject("Menu Panel", menuRoot.transform);
             RectTransform panelRect = panel.GetComponent<RectTransform>();
-            panelRect.anchorMin = panelRect.anchorMax = new Vector2(0.5f, 0.7f);
-            panelRect.sizeDelta = new Vector2(420f, 520f);
+            panelRect.anchorMin = panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.sizeDelta = new Vector2(760f, 620f);
             VerticalLayoutGroup layout = panel.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 14f;
             layout.padding = new RectOffset(30, 30, 30, 30);
             layout.childAlignment = TextAnchor.MiddleCenter;
-            layout.childControlHeight = false;
+            layout.childControlHeight = true;
             layout.childControlWidth = true;
             layout.childForceExpandHeight = false;
 
-            CreateLabel(panel.transform, "PAUSED", 42, 72f);
-            firstButton = CreateButton(panel.transform, "Resume", () => SetPaused(false));
+            menuTitle = CreateLabel(panel.transform, "PAUSED", 42, 64f);
+            firstButton = CreateButton(panel.transform, "Resume", () =>
+            {
+                if (gauntletSequence != null && gauntletSequence.RunComplete) SelectLevel(0);
+                else SetPaused(false);
+            });
             CreateLabel(panel.transform, "SELECT LEVEL", 22, 48f);
 
+            GameObject levelGrid = CreateUiObject("Levels", panel.transform);
+            GridLayoutGroup grid = levelGrid.AddComponent<GridLayoutGroup>();
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 2;
+            grid.cellSize = new Vector2(343f, 50f);
+            grid.spacing = new Vector2(14f, 10f);
+            LayoutElement gridSize = levelGrid.AddComponent<LayoutElement>();
+            int rows = Mathf.CeilToInt((gauntletSequence?.LevelCount ?? 0) / 2f);
+            gridSize.preferredHeight = Mathf.Max(0f, rows * 60f - 10f);
             if (gauntletSequence != null)
             {
                 for (int i = 0; i < gauntletSequence.LevelCount; i++)
                 {
                     int levelIndex = i;
                     string sceneName = gauntletSequence.GetLevelName(i);
-                    CreateButton(panel.transform, FormatLevelName(sceneName), () => SelectLevel(levelIndex));
+                    CreateButton(levelGrid.transform, FormatLevelName(sceneName), () => SelectLevel(levelIndex));
                 }
             }
 
@@ -162,7 +210,7 @@ namespace CrowdPunch.Mono.UI
             return result;
         }
 
-        private static void CreateLabel(Transform parent, string value, int fontSize, float height)
+        private static Text CreateLabel(Transform parent, string value, int fontSize, float height)
         {
             GameObject labelObject = CreateUiObject(value, parent);
             LayoutElement element = labelObject.AddComponent<LayoutElement>();
@@ -174,6 +222,7 @@ namespace CrowdPunch.Mono.UI
             label.fontStyle = FontStyle.Bold;
             label.alignment = TextAnchor.MiddleCenter;
             label.color = Color.white;
+            return label;
         }
 
         private static Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction action)

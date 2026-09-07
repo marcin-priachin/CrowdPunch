@@ -46,6 +46,12 @@ namespace CrowdPunch.Mono.UI
         public void RestartGame()
         {
             Time.timeScale = 1f;
+            var sequence = FindFirstObjectByType<CrowdPunch.Mono.Levels.GauntletSequence>();
+            if (sequence != null && sequence.CurrentLevelIndex >= 0)
+            {
+                sequence.RestartCurrentLevel();
+                return;
+            }
             ReactivatePlayerObject();
             EnsurePlayerController();
             EnsurePlayerPunch();
