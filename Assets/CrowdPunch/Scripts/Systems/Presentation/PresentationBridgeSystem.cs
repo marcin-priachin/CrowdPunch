@@ -49,7 +49,14 @@ namespace CrowdPunch.Systems.Presentation
 
             float3 origin = bridge.PunchPreviewOrigin;
             float3 punchDirection = math.normalizesafe(bridge.PunchPreviewDirection);
-            float radiusSquared = bridge.PunchPreviewRadius * bridge.PunchPreviewRadius;
+            PunchSpecification volume = new PunchSpecification
+            {
+                Origin = origin,
+                Direction = punchDirection,
+                Radius = bridge.PunchPreviewRadius,
+                Range = bridge.PunchPreviewRange,
+                Cause = EnemyLaunchCause.PlayerPunch
+            };
             float positionWeight = math.saturate(bridge.PunchPreviewPositionWeight);
 
             foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState, RefRO<Health> health,
@@ -67,15 +74,7 @@ namespace CrowdPunch.Systems.Presentation
 
                 float3 enemyPosition = transform.ValueRO.Position;
                 float3 toEnemy = enemyPosition - origin;
-                float forwardDistance = math.dot(toEnemy, punchDirection);
-
-                if (forwardDistance < 0f || forwardDistance > bridge.PunchPreviewRange)
-                {
-                    continue;
-                }
-
-                float3 closestPoint = origin + punchDirection * forwardDistance;
-                if (math.lengthsq(enemyPosition - closestPoint) > radiusSquared)
+                if (!PunchResolution.Contains(enemyPosition, volume))
                 {
                     continue;
                 }

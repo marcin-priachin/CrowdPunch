@@ -4,6 +4,9 @@ using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 
+// Geometry regression tests compile into Unity's separate Editor assembly.
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Assembly-CSharp-Editor")]
+
 namespace CrowdPunch.Systems.Combat
 {
     internal struct PunchSpecification
@@ -22,10 +25,18 @@ namespace CrowdPunch.Systems.Combat
         {
             float3 direction = math.normalizesafe(punch.Direction);
             float3 offset = position - punch.Origin;
+            if (punch.Cause == EnemyLaunchCause.PlayerPunch)
+            {
+                // PLAYER-008: height must not shrink the displayed horizontal footprint.
+                if (math.abs(offset.y) > math.max(0f, punch.Radius)) return false;
+                direction.y = 0f;
+                direction = math.normalizesafe(direction);
+                if (math.lengthsq(direction) <= 0.001f) return false;
+                offset.y = 0f;
+            }
             float forward = math.dot(offset, direction);
             if (forward < 0f || forward > math.max(0f, punch.Range)) return false;
-            float3 closest = punch.Origin + direction * forward;
-            return math.lengthsq(position - closest) <= math.max(0f, punch.Radius) * math.max(0f, punch.Radius);
+            return math.lengthsq(offset - direction * forward) <= math.max(0f, punch.Radius) * math.max(0f, punch.Radius);
         }
 
         public static bool IsEligible(in EnemyLaunchState state, in Health health, in PunchSpecification punch)

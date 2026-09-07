@@ -384,6 +384,11 @@ Package versions in `Packages/manifest.json` and `packages-lock.json` remain the
 
 ## Player Punch Cooldown Confirmation
 
+Player punch containment uses the horizontal rectangle drawn by `PunchAreaFeedback`: forward distance from zero to
+range, and lateral distance up to radius (PLAYER-008). Height is checked independently against radius, so shorter enemies
+do not lose horizontal reach. Detection, aim-assist membership, and trajectory preview all use `PunchResolution.Contains`
+with the player-punch cause (PLAYER-003). Elite punches retain their circular cross-section.
+
 `PunchDetectionSystem` records resolution and whether any `PunchResolution.TryApply` call succeeded on the existing
 `PunchRequest`, then disables the request. `PresentationBridgeSystem` reads that result through the non-enableable
 `PlayerSnapshot` singleton and sends the request sequence and hit flag through `PlayerEcsBridge.PunchResolved`.

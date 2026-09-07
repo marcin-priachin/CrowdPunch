@@ -41,6 +41,7 @@ namespace CrowdPunch.Systems.Combat
                     Direction = direction,
                     Radius = bridge.PunchPreviewRadius,
                     Range = bridge.PunchPreviewRange,
+                    Cause = EnemyLaunchCause.PlayerPunch,
                     AffectActive = 1,
                     AffectRecovering = 1,
                     AffectLaunched = 1

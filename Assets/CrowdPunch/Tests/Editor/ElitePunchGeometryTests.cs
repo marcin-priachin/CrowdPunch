@@ -1,5 +1,6 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.AI;
+using CrowdPunch.Systems.Combat;
 using NUnit.Framework;
 using Unity.Mathematics;
 
@@ -7,6 +8,32 @@ namespace CrowdPunch.Tests
 {
     public sealed class ElitePunchGeometryTests
     {
+        [TestCase(1.14f, -1f, 3f, true)]
+        [TestCase(1.16f, 0f, 3f, false)]
+        [TestCase(0f, 0f, -0.01f, false)]
+        [TestCase(0f, 0f, 6.01f, false)]
+        [TestCase(0f, 1.16f, 3f, false)]
+        public void Player008_PunchMatchesFootprintWithoutHeightNarrowing(float x, float y, float z, bool expected)
+        {
+            PunchSpecification punch = new PunchSpecification
+            {
+                Origin = new float3(0f, 2f, 0f), Direction = new float3(0f, 0f, 1f),
+                Radius = 1.15f, Range = 6f, Cause = EnemyLaunchCause.PlayerPunch
+            };
+            Assert.AreEqual(expected, PunchResolution.Contains(punch.Origin + new float3(x, y, z), punch));
+        }
+
+        [Test]
+        public void ElitePunchRetainsCircularCrossSection()
+        {
+            PunchSpecification punch = new PunchSpecification
+            {
+                Direction = new float3(0f, 0f, 1f), Radius = 1.15f, Range = 6f,
+                Cause = EnemyLaunchCause.ElitePunch
+            };
+            Assert.IsFalse(PunchResolution.Contains(new float3(1.14f, -1f, 3f), punch));
+        }
+
         [Test]
         public void TacticProbabilityEndpointsAreDeterministic()
         {
