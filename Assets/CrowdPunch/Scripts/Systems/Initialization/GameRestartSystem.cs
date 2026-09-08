@@ -81,6 +81,7 @@ namespace CrowdPunch.Systems.Initialization
                 health.ValueRW.Current = health.ValueRO.Max;
                 healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
                 damageState.ValueRW = default;
+                SystemAPI.SetComponent(enemy, new EnemyGroundConstraint());
                 SystemAPI.SetComponent(enemy, new DesiredMovement());
                 SystemAPI.SetComponent(enemy, new WanderDestination());
                 SystemAPI.SetComponent(enemy, new PunchAimAssistTarget());

@@ -253,6 +253,12 @@ Status: Must
 
 Ordinary melee enemies remain distributed across the arena while a limited configurable number of the closest eligible enemies actively approach and surround the player. The pressure allocation must retain arena-wide launch opportunities rather than drawing the whole crowd into one group. Ranged positioning, committed Dasher behavior, and elite crowd support override this baseline allocation, and local enemy separation continues to influence movement in both roles.
 
+### COMBAT-018 — Ground-Plane Enemy Physics
+
+Status: Must
+
+Enemies may fall from their initial spawn height until they reach the ground. After landing, enemy motion is constrained to the XZ plane at their grounded height; punches and collision responses must not lift them. A player punch that hits an enemy before it lands snaps that enemy to ground level and immediately applies the same constraint. Horizontal collision momentum is preserved. This vertical constraint also applies while launched; aim correction and homing do not override it.
+
 ### COMBAT-017 — Separate Arena And Defeat Bounds
 
 Status: Must

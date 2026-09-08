@@ -153,6 +153,7 @@ namespace CrowdPunch.Systems.Lifetime
                 Random random = Random.CreateFromIndex(seed);
 
                 transform.ValueRW.Position = GetRespawnPosition(ref random, arenaBounds, playerSnapshot);
+                SystemAPI.SetComponent(enemy, new EnemyGroundConstraint());
                 physicsVelocity.ValueRW = default;
                 RestoreEliteWaveOwnership(ref state, enemy);
                 respawnRequest.ValueRW = default;

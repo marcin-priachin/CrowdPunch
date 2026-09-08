@@ -59,6 +59,12 @@ namespace CrowdPunch.Systems.Combat
             Health health = manager.GetComponentData<Health>(target);
             float3 position = manager.GetComponentData<LocalTransform>(target).Position;
             if (!IsEligible(launch, health, punch) || !Contains(position, punch)) return false;
+            if (punch.Cause == EnemyLaunchCause.PlayerPunch && manager.HasComponent<EnemyGroundConstraint>(target))
+            {
+                EnemyGroundConstraint ground = manager.GetComponentData<EnemyGroundConstraint>(target);
+                ground.SnapRequested = 1;
+                manager.SetComponentData(target, ground);
+            }
             float3 forward = math.normalizesafe(punch.Direction);
             float3 positionDirection = math.normalizesafe(position - punch.Origin, forward);
             float3 impulseDirection = punch.HasAssistedLaunchDirection != 0

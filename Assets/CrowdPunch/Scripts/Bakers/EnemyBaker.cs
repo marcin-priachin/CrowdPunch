@@ -14,6 +14,7 @@ namespace CrowdPunch.Bakers
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
             AddComponent<Enemy>(entity);
+            AddComponent<EnemyGroundConstraint>(entity);
             AddComponent(entity, new KnockbackResponse { Tier = KnockbackResponseTier.Normal });
             AddComponent<EnemyMovementSettings>(entity);
             AddComponent<EnemySeparationDistance>(entity);

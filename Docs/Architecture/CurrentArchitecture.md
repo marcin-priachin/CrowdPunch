@@ -103,6 +103,8 @@ Each random enemy owns `RandomEnemySpawnRegion`; each authored enemy instead own
 
 ### Pre-Physics Simulation
 
+`EnemyGroundConstraint` owns each enemy's cached floor height, landed lock, and player-punch snap request (COMBAT-018). `EnemyGroundConstraintSystem` runs last before physics, finds a horizontal static floor beneath an uninitialized enemy using the enemy collider filter, and accounts for the baked collider's bottom offset. It ignores dynamic bodies so crowds cannot become stacked ground planes. Initial falling remains physical until the collider bottom reaches the floor; a valid player punch requests immediate grounding before simulation. `EnemyGroundReconciliationSystem` runs first after physics and projects grounded Y position and velocity back onto that plane, preserving solver-produced XZ momentum. This is an explicit vertical constraint, not normal movement integration. Pooling requests are excluded, and restart/edge respawn clear the cached state. Floor lookup is cached after success; this slice assumes the existing flat, static arenas and does not implement traversable slopes or changing floor heights.
+
 `GamePrePhysicsGroup` runs as a direct child of `FixedStepSimulationSystemGroup` before `PhysicsSystemGroup`:
 
 1. `PlayerBridgeSystem` copies the latest GameObject player snapshot, health, and punch request into ECS.
