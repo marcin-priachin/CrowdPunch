@@ -75,7 +75,9 @@ namespace CrowdPunch.Editor
             }
             if (flow.TransitionInProgress || flow.CurrentLevelIndex < 0) return;
             var player = UnityEngine.Object.FindFirstObjectByType<PlayerHealth>(FindObjectsInactive.Include);
-            if (player != null) { player.gameObject.SetActive(true); player.ResetHealth(); }
+            // Preserve normal invulnerability; resetting it every frame would stack knockback
+            // at an attack cadence that cannot occur in normal play.
+            if (player != null) { player.gameObject.SetActive(true); player.Restore(player.MaxHealth); }
             var em = world.EntityManager;
             em.CompleteAllTrackedJobs();
             using var sequenceQuery = em.CreateEntityQuery(typeof(WaveSequence));

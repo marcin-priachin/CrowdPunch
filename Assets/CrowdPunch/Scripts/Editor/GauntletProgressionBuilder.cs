@@ -152,10 +152,11 @@ namespace CrowdPunch.Editor
             Material ground = AssetDatabase.LoadAssetAtPath<Material>(Root+"Materials/Ground.mat");
             Material wall = MaterialAsset("GauntletWalls",new Color(0.13f,0.19f,0.24f));
             Material stripe = MaterialAsset("GauntletLanes",new Color(0.43f,0.48f,0.40f));
+            Material backdrop = MaterialAsset("GauntletBackdrop",new Color(0.08f,0.105f,0.13f));
             Level[] designs = Designs();
             try
             {
-                for (int i=0;i<designs.Length;i++) BuildLevel(i,designs[i],profiles,ground,wall,stripe);
+                for (int i=0;i<designs.Length;i++) BuildLevel(i,designs[i],profiles,ground,wall,stripe,backdrop);
                 Scene bootstrap = EditorSceneManager.OpenScene(Root+"Scenes/Bootstrap.unity",OpenSceneMode.Single);
                 GauntletSequence sequence = UnityEngine.Object.FindFirstObjectByType<GauntletSequence>();
                 var serialized = new SerializedObject(sequence);
@@ -181,7 +182,7 @@ namespace CrowdPunch.Editor
         }
 
         private static void BuildLevel(int index, Level design, EnemySpawnSettings[] profiles,
-            Material ground, Material wall, Material stripe)
+            Material ground, Material wall, Material stripe, Material backdrop)
         {
             string id = $"Gauntlet_{index+1:00}";
             string directory = Scenes+id;
@@ -215,6 +216,9 @@ namespace CrowdPunch.Editor
             sequence.ApplyModifiedPropertiesWithoutUndo();
 
             var layout = new GameObject("Layout - "+design.Name).transform;
+            // Pooling stays ECS-owned below the arena. This visual-only ground hides those bodies
+            // from the low orbit camera without creating walkable or spawnable space outside rails.
+            Box("Presentation Backdrop",layout,new Vector3(0,-2.1f,0),new Vector3(200,0.1f,200),backdrop,false);
             var floor = new GameObject("Continuous Convex Floor",typeof(MeshFilter),typeof(MeshRenderer),typeof(MeshCollider));
             floor.transform.SetParent(layout);
             Mesh mesh=FloorMesh(id,design.Outline);

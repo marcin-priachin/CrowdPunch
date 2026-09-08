@@ -106,6 +106,8 @@ namespace CrowdPunch.Systems.Initialization
                 ResetArchetypeState(enemy);
                 ResetTransientState(enemy);
             }
+            // Reset may run later than the request while the new SubScene's MatchState loads.
+            World.GetExistingSystemManaged<GamePrePhysicsGroup>()?.RequestPhysicsRebuild();
         }
 
         private void ResetWaveSequences()

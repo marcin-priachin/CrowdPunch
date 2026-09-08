@@ -188,6 +188,33 @@ namespace CrowdPunch.Tests
             Assert.That(em.IsComponentEnabled<EnemyWaveEncounterComplete>(sequence), Is.False);
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Enemy011_OutOfBoundsPooledNormalCannotStrandTheEncounter(bool alreadyPooled)
+        {
+            using var world = new World("Elite wave out-of-bounds accounting test");
+            var em = world.EntityManager;
+            var system = world.GetOrCreateSystem<EnemyWaveDefeatCountSystem>();
+            Entity sequence = em.CreateEntity(typeof(WaveSequence));
+            em.SetComponentData(sequence, new WaveSequence { RunGeneration = 1, UndefeatedCount = 2 });
+            Entity normal = em.CreateEntity(typeof(EnemyWaveOwnership), typeof(EnemyLaunchState), typeof(RespawnRequest));
+            em.SetComponentData(normal, new EnemyWaveOwnership { Sequence = sequence, RunGeneration = 1 });
+            em.SetComponentData(normal, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            em.SetComponentData(normal, new RespawnRequest { IsPooled = alreadyPooled ? (byte)1 : (byte)0 });
+            Entity elite = em.CreateEntity(typeof(EnemyWaveOwnership), typeof(EnemyLaunchState), typeof(RespawnRequest));
+            em.SetComponentData(elite, new EnemyWaveOwnership { Sequence = sequence, RunGeneration = 1 });
+            em.SetComponentData(elite, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            em.SetComponentEnabled<RespawnRequest>(elite, false);
+            system.Update(world.Unmanaged);
+            system.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<WaveSequence>(sequence).UndefeatedCount, Is.EqualTo(1), "Living elite still blocks completion; pooled normal counts once");
+            Assert.That(em.GetComponentData<EnemyWaveOwnership>(normal).DefeatCounted, Is.EqualTo(1));
+            em.SetComponentData(elite, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            system.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<WaveSequence>(sequence).UndefeatedCount, Is.Zero, "Defeating elite can now finish even if its normal never returns");
+            Assert.That(em.GetComponentData<WaveSequence>(sequence).DefeatedCount, Is.EqualTo(2));
+        }
+
         [Test]
         public void Loop006_CompletionRequiresEverySequenceAndReportsOnce()
         {

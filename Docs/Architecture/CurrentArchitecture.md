@@ -1,7 +1,7 @@
 # Crowd Punch — Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-09-07
+Last inspected: 2026-09-08
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -95,7 +95,7 @@ Wave spawning is a third, independently selectable workflow and does not gate ei
 
 `EnemyWaveSpawnSystem` owns timing, deterministic weighted profile allocation, and candidate sampling. Each wave selects whether its next wave activates after all current-wave enemies are defeated, all current-and-previous wave enemies from the sequence's current run are defeated, or its authored duration has elapsed once spawning finishes; current-wave defeat gating remains the default. The sequence maintains a running undefeated-owned-enemy count so cumulative gating does not require a crowd-wide query. Rectangles are selected proportionally to area and sampled uniformly, so equal valid world area has approximately equal probability. A conservative spherical clearance is derived from each prefab's authored collider bounds. Every candidate must remain inside its rectangle, clear the GameObject player's published position/radius and configured extra separation, and produce no Unity Physics point-distance hit against enemies or blocking geometry. Candidates spawned in the same update are also checked against one another. Attempts are bounded; blocked enemies stay pending, retry on later updates without restarting the pre-wave delay, and emit only throttled diagnostics.
 
-Every wave instance still goes through `EnemySpawnInitialization`, preserving prefab/archetype identity, health, state, presentation overrides, projectile data, separation randomization, and archetype-specific setup. It additionally receives `EnemyWaveOwnership` with sequence entity, run generation, and wave index. `EnemyWaveDefeatCountSystem` observes the authoritative `EnemyLaunchState.Defeated` transition after post-physics defeat resolution and before pooling, marks each current-run ownership record once, decrements the sequence's cumulative undefeated count, and increments the current-wave defeat count when applicable. Legacy and authored enemies therefore cannot advance a wave. Wave instances explicitly bake their per-instance `EnemyRespawnSettings.Enabled` override to false, so they pool after defeat but never perform continuous arena-edge respawning; source assets and non-wave instances keep their existing policy.
+Every wave instance still goes through `EnemySpawnInitialization`, preserving prefab/archetype identity, health, state, presentation overrides, projectile data, separation randomization, and archetype-specific setup. It additionally receives `EnemyWaveOwnership` with sequence entity, run generation, and wave index. `EnemyWaveDefeatCountSystem` observes terminal `EnemyLaunchState.Defeated` or an enabled pooling request after bounds handling and before pooling, marks each current-run ownership record once, decrements the sequence's cumulative undefeated count, and increments the current-wave defeat count when applicable. Legacy and authored enemies therefore cannot advance a wave. Wave instances explicitly bake their per-instance `EnemyRespawnSettings.Enabled` override to false, so they pool after defeat but never perform continuous arena-edge respawning; source assets and non-wave instances keep their existing policy.
 
 Only one wave is spawned at a time per sequence. Progress first waits for the configured successful-spawn count, then applies the current wave asset's activation mode: exact current-wave defeat count, cumulative undefeated count, or its duration. The next asset's pre-wave delay begins after that condition. Timed waves may overlap previously spawned survivors. Zero-count waves progress safely. An invalid nonempty wave enters an inspectable stopped state without affecting other spawners. Empty sequences and completed final waves enable `EnemyWaveEncounterComplete` and never loop.
 
@@ -448,13 +448,20 @@ Rebuilding replaces generated content, so ordinary tuning should edit the saved 
 and scenes. Convex floor meshes and low perimeter rails bake into Unity Physics; rail collision
 faces extend above the visible mesh to intersect the elevated hybrid player sphere cast.
 Movement bounds are inset from the perimeter and defeat bounds permit limited launch travel
-outside the court before terminal defeat. There are no internal navigation obstacles.
+outside the court before terminal defeat. There are no internal navigation obstacles. A
+non-colliding presentation backdrop below each floor occludes pooled bodies that would
+otherwise be visible beneath compact courts from the orbit camera.
 
-Two lifecycle corrections support the sequence without changing enemy profiles or attacks:
+Three lifecycle corrections support the sequence without changing enemy profiles or attacks:
 `GameRestartSystem` destroys independent fired `RangedProjectile` roots and linked children on
 restart; `EliteWaveReplenishmentSystem` also checks the ownership record's terminal
 `DefeatCounted` flag, because pooling restores an elite's launch phase to Active for generic
 pool bookkeeping. A pooled defeated elite must not re-enable its normal cohort (ENEMY-011).
+`EnemyWaveDefeatCountSystem` explicitly runs after `OutOfBoundsSystem` and also counts
+enabled pooling requests, including normals that leave defeat bounds while replenishment is
+enabled and therefore bypass terminal launch state. The normal respawn path already reverses
+that ownership count on return. An out-of-bounds pooled normal now permits completion if its
+elite dies before it returns, instead of leaving a permanently positive undefeated count.
 
 `GauntletProgressionTests` checks authored references, geometry, bounded compositions, and
 isolated ECS lifecycle regressions. `GauntletSequenceSmokeCheck` is an explicit Editor-only

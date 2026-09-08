@@ -1,0 +1,67 @@
+Editor lifecycle probe: idle player kept alive; stage clears use injected DamageRequest. Not a difficulty test.
+ENTER 01: 01 First Line
+WAVE 01.01: exact B/R/X/D/E=1/0/0/0/0, alive=1, cohortEntities=1
+WAVE 01.02: exact B/R/X/D/E=8/0/0/0/0, alive=8, cohortEntities=9
+WAVE 01.03: exact B/R/X/D/E=10/0/0/0/0, alive=10, cohortEntities=19
+CLEAR 01: peakActive=10; retainedRoots=19; editor frame median=16.6ms (includes Editor/tool overhead)
+ENTER 02: 02 Side Step
+WAVE 02.01: exact B/R/X/D/E=6/0/0/0/0, alive=6, cohortEntities=6
+WAVE 02.02: exact B/R/X/D/E=6/0/0/0/0, alive=12, cohortEntities=12
+WAVE 02.03: exact B/R/X/D/E=14/0/0/0/0, alive=14, cohortEntities=26
+CLEAR 02: peakActive=14; retainedRoots=26; editor frame median=16.4ms (includes Editor/tool overhead)
+ENTER 03: 03 Far Bank
+WAVE 03.01: exact B/R/X/D/E=6/0/0/0/0, alive=6, cohortEntities=6
+WAVE 03.02: exact B/R/X/D/E=0/1/0/0/0, alive=7, cohortEntities=7
+WAVE 03.03: exact B/R/X/D/E=12/0/0/0/0, alive=12, cohortEntities=19
+WAVE 03.04: exact B/R/X/D/E=0/2/0/0/0, alive=14, cohortEntities=21
+CLEAR 03: peakActive=14; retainedRoots=21; editor frame median=16.4ms (includes Editor/tool overhead)
+ENTER 04: 04 Fuse Court
+WAVE 04.01: exact B/R/X/D/E=10/0/0/0/0, alive=10, cohortEntities=10
+WAVE 04.02: exact B/R/X/D/E=0/0/1/0/0, alive=11, cohortEntities=11
+WAVE 04.03: exact B/R/X/D/E=16/0/0/0/0, alive=16, cohortEntities=27
+WAVE 04.04: exact B/R/X/D/E=0/0/1/0/0, alive=17, cohortEntities=28
+CLEAR 04: peakActive=17; retainedRoots=28; editor frame median=16.3ms (includes Editor/tool overhead)
+ENTER 05: 05 Runway
+WAVE 05.01: exact B/R/X/D/E=12/0/0/0/0, alive=12, cohortEntities=12
+WAVE 05.02: exact B/R/X/D/E=0/0/0/1/0, alive=13, cohortEntities=13
+WAVE 05.03: exact B/R/X/D/E=18/0/0/0/0, alive=18, cohortEntities=31
+WAVE 05.04: exact B/R/X/D/E=0/0/0/1/0, alive=19, cohortEntities=32
+CLEAR 05: peakActive=19; retainedRoots=32; editor frame median=16.4ms (includes Editor/tool overhead)
+ENTER 06: 06 Two Problems
+WAVE 06.01: exact B/R/X/D/E=16/0/0/0/0, alive=16, cohortEntities=16
+WAVE 06.02: exact B/R/X/D/E=0/1/0/0/0, alive=17, cohortEntities=17
+WAVE 06.03: exact B/R/X/D/E=0/0/1/0/0, alive=18, cohortEntities=18
+WAVE 06.04: exact B/R/X/D/E=20/0/0/0/0, alive=20, cohortEntities=38
+WAVE 06.05: exact B/R/X/D/E=0/1/0/0/0, alive=21, cohortEntities=39
+WAVE 06.06: exact B/R/X/D/E=0/0/1/0/0, alive=22, cohortEntities=40
+CLEAR 06: peakActive=22; retainedRoots=40; editor frame median=16.7ms (includes Editor/tool overhead)
+ENTER 07: 07 Borrowed Fist
+WAVE 07.01: exact B/R/X/D/E=20/0/0/0/0, alive=20, cohortEntities=20
+WAVE 07.02: exact B/R/X/D/E=22/0/0/0/1, alive=23, cohortEntities=43
+ELITE: injected one normal defeat; waiting for existing-instance replenishment
+ELITE: same normal entity returned and defeat accounting restored
+ELITE: replenishment remains disabled eight seconds after elite defeat
+CLEAR 07: peakActive=23; retainedRoots=43; editor frame median=16.7ms (includes Editor/tool overhead)
+ENTER 08: 08 Oblique Angles
+WAVE 08.01: exact B/R/X/D/E=18/0/0/0/0, alive=18, cohortEntities=18
+WAVE 08.02: exact B/R/X/D/E=0/1/0/0/0, alive=19, cohortEntities=19
+WAVE 08.03: exact B/R/X/D/E=0/0/0/1/0, alive=20, cohortEntities=20
+WAVE 08.04: exact B/R/X/D/E=22/0/0/0/0, alive=22, cohortEntities=42
+WAVE 08.05: exact B/R/X/D/E=0/2/0/0/0, alive=24, cohortEntities=44
+CLEAR 08: peakActive=24; retainedRoots=44; editor frame median=16.7ms (includes Editor/tool overhead)
+ENTER 09: 09 Relay
+WAVE 09.01: exact B/R/X/D/E=16/0/0/0/0, alive=16, cohortEntities=16
+WAVE 09.02: exact B/R/X/D/E=10/0/1/0/0, alive=27, cohortEntities=27
+WAVE 09.03: exact B/R/X/D/E=0/1/0/0/0, alive=28, cohortEntities=28
+WAVE 09.04: exact B/R/X/D/E=22/0/0/0/0, alive=22, cohortEntities=50
+WAVE 09.05: exact B/R/X/D/E=0/1/0/1/0, alive=24, cohortEntities=52
+CLEAR 09: peakActive=28; retainedRoots=52; editor frame median=16.5ms (includes Editor/tool overhead)
+ENTER 10: 10 Crowd Punch
+WAVE 10.01: exact B/R/X/D/E=24/0/0/1/0, alive=25, cohortEntities=25
+WAVE 10.02: exact B/R/X/D/E=28/1/1/0/0, alive=30, cohortEntities=55
+WAVE 10.03: exact B/R/X/D/E=24/1/0/1/1, alive=27, cohortEntities=82
+ELITE: injected one normal defeat; waiting for existing-instance replenishment
+ELITE: same normal entity returned and defeat accounting restored
+ELITE: replenishment remains disabled eight seconds after elite defeat
+CLEAR 10: peakActive=30; retainedRoots=82; editor frame median=16.7ms (includes Editor/tool overhead)
+PASS: 10 levels, 39 valid fully spawned waves, final completion reported.
