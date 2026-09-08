@@ -1,0 +1,7 @@
+Live additive retry: death with a fired projectile, then restart with a live Dasher. Transition pause is respected.
+REQUEST level 3: roots=8, shots=1, including linked entities=16
+PASS level 3: old roots/children/shots gone, player alive at entry, wave 0 empty, completion reset
+REQUEST level 10: roots=25, shots=0, including linked entities=50
+PASS level 10: old roots/children/shots gone, player alive at entry, wave 0 empty, completion reset
+PASS: seven seconds of resumed physics and spawning after finale retry
+PASS: live death retry and Dasher retry

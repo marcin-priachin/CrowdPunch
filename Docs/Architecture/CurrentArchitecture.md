@@ -452,7 +452,7 @@ outside the court before terminal defeat. There are no internal navigation obsta
 non-colliding presentation backdrop below each floor occludes pooled bodies that would
 otherwise be visible beneath compact courts from the orbit camera.
 
-Three lifecycle corrections support the sequence without changing enemy profiles or attacks:
+Four lifecycle corrections support the sequence without changing enemy profiles or attacks:
 `GameRestartSystem` destroys independent fired `RangedProjectile` roots and linked children on
 restart; `EliteWaveReplenishmentSystem` also checks the ownership record's terminal
 `DefeatCounted` flag, because pooling restores an elite's launch phase to Active for generic
@@ -462,6 +462,14 @@ enabled pooling requests, including normals that leave defeat bounds while reple
 enabled and therefore bypass terminal launch state. The normal respawn path already reverses
 that ownership count on return. An out-of-bounds pooled normal now permits completion if its
 elite dies before it returns, instead of leaving a permanently positive undefeated count.
+
+`GamePrePhysicsGroup` observes `GameRestartRegistry.Sequence` and a rebuild request from
+`GameRestartSystem` after actual cleanup. Either skips one gameplay fixed-step update so the
+following `PhysicsSystemGroup` rebuilds its collision world before pre-physics queries resume.
+Those queries otherwise read the previous step's world, which may reference collider blobs
+released by additive teardown or pooled-Dasher cleanup. This is a restart-only warmup;
+ordinary system order and combat/physics tuning are unchanged. The cleanup notification is
+needed because the new SubScene's `MatchState` can become available after the Mono request.
 
 `GauntletProgressionTests` checks authored references, geometry, bounded compositions, and
 isolated ECS lifecycle regressions. `GauntletSequenceSmokeCheck` is an explicit Editor-only

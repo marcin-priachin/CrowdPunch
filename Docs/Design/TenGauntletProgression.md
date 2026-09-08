@@ -40,13 +40,29 @@ Wave recipes use existing exact minimum counts summing to the normal total, exis
 
 No wave schema, enemy variant, AI override, or new runtime spawning framework was needed. Different profile-specific banks are separate timed wave assets; cumulative-clear gates join them into one stage. This preserves legacy random/authored spawning and every existing wave activation mode.
 
-Three existing bookkeeping gaps needed correction for LOOP-006 and ENEMY-011:
+Four existing lifecycle gaps needed correction for LOOP-006 and ENEMY-011:
 
 1. Fired ranged projectiles are independent runtime entities. `GameRestartSystem` now destroys their roots and linked children on reset, as it already does for old wave bodies.
 2. Generic pooling resets an elite's launch phase to Active. `EliteWaveReplenishmentSystem` now also rejects an ownership record with terminal `DefeatCounted`, preventing a pooled dead elite from re-enabling normal replenishment. The established same-wave replenishment policy and cadence are preserved.
 3. A replenishing normal can enter the pool directly on leaving defeat bounds, without entering Defeated. `EnemyWaveDefeatCountSystem` now runs after bounds handling and counts an enabled pooling request as well as terminal launch state. The existing respawn path restores its counters if it returns. If the elite dies before that return, the pooled normal no longer strands cumulative completion at one remaining enemy. This was reproduced during the full sequence probe and is covered in both pending-pool and already-pooled regression cases.
+4. Pre-physics gameplay queries normally read the preceding step's collision world. Additive teardown or restart cleanup can release colliders still referenced there. `GamePrePhysicsGroup` skips gameplay for one fixed step after a restart request or actual reset cleanup, allowing the following Unity Physics step to rebuild before queries resume. The additive loader retains ownership of the pause throughout unloading. Normal combat system ordering, collision rules, and physics settings are unchanged.
 
 `GauntletProgressionBuilder` provides an explicit Editor rebuild recipe with an overwrite warning. Saved scenes/assets are the runtime content and normal Inspector tuning is independent of that recipe. `GauntletSequenceSmokeCheck` is an opt-in Editor validation tool, never part of player builds.
+
+## Validation performed
+
+Unity Editor 6000.3.10f1 was available. Validation included actual SubScene baking/loading and play-mode simulation, beyond C# compilation:
+
+- Sixteen authored-content and isolated ECS assertions passed when invoked directly through an Editor command. They cover the ten ordered entries and eleven enabled build scenes, all ten scene/SubScene layouts, spawn clearance, fixed compositions, cumulative completion, restart cleanup, terminal elite pooling, and both out-of-bounds pooling cases. This was not a Unity Test Runner batch run.
+- The complete ten-level sequence ran through all 39 fully spawned waves using the opt-in lifecycle probe. Both elite encounters replenished the same normal instance, restored its defeat accounting, and stopped replenishing after elite defeat. Every transition rejected old encounter ownership; final completion reached the existing menu.
+- Peak active bodies by level were 10, 14, 14, 17, 19, 22, 23, 24, 28, 30. Retained roots at the final stage were 19, 26, 21, 28, 32, 40, 43, 44, 52, 82. Pools therefore stayed finite. Editor frame medians were around 16.7 ms, including Editor/tool overhead and pacing; these are not target-hardware benchmarks.
+- A virtual gamepad cleared both introductory levels through the unchanged movement, camera aim, punch, and dash actions. The probe restored health while preserving ordinary invulnerability. It read enemies only to select an aim direction; it did not inject enemy damage. Propagated launches were observed.
+- Live death retry with a fired ranged projectile and restart with a live Dasher cleared the old roots and linked children, restored health and entry position, and reset encounter counters and completion. The final sequence run also exercises the restart physics warmup on automatic transitions.
+- The dependency audit resolved 382 serialized GUID references across 115 scene dependencies, with no missing references or duplicate CrowdPunch metadata GUIDs. The first four main-scene and SubScene GUIDs were preserved. A Git comparison against pre-task commit `6500b7c` found no changes to existing prefabs, non-wave settings, enemy AI/combat/movement/physics code, or player/camera code.
+
+Logs, compilation results, profiling samples, screenshots of both introductions and the finale, and detailed limitations are in [the validation evidence](../Validation/TenGauntlets/README.md).
+
+The lifecycle probe keeps an idle player alive and clears stages with injected damage. It establishes finite spawning and completion, not whether a human can reliably make every intended shot. The input probe is also health-assisted. No unassisted full run, standalone-player build, target-hardware benchmark, or novice difficulty study was performed. Target durations, special-threat readability under aggressive movement, and the difficulty curve remain human playtest work. The continuous convex courts and observed runs revealed no stranded enemies, but arbitrary camping and every possible camera angle were not exhaustively tested.
 
 ## First human playtest priorities
 

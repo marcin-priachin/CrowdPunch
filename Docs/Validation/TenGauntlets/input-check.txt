@@ -1,0 +1,4 @@
+Clicked actual Play Again button after final completion. Transition-owned pause is respected and asserted. Virtual gamepad drives ordinary Move/Look/Punch/Dash actions. Health restored without resetting invulnerability; no enemy damage injection or tuning edits.
+Entered level 1
+Entered level 2
+PASS: Play Again and both introductory levels cleared via ordinary input; hit punches=22, misses=3, dash starts=2, distinct propagated bodies=22, maximum preview lines=4
