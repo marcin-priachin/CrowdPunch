@@ -40,6 +40,47 @@ There are currently no game-specific assembly definitions; scripts compile into 
 
 ## Ownership Boundary
 
+`Enemy.prefab` nests the humanoid `Models/BaseEnemy/BaseEnemy.prefab`, fitted to its existing
+physics capsule. `EnemyMovement.controller` remains an editor-side animation source: runtime
+enemies do not create GameObject Animators. `EnemyAnimationSampling` evaluates its idle and
+eight directional poses (including mirrored diagonals) at 32 normalized phases per motion.
+The generated `Animation/EnemyMovement.bytes` contains durations and 88 root-relative skin
+matrices per pose. Rebuild it with **Crowd Punch > Animation > Rebuild Enemy Samples** after
+editing the controller, clips, avatar, or mesh. The baker rejects stale source hashes and
+bone ordering; it converts the samples into a shared blob with no runtime UnityEngine references.
+
+`EnemyAnimationAuthoring` belongs to the skinned renderer. Its baker stores the owning enemy
+entity, shared pose blob, blend response, and per-instance playback state there.
+`EnemyAnimationSystem` runs a Burst parallel job in `GamePresentationGroup`, which precedes
+Entities Graphics' `DeformationsInPresentation` group. It reads `DesiredMovement` in enemy-local
+space, normalizes by `EnemyMovementSettings.MoveSpeed`, damps the blend, and interpolates idle,
+the two surrounding movement directions, and neighboring sample frames into `SkinMatrix`.
+Cycles start at entity-specific phases to avoid synchronized crowds. Matrix blending is a
+sampled locomotion approximation, not a general runtime Animator-controller interpreter.
+
+Physics transforms and velocities are read-only to animation. Launched, recovering, and
+defeated bodies hold their last pose until active again (COMBAT-010/011); the supplied assets
+contain no dedicated reaction clips. Pooled enemies reset playback and skip pose updates.
+`EnemyAnimationVisualBakingSystem` connects the additional skinned rendering entities to
+`EnemyVisualOwner` and the existing body-color feedback (INFO-004). `EnemySkinning.shadergraph`
+retains the Sidekick surface shading, adds compute deformation, and multiplies the result by
+the ECS `_BaseColor` override. Sampled motion bounds include a small padding for culling.
+The graph uses full precision: the compute deformation buffer index must remain a float
+for the package's DOTS-instancing lookup; inheriting the Sidekick graph's half precision
+produces an invalid DOTS shader variant.
+This uses the installed Entities Graphics experimental deformation path; GPU work and mesh
+cost still need profiling against the unresolved crowd/hardware targets in OQ-001.
+
+Validation (2026-09-10): six isolated ECS regression checks cover looping/interpolation,
+enemy-relative direction, partial-speed strafing, launch/recovery/defeat without physics
+writes, pooling/reuse, and missing owners. Unity Play Mode confirms the baked renderer,
+body-color ownership, animated poses and shadows. An isolated 500-enemy/88-bone CPU playback
+measurement averaged 0.30 ms per update over 300 updates after warmup on an i9-14900KF
+(RTX 4090); this includes scheduling/completion but excludes GPU rendering and gameplay.
+A separate live rendering check reached 518 animated instances, with 518 valid distinct
+owners and body-color renderers, independent phases, and no shader errors. This is a
+rendering/ownership smoke check, not an end-to-end crowd frame-rate benchmark.
+
 `PlayerModel.prefab` owns a humanoid Animator with `Animation/PlayerMovement.controller` and
 `PlayerMovementAnimation`. Its `MoveX`/`MoveZ` directional blend tree uses fighting idle and
 eight jog directions from the seven imported clips; the left diagonal clips are mirrored for
