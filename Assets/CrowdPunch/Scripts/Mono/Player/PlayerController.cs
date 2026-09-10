@@ -34,6 +34,8 @@ namespace CrowdPunch.Mono.Player
 
         public bool IsDashing => dashActive;
         public PlayerMovementSettings MovementSettings => settings;
+        /// <summary>Commanded locomotion velocity, excluding external knockback, for player presentation.</summary>
+        public Vector3 LocomotionVelocity { get; private set; }
 
         private void Reset()
         {
@@ -97,6 +99,7 @@ namespace CrowdPunch.Mono.Player
             moveAction?.Disable();
             dashAction?.Disable();
             EndDash();
+            LocomotionVelocity = Vector3.zero;
         }
 
         private void OnDestroy()
@@ -157,6 +160,7 @@ namespace CrowdPunch.Mono.Player
             }
 
             Vector3 movementStart = transform.position;
+            LocomotionVelocity = Time.deltaTime > 0f ? playerDisplacement / Time.deltaTime : Vector3.zero;
             transform.position += playerDisplacement + Time.deltaTime * knockbackVelocity;
             submittedMovementSequence = ecsBridge.PublishMovement(
                 movementStart,
@@ -214,6 +218,7 @@ namespace CrowdPunch.Mono.Player
         public void ResetPlayerState()
         {
             EndDash();
+            LocomotionVelocity = Vector3.zero;
             dashDirection = Vector3.zero;
             nextDashTime = 0f;
             knockbackVelocity = Vector3.zero;

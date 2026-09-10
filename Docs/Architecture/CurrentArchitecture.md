@@ -40,6 +40,33 @@ There are currently no game-specific assembly definitions; scripts compile into 
 
 ## Ownership Boundary
 
+`PlayerModel.prefab` owns a humanoid Animator with `Animation/PlayerMovement.controller` and
+`PlayerMovementAnimation`. Its `MoveX`/`MoveZ` directional blend tree uses fighting idle and
+eight jog directions from the seven imported clips; the left diagonal clips are mirrored for
+the right diagonals. All movement clips loop with root translation and rotation baked into
+the pose, and root motion is disabled. `PlayerController.LocomotionVelocity` publishes only
+commanded movement (including the committed dash displacement), excluding external knockback.
+The presentation component reads it relative to player facing, normalizes by authored move
+speed, clamps to the jog blend radius, and damps the Animator parameters. Disable and player
+reset clear the published velocity. The model discovers its parent controller at runtime,
+so the Bootstrap prefab instance inherits animation support without additional scene wiring.
+This preserves PLAYER-002 camera-forward facing and PLAYER-005 independent dash/punch timing.
+Jogging during dash is the current presentation fallback because no dash clip is supplied.
+Animation follows movement intent, so pressing against a blocking wall still plays locomotion.
+No ECS ownership, physics ordering, or open art-direction decision (OQ-015) changes.
+
+`PlayerPunchAnimation` drives the always-weighted `Upper Body Punch` override layer using
+`PlayerUpperBody.mask` (torso, head, arms, and fingers; root and legs remain locomotion-owned).
+The non-looping `Cross Punch` clip is sampled through the state's `PunchTime` motion-time
+parameter. Frames 0-22 follow `PlayerPunch.CooldownProgress`, with frame 22 held when ready.
+`PlayerPunch.PunchStarted` fires only for accepted requests and starts playback from frame 22
+through the end at the Inspector's `punchSpeedMultiplier` (default 1). Strike playback takes
+precedence over cooldown posing; after the final frame it returns to the current cooldown
+pose, or directly to frame 22 on a miss/completed cooldown. Another accepted punch restarts
+the strike even if the previous visual has not finished. `PunchStateReset` cancels visual
+playback on gameplay reset/disable. Animation never delays hits, spends cooldown, or changes
+dash movement (PLAYER-005, PLAYER-009). The shared cooldown property also drives area feedback.
+
 | Concern | Current owner | Boundary/data |
 |---|---|---|
 | Input, player transform, and punch | GameObject | `PlayerController` owns movement and committed dash timing; `PlayerPunch` owns immediate attack input, hit-confirmed cooldown, and punch-area cooldown presentation. Punching does not interrupt a dash. |

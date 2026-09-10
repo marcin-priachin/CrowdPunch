@@ -1,3 +1,4 @@
+using System;
 using CrowdPunch.Configuration;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -22,6 +23,11 @@ namespace CrowdPunch.Mono.Player
         private uint pendingPunchSequence;
 
         public float PunchRadius => settings == null ? 0f : settings.Radius;
+        public event Action PunchStarted;
+        public event Action PunchStateReset;
+        public float CooldownProgress => settings == null || settings.Cooldown <= 0f
+            ? 1f
+            : 1f - Mathf.Clamp01((nextPunchTime - Time.time) / settings.Cooldown);
 
         private void Reset()
         {
@@ -73,6 +79,7 @@ namespace CrowdPunch.Mono.Player
             attackAction?.Disable();
             areaFeedback?.Hide();
             ecsBridge?.ClearPunchPreview();
+            PunchStateReset?.Invoke();
         }
 
         private void Update()
@@ -105,15 +112,12 @@ namespace CrowdPunch.Mono.Player
         private void UpdateAreaFeedback()
         {
             Transform originTransform = punchOrigin != null ? punchOrigin : transform;
-            float cooldownProgress = settings.Cooldown <= 0f
-                ? 1f
-                : 1f - Mathf.Clamp01((nextPunchTime - Time.time) / settings.Cooldown);
             areaFeedback.Show(
                 originTransform.position,
                 originTransform.forward,
                 settings.Radius,
                 settings.Range,
-                cooldownProgress);
+                CooldownProgress);
         }
 
         public void RequestPunch()
@@ -132,6 +136,7 @@ namespace CrowdPunch.Mono.Player
             nextPunchTime = 0f;
             areaFeedback?.Hide();
             ecsBridge?.ClearPunch();
+            PunchStateReset?.Invoke();
         }
 
         private bool CanPunch()
@@ -157,6 +162,7 @@ namespace CrowdPunch.Mono.Player
                 settings.DirectionPositionWeight);
             pendingPunchSequence = ecsBridge.PunchSequence;
             awaitingPunchResult = true;
+            PunchStarted?.Invoke();
         }
 
         private void OnPunchResolved(uint sequence, bool hitEnemy)
