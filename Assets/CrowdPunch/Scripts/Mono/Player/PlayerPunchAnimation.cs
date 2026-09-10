@@ -8,6 +8,7 @@ namespace CrowdPunch.Mono.Player
     public sealed class PlayerPunchAnimation : MonoBehaviour
     {
         private const float ReadyFrame = 22f;
+        private const float PunchRotationEndFrame = 34f;
         private static readonly int PunchTime = Animator.StringToHash("PunchTime");
 
         [SerializeField] private PlayerPunch playerPunch;
@@ -16,15 +17,32 @@ namespace CrowdPunch.Mono.Player
         [Tooltip("Playback multiplier for frames 22 through the end of the punch. Does not change gameplay cooldown or hit timing.")]
         private float punchSpeedMultiplier = 1f;
 
+        [Header("Upper Body Rotation")]
+        [SerializeField, Range(-180f, 180f)]
+        [Tooltip("Y rotation offset in degrees at frame 22, held while ready to punch.")]
+        private float readyYaw;
+        [SerializeField, Range(-180f, 180f)]
+        [Tooltip("Y rotation offset reached at frame 34 and held through the rest of the punch.")]
+        private float punchYaw;
+
         private Animator animator;
+        private Transform spine;
+        private Quaternion animatedSpineRotation;
+        private bool hasRotationOffset;
+        private float upperBodyYaw;
         private float playbackTime;
         private bool playingPunch;
 
         private float ReadyTime => Mathf.Min(ReadyFrame / punchClip.frameRate, punchClip.length);
+        private float PunchRotationEndTime => Mathf.Min(PunchRotationEndFrame / punchClip.frameRate, punchClip.length);
 
         private void Awake()
         {
             animator = GetComponent<Animator>();
+            if (animator.isHuman)
+            {
+                spine = animator.GetBoneTransform(HumanBodyBones.Spine);
+            }
             if (playerPunch == null)
             {
                 playerPunch = GetComponentInParent<PlayerPunch>();
@@ -44,6 +62,7 @@ namespace CrowdPunch.Mono.Player
 
         private void OnDisable()
         {
+            RestoreAnimatedRotation();
             if (playerPunch != null)
             {
                 playerPunch.PunchStarted -= StartPunch;
@@ -55,6 +74,8 @@ namespace CrowdPunch.Mono.Player
 
         private void Update()
         {
+            // Remove last frame's offset before Animator evaluates a fresh pose.
+            RestoreAnimatedRotation();
             if (!HasAnimation())
             {
                 return;
@@ -103,6 +124,34 @@ namespace CrowdPunch.Mono.Player
         private void SetPose(float time)
         {
             animator.SetFloat(PunchTime, Mathf.Clamp01(time / punchClip.length));
+            upperBodyYaw = time <= ReadyTime
+                ? Mathf.LerpAngle(punchYaw, readyYaw, Mathf.InverseLerp(0f, ReadyTime, time))
+                : Mathf.LerpAngle(readyYaw, punchYaw, Mathf.InverseLerp(ReadyTime, PunchRotationEndTime, time));
+        }
+
+        private void LateUpdate()
+        {
+            RestoreAnimatedRotation();
+            if (!HasAnimation() || !animator.isActiveAndEnabled || spine == null)
+            {
+                return;
+            }
+
+            // The humanoid spine's local Y need not be vertical. Rotate around model up
+            // after animation, leaving root facing, legs, and punch targeting untouched.
+            animatedSpineRotation = spine.localRotation;
+            spine.rotation = Quaternion.AngleAxis(upperBodyYaw, animator.transform.up) * spine.rotation;
+            hasRotationOffset = true;
+        }
+
+        private void RestoreAnimatedRotation()
+        {
+            if (hasRotationOffset && spine != null)
+            {
+                spine.localRotation = animatedSpineRotation;
+            }
+
+            hasRotationOffset = false;
         }
     }
 }

@@ -629,7 +629,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: 8.5973575e-11, z: 8.59295e-11, w: 0.7071068}
   m_LocalPosition: {x: 0.24188016, y: -1.5152323e-14, z: -5.880224e-11}
-  m_LocalScale: {x: 1.4, y: 1, z: 1}
+  m_LocalScale: {x: 1.4, y: 1.4, z: 1.4}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6949978022189017009}
@@ -3832,6 +3832,8 @@ MonoBehaviour:
   playerPunch: {fileID: 0}
   punchClip: {fileID: -203655887218126122, guid: bbf3d8729909d204c9302467f938bd10, type: 3}
   punchSpeedMultiplier: 2
+  readyYaw: 44.7
+  punchYaw: -30
 --- !u!1 &5146028365045450692
 GameObject:
   m_ObjectHideFlags: 0

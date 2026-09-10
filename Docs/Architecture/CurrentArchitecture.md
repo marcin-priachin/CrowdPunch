@@ -66,6 +66,15 @@ pose, or directly to frame 22 on a miss/completed cooldown. Another accepted pun
 the strike even if the previous visual has not finished. `PunchStateReset` cancels visual
 playback on gameplay reset/disable. Animation never delays hits, spends cooldown, or changes
 dash movement (PLAYER-005, PLAYER-009). The shared cooldown property also drives area feedback.
+`PlayerPunchAnimation` also exposes `readyYaw` and `punchYaw` offsets in degrees (both default
+to zero). Cooldown frames 0-22 interpolate from punch yaw to ready yaw; frame 22 holds ready
+yaw, and strike frames 22-34 interpolate back to punch yaw at the existing playback speed.
+Punch yaw then holds from frame 34 through the rest of the strike clip.
+After Animator evaluation, `LateUpdate` offsets the humanoid spine around the model's up
+axis, carrying the torso, head, and arms without rotating the root or legs. The previous
+offset is restored before the next animation evaluation and on disable to prevent drift.
+This is presentation only: camera-forward facing and gameplay punch direction stay unchanged
+(PLAYER-002, PLAYER-004, PLAYER-005).
 
 | Concern | Current owner | Boundary/data |
 |---|---|---|
