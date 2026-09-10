@@ -1,0 +1,13 @@
+#pragma kernel CheckBounds
+struct VertexData { float3 position; float3 normal; float3 tangent; };
+StructuredBuffer<VertexData> _DeformedMeshData;
+RWStructuredBuffer<uint> _ProbeResult;
+uint _ProbeVertexCount;
+[numthreads(128,1,1)]
+void CheckBounds(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ProbeVertexCount) return;
+    float3 p = _DeformedMeshData[id.x + 1].position;
+    if (!all(isfinite(p))) InterlockedAdd(_ProbeResult[1], 1);
+    else InterlockedMax(_ProbeResult[0], (uint)min(max(abs(p.x), max(abs(p.y), abs(p.z))) * 10000, 4294960000.0));
+}
