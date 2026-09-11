@@ -24,6 +24,20 @@ Crowd Punch uses a hybrid Unity architecture:
 
 ## Source Layout
 
+The ten gauntlet SubScenes use nature-kit environment visuals authored by
+`Scripts/Editor/GauntletNatureEnvironment.cs` (**Crowd Punch > Levels > Apply Nature Kit Environment**).
+It fits `rock_largeA`, `path_stone`, `ground_pathTile`, and `ground_grass` from
+`Models/kenney_nature-kit` to the existing perimeter, lanes, entry aprons, and backdrop.
+Repeated pieces are combined into one visual mesh per original renderer under
+`Data/GauntletLayouts/Nature`; shared, instanced URP materials live in `Materials/Nature`.
+Custom floor polygons retain their vertices with separate grass-top and stone-side materials.
+Original transforms, floor collision meshes, perimeter colliders, bounds, and encounter
+authoring are unchanged (LOOP-002, VISION-004). This adds no runtime system or collider.
+Reapplying preserves existing material edits. After using **Rebuild Ten Gauntlets**, reapply
+the nature environment; that older recipe still creates the original blockout visuals.
+The kit selection implements the requested environment replacement without closing the
+broader art-direction question OQ-015.
+
 All game code is under `Assets/CrowdPunch/Scripts`:
 
 - `Mono` — GameObject player, camera, UI, and bridge registry.
