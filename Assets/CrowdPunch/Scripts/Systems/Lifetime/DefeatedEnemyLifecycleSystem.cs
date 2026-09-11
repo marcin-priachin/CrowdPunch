@@ -24,19 +24,24 @@ namespace CrowdPunch.Systems.Lifetime
 
             foreach ((RefRW<RespawnRequest> respawnRequest,
                          EnabledRefRW<RespawnRequest> respawnRequestEnabled,
-                         EnabledRefRW<DeathRequest> deathRequestEnabled) in
+                         EnabledRefRW<DeathRequest> deathRequestEnabled, Entity enemy) in
                      SystemAPI.Query<RefRW<RespawnRequest>, EnabledRefRW<RespawnRequest>, EnabledRefRW<DeathRequest>>()
                          .WithAll<Enemy>()
-                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
+                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState).WithEntityAccess())
             {
                 if (!deathRequestEnabled.ValueRO)
                 {
                     continue;
                 }
 
+                double landingDuration = SystemAPI.HasComponent<EnemyLandingAnimation>(enemy)
+                    && SystemAPI.HasComponent<EnemyLaunchState>(enemy)
+                    && SystemAPI.GetComponent<EnemyLaunchState>(enemy).LaunchSequence != 0
+                    ? SystemAPI.GetComponent<EnemyLandingAnimation>(enemy).Duration : 0d;
                 respawnRequest.ValueRW = new RespawnRequest
                 {
-                    ForcePoolAt = elapsedTime + MaximumDefeatTravelSeconds
+                    ForcePoolAt = elapsedTime + MaximumDefeatTravelSeconds,
+                    PoolNotBefore = elapsedTime + landingDuration
                 };
                 respawnRequestEnabled.ValueRW = true;
                 deathRequestEnabled.ValueRW = false;

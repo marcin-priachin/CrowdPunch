@@ -71,9 +71,24 @@ from its first frame on launch entry or a changed launch sequence (including re-
 clamp at the final frame, and apply visual pitch from vertical versus horizontal velocity.
 Their collider remains upright; yaw comes from `EnemyFacingSystem`. At zero velocity,
 the last facing is retained. Sampled bounds include all possible flight pitches.
-Recovering and defeated bodies hold their last pose until active again (COMBAT-010/011).
-Pooled enemies reset playback and skip pose updates. Sample format CPA2 contains ten motions;
-the Flying endpoint is sampled explicitly, while locomotion wraps between samples.
+On launch end, Recovering and Defeated bodies play `Falling Flat Impact.fbx` once and hold
+its endpoint (COMBAT-010/011). Living enemies fit the impact into their remaining recovery
+window before resuming locomotion; a re-punch immediately restarts Flying. The landing
+clip imports vertical root motion into the pose, so the body lowers during the fall.
+Sampling raises any below-floor retargeted pose to the model ground plane using the same
+four-weight skin matrices used by ECS, and includes that offset in the sampled bounds.
+This moves only the visual body; physics position and collider remain unchanged. The height
+regression verifies all 32 poses stay above the model floor, finish grounded and lower the
+body by more than 0.8 model units.
+The landing pose does not inherit flight pitch. The visual post-baking system puts `EnemyLandingAnimation.Duration`
+on the owner. Defeat processing uses that duration as `RespawnRequest.PoolNotBefore` for
+previously launched bodies, so a stopped body is not pooled before its impact can play.
+Pooled enemies reset playback and skip pose updates. Sample format CPA3 contains eleven motions;
+Flying and impact endpoints are sampled explicitly, while locomotion wraps between samples.
+Impact validation: ten animation cases and a lifetime check pass, covering recovery/defeat
+impact playback, endpoint hold, re-punch interruption, and pooling before/after the visibility
+deadline. A live defeated enemy showed advancing impact playback at phase 0.506, eleven
+baked motions, finite skin positions and `IsPooled = 0`. The C# build has zero errors.
 Flying validation: eight animation regression cases and seven facing cases pass, including
 re-punch restarts, endpoint hold, flight pitch, redirected velocity and unavailable player.
 A live launched enemy reported ten baked motions, advancing Flying playback, finite skin

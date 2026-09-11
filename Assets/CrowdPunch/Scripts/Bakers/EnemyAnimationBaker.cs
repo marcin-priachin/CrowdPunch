@@ -23,7 +23,7 @@ namespace CrowdPunch.Bakers
             DependsOn(animator.runtimeAnimatorController);
             DependsOn(animator.avatar);
             using var reader = new BinaryReader(new MemoryStream(authoring.Samples.bytes));
-            if (reader.ReadInt32() != 0x43504132)
+            if (reader.ReadInt32() != 0x43504133)
                 throw new InvalidDataException("Unsupported enemy animation samples. Run Crowd Punch/Animation/Rebuild Enemy Samples.");
             string sourceHash = reader.ReadString();
 #if UNITY_EDITOR

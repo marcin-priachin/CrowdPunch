@@ -43,6 +43,16 @@ namespace CrowdPunch.Editor
                     if (child.state.name == "Flying") flyingState = child.state;
                 if (flyingState == null) flyingState = controller.layers[0].stateMachine.AddState("Flying");
                 flyingState.motion = flying;
+                AnimationClip impact = null;
+                foreach (var asset in AssetDatabase.LoadAllAssetsAtPath("Assets/CrowdPunch/Animation/Falling Flat Impact.fbx"))
+                    if (asset is AnimationClip clip && !clip.name.StartsWith("__preview__")) impact = clip;
+                if (impact == null || !impact.humanMotion)
+                    throw new InvalidOperationException("Falling Flat Impact.fbx must contain a humanoid animation.");
+                AnimatorState impactState = null;
+                foreach (var child in controller.layers[0].stateMachine.states)
+                    if (child.state.name == "Falling Flat Impact") impactState = child.state;
+                if (impactState == null) impactState = controller.layers[0].stateMachine.AddState("Falling Flat Impact");
+                impactState.motion = impact;
                 EditorUtility.SetDirty(controller);
 
                 var sourceRenderer = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath)
@@ -70,6 +80,8 @@ namespace CrowdPunch.Editor
                 var matrices = new Matrix4x4[EnemyAnimationSamples.MotionCount * FrameCount * renderer.bones.Length];
                 var durations = new float[EnemyAnimationSamples.MotionCount];
                 var bindposes = renderer.sharedMesh.bindposes;
+                var sourceVertices = renderer.sharedMesh.vertices;
+                var boneWeights = renderer.sharedMesh.boneWeights;
                 var bounds = new Bounds();
                 var sampledMesh = new Mesh();
                 try
@@ -82,20 +94,44 @@ namespace CrowdPunch.Editor
                         for (int frame = 0; frame < FrameCount; frame++)
                         {
                             bool isFlying = motion == EnemyAnimationSamples.FlyingMotion;
-                            animator.Play(isFlying ? "Base Layer.Flying" : "Base Layer.Locomotion", 0,
-                                frame / (float)(isFlying ? FrameCount - 1 : FrameCount));
+                            bool isImpact = motion == EnemyAnimationSamples.ImpactMotion;
+                            animator.Play(isFlying ? "Base Layer.Flying" : isImpact ? "Base Layer.Falling Flat Impact" : "Base Layer.Locomotion", 0,
+                                frame / (float)(isFlying || isImpact ? FrameCount - 1 : FrameCount));
                             animator.Update(0f);
                             durations[motion] = animator.GetCurrentAnimatorStateInfo(0).length;
                             if (durations[motion] <= 0f) throw new InvalidOperationException("Animator did not evaluate locomotion.");
                             Matrix4x4 inverse = animator.transform.worldToLocalMatrix;
+                            int poseStart = (motion * FrameCount + frame) * renderer.bones.Length;
                             for (int bone = 0; bone < renderer.bones.Length; bone++)
-                                matrices[(motion * FrameCount + frame) * renderer.bones.Length + bone] =
-                                    inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
+                                matrices[poseStart + bone] = inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
                             renderer.BakeMesh(sampledMesh);
                             var toRoot = inverse * renderer.transform.localToWorldMatrix;
-                            foreach (Vector3 vertex in sampledMesh.vertices)
+                            var vertices = sampledMesh.vertices;
+                            float groundOffset = 0f;
+                            if (isImpact)
+                            {
+                                // Retargeted body proportions can put the fall below its authored floor.
+                                // Use the exported skin matrices, matching ECS rather than BakeMesh's transform handling.
+                                toRoot = Matrix4x4.identity;
+                                for (int vertex = 0; vertex < vertices.Length; vertex++)
+                                {
+                                    BoneWeight w = boneWeights[vertex];
+                                    Vector3 v = sourceVertices[vertex];
+                                    vertices[vertex] = matrices[poseStart + w.boneIndex0].MultiplyPoint3x4(v) * w.weight0
+                                        + matrices[poseStart + w.boneIndex1].MultiplyPoint3x4(v) * w.weight1
+                                        + matrices[poseStart + w.boneIndex2].MultiplyPoint3x4(v) * w.weight2
+                                        + matrices[poseStart + w.boneIndex3].MultiplyPoint3x4(v) * w.weight3;
+                                    groundOffset = Mathf.Max(groundOffset, -vertices[vertex].y);
+                                }
+                            }
+                            for (int bone = 0; bone < renderer.bones.Length; bone++)
+                            {
+                                matrices[poseStart + bone][1, 3] += groundOffset;
+                            }
+                            foreach (Vector3 vertex in vertices)
                             {
                                 Vector3 position = toRoot.MultiplyPoint3x4(vertex);
+                                position.y += groundOffset;
                                 bounds.Encapsulate(position);
                                 if (isFlying)
                                 {
@@ -115,7 +151,7 @@ namespace CrowdPunch.Editor
                     + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(animator.avatar));
                 using (var writer = new BinaryWriter(File.Create(SamplesPath)))
                 {
-                    writer.Write(0x43504132);
+                    writer.Write(0x43504133);
                     writer.Write(hash);
                     writer.Write(renderer.bones.Length);
                     writer.Write(FrameCount);

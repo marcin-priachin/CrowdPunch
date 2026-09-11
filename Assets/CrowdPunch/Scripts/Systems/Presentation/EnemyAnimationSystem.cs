@@ -60,6 +60,7 @@ namespace CrowdPunch.Systems.Presentation
                 EnemyLaunchState launch = Launches[owner];
                 if (launch.Phase == EnemyLaunchPhase.Launched)
                 {
+                    playback.Landing = 0;
                     bool newLaunch = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
                     playback.FlightPhase = newLaunch ? 0f : math.saturate(playback.FlightPhase
                         + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.FlyingMotion]));
@@ -84,8 +85,33 @@ namespace CrowdPunch.Systems.Presentation
                     }
                     return;
                 }
+                bool endingLaunch = playback.WasLaunched != 0
+                    || (launch.LaunchSequence != 0 && playback.LaunchSequence != launch.LaunchSequence);
+                if (launch.Phase == EnemyLaunchPhase.Recovering || launch.Phase == EnemyLaunchPhase.Defeated)
+                {
+                    if (endingLaunch)
+                    {
+                        playback.Landing = 1;
+                        playback.ImpactPhase = 0f;
+                        float impactDuration = samples.Durations[EnemyAnimationSamples.ImpactMotion];
+                        playback.ImpactDuration = launch.Phase == EnemyLaunchPhase.Recovering
+                            ? math.min(impactDuration, math.max(0.01f, launch.RecoverySecondsRemaining)) : impactDuration;
+                        playback.LaunchSequence = launch.LaunchSequence;
+                    }
+                    else if (playback.Landing != 0)
+                        playback.ImpactPhase = math.saturate(playback.ImpactPhase + DeltaTime / math.max(0.01f, playback.ImpactDuration));
+                    if (playback.Landing != 0)
+                    {
+                        float impactFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                        int from = (int)impactFrame;
+                        int to = math.min(from + 1, samples.FrameCount - 1);
+                        for (int bone = 0; bone < skin.Length; bone++)
+                            skin[bone] = new SkinMatrix { Value = Sample(ref samples, EnemyAnimationSamples.ImpactMotion,
+                                from, to, bone, math.frac(impactFrame)) };
+                    }
+                }
+                else playback.Landing = 0;
                 playback.WasLaunched = 0;
-                // COMBAT-010/011: recovery and defeat retain the last evaluated pose.
                 if (launch.Phase != EnemyLaunchPhase.Active) return;
 
                 DesiredMovement intent = Movement[owner];

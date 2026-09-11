@@ -167,6 +167,29 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized, Is.EqualTo(1));
         }
 
+        [TestCase(EnemyLaunchPhase.Recovering)]
+        [TestCase(EnemyLaunchPhase.Defeated)]
+        public void Combat011LaunchEndsWithImpactAndRepunchInterruptsIt(EnemyLaunchPhase ending)
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = ending, LaunchSequence = 1, RecoverySecondsRemaining = 0.5f });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)));
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(ending == EnemyLaunchPhase.Recovering ? 0.5f : 0.25f).Within(0.001f));
+            Tick(2f);
+            Assert.That(Pose, Is.EqualTo(new float3(10f, 1f, 0f)));
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(1f));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 2 });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(9f, 0f, 0f)));
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Landing, Is.Zero);
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner).Linear, Is.EqualTo(float3.zero));
+        }
+
         [Test]
         public void Info004DestroyedOwnerDoesNotLeaveAStaleLookup()
         {

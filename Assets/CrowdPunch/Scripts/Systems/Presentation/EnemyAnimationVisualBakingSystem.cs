@@ -18,6 +18,10 @@ namespace CrowdPunch.Systems.Presentation
             foreach (var (animation, additional) in SystemAPI.Query<RefRO<EnemyAnimation>, DynamicBuffer<AdditionalEntitiesBakingData>>()
                          .WithOptions(EntityQueryOptions.IncludePrefab | EntityQueryOptions.IncludeDisabledEntities))
             {
+                commands.AddComponent(animation.ValueRO.Owner, new EnemyLandingAnimation
+                {
+                    Duration = animation.ValueRO.Samples.Value.Durations[EnemyAnimationSamples.ImpactMotion]
+                });
                 foreach (var child in additional)
                 {
                     Entity entity = child.Value;

@@ -192,6 +192,7 @@ namespace CrowdPunch.Systems.Lifetime
             ref PhysicsVelocity physicsVelocity,
             float deltaTime)
         {
+            if (elapsedTime < respawnRequest.PoolNotBefore) return false;
             if (elapsedTime >= respawnRequest.ForcePoolAt)
             {
                 return true;
