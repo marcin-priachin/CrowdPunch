@@ -401,6 +401,8 @@ Status: Must
 
 Enemy types and dangerous states must remain distinguishable at crowd scale without requiring the player to inspect individual units.
 
+Enemies in `Active` or `Recovering` face the player's current horizontal position, independently of movement direction. This facing does not steer committed dash movement or launched velocity. `Launched` and `Defeated` retain their existing rotation behavior.
+
 ### INFO-005 — Trajectory Scope
 
 Status: Must

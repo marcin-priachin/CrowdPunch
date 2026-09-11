@@ -40,6 +40,13 @@ There are currently no game-specific assembly definitions; scripts compile into 
 
 ## Ownership Boundary
 
+`EnemyFacingSystem` runs in `GamePostPhysicsGroup` after respawn processing and the Dasher
+rotation lock. Active and Recovering enemies face the available player's horizontal position
+(INFO-004), with yaw angular velocity cleared and position/linear velocity preserved.
+This includes Active dashers without redirecting their committed movement. Launched and
+Defeated rotations are untouched. Enabled respawn requests and coincident horizontal
+positions skip facing. The resulting root rotation feeds enemy-local animation blending.
+
 `Enemy.prefab` nests the humanoid `Models/BaseEnemy/BaseEnemy.prefab`, fitted to its existing
 physics capsule. `EnemyMovement.controller` remains an editor-side animation source: runtime
 enemies do not create GameObject Animators. `EnemyAnimationSampling` evaluates its idle and
