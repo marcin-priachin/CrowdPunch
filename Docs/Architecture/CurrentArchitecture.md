@@ -68,6 +68,16 @@ the ECS `_BaseColor` override. Sampled motion bounds include a small padding for
 The graph uses full precision: the compute deformation buffer index must remain a float
 for the package's DOTS-instancing lookup; inheriting the Sidekick graph's half precision
 produces an invalid DOTS shader variant.
+`EnemyStaticShapeMesh` resolves the BaseEnemy model's fixed blend-shape proportions into
+`Animation/EnemySkinningMesh.asset` during the same rebuild command. The enemy prefab uses
+this generated mesh with its original bone weights, bind poses, topology and surface data.
+The source model remains the input on every rebuild, so shape deltas cannot accumulate.
+The current source uses two blend-shape frames at weights 0 and 100; generation rejects
+unsupported active frame layouts. The renderer explicitly uses four bone influences so
+editor bounds sampling does not depend on the selected quality tier.
+Runtime enemies need only bone deformation, avoiding the GPU blend-shape path that produced
+intermittent out-of-range vertices on the current Direct3D12 setup. Proportions are fixed;
+future animated facial/body morphs would require a separately validated runtime path.
 This uses the installed Entities Graphics experimental deformation path; GPU work and mesh
 cost still need profiling against the unresolved crowd/hardware targets in OQ-001.
 
@@ -80,6 +90,14 @@ measurement averaged 0.30 ms per update over 300 updates after warmup on an i9-1
 A separate live rendering check reached 518 animated instances, with 518 valid distinct
 owners and body-color renderers, independent phases, and no shader errors. This is a
 rendering/ownership smoke check, not an end-to-end crowd frame-rate benchmark.
+
+Glitch validation (2026-09-11, Direct3D12): before the static-shape mesh change, a clean
+120-frame GPU bounds probe found 48 frames exceeding four local units (maximum 15.63).
+After rebuilding, both the single-enemy and 64-enemy checks completed 300 frames with
+zero non-finite or oversized vertices (maximum absolute coordinate 1.77 and 1.83).
+The mesh regression compares CPU-skinned positions and normals with the original model
+within 0.0001, and checks unchanged bone weights, bind poses and topology. It and the six
+ECS playback checks pass. The C# build completes with zero errors and package warnings.
 
 `PlayerModel.prefab` owns a humanoid Animator with `Animation/PlayerMovement.controller` and
 `PlayerMovementAnimation`. Its `MoveX`/`MoveZ` directional blend tree uses fighting idle and

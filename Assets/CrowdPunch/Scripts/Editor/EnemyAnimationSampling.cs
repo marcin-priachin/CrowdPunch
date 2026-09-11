@@ -11,6 +11,8 @@ namespace CrowdPunch.Editor
     {
         private const string PrefabPath = "Assets/CrowdPunch/Prefabs/Enemy.prefab";
         private const string SamplesPath = "Assets/CrowdPunch/Animation/EnemyMovement.bytes";
+        private const string ModelPath = "Assets/CrowdPunch/Models/BaseEnemy/BaseEnemy.prefab";
+        private const string MeshPath = "Assets/CrowdPunch/Animation/EnemySkinningMesh.asset";
         private const int FrameCount = 32;
 
         [MenuItem("Crowd Punch/Animation/Rebuild Enemy Samples")]
@@ -30,6 +32,24 @@ namespace CrowdPunch.Editor
                 if (tree == null || tree.children.Length != 9)
                     throw new InvalidOperationException("Expected idle and eight locomotion directions.");
 
+                var sourceRenderer = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath)
+                    .GetComponentInChildren<SkinnedMeshRenderer>();
+                Mesh generatedMesh = EnemyStaticShapeMesh.Create(sourceRenderer);
+                Mesh skinningMesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath);
+                if (skinningMesh == null)
+                {
+                    AssetDatabase.CreateAsset(generatedMesh, MeshPath);
+                    skinningMesh = generatedMesh;
+                }
+                else
+                {
+                    EditorUtility.CopySerialized(generatedMesh, skinningMesh);
+                    UnityEngine.Object.DestroyImmediate(generatedMesh);
+                    EditorUtility.SetDirty(skinningMesh);
+                }
+                AssetDatabase.SaveAssets();
+                renderer.sharedMesh = skinningMesh;
+                renderer.quality = SkinQuality.Bone4;
                 renderer.rootBone = animator.transform;
                 animator.applyRootMotion = false;
                 animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
@@ -87,6 +107,8 @@ namespace CrowdPunch.Editor
                 root = PrefabUtility.LoadPrefabContents(PrefabPath);
                 animator = root.GetComponentInChildren<Animator>();
                 renderer = root.GetComponentInChildren<SkinnedMeshRenderer>();
+                renderer.sharedMesh = skinningMesh;
+                renderer.quality = SkinQuality.Bone4;
                 renderer.rootBone = animator.transform;
                 bounds.Expand(0.1f);
                 renderer.localBounds = bounds;
