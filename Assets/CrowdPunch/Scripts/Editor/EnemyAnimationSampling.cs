@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using CrowdPunch.Authoring;
+using CrowdPunch.Components;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -32,6 +33,18 @@ namespace CrowdPunch.Editor
                 if (tree == null || tree.children.Length != 9)
                     throw new InvalidOperationException("Expected idle and eight locomotion directions.");
 
+                AnimationClip flying = null;
+                foreach (var asset in AssetDatabase.LoadAllAssetsAtPath("Assets/CrowdPunch/Animation/Flying.fbx"))
+                    if (asset is AnimationClip clip && !clip.name.StartsWith("__preview__")) flying = clip;
+                if (flying == null || !flying.humanMotion)
+                    throw new InvalidOperationException("Flying.fbx must contain a humanoid animation.");
+                AnimatorState flyingState = null;
+                foreach (var child in controller.layers[0].stateMachine.states)
+                    if (child.state.name == "Flying") flyingState = child.state;
+                if (flyingState == null) flyingState = controller.layers[0].stateMachine.AddState("Flying");
+                flyingState.motion = flying;
+                EditorUtility.SetDirty(controller);
+
                 var sourceRenderer = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath)
                     .GetComponentInChildren<SkinnedMeshRenderer>();
                 Mesh generatedMesh = EnemyStaticShapeMesh.Create(sourceRenderer);
@@ -54,21 +67,23 @@ namespace CrowdPunch.Editor
                 animator.applyRootMotion = false;
                 animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
                 animator.Rebind();
-                var matrices = new Matrix4x4[9 * FrameCount * renderer.bones.Length];
-                var durations = new float[9];
+                var matrices = new Matrix4x4[EnemyAnimationSamples.MotionCount * FrameCount * renderer.bones.Length];
+                var durations = new float[EnemyAnimationSamples.MotionCount];
                 var bindposes = renderer.sharedMesh.bindposes;
                 var bounds = new Bounds();
                 var sampledMesh = new Mesh();
                 try
                 {
-                    for (int motion = 0; motion < 9; motion++)
+                    for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++)
                     {
                         float angle = (motion - 1) * Mathf.PI / 4f;
                         animator.SetFloat("MoveX", motion == 0 ? 0f : Mathf.Sin(angle));
                         animator.SetFloat("MoveZ", motion == 0 ? 0f : Mathf.Cos(angle));
                         for (int frame = 0; frame < FrameCount; frame++)
                         {
-                            animator.Play("Base Layer.Locomotion", 0, frame / (float)FrameCount);
+                            bool isFlying = motion == EnemyAnimationSamples.FlyingMotion;
+                            animator.Play(isFlying ? "Base Layer.Flying" : "Base Layer.Locomotion", 0,
+                                frame / (float)(isFlying ? FrameCount - 1 : FrameCount));
                             animator.Update(0f);
                             durations[motion] = animator.GetCurrentAnimatorStateInfo(0).length;
                             if (durations[motion] <= 0f) throw new InvalidOperationException("Animator did not evaluate locomotion.");
@@ -79,7 +94,17 @@ namespace CrowdPunch.Editor
                             renderer.BakeMesh(sampledMesh);
                             var toRoot = inverse * renderer.transform.localToWorldMatrix;
                             foreach (Vector3 vertex in sampledMesh.vertices)
-                                bounds.Encapsulate(toRoot.MultiplyPoint3x4(vertex));
+                            {
+                                Vector3 position = toRoot.MultiplyPoint3x4(vertex);
+                                bounds.Encapsulate(position);
+                                if (isFlying)
+                                {
+                                    // Flying can pitch with vertical velocity without tilting the collider.
+                                    float radius = new Vector2(position.y, position.z).magnitude;
+                                    bounds.Encapsulate(new Vector3(position.x, radius, radius));
+                                    bounds.Encapsulate(new Vector3(position.x, -radius, -radius));
+                                }
+                            }
                         }
                     }
                 }
@@ -90,7 +115,7 @@ namespace CrowdPunch.Editor
                     + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(animator.avatar));
                 using (var writer = new BinaryWriter(File.Create(SamplesPath)))
                 {
-                    writer.Write(0x43504131);
+                    writer.Write(0x43504132);
                     writer.Write(hash);
                     writer.Write(renderer.bones.Length);
                     writer.Write(FrameCount);
@@ -117,7 +142,7 @@ namespace CrowdPunch.Editor
                 authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(SamplesPath);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
-                Debug.Log($"Enemy animation: sampled 9 motions x {FrameCount} frames x {renderer.bones.Length} bones. Bounds: {bounds}");
+                Debug.Log($"Enemy animation: sampled {EnemyAnimationSamples.MotionCount} motions x {FrameCount} frames x {renderer.bones.Length} bones. Bounds: {bounds}");
             }
             finally { if (root != null) PrefabUtility.UnloadPrefabContents(root); }
         }

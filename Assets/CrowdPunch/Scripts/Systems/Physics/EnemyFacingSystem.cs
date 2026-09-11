@@ -22,8 +22,7 @@ namespace CrowdPunch.Systems.Physics
         public void OnUpdate(ref SystemState state)
         {
             PlayerSnapshot player = SystemAPI.GetSingleton<PlayerSnapshot>();
-            if (!player.IsAvailable) return;
-            new FacePlayerJob { PlayerPosition = player.Position }.ScheduleParallel();
+            new FacePlayerJob { PlayerPosition = player.Position, PlayerAvailable = player.IsAvailable }.ScheduleParallel();
         }
 
         [BurstCompile]
@@ -32,16 +31,19 @@ namespace CrowdPunch.Systems.Physics
         private partial struct FacePlayerJob : IJobEntity
         {
             public float3 PlayerPosition;
+            public bool PlayerAvailable;
 
             private void Execute(ref LocalTransform transform, ref PhysicsVelocity velocity,
                 in EnemyLaunchState launch)
             {
-                if (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)
+                bool launched = launch.Phase == EnemyLaunchPhase.Launched;
+                if (!launched && (!PlayerAvailable ||
+                    (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)))
                     return;
-                float3 toward = PlayerPosition - transform.Position;
+                float3 toward = launched ? velocity.Linear : PlayerPosition - transform.Position;
                 toward.y = 0f;
                 if (math.lengthsq(toward) <= 0.0001f) return;
-                // INFO-004: face the player independently of strafing or committed dash velocity.
+                // Keep the physics capsule upright; animation supplies launched visual pitch.
                 transform.Rotation = quaternion.LookRotationSafe(toward, math.up());
                 velocity.Angular.y = 0f;
             }

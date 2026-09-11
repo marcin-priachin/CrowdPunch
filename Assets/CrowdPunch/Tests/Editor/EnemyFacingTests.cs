@@ -32,18 +32,31 @@ namespace CrowdPunch.Tests
             system.Update(world.Unmanaged);
             em.CompleteAllTrackedJobs();
             bool faces = phase == EnemyLaunchPhase.Active || phase == EnemyLaunchPhase.Recovering;
+            bool launched = phase == EnemyLaunchPhase.Launched;
+            float3 launchedForward = math.normalize(new float3(velocity.Linear.x, 0f, velocity.Linear.z));
             var actual = em.GetComponentData<LocalTransform>(enemy);
-            Assert.That(math.distance(math.forward(actual.Rotation), faces ? new float3(1f, 0f, 0f) : math.forward()), Is.LessThan(0.0001f));
+            Assert.That(math.distance(math.forward(actual.Rotation), faces ? new float3(1f, 0f, 0f) : launched ? launchedForward : math.forward()), Is.LessThan(0.0001f));
             Assert.That(actual.Position, Is.EqualTo(initial.Position));
             Assert.That(em.GetComponentData<PhysicsVelocity>(enemy).Linear, Is.EqualTo(velocity.Linear));
-            Assert.That(em.GetComponentData<PhysicsVelocity>(enemy).Angular.y, Is.EqualTo(faces ? 0f : 2f));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(enemy).Angular.y, Is.EqualTo(faces || launched ? 0f : 2f));
 
             // A moving player must update facing; no delta-time-dependent turn lag.
             em.SetComponentData(player, new PlayerSnapshot { Position = new float3(2f, -4f, -7f), IsAvailable = true });
             system.Update(world.Unmanaged);
             em.CompleteAllTrackedJobs();
             Assert.That(math.distance(math.forward(em.GetComponentData<LocalTransform>(enemy).Rotation),
-                faces ? new float3(0f, 0f, -1f) : math.forward()), Is.LessThan(0.0001f));
+                faces ? new float3(0f, 0f, -1f) : launched ? launchedForward : math.forward()), Is.LessThan(0.0001f));
+            if (launched)
+            {
+                em.SetComponentData(player, new PlayerSnapshot { IsAvailable = false });
+                velocity.Linear = new float3(3f, -2f, -4f);
+                em.SetComponentData(enemy, velocity);
+                system.Update(world.Unmanaged);
+                em.CompleteAllTrackedJobs();
+                Assert.That(math.distance(math.forward(em.GetComponentData<LocalTransform>(enemy).Rotation),
+                    new float3(0.6f, 0f, -0.8f)), Is.LessThan(0.0001f));
+                Assert.That(em.GetComponentData<PhysicsVelocity>(enemy).Linear, Is.EqualTo(velocity.Linear));
+            }
         }
 
         [TestCase(true, false, false)]

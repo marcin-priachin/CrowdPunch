@@ -5,6 +5,7 @@ using Unity.Collections;
 using Unity.Deformations;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Physics;
 using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Presentation
@@ -22,6 +23,7 @@ namespace CrowdPunch.Systems.Presentation
                 Transforms = SystemAPI.GetComponentLookup<LocalTransform>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
                 Respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true),
+                Velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel();
         }
@@ -34,6 +36,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<LocalTransform> Transforms;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
             [ReadOnly] public ComponentLookup<RespawnRequest> Respawns;
+            [ReadOnly] public ComponentLookup<PhysicsVelocity> Velocities;
             public float DeltaTime;
 
             private void Execute(in EnemyAnimation animation, ref EnemyAnimationPlayback playback, ref DynamicBuffer<SkinMatrix> skin)
@@ -54,9 +57,36 @@ namespace CrowdPunch.Systems.Presentation
                     playback.Phase = (math.hash(new uint2((uint)owner.Index, (uint)owner.Version)) & 65535) / 65536f;
                     playback.Initialized = 1;
                 }
-                // COMBAT-010/011: impulses and deferred defeat never become running input.
-                // Without authored reaction clips, retain the last pose during non-active phases.
-                if (Launches[owner].Phase != EnemyLaunchPhase.Active) return;
+                EnemyLaunchState launch = Launches[owner];
+                if (launch.Phase == EnemyLaunchPhase.Launched)
+                {
+                    bool newLaunch = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
+                    playback.FlightPhase = newLaunch ? 0f : math.saturate(playback.FlightPhase
+                        + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.FlyingMotion]));
+                    playback.WasLaunched = 1;
+                    playback.LaunchSequence = launch.LaunchSequence;
+                    if (Velocities.HasComponent(owner))
+                    {
+                        float3 velocity = Velocities[owner].Linear;
+                        if (math.lengthsq(velocity) > 0.0001f)
+                            playback.FlightPitch = -math.atan2(velocity.y, math.length(velocity.xz));
+                    }
+                    float flyingFrame = playback.FlightPhase * (samples.FrameCount - 1);
+                    int from = (int)flyingFrame;
+                    int to = math.min(from + 1, samples.FrameCount - 1);
+                    var pitch = new float3x3(quaternion.RotateX(playback.FlightPitch));
+                    for (int bone = 0; bone < skin.Length; bone++)
+                    {
+                        float3x4 pose = Sample(ref samples, EnemyAnimationSamples.FlyingMotion,
+                            from, to, bone, math.frac(flyingFrame));
+                        skin[bone] = new SkinMatrix { Value = new float3x4(math.mul(pitch, pose.c0),
+                            math.mul(pitch, pose.c1), math.mul(pitch, pose.c2), math.mul(pitch, pose.c3)) };
+                    }
+                    return;
+                }
+                playback.WasLaunched = 0;
+                // COMBAT-010/011: recovery and defeat retain the last evaluated pose.
+                if (launch.Phase != EnemyLaunchPhase.Active) return;
 
                 DesiredMovement intent = Movement[owner];
                 float3 local = math.rotate(math.inverse(Transforms[owner].Rotation),

@@ -43,14 +43,15 @@ There are currently no game-specific assembly definitions; scripts compile into 
 `EnemyFacingSystem` runs in `GamePostPhysicsGroup` after respawn processing and the Dasher
 rotation lock. Active and Recovering enemies face the available player's horizontal position
 (INFO-004), with yaw angular velocity cleared and position/linear velocity preserved.
-This includes Active dashers without redirecting their committed movement. Launched and
-Defeated rotations are untouched. Enabled respawn requests and coincident horizontal
+This includes Active dashers without redirecting their committed movement. Launched enemies
+instead face current horizontal physics velocity, including after collisions and homing,
+even when the player is unavailable. Defeated rotations are untouched. Enabled respawn requests and coincident horizontal
 positions skip facing. The resulting root rotation feeds enemy-local animation blending.
 
 `Enemy.prefab` nests the humanoid `Models/BaseEnemy/BaseEnemy.prefab`, fitted to its existing
 physics capsule. `EnemyMovement.controller` remains an editor-side animation source: runtime
 enemies do not create GameObject Animators. `EnemyAnimationSampling` evaluates its idle and
-eight directional poses (including mirrored diagonals) at 32 normalized phases per motion.
+eight directional poses (including mirrored diagonals), plus the `Flying.fbx` state, at 32 normalized phases per motion.
 The generated `Animation/EnemyMovement.bytes` contains durations and 88 root-relative skin
 matrices per pose. Rebuild it with **Crowd Punch > Animation > Rebuild Enemy Samples** after
 editing the controller, clips, avatar, or mesh. The baker rejects stale source hashes and
@@ -65,9 +66,18 @@ the two surrounding movement directions, and neighboring sample frames into `Ski
 Cycles start at entity-specific phases to avoid synchronized crowds. Matrix blending is a
 sampled locomotion approximation, not a general runtime Animator-controller interpreter.
 
-Physics transforms and velocities are read-only to animation. Launched, recovering, and
-defeated bodies hold their last pose until active again (COMBAT-010/011); the supplied assets
-contain no dedicated reaction clips. Pooled enemies reset playback and skip pose updates.
+Physics transforms and velocities are read-only to animation. Launched bodies play Flying
+from its first frame on launch entry or a changed launch sequence (including re-punch),
+clamp at the final frame, and apply visual pitch from vertical versus horizontal velocity.
+Their collider remains upright; yaw comes from `EnemyFacingSystem`. At zero velocity,
+the last facing is retained. Sampled bounds include all possible flight pitches.
+Recovering and defeated bodies hold their last pose until active again (COMBAT-010/011).
+Pooled enemies reset playback and skip pose updates. Sample format CPA2 contains ten motions;
+the Flying endpoint is sampled explicitly, while locomotion wraps between samples.
+Flying validation: eight animation regression cases and seven facing cases pass, including
+re-punch restarts, endpoint hold, flight pitch, redirected velocity and unavailable player.
+A live launched enemy reported ten baked motions, advancing Flying playback, finite skin
+matrices and a facing/velocity dot product of 1. The C# build passes with no errors.
 `EnemyAnimationVisualBakingSystem` connects the additional skinned rendering entities to
 `EnemyVisualOwner` and the existing body-color feedback (INFO-004). `EnemySkinning.shadergraph`
 retains the Sidekick surface shading, adds compute deformation, and multiplies the result by

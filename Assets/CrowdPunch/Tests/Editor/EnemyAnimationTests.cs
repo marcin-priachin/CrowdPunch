@@ -32,9 +32,9 @@ namespace CrowdPunch.Tests
             ref var root = ref builder.ConstructRoot<EnemyAnimationSamples>();
             root.BoneCount = 1;
             root.FrameCount = 2;
-            var durations = builder.Allocate(ref root.Durations, 9);
-            var matrices = builder.Allocate(ref root.Matrices, 18);
-            for (int motion = 0; motion < 9; motion++)
+            var durations = builder.Allocate(ref root.Durations, EnemyAnimationSamples.MotionCount);
+            var matrices = builder.Allocate(ref root.Matrices, EnemyAnimationSamples.MotionCount * 2);
+            for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++)
             {
                 durations[motion] = 1f;
                 // x identifies the motion; y identifies the sampled time.
@@ -93,7 +93,7 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Combat011LaunchRecoveryAndDefeatFreezePoseWithoutPhysicsWrites()
+        public void Combat011RecoveryAndDefeatFreezePoseWithoutPhysicsWrites()
         {
             var em = world.EntityManager;
             em.SetComponentData(owner, new DesiredMovement { Direction = new float3(0, 0, 1), Speed = 4f });
@@ -101,7 +101,7 @@ namespace CrowdPunch.Tests
             em.SetComponentData(owner, velocity);
             Tick();
             float3 pose = Pose;
-            foreach (var phase in new[] { EnemyLaunchPhase.Launched, EnemyLaunchPhase.Recovering, EnemyLaunchPhase.Defeated })
+            foreach (var phase in new[] { EnemyLaunchPhase.Recovering, EnemyLaunchPhase.Defeated })
             {
                 em.SetComponentData(owner, new EnemyLaunchState { Phase = phase });
                 Tick();
@@ -113,6 +113,44 @@ namespace CrowdPunch.Tests
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
             Tick();
             Assert.That(Pose.y, Is.Not.EqualTo(pose.y));
+        }
+
+        [Test]
+        public void Combat014FlyingRestartsOnRepunchAndHoldsLastFrame()
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(9f, 0f, 0f)));
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(0.25f).Within(0.001f));
+            Tick(2f);
+            Assert.That(Pose.y, Is.EqualTo(1f).Within(0.001f));
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(1f).Within(0.001f));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 2 });
+            Tick();
+            Assert.That(Pose.y, Is.Zero);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            Tick();
+            Assert.That(Pose.x, Is.Zero);
+        }
+
+        [Test]
+        public void Info004FlyingPitchFollowsVelocityWithoutPhysicsWrites()
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            var velocity = new PhysicsVelocity { Linear = new float3(0f, 4f, 4f) };
+            em.SetComponentData(owner, velocity);
+            Tick();
+            var pose = em.GetBuffer<SkinMatrix>(visual)[0].Value;
+            Assert.That(math.distance(pose.c2, math.normalize(velocity.Linear)), Is.LessThan(0.0001f));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner).Linear, Is.EqualTo(velocity.Linear));
+            Assert.That(em.GetComponentData<LocalTransform>(owner).Rotation, Is.EqualTo(quaternion.identity));
+            em.SetComponentData(owner, new PhysicsVelocity());
+            Tick();
+            Assert.That(em.GetBuffer<SkinMatrix>(visual)[0].Value.c2, Is.EqualTo(pose.c2));
         }
 
         [Test]
