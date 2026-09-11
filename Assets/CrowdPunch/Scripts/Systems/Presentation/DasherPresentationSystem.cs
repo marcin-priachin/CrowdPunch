@@ -21,7 +21,7 @@ namespace CrowdPunch.Systems.Presentation
             {
                 if (launch.ValueRO.Phase == EnemyLaunchPhase.Launched)
                 {
-                    color.ValueRW.Value = new float4(1f, 0.85f, 0.2f, 1f);
+                    color.ValueRW.Value = new float4(0.38f, 0.38f, 0.42f, 1f);
                     shape.ValueRW.Value = float4x4.Scale(new float3(0.55f, 0.8f, 3.2f));
                 }
                 else if (dash.ValueRO.Phase == DasherPhase.Preparing)

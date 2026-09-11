@@ -266,7 +266,7 @@ Ordering between systems that share only a group should be made explicit when co
 
 - `HealthBarPresentationSystem` updates ECS health-bar presentation data and expires one-second post-damage visibility.
 - `EnemyHealthBarBridgeSystem` publishes living normal enemy health while post-damage visibility is enabled, and elite health while alive.
-- `EnemyReadabilitySystem` maps gameplay state to body color through baked renderer ownership. Dasher presentation remains specialized.
+- `EnemyReadabilitySystem` maps archetype and non-launch gameplay feedback to body color through baked renderer ownership. Entering `Launched` preserves the archetype body color; movement and animation communicate launch state. Dasher presentation remains specialized and keeps its launched shape override without a launched color override.
 - `PresentationBridgeSystem` is the explicit ECS presentation bridge point.
 - `PresentationBridgeSystem` selects enemies currently inside the live punch volume, reads the same ECS-owned aim-assist target lock used by punch detection, and publishes their initial launch segments through `PlayerEcsBridge`; `PunchTrajectoryPreview` renders those segments as pooled semitransparent world-space lines.
 

@@ -57,9 +57,7 @@ namespace CrowdPunch.Systems.Presentation
                     && Contacts[enemy].IsWindingUp != 0
                     || Ranged.HasComponent(enemy) && Ranged[enemy].Phase == RangedAttackPhase.WindUp
                     || Elites.HasComponent(enemy) && Elites[enemy].Phase == ElitePunchPhase.WindUp;
-                if (phase == EnemyLaunchPhase.Launched)
-                    body = math.lerp(body, new float3(1f, 0.96f, 0.72f), 0.72f);
-                else if (phase == EnemyLaunchPhase.Recovering || phase == EnemyLaunchPhase.Defeated)
+                if (phase == EnemyLaunchPhase.Recovering || phase == EnemyLaunchPhase.Defeated)
                     body *= 0.45f;
                 else if (preparing)
                     body = math.lerp(body, new float3(1f, 0.82f, 0.2f), 0.55f + 0.3f * math.sin(Time * 12f));

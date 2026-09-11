@@ -403,6 +403,8 @@ Enemy types and dangerous states must remain distinguishable at crowd scale with
 
 Enemies in `Active` or `Recovering` face the player's current horizontal position, independently of movement direction. While `Launched`, they use the Flying animation and face their current movement direction, including changes during flight. Launch ends with the Falling Flat Impact animation, including when defeat was deferred until launch ended. Facing does not steer committed dash movement or launched velocity. `Defeated` retains its existing rotation behavior.
 
+Entering `Launched` does not change an enemy's archetype body color. Launch readability comes from movement, the Flying animation, and existing silhouette behavior. Other authored feedback, including damage flashes, attack telegraphs, recovery dimming, and Dasher shape changes, remains phase-specific.
+
 ### INFO-005 — Trajectory Scope
 
 Status: Must
