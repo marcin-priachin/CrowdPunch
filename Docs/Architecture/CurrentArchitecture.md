@@ -184,7 +184,7 @@ This is presentation only: camera-forward facing and gameplay punch direction st
 | Concern | Current owner | Boundary/data |
 |---|---|---|
 | Input, player transform, and punch | GameObject | `PlayerController` owns movement and committed dash timing; `PlayerPunch` owns immediate attack input, hit-confirmed cooldown, and punch-area cooldown presentation. Punching does not interrupt a dash. |
-| Player health and invincibility | GameObject | `PlayerHealth`; `PlayerInvincibilityFeedback` blinks the player renderer while invulnerability is active |
+| Player health and invincibility | GameObject | `PlayerHealth`; `PlayerHitAnimation` plays Hit To Body on accepted damage; invulnerability remains health-owned |
 | Camera | GameObject | `CameraFollow` |
 | Scene bootstrap and UI | GameObject | `GameBootstrap`, UI MonoBehaviours |
 | Fixed gauntlet sequence and additive scene lifecycle | GameObject | `GauntletSequence`, `GauntletLevel` |
@@ -626,3 +626,14 @@ skill, intended clear times, or balance.
 - A generated `Assembly-CSharp.csproj` may be stale until Unity refreshes assets.
 - Physics changes require checking representative crowd density and profiling, not only single-enemy correctness.
 - Changes to bridge fields, component ownership, system order, scenes, or package boundaries must update this document.
+
+## Player Hit Reaction
+
+GameBootstrap adds PlayerHitAnimation to the player root instead of renderer blinking.
+It listens to PlayerHealth.DamageAccepted and triggers the masked Hit Reaction Animator
+layer above the punch layer. Hit To Body plays once in place, with a short entry/exit blend.
+The component releases the layer weight to zero after playback and on disable, so locomotion
+and the current punch pose resume. Punch spine yaw fades out with reaction weight and returns
+afterward. Rejected invulnerable hits do not restart the clip. Damage, invincibility duration,
+movement, and punch eligibility remain unchanged (PLAYER-002, PLAYER-005, PLAYER-009).
+An accepted PlayerPunch.PunchStarted immediately cancels the hit reaction, clears its pending trigger, and sets its layer weight to zero so the punch pose and yaw regain priority. Cooldown-rejected punch input does not interrupt the reaction (PLAYER-005, PLAYER-009).

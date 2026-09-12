@@ -27,7 +27,7 @@ namespace CrowdPunch.Mono.UI
             EnsurePlayerController();
             EnsurePlayerPunch();
             EnsurePlayerHealth();
-            EnsurePlayerInvincibilityFeedback();
+            EnsurePlayerHitAnimation();
             EnsurePunchTrajectoryPreview();
             EnsureExplosionFeedback();
             EnsureGameCanvas();
@@ -121,11 +121,11 @@ namespace CrowdPunch.Mono.UI
             }
         }
 
-        private void EnsurePlayerInvincibilityFeedback()
+        private void EnsurePlayerHitAnimation()
         {
-            if (playerBridge != null && playerBridge.GetComponent<PlayerInvincibilityFeedback>() == null)
+            if (playerBridge != null && playerBridge.GetComponent<PlayerHitAnimation>() == null)
             {
-                playerBridge.gameObject.AddComponent<PlayerInvincibilityFeedback>();
+                playerBridge.gameObject.AddComponent<PlayerHitAnimation>();
             }
         }
 

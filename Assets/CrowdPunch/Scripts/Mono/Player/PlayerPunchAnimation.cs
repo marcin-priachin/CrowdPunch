@@ -26,6 +26,7 @@ namespace CrowdPunch.Mono.Player
         private float punchYaw;
 
         private Animator animator;
+        private PlayerHitAnimation hitAnimation;
         private Transform spine;
         private Quaternion animatedSpineRotation;
         private bool hasRotationOffset;
@@ -140,7 +141,10 @@ namespace CrowdPunch.Mono.Player
             // The humanoid spine's local Y need not be vertical. Rotate around model up
             // after animation, leaving root facing, legs, and punch targeting untouched.
             animatedSpineRotation = spine.localRotation;
-            spine.rotation = Quaternion.AngleAxis(upperBodyYaw, animator.transform.up) * spine.rotation;
+            if (hitAnimation == null)
+                hitAnimation = GetComponentInParent<PlayerHitAnimation>();
+            float yawWeight = hitAnimation == null ? 1f : 1f - hitAnimation.ReactionWeight;
+            spine.rotation = Quaternion.AngleAxis(upperBodyYaw * yawWeight, animator.transform.up) * spine.rotation;
             hasRotationOffset = true;
         }
 
