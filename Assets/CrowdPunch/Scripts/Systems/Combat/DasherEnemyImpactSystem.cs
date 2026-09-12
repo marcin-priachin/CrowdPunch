@@ -22,6 +22,8 @@ namespace CrowdPunch.Systems.Combat
                 .WithAll<Enemy, LocalTransform, EnemyContactDamageSettings, EnemyLaunchState, KnockbackResponse>()
                 .WithNone<RespawnRequest>().Build();
             NativeArray<Entity> targets = targetQuery.ToEntityArray(Allocator.Temp);
+            var feedbacks = SystemAPI.GetComponentLookup<EnemyImpactFeedback>();
+            double elapsed = SystemAPI.Time.ElapsedTime;
             ComponentLookup<LocalTransform> transforms = SystemAPI.GetComponentLookup<LocalTransform>(true);
             ComponentLookup<EnemyContactDamageSettings> radii = SystemAPI.GetComponentLookup<EnemyContactDamageSettings>(true);
             ComponentLookup<KnockbackResponse> tiers = SystemAPI.GetComponentLookup<KnockbackResponse>(true);
@@ -56,7 +58,7 @@ namespace CrowdPunch.Systems.Combat
                     ResolveImpact(source, target, sourceTransform.ValueRO.Position,
                         transforms[target].Position, dash.ValueRO, settings.ValueRO, history,
                         ref launches, ref tiers, ref enemyTiers, ref damageRequests, ref impulses,
-                        ref explosiveStates, ref detonationRequests);
+                        ref explosiveStates, ref detonationRequests, ref feedbacks, elapsed);
                 }
             }
             targets.Dispose();
@@ -69,7 +71,8 @@ namespace CrowdPunch.Systems.Combat
             ref ComponentLookup<EnemyTier> enemyTiers,
             ref ComponentLookup<DamageRequest> damageRequests, ref ComponentLookup<ExternalImpulse> impulses,
             ref ComponentLookup<ExplosiveEnemyState> explosiveStates,
-            ref ComponentLookup<ExplosiveDetonationRequest> detonationRequests)
+            ref ComponentLookup<ExplosiveDetonationRequest> detonationRequests,
+            ref ComponentLookup<EnemyImpactFeedback> feedbacks, double elapsed)
         {
             EnemyLaunchState targetLaunch = launches[target];
             if (targetLaunch.Phase != EnemyLaunchPhase.Active && targetLaunch.Phase != EnemyLaunchPhase.Recovering) return;
@@ -101,7 +104,18 @@ namespace CrowdPunch.Systems.Combat
                     EnemyLaunchCause.EnemyCollision,
                     damage,
                     launches[source].Owner);
+                targetLaunch.FeedbackChainDepth = math.min(64, launches[source].FeedbackChainDepth + 1);
                 launches[target] = targetLaunch;
+            }
+            if (feedbacks.HasComponent(target))
+            {
+                var feedback = feedbacks[target];
+                var significance = launches[source];
+                significance.FeedbackChainDepth = math.min(64, significance.FeedbackChainDepth + 1);
+                ImpactFeedbackRecording.Record(ref feedback, CombatImpactKind.EnemyCollision,
+                    (sourcePosition + targetPosition) * .5f, dash.PreservedLaunchedVelocity,
+                    math.length(dash.PreservedLaunchedVelocity), knockback, significance, elapsed);
+                feedbacks[target] = feedback;
             }
             if (damage > 0f)
             {

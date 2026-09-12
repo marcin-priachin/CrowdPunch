@@ -15,6 +15,7 @@ namespace CrowdPunch.Bakers
             EnemyAuthoring owner = GetComponentInParent<EnemyAuthoring>();
             if (owner == null) return;
             Entity visual = GetEntity(TransformUsageFlags.Dynamic);
+            AddComponent<EnemyVisualDeformation>(visual);
             AddComponent(visual, new EnemyVisualOwner { Value = GetEntity(owner, TransformUsageFlags.Dynamic) });
             AddComponent(visual, new URPMaterialPropertyBaseColor { Value = new float4(1f) });
         }

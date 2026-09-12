@@ -36,6 +36,9 @@ namespace CrowdPunch.Systems.Combat
                 .Build();
             EnemyCollisionJob job = new EnemyCollisionJob
             {
+                MassLookup = SystemAPI.GetComponentLookup<PhysicsMass>(true),
+                FeedbackLookup = SystemAPI.GetComponentLookup<EnemyImpactFeedback>(),
+                ElapsedTime = SystemAPI.Time.ElapsedTime,
                 EnemyLookup = SystemAPI.GetComponentLookup<Enemy>(true),
                 LaunchStateLookup = SystemAPI.GetComponentLookup<EnemyLaunchState>(),
                 RespawnLookup = SystemAPI.GetComponentLookup<RespawnRequest>(true),
@@ -65,6 +68,9 @@ namespace CrowdPunch.Systems.Combat
         [BurstCompile]
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
+            [ReadOnly] public ComponentLookup<PhysicsMass> MassLookup;
+            public ComponentLookup<EnemyImpactFeedback> FeedbackLookup;
+            public double ElapsedTime;
             [ReadOnly] public ComponentLookup<Enemy> EnemyLookup;
             public ComponentLookup<EnemyLaunchState> LaunchStateLookup;
             [ReadOnly] public ComponentLookup<RespawnRequest> RespawnLookup;
@@ -90,6 +96,28 @@ namespace CrowdPunch.Systems.Combat
                 Entity entityA = collisionEvent.EntityA;
                 Entity entityB = collisionEvent.EntityB;
 
+                bool enemyA = EnemyLookup.HasComponent(entityA);
+                bool enemyB = EnemyLookup.HasComponent(entityB);
+                if (enemyA != enemyB)
+                {
+                    Entity body = enemyA ? entityA : entityB;
+                    if (!IsUnavailable(body) && LaunchStateLookup.HasComponent(body)
+                        && LaunchStateLookup[body].Phase == EnemyLaunchPhase.Launched && FeedbackLookup.HasComponent(body))
+                    {
+                        var feedback = FeedbackLookup[body];
+                        if (ElapsedTime >= feedback.NextContactTime)
+                        {
+                            float speed = math.abs(math.dot(feedback.IncomingVelocity, collisionEvent.Normal));
+                            if (speed <= .0001f) return;
+                            var contact = collisionEvent.CalculateDetails(ref World);
+                            ImpactFeedbackRecording.Record(ref feedback, CombatImpactKind.Environment,
+                                contact.AverageContactPointPosition, enemyA ? collisionEvent.Normal : -collisionEvent.Normal,
+                                speed, contact.EstimatedImpulse, LaunchStateLookup[body], ElapsedTime);
+                            FeedbackLookup[body] = feedback;
+                        }
+                    }
+                    return;
+                }
                 if (!EnemyLookup.HasComponent(entityA)
                     || !EnemyLookup.HasComponent(entityB)
                     || !LaunchStateLookup.HasComponent(entityA)
@@ -144,6 +172,23 @@ namespace CrowdPunch.Systems.Combat
                 }
 
                 TryQueueDamage(source, target, estimatedImpulse);
+                if (FeedbackLookup.HasComponent(source) && FeedbackLookup.HasComponent(target))
+                {
+                    var feedback = FeedbackLookup[target];
+                    float3 relative = FeedbackLookup[source].IncomingVelocity - feedback.IncomingVelocity;
+                    // Only closing speed along the contact normal counts, not grazing travel speed.
+                    float speed = math.abs(math.dot(relative, collisionEvent.Normal));
+                    // A body may receive and transfer momentum within the same solver step.
+                    // Its pre-step speed is then zero; impulse/mass estimates that transferred delta-v.
+                    if (MassLookup.HasComponent(source))
+                        speed = math.max(speed, estimatedImpulse * MassLookup[source].InverseMass);
+                    var significance = LaunchStateLookup[source];
+                    significance.FeedbackChainDepth = math.min(64, significance.FeedbackChainDepth + 1);
+                    ImpactFeedbackRecording.Record(ref feedback, CombatImpactKind.EnemyCollision,
+                        details.AverageContactPointPosition, math.normalizesafe(relative), speed,
+                        estimatedImpulse, significance, ElapsedTime);
+                    FeedbackLookup[target] = feedback;
+                }
             }
 
             private void PropagateLaunch(Entity source, Entity target, float estimatedImpulse)
@@ -157,6 +202,7 @@ namespace CrowdPunch.Systems.Combat
                     EnemyLaunchCause.EnemyCollision,
                     sourceState.LaunchDamage,
                     sourceState.Owner);
+                targetState.FeedbackChainDepth = math.min(64, sourceState.FeedbackChainDepth + 1);
                 targetState.PropagatedLaunchCount++;
                 targetState.LastPropagationImpulse = estimatedImpulse;
                 LaunchStateLookup[target] = targetState;

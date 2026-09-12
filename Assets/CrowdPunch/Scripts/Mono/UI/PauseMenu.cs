@@ -22,7 +22,7 @@ namespace CrowdPunch.Mono.UI
         private Text openingHint;
         private uint observedLevelEntry;
         private float hintSecondsRemaining;
-        private float timeScaleBeforePause = 1f;
+
         private bool isPaused;
 
         public void Configure(InputActionAsset actions)
@@ -76,7 +76,7 @@ namespace CrowdPunch.Mono.UI
         {
             if (isPaused)
             {
-                Time.timeScale = timeScaleBeforePause;
+                CrowdPunch.Mono.Player.FeedbackTimeController.SetPaused(false);
             }
         }
 
@@ -121,14 +121,13 @@ namespace CrowdPunch.Mono.UI
             isPaused = paused;
             if (paused)
             {
-                timeScaleBeforePause = Time.timeScale;
-                Time.timeScale = 0f;
+                CrowdPunch.Mono.Player.FeedbackTimeController.SetPaused(true);
                 menuRoot.SetActive(true);
                 EventSystem.current?.SetSelectedGameObject(firstButton.gameObject);
             }
             else
             {
-                Time.timeScale = timeScaleBeforePause;
+                CrowdPunch.Mono.Player.FeedbackTimeController.SetPaused(false);
                 menuRoot.SetActive(false);
                 EventSystem.current?.SetSelectedGameObject(null);
             }

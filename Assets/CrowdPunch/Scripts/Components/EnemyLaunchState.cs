@@ -37,6 +37,7 @@ namespace CrowdPunch.Components
         public float BelowUsefulMomentumSeconds;
         public float RecoverySecondsRemaining;
         public uint LaunchSequence;
+        public int FeedbackChainDepth;
         public float LaunchDamage;
         public uint PropagatedLaunchCount;
         public float LastPropagationImpulse;

@@ -23,7 +23,6 @@ namespace CrowdPunch.Systems.Presentation
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
                 Ranged = SystemAPI.GetComponentLookup<RangedAttackState>(true),
                 Elites = SystemAPI.GetComponentLookup<ElitePunchState>(true),
-                Damage = SystemAPI.GetComponentLookup<EnemyHealthBarVisibility>(true),
                 Time = (float)SystemAPI.Time.ElapsedTime
             }.ScheduleParallel();
         }
@@ -36,7 +35,6 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
             [ReadOnly] public ComponentLookup<RangedAttackState> Ranged;
             [ReadOnly] public ComponentLookup<ElitePunchState> Elites;
-            [ReadOnly] public ComponentLookup<EnemyHealthBarVisibility> Damage;
             public float Time;
 
             private void Execute(in EnemyVisualOwner owner, ref URPMaterialPropertyBaseColor color)
@@ -65,9 +63,6 @@ namespace CrowdPunch.Systems.Presentation
                     && Contacts[enemy].IsAttempting != 0)
                     body = new float3(1f, 0.3f, 0.12f);
 
-                if (Damage.HasComponent(enemy) && Damage.IsComponentEnabled(enemy)
-                    && Damage[enemy].SecondsRemaining > 0.88f)
-                    body = new float3(1f); // Short actual-damage flash; elite health bar shows the amount.
                 color.Value = new float4(body, 1f);
             }
         }

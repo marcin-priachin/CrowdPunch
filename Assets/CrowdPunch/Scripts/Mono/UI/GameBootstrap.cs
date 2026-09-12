@@ -17,6 +17,8 @@ namespace CrowdPunch.Mono.UI
         [SerializeField] private bool showEnemyHealthBars = true;
         [SerializeField] private bool showEnemyStates = true;
 
+        [SerializeField] private CrowdPunch.Configuration.CombatFeedbackSettings combatFeedbackSettings;
+
         private void Awake()
         {
             if (playerBridge == null)
@@ -28,6 +30,14 @@ namespace CrowdPunch.Mono.UI
             EnsurePlayerPunch();
             EnsurePlayerHealth();
             EnsurePlayerHitAnimation();
+            if (GetComponent<FeedbackTimeController>() == null) gameObject.AddComponent<FeedbackTimeController>();
+            if (combatFeedbackSettings == null)
+                combatFeedbackSettings = Resources.Load<CrowdPunch.Configuration.CombatFeedbackSettings>("CombatFeedbackSettings");
+            if (combatFeedbackSettings == null)
+                combatFeedbackSettings = ScriptableObject.CreateInstance<CrowdPunch.Configuration.CombatFeedbackSettings>();
+            var combatFeedback = GetComponent<CombatFeedback>();
+            if (combatFeedback == null) combatFeedback = gameObject.AddComponent<CombatFeedback>();
+            combatFeedback.Configure(playerBridge, combatFeedbackSettings);
             EnsurePunchTrajectoryPreview();
             EnsureExplosionFeedback();
             EnsureGameCanvas();
@@ -45,7 +55,7 @@ namespace CrowdPunch.Mono.UI
 
         public void RestartGame()
         {
-            Time.timeScale = 1f;
+            CrowdPunch.Mono.Player.FeedbackTimeController.CancelEffects();
             var sequence = FindFirstObjectByType<CrowdPunch.Mono.Levels.GauntletSequence>();
             if (sequence != null && sequence.CurrentLevelIndex >= 0)
             {

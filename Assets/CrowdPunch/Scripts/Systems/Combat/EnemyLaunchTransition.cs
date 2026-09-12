@@ -36,6 +36,7 @@ namespace CrowdPunch.Systems.Combat
             state.BelowUsefulMomentumSeconds = 0f;
             state.RecoverySecondsRemaining = 0f;
             state.LaunchSequence++;
+            state.FeedbackChainDepth = owner == EnemyLaunchOwner.Player ? 1 : 0;
             state.LaunchDamage = launchDamage < 0f ? 0f : launchDamage;
             state.PropagatedLaunchCount = 0;
             state.LastPropagationImpulse = 0f;

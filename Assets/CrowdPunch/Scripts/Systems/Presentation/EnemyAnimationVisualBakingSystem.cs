@@ -26,6 +26,7 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     Entity entity = child.Value;
                     if (!SystemAPI.HasComponent<RenderBounds>(entity)) continue;
+                    commands.AddComponent<EnemyVisualDeformation>(entity);
                     commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner });
                     commands.AddComponent(entity, new URPMaterialPropertyBaseColor { Value = new float4(1f) });
                 }

@@ -17,6 +17,23 @@ namespace CrowdPunch.Mono.Player
         [Tooltip("Playback multiplier for frames 22 through the end of the punch. Does not change gameplay cooldown or hit timing.")]
         private float punchSpeedMultiplier = 1f;
 
+        [Header("Impact exaggeration (presentation only)")]
+        [SerializeField, Min(0f)] private float contactFrame = 32f;
+        [SerializeField, Min(.1f)] private float strikeSpeed = 1.35f;
+        [SerializeField, Min(.1f)] private float followThroughSpeed = 1f;
+        [SerializeField] private bool snapToContactOnHit = true;
+
+        public void ConfirmContactPose()
+        {
+            if (!snapToContactOnHit || !HasAnimation() || !isActiveAndEnabled) return;
+            RestoreAnimatedRotation();
+            playbackTime = Mathf.Clamp(contactFrame / punchClip.frameRate, ReadyTime, punchClip.length);
+            playingPunch = true;
+            SetPose(playbackTime);
+            // Evaluate the existing time-parameter punch layer before freezing the contact frame.
+            animator.Update(0f);
+        }
+
         [Header("Upper Body Rotation")]
         [SerializeField, Range(-180f, 180f)]
         [Tooltip("Y rotation offset in degrees at frame 22, held while ready to punch.")]
@@ -85,7 +102,8 @@ namespace CrowdPunch.Mono.Player
             if (playingPunch)
             {
                 playbackTime = Mathf.Min(punchClip.length,
-                    playbackTime + Time.deltaTime * Mathf.Max(0.01f, punchSpeedMultiplier));
+                    playbackTime + Time.deltaTime * Mathf.Max(0.01f, punchSpeedMultiplier)
+                    * (playbackTime < PunchRotationEndTime ? strikeSpeed : followThroughSpeed));
                 SetPose(playbackTime);
                 playingPunch = playbackTime < punchClip.length;
                 return;

@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 504e1d2676985dd42b7442c956ed60cb, type: 3}
+  m_Name: CombatFeedbackSettings
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.CombatFeedbackSettings
+  PunchHitStop: 0.028
+  ExceptionalSlowMotion: 1
+  ExceptionalChainDepth: 4
+  SlowMotionScale: 0.3
+  SlowMotionDuration: 0.08
+  ExceptionalCooldown: 1.5
+  MinimumCollisionSpeed: 2
+  FullCollisionSpeed: 16
+  MinimumCollisionImpulse: 1.5
+  EnvironmentMinimumSpeed: 4
+  ContactFeedbackInterval: 0.12
+  ChainGainPerDepth: 0.15
+  MaximumChainMultiplier: 1.65
+  PunchKick: 0.075
+  DamageKick: 0.15
+  CollisionKick: 0.045
+  ExceptionalKick: 0.11
+  Shake: 0.025
+  CameraRecovery: 0.13
+  MaximumCameraOffset: 0.22
+  CollisionCameraThreshold: 0.55
+  CollisionCameraInterval: 0.18
+  CameraImpactRange: 25
+  PunchParticles: {fileID: 0}
+  EnemyParticles: {fileID: 0}
+  PlayerDamageParticles: {fileID: 0}
+  EnvironmentParticles: {fileID: 0}
+  DashStartParticles: {fileID: 0}
+  DashMovementParticles: {fileID: 0}
+  DashEndParticles: {fileID: 0}
+  ParticlePoolSizePerEffect: 8
+  MaximumImpactsPerFrame: 12
+  ParticleScale: {x: 0.55, y: 1.1}
+  PlaceholderParticleCount: 7
+  DashMovementInterval: 0.045
+  MaximumTrails: 48
+  TrailMinimumSpeed: 3
+  TrailDuration: 0.11
+  TrailWidth: 0.11
+  TrailColor: {r: 0.75, g: 0.85, b: 0.85, a: 0.32}
+  SquashAmount: 0.13
+  SquashDuration: 0.12
+  DeformationThreshold: 0.12
+  FlashDuration: 0.045
+  EnemyFlashIntensity: 0.6
+  PlayerFlashIntensity: 0.7
+  PlayerFlashColor: {r: 1, g: 0.65, b: 0.5, a: 1}
+  DashFovDelta: 3
+  DashFovTransition: 0.1

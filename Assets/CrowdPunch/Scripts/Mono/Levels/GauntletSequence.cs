@@ -99,8 +99,7 @@ namespace CrowdPunch.Mono.Levels
 
             transitionInProgress = true;
             RunComplete = false;
-            float previousTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
+            FeedbackTimeController.SetTransition(true);
 
             if (currentLevelScene.IsValid() && currentLevelScene.isLoaded)
             {
@@ -129,7 +128,7 @@ namespace CrowdPunch.Mono.Levels
             }
 
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;
-            Time.timeScale = previousTimeScale;
+            FeedbackTimeController.SetTransition(false);
             transitionInProgress = false;
         }
 

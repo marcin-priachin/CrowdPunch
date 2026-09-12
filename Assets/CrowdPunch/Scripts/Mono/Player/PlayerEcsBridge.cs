@@ -46,6 +46,16 @@ namespace CrowdPunch.Mono.Player
     /// </summary>
     public sealed class PlayerEcsBridge : MonoBehaviour
     {
+        public CrowdPunch.Configuration.CombatFeedbackSettings FeedbackSettings { get; set; }
+        public event Action<CombatFeedbackMessage> ImpactReceived;
+        public event Action TrailsBegan, TrailsEnded;
+        public event Action<ulong, uint, Vector3, float, int> TrailReceived;
+        public void ReceiveImpact(CombatFeedbackMessage message) => ImpactReceived?.Invoke(message);
+        public void BeginTrails() => TrailsBegan?.Invoke();
+        public void EndTrails() => TrailsEnded?.Invoke();
+        public void ReceiveTrail(ulong id, uint sequence, Vector3 position, float speed, int depth)
+            => TrailReceived?.Invoke(id, sequence, position, speed, depth);
+
         public readonly struct TrajectoryPreviewSegment
         {
             public TrajectoryPreviewSegment(float3 start, float3 end)

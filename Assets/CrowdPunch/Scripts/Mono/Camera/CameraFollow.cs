@@ -17,6 +17,7 @@ namespace CrowdPunch.Mono.Camera
         [SerializeField] private float horizontalLookSensitivity = 0.15f;
         [SerializeField] private float followSharpness = 12f;
 
+        private CombatCameraFeedback feedback;
         private InputAction lookAction;
         private float orbitAngle;
 
@@ -55,6 +56,8 @@ namespace CrowdPunch.Mono.Camera
                 return;
             }
 
+            if (feedback == null) feedback = GetComponent<CombatCameraFeedback>();
+            feedback?.RemoveOffset();
             float horizontalLook = lookAction?.ReadValue<Vector2>().x ?? 0f;
             bool usesJoystick = lookAction?.activeControl?.device is Gamepad
                 || lookAction?.activeControl?.device is Joystick;
@@ -70,6 +73,7 @@ namespace CrowdPunch.Mono.Camera
 
             transform.position = Vector3.Lerp(transform.position, desiredPosition, interpolation);
             transform.LookAt(lookTarget);
+            feedback?.ApplyOffset();
         }
     }
 }

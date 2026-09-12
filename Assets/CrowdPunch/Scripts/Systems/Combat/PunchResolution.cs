@@ -108,6 +108,15 @@ namespace CrowdPunch.Systems.Combat
                 DamageRequest damage = manager.IsComponentEnabled<DamageRequest>(target) ? manager.GetComponentData<DamageRequest>(target) : default;
                 damage.Amount += punch.Damage; manager.SetComponentData(target, damage); manager.SetComponentEnabled<DamageRequest>(target, true);
             }
+            if (manager.HasComponent<EnemyImpactFeedback>(target))
+            {
+                var feedback = manager.GetComponentData<EnemyImpactFeedback>(target);
+                float inverseMass = manager.HasComponent<PhysicsMass>(target)
+                    ? manager.GetComponentData<PhysicsMass>(target).InverseMass : 1f;
+                ImpactFeedbackRecording.Record(ref feedback, CombatImpactKind.Punch, position,
+                    impulseDirection, punch.Strength * inverseMass, punch.Strength, launch, 0);
+                manager.SetComponentData(target, feedback);
+            }
             return true;
         }
     }

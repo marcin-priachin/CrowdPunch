@@ -47,7 +47,7 @@ namespace CrowdPunch.Mono.UI
                 return;
             }
 
-            Time.timeScale = 1f;
+            CrowdPunch.Mono.Player.FeedbackTimeController.CancelEffects();
             GameRestartRegistry.RequestRestart();
         }
 
