@@ -20,11 +20,12 @@ namespace CrowdPunch.Mono.Player
         private ImpactParticlePool particles;
         private LaunchedTrailPool trails;
         private PlayerDamageFlash flash;
+        private ExplosionFeedback explosions;
         private Material particleMaterial, flashMaterial;
         private Transform poolRoot;
         private float flashRemaining, dashRemaining;
         private double nextCameraTime, nextExceptionalTime;
-        private uint restart;
+        private uint restart, observedPunch;
         private bool bound;
 
         public void Configure(PlayerEcsBridge player, CombatFeedbackSettings configuration)
@@ -59,11 +60,14 @@ namespace CrowdPunch.Mono.Player
             if (health != null) health.DamageAccepted += OnDamage;
             if (controller != null) { controller.DashStarted += OnDashStart; controller.DashEnded += OnDashEnd; }
             if (punch != null) punch.PunchStateReset += ResetFeedback;
+            observedPunch = bridge.PunchSequence;
             bound = true;
         }
         private void OnPunchResolved(uint sequence, bool hit)
         {
-            if (!isActiveAndEnabled || !hit || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
+            if (!isActiveAndEnabled || sequence != bridge.PunchSequence || sequence == observedPunch) return;
+            observedPunch = sequence;
+            if (!hit || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
             punchAnimation?.ConfirmContactPose();
             cameraFeedback?.Impulse(bridge.PunchDirection, settings.PunchKick, 1f);
             FeedbackTimeController.Freeze(settings.PunchHitStop);
@@ -102,20 +106,21 @@ namespace CrowdPunch.Mono.Player
         }
         private void OnDashStart()
         {
-            if (FeedbackTimeController.IsSuspended) return;
+            if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended) return;
             dashRemaining = 0f;
             if (cameraFeedback != null) cameraFeedback.Dashing = true;
             particles.Show(CombatImpactKind.DashStart, bridge.transform.position, Vector3.up, .7f);
         }
         private void OnDashEnd()
         {
+            if (!isActiveAndEnabled) return;
             if (cameraFeedback != null) cameraFeedback.Dashing = false;
             if (bridge.gameObject.activeInHierarchy && !FeedbackTimeController.IsSuspended)
                 particles.Show(CombatImpactKind.DashEnd, bridge.transform.position, Vector3.up, .4f);
         }
         private void Update()
         {
-            if (!bound) return;
+            if (!bound || bridge == null || flash == null) return;
             if (restart != GameRestartRegistry.Sequence || FeedbackTimeController.IsSuspended)
             {
                 restart = GameRestartRegistry.Sequence;
@@ -139,13 +144,28 @@ namespace CrowdPunch.Mono.Player
         }
         public void ResetFeedback()
         {
+            if (bridge != null) observedPunch = bridge.PunchSequence;
+            if (explosions == null && bridge != null) explosions = bridge.GetComponent<ExplosionFeedback>();
+            explosions?.Clear();
             flashRemaining = dashRemaining = 0f;
             nextCameraTime = nextExceptionalTime = 0;
             particles?.Clear(); trails?.Clear(); flash?.Clear();
-            cameraFeedback?.ResetFeedback();
+            if (cameraFeedback != null) cameraFeedback.ResetFeedback();
             FeedbackTimeController.CancelEffects();
         }
-        private void OnEnable() { if (bound && bridge != null) bridge.FeedbackSettings = settings; }
+        private void OnEnable()
+        {
+            // Unity retains object references during script reload but not the managed pools.
+            if (bridge != null && settings != null && particles == null)
+            {
+                bound = false;
+                if (poolRoot != null) Destroy(poolRoot.gameObject);
+                if (particleMaterial != null) Destroy(particleMaterial);
+                if (flashMaterial != null) Destroy(flashMaterial);
+                Configure(bridge, settings);
+            }
+            else if (bound && bridge != null) bridge.FeedbackSettings = settings;
+        }
         private void OnDisable()
         {
             if (bridge != null) bridge.FeedbackSettings = null;

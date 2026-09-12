@@ -92,8 +92,8 @@ namespace CrowdPunch.Systems.Initialization
                 SystemAPI.GetBuffer<CollisionDamageHistory>(enemy).Clear();
 
                 if (SystemAPI.HasComponent<EnemyImpactFeedback>(enemy))
-                        SystemAPI.SetComponent(enemy, new EnemyImpactFeedback());
-                    if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
+                    SystemAPI.SetComponent(enemy, new EnemyImpactFeedback());
+                if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
                 {
                     SystemAPI.SetComponent(enemy, new EnemyLaunchState
                     {

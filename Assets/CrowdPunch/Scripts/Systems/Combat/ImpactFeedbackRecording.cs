@@ -9,7 +9,7 @@ namespace CrowdPunch.Systems.Combat
             float3 position, float3 direction, float speed, float impulse, in EnemyLaunchState launch, double time)
         {
             if (kind != CombatImpactKind.Punch && time < feedback.NextContactTime) return;
-            if (feedback.Pending != 0 && (feedback.Kind == CombatImpactKind.Punch || feedback.Speed > speed)) return;
+            if (kind != CombatImpactKind.Punch && feedback.Pending != 0 && (feedback.Kind == CombatImpactKind.Punch || feedback.Speed > speed)) return;
             feedback.Pending = 1;
             feedback.Kind = kind;
             feedback.Position = position;

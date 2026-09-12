@@ -1,7 +1,7 @@
-# Crowd Punch — Current Architecture
+# Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-09-08
+Last inspected: 2026-09-12
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -17,8 +17,8 @@ Crowd Punch uses a hybrid Unity architecture:
 
 ## Scenes
 
-- `Assets/CrowdPunch/Scenes/Bootstrap.unity` — persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` — First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
+- `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_10` each contain their matching ECS SubScene. Exactly ten gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first four scene GUIDs are preserved with replacement layouts and encounters.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
@@ -40,15 +40,15 @@ broader art-direction question OQ-015.
 
 All game code is under `Assets/CrowdPunch/Scripts`:
 
-- `Mono` — GameObject player, camera, UI, and bridge registry.
-- `Authoring` — inspector-facing baking inputs.
-- `Configuration` — reusable ScriptableObject tuning consumed by scene-facing MonoBehaviours and bakers.
-- `Bakers` — conversion from authoring objects to ECS components.
-- `Components` — data-only ECS state and requests.
-- `Systems` — initialization, bridge, AI, movement, combat, physics, lifetime, and presentation.
-- `Groups` — explicit update phases.
-- `Aspects` — one legacy learning aspect; new code should prefer direct component/query APIs.
-- `Editor` — arena authoring inspector support.
+- `Mono` â€” GameObject player, camera, UI, and bridge registry.
+- `Authoring` â€” inspector-facing baking inputs.
+- `Configuration` â€” reusable ScriptableObject tuning consumed by scene-facing MonoBehaviours and bakers.
+- `Bakers` â€” conversion from authoring objects to ECS components.
+- `Components` â€” data-only ECS state and requests.
+- `Systems` â€” initialization, bridge, AI, movement, combat, physics, lifetime, and presentation.
+- `Groups` â€” explicit update phases.
+- `Aspects` â€” one legacy learning aspect; new code should prefer direct component/query APIs.
+- `Editor` â€” arena authoring inspector support.
 
 There are currently no game-specific assembly definitions; scripts compile into Unity's generated assemblies.
 
@@ -188,18 +188,18 @@ This is presentation only: camera-forward facing and gameplay punch direction st
 | Camera | GameObject | `CameraFollow` |
 | Scene bootstrap and UI | GameObject | `GameBootstrap`, UI MonoBehaviours |
 | Fixed gauntlet sequence and additive scene lifecycle | GameObject | `GauntletSequence`, `GauntletLevel` |
-| Player state visible to ECS | Bridge → ECS singleton | `PlayerSnapshot` (including collision-resolved velocity), `PlayerHealthSnapshot` |
-| Punch command visible to ECS | Bridge → enableable ECS request | `PunchRequest` |
-| Enemy contact reported to player | ECS → bridge event | `EnemyContactHitReceived` |
-| Enemy initial spawn, waves, and pooling | Authoring → baked profile → ECS | random `SpawnSettings`, authored spawn points, ordered wave buffers, shared initialization, and respawn systems |
+| Player state visible to ECS | Bridge â†’ ECS singleton | `PlayerSnapshot` (including collision-resolved velocity), `PlayerHealthSnapshot` |
+| Punch command visible to ECS | Bridge â†’ enableable ECS request | `PunchRequest` |
+| Enemy contact reported to player | ECS â†’ bridge event | `EnemyContactHitReceived` |
+| Enemy initial spawn, waves, and pooling | Authoring â†’ baked profile â†’ ECS | random `SpawnSettings`, authored spawn points, ordered wave buffers, shared initialization, and respawn systems |
 | Enemy intent and movement | ECS | `DesiredMovement`, Unity Physics velocity |
 | Enemy archetypes and attacks/effects | ECS | `EnemyArchetype`, ranged state, and explosive settings/state |
 | Ranged projectile trajectory and lifetime | ECS | `RangedProjectile`, velocity-led fixed fire-time start/target, ECS transform evaluation |
 | Enemy combat state | ECS | health, damage, impulse, explicit launch lifecycle, death/respawn requests |
-| Punch trajectory preview | ECS → bridge → GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
+| Punch trajectory preview | ECS â†’ bridge â†’ GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
 | Committed punch-area feedback | GameObject | `PlayerPunch` triggers `PunchAreaFeedback` from the same origin, direction, radius, and range published to ECS |
 | Enemy body feedback | ECS rendering | Baked `EnemyVisualOwner` connects root/child renderers to gameplay state; `EnemyReadabilitySystem` writes body color. `DasherPresentationSystem` retains ownership of Dasher color/shape. |
-| Temporary normal health and elite health UI | ECS → presentation registry → Canvas | `EnemyHealthBarVisibility`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas`; no repeated normal launch/recovery text, and zero-health normal bars are suppressed. |
+| Temporary normal health and elite health UI | ECS â†’ presentation registry â†’ Canvas | `EnemyHealthBarVisibility`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas`; no repeated normal launch/recovery text, and zero-health normal bars are suppressed. |
 
 MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exposes the one active `PlayerEcsBridge` to the few managed systems that cross the boundary.
 
@@ -637,3 +637,156 @@ and the current punch pose resume. Punch spine yaw fades out with reaction weigh
 afterward. Rejected invulnerable hits do not restart the clip. Damage, invincibility duration,
 movement, and punch eligibility remain unchanged (PLAYER-002, PLAYER-005, PLAYER-009).
 An accepted PlayerPunch.PunchStarted immediately cancels the hit reaction, clears its pending trigger, and sets its layer weight to zero so the punch pose and yaw regain priority. Cooldown-rejected punch input does not interrupt the reaction (PLAYER-005, PLAYER-009).
+
+
+## Combat Feedback Pass (2026-09-12)
+
+This presentation pass reinforces VISION-004/005, COMBAT-001/003/012 and INFO-004.
+It changes no attack eligibility, damage, launch impulse, targeting, dash movement, enemy
+archetype, or wave configuration. OQ-001 (target hardware/performance), OQ-015 and OQ-016
+remain open; the restrained defaults are tunable presentation choices, not new gameplay rules.
+No audio, HUD, decals, bloom or third-party dependencies were added.
+
+### Event ownership and ordering
+
+- `EnemyBaker` adds `EnemyImpactFeedback`, a fixed-size strongest-pending mailbox per enemy.
+  `PunchResolution` records only successful applications. `EnemyLaunchCollisionSystem`
+  records eligible launched-body contacts and launched-body/world contacts using the existing
+  collision stream. `DasherEnemyImpactSystem` records its existing deduplicated swept hits.
+  These producers write data only; they never reference UnityEngine presentation objects.
+- `ImpactVelocityCaptureSystem` runs last in GamePrePhysicsGroup and records pre-solver
+  velocity. Ordinary collision strength uses relative speed along the contact normal and
+  solver-estimated impulse. When momentum is received and transferred within the same physics
+  step, impulse times source inverse mass supplies a transferred delta-velocity estimate.
+  World impacts use incoming normal speed. Dasher hits use preserved launch velocity.
+- `EnemyLaunchState.FeedbackChainDepth` starts at one for player launches, increments from
+  the source on ordinary and Dasher propagation, and is capped at 64. A re-punch begins a
+  new depth-one chain. This is presentation metadata, independent of damage and existing
+  PropagatedLaunchCount. Only player-owned depth escalates presentation.
+- `CombatFeedbackBridgeSystem` runs in GamePresentationGroup after the existing punch result
+  bridge, before the final visual composition. It consumes pending mailboxes, filters weak
+  contacts, starts short visual envelopes, and publishes bounded `CombatFeedbackMessage`
+  values through `PlayerEcsBridge`. It also sends bounded launched-trail samples. Mono receives
+  opaque visual keys and launch sequences, never enemy Entities or an EntityManager.
+- `EnemyImpactVisualSystem` runs after role colors, Dasher shape and enemy animation. It
+  composes flash with their current color and applies direction-based deformation to renderer
+  LocalToWorld only. Each renderer caches its current undeformed matrix and last output;
+  every deformation is rebuilt from that baseline. LocalTransform, authored scale,
+  PostTransformMatrix, physics collider geometry and sampled skin matrices remain untouched.
+  Both MeshRenderer baking and additional skinned render entities receive this state.
+  The old hardcoded health-bar-timer flash was removed so there is one enemy impact flash.
+
+### Scene presentation and configuration
+
+Bootstrap's GameBootstrap references
+`Assets/CrowdPunch/Resources/CombatFeedbackSettings.asset` and automatically installs
+`FeedbackTimeController` and `CombatFeedback` on the bootstrap object. The latter uses
+existing PunchResolved, DamageAccepted, DashStarted/Ended and PunchStateReset events.
+It prewarms `ImpactParticlePool` (eight instances per effect by default) and
+`LaunchedTrailPool` (48 short TrailRenderers by default), attaches `CombatCameraFeedback`
+to the main camera, and prepares `PlayerDamageFlash`. No manual scene plumbing is required.
+Missing particle prefab references deliberately select built-in placeholders using the
+included Resources shader. Optional custom prefabs should be finite particle bursts.
+
+All effect tuning except punch-pose timing lives on CombatFeedbackSettings:
+
+| Inspector group | Controls |
+| --- | --- |
+| Time | Punch freeze (28 ms), exceptional depth (4), enabled toggle, scale (0.3), duration (80 ms), 1.5 s retrigger interval |
+| Impact significance | Speed range (2-16 m/s), impulse minimum (1.5), environment minimum normal speed (4 m/s), contact interval (120 ms), single-hit ceiling and capped chain gain |
+| Camera | Punch/damage/collision/exceptional directional kick, shake, decay, maximum displacement, significance threshold, collision interval and distance falloff |
+| Particles | Seven optional effect prefabs, pool capacity, per-frame impact budget (12), scale range, placeholder count, dash emission interval |
+| Launched trails | Capacity, minimum speed, 110 ms length in time, width and color |
+| Visual-only enemy deformation / flash | Squash amount/duration/threshold, flash duration and distinct enemy/player strength/color |
+| Dash camera | FOV delta (3 degrees) and transition time (100 ms) |
+
+Base speed intensity is normalized over the configured speed range. A single-impact ceiling
+(default 0.7) leaves room for chains: multiply by `min(maximumChainMultiplier,
+1 + max(0, depth - 1) * chainGainPerDepth)` and clamp the result to [0,1]. Strong standalone,
+small-chain and exceptional events therefore remain distinguishable even at high speeds.
+The impulse minimum independently rejects insignificant solver contacts. Feedback cooldowns
+apply only to accepted presentation impacts; weak floor contacts do not suppress later hits.
+
+Ordinary collisions use solver average contact positions. Punches use the struck enemy's
+position because the existing volume attack has no fist contact manifold; Dasher swept
+contacts use the midpoint of the overlapping bodies. Player damage estimates contact from
+player radius and accepted push direction, falling back to facing when no direction exists.
+These approximations do not change hit geometry or manufacture gameplay collision data.
+
+### Restoration and readability
+
+Punch freeze is driven once by the existing hit-confirmed PunchResolved event (PLAYER-009),
+not by input or per-target particles. `PlayerPunchAnimation.ConfirmContactPose` evaluates
+its existing time-parameter Animator layer at the configurable contact frame before freezing.
+The existing animation component exposes strike speed, follow-through speed, contact frame
+and a confirmation-pose toggle. Fist/arm bone scaling was deliberately omitted because the
+humanoid rig is retargeted; the existing animation/upper-body yaw system remains authoritative.
+
+FeedbackTimeController centrally composes hit-stop, exceptional slow motion, menu pause and
+additive transition gates. Hit-stop wins while active; an unexpired slow-motion window then
+continues, followed by the captured baseline. Deadlines use unscaled time. Pause and transition
+cancel temporary effects and never capture a transient zero scale as their resume value.
+The fixed timestep and Unity Physics integration are unchanged; gameplay timers and movement
+remain on scaled time, while feedback restoration continues on real time. Reset, disable,
+death and restart cancel temporary state. PauseMenu and GauntletSequence retain separate gates.
+
+CameraFollow removes the previous translation before its normal follow solve and composes
+new feedback afterward. Rotation is never shaken, preserving camera-forward punch aiming.
+FOV is baseline plus one smoothed offset, with dash end/interruption and reset restoring it.
+Collision camera responses are distance attenuated and rate limited. Exceptional events require
+player ownership, configured depth, sufficient strength and the global retrigger interval.
+
+Enemy flashes reuse ECS material properties. Sidekick's player shader lacks a general body
+tint: PlayerDamageFlash briefly appends one shared transparent overlay to the existing renderers
+and restores their preallocated original material arrays. It does not instantiate per-body
+materials. Particles and trails use one shared vertex-color material. Trail samples are limited
+to launched bodies above minimum speed; unobserved, pooled, reused or new-launch slots clear
+before release/reassignment. Particle exhaustion drops cosmetic work. The bridge allocates no
+per-frame enemy arrays. Restart and pooling explicitly reset mailboxes as well as launch state.
+
+The existing ExplosionFeedback sphere presentation now prewarms a bounded reusable pool
+(default 16, configurable on that component) and clears on reset/disable/transition. Its sphere
+appearance and authored explosion duration/radius are unchanged. Its shader is also reused
+for the player overlay. This removes the previous instantiate/destroy cycle per explosion.
+
+
+### Verification of this pass
+
+- Runtime and Editor assemblies compile with zero errors. Existing package assembly-conflict,
+  obsolete ColliderAspect and unused legacy-aspect warnings remain.
+- Six EditMode regressions passed in Unity: time overlap/expiry; menu and transition ownership;
+  re-punch ownership/depth reset; bounded mailbox priority/contact throttling; repeated renderer
+  deformation preserving physics transforms and exact authored-scale restoration; trail release
+  and capacity reuse. Tests are in `Tests/Editor/CombatFeedbackTests.cs`.
+- A real six-body arranged line produced one confirmed punch, 14 impact messages, depth three,
+  37 peak particles and six active trails. The successful punch reached timeScale zero and
+  restored to one. An empty-volume smoke request produced no freeze or effects.
+- A temporary 200-body crowd in Gauntlet 3 (created only in Play mode, without changing wave
+  assets) produced a real chain reaching depth 11: 154 impact messages over four seconds,
+  77 peak particles and 46 active trails. Exceptional slow motion was observed and scale
+  restored to one. Particle/trail object count remained 104, the prewarmed budget. The later
+  pooled explosion implementation adds a separate fixed budget of 16 existing-style spheres.
+- An Editor ProfilerRecorder sample at that crowd size measured CombatFeedbackBridgeSystem
+  at 0.270 ms mean and 0.333 ms maximum across 180 samples. This measures the bridge in this
+  local Editor run, not total rendering/physics cost, standalone-build performance or a
+  supported hardware target. OQ-001 remains unresolved. A gameplay-camera capture was inspected
+  at `Temp/CombatFeedback-chain.png` for crowd visibility; it is not a final-art approval.
+- Real Input System dash presses, including an early disable/interruption followed by a second
+  dash, produced two starts/two ends. FOV peaked at 62.837 degrees from a 60-degree baseline and
+  restored to 60.00006 degrees. Player hit overlays appeared on the model and all 31 inspected
+  renderer material arrays restored. Background crowd attacks continued during that test.
+- Editor script-reload testing exposed managed-pool loss and camera destruction-order hazards.
+  Pools now reconstruct when Unity retains scene references across reload, and teardown checks
+  Unity object validity before touching the camera. These are presentation lifecycle fixes.
+
+No manual Unity Editor setup is required for Bootstrap or the shipped gauntlets. Assign
+optional ParticleSystem prefabs only to replace the deliberately restrained placeholders.
+Punch phase controls live on the existing PlayerPunchAnimation component on the player model;
+they preserve PLAYER-005/009 gameplay timing and do not require rig changes.
+
+- Final lifecycle verification after the fixes: a script reload retained exactly 56 particle
+  systems and 48 trails with settings rebound and timeScale one. Repeated explosion requests
+  used the same 16 spheres and all expired. Reset left zero trail vertices/emitting slots,
+  timeScale one and FOV exactly 60 degrees. Play mode was stopped and the temporary stress
+  crowd was discarded. The pre-existing Synty downloader/disabled Animator Editor warnings
+  are unrelated to feedback gameplay.

@@ -185,7 +185,8 @@ namespace CrowdPunch.Systems.Combat
                     var significance = LaunchStateLookup[source];
                     significance.FeedbackChainDepth = math.min(64, significance.FeedbackChainDepth + 1);
                     ImpactFeedbackRecording.Record(ref feedback, CombatImpactKind.EnemyCollision,
-                        details.AverageContactPointPosition, math.normalizesafe(relative), speed,
+                        details.AverageContactPointPosition, math.normalizesafe(relative,
+                            source == collisionEvent.EntityA ? -collisionEvent.Normal : collisionEvent.Normal), speed,
                         estimatedImpulse, significance, ElapsedTime);
                     FeedbackLookup[target] = feedback;
                 }
