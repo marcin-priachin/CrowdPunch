@@ -588,7 +588,9 @@ before the next stage. See [the progression and validation record](../Design/Ten
 
 `GauntletProgressionBuilder` is an explicit Editor authoring recipe, not a runtime loader.
 Rebuilding replaces generated content, so ordinary tuning should edit the saved wave assets
-and scenes. Convex floor meshes and low perimeter rails bake into Unity Physics; rail collision
+and scenes. Floor MeshColliders use convex baking, producing one solid hull rather than
+triangle-mesh collision edges that can deflect grounded enemies inside the court
+(VISION-004, COMBAT-018). Floor outlines and heights are unchanged. Low perimeter rails bake into Unity Physics; rail collision
 faces extend above the visible mesh to intersect the elevated hybrid player sphere cast.
 Movement bounds are inset from the perimeter and defeat bounds permit limited launch travel
 outside the court before terminal defeat. There are no internal navigation obstacles. A

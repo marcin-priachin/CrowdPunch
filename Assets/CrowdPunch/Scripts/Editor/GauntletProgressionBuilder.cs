@@ -225,6 +225,9 @@ namespace CrowdPunch.Editor
             floor.GetComponent<MeshFilter>().sharedMesh=mesh;
             floor.GetComponent<MeshRenderer>().sharedMaterial=ground;
             floor.GetComponent<MeshCollider>().sharedMesh=mesh;
+            // VISION-004, COMBAT-018: a single convex face avoids triangle-edge contacts
+            // that deflect grounded capsules sideways inside an otherwise flat court.
+            floor.GetComponent<MeshCollider>().convex=true;
             for(int i=0;i<design.Outline.Length;i++)
             {
                 Vector2 a=design.Outline[i], b=design.Outline[(i+1)%design.Outline.Length];

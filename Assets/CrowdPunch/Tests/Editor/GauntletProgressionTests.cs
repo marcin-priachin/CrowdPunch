@@ -78,6 +78,8 @@ namespace CrowdPunch.Tests
                 var authoring = Find<EnemyWaveSequenceAuthoring>(sub);
                 var floor = Find<MeshCollider>(sub);
                 Assert.That(floor.sharedMesh, Is.Not.Null);
+                Assert.That(floor.convex, Is.True,
+                    "VISION-004 / COMBAT-018: floor collision must not expose internal triangle edges");
                 Vector3[] vertices = floor.sharedMesh.vertices;
                 Vector2[] outline = vertices.Take(vertices.Length / 2).Select(v => new Vector2(v.x, v.z)).ToArray();
                 AssertInside(outline, marker.PlayerEntryPoint.position, 0.6f);
