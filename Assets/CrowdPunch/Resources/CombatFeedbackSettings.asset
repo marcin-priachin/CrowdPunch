@@ -36,13 +36,13 @@ MonoBehaviour:
   CollisionCameraThreshold: 0.55
   CollisionCameraInterval: 0.18
   CameraImpactRange: 25
-  PunchParticles: {fileID: 0}
-  EnemyParticles: {fileID: 0}
-  PlayerDamageParticles: {fileID: 0}
-  EnvironmentParticles: {fileID: 0}
-  DashStartParticles: {fileID: 0}
-  DashMovementParticles: {fileID: 0}
-  DashEndParticles: {fileID: 0}
+  PunchParticles: {fileID: 7989950310316155673, guid: eb3470de0053d204e9b5fa6d91f01ffb, type: 3}
+  EnemyParticles: {fileID: 6816563850779793148, guid: 1fad542426eacc04685896f539f196d6, type: 3}
+  PlayerDamageParticles: {fileID: 2807005332899504765, guid: 7ce3558794005854c95b0312bc9358b9, type: 3}
+  EnvironmentParticles: {fileID: 969750304401151511, guid: 66401bae004f2d746b8efb054fc05a6c, type: 3}
+  DashStartParticles: {fileID: 8895413931122264658, guid: fe8ea98b5b591674896ee61dfc16a37f, type: 3}
+  DashMovementParticles: {fileID: 4259955598730627180, guid: d71d26e00ed028c4791b1f89108cfd60, type: 3}
+  DashEndParticles: {fileID: 125943153959064112, guid: 1df49d1f5ca3109499a26ad3560e9923, type: 3}
   ParticlePoolSizePerEffect: 8
   MaximumImpactsPerFrame: 12
   ParticleScale: {x: 0.55, y: 1.1}

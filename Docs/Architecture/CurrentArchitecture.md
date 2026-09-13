@@ -739,7 +739,8 @@ player ownership, configured depth, sufficient strength and the global retrigger
 Enemy flashes reuse ECS material properties. Sidekick's player shader lacks a general body
 tint: PlayerDamageFlash briefly appends one shared transparent overlay to the existing renderers
 and restores their preallocated original material arrays. It does not instantiate per-body
-materials. Particles and trails use one shared vertex-color material. Trail samples are limited
+materials. Trails and fallback particles use one shared vertex-color material. Authored particle
+prefabs share a separate URP unlit alpha-blended material and soft-disc texture. Trail samples are limited
 to launched bodies above minimum speed; unobserved, pooled, reused or new-launch slots clear
 before release/reassignment. Particle exhaustion drops cosmetic work. The bridge allocates no
 per-frame enemy arrays. Restart and pooling explicitly reset mailboxes as well as launch state.
@@ -779,8 +780,8 @@ for the player overlay. This removes the previous instantiate/destroy cycle per 
   Pools now reconstruct when Unity retains scene references across reload, and teardown checks
   Unity object validity before touching the camera. These are presentation lifecycle fixes.
 
-No manual Unity Editor setup is required for Bootstrap or the shipped gauntlets. Assign
-optional ParticleSystem prefabs only to replace the deliberately restrained placeholders.
+No manual Unity Editor setup is required for Bootstrap or the shipped gauntlets. The seven
+particle slots now reference authored prefabs in `Assets/CrowdPunch/Prefabs/Feedback`.
 Punch phase controls live on the existing PlayerPunchAnimation component on the player model;
 they preserve PLAYER-005/009 gameplay timing and do not require rig changes.
 
@@ -790,3 +791,30 @@ they preserve PLAYER-005/009 gameplay timing and do not require rig changes.
   timeScale one and FOV exactly 60 degrees. Play mode was stopped and the temporary stress
   crowd was discarded. The pre-existing Synty downloader/disabled Animator Editor warnings
   are unrelated to feedback gameplay.
+
+
+### Authored combat particles
+
+`CombatFeedbackSettings.asset` assigns PunchImpact, EnemyImpact, PlayerDamage,
+EnvironmentImpact, DashStart, DashMovement and DashEnd. Each prefab has a directional
+fleck burst and a soft-wisp child, sharing `Materials/Feedback/CombatParticles.mat` and
+`ParticleSoftDisc.asset`. Warm punch flecks, pale enemy impacts, coral damage and tan dust
+distinguish event types; pale cyan dash effects stay short. This supports VISION-004/005
+and INFO-004 without changing damage, launch, dash or chain rules.
+
+The existing ImpactParticlePool instantiates eight copies per effect (56 roots, 112 particle
+systems). Each activation emits 3-9 particles, with a maximum authored lifetime of 0.33
+seconds. No looping emission, collision modules, lights, shadows or per-instance materials
+are used. World-space simulation preserves emitted particles during movement, and hierarchy
+scaling retains the existing impact-intensity control. All systems use AlwaysSimulate so
+offscreen effects expire and release their pool slots.
+
+Tune burst count, lifetime, color, shape and size on each prefab's root and SoftWisps child.
+Global scale, pool size and impact limits remain on CombatFeedbackSettings. No scene edits
+or additional runtime components are required.
+
+Verification: all seven authored burst counts, particle expiry, replay and recursive clear
+passed in Unity. A rendered preview was inspected at `Temp/CombatParticlePrefabs.png`.
+Live bridge requests activated seven pool slots, all expired within one second, then all
+seven replayed with the same 112 systems. Reset left zero live systems. The existing Synty
+Sidekick downloader Editor-window error remains unrelated to these assets.
