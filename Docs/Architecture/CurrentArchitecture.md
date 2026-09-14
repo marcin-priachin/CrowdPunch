@@ -340,6 +340,8 @@ The existing player bridge receives explosion damage through the normal `PlayerH
 
 `PauseMenu` is a scene-level MonoBehaviour UI boundary created on the persistent game canvas by `GameBootstrap`. It reads
 the shared `Assets/InputSystem_Actions.inputactions` `Game/Pause` action, toggles `Time.timeScale`, and owns no ECS data.
+It also owns cursor capture: active gameplay locks and hides the cursor, while pausing releases and shows it for menu
+interaction. The component reapplies the current cursor state when enabled and when application focus returns (PLAYER-011).
 Its runtime-built menu restores selection to Resume when opened so the Input System UI module can navigate and submit with
 a gamepad. Level buttons are populated from the fixed `GauntletSequence`; selecting any entry calls the same additive
 level-loading path, and selecting the active entry therefore unloads and reloads that gauntlet. The loader continues to

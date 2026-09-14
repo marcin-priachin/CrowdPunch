@@ -151,6 +151,12 @@ Status: Must
 
 The MVP must be fully playable with both keyboard/mouse and gamepad. Movement, camera rotation, punch, and dash must remain available on both input methods. Input-specific tuning, including whether punch aim assistance differs between schemes, remains unresolved under `OQ-017`.
 
+### PLAYER-011 — Cursor Capture
+
+Status: Must
+
+During active gameplay, the mouse cursor must be locked and hidden. Pausing must release and show the cursor for menu interaction, and resuming must lock and hide it again.
+
 ## Combat And Crowd Physics
 
 ### COMBAT-001 — Enemies As Projectiles

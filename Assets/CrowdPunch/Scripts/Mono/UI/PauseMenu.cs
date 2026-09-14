@@ -61,6 +61,7 @@ namespace CrowdPunch.Mono.UI
         private void OnEnable()
         {
             pauseAction?.Enable();
+            ApplyCursorState(isPaused);
         }
 
         private void OnDisable()
@@ -113,6 +114,7 @@ namespace CrowdPunch.Mono.UI
 
         private void SetPaused(bool paused)
         {
+            ApplyCursorState(paused);
             if (isPaused == paused)
             {
                 return;
@@ -131,6 +133,20 @@ namespace CrowdPunch.Mono.UI
                 menuRoot.SetActive(false);
                 EventSystem.current?.SetSelectedGameObject(null);
             }
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus)
+            {
+                ApplyCursorState(isPaused);
+            }
+        }
+
+        private static void ApplyCursorState(bool paused)
+        {
+            Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
+            Cursor.visible = paused;
         }
 
         private void SelectLevel(int levelIndex)
