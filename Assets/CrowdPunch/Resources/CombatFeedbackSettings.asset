@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 504e1d2676985dd42b7442c956ed60cb, type: 3}
   m_Name: CombatFeedbackSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.CombatFeedbackSettings
-  PunchHitStop: 0.028
+  PunchHitStop: 0.045
   ExceptionalSlowMotion: 1
   ExceptionalChainDepth: 4
-  SlowMotionScale: 0.3
-  SlowMotionDuration: 0.08
+  SlowMotionScale: 0.22
+  SlowMotionDuration: 0.095
   ExceptionalCooldown: 1.5
   MinimumCollisionSpeed: 2
   FullCollisionSpeed: 16
@@ -24,17 +24,17 @@ MonoBehaviour:
   EnvironmentMinimumSpeed: 4
   ContactFeedbackInterval: 0.12
   SingleImpactIntensity: 0.7
-  ChainGainPerDepth: 0.15
-  MaximumChainMultiplier: 1.65
-  PunchKick: 0.075
-  DamageKick: 0.15
-  CollisionKick: 0.045
-  ExceptionalKick: 0.11
-  Shake: 0.025
-  CameraRecovery: 0.13
-  MaximumCameraOffset: 0.22
+  ChainGainPerDepth: 0.18
+  MaximumChainMultiplier: 1.8
+  PunchKick: 0.17
+  DamageKick: 0.28
+  CollisionKick: 0.085
+  ExceptionalKick: 0.22
+  Shake: 0.045
+  CameraRecovery: 0.1
+  MaximumCameraOffset: 0.34
   CollisionCameraThreshold: 0.55
-  CollisionCameraInterval: 0.18
+  CollisionCameraInterval: 0.22
   CameraImpactRange: 25
   PunchParticles: {fileID: 7989950310316155673, guid: eb3470de0053d204e9b5fa6d91f01ffb, type: 3}
   EnemyParticles: {fileID: 6816563850779793148, guid: 1fad542426eacc04685896f539f196d6, type: 3}
@@ -44,21 +44,21 @@ MonoBehaviour:
   DashMovementParticles: {fileID: 4259955598730627180, guid: d71d26e00ed028c4791b1f89108cfd60, type: 3}
   DashEndParticles: {fileID: 125943153959064112, guid: 1df49d1f5ca3109499a26ad3560e9923, type: 3}
   ParticlePoolSizePerEffect: 8
-  MaximumImpactsPerFrame: 12
-  ParticleScale: {x: 0.55, y: 1.1}
-  PlaceholderParticleCount: 7
-  DashMovementInterval: 0.045
+  MaximumImpactsPerFrame: 8
+  ParticleScale: {x: 0.7, y: 1.45}
+  PlaceholderParticleCount: 10
+  DashMovementInterval: 0.055
   MaximumTrails: 48
-  TrailMinimumSpeed: 3
-  TrailDuration: 0.11
-  TrailWidth: 0.11
-  TrailColor: {r: 0.75, g: 0.85, b: 0.85, a: 0.32}
-  SquashAmount: 0.13
-  SquashDuration: 0.12
+  TrailMinimumSpeed: 4
+  TrailDuration: 0.14
+  TrailWidth: 0.24
+  TrailColor: {r: 0.72, g: 0.94, b: 1, a: 0.58}
+  SquashAmount: 0.27
+  SquashDuration: 0.16
   DeformationThreshold: 0.12
-  FlashDuration: 0.045
-  EnemyFlashIntensity: 0.6
-  PlayerFlashIntensity: 0.7
-  PlayerFlashColor: {r: 1, g: 0.65, b: 0.5, a: 1}
-  DashFovDelta: 3
-  DashFovTransition: 0.1
+  FlashDuration: 0.065
+  EnemyFlashIntensity: 0.9
+  PlayerFlashIntensity: 0.9
+  PlayerFlashColor: {r: 1, g: 0.48, b: 0.22, a: 1}
+  DashFovDelta: 5.5
+  DashFovTransition: 0.075

@@ -3832,8 +3832,12 @@ MonoBehaviour:
   playerPunch: {fileID: 0}
   punchClip: {fileID: -203655887218126122, guid: bbf3d8729909d204c9302467f938bd10, type: 3}
   punchSpeedMultiplier: 2
-  readyYaw: 44.7
-  punchYaw: -30
+  contactFrame: 32
+  strikeSpeed: 1.85
+  followThroughSpeed: 0.85
+  snapToContactOnHit: 1
+  readyYaw: 50
+  punchYaw: -42
 --- !u!1 &5146028365045450692
 GameObject:
   m_ObjectHideFlags: 0

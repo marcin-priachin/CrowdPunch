@@ -19,8 +19,8 @@ namespace CrowdPunch.Mono.Player
 
         [Header("Impact exaggeration (presentation only)")]
         [SerializeField, Min(0f)] private float contactFrame = 32f;
-        [SerializeField, Min(.1f)] private float strikeSpeed = 1.35f;
-        [SerializeField, Min(.1f)] private float followThroughSpeed = 1f;
+        [SerializeField, Min(.1f)] private float strikeSpeed = 1.85f;
+        [SerializeField, Min(.1f)] private float followThroughSpeed = .85f;
         [SerializeField] private bool snapToContactOnHit = true;
 
         public void ConfirmContactPose()

@@ -692,13 +692,13 @@ All effect tuning except punch-pose timing lives on CombatFeedbackSettings:
 
 | Inspector group | Controls |
 | --- | --- |
-| Time | Punch freeze (28 ms), exceptional depth (4), enabled toggle, scale (0.3), duration (80 ms), 1.5 s retrigger interval |
+| Time | Punch freeze (45 ms), exceptional depth (4), enabled toggle, scale (0.22), duration (95 ms), 1.5 s retrigger interval |
 | Impact significance | Speed range (2-16 m/s), impulse minimum (1.5), environment minimum normal speed (4 m/s), contact interval (120 ms), single-hit ceiling and capped chain gain |
 | Camera | Punch/damage/collision/exceptional directional kick, shake, decay, maximum displacement, significance threshold, collision interval and distance falloff |
-| Particles | Seven optional effect prefabs, pool capacity, per-frame impact budget (12), scale range, placeholder count, dash emission interval |
-| Launched trails | Capacity, minimum speed, 110 ms length in time, width and color |
+| Particles | Seven optional effect prefabs, pool capacity, per-frame impact budget (8), scale range, placeholder count, dash emission interval |
+| Launched trails | Capacity, minimum speed, 140 ms length in time, width and color |
 | Visual-only enemy deformation / flash | Squash amount/duration/threshold, flash duration and distinct enemy/player strength/color |
-| Dash camera | FOV delta (3 degrees) and transition time (100 ms) |
+| Dash camera | FOV delta (5.5 degrees) and transition time (75 ms) |
 
 Base speed intensity is normalized over the configured speed range. A single-impact ceiling
 (default 0.7) leaves room for chains: multiply by `min(maximumChainMultiplier,
@@ -803,7 +803,7 @@ distinguish event types; pale cyan dash effects stay short. This supports VISION
 and INFO-004 without changing damage, launch, dash or chain rules.
 
 The existing ImpactParticlePool instantiates eight copies per effect (56 roots, 112 particle
-systems). Each activation emits 3-9 particles, with a maximum authored lifetime of 0.33
+systems). Each activation emits 5-11 particles, with a maximum authored lifetime of 0.32
 seconds. No looping emission, collision modules, lights, shadows or per-instance materials
 are used. World-space simulation preserves emitted particles during movement, and hierarchy
 scaling retains the existing impact-intensity control. All systems use AlwaysSimulate so
@@ -818,3 +818,39 @@ passed in Unity. A rendered preview was inspected at `Temp/CombatParticlePrefabs
 Live bridge requests activated seven pool slots, all expired within one second, then all
 seven replayed with the same 112 systems. Reset left zero live systems. The existing Synty
 Sidekick downloader Editor-window error remains unrelated to these assets.
+
+
+### Cartoon feedback tuning (2026-09-14)
+
+The user's requested exaggeration strengthens silhouette changes and directional bursts
+while preserving VISION-004/005, INFO-004 and PLAYER-005/009. This is presentation tuning,
+not a resolution of the broader art/camera questions OQ-015/016.
+
+- Punch freeze is 45 ms; exceptional chains use 95 ms at scale 0.22, still gated at depth
+  four and by the existing 1.5-second retrigger interval.
+- Punch/damage/collision/exceptional kick strengths are 0.17/0.28/0.085/0.22 metres.
+  Displacement is capped at 0.34 metres, with 100 ms decay and no camera rotation.
+  Collision impulses remain strength/distance gated, now spaced at least 220 ms apart.
+- Squash rises from 0.13 to 0.27 with 160 ms recovery; hit flashes last 65 ms and have
+  maximum strength 0.9. Existing velocity/intensity multipliers still temper ordinary hits.
+- Launched trails are 0.24 metres wide before velocity scaling, with alpha 0.58 and only
+  140 ms history. The minimum speed rises to 4 m/s to exclude sluggish bodies.
+- All seven particle prefabs have larger, more saturated flecks, slightly longer finite
+  bursts and restrained low-alpha wisps. Global scale is 0.7-1.45. Particle count remains
+  5-11 per event; the bridge emits at most eight effects per frame instead of twelve.
+  Dash movement emits at 55 ms intervals; pool capacity and shared materials are unchanged.
+- Chain gain rises to 0.18 per depth, capped at 1.8, retaining the single-impact ceiling
+  of 0.7. Strong singles, short chains and exceptional chains remain distinct.
+- PlayerModel's existing punch layer uses strike speed 1.85, follow-through speed 0.85
+  and torso yaw from +50 to -42 degrees. Contact frame, gameplay timing, root facing
+  and all rig scales are unchanged. Dash FOV is baseline plus 5.5 degrees with 75 ms smoothing.
+
+Configuration lives in CombatFeedbackSettings.asset, the seven Feedback prefabs, and
+PlayerModel's PlayerPunchAnimation. Script defaults match the new central tuning.
+Build passed with zero errors and existing package/legacy warnings. All six existing
+feedback regressions passed in Unity. Particle preview and a gameplay-camera saturation
+capture were inspected. Sending 140 presentation requests filled the fixed 56 root slots
+without increasing the 112 particle systems; all expired and reset cleared every system.
+Overlapping configured hit-stop/slow motion restored timeScale to one. This saturation
+check verifies presentation capacity, not a new whole-crowd performance benchmark.
+Real Input System dash verification produced two starts/two ends, including an early disable/interruption. FOV peaked at 65.37495 degrees and restored exactly to the 60-degree baseline. Play mode was stopped without saving temporary scene state.
