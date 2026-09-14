@@ -9,6 +9,7 @@ namespace CrowdPunch.Components
         public EnemyArchetypeKind Archetype;
         public byte RespawnEnabled;
         public float SpawnClearance;
+        public float NavigationRadius;
         public EnemyMovementSettings MovementSettings;
         public EnemyArchetypeSeparationSettings ArchetypeSeparationSettings;
         public Health Health;

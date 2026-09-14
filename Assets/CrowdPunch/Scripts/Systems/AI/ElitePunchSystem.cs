@@ -50,10 +50,14 @@ namespace CrowdPunch.Systems.AI
                      SystemAPI.Query<RefRW<ElitePunchState>, RefRO<ElitePunchSettings>, RefRW<DesiredMovement>,
                          RefRW<LocalTransform>, RefRO<EnemyLaunchState>>().WithAll<Enemy>().WithNone<RespawnRequest>().WithEntityAccess())
             {
+                EntityManager.SetComponentData(elite, new NavigationIntent());
                 if (!player.IsAvailable || launch.ValueRO.Phase != EnemyLaunchPhase.Active)
                 {
                     Cancel(elite, ref state.ValueRW); movement.ValueRW = default; continue;
                 }
+                if (EntityManager.GetComponentData<NavigationPathState>(elite).TravelState == NavigationTravelState.Failed
+                    && state.ValueRO.Phase != ElitePunchPhase.Cooldown)
+                { BeginCooldown(elite, settings.ValueRO, ref state.ValueRW); movement.ValueRW = default; continue; }
                 state.ValueRW.SecondsRemaining -= dt;
                 if (state.ValueRO.Phase == ElitePunchPhase.InitialDelay)
                 {
@@ -99,6 +103,7 @@ namespace CrowdPunch.Systems.AI
                                 math.max(0f, cooldownMovementSettings.Acceleration),
                                 math.max(0f, cooldownMovementSettings.BrakingAcceleration)),
                             0f);
+                        SetNavigation(elite, transform.ValueRO.Position, cooldownDestination, movement.ValueRO.Direction, movement.ValueRO.Speed, settings.ValueRO.PositionTolerance, float3.zero);
                         transform.ValueRW.Rotation = math.slerp(
                             transform.ValueRO.Rotation,
                             quaternion.LookRotationSafe(cooldownLaunchDirection, math.up()),
@@ -183,6 +188,9 @@ namespace CrowdPunch.Systems.AI
                     maximumSetupSpeed,
                     setupBraking,
                     minimumCatchupSpeed);
+                SetNavigation(elite, transform.ValueRO.Position, desired, setupDirection, movement.ValueRO.Speed,
+                    settings.ValueRO.PositionTolerance, settings.ValueRO.ApplySeparationDuringSetup != 0
+                        ? EntityManager.GetComponentData<NavigationIntent>(elite).Separation : float3.zero);
                 bool linedUp = IsLinedUp(transform.ValueRO, targetTransform.Position, launchDirection, settings.ValueRO);
                 if (!linedUp)
                 {
@@ -209,6 +217,15 @@ namespace CrowdPunch.Systems.AI
                 ExecutePunch(elite, transform.ValueRO.Position, targetTransform.Position, player, settings.ValueRO, all, state.ValueRO.Target);
                 BeginCooldown(elite, settings.ValueRO, ref state.ValueRW);
             }
+        }
+
+        private void SetNavigation(Entity elite, float3 position, float3 destination, float3 sideDirection,
+            float speed, float tolerance, float3 separation)
+        {
+            // Preserve the existing target-body side detour before routing around static terrain.
+            float3 direct = math.normalizesafe(destination-position);
+            if (math.dot(direct,sideDirection) < .99f) destination = position + sideDirection * math.min(2f,math.distance(position,destination));
+            EntityManager.SetComponentData(elite, NavigationIntent.Travel(destination,speed,tolerance,separation,NavigationGoalKind.ExactSetup));
         }
 
         private void SelectTarget(Entity elite, float3 elitePosition, PlayerSnapshot player, ElitePunchSettings settings,

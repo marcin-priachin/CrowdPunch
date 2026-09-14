@@ -82,6 +82,12 @@ namespace CrowdPunch.Systems.Initialization
                 healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
                 damageState.ValueRW = default;
                 SystemAPI.SetComponent(enemy, new EnemyGroundConstraint());
+                if (SystemAPI.HasComponent<NavigationPathState>(enemy))
+                {
+                    var navigation = SystemAPI.GetComponent<NavigationPathState>(enemy); navigation.Reset();
+                    SystemAPI.SetComponent(enemy, navigation); SystemAPI.SetComponent(enemy, new NavigationIntent());
+                    SystemAPI.GetBuffer<NavigationWaypoint>(enemy).Clear();
+                }
                 SystemAPI.SetComponent(enemy, new DesiredMovement());
                 SystemAPI.SetComponent(enemy, new WanderDestination());
                 SystemAPI.SetComponent(enemy, new PunchAimAssistTarget());

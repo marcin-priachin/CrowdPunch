@@ -17,6 +17,7 @@ namespace CrowdPunch.Systems.Movement
     [UpdateInGroup(typeof(GamePrePhysicsGroup))]
     [UpdateAfter(typeof(EnemyChaseSystem))]
     [UpdateAfter(typeof(RangedEnemyPositioningSystem))]
+    [UpdateAfter(typeof(EnemyNavigationSystem))]
     [UpdateBefore(typeof(PunchDetectionSystem))]
     public partial struct EnemyMovementSystem : ISystem
     {

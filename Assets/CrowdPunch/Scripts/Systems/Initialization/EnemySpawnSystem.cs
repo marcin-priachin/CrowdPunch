@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using CrowdPunch.Utilities;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Collections;
@@ -29,11 +30,14 @@ namespace CrowdPunch.Systems.Initialization
                 return;
             }
 
+            NavigationGrid navigationGrid = SystemAPI.HasSingleton<NavigationGrid>() ? SystemAPI.GetSingleton<NavigationGrid>() : default;
+            int rejected = 0;
             EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             Random random = Random.CreateFromIndex(1);
 
-            foreach (RefRO<SpawnSettings> spawnSettingsReference in SystemAPI.Query<RefRO<SpawnSettings>>())
+            foreach (var (spawnSettingsReference, spawner) in SystemAPI.Query<RefRO<SpawnSettings>>().WithEntityAccess())
             {
+                commandBuffer.RemoveComponent<SpawnSettings>(spawner);
                 SpawnSettings spawnSettings = spawnSettingsReference.ValueRO;
                 if (spawnSettings.Profile.EnemyPrefab == Entity.Null || spawnSettings.InitialCount <= 0)
                 {
@@ -46,6 +50,10 @@ namespace CrowdPunch.Systems.Initialization
                         ref random,
                         spawnSettings.Center,
                         spawnSettings.SpawnRadius);
+                    int attempt = 0;
+                    while (!NavigationGeometry.SpawnAllowed(navigationGrid,position.xz,spawnSettings.Profile.NavigationRadius) && attempt++ < 32)
+                        position = GetRandomSpawnPosition(ref random,spawnSettings.Center,spawnSettings.SpawnRadius);
+                    if (!NavigationGeometry.SpawnAllowed(navigationGrid,position.xz,spawnSettings.Profile.NavigationRadius)) { rejected++; continue; }
                     Entity enemy = EnemySpawnInitialization.Create(
                         commandBuffer,
                         state.EntityManager,
@@ -63,10 +71,12 @@ namespace CrowdPunch.Systems.Initialization
                 }
             }
 
-            foreach (RefRO<AuthoredEnemySpawnPoint> spawnPointReference in
-                     SystemAPI.Query<RefRO<AuthoredEnemySpawnPoint>>())
+            foreach (var (spawnPointReference, point) in
+                     SystemAPI.Query<RefRO<AuthoredEnemySpawnPoint>>().WithEntityAccess())
             {
+                commandBuffer.RemoveComponent<AuthoredEnemySpawnPoint>(point);
                 AuthoredEnemySpawnPoint spawnPoint = spawnPointReference.ValueRO;
+                if (!NavigationGeometry.SpawnAllowed(navigationGrid,spawnPoint.Position.xz,spawnPoint.Profile.NavigationRadius)) { rejected++; continue; }
                 Random pointRandom = Random.CreateFromIndex(spawnPoint.RandomSeed);
                 Entity enemy = EnemySpawnInitialization.Create(
                     commandBuffer,
@@ -83,9 +93,15 @@ namespace CrowdPunch.Systems.Initialization
                 }
             }
 
+            if (rejected > 0)
+            {
+                UnityEngine.Debug.LogWarning("Initial enemy placement rejected blocked or disconnected positions. Check Navigation Inspector and authored spawn regions.");
+                if(SystemAPI.HasSingleton<NavigationDiagnostics>())
+                {var diagnostics=SystemAPI.GetSingleton<NavigationDiagnostics>();diagnostics.RejectedSpawns+=rejected;SystemAPI.SetSingleton(diagnostics);}
+            }
             commandBuffer.Playback(state.EntityManager);
             commandBuffer.Dispose();
-            state.Enabled = false;
+
         }
 
         private static float3 GetRandomSpawnPosition(ref Random random, float3 center, float radius)

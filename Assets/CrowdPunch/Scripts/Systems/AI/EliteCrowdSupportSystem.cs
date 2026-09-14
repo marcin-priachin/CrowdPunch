@@ -108,6 +108,8 @@ namespace CrowdPunch.Systems.AI
                             stagingPosition,
                             movementSettings.MoveSpeed,
                             elite.Settings.PositionTolerance);
+                        EntityManager.SetComponentData(enemy, NavigationIntent.Travel(stagingPosition, movement.Speed,
+                            elite.Settings.PositionTolerance, float3.zero, NavigationGoalKind.ExactSetup));
                         ElitePunchReservation reservation = EntityManager.GetComponentData<ElitePunchReservation>(enemy);
                         if (reservation.Owner == elite.Entity)
                         {
@@ -125,6 +127,9 @@ namespace CrowdPunch.Systems.AI
                         CancelContactCommitment(enemy);
                         movement.Direction = exitDirection;
                         movement.Speed = math.max(0f, movementSettings.MoveSpeed);
+                        EntityManager.SetComponentData(enemy, NavigationIntent.Travel(
+                            transform.Position + exitDirection * math.max(1f,elite.Settings.CrowdCorridorRadius),
+                            movement.Speed,.2f,float3.zero));
                     }
 
                     EntityManager.SetComponentData(enemy, movement);

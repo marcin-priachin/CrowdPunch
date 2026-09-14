@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using CrowdPunch.Utilities;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Collections;
@@ -20,6 +21,8 @@ namespace CrowdPunch.Systems.AI
         public void OnUpdate(ref SystemState state)
         {
             PlayerSnapshot player = SystemAPI.GetSingleton<PlayerSnapshot>();
+            NavigationGrid grid = SystemAPI.HasSingleton<NavigationGrid>() && SystemAPI.GetSingleton<NavigationRuntimeSettings>().Enabled != 0
+                ? SystemAPI.GetSingleton<NavigationGrid>() : default;
             NativeList<EnemySeparationNeighbor> enemies = new NativeList<EnemySeparationNeighbor>(Allocator.TempJob);
             foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launch, RefRO<EnemyArchetype> archetype) in
                      SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<EnemyArchetype>>().WithAll<Enemy>().WithNone<RespawnRequest>())
@@ -30,7 +33,7 @@ namespace CrowdPunch.Systems.AI
                         Archetype = archetype.ValueRO.Value
                     });
 
-            state.Dependency = new DecisionJob { Player = player, Enemies = enemies.AsDeferredJobArray(), DeltaTime = SystemAPI.Time.DeltaTime }
+            state.Dependency = new DecisionJob { Player = player, Grid = grid, Enemies = enemies.AsDeferredJobArray(), DeltaTime = SystemAPI.Time.DeltaTime }
                 .ScheduleParallel(state.Dependency);
             state.Dependency = enemies.Dispose(state.Dependency);
         }
@@ -39,14 +42,16 @@ namespace CrowdPunch.Systems.AI
         private partial struct DecisionJob : IJobEntity
         {
             public PlayerSnapshot Player;
+            public NavigationGrid Grid;
             [ReadOnly] public NativeArray<EnemySeparationNeighbor> Enemies;
             public float DeltaTime;
 
-            private void Execute(ref DesiredMovement movement, ref DasherState state, in DasherSettings settings,
-                in EnemyMovementSettings movementSettings, in EnemySeparationDistance separationDistance,
+            private void Execute(ref DesiredMovement movement, ref NavigationIntent navigation, ref DasherState state, in DasherSettings settings,
+                in EnemyMovementSettings movementSettings, in NavigationAgent agent, in EnemySeparationDistance separationDistance,
                 in EnemyArchetypeSeparationDistances archetypeSeparationDistances,
                 in EnemyLaunchState launch, in LocalTransform transform)
             {
+                navigation = default;
                 if (launch.Phase != EnemyLaunchPhase.Active || !Player.IsAvailable)
                 {
                     movement = default;
@@ -85,6 +90,10 @@ namespace CrowdPunch.Systems.AI
                     movement.Speed = distance < preferredMin ? settings.RetreatSpeed : distance > preferredMax ? settings.ApproachSpeed : 0f;
                     if (movement.Direction.Equals(float3.zero)) movement.Speed = 0f;
                     else if (movement.Speed <= 0f) movement.Speed = movementSettings.WanderSpeed;
+                    float3 destination = NavigationGeometry.DistanceBandDestination(Grid,transform.Position,Player.Position,preferredMin,preferredMax,agent.Radius);
+                    destination.y = transform.Position.y;
+                    navigation = NavigationIntent.Travel(destination, movement.Speed, .35f, separation, NavigationGoalKind.DistanceBand);
+                    if (math.lengthsq(primaryDirection) == 0) navigation.Mode = NavigationMode.Hold;
                     return;
                 }
 

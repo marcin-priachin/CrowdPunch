@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a035e1106b5b7924dba42242cae137d5, type: 3}
+  m_Name: NavigationSettings
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.NavigationSettings
+  assistanceEnabled: 1
+  cellSize: 1
+  clearanceMargin: 0.12
+  clearanceRadii: {x: 0.5, y: 0.85, z: 1.5}
+  directInterval: 0.2
+  waypointArrival: 0.25
+  lookAhead: 0.7
+  smoothingChecks: 8
+  destinationThreshold: 1.5
+  repathCooldown: 0.6
+  requestStagger: 0.3
+  stuckDuration: 2.5
+  minimumProgress: 0.3
+  failureDelay: 3
+  globalNodeBudget: 512
+  perSearchLimit: 4096
+  concurrentSearches: 4
+  maximumPathLength: 128
+  maximumRequests: 4096
+  debugDrawing: 0
+  diagnostics: 1

@@ -178,6 +178,7 @@ namespace CrowdPunch.Systems.AI
             private void Execute(
                 Entity entity,
                 ref DesiredMovement desiredMovement,
+                ref NavigationIntent navigation,
                 ref WanderDestination wanderDestination,
                 ref EnemyContactAttemptState contactAttempt,
                 in LocalTransform transform,
@@ -188,6 +189,7 @@ namespace CrowdPunch.Systems.AI
                 in EnemyArchetype archetype,
                 in EnemyLaunchState launchState)
             {
+                navigation = default;
                 if (launchState.Phase != EnemyLaunchPhase.Active)
                 {
                     EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
@@ -263,6 +265,9 @@ namespace CrowdPunch.Systems.AI
                                 ? movementSettings.ChargeSpeedMultiplier
                                 : 1f)
                             * (contactAttempt.IsAttempting != 0 ? math.max(0f, contactSettings.AttemptSpeedMultiplier) : 1f);
+                    navigation = NavigationIntent.Travel(target, desiredMovement.Speed, movementSettings.StoppingDistance,
+                        appliedSeparation);
+                    if (usesCommitment && contactAttempt.IsAttempting != 0) navigation.Mode = NavigationMode.Committed;
                     return;
                 }
 
@@ -289,6 +294,8 @@ namespace CrowdPunch.Systems.AI
                     : distributionDistance > returnSpeedDistance
                         ? movementSettings.MoveSpeed
                         : movementSettings.WanderSpeed;
+                navigation = NavigationIntent.Travel(wanderDestination.Position, desiredMovement.Speed, arrivalDistance,
+                    separation * separationBlend, NavigationGoalKind.Coverage);
             }
 
             private bool IsPressureEnemy(Entity entity)

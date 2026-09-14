@@ -33,6 +33,7 @@ namespace CrowdPunch.Systems.Initialization
             Entity enemy = commandBuffer.Instantiate(profile.EnemyPrefab);
             commandBuffer.SetComponent(enemy, LocalTransform.FromPosition(position));
             commandBuffer.SetComponent(enemy, movementSettings);
+            commandBuffer.SetComponent(enemy, new NavigationAgent { Radius = profile.NavigationRadius });
             commandBuffer.SetComponent(enemy, profile.Health);
             commandBuffer.SetComponent(enemy, profile.ContactDamageSettings);
             commandBuffer.SetComponent(enemy, new EnemyContactAttemptState

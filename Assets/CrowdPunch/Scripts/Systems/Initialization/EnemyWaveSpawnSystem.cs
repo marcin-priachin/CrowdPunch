@@ -1,5 +1,6 @@
 using CrowdPunch.Components;
 using CrowdPunch.Configuration;
+using CrowdPunch.Utilities;
 using CrowdPunch.Systems.Groups;
 using Unity.Collections;
 using Unity.Entities;
@@ -22,9 +23,11 @@ namespace CrowdPunch.Systems.Initialization
 
         public void OnUpdate(ref SystemState state)
         {
+            NavigationGrid navigationGrid = SystemAPI.HasSingleton<NavigationGrid>() ? SystemAPI.GetSingleton<NavigationGrid>() : default;
             double now = SystemAPI.Time.ElapsedTime;
             PhysicsWorldSingleton physicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
             PlayerSnapshot player = SystemAPI.HasSingleton<PlayerSnapshot>() ? SystemAPI.GetSingleton<PlayerSnapshot>() : default;
+            int rejectedNavigation = 0;
             NativeList<float4> occupiedEnemies = new NativeList<float4>(Allocator.Temp);
             EntityCommandBuffer commands = new EntityCommandBuffer(Allocator.Temp);
             foreach ((RefRO<Unity.Transforms.LocalTransform> transform, RefRO<EnemySpawnClearance> clearance) in
@@ -99,8 +102,8 @@ namespace CrowdPunch.Systems.Initialization
                 int requested = wave.SpawnMode == (byte)EnemyWaveSpawnMode.AllAtOnce
                     ? remaining
                     : math.min(remaining, math.max(1, wave.BatchSize));
-                int spawned = SpawnBatch(commands, state.EntityManager, physicsWorld, player, sequenceEntity, wave, profiles, eliteProfiles, ranges,
-                    occupiedEnemies, ref sequence, requested);
+                int spawned = SpawnBatch(commands, state.EntityManager, navigationGrid, physicsWorld, player, sequenceEntity, wave, profiles, eliteProfiles, ranges,
+                    occupiedEnemies, ref sequence, requested, ref rejectedNavigation);
 
                 if (sequence.SpawnedCount >= wave.TotalEnemyCount + wave.TotalEliteCount)
                 {
@@ -123,6 +126,8 @@ namespace CrowdPunch.Systems.Initialization
                     }
                 }
             }
+            if(SystemAPI.HasSingleton<NavigationDiagnostics>())
+            { var d=SystemAPI.GetSingleton<NavigationDiagnostics>();d.RejectedSpawns+=rejectedNavigation;SystemAPI.SetSingleton(d); }
             commands.Playback(state.EntityManager);
             commands.Dispose();
             occupiedEnemies.Dispose();
@@ -193,11 +198,11 @@ namespace CrowdPunch.Systems.Initialization
         }
 
         private static int SpawnBatch(EntityCommandBuffer commands, EntityManager entityManager,
-            PhysicsWorldSingleton physicsWorld, PlayerSnapshot player,
+            NavigationGrid navigationGrid, PhysicsWorldSingleton physicsWorld, PlayerSnapshot player,
             Entity sequenceEntity, EnemyWaveDefinition wave, DynamicBuffer<EnemyWaveProfile> profiles,
             DynamicBuffer<EnemyWaveEliteProfile> eliteProfiles,
             DynamicBuffer<EnemyWaveSpawnRange> ranges, NativeList<float4> occupiedEnemies,
-            ref EnemyWaveSequence sequence, int requested)
+            ref EnemyWaveSequence sequence, int requested, ref int rejectedNavigation)
         {
             MathematicsRandom random = new MathematicsRandom(sequence.RandomState == 0 ? 1u : sequence.RandomState);
             NativeList<float4> accepted = new NativeList<float4>(Allocator.Temp);
@@ -222,6 +227,8 @@ namespace CrowdPunch.Systems.Initialization
                 for (int attempt = 0; attempt < math.max(1, sequence.PlacementAttemptsPerEnemy); attempt++)
                 {
                     position = SelectPosition(ref random, wave, ranges);
+                    if(!NavigationGeometry.SpawnAllowed(navigationGrid,position.xz,selectedProfile.NavigationRadius))
+                    { rejectedNavigation++; continue; }
                     if (IsSafe(physicsWorld, player, position, selectedProfile.SpawnClearance,
                             sequence.MinimumPlayerDistance, occupiedEnemies, accepted))
                     {

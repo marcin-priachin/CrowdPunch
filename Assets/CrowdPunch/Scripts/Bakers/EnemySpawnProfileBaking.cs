@@ -33,6 +33,7 @@ namespace CrowdPunch.Bakers
             {
                 EnemyPrefab = enemyPrefab,
                 SpawnClearance = GetSpawnClearance(settings.EnemyPrefab),
+                NavigationRadius = GetNavigationRadius(settings.EnemyPrefab),
                 Archetype = settings.Archetype switch
                 {
                     Configuration.EnemyArchetype.Ranged => EnemyArchetypeKind.Ranged,
@@ -86,6 +87,40 @@ namespace CrowdPunch.Bakers
                 ElitePunchSettings = settings.ElitePunchSettings
             };
             return true;
+        }
+
+        private static float GetNavigationRadius(GameObject prefab)
+        {
+            float result=0;
+            foreach (UnityEngine.Collider collider in prefab.GetComponentsInChildren<UnityEngine.Collider>(true))
+            {
+                if (!collider.enabled || collider.isTrigger) continue;
+                if (collider is CapsuleCollider capsule || collider is SphereCollider)
+                {
+                    Vector3 center;float radius;Vector3 halfSegment=Vector3.zero;
+                    if(collider is CapsuleCollider cap)
+                    {center=cap.center;radius=cap.radius;halfSegment[cap.direction]=math.max(0,cap.height*.5f-radius);}
+                    else {var sphere=(SphereCollider)collider;center=sphere.center;radius=sphere.radius;}
+                    Vector3 origin=TransformToPrefabLocal(Vector3.zero,collider.transform,prefab.transform);
+                    Vector3 x=TransformToPrefabLocal(Vector3.right,collider.transform,prefab.transform)-origin;
+                    Vector3 y=TransformToPrefabLocal(Vector3.up,collider.transform,prefab.transform)-origin;
+                    Vector3 z=TransformToPrefabLocal(Vector3.forward,collider.transform,prefab.transform)-origin;
+                    // Largest singular value of the XZ projection bounds even rotated/nonuniform sphere scaling.
+                    float xx=x.x*x.x+y.x*y.x+z.x*z.x, zz=x.z*x.z+y.z*y.z+z.z*z.z;
+                    float xz=x.x*x.z+y.x*y.z+z.x*z.z;
+                    float scale=math.sqrt(.5f*(xx+zz+math.sqrt((xx-zz)*(xx-zz)+4*xz*xz)));
+                    Vector3 a=TransformToPrefabLocal(center-halfSegment,collider.transform,prefab.transform);
+                    Vector3 b=TransformToPrefabLocal(center+halfSegment,collider.transform,prefab.transform);
+                    result=math.max(result,math.max(math.length(new float2(a.x,a.z)),math.length(new float2(b.x,b.z)))+radius*scale);
+                }
+                else if(TryGetLocalBounds(collider,out Bounds bounds))
+                {
+                    for(int x=-1;x<=1;x+=2)for(int y=-1;y<=1;y+=2)for(int z=-1;z<=1;z+=2)
+                    {Vector3 p=TransformToPrefabLocal(bounds.center+Vector3.Scale(bounds.extents,new Vector3(x,y,z)),collider.transform,prefab.transform);
+                        result=math.max(result,math.length(new float2(p.x,p.z)));}
+                }
+            }
+            return result;
         }
 
         private static float GetSpawnClearance(GameObject prefab)

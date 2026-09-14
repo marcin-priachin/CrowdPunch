@@ -21,6 +21,10 @@ namespace CrowdPunch.Bakers
             AddComponent<EnemySeparationDistance>(entity);
             AddComponent<EnemyArchetypeSeparationDistances>(entity);
             AddComponent<DesiredMovement>(entity);
+            AddComponent<NavigationIntent>(entity);
+            AddComponent<NavigationPathState>(entity);
+            AddComponent<NavigationAgent>(entity);
+            AddBuffer<NavigationWaypoint>(entity);
             AddComponent<PunchAimAssistTarget>(entity);
             AddComponent(entity, new EnemyLaunchState
             {
