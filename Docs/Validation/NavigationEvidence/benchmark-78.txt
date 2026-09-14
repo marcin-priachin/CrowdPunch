@@ -1,0 +1,12 @@
+UTC 2026-09-14T18:21:16.4691387Z; Editor 6000.3.10f1; total 78; active 78; native path capacity 8184 bytes
+Completed-update microbenchmark, 20 warmups + 120 samples per system. Includes main-thread and job completion time; simulation time and physics are not advanced. Managed bytes cover calling thread only. This is not a whole-frame/standalone benchmark.
+Assistance 1
+Chase + separation: 0.040082 ms/update, 0 managed bytes / 120 updates
+Ranged positioning + separation: 0.014915 ms/update, 0 managed bytes / 120 updates
+Dasher decision + separation: 0.014697 ms/update, 0 managed bytes / 120 updates
+Navigation: 0.013388 ms/update, 0 managed bytes / 120 updates
+Assistance 0
+Chase + separation: 0.044821 ms/update, 0 managed bytes / 120 updates
+Ranged positioning + separation: 0.012266 ms/update, 0 managed bytes / 120 updates
+Dasher decision + separation: 0.011961 ms/update, 0 managed bytes / 120 updates
+Navigation: 0.004008 ms/update, 0 managed bytes / 120 updates
