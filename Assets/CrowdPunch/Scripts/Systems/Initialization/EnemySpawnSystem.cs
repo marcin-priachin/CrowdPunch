@@ -51,9 +51,9 @@ namespace CrowdPunch.Systems.Initialization
                         spawnSettings.Center,
                         spawnSettings.SpawnRadius);
                     int attempt = 0;
-                    while (!NavigationGeometry.SpawnAllowed(navigationGrid,position.xz,spawnSettings.Profile.NavigationRadius) && attempt++ < 32)
-                        position = GetRandomSpawnPosition(ref random,spawnSettings.Center,spawnSettings.SpawnRadius);
-                    if (!NavigationGeometry.SpawnAllowed(navigationGrid,position.xz,spawnSettings.Profile.NavigationRadius)) { rejected++; continue; }
+                    while (!NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, spawnSettings.Profile.NavigationRadius) && attempt++ < 32)
+                        position = GetRandomSpawnPosition(ref random, spawnSettings.Center, spawnSettings.SpawnRadius);
+                    if (!NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, spawnSettings.Profile.NavigationRadius)) { rejected++; continue; }
                     Entity enemy = EnemySpawnInitialization.Create(
                         commandBuffer,
                         state.EntityManager,
@@ -76,7 +76,7 @@ namespace CrowdPunch.Systems.Initialization
             {
                 commandBuffer.RemoveComponent<AuthoredEnemySpawnPoint>(point);
                 AuthoredEnemySpawnPoint spawnPoint = spawnPointReference.ValueRO;
-                if (!NavigationGeometry.SpawnAllowed(navigationGrid,spawnPoint.Position.xz,spawnPoint.Profile.NavigationRadius)) { rejected++; continue; }
+                if (!NavigationGeometry.SpawnAllowed(navigationGrid, spawnPoint.Position.xz, spawnPoint.Profile.NavigationRadius)) { rejected++; continue; }
                 Random pointRandom = Random.CreateFromIndex(spawnPoint.RandomSeed);
                 Entity enemy = EnemySpawnInitialization.Create(
                     commandBuffer,
@@ -96,8 +96,8 @@ namespace CrowdPunch.Systems.Initialization
             if (rejected > 0)
             {
                 UnityEngine.Debug.LogWarning("Initial enemy placement rejected blocked or disconnected positions. Check Navigation Inspector and authored spawn regions.");
-                if(SystemAPI.HasSingleton<NavigationDiagnostics>())
-                {var diagnostics=SystemAPI.GetSingleton<NavigationDiagnostics>();diagnostics.RejectedSpawns+=rejected;SystemAPI.SetSingleton(diagnostics);}
+                if (SystemAPI.HasSingleton<NavigationDiagnostics>())
+                { var diagnostics = SystemAPI.GetSingleton<NavigationDiagnostics>(); diagnostics.RejectedSpawns += rejected; SystemAPI.SetSingleton(diagnostics); }
             }
             commandBuffer.Playback(state.EntityManager);
             commandBuffer.Dispose();

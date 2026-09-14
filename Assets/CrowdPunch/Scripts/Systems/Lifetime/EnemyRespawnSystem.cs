@@ -130,7 +130,7 @@ namespace CrowdPunch.Systems.Lifetime
                     if (SystemAPI.HasComponent<NavigationPathState>(enemy))
                     {
                         var navigation = SystemAPI.GetComponent<NavigationPathState>(enemy); navigation.Reset();
-                        SystemAPI.SetComponent(enemy,navigation); SystemAPI.GetBuffer<NavigationWaypoint>(enemy).Clear();
+                        SystemAPI.SetComponent(enemy, navigation); SystemAPI.GetBuffer<NavigationWaypoint>(enemy).Clear();
                     }
                     respawnRequest.ValueRW.IsPooled = 1;
                     respawnRequest.ValueRW.RespawnAt = respawnSettings.ValueRO.Enabled != 0
@@ -162,20 +162,20 @@ namespace CrowdPunch.Systems.Lifetime
 
                 var grid = SystemAPI.HasSingleton<NavigationGrid>() ? SystemAPI.GetSingleton<NavigationGrid>() : default;
                 float radius = SystemAPI.HasComponent<NavigationAgent>(enemy) ? SystemAPI.GetComponent<NavigationAgent>(enemy).Radius : .5f;
-                var spawnBounds=arenaBounds;
-                if(grid.Data.IsCreated)
+                var spawnBounds = arenaBounds;
+                if (grid.Data.IsCreated)
                 {
-                    ref var data=ref grid.Data.Value;int cls=NavigationGeometry.ClearanceClass(ref data,radius);
-                    if(cls<0){respawnRequest.ValueRW.RespawnAt=elapsedTime+3;continue;}
-                    spawnBounds.Extents.xz=math.max(new float2(0),spawnBounds.Extents.xz-data.Radii[cls]-data.CellSize*.5f);
+                    ref var data = ref grid.Data.Value; int cls = NavigationGeometry.ClearanceClass(ref data, radius);
+                    if (cls < 0) { respawnRequest.ValueRW.RespawnAt = elapsedTime + 3; continue; }
+                    spawnBounds.Extents.xz = math.max(new float2(0), spawnBounds.Extents.xz - data.Radii[cls] - data.CellSize * .5f);
                 }
                 float3 respawnPosition = default; bool foundPosition = false;
-                for(int attempt=0;attempt<32;attempt++)
+                for (int attempt = 0; attempt < 32; attempt++)
                 {
-                    respawnPosition = GetRespawnPosition(ref random,spawnBounds,playerSnapshot);
-                    if(NavigationGeometry.SpawnAllowed(grid,respawnPosition.xz,radius)){foundPosition=true;break;}
+                    respawnPosition = GetRespawnPosition(ref random, spawnBounds, playerSnapshot);
+                    if (NavigationGeometry.SpawnAllowed(grid, respawnPosition.xz, radius)) { foundPosition = true; break; }
                 }
-                if(!foundPosition){respawnRequest.ValueRW.RespawnAt=elapsedTime+1;continue;}
+                if (!foundPosition) { respawnRequest.ValueRW.RespawnAt = elapsedTime + 1; continue; }
                 transform.ValueRW.Position = respawnPosition;
                 SystemAPI.SetComponent(enemy, new EnemyGroundConstraint());
                 physicsVelocity.ValueRW = default;

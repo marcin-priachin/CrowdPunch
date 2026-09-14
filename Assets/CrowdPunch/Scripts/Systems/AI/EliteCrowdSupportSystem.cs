@@ -128,8 +128,8 @@ namespace CrowdPunch.Systems.AI
                         movement.Direction = exitDirection;
                         movement.Speed = math.max(0f, movementSettings.MoveSpeed);
                         EntityManager.SetComponentData(enemy, NavigationIntent.Travel(
-                            transform.Position + exitDirection * math.max(1f,elite.Settings.CrowdCorridorRadius),
-                            movement.Speed,.2f,float3.zero));
+                            transform.Position + exitDirection * math.max(1f, elite.Settings.CrowdCorridorRadius),
+                            movement.Speed, .2f, float3.zero));
                     }
 
                     EntityManager.SetComponentData(enemy, movement);

@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using CrowdPunch.Utilities;
 using CrowdPunch.Mono.UI;
 using CrowdPunch.Systems.Groups;
 using Unity.Collections;
@@ -54,6 +55,7 @@ namespace CrowdPunch.Systems.Initialization
                 }
             }
             Random random = Random.CreateFromIndex(1);
+            NavigationGrid navigationGrid = SystemAPI.HasSingleton<NavigationGrid>() ? SystemAPI.GetSingleton<NavigationGrid>() : default;
 
             foreach ((RefRW<LocalTransform> transform,
                          RefRW<Health> health,
@@ -72,10 +74,22 @@ namespace CrowdPunch.Systems.Initialization
                 else if (SystemAPI.HasComponent<RandomEnemySpawnRegion>(enemy))
                 {
                     RandomEnemySpawnRegion region = SystemAPI.GetComponent<RandomEnemySpawnRegion>(enemy);
-                    transform.ValueRW = LocalTransform.FromPosition(GetRandomSpawnPosition(
-                        ref random,
-                        region.Center,
-                        region.Radius));
+                    float radius = SystemAPI.HasComponent<NavigationAgent>(enemy) ? SystemAPI.GetComponent<NavigationAgent>(enemy).Radius : 0;
+                    float3 position = transform.ValueRO.Position; bool found = false;
+                    for (int attempt = 0; attempt < 32; attempt++)
+                    {
+                        position = GetRandomSpawnPosition(ref random, region.Center, region.Radius);
+                        if (NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, radius)) { found = true; break; }
+                    }
+                    if (!found)
+                    {
+                        var navigation = SystemAPI.GetComponent<NavigationPathState>(enemy); navigation.Reset(); SystemAPI.SetComponent(enemy, navigation);
+                        SystemAPI.GetBuffer<NavigationWaypoint>(enemy).Clear();
+                        SystemAPI.SetComponent(enemy, new RespawnRequest());
+                        SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, true);
+                        continue;
+                    }
+                    transform.ValueRW = LocalTransform.FromPosition(position);
                 }
 
                 health.ValueRW.Current = health.ValueRO.Max;

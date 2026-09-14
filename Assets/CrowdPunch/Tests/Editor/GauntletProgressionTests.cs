@@ -34,7 +34,13 @@ namespace CrowdPunch.Tests
         }
 
         [TearDown]
-        public void RestoreScenes() { if (sceneSetup != null) EditorSceneManager.RestoreSceneManagerSetup(sceneSetup); }
+        public void RestoreScenes()
+        {
+            if (sceneSetup == null) return;
+            // The EditMode runner can start with an unsaved empty scene, which has no restorable setup.
+            if (sceneSetup.Any(scene => scene.isLoaded && scene.isActive)) EditorSceneManager.RestoreSceneManagerSetup(sceneSetup);
+            else EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        }
 
         [Test]
         public void Loop002_ActiveSequenceAndBuildSettingsContainExactlyTenOrderedLevels()
@@ -46,7 +52,11 @@ namespace CrowdPunch.Tests
                 var names = new SerializedObject(sequence).FindProperty("levelSceneNames");
                 Assert.That(names.arraySize, Is.EqualTo(10));
                 string[] enabled = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-                Assert.That(enabled.Length, Is.EqualTo(11));
+                Assert.That(enabled.Length, Is.EqualTo(13));
+                Assert.That(enabled.Skip(11), Is.EquivalentTo(new[] {
+                    Root + "NavigationValidation/NavigationValidationBootstrap.unity",
+                    Root + "NavigationValidation/NavigationValidationArena.unity" }),
+                    "The two separate validation scenes must not enter the ten-level progression.");
                 Assert.That(enabled[0], Is.EqualTo(Root + "Bootstrap.unity"));
                 for (int i = 0; i < 10; i++)
                 {
@@ -59,8 +69,16 @@ namespace CrowdPunch.Tests
             finally { EditorSceneManager.CloseScene(scene, true); }
         }
 
-        [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)]
-        [TestCase(6)] [TestCase(7)] [TestCase(8)] [TestCase(9)] [TestCase(10)]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        [TestCase(8)]
+        [TestCase(9)]
+        [TestCase(10)]
         public void Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(int number)
         {
             string id = $"Gauntlet_{number:00}";
@@ -89,8 +107,8 @@ namespace CrowdPunch.Tests
                 Assert.That(arena.DefeatSize.x, Is.GreaterThan(arena.SpacingSize.x));
                 Assert.That(arena.DefeatSize.z, Is.GreaterThan(arena.SpacingSize.z));
                 for (int x = -1; x <= 1; x += 2)
-                for (int z = -1; z <= 1; z += 2)
-                    AssertInside(outline, arena.transform.position + new Vector3(x * arena.SpacingSize.x / 2, 0, z * arena.SpacingSize.z / 2), 0.75f);
+                    for (int z = -1; z <= 1; z += 2)
+                        AssertInside(outline, arena.transform.position + new Vector3(x * arena.SpacingSize.x / 2, 0, z * arena.SpacingSize.z / 2), 0.75f);
                 Assert.That(Find<GameSettingsAuthoring>(sub).Settings, Is.SameAs(
                     AssetDatabase.LoadAssetAtPath<GameRuntimeSettings>("Assets/CrowdPunch/Data/Settings/GameRuntimeSettings.asset")));
                 Assert.That(authoring.Waves.Count, Is.GreaterThan(0));
@@ -124,8 +142,8 @@ namespace CrowdPunch.Tests
                         float avoidance = authoring.MinimumPlayerDistance + 0.5f + (wave.EliteEnemies.Count > 0 ? 1.061f : 0.708f);
                         Assert.That(new Vector2(range.Width, range.Depth).magnitude / 2, Is.GreaterThan(avoidance), "One camping player must not exclude a whole rectangle");
                         for (int x = -1; x <= 1; x += 2)
-                        for (int z = -1; z <= 1; z += 2)
-                            AssertInside(outline, range.Center + new Vector3(x * range.Width / 2, 0, z * range.Depth / 2), 1.1f);
+                            for (int z = -1; z <= 1; z += 2)
+                                AssertInside(outline, range.Center + new Vector3(x * range.Width / 2, 0, z * range.Depth / 2), 1.1f);
                     }
                     outstandingBudget += wave.TotalEnemyCount + wave.EliteEnemies.Sum(e => e.Count);
                     Assert.That(outstandingBudget, Is.LessThanOrEqualTo(30), "Bounded authored peak, including timed overlap");
@@ -170,9 +188,16 @@ namespace CrowdPunch.Tests
             var system = world.GetOrCreateSystemManaged<GameRestartSystem>();
             em.CreateEntity(typeof(MatchState));
             Entity sequence = em.CreateEntity(typeof(WaveSequence), typeof(EnemyWaveEncounterComplete));
-            em.SetComponentData(sequence, new WaveSequence { InitialSeed = 123, RunGeneration = 7,
-                Initialized = 1, SpawnedCount = 28, UndefeatedCount = 12, NextActionAt = 1000,
-                Phase = EnemyWaveRuntimePhase.Complete });
+            em.SetComponentData(sequence, new WaveSequence
+            {
+                InitialSeed = 123,
+                RunGeneration = 7,
+                Initialized = 1,
+                SpawnedCount = 28,
+                UndefeatedCount = 12,
+                NextActionAt = 1000,
+                Phase = EnemyWaveRuntimePhase.Complete
+            });
             Entity shot = em.CreateEntity(typeof(RangedProjectile));
             Entity child = em.CreateEntity();
             var linked = em.AddBuffer<LinkedEntityGroup>(shot);

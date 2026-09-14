@@ -13,8 +13,14 @@ namespace CrowdPunch.Components
         public NavigationGoalKind Kind;
         public static NavigationIntent Travel(float3 destination, float speed, float arrival, float3 separation,
             NavigationGoalKind kind = NavigationGoalKind.Position) => new NavigationIntent
-            { Destination = destination, Speed = speed, ArrivalDistance = arrival, Separation = separation,
-                Mode = NavigationMode.Travel, Kind = kind };
+            {
+                Destination = destination,
+                Speed = speed,
+                ArrivalDistance = arrival,
+                Separation = separation,
+                Mode = NavigationMode.Travel,
+                Kind = kind
+            };
     }
     public struct NavigationAgent : IComponentData
     {
@@ -25,6 +31,7 @@ namespace CrowdPunch.Components
     {
         public float2 RequestedGoal, ResolvedGoal, ProgressPosition, LastPosition;
         public uint Version, PathVersion;
+        public float RequestOffset;
         public int Waypoint;
         public double NextRequestAt, NextDirectAt, ProgressAt;
         public byte Pending, Initialized;

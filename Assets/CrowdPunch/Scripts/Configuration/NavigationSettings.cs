@@ -52,28 +52,41 @@ namespace CrowdPunch.Configuration
         public bool debugDrawing;
         [Tooltip("Collect navigation elapsed CPU time. Profiler markers remain available independently.")]
         public bool diagnostics = true;
-        public NavigationRuntimeSettings Runtime => new NavigationRuntimeSettings {
-            Enabled = assistanceEnabled ? (byte)1 : (byte)0, DebugDrawing = debugDrawing ? (byte)1 : (byte)0,
-            Diagnostics = diagnostics ? (byte)1 : (byte)0, DirectInterval = directInterval,
-            WaypointArrival = waypointArrival, LookAhead = lookAhead, SmoothingChecks = smoothingChecks,
-            DestinationThreshold = destinationThreshold, RepathCooldown = repathCooldown, Stagger = requestStagger,
-            StuckDuration = stuckDuration, MinimumProgress = minimumProgress, FailureDelay = failureDelay,
-            GlobalBudget = globalNodeBudget, SearchLimit = perSearchLimit, ConcurrentSearches = concurrentSearches,
-            MaxPathLength = maximumPathLength, MaxRequests = maximumRequests };
+        public NavigationRuntimeSettings Runtime => new NavigationRuntimeSettings
+        {
+            Enabled = assistanceEnabled ? (byte)1 : (byte)0,
+            DebugDrawing = debugDrawing ? (byte)1 : (byte)0,
+            Diagnostics = diagnostics ? (byte)1 : (byte)0,
+            DirectInterval = directInterval,
+            WaypointArrival = waypointArrival,
+            LookAhead = lookAhead,
+            SmoothingChecks = smoothingChecks,
+            DestinationThreshold = destinationThreshold,
+            RepathCooldown = repathCooldown,
+            Stagger = requestStagger,
+            StuckDuration = stuckDuration,
+            MinimumProgress = minimumProgress,
+            FailureDelay = failureDelay,
+            GlobalBudget = globalNodeBudget,
+            SearchLimit = perSearchLimit,
+            ConcurrentSearches = concurrentSearches,
+            MaxPathLength = maximumPathLength,
+            MaxRequests = maximumRequests
+        };
         private void OnValidate()
         {
             cellSize = Mathf.Clamp(cellSize, .25f, 4); clearanceMargin = Mathf.Clamp(clearanceMargin, 0, .5f);
             clearanceRadii.x = Mathf.Max(.05f, clearanceRadii.x);
             clearanceRadii.y = Mathf.Max(clearanceRadii.x, clearanceRadii.y);
             clearanceRadii.z = Mathf.Max(clearanceRadii.y, clearanceRadii.z);
-            directInterval = Mathf.Clamp(directInterval,.02f,1); waypointArrival = Mathf.Clamp(waypointArrival,.05f,1);
-            lookAhead = Mathf.Clamp(lookAhead,.2f,4); smoothingChecks = Mathf.Clamp(smoothingChecks,1,32);
-            destinationThreshold = Mathf.Clamp(destinationThreshold,.25f,5); repathCooldown = Mathf.Clamp(repathCooldown,.1f,5);
-            requestStagger = Mathf.Clamp(requestStagger,0,2); stuckDuration = Mathf.Clamp(stuckDuration,.5f,10);
-            minimumProgress = Mathf.Clamp(minimumProgress,.05f,2); failureDelay = Mathf.Clamp(failureDelay,.5f,15);
-            globalNodeBudget = Mathf.Clamp(globalNodeBudget,1,8192); perSearchLimit = Mathf.Clamp(perSearchLimit,16,65536);
-            concurrentSearches = Mathf.Clamp(concurrentSearches,1,16); maximumPathLength = Mathf.Clamp(maximumPathLength,8,512);
-            maximumRequests = Mathf.Clamp(maximumRequests,16,16384);
+            directInterval = Mathf.Clamp(directInterval, .02f, 1); waypointArrival = Mathf.Clamp(waypointArrival, .05f, 1);
+            lookAhead = Mathf.Clamp(lookAhead, .2f, 4); smoothingChecks = Mathf.Clamp(smoothingChecks, 1, 32);
+            destinationThreshold = Mathf.Clamp(destinationThreshold, .25f, 5); repathCooldown = Mathf.Clamp(repathCooldown, .1f, 5);
+            requestStagger = Mathf.Clamp(requestStagger, 0, 2); stuckDuration = Mathf.Clamp(stuckDuration, .5f, 10);
+            minimumProgress = Mathf.Clamp(minimumProgress, .05f, 2); failureDelay = Mathf.Clamp(failureDelay, .5f, 15);
+            globalNodeBudget = Mathf.Clamp(globalNodeBudget, 1, 8192); perSearchLimit = Mathf.Clamp(perSearchLimit, 16, 65536);
+            concurrentSearches = Mathf.Clamp(concurrentSearches, 1, 16); maximumPathLength = Mathf.Clamp(maximumPathLength, 8, 512);
+            maximumRequests = Mathf.Clamp(maximumRequests, 16, 16384);
         }
     }
 }

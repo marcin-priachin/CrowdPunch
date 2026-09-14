@@ -47,7 +47,8 @@ namespace CrowdPunch.Systems.AI
 
             state.Dependency = new PositioningJob
             {
-                Player = player, Grid = grid,
+                Player = player,
+                Grid = grid,
                 ActiveEnemies = activeEnemies.AsDeferredJobArray()
             }.ScheduleParallel(state.Dependency);
             state.Dependency = activeEnemies.Dispose(state.Dependency);
@@ -117,8 +118,7 @@ namespace CrowdPunch.Systems.AI
                 movement.Speed = movement.Direction.Equals(float3.zero)
                     ? 0f
                     : math.max(speed, speed <= 0f ? movementSettings.WanderSpeed : 0f);
-                float preferred = (minimum + maximum) * .5f;
-                float3 destination = NavigationGeometry.DistanceBandDestination(Grid,transform.Position,Player.Position,minimum,maximum,agent.Radius);
+                float3 destination = NavigationGeometry.DistanceBandDestination(Grid, transform.Position, Player.Position, minimum, maximum, agent.Radius);
                 destination.y = transform.Position.y;
                 navigation = NavigationIntent.Travel(destination, movement.Speed, .35f, separation, NavigationGoalKind.DistanceBand);
                 if (positioning.Mode == RangedPositioningMode.Hold) navigation.Mode = NavigationMode.Hold;

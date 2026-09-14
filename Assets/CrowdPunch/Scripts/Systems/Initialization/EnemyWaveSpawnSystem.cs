@@ -77,9 +77,9 @@ namespace CrowdPunch.Systems.Initialization
                 if (sequence.Phase == EnemyWaveRuntimePhase.PreWaveDelay)
                 {
                     if (now < sequence.NextActionAt) continue;
-                    if (wave.IsValid == 0)
+                    if (wave.IsValid == 0 || !HasParticipatingSpawnSpace(navigationGrid, wave, profiles, eliteProfiles, ranges))
                     {
-                        Debug.LogError($"Wave sequence entity {sequenceEntity.Index}, wave {sequence.CurrentWaveIndex} is invalid and has stopped without affecting other spawners.");
+                        Debug.LogError($"Wave sequence entity {sequenceEntity.Index}, wave {sequence.CurrentWaveIndex} has invalid data or no connected navigation spawn space for an authored profile, and has stopped without affecting other spawners.");
                         sequence.Phase = EnemyWaveRuntimePhase.Invalid;
                         continue;
                     }
@@ -126,11 +126,42 @@ namespace CrowdPunch.Systems.Initialization
                     }
                 }
             }
-            if(SystemAPI.HasSingleton<NavigationDiagnostics>())
-            { var d=SystemAPI.GetSingleton<NavigationDiagnostics>();d.RejectedSpawns+=rejectedNavigation;SystemAPI.SetSingleton(d); }
+            if (SystemAPI.HasSingleton<NavigationDiagnostics>())
+            { var d = SystemAPI.GetSingleton<NavigationDiagnostics>(); d.RejectedSpawns += rejectedNavigation; SystemAPI.SetSingleton(d); }
             commands.Playback(state.EntityManager);
             commands.Dispose();
             occupiedEnemies.Dispose();
+        }
+
+        private static bool HasParticipatingSpawnSpace(NavigationGrid grid, EnemyWaveDefinition wave,
+            DynamicBuffer<EnemyWaveProfile> profiles, DynamicBuffer<EnemyWaveEliteProfile> elites, DynamicBuffer<EnemyWaveSpawnRange> ranges)
+        {
+            if (!grid.Data.IsCreated) return true;
+            for (int i = 0; i < wave.ProfileCount; i++)
+            {
+                var profile = profiles[wave.ProfileStart + i];
+                if ((profile.MinimumCount > 0 || profile.Weight > 0) && !HasSpace(grid, profile.Profile.NavigationRadius, wave, ranges)) return false;
+            }
+            for (int i = 0; i < wave.EliteProfileCount; i++)
+                if (elites[wave.EliteProfileStart + i].Count > 0 && !HasSpace(grid, elites[wave.EliteProfileStart + i].Profile.NavigationRadius, wave, ranges)) return false;
+            return true;
+        }
+        private static bool HasSpace(NavigationGrid grid, float radius, EnemyWaveDefinition wave, DynamicBuffer<EnemyWaveSpawnRange> ranges)
+        {
+            ref var g = ref grid.Data.Value; int cls = NavigationGeometry.ClearanceClass(ref g, radius);
+            int region = NavigationGeometry.Region(ref g, NavigationGeometry.Anchor(ref g, grid.ParticipationAnchor, cls), cls);
+            if (region == 0) return false;
+            for (int r = 0; r < wave.RangeCount; r++)
+            {
+                var range = ranges[wave.RangeStart + r]; var half = new float2(range.Width, range.Depth) * .5f;
+                for (int cell = 0; cell < g.Size.x * g.Size.y; cell++)
+                {
+                    if (NavigationGeometry.Region(ref g, cell, cls) != region) continue;
+                    float2 candidate = math.clamp(NavigationGeometry.Center(ref g, cell), range.Center.xz - half, range.Center.xz + half);
+                    if (NavigationGeometry.SpawnAllowed(grid, candidate, radius)) return true;
+                }
+            }
+            return false;
         }
 
         private static void BeginAwaitingActivation(ref EnemyWaveSequence sequence, EnemyWaveDefinition wave, double now)
@@ -227,7 +258,7 @@ namespace CrowdPunch.Systems.Initialization
                 for (int attempt = 0; attempt < math.max(1, sequence.PlacementAttemptsPerEnemy); attempt++)
                 {
                     position = SelectPosition(ref random, wave, ranges);
-                    if(!NavigationGeometry.SpawnAllowed(navigationGrid,position.xz,selectedProfile.NavigationRadius))
+                    if (!NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, selectedProfile.NavigationRadius))
                     { rejectedNavigation++; continue; }
                     if (IsSafe(physicsWorld, player, position, selectedProfile.SpawnClearance,
                             sequence.MinimumPlayerDistance, occupiedEnemies, accepted))

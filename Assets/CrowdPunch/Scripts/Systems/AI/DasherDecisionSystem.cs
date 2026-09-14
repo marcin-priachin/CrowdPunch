@@ -90,7 +90,7 @@ namespace CrowdPunch.Systems.AI
                     movement.Speed = distance < preferredMin ? settings.RetreatSpeed : distance > preferredMax ? settings.ApproachSpeed : 0f;
                     if (movement.Direction.Equals(float3.zero)) movement.Speed = 0f;
                     else if (movement.Speed <= 0f) movement.Speed = movementSettings.WanderSpeed;
-                    float3 destination = NavigationGeometry.DistanceBandDestination(Grid,transform.Position,Player.Position,preferredMin,preferredMax,agent.Radius);
+                    float3 destination = NavigationGeometry.DistanceBandDestination(Grid, transform.Position, Player.Position, preferredMin, preferredMax, agent.Radius);
                     destination.y = transform.Position.y;
                     navigation = NavigationIntent.Travel(destination, movement.Speed, .35f, separation, NavigationGoalKind.DistanceBand);
                     if (math.lengthsq(primaryDirection) == 0) navigation.Mode = NavigationMode.Hold;
