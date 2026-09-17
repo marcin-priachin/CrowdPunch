@@ -27,11 +27,15 @@ namespace CrowdPunch.Bakers
                 authoring.settings.cellSize, radii, rectangles, Allocator.Persistent);
             blob.Value.Margin = authoring.settings.clearanceMargin;
             rectangles.Dispose();
+            bool anchorValid = NavigationGeometry.TryResolveParticipationAnchor(ref blob.Value,
+                authoring.overrideParticipationAnchor, authoring.participationAnchor, out float2 anchor);
             AddBlobAsset(ref blob, out _); var entity = GetEntity(TransformUsageFlags.WorldSpace);
-            AddComponent(entity, new NavigationGrid { Data = blob, ParticipationAnchor = authoring.participationAnchor });
+            AddComponent(entity, new NavigationGrid { Data = blob, ParticipationAnchor = anchor });
             AddComponent(entity, authoring.settings.Runtime); AddComponent<NavigationDiagnostics>(entity);
-            for (int c = 0; c < 3; c++) if (NavigationGeometry.Anchor(ref blob.Value, authoring.participationAnchor, c) < 0)
-                    UnityEngine.Debug.LogError("Navigation participation anchor lacks clearance for class " + c, authoring);
+            if (!anchorValid)
+                UnityEngine.Debug.LogError(authoring.overrideParticipationAnchor
+                    ? "Navigation participation anchor override is outside the spacing bounds or lacks clearance. Move it to open ground clear for every configured radius class, or disable the override."
+                    : "Navigation spacing bounds contain no participation anchor clear for every configured radius class. Check obstacle footprints, bounds, cell size, and clearance settings.", authoring);
         }
     }
 }

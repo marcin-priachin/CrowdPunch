@@ -861,3 +861,5 @@ Real Input System dash verification produced two starts/two ends, including an e
 ## Static Obstacles And Navigation
 
 The dedicated validation arena adds baked rectangular solids, class-based clearance and reachable regions, explicit tactical intent, a shared budgeted A* scheduler, and optional editor diagnostics. The original ten-level progression is unchanged. See [Navigation ownership, settings, and system order](Navigation.md) and [performed validation and profiling](../Validation/NavigationValidation.md). Projectile cover, explosion occlusion, and terrain-aware homing are not introduced: existing projectiles pass static solids, explosions remain radial, and launched-body homing may select an obstructed target while physical wall collision remains active.
+
+Navigation participation anchors now default to the clearance-valid spacing-bounds centre (or nearest valid cell), with an optional explicit override for disconnected layouts. See [anchor selection](Navigation.md#spawning-and-lifecycle). This is baked configuration, not a per-frame search.

@@ -16,6 +16,53 @@ namespace CrowdPunch.Tests
         }
         private static NavigationRectangle Box(float x0, float y0, float x1, float y1) => new NavigationRectangle { Minimum = new float2(x0, y0), Maximum = new float2(x1, y1) };
         [Test]
+        public void ParticipationAnchorUsesTranslatedSpacingCentreAndIgnoresDisabledOverride()
+        {
+            // COMBAT-017: translated, differently sized spacing bounds define the origin.
+            using var rectangles = new NativeArray<NavigationRectangle>(0, Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(20, -14), new float2(42, 14),
+                1, new float3(.62f, .97f, 1.62f), rectangles, Allocator.Persistent);
+            Assert.True(NavigationGeometry.TryResolveParticipationAnchor(ref blob.Value, false, new float2(0, -14), out var anchor));
+            Assert.AreEqual(new float2(31, 0), anchor);
+        }
+        [Test]
+        public void BlockedParticipationCentreSelectsNearestCellClearForEveryClass()
+        {
+            using var blob = Grid(Box(-1, -1, 1, 1)); ref var g = ref blob.Value;
+            Assert.True(NavigationGeometry.TryResolveParticipationAnchor(ref g, false, default, out var anchor));
+            for (int cls = 0; cls < 3; cls++) Assert.GreaterOrEqual(NavigationGeometry.Anchor(ref g, anchor, cls), 0);
+            for (int cell = 0; cell < 400; cell++)
+            {
+                var candidate = NavigationGeometry.Center(ref g, cell);
+                bool clear = true;
+                for (int cls = 0; cls < 3; cls++) clear &= NavigationGeometry.Anchor(ref g, candidate, cls) >= 0;
+                if (clear) Assert.GreaterOrEqual(math.lengthsq(candidate), math.lengthsq(anchor));
+            }
+            Assert.True(NavigationGeometry.TryResolveParticipationAnchor(ref g, false, default, out var repeated));
+            Assert.AreEqual(anchor, repeated);
+        }
+        [Test]
+        public void ParticipationOverrideSelectsRegionAndInvalidOverrideIsNotRelocated()
+        {
+            using var blob = Grid(Box(-1, -10, 1, 10)); ref var g = ref blob.Value;
+            var requested = new float2(5, 0);
+            Assert.True(NavigationGeometry.TryResolveParticipationAnchor(ref g, true, requested, out var anchor));
+            Assert.AreEqual(requested, anchor);
+            var grid = new NavigationGrid { Data = blob, ParticipationAnchor = anchor };
+            Assert.True(NavigationGeometry.SpawnAllowed(grid, new float2(6, 0), .2f));
+            Assert.False(NavigationGeometry.SpawnAllowed(grid, new float2(-6, 0), .2f));
+            requested = new float2(0, -14);
+            Assert.False(NavigationGeometry.TryResolveParticipationAnchor(ref g, true, requested, out anchor));
+            Assert.AreEqual(requested, anchor);
+        }
+        [Test]
+        public void ParticipationAnchorFailsWhenNoPointFitsEveryClass()
+        {
+            // Small enemies fit this corridor; the largest configured class does not.
+            using var blob = Grid(Box(-10, -10, -1, 10), Box(1, -10, 10, 10));
+            Assert.False(NavigationGeometry.TryResolveParticipationAnchor(ref blob.Value, false, default, out _));
+        }
+        [Test]
         public void CoordinatesAndRasterisationUseWorldXZAndActualBounds()
         {
             using var blob = Grid(Box(-1, -2, 1, 2)); ref var g = ref blob.Value;

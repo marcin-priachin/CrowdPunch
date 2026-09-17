@@ -35,7 +35,7 @@ namespace CrowdPunch.Editor
                 var arena = new GameObject("Navigation Arena - XZ bounds").AddComponent<ArenaAuthoring>();
                 var a = new SerializedObject(arena); a.FindProperty("spacingSize").vector3Value = new Vector3(48, 16, 40);
                 a.FindProperty("defeatSize").vector3Value = new Vector3(58, 20, 50); a.ApplyModifiedPropertiesWithoutUndo();
-                var nav = arena.gameObject.AddComponent<NavigationArenaAuthoring>(); nav.settings = settings; nav.participationAnchor = new Vector2(0, -14);
+                var nav = arena.gameObject.AddComponent<NavigationArenaAuthoring>(); nav.settings = settings;
                 Block(arena.transform, "Short block west", new Vector2(-8, -4), new Vector2Int(6, 2), material);
                 Block(arena.transform, "Short block east", new Vector2(8, 2), new Vector2Int(6, 2), material);
                 Block(arena.transform, "L vertical", new Vector2(-7, 8), new Vector2Int(2, 8), material);

@@ -100,6 +100,32 @@ namespace CrowdPunch.Utilities
                 }
             return best < float.MaxValue;
         }
+        // Bake-time selection only. COMBAT-017: use spacing bounds, never defeat bounds.
+        public static bool TryResolveParticipationAnchor(ref NavigationGridBlob g, bool useOverride,
+            float2 explicitAnchor, out float2 anchor)
+        {
+            anchor = useOverride ? explicitAnchor : (g.Minimum + g.Maximum) * .5f;
+            if (ParticipationAnchorIsClear(ref g, anchor)) return true;
+            if (useOverride) return false;
+
+            float2 centre = anchor;
+            float bestDistance = float.MaxValue;
+            for (int cell = 0; cell < g.Size.x * g.Size.y; cell++)
+            {
+                float2 candidate = Center(ref g, cell);
+                float distance = math.distancesq(candidate, centre);
+                if (distance >= bestDistance || !ParticipationAnchorIsClear(ref g, candidate)) continue;
+                anchor = candidate;
+                bestDistance = distance;
+            }
+            // Equal-distance candidates retain grid order, keeping rebakes deterministic.
+            return bestDistance < float.MaxValue;
+        }
+        private static bool ParticipationAnchorIsClear(ref NavigationGridBlob g, float2 point)
+        {
+            for (int c = 0; c < 3; c++) if (Anchor(ref g, point, c) < 0) return false;
+            return true;
+        }
         public static bool SpawnAllowed(NavigationGrid grid, float2 position, float radius)
         {
             if (!grid.Data.IsCreated) return true;

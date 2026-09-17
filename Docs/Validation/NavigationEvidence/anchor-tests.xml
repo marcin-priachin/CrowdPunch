@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="16" result="Passed" total="16" passed="16" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-17 16:05:34Z" end-time="2026-09-17 16:05:35Z" duration="0.7337642">
+  <test-suite type="TestSuite" id="1000" name="CrowdPunch" fullname="CrowdPunch" runstate="Runnable" testcasecount="106" result="Passed" start-time="2026-09-17 16:05:34Z" end-time="2026-09-17 16:05:35Z" duration="0.733764" total="16" passed="16" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1131" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/pc/Documents/CrowdPunch/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="105" result="Passed" start-time="2026-09-17 16:05:34Z" end-time="2026-09-17 16:05:35Z" duration="0.662890" total="16" passed="16" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="23588" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1132" name="CrowdPunch" fullname="CrowdPunch" runstate="Runnable" testcasecount="105" result="Passed" start-time="2026-09-17 16:05:34Z" end-time="2026-09-17 16:05:35Z" duration="0.661562" total="16" passed="16" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1133" name="Tests" fullname="CrowdPunch.Tests" runstate="Runnable" testcasecount="105" result="Passed" start-time="2026-09-17 16:05:34Z" end-time="2026-09-17 16:05:35Z" duration="0.562016" total="16" passed="16" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1113" name="NavigationSystemTests" fullname="CrowdPunch.Tests.NavigationSystemTests" classname="CrowdPunch.Tests.NavigationSystemTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-17 16:05:34Z" end-time="2026-09-17 16:05:35Z" duration="0.391991" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1115" name="ChangedGoalCancelsAnUnfinishedResultAndDisabledAssistanceRetainsLegacy" fullname="CrowdPunch.Tests.NavigationSystemTests.ChangedGoalCancelsAnUnfinishedResultAndDisabledAssistanceRetainsLegacy" methodname="ChangedGoalCancelsAnUnfinishedResultAndDisabledAssistanceRetainsLegacy" classname="CrowdPunch.Tests.NavigationSystemTests" runstate="Runnable" seed="1624927862" result="Passed" start-time="2026-09-17 16:05:34Z" end-time="2026-09-17 16:05:34Z" duration="0.251478" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1117" name="ImpossibleSetupRetriesAfterCooldownWithoutPretendingToArrive" fullname="CrowdPunch.Tests.NavigationSystemTests.ImpossibleSetupRetriesAfterCooldownWithoutPretendingToArrive" methodname="ImpossibleSetupRetriesAfterCooldownWithoutPretendingToArrive" classname="CrowdPunch.Tests.NavigationSystemTests" runstate="Runnable" seed="1460398817" result="Passed" start-time="2026-09-17 16:05:34Z" end-time="2026-09-17 16:05:35Z" duration="0.007909" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1116" name="PoolingAndSceneReloadInvalidateSearchAndResumeFromActualPosition" fullname="CrowdPunch.Tests.NavigationSystemTests.PoolingAndSceneReloadInvalidateSearchAndResumeFromActualPosition" methodname="PoolingAndSceneReloadInvalidateSearchAndResumeFromActualPosition" classname="CrowdPunch.Tests.NavigationSystemTests" runstate="Runnable" seed="1397417217" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.006757" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1114" name="SharedFifoCompletesEveryWaitingEnemyWithinGlobalBudget" fullname="CrowdPunch.Tests.NavigationSystemTests.SharedFifoCompletesEveryWaitingEnemyWithinGlobalBudget" methodname="SharedFifoCompletesEveryWaitingEnemyWithinGlobalBudget" classname="CrowdPunch.Tests.NavigationSystemTests" runstate="Runnable" seed="733010990" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.019030" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1118" name="NavigationTests" fullname="CrowdPunch.Tests.NavigationTests" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.069019" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1125" name="AStarFindsDetourAndEverySmoothingShortcutIsSafe" fullname="CrowdPunch.Tests.NavigationTests.AStarFindsDetourAndEverySmoothingShortcutIsSafe" methodname="AStarFindsDetourAndEverySmoothingShortcutIsSafe" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="33298604" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.006195" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1120" name="BlockedParticipationCentreSelectsNearestCellClearForEveryClass" fullname="CrowdPunch.Tests.NavigationTests.BlockedParticipationCentreSelectsNearestCellClearForEveryClass" methodname="BlockedParticipationCentreSelectsNearestCellClearForEveryClass" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="1947075432" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.007373" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1127" name="BudgetContinuationIsFairAndLimitIsNotUnreachable" fullname="CrowdPunch.Tests.NavigationTests.BudgetContinuationIsFairAndLimitIsNotUnreachable" methodname="BudgetContinuationIsFairAndLimitIsNotUnreachable" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="1099401372" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.004583" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1124" name="ClearanceAppliesToEdgesCornersAndDifferentRadii" fullname="CrowdPunch.Tests.NavigationTests.ClearanceAppliesToEdgesCornersAndDifferentRadii" methodname="ClearanceAppliesToEdgesCornersAndDifferentRadii" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="2144216729" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.010187" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1123" name="CoordinatesAndRasterisationUseWorldXZAndActualBounds" fullname="CrowdPunch.Tests.NavigationTests.CoordinatesAndRasterisationUseWorldXZAndActualBounds" methodname="CoordinatesAndRasterisationUseWorldXZAndActualBounds" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="2099859363" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.005191" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1128" name="DestinationVersionsPoolingAndRestartRejectOldResults" fullname="CrowdPunch.Tests.NavigationTests.DestinationVersionsPoolingAndRestartRejectOldResults" methodname="DestinationVersionsPoolingAndRestartRejectOldResults" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="539137017" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.001324" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1129" name="HighSpeedSteeringBrakesForTerrainWithoutReducingEveryStepToACrawl" fullname="CrowdPunch.Tests.NavigationTests.HighSpeedSteeringBrakesForTerrainWithoutReducingEveryStepToACrawl" methodname="HighSpeedSteeringBrakesForTerrainWithoutReducingEveryStepToACrawl" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="954589964" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.005215" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1130" name="InvalidCoverageSlotsResolveStablyWithoutOneFallbackCell" fullname="CrowdPunch.Tests.NavigationTests.InvalidCoverageSlotsResolveStablyWithoutOneFallbackCell" methodname="InvalidCoverageSlotsResolveStablyWithoutOneFallbackCell" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="1909087611" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.006967" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1122" name="ParticipationAnchorFailsWhenNoPointFitsEveryClass" fullname="CrowdPunch.Tests.NavigationTests.ParticipationAnchorFailsWhenNoPointFitsEveryClass" methodname="ParticipationAnchorFailsWhenNoPointFitsEveryClass" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="1960173231" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.001463" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1119" name="ParticipationAnchorUsesTranslatedSpacingCentreAndIgnoresDisabledOverride" fullname="CrowdPunch.Tests.NavigationTests.ParticipationAnchorUsesTranslatedSpacingCentreAndIgnoresDisabledOverride" methodname="ParticipationAnchorUsesTranslatedSpacingCentreAndIgnoresDisabledOverride" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="571679962" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.005412" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1121" name="ParticipationOverrideSelectsRegionAndInvalidOverrideIsNotRelocated" fullname="CrowdPunch.Tests.NavigationTests.ParticipationOverrideSelectsRegionAndInvalidOverrideIsNotRelocated" methodname="ParticipationOverrideSelectsRegionAndInvalidOverrideIsNotRelocated" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="727569886" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.004567" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1126" name="RegionsRejectDisconnectedDestinationsAndSpawns" fullname="CrowdPunch.Tests.NavigationTests.RegionsRejectDisconnectedDestinationsAndSpawns" methodname="RegionsRejectDisconnectedDestinationsAndSpawns" classname="CrowdPunch.Tests.NavigationTests" runstate="Runnable" seed="1398675653" result="Passed" start-time="2026-09-17 16:05:35Z" end-time="2026-09-17 16:05:35Z" duration="0.006262" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[Saving results to: C:/Users/pc/AppData/LocalLow/DefaultCompany/CrowdPunch\TestResults.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
