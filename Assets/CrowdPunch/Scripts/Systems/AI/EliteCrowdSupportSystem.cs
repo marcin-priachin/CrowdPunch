@@ -255,7 +255,157 @@ namespace CrowdPunch.Systems.AI
                 }
             }
 
+            if (TryFindDistantStagingPosition(
+                    elite,
+                    projectile,
+                    elitePosition,
+                    projectilePosition,
+                    playerPosition,
+                    clearance,
+                    settings.DesiredPunchDistance,
+                    enemies,
+                    out float3 distantStagingPosition))
+            {
+                return distantStagingPosition;
+            }
+
             return projectilePosition;
+        }
+
+        private bool TryFindDistantStagingPosition(
+            Entity elite,
+            Entity projectile,
+            float3 elitePosition,
+            float3 projectilePosition,
+            float3 playerPosition,
+            float clearance,
+            float desiredPunchDistance,
+            NativeArray<Entity> enemies,
+            out float3 stagingPosition)
+        {
+            stagingPosition = projectilePosition;
+            if (!SystemAPI.HasSingleton<NavigationGrid>() || !SystemAPI.HasSingleton<NavigationRuntimeSettings>()
+                || SystemAPI.GetSingleton<NavigationRuntimeSettings>().Enabled == 0)
+            {
+                return false;
+            }
+
+            NavigationGrid grid = SystemAPI.GetSingleton<NavigationGrid>();
+            if (!grid.Data.IsCreated)
+            {
+                return false;
+            }
+
+            ref NavigationGridBlob geometry = ref grid.Data.Value;
+            int originCell = NavigationGeometry.Cell(ref geometry, projectilePosition.xz);
+            if (originCell < 0)
+            {
+                return false;
+            }
+
+            int2 origin = new int2(originCell % geometry.Size.x, originCell / geometry.Size.x);
+            int maximumRing = math.max(geometry.Size.x, geometry.Size.y);
+            for (int ring = 1; ring <= maximumRing; ring++)
+            {
+                for (int x = -ring; x <= ring; x++)
+                {
+                    if (TryStagingCell(origin + new int2(x, -ring), ref geometry, elite, projectile,
+                            elitePosition, projectilePosition, playerPosition, clearance,
+                            desiredPunchDistance, enemies, out stagingPosition)
+                        || TryStagingCell(origin + new int2(x, ring), ref geometry, elite, projectile,
+                            elitePosition, projectilePosition, playerPosition, clearance,
+                            desiredPunchDistance, enemies, out stagingPosition))
+                    {
+                        return true;
+                    }
+                }
+
+                for (int z = -ring + 1; z < ring; z++)
+                {
+                    if (TryStagingCell(origin + new int2(-ring, z), ref geometry, elite, projectile,
+                            elitePosition, projectilePosition, playerPosition, clearance,
+                            desiredPunchDistance, enemies, out stagingPosition)
+                        || TryStagingCell(origin + new int2(ring, z), ref geometry, elite, projectile,
+                            elitePosition, projectilePosition, playerPosition, clearance,
+                            desiredPunchDistance, enemies, out stagingPosition))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private bool TryStagingCell(
+            int2 coordinates,
+            ref NavigationGridBlob geometry,
+            Entity elite,
+            Entity projectile,
+            float3 elitePosition,
+            float3 projectilePosition,
+            float3 playerPosition,
+            float clearance,
+            float desiredPunchDistance,
+            NativeArray<Entity> enemies,
+            out float3 stagingPosition)
+        {
+            stagingPosition = projectilePosition;
+            if (math.any(coordinates < 0) || math.any(coordinates >= geometry.Size))
+            {
+                return false;
+            }
+
+            int cell = coordinates.y * geometry.Size.x + coordinates.x;
+            float2 centre = NavigationGeometry.Center(ref geometry, cell);
+            float3 candidate = new float3(centre.x, projectilePosition.y, centre.y);
+            if (math.distancesq(candidate.xz, elitePosition.xz) < clearance * clearance
+                || !HasDistantStagingClearance(elite, projectile, elitePosition, candidate,
+                    playerPosition, desiredPunchDistance)
+                || IsStagingPositionOccupied(elite, projectile, candidate, clearance, enemies))
+            {
+                return false;
+            }
+
+            stagingPosition = candidate;
+            return true;
+        }
+
+        private bool HasDistantStagingClearance(Entity elite, Entity projectile, float3 elitePosition,
+            float3 stagingPosition, float3 playerPosition, float desiredPunchDistance)
+        {
+            float3 desiredElitePosition = ElitePunchSystem.DesiredPosition(
+                stagingPosition, playerPosition, desiredPunchDistance);
+            desiredElitePosition.y = elitePosition.y;
+            return HasNavigationClearance(elite, projectile, elitePosition, stagingPosition,
+                       desiredElitePosition, false)
+                && !HasWorldObstruction(elitePosition, desiredElitePosition);
+        }
+
+        private bool IsStagingPositionOccupied(Entity elite, Entity projectile, float3 stagingPosition,
+            float clearance, NativeArray<Entity> enemies)
+        {
+            float clearanceSq = clearance * clearance;
+            for (int index = 0; index < enemies.Length; index++)
+            {
+                Entity blocker = enemies[index];
+                if (blocker == elite || blocker == projectile || !EntityManager.Exists(blocker)
+                    || EntityManager.HasComponent<RespawnRequest>(blocker)
+                    && EntityManager.IsComponentEnabled<RespawnRequest>(blocker)
+                    || EntityManager.GetComponentData<EnemyLaunchState>(blocker).Phase == EnemyLaunchPhase.Defeated)
+                {
+                    continue;
+                }
+
+                if (math.distancesq(
+                        EntityManager.GetComponentData<LocalTransform>(blocker).Position.xz,
+                        stagingPosition.xz) < clearanceSq)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private bool TryGetNavigationReentry(Entity projectile, float3 position, out float3 destination)
@@ -315,14 +465,16 @@ namespace CrowdPunch.Systems.AI
             float3 playerPosition,
             float clearance,
             float desiredPunchDistance,
-            NativeArray<Entity> enemies)
+            NativeArray<Entity> enemies,
+            bool requireDirectProjectilePath = true)
         {
             float3 desiredElitePosition = ElitePunchSystem.DesiredPosition(
                 projectilePosition,
                 playerPosition,
                 desiredPunchDistance);
             desiredElitePosition.y = elitePosition.y;
-            if (!HasNavigationClearance(elite, projectile, elitePosition, projectilePosition, desiredElitePosition)
+            if (!HasNavigationClearance(elite, projectile, elitePosition, projectilePosition,
+                    desiredElitePosition, requireDirectProjectilePath)
                 || HasWorldObstruction(elitePosition, desiredElitePosition))
             {
                 return false;
@@ -357,7 +509,7 @@ namespace CrowdPunch.Systems.AI
         }
 
         private bool HasNavigationClearance(Entity elite, Entity projectile, float3 elitePosition,
-            float3 stagingPosition, float3 desiredElitePosition)
+            float3 stagingPosition, float3 desiredElitePosition, bool requireDirectProjectilePath)
         {
             if (!SystemAPI.HasSingleton<NavigationGrid>() || !SystemAPI.HasSingleton<NavigationRuntimeSettings>()
                 || SystemAPI.GetSingleton<NavigationRuntimeSettings>().Enabled == 0)
@@ -375,9 +527,21 @@ namespace CrowdPunch.Systems.AI
             // ENEMY-009: a centre ray can pass where the elite's full body cannot.
             // Use the same inflated terrain/bounds and anchored endpoints as ExactSetup navigation.
             float2 projectilePosition = EntityManager.GetComponentData<LocalTransform>(projectile).Position.xz;
-            return NavigationGeometry.Anchor(ref geometry, stagingPosition.xz, projectileClass) >= 0
-                && NavigationGeometry.Anchor(ref geometry, desiredElitePosition.xz, eliteClass) >= 0
-                && NavigationGeometry.Segment(ref geometry, projectilePosition, stagingPosition.xz, geometry.Radii[projectileClass])
+            int projectileStart = NavigationGeometry.Anchor(ref geometry, projectilePosition, projectileClass);
+            int projectileEnd = NavigationGeometry.Anchor(ref geometry, stagingPosition.xz, projectileClass);
+            int eliteStart = NavigationGeometry.Anchor(ref geometry, elitePosition.xz, eliteClass);
+            int eliteEnd = NavigationGeometry.Anchor(ref geometry, desiredElitePosition.xz, eliteClass);
+            return projectileStart >= 0
+                && projectileEnd >= 0
+                && eliteStart >= 0
+                && eliteEnd >= 0
+                && NavigationGeometry.Region(ref geometry, projectileStart, projectileClass)
+                    == NavigationGeometry.Region(ref geometry, projectileEnd, projectileClass)
+                && NavigationGeometry.Region(ref geometry, eliteStart, eliteClass)
+                    == NavigationGeometry.Region(ref geometry, eliteEnd, eliteClass)
+                && (!requireDirectProjectilePath
+                    || NavigationGeometry.Segment(ref geometry, projectilePosition, stagingPosition.xz,
+                        geometry.Radii[projectileClass]))
                 && NavigationGeometry.Segment(ref geometry, elitePosition.xz, desiredElitePosition.xz, geometry.Radii[eliteClass]);
         }
 

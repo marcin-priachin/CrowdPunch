@@ -395,14 +395,17 @@ owned by the existing wave counters.
 `EliteCrowdSupportSystem` runs after elite target selection and before movement integration. For each active elite, its
 selected projectile (or the closest active normal before selection) first tests its current location as a staging point.
 The test excludes static-world ray obstruction, occupied target space, and non-defeated enemies inside the finite route
-from the elite to its eventual behind-projectile position. If blocked, the projectile checks two deterministic rings of
-eight nearby candidates, preferring lateral displacement, and writes movement toward the first clear candidate. It requests
+from the elite to its eventual behind-projectile position. If blocked, the projectile first checks two deterministic rings
+of eight nearby candidates, preferring lateral displacement. If those local samples cannot provide full elite clearance,
+it searches navigation-cell rings outward until it finds a reachable staging cell with a direct, body-clear elite approach.
+The projectile may route around static terrain to reach that distant cell; the elite remains stationary until it arrives.
+This lets a selected enemy beside a long obstacle move far enough away for an unobstructed aim and approach. It requests
 zero speed when its current approach lane is clear or no sampled alternative is available; only a verified clear current
 lane publishes `IsStaged`. With navigation enabled, staging also checks clearance-class-inflated static geometry and arena
 bounds for the projectile path and elite approach, plus navigation anchors at both destinations. A centre ray alone does
 not prove that an elite can reach the behind-projectile point. The target reservation publishes `IsStaged`; while it is false,
 `ElitePunchSystem` requests zero elite movement and does not spend setup timeout, preventing two moving goals from chasing
-one another. This avoids per-frame allocations and adds no tuning: sampling and
+one another. The expanding search is allocation-free and adds no tuning: sampling and
 clearance reuse the elite's existing crowd-corridor radius and position tolerance. Other active normal enemies in the finite
 projectile-to-player corridor override chase intent with lateral movement toward the nearest side.
 Launched, recovering, defeated, disabled, and pooled enemies are excluded. When several elites are active, each normal

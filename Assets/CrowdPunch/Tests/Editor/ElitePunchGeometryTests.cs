@@ -13,6 +13,68 @@ namespace CrowdPunch.Tests
 {
     public sealed class ElitePunchGeometryTests
     {
+        [Test]
+        public void Enemy009_ProjectileMovesBeyondLocalSamplesToClearLongObstacleBeforeEliteApproaches()
+        {
+            using var world = new World("Elite long-obstacle staging");
+            Entity elite = CreateEliteAttempt(world, out Entity target);
+            var em = world.EntityManager;
+            em.SetComponentData(elite, LocalTransform.FromPosition(new float3(-4, 0, 0)));
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(2, 0, 0)));
+            using var playerQuery = em.CreateEntityQuery(typeof(PlayerSnapshot));
+            em.SetComponentData(playerQuery.GetSingletonEntity(), new PlayerSnapshot
+            { IsAvailable = true, Position = new float3(10, 0, 0) });
+            var settings = em.GetComponentData<ElitePunchSettings>(elite);
+            settings.CrowdCorridorRadius = 1.5f;
+            settings.DesiredPunchDistance = 1f;
+            em.SetComponentData(elite, settings);
+            em.AddComponentData(elite, new NavigationAgent { Radius = .75f });
+            em.AddComponentData(target, new NavigationAgent { Radius = .2f });
+            em.AddComponentData(target, new EnemyMovementSettings { MoveSpeed = 5 });
+            em.AddComponentData(target, new DesiredMovement());
+            em.AddComponentData(target, new NavigationIntent());
+            em.AddComponentData(target, new EnemyContactAttemptState());
+            em.AddComponentData(target, new EnemyContactDamageSettings());
+            using var obstacles = new NativeArray<NavigationRectangle>(new[]
+            {
+                new NavigationRectangle { Minimum = new float2(-1, -5), Maximum = new float2(1, 5) }
+            }, Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-15), new float2(15), 1,
+                new float3(.3f, .6f, 1.2f), obstacles, Allocator.Persistent);
+            Entity arena = em.CreateEntity(typeof(NavigationGrid), typeof(NavigationRuntimeSettings));
+            em.SetComponentData(arena, new NavigationGrid { Data = blob });
+            em.SetComponentData(arena, new NavigationRuntimeSettings { Enabled = 1 });
+
+            world.GetOrCreateSystemManaged<EliteCrowdSupportSystem>().Update();
+
+            NavigationIntent intent = em.GetComponentData<NavigationIntent>(target);
+            Assert.AreEqual(0, em.GetComponentData<ElitePunchReservation>(target).IsStaged);
+            Assert.Greater(em.GetComponentData<DesiredMovement>(target).Speed, 0);
+            Assert.Greater(math.abs(intent.Destination.z), 3f,
+                "Two local 1.5 m rings cannot clear this wall; staging must keep searching outward.");
+            float3 behind = ElitePunchSystem.DesiredPosition(intent.Destination, new float3(10, 0, 0), 1f);
+            Assert.IsTrue(NavigationGeometry.Segment(ref blob.Value, new float2(-4, 0), behind.xz, 1.2f),
+                "The chosen projectile position must already provide the elite's full clear approach lane.");
+
+            Entity transientBlocker = em.CreateEntity(typeof(Enemy), typeof(EnemyTier), typeof(LocalTransform),
+                typeof(EnemyLaunchState), typeof(DesiredMovement), typeof(EnemyMovementSettings),
+                typeof(NavigationIntent), typeof(EnemyContactAttemptState), typeof(EnemyContactDamageSettings),
+                typeof(ElitePunchReservation));
+            em.SetComponentData(transientBlocker, new EnemyTier { Value = EnemyCombatTier.Normal });
+            em.SetComponentData(transientBlocker, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            em.SetComponentData(transientBlocker, LocalTransform.FromPosition(
+                math.lerp(new float3(-4, 0, 0), behind, .5f)));
+            em.SetComponentData(transientBlocker, new EnemyMovementSettings { MoveSpeed = 5 });
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(2, 0, 0)));
+            em.SetComponentData(target, new DesiredMovement());
+
+            world.GetOrCreateSystemManaged<EliteCrowdSupportSystem>().Update();
+
+            Assert.Greater(em.GetComponentData<DesiredMovement>(target).Speed, 0,
+                "A transient crowd blocker may delay IsStaged, but must not prevent obstacle-clear relocation.");
+            Assert.AreEqual(0, em.GetComponentData<ElitePunchReservation>(target).IsStaged);
+        }
+
         [TestCase(false, 8.5f)]
         [TestCase(true, 8.5f)]
         [TestCase(false, 12f)]
