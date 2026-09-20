@@ -1,5 +1,6 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
+using CrowdPunch.Utilities;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -83,7 +84,11 @@ namespace CrowdPunch.Systems.AI
                     projectilePosition,
                     player.Position,
                     elite.Settings,
-                    normalEnemies);
+                    normalEnemies,
+                    out bool isStaged);
+                if (!isStaged)
+                    stagingPosition = GetProjectileApproachDestination(projectile, elite.Entity,
+                        projectilePosition, elite.Position, stagingPosition);
 
                 for (int index = 0; index < normalEnemies.Length; index++)
                 {
@@ -113,7 +118,7 @@ namespace CrowdPunch.Systems.AI
                         ElitePunchReservation reservation = EntityManager.GetComponentData<ElitePunchReservation>(enemy);
                         if (reservation.Owner == elite.Entity)
                         {
-                            reservation.IsStaged = movement.Speed <= 0f ? (byte)1 : (byte)0;
+                            reservation.IsStaged = isStaged ? (byte)1 : (byte)0;
                             EntityManager.SetComponentData(enemy, reservation);
                         }
                     }
@@ -200,8 +205,12 @@ namespace CrowdPunch.Systems.AI
             float3 projectilePosition,
             float3 playerPosition,
             ElitePunchSettings settings,
-            NativeArray<Entity> enemies)
+            NativeArray<Entity> enemies,
+            out bool isStaged)
         {
+            isStaged = false;
+            if (TryGetNavigationReentry(projectile, projectilePosition, out float3 reentry))
+                return reentry;
             float clearance = math.max(0.1f, settings.CrowdCorridorRadius);
             if (IsApproachLaneClear(
                     elite,
@@ -213,6 +222,7 @@ namespace CrowdPunch.Systems.AI
                     settings.DesiredPunchDistance,
                     enemies))
             {
+                isStaged = true;
                 return projectilePosition;
             }
 
@@ -248,6 +258,55 @@ namespace CrowdPunch.Systems.AI
             return projectilePosition;
         }
 
+        private bool TryGetNavigationReentry(Entity projectile, float3 position, out float3 destination)
+        {
+            destination = position;
+            if (!SystemAPI.HasSingleton<NavigationGrid>() || !SystemAPI.HasSingleton<NavigationRuntimeSettings>()
+                || SystemAPI.GetSingleton<NavigationRuntimeSettings>().Enabled == 0) return false;
+            NavigationGrid grid = SystemAPI.GetSingleton<NavigationGrid>();
+            if (!grid.Data.IsCreated) return false;
+            ref NavigationGridBlob geometry = ref grid.Data.Value;
+            float radius = EntityManager.GetComponentData<NavigationAgent>(projectile).Radius;
+            int clearance = NavigationGeometry.ClearanceClass(ref geometry, radius);
+            if (clearance < 0 || NavigationGeometry.Anchor(ref geometry, position.xz, clearance) >= 0
+                || !NavigationGeometry.TryEscape(ref geometry, position.xz, radius, clearance, out float2 entry)) return false;
+            destination = new float3(entry.x, position.y, entry.y);
+            return true;
+        }
+
+        private float3 GetProjectileApproachDestination(Entity projectile, Entity elite,
+            float3 position, float3 elitePosition, float3 destination)
+        {
+            float clearance = EntityManager.GetComponentData<NavigationAgent>(projectile).Radius
+                + EntityManager.GetComponentData<NavigationAgent>(elite).Radius + .1f;
+            float3 direct = destination - position;
+            direct.y = 0;
+            float3 approach = ElitePunchSystem.GetCollisionAvoidingApproachDirection(
+                position, elitePosition, destination, clearance);
+            if (math.dot(math.normalizesafe(direct), approach) >= .99f || math.lengthsq(direct) < .0001f)
+                return destination;
+
+            float3 waypoint = position + approach * math.min(2f, math.length(direct));
+            if (!SystemAPI.HasSingleton<NavigationGrid>() || !SystemAPI.HasSingleton<NavigationRuntimeSettings>()
+                || SystemAPI.GetSingleton<NavigationRuntimeSettings>().Enabled == 0) return waypoint;
+            NavigationGrid grid = SystemAPI.GetSingleton<NavigationGrid>();
+            if (!grid.Data.IsCreated) return waypoint;
+            ref NavigationGridBlob geometry = ref grid.Data.Value;
+            int cls = NavigationGeometry.ClearanceClass(ref geometry,
+                EntityManager.GetComponentData<NavigationAgent>(projectile).Radius);
+            if (cls < 0) return destination;
+            if (NavigationGeometry.Segment(ref geometry, position.xz, waypoint.xz, geometry.Radii[cls]))
+                return waypoint;
+
+            // If terrain blocks the chosen side, try the opposite side of the waiting elite.
+            float3 perpendicular = math.normalizesafe(new float3(-direct.z, 0, direct.x));
+            float side = math.dot(position - elitePosition, perpendicular) < 0f ? -1f : 1f;
+            float3 opposite = elitePosition - perpendicular * side * clearance;
+            opposite.y = position.y;
+            return NavigationGeometry.Segment(ref geometry, position.xz, opposite.xz, geometry.Radii[cls])
+                ? opposite : destination;
+        }
+
         private bool IsApproachLaneClear(
             Entity elite,
             Entity projectile,
@@ -263,7 +322,8 @@ namespace CrowdPunch.Systems.AI
                 playerPosition,
                 desiredPunchDistance);
             desiredElitePosition.y = elitePosition.y;
-            if (HasWorldObstruction(elitePosition, desiredElitePosition))
+            if (!HasNavigationClearance(elite, projectile, elitePosition, projectilePosition, desiredElitePosition)
+                || HasWorldObstruction(elitePosition, desiredElitePosition))
             {
                 return false;
             }
@@ -294,6 +354,31 @@ namespace CrowdPunch.Systems.AI
             }
 
             return true;
+        }
+
+        private bool HasNavigationClearance(Entity elite, Entity projectile, float3 elitePosition,
+            float3 stagingPosition, float3 desiredElitePosition)
+        {
+            if (!SystemAPI.HasSingleton<NavigationGrid>() || !SystemAPI.HasSingleton<NavigationRuntimeSettings>()
+                || SystemAPI.GetSingleton<NavigationRuntimeSettings>().Enabled == 0)
+                return true;
+
+            NavigationGrid grid = SystemAPI.GetSingleton<NavigationGrid>();
+            if (!grid.Data.IsCreated) return true;
+            ref NavigationGridBlob geometry = ref grid.Data.Value;
+            int eliteClass = NavigationGeometry.ClearanceClass(ref geometry,
+                EntityManager.GetComponentData<NavigationAgent>(elite).Radius);
+            int projectileClass = NavigationGeometry.ClearanceClass(ref geometry,
+                EntityManager.GetComponentData<NavigationAgent>(projectile).Radius);
+            if (eliteClass < 0 || projectileClass < 0) return false;
+
+            // ENEMY-009: a centre ray can pass where the elite's full body cannot.
+            // Use the same inflated terrain/bounds and anchored endpoints as ExactSetup navigation.
+            float2 projectilePosition = EntityManager.GetComponentData<LocalTransform>(projectile).Position.xz;
+            return NavigationGeometry.Anchor(ref geometry, stagingPosition.xz, projectileClass) >= 0
+                && NavigationGeometry.Anchor(ref geometry, desiredElitePosition.xz, eliteClass) >= 0
+                && NavigationGeometry.Segment(ref geometry, projectilePosition, stagingPosition.xz, geometry.Radii[projectileClass])
+                && NavigationGeometry.Segment(ref geometry, elitePosition.xz, desiredElitePosition.xz, geometry.Radii[eliteClass]);
         }
 
         private bool HasWorldObstruction(float3 start, float3 end)

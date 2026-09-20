@@ -55,9 +55,6 @@ namespace CrowdPunch.Systems.AI
                 {
                     Cancel(elite, ref state.ValueRW); movement.ValueRW = default; EntityManager.SetComponentData(elite, new NavigationIntent()); continue;
                 }
-                if (EntityManager.GetComponentData<NavigationPathState>(elite).TravelState == NavigationTravelState.Failed
-                    && state.ValueRO.Phase != ElitePunchPhase.Cooldown)
-                { BeginCooldown(elite, settings.ValueRO, ref state.ValueRW); movement.ValueRW = default; EntityManager.SetComponentData(elite, new NavigationIntent()); continue; }
                 state.ValueRW.SecondsRemaining -= dt;
                 if (state.ValueRO.Phase == ElitePunchPhase.InitialDelay)
                 {
@@ -116,25 +113,17 @@ namespace CrowdPunch.Systems.AI
                 {
                     if (state.ValueRO.SecondsRemaining > 0f) continue;
                     SelectTarget(elite, transform.ValueRO.Position, player, settings.ValueRO, all, ref state.ValueRW);
+                    // A cooldown approach is speculative. Retire its route before reserved setup begins.
+                    movement.ValueRW = default;
+                    EntityManager.SetComponentData(elite, new NavigationIntent());
                     continue;
                 }
                 if (!TryValidateTarget(elite, settings.ValueRO, ref state.ValueRW, out LocalTransform targetTransform))
                 {
                     Cancel(elite, ref state.ValueRW); state.ValueRW.Phase = ElitePunchPhase.SelectingTarget; continue;
                 }
-                ElitePunchReservation targetReservation = EntityManager.GetComponentData<ElitePunchReservation>(state.ValueRO.Target);
-                if (targetReservation.Owner == elite && targetReservation.IsStaged == 0)
-                {
-                    movement.ValueRW = default;
-                    EntityManager.SetComponentData(elite, new NavigationIntent());
-                    continue;
-                }
-                state.ValueRW.SetupSeconds += dt;
+                // ENEMY-009: staging pauses setup time, not nearest-projectile re-evaluation.
                 state.ValueRW.RetargetSeconds -= dt;
-                if (state.ValueRO.SetupSeconds > math.max(0f, settings.ValueRO.MaximumSetupDuration))
-                {
-                    BeginCooldown(elite, settings.ValueRO, ref state.ValueRW); continue;
-                }
                 if (state.ValueRO.RetargetSeconds <= 0f)
                 {
                     state.ValueRW.RetargetSeconds = math.max(0.02f, settings.ValueRO.RetargetInterval);
@@ -143,6 +132,8 @@ namespace CrowdPunch.Systems.AI
                     {
                         Cancel(elite, ref state.ValueRW);
                         SelectTarget(elite, transform.ValueRO.Position, player, settings.ValueRO, all, ref state.ValueRW);
+                        movement.ValueRW = default;
+                        EntityManager.SetComponentData(elite, new NavigationIntent());
                         continue;
                     }
 
@@ -153,6 +144,22 @@ namespace CrowdPunch.Systems.AI
                         state.ValueRW.ValidatedTargetPosition = targetTransform.Position;
                         if (state.ValueRO.Phase == ElitePunchPhase.WindUp) state.ValueRW.Phase = ElitePunchPhase.Repositioning;
                     }
+                }
+                ElitePunchReservation targetReservation = EntityManager.GetComponentData<ElitePunchReservation>(state.ValueRO.Target);
+                if (targetReservation.Owner == elite && targetReservation.IsStaged == 0)
+                {
+                    movement.ValueRW = default;
+                    EntityManager.SetComponentData(elite, new NavigationIntent());
+                    continue;
+                }
+                state.ValueRW.SetupSeconds += dt;
+                if (EntityManager.GetComponentData<NavigationPathState>(elite).TravelState == NavigationTravelState.Failed
+                    || state.ValueRO.SetupSeconds > math.max(0f, settings.ValueRO.MaximumSetupDuration))
+                {
+                    BeginCooldown(elite, settings.ValueRO, ref state.ValueRW);
+                    movement.ValueRW = default;
+                    EntityManager.SetComponentData(elite, new NavigationIntent());
+                    continue;
                 }
                 float3 launchDirection = HorizontalDirection(targetTransform.Position, player.Position);
                 EnemyMovementSettings movementSettings = SystemAPI.GetComponent<EnemyMovementSettings>(elite);

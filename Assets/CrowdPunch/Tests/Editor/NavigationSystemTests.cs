@@ -11,6 +11,76 @@ namespace CrowdPunch.Tests
 {
     public sealed class NavigationSystemTests
     {
+        [Test]
+        public void Enemy009_PausedGauntlet07ProjectileEscapesConservativeObstacleCorner()
+        {
+            // Captured from the user's paused encounter: physically clear of the rounded corner,
+            // but inside the square-inflated navigation obstacle, with no valid navigation anchor.
+            using var obstacles = new NativeArray<NavigationRectangle>(new[] { new NavigationRectangle
+            { Minimum = new float2(-6, 10), Maximum = new float2(-3, 13) } }, Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-15), new float2(15), 1,
+                new float3(.62f, .97f, 1.62f), obstacles, Allocator.Persistent);
+            float2 position = new float2(-6.421355f, 9.660804f);
+            Assert.AreEqual(-1, NavigationGeometry.Anchor(ref blob.Value, position, 0));
+            Assert.IsTrue(NavigationGeometry.TryEscape(ref blob.Value, position, .5f, 0, out float2 entry));
+            Assert.GreaterOrEqual(NavigationGeometry.Anchor(ref blob.Value, entry, 0), 0);
+
+            using var world = new World("Paused elite projectile corner escape");
+            var em = world.EntityManager;
+            Arena(em, blob);
+            Entity enemy = Enemy(em);
+            em.SetComponentData(enemy, new NavigationAgent { Radius = .5f });
+            em.SetComponentData(enemy, LocalTransform.FromPosition(new float3(position.x, 0, position.y)));
+            em.SetComponentData(enemy, NavigationIntent.Travel(new float3(entry.x, 0, entry.y), 8, .4f,
+                float3.zero, NavigationGoalKind.ExactSetup));
+            Tick(world, world.GetOrCreateSystem<EnemyNavigationSystem>(), 0);
+            DesiredMovement movement = em.GetComponentData<DesiredMovement>(enemy);
+            Assert.Greater(movement.Speed, 0, "The selected projectile must move instead of leaving both enemies waiting.");
+            Assert.Greater(math.dot(movement.Direction.xz, entry - position), 0);
+            Assert.AreEqual(position, em.GetComponentData<LocalTransform>(enemy).Position.xz);
+        }
+
+        [TestCase(-.4f, -.4f, -2f, -2f, false)]
+        [TestCase(-.4f, -.4f, 2f, 2f, true)]
+        [TestCase(-1f, -.1f, .1f, -1f, false)]
+        [TestCase(-1f, -.1f, .1f, -.1f, true)]
+        [TestCase(-.3f, -.3f, -2f, -2f, true)]
+        [TestCase(-2f, -.5f, 2f, -.5f, true)]
+        public void Combat017_RoundEscapeChecksWholeSweepAndRetainsObstacleBlocking(
+            float startX, float startZ, float endX, float endZ, bool blocked)
+        {
+            Assert.AreEqual(blocked, NavigationGeometry.SweptCircleIntersectsRectangle(
+                new float2(startX, startZ), new float2(endX, endZ), .5f, float2.zero, new float2(3)));
+        }
+
+        [Test]
+        public void Combat017_RecoveredBodyOutsideSpacingBoundsCanMoveBackInside()
+        {
+            using var blob = MakeGrid();
+            using var world = new World("Navigation bounds reentry");
+            var em = world.EntityManager;
+            Arena(em, blob);
+            Entity enemy = Enemy(em);
+            em.SetComponentData(enemy, LocalTransform.FromPosition(new float3(-14, 0, 0)));
+            var navigation = world.GetOrCreateSystem<EnemyNavigationSystem>();
+            Tick(world, navigation, 0);
+            DesiredMovement movement = em.GetComponentData<DesiredMovement>(enemy);
+            Assert.Greater(movement.Direction.x, 0);
+            Assert.That(movement.Speed, Is.GreaterThan(0).And.LessThanOrEqualTo(1.5f));
+            Assert.AreEqual(-14, em.GetComponentData<LocalTransform>(enemy).Position.x,
+                "Reentry remains velocity intent; navigation must not teleport the body.");
+        }
+
+        [Test]
+        public void Combat017_BoundsReentryCannotCrossStaticObstacles()
+        {
+            using var obstacles = new NativeArray<NavigationRectangle>(new[] { new NavigationRectangle
+            { Minimum = new float2(-11.5f, -10), Maximum = new float2(-10.5f, 10) } }, Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-10), new float2(10), 1,
+                new float3(.2f, .6f, 1.2f), obstacles, Allocator.Persistent);
+            Assert.IsFalse(NavigationGeometry.TryEscape(ref blob.Value, new float2(-14, 0), .2f, 0, out _));
+        }
+
         private static BlobAssetReference<NavigationGridBlob> MakeGrid(bool sealedWall = false)
         {
             using var obstacles = new NativeArray<NavigationRectangle>(new[]{new NavigationRectangle{

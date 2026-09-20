@@ -1,13 +1,172 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.AI;
 using CrowdPunch.Systems.Combat;
+using CrowdPunch.Utilities;
 using NUnit.Framework;
+using Unity.Collections;
+using Unity.Core;
+using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
 
 namespace CrowdPunch.Tests
 {
     public sealed class ElitePunchGeometryTests
     {
+        [TestCase(false, 8.5f)]
+        [TestCase(true, 8.5f)]
+        [TestCase(false, 12f)]
+        public void Enemy009_StagingRequiresBodyClearanceAndNeverReportsBlockedFallbackReady(bool fullyBlocked, float targetX)
+        {
+            using var world = new World("Elite boundary staging");
+            Entity elite = CreateEliteAttempt(world, out Entity target);
+            var em = world.EntityManager;
+            em.SetComponentData(elite, LocalTransform.FromPosition(new float3(5, 0, 0)));
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(targetX, 0, 0)));
+            using var playerQuery = em.CreateEntityQuery(typeof(PlayerSnapshot));
+            em.SetComponentData(playerQuery.GetSingletonEntity(), new PlayerSnapshot { IsAvailable = true });
+            var settings = em.GetComponentData<ElitePunchSettings>(elite);
+            settings.CrowdCorridorRadius = 1.5f;
+            em.SetComponentData(elite, settings);
+            em.AddComponentData(elite, new NavigationAgent { Radius = .75f });
+            em.AddComponentData(target, new NavigationAgent { Radius = .2f });
+            em.AddComponentData(target, new EnemyMovementSettings { MoveSpeed = 5 });
+            em.AddComponentData(target, new DesiredMovement());
+            em.AddComponentData(target, new NavigationIntent());
+            em.AddComponentData(target, new EnemyContactAttemptState());
+            em.AddComponentData(target, new EnemyContactDamageSettings());
+            using var obstacles = new NativeArray<NavigationRectangle>(fullyBlocked
+                ? new[] { new NavigationRectangle { Minimum = new float2(-10), Maximum = new float2(10) } }
+                : new NavigationRectangle[0], Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-10), new float2(10), 1,
+                new float3(.3f, .6f, 1.2f), obstacles, Allocator.Persistent);
+            Entity arena = em.CreateEntity(typeof(NavigationGrid), typeof(NavigationRuntimeSettings));
+            em.SetComponentData(arena, new NavigationGrid { Data = blob });
+            em.SetComponentData(arena, new NavigationRuntimeSettings { Enabled = 1 });
+            var support = world.GetOrCreateSystemManaged<EliteCrowdSupportSystem>();
+
+            support.Update();
+
+            Assert.AreEqual(0, em.GetComponentData<ElitePunchReservation>(target).IsStaged);
+            if (fullyBlocked)
+            {
+                Assert.AreEqual(0, em.GetComponentData<DesiredMovement>(target).Speed,
+                    "No valid sample must remain unstaged even when movement is zero.");
+                return;
+            }
+            Assert.Greater(em.GetComponentData<DesiredMovement>(target).Speed, 0);
+            float3 destination = em.GetComponentData<NavigationIntent>(target).Destination;
+            if (targetX > 10f)
+            {
+                Assert.Less(destination.x, 10f, "A recovered projectile outside spacing bounds must first re-enter.");
+                em.SetComponentData(target, LocalTransform.FromPosition(destination));
+                support.Update();
+                Assert.AreEqual(0, em.GetComponentData<ElitePunchReservation>(target).IsStaged);
+                Assert.Greater(em.GetComponentData<DesiredMovement>(target).Speed, 0);
+                destination = em.GetComponentData<NavigationIntent>(target).Destination;
+            }
+            float3 behind = ElitePunchSystem.DesiredPosition(destination, float3.zero, settings.DesiredPunchDistance);
+            Assert.IsTrue(NavigationGeometry.Segment(ref blob.Value, new float2(5, 0), behind.xz, 1.2f));
+            em.SetComponentData(target, LocalTransform.FromPosition(destination));
+            support.Update();
+            Assert.AreEqual(1, em.GetComponentData<ElitePunchReservation>(target).IsStaged);
+            Assert.AreEqual(0, em.GetComponentData<DesiredMovement>(target).Speed);
+        }
+
+        [Test]
+        public void Enemy009_FailedCooldownApproachDoesNotPreventNextReservation()
+        {
+            using var world = new World("Elite cooldown retry");
+            Entity elite = CreateEliteAttempt(world, out Entity target);
+            var em = world.EntityManager;
+            em.SetComponentData(elite, new ElitePunchState { Phase = ElitePunchPhase.Cooldown });
+            em.SetComponentData(target, new ElitePunchReservation());
+            em.SetComponentData(elite, new NavigationPathState { TravelState = NavigationTravelState.Failed });
+            var system = world.GetOrCreateSystemManaged<ElitePunchSystem>();
+
+            system.Update();
+            Assert.AreEqual(ElitePunchPhase.SelectingTarget, em.GetComponentData<ElitePunchState>(elite).Phase);
+            system.Update();
+
+            Assert.AreEqual(target, em.GetComponentData<ElitePunchState>(elite).Target);
+            Assert.AreEqual(elite, em.GetComponentData<ElitePunchReservation>(target).Owner);
+            Assert.AreEqual(NavigationMode.Hold, em.GetComponentData<NavigationIntent>(elite).Mode,
+                "Navigation must retire the failed speculative route before reserved setup.");
+        }
+
+        [Test]
+        public void Enemy009_StagingWaitStillRetargetsWithoutSpendingSetupTimeout()
+        {
+            using var world = new World("Elite staging retarget");
+            Entity elite = CreateEliteAttempt(world, out Entity target);
+            var em = world.EntityManager;
+            var system = world.GetOrCreateSystemManaged<ElitePunchSystem>();
+            for (int i = 0; i < 100; i++) system.Update();
+            Assert.AreEqual(0f, em.GetComponentData<ElitePunchState>(elite).SetupSeconds);
+            Assert.AreEqual(target, em.GetComponentData<ElitePunchState>(elite).Target);
+
+            Entity closer = CreateProjectile(em, 1f);
+            for (int i = 0; i < 20; i++) system.Update();
+
+            Assert.AreEqual(closer, em.GetComponentData<ElitePunchState>(elite).Target);
+            Assert.AreEqual(Entity.Null, em.GetComponentData<ElitePunchReservation>(target).Owner);
+            Assert.AreEqual(elite, em.GetComponentData<ElitePunchReservation>(closer).Owner);
+            Assert.AreEqual(0f, em.GetComponentData<ElitePunchState>(elite).SetupSeconds);
+        }
+
+        [Test]
+        public void Enemy009_FailedReservedApproachStillCancelsAndCoolsDown()
+        {
+            using var world = new World("Elite failed reserved setup");
+            Entity elite = CreateEliteAttempt(world, out Entity target);
+            var em = world.EntityManager;
+            em.SetComponentData(target, new ElitePunchReservation { Owner = elite, IsStaged = 1 });
+            em.SetComponentData(elite, new NavigationPathState { TravelState = NavigationTravelState.Failed });
+
+            world.GetOrCreateSystemManaged<ElitePunchSystem>().Update();
+
+            Assert.AreEqual(ElitePunchPhase.Cooldown, em.GetComponentData<ElitePunchState>(elite).Phase);
+            Assert.AreEqual(Entity.Null, em.GetComponentData<ElitePunchState>(elite).Target);
+            Assert.AreEqual(Entity.Null, em.GetComponentData<ElitePunchReservation>(target).Owner);
+            Assert.AreEqual(0f, em.GetComponentData<DesiredMovement>(elite).Speed);
+        }
+
+        private static Entity CreateEliteAttempt(World world, out Entity target)
+        {
+            world.SetTime(new TimeData(1, .02f));
+            var em = world.EntityManager;
+            Entity player = em.CreateEntity(typeof(PlayerSnapshot));
+            em.SetComponentData(player, new PlayerSnapshot { IsAvailable = true, Position = new float3(0, 0, 10) });
+            Entity elite = em.CreateEntity(typeof(Enemy), typeof(ElitePunchState), typeof(ElitePunchSettings),
+                typeof(DesiredMovement), typeof(LocalTransform), typeof(EnemyLaunchState),
+                typeof(NavigationIntent), typeof(NavigationPathState), typeof(EnemyMovementSettings));
+            em.SetComponentData(elite, LocalTransform.Identity);
+            em.SetComponentData(elite, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            em.SetComponentData(elite, new ElitePunchSettings
+            {
+                AllowActiveTargets = 1, Cooldown = 1, RetargetInterval = .25f, MaximumSetupDuration = 1,
+                DesiredPunchDistance = 1, PositionTolerance = .4f
+            });
+            target = CreateProjectile(em, 3f);
+            em.SetComponentData(target, new ElitePunchReservation { Owner = elite });
+            em.SetComponentData(elite, new ElitePunchState
+            {
+                Phase = ElitePunchPhase.Repositioning, Target = target, RetargetSeconds = .25f
+            });
+            return elite;
+        }
+
+        private static Entity CreateProjectile(EntityManager em, float distance)
+        {
+            Entity target = em.CreateEntity(typeof(Enemy), typeof(EnemyTier), typeof(EnemyArchetype),
+                typeof(LocalTransform), typeof(EnemyLaunchState), typeof(Health), typeof(ElitePunchReservation));
+            em.SetComponentData(target, new EnemyTier { Value = EnemyCombatTier.Normal });
+            em.SetComponentData(target, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            em.SetComponentData(target, new Health { Current = 10, Max = 10 });
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(0, 0, distance)));
+            return target;
+        }
+
         [TestCase(1.14f, -1f, 3f, true)]
         [TestCase(1.16f, 0f, 3f, false)]
         [TestCase(0f, 0f, -0.01f, false)]

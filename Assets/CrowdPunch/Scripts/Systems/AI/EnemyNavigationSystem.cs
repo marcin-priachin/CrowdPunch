@@ -83,8 +83,12 @@ namespace CrowdPunch.Systems.AI
                     if (NavigationGeometry.TryEscape(ref g, position, agent.ValueRO.Radius, cls, out var escape))
                     {
                         var direction = math.normalizesafe(escape - position);
-                        movement.ValueRW = SafeMovement(ref g, position, new float3(direction.x, 0, direction.y),
-                            math.min(goal.Speed, 1.5f), agent.ValueRO.Radius, settings, 3);
+                        // TryEscape validates the complete ingress segment, including obstacle clearance.
+                        // Ordinary SafeMovement rejects its outside-bounds starting point.
+                        float escapeSpeed = math.min(math.min(goal.Speed, 1.5f),
+                            math.sqrt(6f * math.max(0f, math.distance(position, escape) - .05f)));
+                        movement.ValueRW = new DesiredMovement
+                        { Direction = new float3(direction.x, 0, direction.y), Speed = escapeSpeed };
                         n.NextDirectAt = 0; n.ProgressAt = now;
                     }
                     else movement.ValueRW = default;

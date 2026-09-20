@@ -358,6 +358,7 @@ receives attack state. The explicit phases are `InitialDelay`, `SelectingTarget`
 projectile selection scans the eligible set and always chooses the closest active normal enemy with a deterministic
 entity-index tie break. It re-evaluates that choice on the existing retarget interval during setup, so a newly closer enemy
 replaces the reservation without requiring per-frame selection.
+Retargeting continues while the projectile is staging; only setup timeout pauses during that wait (ENEMY-009).
 
 Only active, normal-tier, health-bearing, non-defeated, non-pooled targets qualify for a coordinated shot. The legacy elite
 search range and target-to-player distance fields do not filter this nearest-enemy rule. Spawn order affects only the
@@ -396,7 +397,10 @@ selected projectile (or the closest active normal before selection) first tests 
 The test excludes static-world ray obstruction, occupied target space, and non-defeated enemies inside the finite route
 from the elite to its eventual behind-projectile position. If blocked, the projectile checks two deterministic rings of
 eight nearby candidates, preferring lateral displacement, and writes movement toward the first clear candidate. It requests
-zero speed only when its current approach lane is clear. The target reservation publishes `IsStaged`; while it is false,
+zero speed when its current approach lane is clear or no sampled alternative is available; only a verified clear current
+lane publishes `IsStaged`. With navigation enabled, staging also checks clearance-class-inflated static geometry and arena
+bounds for the projectile path and elite approach, plus navigation anchors at both destinations. A centre ray alone does
+not prove that an elite can reach the behind-projectile point. The target reservation publishes `IsStaged`; while it is false,
 `ElitePunchSystem` requests zero elite movement and does not spend setup timeout, preventing two moving goals from chasing
 one another. This avoids per-frame allocations and adds no tuning: sampling and
 clearance reuse the elite's existing crowd-corridor radius and position tolerance. Other active normal enemies in the finite
@@ -404,16 +408,48 @@ projectile-to-player corridor override chase intent with lateral movement toward
 Launched, recovering, defeated, disabled, and pooled enemies are excluded. When several elites are active, each normal
 supports its nearest active elite with entity index as the deterministic equal-distance tie break. The support layer only
 writes explicit `NavigationIntent` and legacy `DesiredMovement`; navigation resolves terrain steering and physics velocity remains owned by `EnemyMovementSystem`.
+If a projectile recovers outside navigation spacing bounds, support first requests a clear interior reentry point and keeps
+it unstaged. Navigation's existing slow escape movement permits that ingress while checking the complete segment against
+inflated static obstacles; it does not teleport enemies or change physical arena/defeat bounds (COMBAT-017).
+Projectile staging also uses the existing body-side approach calculation around the waiting elite, using their combined
+navigation-agent radii. Terrain clearance checks the waypoint and tries the opposite side when needed, preventing a
+staging destination from driving the projectile directly into its stationary owner.
 
 After executing a punch, `ElitePunchSystem` clears the launched target and retains the authored cooldown. During that
 cooldown it continuously finds the next closest eligible active normal and uses the same behind-projectile destination and
 arrival-speed calculation as setup. It does not reserve or punch that enemy until cooldown ends. This prevents ordinary
 player-chase intent from visually interrupting the coordinated sequence between consecutive shots.
+Failed speculative cooldown routes cannot restart cooldown before target selection. Selection and retargeting publish a
+hold intent to retire the previous route through `EnemyNavigationSystem`; only a failed reserved, staged approach cancels
+the current attempt into cooldown. This prevents the Gauntlet_07 failure loop from suppressing all subsequent reservations.
 
 Both cooldown approach and reserved-target setup pass their desired direction through the same collision-avoidance helper.
 When the direct segment to the behind-projectile destination crosses the target's punch-radius clearance, the helper chooses
 a deterministic side waypoint around the target; once the target no longer blocks that segment, movement returns directly
 to the desired position. Unity Physics remains responsible for actual collision response.
+
+Gauntlet_07 stall verification (2026-09-20): before the fix, the live elite remained at attack sequence two while failed
+speculative routes repeatedly restarted cooldown. After the fixes, a 75-second Editor observation recorded eight distinct
+elite launches with 23 peak active enemies, and the longer state trace reached attempt 19. The idle player's health was
+restored for observation and earlier normal-only waves were cleared with injected damage; this was a behavior check, not
+a balance test. Crowd-blocked staging can still pause while waiting for a clear lane or a closer eligible projectile.
+ProfilerRecorder samples in that run averaged 0.143 ms for elite punch and 0.521 ms for crowd support (maxima 3.160/5.890 ms);
+these are local Editor system costs, not standalone performance guarantees. Regression coverage includes failed-cooldown
+retry, retargeting during staging, actual setup failure, body-clear staging, blocked fallback readiness, projectile bounds
+reentry, and obstacle rejection during reentry. Build and regression artifacts are under `Temp/elite-*` and
+`Temp/EliteRegressionResults.xml`.
+
+The subsequent paused recurrence exposed an additional corner case: projectile 337 at (-6.421355, 9.660804) was
+physically clear of the obstacle spanning (-6, 10) to (-3, 13), but inside its square-inflated navigation corner.
+`TryEscape` now checks a swept circle of the actual body radius against rectangle faces and corners. This lets a round
+body leave the conservative corner margin while still rejecting paths that cross or touch physical obstacle clearance.
+Ordinary paths keep square inflation and the escape destination must still be a class-valid interior cell. Regression
+coverage uses the captured coordinates, checks nonzero ECS movement intent, and rejects intersecting/tangent sweeps.
+The runtime/geometry suites passed 48 tests after this correction. A fresh Gauntlet_07 replay restored the captured player,
+elite, projectile and crowd positions with fresh wave health/velocity state: the projectile left the corner and four direct
+elite launches were recorded within 15 seconds. The replay was paused after observation. Captures and replay evidence are
+in `Temp/elite-paused-recurrence.txt`, `Temp/elite-paused-diagnosis.txt`, `Temp/elite-corner-replay.txt`, and
+`Temp/EliteCornerRegressionResults.xml`; the replay is a targeted reproduction, not a restored save of the original run.
 
 ## Elite Enemy And Elite-Gated Waves
 

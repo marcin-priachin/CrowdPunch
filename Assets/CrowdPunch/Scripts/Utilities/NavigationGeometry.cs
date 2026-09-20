@@ -91,14 +91,46 @@ namespace CrowdPunch.Utilities
         public static bool TryEscape(ref NavigationGridBlob g, float2 position, float actualRadius, int cls, out float2 goal)
         {
             goal = position; float best = float.MaxValue; int2 centre = (int2)math.floor((position - g.Minimum) / g.CellSize);
+            centre = math.clamp(centre, int2.zero, g.Size - 1);
             for (int z = -3; z <= 3; z++) for (int x = -3; x <= 3; x++)
                 {
                     int2 c = centre + new int2(x, z); if (math.any(c < 0) || math.any(c >= g.Size)) continue;
                     int cell = c.y * g.Size.x + c.x; if (Region(ref g, cell, cls) == 0) continue;
                     float2 candidate = Center(ref g, cell); float distance = math.distancesq(candidate, position);
-                    if (distance < best && Segment(ref g, position, candidate, actualRadius)) { best = distance; goal = candidate; }
+                    if (distance < best && EscapeSegment(ref g, position, candidate, actualRadius)) { best = distance; goal = candidate; }
                 }
             return best < float.MaxValue;
+        }
+        private static bool EscapeSegment(ref NavigationGridBlob g, float2 start, float2 end, float radius)
+        {
+            // Spacing bounds are not defeat bounds: a launched body can recover outside them.
+            // Permit entry to a clear interior point, but never cross inflated static geometry.
+            if (math.any(end < g.Minimum + radius) || math.any(end > g.Maximum - radius)) return false;
+            for (int i = 0; i < g.Obstacles.Length; i++)
+                if (SweptCircleIntersectsRectangle(start, end, radius,
+                        g.Obstacles[i].Minimum, g.Obstacles[i].Maximum)) return false;
+            return true;
+        }
+        public static bool SweptCircleIntersectsRectangle(float2 start, float2 end, float radius, float2 minimum, float2 maximum)
+        {
+            if (Intersects(start, end, minimum, maximum)) return true;
+            // Escape uses the actual round body. Square inflation falsely traps a physically clear
+            // body in the extra corner area after solver contact; ordinary routing stays conservative.
+            float distanceSq = math.min(PointRectangleDistanceSq(start, minimum, maximum),
+                PointRectangleDistanceSq(end, minimum, maximum));
+            distanceSq = math.min(distanceSq, PointSegmentDistanceSq(minimum, start, end));
+            distanceSq = math.min(distanceSq, PointSegmentDistanceSq(maximum, start, end));
+            distanceSq = math.min(distanceSq, PointSegmentDistanceSq(new float2(minimum.x, maximum.y), start, end));
+            distanceSq = math.min(distanceSq, PointSegmentDistanceSq(new float2(maximum.x, minimum.y), start, end));
+            return distanceSq <= radius * radius;
+        }
+        private static float PointRectangleDistanceSq(float2 point, float2 minimum, float2 maximum)
+            => math.lengthsq(point - math.clamp(point, minimum, maximum));
+        private static float PointSegmentDistanceSq(float2 point, float2 start, float2 end)
+        {
+            float2 segment = end - start;
+            float t = math.saturate(math.dot(point - start, segment) / math.max(1e-10f, math.lengthsq(segment)));
+            return math.distancesq(point, start + segment * t);
         }
         // Bake-time selection only. COMBAT-017: use spacing bounds, never defeat bounds.
         public static bool TryResolveParticipationAnchor(ref NavigationGridBlob g, bool useOverride,
