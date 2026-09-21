@@ -6,7 +6,8 @@ namespace CrowdPunch.Components
     public enum EnemyAnimationProfile : byte
     {
         Standard,
-        Dasher
+        Dasher,
+        Explosive
     }
 
     public struct EnemyAnimation : IComponentData

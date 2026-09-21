@@ -200,6 +200,35 @@ namespace CrowdPunch.Tests
             Assert.That(Pose.y, Is.EqualTo(0.25f).Within(0.001f), "Death should advance and then hold its final frame.");
         }
 
+        [Test]
+        public void Enemy010ExplosiveUsesIdleWalkAndDeathWithoutDyingDuringRecovery()
+        {
+            var em = world.EntityManager;
+            EnemyAnimation animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)EnemyAnimationProfile.Explosive;
+            em.SetComponentData(visual, animation);
+
+            Tick();
+            Assert.That(Pose.x, Is.Zero, "Idle should drive a stationary Explosive.");
+
+            em.SetComponentData(owner, new DesiredMovement { Direction = new float3(0, 0, 1), Speed = 4f });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(1f), "Walk should drive movement.");
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)), "Launch should hold the first Walk frame.");
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering });
+            em.SetComponentData(owner, new DesiredMovement());
+            Tick();
+            Assert.That(Pose.x, Is.Zero, "Recovery should return to Idle rather than play Death.");
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Death should begin only on defeat.");
+        }
+
         [TestCase(EnemyLaunchPhase.Recovering)]
         [TestCase(EnemyLaunchPhase.Defeated)]
         public void Combat011LaunchEndsWithImpactAndRepunchInterruptsIt(EnemyLaunchPhase ending)

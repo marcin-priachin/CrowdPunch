@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a12c749ec1ba4b17aac7000000000013, type: 3}
   m_Name: ExplosiveEnemySpawnSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemySpawnSettings
-  enemyPrefab: {fileID: 8618196010151164906, guid: 3e70fb2e89b01674f95633e429f13253, type: 3}
+  enemyPrefab: {fileID: 7543440517839130146, guid: 99e3096ed7460e34abd204478016bb7a, type: 3}
   rangedProjectilePrefab: {fileID: 0}
   archetype: 2
   initialCount: 20
@@ -41,10 +41,11 @@ MonoBehaviour:
   contactPushStrength: 10
   contactInvincibilitySeconds: 0.5
   contactRadius: 0.75
-  contactAttemptDistance: 10
+  contactAttemptDistance: 99999
   contactAttemptIntervalMin: 1
   contactAttemptIntervalMax: 3
   contactAttemptDuration: 2
+  contactAttemptWindUpDuration: 0.65
   contactAttemptSpeedMultiplier: 1.25
   contactAttemptSeparationWeight: 1
   preferredMinimumDistance: 8

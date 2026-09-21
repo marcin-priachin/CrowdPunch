@@ -171,6 +171,22 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void ExplosiveDirectChargeCanReachClearPlayerOutsideSpacingGrid()
+        {
+            // ENEMY-010 / COMBAT-017: spacing bounds do not create an invisible wall for a direct explosive pursuit.
+            using var clearBlob = Grid(); ref var clear = ref clearBlob.Value;
+            var goal = NavigationIntent.Travel(new float3(15, 0, 0), 12.5f, 0f, float3.zero);
+            Assert.True(EnemyNavigationSystem.TryGetOutOfGridDirectMovement(
+                ref clear, new float2(9, 0), goal, .62f, 8f, out var movement));
+            Assert.Greater(movement.Speed, 0f);
+            Assert.That(movement.Direction.x, Is.EqualTo(1f).Within(.0001f));
+
+            using var blockedBlob = Grid(Box(10, -2, 11, 2)); ref var blocked = ref blockedBlob.Value;
+            Assert.False(EnemyNavigationSystem.TryGetOutOfGridDirectMovement(
+                ref blocked, new float2(9, 0), goal, .62f, 8f, out _));
+        }
+
+        [Test]
         public void InvalidCoverageSlotsResolveStablyWithoutOneFallbackCell()
         {
             // COMBAT-016: terrain must retain distributed launch opportunities.

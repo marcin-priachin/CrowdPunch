@@ -76,6 +76,15 @@ namespace CrowdPunch.Systems.AI
                 int cls = NavigationGeometry.ClearanceClass(ref g, agent.ValueRO.Radius);
                 if (cls < 0) { movement.ValueRW = default; continue; }
                 float radius = g.Radii[cls];
+                if (SystemAPI.HasComponent<ExplosiveEnemyState>(enemy)
+                    && TryGetOutOfGridDirectMovement(ref g, position, goal, radius,
+                        SystemAPI.GetComponent<EnemyMovementSettings>(enemy).BrakingAcceleration, out DesiredMovement directMovement))
+                {
+                    if (n.Initialized != 0) { n.Reset(); path.Clear(); }
+                    movement.ValueRW = directMovement;
+                    diagnostics.Direct++;
+                    continue;
+                }
                 if (NavigationGeometry.Anchor(ref g, position, cls) < 0)
                 {
                     // Physics crowd compression may push an active body inside the navigation margin.
@@ -236,6 +245,30 @@ namespace CrowdPunch.Systems.AI
             else { n.ResolvedGoal = position; Fail(now, settings, ref n, ref diagnostics, false); }
         }
         private static float Stagger(Entity e, float maximum) => (math.hash(new int2(e.Index, e.Version)) % 1024) / 1024f * maximum;
+        public static bool TryGetOutOfGridDirectMovement(ref NavigationGridBlob g, float2 position,
+            NavigationIntent goal, float radius, float braking, out DesiredMovement movement)
+        {
+            movement = default;
+            if (goal.Mode != NavigationMode.Travel || goal.Kind != NavigationGoalKind.Position
+                || NavigationGeometry.Cell(ref g, goal.Destination.xz) >= 0
+                || !NavigationGeometry.ObstacleFreeSegment(ref g, position, goal.Destination.xz, radius))
+                return false;
+
+            float2 toGoal = goal.Destination.xz - position;
+            float distance = math.length(toGoal);
+            float arrival = math.max(.05f, goal.ArrivalDistance);
+            if (distance <= arrival) return true;
+
+            float speed = goal.Speed;
+            if (braking > 0f)
+                speed = math.min(speed, math.sqrt(2f * braking * math.max(0f, distance - arrival * .5f)));
+            movement = new DesiredMovement
+            {
+                Direction = new float3(toGoal.x / distance, 0f, toGoal.y / distance),
+                Speed = speed
+            };
+            return true;
+        }
         private static void Fail(double now, NavigationRuntimeSettings s, ref NavigationPathState n, ref NavigationDiagnostics d, bool limited)
         { n.Pending = 0; n.TravelState = NavigationTravelState.Failed; n.NextRequestAt = now + s.FailureDelay + n.RequestOffset; n.NextDirectAt = n.NextRequestAt; if (limited) d.LimitReached++; else d.Failures++; }
         public static bool Valid(EntityManager em, NavigationSearchRequest request)

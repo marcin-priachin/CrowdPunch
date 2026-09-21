@@ -20,6 +20,10 @@ namespace CrowdPunch.Utilities
         {
             if (math.any(a < g.Minimum + radius) || math.any(a > g.Maximum - radius)
                 || math.any(b < g.Minimum + radius) || math.any(b > g.Maximum - radius)) return false;
+            return ObstacleFreeSegment(ref g, a, b, radius);
+        }
+        public static bool ObstacleFreeSegment(ref NavigationGridBlob g, float2 a, float2 b, float radius)
+        {
             for (int i = 0; i < g.Obstacles.Length; i++)
                 if (Intersects(a, b, g.Obstacles[i].Minimum - radius, g.Obstacles[i].Maximum + radius)) return false;
             return true;
