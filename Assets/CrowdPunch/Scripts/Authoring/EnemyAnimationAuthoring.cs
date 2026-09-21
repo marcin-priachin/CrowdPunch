@@ -1,3 +1,4 @@
+using CrowdPunch.Components;
 using UnityEngine;
 
 namespace CrowdPunch.Authoring
@@ -6,6 +7,7 @@ namespace CrowdPunch.Authoring
     public sealed class EnemyAnimationAuthoring : MonoBehaviour
     {
         public TextAsset Samples;
+        public EnemyAnimationProfile Profile;
         [Min(0f)] public float BlendResponse = 12f;
     }
 }

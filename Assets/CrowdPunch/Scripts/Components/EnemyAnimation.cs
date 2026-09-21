@@ -3,10 +3,17 @@ using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
+    public enum EnemyAnimationProfile : byte
+    {
+        Standard,
+        Dasher
+    }
+
     public struct EnemyAnimation : IComponentData
     {
         public Entity Owner;
         public BlobAssetReference<EnemyAnimationSamples> Samples;
+        public byte Profile;
         public float BlendResponse;
     }
 

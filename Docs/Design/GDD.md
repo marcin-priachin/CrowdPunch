@@ -333,7 +333,7 @@ Except for distance-keeping and its ranged attack, the ranged enemy follows the 
 
 Status: Must
 
-The Dasher maintains distance, stops for a readable configurable telegraph, samples and locks its direction when the dash begins, and travels without steering until its maximum distance or a static obstruction. Player and ordinary-enemy contact does not end the dash. It then enters a readable recovery window. Dash-path enemy avoidance is one authored policy: none, between the Dasher and player, or between and behind the player.
+The Dasher maintains distance, stops for a readable configurable telegraph, samples and locks its direction when the dash begins, and travels without steering until its maximum distance. Static-obstruction contacts redirect the committed dash through the same physics response used while launched; the resolved direction becomes the new locked dash direction instead of ending the dash. Player and ordinary-enemy contact does not end the dash. It then enters a readable recovery window. Dash-path enemy avoidance is one authored policy: none, between the Dasher and player, or between and behind the player.
 
 ### ENEMY-006 — Dasher Impacts
 

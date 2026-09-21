@@ -32,6 +32,7 @@ namespace CrowdPunch.Components
         public float SecondsRemaining;
         public float3 LockedDirection;
         public float3 DashStartPosition;
+        public float DashDistanceTravelled;
         public uint DashSequence;
         public byte HasHitPlayer;
         public float3 PreservedLaunchedVelocity;

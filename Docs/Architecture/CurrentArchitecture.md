@@ -57,7 +57,8 @@ There are currently no game-specific assembly definitions; scripts compile into 
 `EnemyFacingSystem` runs in `GamePostPhysicsGroup` after respawn processing and the Dasher
 rotation lock. Active and Recovering enemies face the available player's horizontal position
 (INFO-004), with yaw angular velocity cleared and position/linear velocity preserved.
-This includes Active dashers without redirecting their committed movement. Launched enemies
+Active Dashers normally face the player, but a Dasher in its committed `Dashing` phase faces
+its locked dash direction. Launched enemies
 instead face current horizontal physics velocity, including after collisions and homing,
 even when the player is unavailable. Defeated rotations are untouched. Enabled respawn requests and coincident horizontal
 positions skip facing. The resulting root rotation feeds enemy-local animation blending.
@@ -79,6 +80,22 @@ space, normalizes by `EnemyMovementSettings.MoveSpeed`, damps the blend, and int
 the two surrounding movement directions, and neighboring sample frames into `SkinMatrix`.
 Cycles start at entity-specific phases to avoid synchronized crowds. Matrix blending is a
 sampled locomotion approximation, not a general runtime Animator-controller interpreter.
+
+`EnemyDasher.prefab` uses the same sampled GPU-skinning path with the generic-rigged
+`Models/UltimateMonsters/Flying/Dragon.fbx`. Its `EnemyAnimationProfile.Dasher` selects a
+narrow state mapping: `Flying_Idle` loops while stationary, `Fast_Flying` loops while moving,
+and `Death` plays once for `Defeated`. Intentional dashes and the shared `Launched` phase both
+hold the first sampled frame of `Fast_Flying`, leaving dash direction and launch physics under
+their existing ECS owners (ENEMY-005/007/008). The generated `EnemyDasherMovement.bytes`,
+controller, prefab, and skinning material can be rebuilt with **Crowd Punch > Enemies > Rebuild
+Dasher Prefab**. `EnemyDasherSpawnSettings` references that prefab directly.
+
+`DasherTelegraphBridgeSystem` publishes each preparing Dasher's presentation ID, position,
+locked aim, and normalized preparation progress through `PlayerEcsBridge`. `CombatFeedback`
+owns a bounded `DasherTelegraphParticlePool` of the generated `Prefabs/Feedback/DasherTelegraph`
+effect. Each active effect follows its preparing Dasher and scales toward dash commitment;
+leaving `Preparing`, interruption, pooling, restart, or suspended feedback clears it without
+changing gameplay state or storing an ECS entity in a MonoBehaviour (ENEMY-005).
 
 Physics transforms and velocities are read-only to animation. Launched bodies play Flying
 from its first frame on launch entry or a changed launch sequence (including re-punch),
@@ -513,8 +530,11 @@ resets both state and hit history.
 
 The decision system maintains an authored distance band and evaluates the configured corridor policy only when entering
 preparation. Preparation faces the live player and either stops immediately or brakes using normal movement. Direction is
-resampled and locked when the telegraph expires. Dash movement writes the locked horizontal velocity until maximum travel
-or an obstacle reduces it below the stop threshold. Player hits are limited by a per-dash flag; enemy hits use a source,
+resampled and locked when the telegraph expires. Dash movement writes the locked horizontal velocity until maximum travel.
+After a static-obstacle collision, `DasherObstacleRedirectSystem` adopts the solver's horizontal result as the new locked
+direction and restores authored dash speed; a stopped head-on result reflects the incoming direction so the body leaves
+the contact instead of remaining embedded. Maximum distance accumulates the redirected path length rather than measuring
+straight-line displacement from the start. Player hits are limited by a per-dash flag; enemy hits use a source,
 target, and action-sequence history. Both use the existing player bridge, `DamageRequest`, `ExternalImpulse`, and
 `EnemyLaunchTransition` pipelines.
 

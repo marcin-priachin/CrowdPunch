@@ -13,6 +13,7 @@ namespace CrowdPunch.Systems.Physics
     [BurstCompile]
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
     [UpdateAfter(typeof(DasherEnemyImpactSystem))]
+    [UpdateAfter(typeof(DasherObstacleRedirectSystem))]
     public partial struct DasherRotationLockSystem : ISystem
     {
         [BurstCompile]

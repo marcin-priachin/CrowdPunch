@@ -57,6 +57,7 @@ namespace CrowdPunch.Bakers
             {
                 Owner = GetEntity(owner, TransformUsageFlags.Dynamic),
                 Samples = blob,
+                Profile = (byte)authoring.Profile,
                 BlendResponse = math.max(0f, authoring.BlendResponse)
             });
             AddComponent<EnemyAnimationPlayback>(entity);

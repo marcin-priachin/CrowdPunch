@@ -24,6 +24,7 @@ namespace CrowdPunch.Systems.Presentation
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
                 Respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true),
                 Velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true),
+                Dashers = SystemAPI.GetComponentLookup<DasherState>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel();
         }
@@ -37,6 +38,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
             [ReadOnly] public ComponentLookup<RespawnRequest> Respawns;
             [ReadOnly] public ComponentLookup<PhysicsVelocity> Velocities;
+            [ReadOnly] public ComponentLookup<DasherState> Dashers;
             public float DeltaTime;
 
             private void Execute(in EnemyAnimation animation, ref EnemyAnimationPlayback playback, ref DynamicBuffer<SkinMatrix> skin)
@@ -58,6 +60,11 @@ namespace CrowdPunch.Systems.Presentation
                     playback.Initialized = 1;
                 }
                 EnemyLaunchState launch = Launches[owner];
+                if (animation.Profile == (byte)EnemyAnimationProfile.Dasher)
+                {
+                    AnimateDasher(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
                 if (launch.Phase == EnemyLaunchPhase.Launched)
                 {
                     playback.Landing = 0;
@@ -141,6 +148,56 @@ namespace CrowdPunch.Systems.Presentation
                     float3x4 right = Sample(ref samples, second + 1, a, b, bone, between);
                     skin[bone] = new SkinMatrix { Value = idle * (1f - amount) + (left * (1f - turn) + right * turn) * amount };
                 }
+            }
+
+            private void AnimateDasher(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                bool dashing = Dashers.HasComponent(owner) && Dashers[owner].Phase == DasherPhase.Dashing;
+                if (launch.Phase == EnemyLaunchPhase.Launched || dashing)
+                {
+                    playback.Landing = 0;
+                    playback.WasLaunched = launch.Phase == EnemyLaunchPhase.Launched ? (byte)1 : (byte)0;
+                    ApplyFrame(ref skin, ref samples, 1, 0, 0, 0f);
+                    return;
+                }
+
+                playback.WasLaunched = 0;
+                if (launch.Phase == EnemyLaunchPhase.Defeated)
+                {
+                    if (playback.Landing == 0)
+                    {
+                        playback.Landing = 1;
+                        playback.ImpactPhase = 0f;
+                    }
+                    else
+                    {
+                        playback.ImpactPhase = math.saturate(playback.ImpactPhase
+                            + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
+                    }
+                    float deathFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                    int from = (int)deathFrame;
+                    ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
+                        math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
+                    return;
+                }
+
+                playback.Landing = 0;
+                if (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)
+                    return;
+                int motion = Movement[owner].Speed > 0.01f ? 1 : 0;
+                playback.Phase = math.frac(playback.Phase
+                    + DeltaTime / math.max(0.01f, samples.Durations[motion]));
+                float frame = playback.Phase * samples.FrameCount;
+                int a = (int)frame;
+                ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
+            }
+
+            private static void ApplyFrame(ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples,
+                int motion, int from, int to, float blend)
+            {
+                for (int bone = 0; bone < skin.Length; bone++)
+                    skin[bone] = new SkinMatrix { Value = Sample(ref samples, motion, from, to, bone, blend) };
             }
 
             private static float3x4 Sample(ref EnemyAnimationSamples data, int motion, int a, int b, int bone, float t)

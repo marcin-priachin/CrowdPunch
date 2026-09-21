@@ -77,5 +77,34 @@ namespace CrowdPunch.Tests
             em.CompleteAllTrackedJobs();
             Assert.That(em.GetComponentData<LocalTransform>(enemy).Rotation, Is.EqualTo(quaternion.identity));
         }
+
+        [Test]
+        public void Enemy005DashingDasherFacesCommittedDashDirection()
+        {
+            using var world = new World("Dasher committed facing test");
+            EntityManager em = world.EntityManager;
+            Entity player = em.CreateEntity(typeof(PlayerSnapshot));
+            em.SetComponentData(player, new PlayerSnapshot
+            {
+                Position = new float3(10f, 0f, 0f),
+                IsAvailable = true
+            });
+            Entity dasher = em.CreateEntity(typeof(Enemy), typeof(LocalTransform), typeof(PhysicsVelocity),
+                typeof(EnemyLaunchState), typeof(DasherState), typeof(RespawnRequest));
+            em.SetComponentEnabled<RespawnRequest>(dasher, false);
+            em.SetComponentData(dasher, LocalTransform.Identity);
+            em.SetComponentData(dasher, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            em.SetComponentData(dasher, new DasherState
+            {
+                Phase = DasherPhase.Dashing,
+                LockedDirection = new float3(0f, 0f, -1f)
+            });
+
+            world.GetOrCreateSystem<EnemyFacingSystem>().Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+
+            float3 forward = math.forward(em.GetComponentData<LocalTransform>(dasher).Rotation);
+            Assert.That(math.distance(forward, new float3(0f, 0f, -1f)), Is.LessThan(0.0001f));
+        }
     }
 }

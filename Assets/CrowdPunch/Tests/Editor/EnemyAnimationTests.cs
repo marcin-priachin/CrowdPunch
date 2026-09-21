@@ -167,6 +167,39 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized, Is.EqualTo(1));
         }
 
+        [Test]
+        public void Enemy005DasherUsesAuthoredIdleMovementFrozenDashAndDeathMotions()
+        {
+            var em = world.EntityManager;
+            EnemyAnimation animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)EnemyAnimationProfile.Dasher;
+            em.SetComponentData(visual, animation);
+            em.AddComponentData(owner, new DasherState { Phase = DasherPhase.Positioning });
+
+            Tick();
+            Assert.That(Pose.x, Is.Zero, "Flying_Idle should drive a stationary Dasher.");
+
+            em.SetComponentData(owner, new DesiredMovement { Direction = new float3(0, 0, 1), Speed = 4f });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(1f), "Fast_Flying should drive movement.");
+
+            em.SetComponentData(owner, new DasherState { Phase = DasherPhase.Dashing });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)), "Dashing should freeze Fast_Flying on frame zero.");
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)));
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)), "Launching should freeze Fast_Flying on frame zero.");
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Death should start at its first frame.");
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(0.25f).Within(0.001f), "Death should advance and then hold its final frame.");
+        }
+
         [TestCase(EnemyLaunchPhase.Recovering)]
         [TestCase(EnemyLaunchPhase.Defeated)]
         public void Combat011LaunchEndsWithImpactAndRepunchInterruptsIt(EnemyLaunchPhase ending)

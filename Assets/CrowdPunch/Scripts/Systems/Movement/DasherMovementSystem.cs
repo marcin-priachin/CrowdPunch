@@ -36,8 +36,10 @@ namespace CrowdPunch.Systems.Movement
                 }
                 else if (dash.ValueRO.Phase == DasherPhase.Dashing)
                 {
-                    float travelled = math.distance(transform.ValueRO.Position.xz, dash.ValueRO.DashStartPosition.xz);
-                    if (travelled >= math.max(0f, settings.ValueRO.MaximumDistance))
+                    dash.ValueRW.DashDistanceTravelled += math.distance(
+                        transform.ValueRO.Position.xz,
+                        dash.ValueRO.PreviousPosition.xz);
+                    if (dash.ValueRO.DashDistanceTravelled >= math.max(0f, settings.ValueRO.MaximumDistance))
                     {
                         dash.ValueRW.Phase = DasherPhase.Recovering;
                         dash.ValueRW.SecondsRemaining = math.max(0f, settings.ValueRO.RecoveryDuration);

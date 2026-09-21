@@ -12,7 +12,7 @@ namespace CrowdPunch.Systems.Physics
     [BurstCompile, UpdateInGroup(typeof(GamePostPhysicsGroup))]
     [UpdateAfter(typeof(DasherEnemyImpactSystem))]
     [UpdateAfter(typeof(DasherPlayerImpactSystem))]
-    public partial struct DasherObstacleStopSystem : ISystem
+    public partial struct DasherObstacleRedirectSystem : ISystem
     {
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -24,7 +24,7 @@ namespace CrowdPunch.Systems.Physics
         [BurstCompile] public void OnUpdate(ref SystemState state)
         {
             PhysicsWorld physicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld;
-            StopOnStaticCollisionJob job = new StopOnStaticCollisionJob
+            RedirectOnStaticCollisionJob job = new RedirectOnStaticCollisionJob
             {
                 DasherLookup = SystemAPI.GetComponentLookup<DasherState>(),
                 SettingsLookup = SystemAPI.GetComponentLookup<DasherSettings>(true),
@@ -37,7 +37,7 @@ namespace CrowdPunch.Systems.Physics
         }
 
         [BurstCompile]
-        private struct StopOnStaticCollisionJob : ICollisionEventsJob
+        private struct RedirectOnStaticCollisionJob : ICollisionEventsJob
         {
             private const float MaximumWallNormalY = 0.5f;
 
@@ -49,16 +49,16 @@ namespace CrowdPunch.Systems.Physics
 
             public void Execute(CollisionEvent collisionEvent)
             {
-                // Ground and walkable slopes are static too; only lateral obstruction ends a dash.
+                // Ground and walkable slopes are static too; only lateral obstruction redirects a dash.
                 if (math.abs(collisionEvent.Normal.y) > MaximumWallNormalY) return;
 
                 if (collisionEvent.BodyIndexA >= NumDynamicBodies)
-                    StopDash(collisionEvent.EntityB);
+                    RedirectDash(collisionEvent.EntityB, collisionEvent.Normal);
                 if (collisionEvent.BodyIndexB >= NumDynamicBodies)
-                    StopDash(collisionEvent.EntityA);
+                    RedirectDash(collisionEvent.EntityA, collisionEvent.Normal);
             }
 
-            private void StopDash(Entity entity)
+            private void RedirectDash(Entity entity, float3 wallNormal)
             {
                 if (!DasherLookup.HasComponent(entity)
                     || !SettingsLookup.HasComponent(entity)
@@ -71,14 +71,38 @@ namespace CrowdPunch.Systems.Physics
                 DasherState dash = DasherLookup[entity];
                 if (dash.Phase != DasherPhase.Dashing) return;
 
-                dash.Phase = DasherPhase.Recovering;
-                dash.SecondsRemaining = math.max(0f, SettingsLookup[entity].RecoveryDuration);
+                PhysicsVelocity velocity = VelocityLookup[entity];
+                float3 redirected = ResolveRedirectedDirection(
+                    dash.LockedDirection,
+                    velocity.Linear,
+                    wallNormal);
+                dash.LockedDirection = redirected;
+                dash.LockedRotation = quaternion.LookRotationSafe(redirected, math.up());
+                dash.HasLockedRotation = 1;
                 DasherLookup[entity] = dash;
 
-                PhysicsVelocity velocity = VelocityLookup[entity];
-                velocity.Linear.xz = float2.zero;
+                velocity.Linear.xz = redirected.xz * math.max(0f, SettingsLookup[entity].DashSpeed);
                 VelocityLookup[entity] = velocity;
             }
+        }
+
+        internal static float3 ResolveRedirectedDirection(
+            float3 committedDirection,
+            float3 solvedVelocity,
+            float3 wallNormal)
+        {
+            float3 solvedDirection = solvedVelocity;
+            solvedDirection.y = 0f;
+            if (math.lengthsq(solvedDirection) > 0.0001f)
+                return math.normalize(solvedDirection);
+
+            float3 incoming = math.normalizesafe(
+                new float3(committedDirection.x, 0f, committedDirection.z),
+                math.forward());
+            float3 horizontalNormal = math.normalizesafe(
+                new float3(wallNormal.x, 0f, wallNormal.z));
+            float3 reflected = math.reflect(incoming, horizontalNormal);
+            return math.normalizesafe(reflected, -incoming);
         }
     }
 }

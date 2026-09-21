@@ -18,6 +18,7 @@ namespace CrowdPunch.Mono.Player
         private CombatFeedbackSettings settings;
         private CombatCameraFeedback cameraFeedback;
         private ImpactParticlePool particles;
+        private DasherTelegraphParticlePool dasherTelegraphs;
         private LaunchedTrailPool trails;
         private PlayerDamageFlash flash;
         private ExplosionFeedback explosions;
@@ -50,6 +51,7 @@ namespace CrowdPunch.Mono.Player
             particleMaterial = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
             flashMaterial = new Material(Resources.Load<Shader>("Shaders/ExplosionFeedback"));
             particles = new ImpactParticlePool(poolRoot, settings, particleMaterial);
+            dasherTelegraphs = new DasherTelegraphParticlePool(poolRoot, settings, particleMaterial);
             trails = new LaunchedTrailPool(poolRoot, settings, particleMaterial);
             flash = new PlayerDamageFlash(player.transform, flashMaterial);
             bridge.ImpactReceived += OnImpact;
@@ -57,6 +59,9 @@ namespace CrowdPunch.Mono.Player
             bridge.TrailsBegan += trails.Begin;
             bridge.TrailReceived += trails.Show;
             bridge.TrailsEnded += trails.End;
+            bridge.DasherTelegraphsBegan += dasherTelegraphs.Begin;
+            bridge.DasherTelegraphReceived += dasherTelegraphs.Show;
+            bridge.DasherTelegraphsEnded += dasherTelegraphs.End;
             if (health != null) health.DamageAccepted += OnDamage;
             if (controller != null) { controller.DashStarted += OnDashStart; controller.DashEnded += OnDashEnd; }
             if (punch != null) punch.PunchStateReset += ResetFeedback;
@@ -149,7 +154,7 @@ namespace CrowdPunch.Mono.Player
             explosions?.Clear();
             flashRemaining = dashRemaining = 0f;
             nextCameraTime = nextExceptionalTime = 0;
-            particles?.Clear(); trails?.Clear(); flash?.Clear();
+            particles?.Clear(); trails?.Clear(); dasherTelegraphs?.Clear(); flash?.Clear();
             if (cameraFeedback != null) cameraFeedback.ResetFeedback();
             FeedbackTimeController.CancelEffects();
         }
@@ -179,6 +184,12 @@ namespace CrowdPunch.Mono.Player
                 bridge.ImpactReceived -= OnImpact;
                 bridge.PunchResolved -= OnPunchResolved;
                 if (trails != null) { bridge.TrailsBegan -= trails.Begin; bridge.TrailReceived -= trails.Show; bridge.TrailsEnded -= trails.End; }
+                if (dasherTelegraphs != null)
+                {
+                    bridge.DasherTelegraphsBegan -= dasherTelegraphs.Begin;
+                    bridge.DasherTelegraphReceived -= dasherTelegraphs.Show;
+                    bridge.DasherTelegraphsEnded -= dasherTelegraphs.End;
+                }
                 bridge.FeedbackSettings = null;
             }
             if (health != null) health.DamageAccepted -= OnDamage;

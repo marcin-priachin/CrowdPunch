@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a12c749ec1ba4b17aac7000000000013, type: 3}
   m_Name: EnemyDasherSpawnSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemySpawnSettings
-  enemyPrefab: {fileID: 8618196010151164906, guid: 3e70fb2e89b01674f95633e429f13253, type: 3}
+  enemyPrefab: {fileID: 6979819722354732718, guid: ad50b850a33b1ad44a415284f1de27cb, type: 3}
   rangedProjectilePrefab: {fileID: 710000000000000001, guid: 65a5af48c2854bbd81ddaf3cc9451011, type: 3}
   archetype: 3
   initialCount: 30
@@ -49,6 +49,7 @@ MonoBehaviour:
   contactAttemptIntervalMin: 1
   contactAttemptIntervalMax: 3
   contactAttemptDuration: 2
+  contactAttemptWindUpDuration: 0.65
   contactAttemptSpeedMultiplier: 1.25
   contactAttemptSeparationWeight: 0.35
   preferredMinimumDistance: 8

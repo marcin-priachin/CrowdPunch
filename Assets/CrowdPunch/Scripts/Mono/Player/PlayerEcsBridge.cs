@@ -50,11 +50,17 @@ namespace CrowdPunch.Mono.Player
         public event Action<CombatFeedbackMessage> ImpactReceived;
         public event Action TrailsBegan, TrailsEnded;
         public event Action<ulong, uint, Vector3, float, int> TrailReceived;
+        public event Action DasherTelegraphsBegan, DasherTelegraphsEnded;
+        public event Action<ulong, Vector3, Vector3, float> DasherTelegraphReceived;
         public void ReceiveImpact(CombatFeedbackMessage message) => ImpactReceived?.Invoke(message);
         public void BeginTrails() => TrailsBegan?.Invoke();
         public void EndTrails() => TrailsEnded?.Invoke();
         public void ReceiveTrail(ulong id, uint sequence, Vector3 position, float speed, int depth)
             => TrailReceived?.Invoke(id, sequence, position, speed, depth);
+        public void BeginDasherTelegraphs() => DasherTelegraphsBegan?.Invoke();
+        public void EndDasherTelegraphs() => DasherTelegraphsEnded?.Invoke();
+        public void ReceiveDasherTelegraph(ulong id, Vector3 position, Vector3 direction, float progress)
+            => DasherTelegraphReceived?.Invoke(id, position, direction, progress);
 
         public readonly struct TrajectoryPreviewSegment
         {

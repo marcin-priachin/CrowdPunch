@@ -2,6 +2,7 @@ using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using CrowdPunch.Systems.Lifetime;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -22,7 +23,12 @@ namespace CrowdPunch.Systems.Physics
         public void OnUpdate(ref SystemState state)
         {
             PlayerSnapshot player = SystemAPI.GetSingleton<PlayerSnapshot>();
-            new FacePlayerJob { PlayerPosition = player.Position, PlayerAvailable = player.IsAvailable }.ScheduleParallel();
+            new FacePlayerJob
+            {
+                PlayerPosition = player.Position,
+                PlayerAvailable = player.IsAvailable,
+                Dashers = SystemAPI.GetComponentLookup<DasherState>(true)
+            }.ScheduleParallel();
         }
 
         [BurstCompile]
@@ -32,15 +38,22 @@ namespace CrowdPunch.Systems.Physics
         {
             public float3 PlayerPosition;
             public bool PlayerAvailable;
+            [ReadOnly] public ComponentLookup<DasherState> Dashers;
 
-            private void Execute(ref LocalTransform transform, ref PhysicsVelocity velocity,
+            private void Execute(Entity entity, ref LocalTransform transform, ref PhysicsVelocity velocity,
                 in EnemyLaunchState launch)
             {
                 bool launched = launch.Phase == EnemyLaunchPhase.Launched;
                 if (!launched && (!PlayerAvailable ||
                     (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)))
                     return;
-                float3 toward = launched ? velocity.Linear : PlayerPosition - transform.Position;
+                bool committedDash = Dashers.HasComponent(entity)
+                    && Dashers[entity].Phase == DasherPhase.Dashing;
+                float3 toward = launched
+                    ? velocity.Linear
+                    : committedDash
+                        ? Dashers[entity].LockedDirection
+                        : PlayerPosition - transform.Position;
                 toward.y = 0f;
                 if (math.lengthsq(toward) <= 0.0001f) return;
                 // Keep the physics capsule upright; animation supplies launched visual pitch.

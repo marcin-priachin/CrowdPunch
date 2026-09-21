@@ -109,6 +109,8 @@ namespace CrowdPunch.Systems.AI
                         state.LockedRotation = quaternion.LookRotationSafe(toward, math.up());
                         state.HasLockedRotation = 1;
                         state.DashStartPosition = transform.Position;
+                        state.PreviousPosition = transform.Position;
+                        state.DashDistanceTravelled = 0f;
                         state.DashSequence++;
                         state.HasHitPlayer = 0;
                     }
