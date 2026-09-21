@@ -26,6 +26,8 @@ namespace CrowdPunch.Systems.Presentation
                 Velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true),
                 Dashers = SystemAPI.GetComponentLookup<DasherState>(true),
                 RangedAttacks = SystemAPI.GetComponentLookup<RangedAttackState>(true),
+                ElitePunches = SystemAPI.GetComponentLookup<ElitePunchState>(true),
+                Health = SystemAPI.GetComponentLookup<Health>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel();
         }
@@ -41,6 +43,8 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<PhysicsVelocity> Velocities;
             [ReadOnly] public ComponentLookup<DasherState> Dashers;
             [ReadOnly] public ComponentLookup<RangedAttackState> RangedAttacks;
+            [ReadOnly] public ComponentLookup<ElitePunchState> ElitePunches;
+            [ReadOnly] public ComponentLookup<Health> Health;
             public float DeltaTime;
 
             private void Execute(in EnemyAnimation animation, ref EnemyAnimationPlayback playback, ref DynamicBuffer<SkinMatrix> skin)
@@ -75,6 +79,11 @@ namespace CrowdPunch.Systems.Presentation
                 if (animation.Profile == (byte)EnemyAnimationProfile.Ranged)
                 {
                     AnimateRanged(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Elite)
+                {
+                    AnimateElite(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
                 if (launch.Phase == EnemyLaunchPhase.Launched)
@@ -301,6 +310,86 @@ namespace CrowdPunch.Systems.Presentation
                 }
 
                 playback.WasAttacking = 0;
+                int motion = Movement[owner].Speed > 0.01f ? 1 : 0;
+                playback.Phase = math.frac(playback.Phase
+                    + DeltaTime / math.max(0.01f, samples.Durations[motion]));
+                float frame = playback.Phase * samples.FrameCount;
+                int a = (int)frame;
+                ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
+            }
+
+            private void AnimateElite(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                const int punchMotion = 2;
+                const int hitMotion = 3;
+                bool damaged = false;
+                if (Health.HasComponent(owner))
+                {
+                    float currentHealth = Health[owner].Current;
+                    damaged = playback.HealthInitialized != 0 && currentHealth < playback.PreviousHealth;
+                    playback.PreviousHealth = currentHealth;
+                    playback.HealthInitialized = 1;
+                }
+
+                if (launch.Phase == EnemyLaunchPhase.Defeated)
+                {
+                    playback.HitActive = 0;
+                    playback.WasAttacking = 0;
+                    if (playback.Landing == 0)
+                    {
+                        playback.Landing = 1;
+                        playback.ImpactPhase = 0f;
+                    }
+                    else
+                    {
+                        playback.ImpactPhase = math.saturate(playback.ImpactPhase
+                            + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
+                    }
+                    float deathFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                    int from = (int)deathFrame;
+                    ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
+                        math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
+                    return;
+                }
+
+                playback.Landing = 0;
+                if (damaged)
+                {
+                    playback.HitActive = 1;
+                    playback.HitPhase = 0f;
+                    playback.WasAttacking = 0;
+                }
+                if (playback.HitActive != 0)
+                {
+                    float hitFrame = playback.HitPhase * (samples.FrameCount - 1);
+                    int from = (int)hitFrame;
+                    ApplyFrame(ref skin, ref samples, hitMotion, from,
+                        math.min(from + 1, samples.FrameCount - 1), math.frac(hitFrame));
+                    playback.HitPhase = math.saturate(playback.HitPhase
+                        + DeltaTime / math.max(0.01f, samples.Durations[hitMotion]));
+                    if (playback.HitPhase >= 1f) playback.HitActive = 0;
+                    return;
+                }
+
+                bool attacking = ElitePunches.HasComponent(owner)
+                    && ElitePunches[owner].Phase == ElitePunchPhase.WindUp;
+                if (attacking)
+                {
+                    if (playback.WasAttacking == 0) playback.AttackPhase = 0f;
+                    else playback.AttackPhase = math.saturate(playback.AttackPhase
+                        + DeltaTime / math.max(0.01f, samples.Durations[punchMotion]));
+                    playback.WasAttacking = 1;
+                    float punchFrame = playback.AttackPhase * (samples.FrameCount - 1);
+                    int from = (int)punchFrame;
+                    ApplyFrame(ref skin, ref samples, punchMotion, from,
+                        math.min(from + 1, samples.FrameCount - 1), math.frac(punchFrame));
+                    return;
+                }
+
+                playback.WasAttacking = 0;
+                if (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)
+                    return;
                 int motion = Movement[owner].Speed > 0.01f ? 1 : 0;
                 playback.Phase = math.frac(playback.Phase
                     + DeltaTime / math.max(0.01f, samples.Durations[motion]));

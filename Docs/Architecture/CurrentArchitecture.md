@@ -500,6 +500,13 @@ in `Temp/elite-paused-recurrence.txt`, `Temp/elite-paused-diagnosis.txt`, `Temp/
 status from prefab, asset, or object names. Elite profiles reuse `EnemySpawnSettings` for their prefab, health, ordinary
 melee movement/contact behavior, and all common tuning. Their `KnockbackResponse` uses the existing `PlayerElite` tier.
 
+`EliteEnemy.prefab` uses `Models/UltimateMonsters/Big/Yeti.fbx` through the sampled GPU-skinning path.
+Its `EnemyAnimationProfile.Elite` loops `Idle` while stationary and `Walk` while moving, plays `Punch`
+during the authoritative elite wind-up, restarts `HitReact` when health decreases, and gives `Death`
+priority on defeat. Generated instanced materials live under `Materials/Enemies/Elite`; mesh-specific
+CPA3 sample blobs, the controller, prefab, materials, and `EliteEnemySpawnSettings` reference can be rebuilt
+through **Crowd Punch > Enemies > Rebuild Elite Prefab** (ENEMY-009, INFO-004).
+
 All damage continues through `DamageRequest` and `DamageApplicationSystem`. Punches, launched-body collision damage,
 explosions, and launched Dashers can therefore defeat an elite normally. `EnemyLaunchTransition` is gated by `EnemyTier`:
 normal targets enter the shared `Launched` lifecycle, while elite targets receive the applicable existing elite-tier

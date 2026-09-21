@@ -262,6 +262,38 @@ namespace CrowdPunch.Tests
             Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Death should start on defeat.");
         }
 
+        [Test]
+        public void Enemy009EliteUsesPunchHitReactAndDeathMotions()
+        {
+            var em = world.EntityManager;
+            EnemyAnimation animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)EnemyAnimationProfile.Elite;
+            em.SetComponentData(visual, animation);
+            em.AddComponentData(owner, new ElitePunchState { Phase = ElitePunchPhase.SelectingTarget });
+            em.AddComponentData(owner, new Health { Current = 250f, Max = 250f });
+
+            Tick();
+            Assert.That(Pose.x, Is.Zero, "Idle should drive a stationary elite.");
+
+            em.SetComponentData(owner, new DesiredMovement { Direction = new float3(0, 0, 1), Speed = 4f });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(1f), "Walk should drive elite movement.");
+
+            em.SetComponentData(owner, new ElitePunchState { Phase = ElitePunchPhase.WindUp });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(2f, 0f, 0f)), "Punch should restart on wind-up entry.");
+
+            em.SetComponentData(owner, new Health { Current = 240f, Max = 250f });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(3f, 0f, 0f)), "HitReact should override Punch after damage.");
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(0.25f).Within(0.001f));
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Death should override HitReact on defeat.");
+        }
+
         [TestCase(EnemyLaunchPhase.Recovering)]
         [TestCase(EnemyLaunchPhase.Defeated)]
         public void Combat011LaunchEndsWithImpactAndRepunchInterruptsIt(EnemyLaunchPhase ending)
