@@ -170,7 +170,12 @@ precedence over cooldown posing; after the final frame it returns to the current
 pose, or directly to frame 22 on a miss/completed cooldown. Another accepted punch restarts
 the strike even if the previous visual has not finished. `PunchStateReset` cancels visual
 playback on gameplay reset/disable. Animation never delays hits, spends cooldown, or changes
-dash movement (PLAYER-005, PLAYER-009). The shared cooldown property also drives area feedback.
+dash movement (PLAYER-005, PLAYER-009). The shared cooldown property also drives hand feedback.
+`PlayerPunchCooldownFeedback` finds the model's `hand_r` bone, scales it from the authored
+cooldown multiplier to the ready multiplier, and creates two child particle systems at runtime.
+The looping aura increases its emission and size during recovery before changing to the ready
+color; a separate burst flashes once when recovery completes. It restores the animated bone
+scale before each Animator evaluation so the presentation cannot accumulate scale drift.
 `PlayerPunchAnimation` also exposes `readyYaw` and `punchYaw` offsets in degrees (both default
 to zero). Cooldown frames 0-22 interpolate from punch yaw to ready yaw; frame 22 holds ready
 yaw, and strike frames 22-34 interpolate back to punch yaw at the existing playback speed.
@@ -183,7 +188,7 @@ This is presentation only: camera-forward facing and gameplay punch direction st
 
 | Concern | Current owner | Boundary/data |
 |---|---|---|
-| Input, player transform, and punch | GameObject | `PlayerController` owns movement and committed dash timing; `PlayerPunch` owns immediate attack input, hit-confirmed cooldown, and punch-area cooldown presentation. Punching does not interrupt a dash. |
+| Input, player transform, and punch | GameObject | `PlayerController` owns movement and committed dash timing; `PlayerPunch` owns immediate attack input and hit-confirmed cooldown; `PlayerPunchCooldownFeedback` presents recovery on `hand_r`. Punching does not interrupt a dash. |
 | Player health and invincibility | GameObject | `PlayerHealth`; `PlayerHitAnimation` plays Hit To Body on accepted damage; invulnerability remains health-owned |
 | Camera | GameObject | `CameraFollow` |
 | Scene bootstrap and UI | GameObject | `GameBootstrap`, UI MonoBehaviours |
@@ -198,7 +203,7 @@ This is presentation only: camera-forward facing and gameplay punch direction st
 | Ranged projectile trajectory and lifetime | ECS | `RangedProjectile`, velocity-led fixed fire-time start/target, ECS transform evaluation |
 | Enemy combat state | ECS | health, damage, impulse, explicit launch lifecycle, death/respawn requests |
 | Punch trajectory preview | ECS â†’ bridge â†’ GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
-| Committed punch-area feedback | GameObject | `PlayerPunch` triggers `PunchAreaFeedback` from the same origin, direction, radius, and range published to ECS |
+| Punch cooldown feedback | GameObject | `PlayerPunchCooldownFeedback` scales `hand_r` and owns the generated cooldown-aura and ready-flash particles; tuning lives in `PlayerPunchSettings` |
 | Enemy body feedback | ECS rendering | Baked `EnemyVisualOwner` connects root/child renderers to gameplay state; `EnemyReadabilitySystem` writes body color. `DasherPresentationSystem` retains ownership of Dasher color/shape. |
 | Temporary normal health and elite health UI | ECS â†’ presentation registry â†’ Canvas | `EnemyHealthBarVisibility`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas`; no repeated normal launch/recovery text, and zero-health normal bars are suppressed. |
 
@@ -571,8 +576,8 @@ Package versions in `Packages/manifest.json` and `packages-lock.json` remain the
 
 ## Player Punch Cooldown Confirmation
 
-Player punch containment uses the horizontal rectangle drawn by `PunchAreaFeedback`: forward distance from zero to
-range, and lateral distance up to radius (PLAYER-008). Height is checked independently against radius, so shorter enemies
+Player punch containment uses a horizontal rectangle defined by the authored range and radius: forward distance from
+zero to range, and lateral distance up to radius. Height is checked independently against radius, so shorter enemies
 do not lose horizontal reach. Detection, aim-assist membership, and trajectory preview all use `PunchResolution.Contains`
 with the player-punch cause (PLAYER-003). Elite punches retain their circular cross-section.
 

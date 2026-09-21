@@ -133,11 +133,11 @@ Status: Must
 
 Movement, aiming, weapons, progression, and other non-crowd mechanics must not accumulate complexity merely to match the depth produced by crowd combinations.
 
-### PLAYER-008 — Punch Area Feedback
+### PLAYER-008 — Punch Cooldown Feedback
 
 Status: Must
 
-Show a semitransparent world-space shape matching the live punch area whenever the player's punch component is active. During punch cooldown, the full shape uses a distinct cooldown color and a ready-color fill grows from the punch origin toward maximum range in proportion to cooldown recovery. The shape follows the current punch origin and direction so it always communicates the area of the next punch.
+Represent punch cooldown on the player model's `hand_r` bone rather than with a world-space punch-range shape. The hand scales from its authored cooldown multiplier to its ready multiplier as cooldown recovers. A hand-bound particle aura grows in intensity through cooldown and changes to its ready color when recovery completes. A second hand-bound particle effect flashes once at completion. These cues are presentation only and follow the hit-confirmed cooldown rule in PLAYER-009.
 
 ### PLAYER-009 — Punch Cooldown
 

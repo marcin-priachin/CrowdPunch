@@ -16,7 +16,7 @@ namespace CrowdPunch.Mono.Player
         [SerializeField] private PlayerPunchSettings settings;
 
         private PunchTrajectoryPreview trajectoryPreview;
-        private PunchAreaFeedback areaFeedback;
+        private PlayerPunchCooldownFeedback cooldownFeedback;
         private InputAction attackAction;
         private float nextPunchTime;
         private bool awaitingPunchResult;
@@ -56,11 +56,12 @@ namespace CrowdPunch.Mono.Player
                 trajectoryPreview = gameObject.AddComponent<PunchTrajectoryPreview>();
             }
 
-            areaFeedback = GetComponent<PunchAreaFeedback>();
-            if (areaFeedback == null)
+            cooldownFeedback = GetComponent<PlayerPunchCooldownFeedback>();
+            if (cooldownFeedback == null)
             {
-                areaFeedback = gameObject.AddComponent<PunchAreaFeedback>();
+                cooldownFeedback = gameObject.AddComponent<PlayerPunchCooldownFeedback>();
             }
+            cooldownFeedback.Initialize(settings);
         }
 
         private void OnEnable()
@@ -68,6 +69,7 @@ namespace CrowdPunch.Mono.Player
             if (ecsBridge != null)
                 ecsBridge.PunchResolved += OnPunchResolved;
             attackAction?.Enable();
+            cooldownFeedback?.ShowReady();
         }
 
         private void OnDisable()
@@ -77,7 +79,7 @@ namespace CrowdPunch.Mono.Player
             awaitingPunchResult = false;
             ecsBridge?.ClearPunch();
             attackAction?.Disable();
-            areaFeedback?.Hide();
+            cooldownFeedback?.Hide();
             ecsBridge?.ClearPunchPreview();
             PunchStateReset?.Invoke();
         }
@@ -85,7 +87,7 @@ namespace CrowdPunch.Mono.Player
         private void Update()
         {
             PublishPunchPreview();
-            UpdateAreaFeedback();
+            UpdateCooldownFeedback();
 
             if (attackAction == null || !attackAction.WasPressedThisFrame())
             {
@@ -109,15 +111,9 @@ namespace CrowdPunch.Mono.Player
                 settings.AimAssistMaximumAngleDegrees);
         }
 
-        private void UpdateAreaFeedback()
+        private void UpdateCooldownFeedback()
         {
-            Transform originTransform = punchOrigin != null ? punchOrigin : transform;
-            areaFeedback.Show(
-                originTransform.position,
-                originTransform.forward,
-                settings.Radius,
-                settings.Range,
-                CooldownProgress);
+            cooldownFeedback?.SetCooldownState(CooldownProgress, Time.time < nextPunchTime);
         }
 
         public void RequestPunch()
@@ -134,7 +130,7 @@ namespace CrowdPunch.Mono.Player
         {
             awaitingPunchResult = false;
             nextPunchTime = 0f;
-            areaFeedback?.Hide();
+            cooldownFeedback?.ShowReady();
             ecsBridge?.ClearPunch();
             PunchStateReset?.Invoke();
         }
@@ -174,7 +170,7 @@ namespace CrowdPunch.Mono.Player
             // PLAYER-009: only confirmed enemy hits spend the punch cooldown.
             if (hitEnemy)
                 nextPunchTime = Time.time + settings.Cooldown;
-            UpdateAreaFeedback();
+            UpdateCooldownFeedback();
         }
     }
 }
