@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using CrowdPunch.Authoring;
@@ -10,38 +10,38 @@ using UnityEngine;
 
 namespace CrowdPunch.Editor
 {
-    public static class EnemyRangedPrefabBuilder
+    public static class EnemyBaselinePrefabBuilder
     {
-        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Big/Alien.fbx";
-        private const string PrefabPath = "Assets/CrowdPunch/Prefabs/EnemyRanged.prefab";
-        private const string ControllerPath = "Assets/CrowdPunch/Animation/EnemyRanged.controller";
-        private const string SettingsPath = "Assets/CrowdPunch/Data/Settings/Enemies/RangedEnemySpawnSettings.asset";
-        private const string MaterialFolder = "Assets/CrowdPunch/Materials/Enemies/Ranged";
+        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Big/Orc.fbx";
+        private const string PrefabPath = "Assets/CrowdPunch/Prefabs/EnemyBaseline.prefab";
+        private const string ControllerPath = "Assets/CrowdPunch/Animation/EnemyBaseline.controller";
+        private const string SettingsPath = "Assets/CrowdPunch/Data/Settings/Enemies/EnemySpawnSettings.asset";
+        private const string MaterialFolder = "Assets/CrowdPunch/Materials/Enemies/Baseline";
         private const string SkinningMaterialPath = "Assets/CrowdPunch/Animation/EnemySkinning.mat";
         private const string PhysicsMaterialPath = "Assets/CrowdPunch/PhysicsMaterial/Enemy.physicMaterial";
         private const int FrameCount = 32;
 
-        [MenuItem("Crowd Punch/Enemies/Rebuild Ranged Prefab")]
+        [MenuItem("Crowd Punch/Enemies/Rebuild Baseline Prefab")]
         public static void Rebuild()
         {
-            EnsureFolder("Assets/CrowdPunch/Materials/Enemies", "Ranged");
+            EnsureFolder("Assets/CrowdPunch/Materials/Enemies", "Baseline");
             ConfigureAnimationImport();
 
             GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath);
-            if (model == null) throw new InvalidOperationException($"Missing ranged model: {ModelPath}");
+            if (model == null) throw new InvalidOperationException($"Missing baseline model: {ModelPath}");
             AnimationClip idle = FindClip("Idle");
             AnimationClip walk = FindClip("Walk");
             AnimationClip death = FindClip("Death");
-            AnimationClip wave = FindClip("Wave");
-            AnimatorController controller = BuildController(idle, walk, death, wave);
 
-            GameObject root = new GameObject("EnemyRanged") { layer = 7 };
+            AnimatorController controller = BuildController(idle, walk, death);
+
+            GameObject root = new GameObject("EnemyBaseline") { layer = 7 };
             try
             {
                 ConfigurePhysics(root);
                 root.AddComponent<EnemyAuthoring>();
                 GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
-                visual.name = "Alien";
+                visual.name = "Orc";
                 visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
                 visual.transform.localScale = Vector3.one;
                 SetLayerRecursively(visual, 7);
@@ -54,7 +54,7 @@ namespace CrowdPunch.Editor
 
                 SkinnedMeshRenderer[] renderers = visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
                 if (renderers.Length == 0)
-                    throw new InvalidOperationException("Alien.fbx contains no skinned renderers.");
+                    throw new InvalidOperationException("Orc.fbx contains no skinned renderers.");
                 FitVisualToEnemy(root.transform, visual.transform, renderers);
                 for (int index = 0; index < renderers.Length; index++)
                 {
@@ -62,11 +62,11 @@ namespace CrowdPunch.Editor
                     renderer.quality = SkinQuality.Bone4;
                     renderer.rootBone = animator.transform;
                     renderer.sharedMaterials = BuildMaterials(renderer.sharedMaterials);
-                    string samplesPath = $"Assets/CrowdPunch/Animation/EnemyRangedMovement_{index:00}_{SafeName(renderer.name)}.bytes";
-                    WriteSamples(samplesPath, animator, renderer, idle, walk, death, wave);
+                    string samplesPath = $"Assets/CrowdPunch/Animation/EnemyBaselineMovement_{index:00}_{SafeName(renderer.name)}.bytes";
+                    WriteSamples(samplesPath, animator, renderer, idle, walk, death);
                     EnemyAnimationAuthoring authoring = renderer.GetComponent<EnemyAnimationAuthoring>();
                     if (authoring == null) authoring = renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
-                    authoring.Profile = EnemyAnimationProfile.Ranged;
+                    authoring.Profile = EnemyAnimationProfile.Baseline;
                     authoring.BlendResponse = 12f;
                     authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samplesPath);
                 }
@@ -80,7 +80,7 @@ namespace CrowdPunch.Editor
             AssignSpawnSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Created {PrefabPath} from Alien.fbx and assigned it to {SettingsPath}.");
+            Debug.Log($"Created {PrefabPath} from Orc.fbx and assigned it to {SettingsPath}.");
         }
 
         private static void ConfigureAnimationImport()
@@ -108,14 +108,14 @@ namespace CrowdPunch.Editor
             if (clip != null) return clip;
             string available = string.Join(", ", AssetDatabase.LoadAllAssetsAtPath(ModelPath)
                 .OfType<AnimationClip>().Select(candidate => candidate.name));
-            throw new InvalidOperationException($"Alien.fbx has no animation named '{name}'. Available: {available}");
+            throw new InvalidOperationException($"Orc.fbx has no animation named '{name}'. Available: {available}");
         }
 
         private static bool MatchesClipName(string candidate, string requested) =>
             candidate == requested || candidate.EndsWith("|" + requested, StringComparison.Ordinal);
 
         private static AnimatorController BuildController(AnimationClip idle, AnimationClip walk,
-            AnimationClip death, AnimationClip wave)
+            AnimationClip death)
         {
             AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
             if (controller == null) controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
@@ -125,7 +125,6 @@ namespace CrowdPunch.Editor
             idleState.motion = idle;
             machine.defaultState = idleState;
             machine.AddState("Walk").motion = walk;
-            machine.AddState("Wave").motion = wave;
             machine.AddState("Death").motion = death;
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
@@ -140,7 +139,7 @@ namespace CrowdPunch.Editor
             for (int index = 0; index < sources.Length; index++)
             {
                 Material source = sources[index];
-                string name = string.IsNullOrWhiteSpace(source?.name) ? $"Alien_{index}" : source.name;
+                string name = string.IsNullOrWhiteSpace(source?.name) ? $"Orc_{index}" : source.name;
                 string path = $"{MaterialFolder}/{SafeName(name)}.mat";
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null)
@@ -165,13 +164,12 @@ namespace CrowdPunch.Editor
         }
 
         private static void WriteSamples(string path, Animator animator, SkinnedMeshRenderer renderer,
-            AnimationClip idle, AnimationClip walk, AnimationClip death, AnimationClip wave)
+            AnimationClip idle, AnimationClip walk, AnimationClip death)
         {
             animator.Rebind();
             var clips = new AnimationClip[EnemyAnimationSamples.MotionCount];
             clips[0] = idle;
             for (int index = 1; index < EnemyAnimationSamples.ImpactMotion; index++) clips[index] = walk;
-            clips[2] = wave;
             clips[EnemyAnimationSamples.FlyingMotion] = idle;
             clips[EnemyAnimationSamples.ImpactMotion] = death;
             var matrices = new Matrix4x4[EnemyAnimationSamples.MotionCount * FrameCount * renderer.bones.Length];
@@ -187,7 +185,7 @@ namespace CrowdPunch.Editor
                 durations[motion] = clip.length;
                 for (int frame = 0; frame < FrameCount; frame++)
                 {
-                    bool oneShot = motion == 2 || motion == EnemyAnimationSamples.ImpactMotion;
+                    bool oneShot = motion == EnemyAnimationSamples.ImpactMotion;
                     float normalized = oneShot ? frame / (float)(FrameCount - 1) : frame / (float)FrameCount;
                     clip.SampleAnimation(animator.gameObject, normalized * clip.length);
                     Matrix4x4 inverse = animator.transform.worldToLocalMatrix;
@@ -235,7 +233,7 @@ namespace CrowdPunch.Editor
             Bounds bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
             float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Alien renderers have empty bounds.");
+            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Orc renderers have empty bounds.");
             visual.localScale *= 2.5f / largest;
             bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
@@ -259,7 +257,7 @@ namespace CrowdPunch.Editor
         {
             EnemySpawnSettings settings = AssetDatabase.LoadAssetAtPath<EnemySpawnSettings>(SettingsPath);
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
-            if (settings == null || prefab == null) throw new InvalidOperationException("Could not load ranged settings or prefab.");
+            if (settings == null || prefab == null) throw new InvalidOperationException("Could not load baseline settings or prefab.");
             var serialized = new SerializedObject(settings);
             serialized.FindProperty("enemyPrefab").objectReferenceValue = prefab;
             serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -281,3 +279,4 @@ namespace CrowdPunch.Editor
         }
     }
 }
+

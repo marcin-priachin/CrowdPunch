@@ -81,6 +81,15 @@ the two surrounding movement directions, and neighboring sample frames into `Ski
 Cycles start at entity-specific phases to avoid synchronized crowds. Matrix blending is a
 sampled locomotion approximation, not a general runtime Animator-controller interpreter.
 
+`EnemyBaseline.prefab` uses `Models/UltimateMonsters/Big/Orc.fbx` through that sampled
+GPU-skinning path. Its `EnemyAnimationProfile.Baseline` loops `Idle` while stationary and
+`Walk` while moving, holds a sideways `Idle` pose while launched, and plays `Death` once when
+defeated. Generated instanced materials live under `Materials/Enemies/Baseline`; mesh-specific
+CPA3 samples, the controller, prefab, materials, and `EnemySpawnSettings` reference can be rebuilt
+through **Crowd Punch > Enemies > Rebuild Baseline Prefab** (ENEMY-012, INFO-004).
+All enemy prefab builders enable `Collider.providesContacts`; the baked physics collider must
+raise collision events for `EnemyLaunchCollisionSystem` to propagate launched state (COMBAT-002/003).
+
 `EnemyDasher.prefab` uses the same sampled GPU-skinning path with the generic-rigged
 `Models/UltimateMonsters/Flying/Dragon.fbx`. Its `EnemyAnimationProfile.Dasher` selects a
 narrow state mapping: `Flying_Idle` loops while stationary, `Fast_Flying` loops while moving,

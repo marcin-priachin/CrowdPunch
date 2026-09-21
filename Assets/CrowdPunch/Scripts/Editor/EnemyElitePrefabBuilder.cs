@@ -248,6 +248,7 @@ namespace CrowdPunch.Editor
             collider.radius = 0.75f;
             collider.height = 3f;
             collider.center = new Vector3(0f, 1f, 0f);
+            collider.providesContacts = true;
             collider.material = AssetDatabase.LoadAssetAtPath<PhysicsMaterial>(PhysicsMaterialPath);
             var body = root.AddComponent<Rigidbody>();
             body.mass = 8f;

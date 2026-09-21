@@ -294,6 +294,32 @@ namespace CrowdPunch.Tests
             Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Death should override HitReact on defeat.");
         }
 
+        [Test]
+        public void Enemy012BaselineUsesIdleWalkRotatedLaunchAndDeathMotions()
+        {
+            var em = world.EntityManager;
+            EnemyAnimation animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)EnemyAnimationProfile.Baseline;
+            em.SetComponentData(visual, animation);
+
+            Tick();
+            Assert.That(Pose.x, Is.Zero, "Idle should drive a stationary baseline enemy.");
+
+            em.SetComponentData(owner, new DesiredMovement { Direction = new float3(0, 0, 1), Speed = 4f });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(1f), "Walk should drive baseline movement.");
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            Tick();
+            float3x4 launched = em.GetBuffer<SkinMatrix>(visual)[0].Value;
+            Assert.That(launched.c3.x, Is.EqualTo(9f).Within(0.001f), "Launching should use the dedicated Idle sample.");
+            Assert.That(launched.c1.z, Is.EqualTo(-1f).Within(0.001f), "The launched Idle pose should rotate onto its side.");
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Death should start on defeat.");
+        }
+
         [TestCase(EnemyLaunchPhase.Recovering)]
         [TestCase(EnemyLaunchPhase.Defeated)]
         public void Combat011LaunchEndsWithImpactAndRepunchInterruptsIt(EnemyLaunchPhase ending)

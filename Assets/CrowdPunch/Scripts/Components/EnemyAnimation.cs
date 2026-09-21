@@ -9,7 +9,8 @@ namespace CrowdPunch.Components
         Dasher,
         Explosive,
         Ranged,
-        Elite
+        Elite,
+        Baseline
     }
 
     public struct EnemyAnimation : IComponentData

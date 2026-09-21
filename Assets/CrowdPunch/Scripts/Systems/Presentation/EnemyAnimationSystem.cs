@@ -86,6 +86,11 @@ namespace CrowdPunch.Systems.Presentation
                     AnimateElite(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Baseline)
+                {
+                    AnimateBaseline(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
                 if (launch.Phase == EnemyLaunchPhase.Launched)
                 {
                     playback.Landing = 0;
@@ -388,6 +393,49 @@ namespace CrowdPunch.Systems.Presentation
                 }
 
                 playback.WasAttacking = 0;
+                if (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)
+                    return;
+                int motion = Movement[owner].Speed > 0.01f ? 1 : 0;
+                playback.Phase = math.frac(playback.Phase
+                    + DeltaTime / math.max(0.01f, samples.Durations[motion]));
+                float frame = playback.Phase * samples.FrameCount;
+                int a = (int)frame;
+                ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
+            }
+
+            private void AnimateBaseline(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                if (launch.Phase == EnemyLaunchPhase.Launched)
+                {
+                    playback.Landing = 0;
+                    playback.WasLaunched = 1;
+                    ApplyRotatedFrame(ref skin, ref samples, EnemyAnimationSamples.FlyingMotion,
+                        0, 0, 0f, quaternion.RotateX(-math.PI * 0.5f));
+                    return;
+                }
+
+                playback.WasLaunched = 0;
+                if (launch.Phase == EnemyLaunchPhase.Defeated)
+                {
+                    if (playback.Landing == 0)
+                    {
+                        playback.Landing = 1;
+                        playback.ImpactPhase = 0f;
+                    }
+                    else
+                    {
+                        playback.ImpactPhase = math.saturate(playback.ImpactPhase
+                            + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
+                    }
+                    float deathFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                    int from = (int)deathFrame;
+                    ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
+                        math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
+                    return;
+                }
+
+                playback.Landing = 0;
                 if (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)
                     return;
                 int motion = Movement[owner].Speed > 0.01f ? 1 : 0;

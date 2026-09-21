@@ -244,6 +244,7 @@ namespace CrowdPunch.Editor
             var collider = root.AddComponent<CapsuleCollider>();
             collider.radius = 0.5f;
             collider.height = 2f;
+            collider.providesContacts = true;
             collider.material = AssetDatabase.LoadAssetAtPath<PhysicsMaterial>(PhysicsMaterialPath);
             var body = root.AddComponent<Rigidbody>();
             body.mass = 1f;
