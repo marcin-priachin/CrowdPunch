@@ -25,6 +25,7 @@ namespace CrowdPunch.Systems.Presentation
                 Respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true),
                 Velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true),
                 Dashers = SystemAPI.GetComponentLookup<DasherState>(true),
+                RangedAttacks = SystemAPI.GetComponentLookup<RangedAttackState>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel();
         }
@@ -39,6 +40,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<RespawnRequest> Respawns;
             [ReadOnly] public ComponentLookup<PhysicsVelocity> Velocities;
             [ReadOnly] public ComponentLookup<DasherState> Dashers;
+            [ReadOnly] public ComponentLookup<RangedAttackState> RangedAttacks;
             public float DeltaTime;
 
             private void Execute(in EnemyAnimation animation, ref EnemyAnimationPlayback playback, ref DynamicBuffer<SkinMatrix> skin)
@@ -68,6 +70,11 @@ namespace CrowdPunch.Systems.Presentation
                 if (animation.Profile == (byte)EnemyAnimationProfile.Explosive)
                 {
                     AnimateExplosive(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Ranged)
+                {
+                    AnimateRanged(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
                 if (launch.Phase == EnemyLaunchPhase.Launched)
@@ -240,11 +247,85 @@ namespace CrowdPunch.Systems.Presentation
                 ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
             }
 
+            private void AnimateRanged(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                const int attackMotion = 2;
+                if (launch.Phase == EnemyLaunchPhase.Launched)
+                {
+                    playback.Landing = 0;
+                    playback.WasLaunched = 1;
+                    playback.WasAttacking = 0;
+                    ApplyRotatedFrame(ref skin, ref samples, EnemyAnimationSamples.FlyingMotion,
+                        0, 0, 0f, quaternion.RotateX(-math.PI * 0.5f));
+                    return;
+                }
+
+                playback.WasLaunched = 0;
+                if (launch.Phase == EnemyLaunchPhase.Defeated)
+                {
+                    playback.WasAttacking = 0;
+                    if (playback.Landing == 0)
+                    {
+                        playback.Landing = 1;
+                        playback.ImpactPhase = 0f;
+                    }
+                    else
+                    {
+                        playback.ImpactPhase = math.saturate(playback.ImpactPhase
+                            + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
+                    }
+                    float deathFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                    int from = (int)deathFrame;
+                    ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
+                        math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
+                    return;
+                }
+
+                playback.Landing = 0;
+                if (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)
+                    return;
+                bool attacking = RangedAttacks.HasComponent(owner)
+                    && RangedAttacks[owner].Phase == RangedAttackPhase.WindUp;
+                if (attacking)
+                {
+                    if (playback.WasAttacking == 0) playback.AttackPhase = 0f;
+                    else playback.AttackPhase = math.saturate(playback.AttackPhase
+                        + DeltaTime / math.max(0.01f, samples.Durations[attackMotion]));
+                    playback.WasAttacking = 1;
+                    float attackFrame = playback.AttackPhase * (samples.FrameCount - 1);
+                    int from = (int)attackFrame;
+                    ApplyFrame(ref skin, ref samples, attackMotion, from,
+                        math.min(from + 1, samples.FrameCount - 1), math.frac(attackFrame));
+                    return;
+                }
+
+                playback.WasAttacking = 0;
+                int motion = Movement[owner].Speed > 0.01f ? 1 : 0;
+                playback.Phase = math.frac(playback.Phase
+                    + DeltaTime / math.max(0.01f, samples.Durations[motion]));
+                float frame = playback.Phase * samples.FrameCount;
+                int a = (int)frame;
+                ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
+            }
+
             private static void ApplyFrame(ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples,
                 int motion, int from, int to, float blend)
             {
                 for (int bone = 0; bone < skin.Length; bone++)
                     skin[bone] = new SkinMatrix { Value = Sample(ref samples, motion, from, to, bone, blend) };
+            }
+
+            private static void ApplyRotatedFrame(ref DynamicBuffer<SkinMatrix> skin,
+                ref EnemyAnimationSamples samples, int motion, int from, int to, float blend, quaternion rotation)
+            {
+                var matrix = new float3x3(rotation);
+                for (int bone = 0; bone < skin.Length; bone++)
+                {
+                    float3x4 pose = Sample(ref samples, motion, from, to, bone, blend);
+                    skin[bone] = new SkinMatrix { Value = new float3x4(math.mul(matrix, pose.c0),
+                        math.mul(matrix, pose.c1), math.mul(matrix, pose.c2), math.mul(matrix, pose.c3)) };
+                }
             }
 
             private static float3x4 Sample(ref EnemyAnimationSamples data, int motion, int a, int b, int bone, float t)

@@ -7,7 +7,8 @@ namespace CrowdPunch.Components
     {
         Standard,
         Dasher,
-        Explosive
+        Explosive,
+        Ranged
     }
 
     public struct EnemyAnimation : IComponentData
@@ -30,6 +31,8 @@ namespace CrowdPunch.Components
         public byte Landing;
         public float ImpactPhase;
         public float ImpactDuration;
+        public float AttackPhase;
+        public byte WasAttacking;
     }
 
     public struct EnemyAnimationSamples

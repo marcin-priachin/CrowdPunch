@@ -229,6 +229,39 @@ namespace CrowdPunch.Tests
             Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Death should begin only on defeat.");
         }
 
+        [Test]
+        public void Enemy002RangedUsesWaveForWindUpAndRotatedIdleWhileLaunched()
+        {
+            var em = world.EntityManager;
+            EnemyAnimation animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)EnemyAnimationProfile.Ranged;
+            em.SetComponentData(visual, animation);
+            em.AddComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.Ready });
+
+            Tick();
+            Assert.That(Pose.x, Is.Zero, "Idle should drive a stationary ranged enemy.");
+
+            em.SetComponentData(owner, new DesiredMovement { Direction = new float3(0, 0, 1), Speed = 4f });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(1f), "Walk should drive ranged movement.");
+
+            em.SetComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.WindUp });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(2f, 0f, 0f)), "Wave should restart on wind-up entry.");
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(0.25f).Within(0.001f));
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            Tick();
+            float3x4 launched = em.GetBuffer<SkinMatrix>(visual)[0].Value;
+            Assert.That(launched.c3.x, Is.EqualTo(9f).Within(0.001f), "The dedicated launch sample should use Idle.");
+            Assert.That(launched.c1.z, Is.EqualTo(-1f).Within(0.001f), "The Idle pose should rotate onto its side.");
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Death should start on defeat.");
+        }
+
         [TestCase(EnemyLaunchPhase.Recovering)]
         [TestCase(EnemyLaunchPhase.Defeated)]
         public void Combat011LaunchEndsWithImpactAndRepunchInterruptsIt(EnemyLaunchPhase ending)

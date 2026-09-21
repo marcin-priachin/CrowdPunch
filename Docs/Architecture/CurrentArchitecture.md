@@ -337,6 +337,13 @@ Full restart destroys all old wave-owned instances, increments each sequence run
 
 `EnemySpawnSettings.Archetype` explicitly selects `Baseline` or `Ranged`; no prefab, scene-object, or presentation name participates in runtime identification. Every spawned enemy receives `EnemyArchetype`. A ranged selection additionally receives the baked `RangedEnemySettings`, `RangedPositioningState`, and `RangedAttackState`. The existing `EnemySpawnSettings.asset` remains baseline. `RangedEnemySpawnSettings.asset` is used by a second ordinary `SpawnerAuthoring` in the arena subscene to add five ranged enemies without changing the 500-enemy baseline batch.
 
+`EnemyRanged.prefab` uses `Models/UltimateMonsters/Big/Alien.fbx` through the sampled GPU-skinning path.
+Its `EnemyAnimationProfile.Ranged` loops `Idle` while stationary and `Walk` while moving, plays `Wave`
+from the beginning during ranged wind-up, uses a sideways `Idle` pose while launched, returns to locomotion
+during recovery, and plays `Death` after entering `Defeated`. Generated instanced materials live under
+`Materials/Enemies/Ranged`; mesh-specific CPA3 sample blobs, the controller, prefab, materials, and the
+`RangedEnemySpawnSettings` prefab reference can be rebuilt through **Crowd Punch > Enemies > Rebuild Ranged Prefab**.
+
 All ranged numerical settings are provisional and live on the ranged spawn settings asset: preferred minimum/maximum distance, engagement range, approach/retreat speed, initial delay and per-instance variation, wind-up, base cooldown and per-shot cooldown variation, damage, player invulnerability duration, projectile speed, horizontal aim-spread radius, fire-time target Y offset, arc height, minimum world-space altitude, lifetime, and radius. Independent per-enemy cadence plus initial and per-shot timing variation is the first-pass multi-attacker control; there is no global simultaneous-attack cap.
 
 `RangedEnemyPositioningSystem` owns the ranged approach/hold/retreat decision. It reuses the baseline active-enemy separation input and writes `NavigationIntent` plus legacy `DesiredMovement`; reachable distance-band goals preserve approach/retreat/hold semantics, and `EnemyNavigationSystem` resolves final steering before movement; `EnemyMovementSystem` remains the velocity owner and its `Active` gate prevents ranged steering from overwriting launch or recovery velocity. `RangedAttackState` exposes eligibility, lifecycle phase, remaining time, emitted count, and cancelled-wind-up count for Entities inspection. Attack evaluation runs after punch and damage application, so same-frame launch or defeat cancels before emission. Pooling resets both attack and positioning state; already-fired projectiles have no shooter reference and remain independent.
