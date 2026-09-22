@@ -14,8 +14,11 @@ namespace CrowdPunch.Bakers
             var owner=GetComponentInParent<BossPartAuthoring>();
             if(owner==null) return;
             var e=GetEntity(TransformUsageFlags.Dynamic);
-            AddComponent(e,new BossVisualOwner { Value=GetEntity(owner,TransformUsageFlags.Dynamic) });
-            AddComponent(e,new URPMaterialPropertyBaseColor { Value=new float4(1) });
+            UnityEngine.Color color=a.sharedMaterial!=null?a.sharedMaterial.color:UnityEngine.Color.white;
+            if(a.sharedMaterial!=null) DependsOn(a.sharedMaterial);
+            float4 tint=new float4(color.r,color.g,color.b,color.a);
+            AddComponent(e,new BossVisualOwner { Value=GetEntity(owner,TransformUsageFlags.Dynamic), Color=tint });
+            AddComponent(e,new URPMaterialPropertyBaseColor { Value=tint });
         }
     }
 }

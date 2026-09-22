@@ -65,6 +65,12 @@ namespace CrowdPunch.Editor
             var flow = UnityEngine.Object.FindFirstObjectByType<GauntletSequence>();
             World world = World.DefaultGameObjectInjectionWorld;
             if (flow == null || world == null || !world.IsCreated) return;
+            if (flow.CurrentLevelIndex == 10 && !flow.TransitionInProgress)
+            {
+                Require(completedLevels == 10 && waveCount == 39, "Did not observe every ordinary gauntlet before boss entry");
+                Record("PASS: all 10 ordinary levels and 39 waves advance to gauntlet 11; handing off boss validation.");
+                Stop(); BossEncounterPlayCheck.BeginLive(); return;
+            }
             if (flow.RunComplete)
             {
                 Require(completedLevels == 10, "Did not observe every level clear");

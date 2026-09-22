@@ -40,7 +40,7 @@ namespace CrowdPunch.Components
         public float3 Position, Direction;
     }
 
-    public struct BossVisualOwner : IComponentData { public Entity Value; }
+    public struct BossVisualOwner : IComponentData { public Entity Value; public float4 Color; }
     public struct BossScatterHistory : IBufferElementData { public Entity Body; public uint AttackSequence; }
     public struct BossCrowdMember : IComponentData { public Entity Encounter; public float ReplenishDelay; }
     public struct BossCrowdSequence : IComponentData { public Entity Encounter; }

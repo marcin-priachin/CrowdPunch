@@ -177,7 +177,8 @@ namespace CrowdPunch.Mono.UI
             GameObject panel = CreateUiObject("Menu Panel", menuRoot.transform);
             RectTransform panelRect = panel.GetComponent<RectTransform>();
             panelRect.anchorMin = panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(760f, 620f);
+            int selectionRows = Mathf.CeilToInt((gauntletSequence?.LevelCount ?? 0) / 2f);
+            panelRect.sizeDelta = new Vector2(760f, Mathf.Max(620f, 334f + selectionRows * 60f));
             VerticalLayoutGroup layout = panel.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 14f;
             layout.padding = new RectOffset(30, 30, 30, 30);

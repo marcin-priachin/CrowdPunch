@@ -190467,6 +190467,7 @@ GameObject:
   - component: {fileID: 1935685715}
   - component: {fileID: 1935685714}
   - component: {fileID: 1935685716}
+  - component: {fileID: 1935685717}
   m_Layer: 0
   m_Name: GameBootstrap
   m_TagString: Untagged
@@ -190533,6 +190534,7 @@ MonoBehaviour:
   - Gauntlet_08
   - Gauntlet_09
   - Gauntlet_10
+  - Gauntlet_11
   levelDisplayNames:
   - 01 First Line
   - 02 Side Step
@@ -190544,7 +190546,20 @@ MonoBehaviour:
   - 08 Oblique Angles
   - 09 Relay
   - 10 Crowd Punch
+  - 11 The Gatekeeper
   loadFirstLevelOnStart: 1
+--- !u!114 &1935685717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1935685713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d77186151d774840bb2e573b7b0511e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.BossAttackTelegraphs
 --- !u!43 &2008576339
 Mesh:
   m_ObjectHideFlags: 0

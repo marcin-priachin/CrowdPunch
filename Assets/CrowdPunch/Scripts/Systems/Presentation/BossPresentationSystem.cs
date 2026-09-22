@@ -55,7 +55,7 @@ namespace CrowdPunch.Systems.Presentation
                     else if(h.Phase==BossHandPhase.Shielding) c=new float3(.65f,.8f,1.4f);
                 }
                 if(SystemAPI.GetComponent<BossImpactFeedback>(owner.ValueRO.Value).FlashRemaining>0) c=math.lerp(c,new float3(3),.7f);
-                color.ValueRW.Value=new float4(c,1);
+                color.ValueRW.Value=new float4(c*owner.ValueRO.Color.xyz,1);
             }
         }
     }

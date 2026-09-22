@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-09-04
+Last updated: 2026-09-22
 
 ## How To Read This Document
 
@@ -442,6 +442,62 @@ Weapons should remain easier to understand than the crowd combinations they enab
 Status: Unresolved
 
 Whether weapons are permanent possessions, temporary run pickups, replace one another, or use another acquisition model is intentionally undecided. See `OpenQuestions.md`.
+
+## First Boss Encounter
+
+### BOSS-001 - Crowd-Mediated Head Damage
+
+Status: Must
+
+The boss consists of a head weak spot and two detached hands. Only player-owned launched enemy bodies, including propagated player launch chains, can damage the head. Direct punches, ordinary contact, ranged projectiles and explosion splash cannot. Each accepted hit starts configurable, clearly visible brief invulnerability while collision remains active. Suppress duplicate and sustained-contact damage within a source launch. The boss never enters the ordinary launch lifecycle. Openings emerge from physical shielding and hand behaviour, without scheduled vulnerability windows.
+
+### BOSS-002 - Physical Hands And Committed Attacks
+
+Status: Must
+
+Hands physically intercept bodies, ignore player punches and cannot be permanently destroyed. Eligible launched impacts can briefly stagger them, with configurable duration and repeat protection plus clear blocked/stagger feedback. Ground slam, straight lunging punch and broad sweep each have readable anticipation, committed active movement with locked targeting, and recovery. One coordinated state owns each hand's motion; stagger and transitions cleanly cancel hitboxes. Recovery must permit deliberate shots with the current punch cooldown.
+
+### BOSS-003 - Boss Launch Ownership
+
+Status: Must
+
+Active hand strikes physically scatter ordinary enemies. Boss-generated launches and their descendants cannot damage the head. An active strike deliberately takes ownership of an already-launched body. Resolve incoming stagger eligibility before that ownership change; passive shielding must not erase it. A fresh player punch reclaims the body with a new player-owned launch. Preserve elite and ordinary ownership behaviour. Do not prevent self-damage by disabling hand-crowd physics or head collision.
+
+### BOSS-004 - Three Stages
+
+Status: Must
+
+Use configurable thresholds initially near two-thirds and one-third health. Stage 1 alternates telegraphed attacks with a mostly exposed head. Stage 2 assigns one shielding hand and one attacker, with predictable role changes. Stage 3 coordinates hand sequences and more active shielding, retaining clear recovery and reaction time. Difficulty grows mainly through coordination, with modest configurable timing changes. Transitions occur once and cancel attacks visibly. A threshold-crossing hit clamps health at that threshold, discards overflow, and starts a protected transition; further hits cannot skip the next stage.
+
+### BOSS-005 - Perimeter Movement And Reachability
+
+Status: Must
+
+Use a configurable perimeter route or authored edge positions. Keep all parts in valid encounter bounds, move smoothly through corners, and coordinate travel with attacks so movement preserves promised recovery openings. The physical weak spot intersects existing ground-plane body trajectories. Preserve the normal camera and readable court. Moving hands are not baked navigation obstacles and do not trigger per-frame navigation-grid rebuilds.
+
+### BOSS-006 - Bounded Supporting Crowd
+
+Status: Must
+
+EnemyWaveSettings owns supporting composition, population and replenishment using existing ordinary profiles. Defaults are mostly Baseline and at most one living non-Baseline ordinary enemy. Maintain a bounded supply of launchable bodies through pooling and safe placement without special duplication. Replenishment stops on boss defeat; surviving supporting enemies need not be cleared. Ordinary gauntlet wave behaviour remains unchanged.
+
+### BOSS-007 - Eleventh Gauntlet And Lifecycle
+
+Status: Must
+
+The complete encounter is gauntlet 11 after the existing ten. Gauntlet 10 advances to it; head defeat triggers the existing run-complete flow once. Supporting wave completion cannot win early. Build configuration, sequence, display names and selection include the boss. Restart, death/retry, selection, unloading and replay reset or remove parts, attacks, ownership, replenishment, feedback and completion while preserving existing player reset conventions.
+
+### BOSS-008 - Presentation And Configuration
+
+Status: Must
+
+Use Assets/CrowdPunch/Models/UltimateMonsters/Blob/Orc.fbx for the head, preserving the original asset. Placeholder hands and procedural movement follow the toy-box style. Reuse the elite health-bar presentation for one head/boss bar, without hand bars, phase markers or additional boss HUD. Reuse proportionate combat feedback and readable world telegraphs. A dedicated baked ScriptableObject owns boss health, invulnerability, thresholds, movement, attacks, telegraphs, recovery, shielding and stagger; crowd tuning stays in wave settings.
+
+### BOSS-009 - Encounter Duration
+
+Status: Should
+
+Target approximately 2-3 minutes through tuning and playtesting, without a forced timer.
 
 ## MVP
 

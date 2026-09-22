@@ -24,7 +24,7 @@ namespace CrowdPunch.Systems.Lifetime
             var radius=em.GetComponentData<NavigationAgent>(body).Radius;
             var occupied=new NativeList<float4>(Allocator.Temp);
             var accepted=new NativeList<float4>(Allocator.Temp);
-            using(var query=em.CreateEntityQuery(ComponentType.ReadOnly<EnemySpawnClearance>(),ComponentType.ReadOnly<LocalTransform>()))
+            using(var query=new EntityQueryBuilder(Allocator.Temp).WithAll<EnemySpawnClearance,LocalTransform>().Build(em))
             using(var entities=query.ToEntityArray(Allocator.Temp))
                 foreach(var e in entities) if(e!=body)
                     occupied.Add(new float4(em.GetComponentData<LocalTransform>(e).Position,em.GetComponentData<EnemySpawnClearance>(e).Value));

@@ -21,7 +21,7 @@ namespace CrowdPunch.Mono.Player
         {
             if(lines[slot]==null)
             {
-                if(material==null) material=new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+                if(material==null) material=new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
                 var go=new GameObject("Boss Attack Telegraph "+slot); go.transform.SetParent(transform,false);
                 var line=go.AddComponent<LineRenderer>(); lines[slot]=line;
                 line.sharedMaterial=material; line.useWorldSpace=true; line.loop=true;

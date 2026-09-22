@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-09-04
+Last updated: 2026-09-22
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -15,10 +15,6 @@ What crowd size, frame-rate target, target hardware, and minimum chain-reaction 
 Which two weapons provide meaningfully different launch geometry while preserving one coherent physical combat language?
 
 ## Priority 2 — Needed For A Complete MVP Run
-
-### OQ-007 — Boss Interaction
-
-What crowd-mediated physical opportunity damages the first boss, and how does the boss change the crowd state during the fight?
 
 ### OQ-009 — Progression Model
 
@@ -81,6 +77,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-09-22 - OQ-007
+
+Decision: Gauntlet 11 is a head and two detached hands. Player-owned launched bodies and their propagated chains damage the head; boss-scattered bodies and their descendants do not. Hands physically shield, stagger without destruction, and perform committed slam, lunge and sweep attacks. Three health-based stages escalate coordination. A bounded wave-configured crowd replenishes while the boss lives; head defeat completes the run. Reuse the Orc Blob model and elite health-bar presentation.
+
+Rationale: The encounter tests deliberate crowd-mediated shots through readable physical protection, while preserving player controls, ordinary enemy mechanics, and the existing hybrid ownership boundary. Threshold damage is clamped with overflow discarded so burst damage cannot skip a stage. The 2-3 minute target remains tuning work rather than a forced timer.
+
+GDD rules: BOSS-001 through BOSS-009, MVP-002, MVP-005, LOOP-006.
 
 ### 2026-09-04 — OQ-002
 

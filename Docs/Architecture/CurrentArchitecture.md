@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-09-12
+Last inspected: 2026-09-22
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -19,10 +19,15 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_10` each contain their matching ECS SubScene. Exactly ten gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first four scene GUIDs are preserved with replacement layouts and encounters.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_11` each contain their matching ECS SubScene. Eleven gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
+
+The first boss is described in [Boss encounter ownership and lifecycle](BossEncounter.md).
+Its separate head/hand components never enter ordinary Enemy queries. The dedicated baked boss
+settings asset and one supporting EnemyWaveSettings wave own tuning; focused coordination,
+physics motion, collision, replenishment, reset and presentation systems implement the encounter.
 
 The ten gauntlet SubScenes use nature-kit environment visuals authored by
 `Scripts/Editor/GauntletNatureEnvironment.cs` (**Crowd Punch > Levels > Apply Nature Kit Environment**).
@@ -249,7 +254,7 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 
 `GauntletSequence` belongs to the persistent Bootstrap scene and loads one configured gauntlet scene additively at a time. A gauntlet scene owns its presentation layout, one `GauntletLevel` marker with an authored player entry point, and an ECS SubScene for level-specific collision and encounter data. The transition pauses scaled simulation, unloads the previous scene and its baked entities, loads the next scene, places the GameObject player at the authored entry point, and requests the established ECS restart reset. It never queries or retains enemy entities.
 
-`GauntletCompletionSystem` runs in `GamePresentationGroup` and reports completion through the narrow process-local `GauntletCompletionRegistry` only when every loaded `EnemyWaveSequence` has enabled `EnemyWaveEncounterComplete`. Requiring at least one sequence prevents an empty loading interval from advancing the run. The Bootstrap flow consumes that signal and loads the next scene in its fixed sequence (LOOP-002, LOOP-006, MVP-001). The last completion sets `GauntletSequence.RunComplete`; the existing pause menu presents Run Complete, Play Again, and the ten-level selector. This closes the implemented gauntlet sequence; it does not implement the unresolved boss encounter.
+`GauntletCompletionSystem` runs in `GamePresentationGroup` and reports through the narrow `GauntletCompletionRegistry`. Ordinary gauntlets require every loaded wave sequence to complete; an empty loading interval cannot advance. When a boss is loaded, head defeat is authoritative and supporting-wave completion cannot win early. The Bootstrap flow consumes one completion signal and loads the next scene (LOOP-002/006). Gauntlet 10 advances to The Gatekeeper; boss defeat sets `GauntletSequence.RunComplete`. The existing pause menu presents Run Complete, Play Again, and eleven selectable levels (BOSS-007).
 
 `GauntletLevel` owns optional opening-hint text alongside its entry transform. `GauntletSequence` publishes that text and an entry counter to the existing `PauseMenu`, which shows a ten-second hint in levels 1-2 and a two-column selection grid in the menu. This is GameObject presentation metadata, not an enemy bridge. The authored display names are separate from scene-loading names. The existing restart button now delegates through `GameBootstrap` to `RestartCurrentLevel` when a gauntlet is active, resetting final-completion state and reusing the additive reload path. Legacy scenes still use soft restart.
 

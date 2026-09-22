@@ -39,6 +39,10 @@ namespace CrowdPunch.Systems.Combat
                     }
                 }
             }
+            foreach (var (hand,history) in SystemAPI.Query<RefRO<BossHand>,DynamicBuffer<BossScatterHistory>>())
+                for(int i=history.Length-1;i>=0;i--)
+                    if(history[i].AttackSequence!=hand.ValueRO.AttackSequence || !launchStateLookup.HasComponent(history[i].Body))
+                        history.RemoveAtSwapBack(i);
         }
     }
 }

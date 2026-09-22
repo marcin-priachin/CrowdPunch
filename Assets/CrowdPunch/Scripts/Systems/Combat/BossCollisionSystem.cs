@@ -31,7 +31,18 @@ namespace CrowdPunch.Systems.Combat
             foreach(var c in contacts) if(c.ActiveHand!=0) Scatter(em,c);
             // Every boss-caused ownership change is visible before head damage or ordinary propagation.
             foreach(var c in contacts) if(em.GetComponentData<BossPart>(c.Part).Kind==BossPartKind.Head) Hit(em,c,settings,now);
+            foreach(var c in contacts) RequestExplosiveContact(em,c.Body);
             contacts.Dispose();
+        }
+
+        internal static void RequestExplosiveContact(EntityManager em, Entity body)
+        {
+            // The body impact resolves first. Its ordinary detonation remains separate from boss damage.
+            if(em.HasComponent<ExplosiveEnemyState>(body) && em.HasComponent<ExplosiveDetonationRequest>(body)
+                && em.HasComponent<EnemyLaunchState>(body)
+                && em.GetComponentData<EnemyLaunchState>(body).Phase==EnemyLaunchPhase.Launched
+                && em.GetComponentData<ExplosiveEnemyState>(body).HasExploded==0)
+                em.SetComponentEnabled<ExplosiveDetonationRequest>(body,true);
         }
 
         private static void Hit(EntityManager em,Contact c,EnemyLaunchSettings settings,double now)

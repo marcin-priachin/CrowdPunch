@@ -89,7 +89,7 @@ namespace CrowdPunch.Editor
                 if(sequence.GetComponent<BossAttackTelegraphs>()==null) sequence.gameObject.AddComponent<BossAttackTelegraphs>();
                 EditorSceneManager.MarkSceneDirty(bootstrap); EditorSceneManager.SaveScene(bootstrap);
                 var scenes=EditorBuildSettings.scenes.ToList();
-                if(!scenes.Any(s=>s.path==ScenePath)) scenes.Add(new EditorBuildSettingsScene(ScenePath,true));
+                if(!scenes.Any(s=>s.path==ScenePath)) scenes.Insert(Math.Min(11,scenes.Count),new EditorBuildSettingsScene(ScenePath,true));
                 else scenes.First(s=>s.path==ScenePath).enabled=true;
                 EditorBuildSettings.scenes=scenes.ToArray(); AssetDatabase.SaveAssets();
             }
@@ -131,6 +131,11 @@ namespace CrowdPunch.Editor
             var go=GameObject.CreatePrimitive(PrimitiveType.Cube); go.name=name; go.transform.position=p; go.transform.localScale=size;
             go.GetComponent<MeshRenderer>().sharedMaterial=mat;
             if(!collision) UnityEngine.Object.DestroyImmediate(go.GetComponent<Collider>());
+            else if(name.EndsWith("Rail",StringComparison.Ordinal))
+            {
+                // The hybrid player's sweep is elevated above its feet, so low visual rails need taller collision.
+                var collider=go.GetComponent<BoxCollider>(); collider.center=new Vector3(0,.4f,0); collider.size=new Vector3(1,1.8f,1);
+            }
         }
         private static Material Material(string name,Color color)
         {
@@ -145,14 +150,14 @@ namespace CrowdPunch.Editor
             {
                 var skin=model.GetComponentInChildren<SkinnedMeshRenderer>();
                 string matPath=Art+"Orc Head.mat"; material=AssetDatabase.LoadAssetAtPath<Material>(matPath);
-                if(material==null) { material=new Material(skin.sharedMaterial) { enableInstancing=true }; AssetDatabase.CreateAsset(material,matPath); }
+                if(material==null) { material=new Material(skin.sharedMaterial) { enableInstancing=true }; material.color=new Color(.52f,.77f,.43f); AssetDatabase.CreateAsset(material,matPath); }
                 var baked=new Mesh(); skin.BakeMesh(baked);
                 var vertices=baked.vertices;
                 for(int i=0;i<vertices.Length;i++) vertices[i]=skin.transform.TransformPoint(vertices[i]);
                 baked.vertices=vertices; baked.RecalculateBounds();
                 Bounds bounds=baked.bounds; float scale=4.4f/bounds.size.y;
                 for(int i=0;i<vertices.Length;i++) vertices[i]=(vertices[i]-bounds.center)*scale+new Vector3(0,.2f,0);
-                baked.vertices=vertices; baked.RecalculateNormals(); baked.RecalculateBounds(); baked.name="Orc Boss Rest Pose";
+                baked.vertices=vertices; baked.RecalculateNormals(); baked.RecalculateBounds(); baked.name="Orc Head Mesh";
                 string path=Art+"Orc Head Mesh.asset";
                 var old=AssetDatabase.LoadAssetAtPath<Mesh>(path);
                 if(old!=null) { EditorUtility.CopySerialized(baked,old); UnityEngine.Object.DestroyImmediate(baked); return old; }

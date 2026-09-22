@@ -1,0 +1,43 @@
+# Gauntlet 11: The Gatekeeper
+
+Implements BOSS-001 through BOSS-009. Gameplay stays in ECS; the existing GameObject player, input, camera and health remain authoritative.
+
+## Authoring and assets
+
+`Scenes/Gauntlets/Gauntlet_11.unity` owns the entry point, opening hint, lighting and the matching arena SubScene. Bootstrap appends `11 The Gatekeeper` to its sequence. The two navigation validation scenes remain outside progression. Gauntlets 1-10 are preserved.
+
+`BossEncounterSettings.asset` bakes into `BossTuning`. It exposes health, immunity, stage thresholds, transitions, rounded perimeter, bounded movement, hand speed/acceleration, shielding, anticipation/active/recovery times, reach, sweep/slam width, stagger/protection, player hit and crowd-scatter tuning. Inspector edits require SubScene rebaking; runtime components are snapshots, not live ScriptableObject reads.
+
+`CP11_Boss_Crowd.asset` is one EnemyWaveSettings wave with 12 Baseline slots and one Ranged slot, exact minimum counts and zero weighted remainder. Existing count/profile/cadence/spawn rectangles apply. Boss-only replenish switch/delay are on the wave asset. Change the special profile to another ordinary roster member or author different exact counts. The default fixed special slot is recycled, never replaced by an additional instance. Ordinary sequences ignore boss-only fields.
+
+`BossGauntletBuilder.Build` is an explicit authoring recipe. It creates only the boss scene and missing boss assets, preserves existing settings/wave edits and appends progression. It does not rebuild earlier levels. Generated art lives under `Data/Boss`. The source Orc Blob model uses a Generic rig, global import scale 1, identity root, a rotated/scaled armature and one Orc_Blob skinned renderer. Its imported Atlas material has no texture assigned in this repository. The builder samples its rest mesh into model-root space, normalizes it to 4.4 metres tall, and creates a separate green instanced material. It never edits the FBX or importer. Detached fists use rounded palm, knuckle, thumb and cuff meshes with a single physical volume per hand.
+
+## Ownership and order
+
+The head owns `BossEncounter`, `BossTuning` and `Health`. All three parts have `BossPart`, `BossMotionTarget`, `BossImpactFeedback`, physics collider/mass/velocity and collision history. Hands additionally own `BossHand` and per-attack scatter history. Parts have **no Enemy, EnemyLaunchState, ordinary movement, damage request, death, respawn or ground constraint components**. This keeps broad ordinary queries out of their lifecycle.
+
+1. `BossHandCoordinationSystem`, after the player bridge, owns stage cycle and hand state decisions. Targeting locks on anticipation entry. Stage 1 alternates hands; stage 2 shields with the other hand; stage 3 starts a delayed second attack and shields during relocation. Anticipation, active, recovery, stagger, return and shield are exclusive states. Recovery retracts outward while the head holds still. The shared opening timer starts only when both hands have returned.
+2. `BossMotionSystem` is the sole normal writer of part velocities. Kinematic Unity Physics bodies integrate bounded, accelerated travel. A rounded rectangle uses arc-length coordinates and continuous corner tangents. Head travel occurs between attack/recovery cycles. Reset is the only discontinuous placement outside test setup.
+3. Unity Physics retains hand-crowd and head-crowd collisions. Boss category 8 remains in the Dasher filter when ordinary enemy category 7 is removed. Hands are never static navigation obstacles.
+4. `BossCollisionSystem` gathers solver contacts. Incoming hand hits resolve before active strikes take launch ownership; all active ownership changes resolve before head damage and ordinary propagation. This prevents event order from admitting a boss-generated chain. `BossImpactResolution` is the only boss health/stagger resolver. Normal bodies use the existing impulse-scaled collision damage curve. Dasher contacts route through `DasherEnemyImpactSystem.ResolveBossContact`, retaining its configured BossDamage and the same ownership, impulse threshold, history and immunity gate. The ordinary Dasher sweep excludes boss parts so it cannot damage through a shielding hand. Boss parts keep their kinematic motion; no generic boss knockback is applied.
+5. Threshold hits clamp to the next threshold and discard overflow. Stage advances once, cancels both hand hitboxes immediately, and protects the readable transition. Invulnerability consumes eligible contacts into history too: sustained contact cannot become delayed damage. Re-punch starts a new source sequence. History cleanup removes stale launches; scatter history retains only the current hand attack.
+6. `BossPlayerImpactSystem` sweeps committed hand movement against the player snapshot, or tests the grounded slam radius, and reports at most one hit per hand attack through `ReceiveEnemyHit`. The GameObject player applies its existing health/invulnerability and knockback rules.
+7. `BossCrowdReplenishmentSystem` enables existing-instance pooling returns only while the head lives. Respawn uses wave rectangles and existing player, static geometry, body-clearance and bounded retry checks through `BossCrowdPlacement`. The wave's initial allocation is never repeated. Returned members restore wave accounting like elite-wave normals.
+
+Fresh player punches map to Player ownership; active boss scattering maps to Boss. Ordinary propagation and launched-Dasher propagation inherit the source owner. Existing elite/explosion behaviour remains unchanged. Direct punch resolution explicitly rejects BossPart; explosion resolution explicitly skips it; generic DamageApplicationSystem excludes it. Ranged projectile resolution only targets the player. Boss head aim assistance is a target eligibility exception, not a direct-punch exception.
+
+## Presentation and lifecycle
+
+`BossVisualBaker` connects renderer material colors to part ownership. `BossPresentationSystem` tints anticipation amber, active hands red, shielding blue, recovery dim, stagger cyan, head immunity pulsing cyan and transitions gold. Impact flashes and bounded impact messages reuse combat feedback/camera effects. `BossAttackTelegraphs` receives only draw parameters for two reusable world-space line slots, never entities; it draws the committed slam area, lunge lane or sweep footprint. No extra HUD is created.
+
+`EnemyHealthBarBridgeSystem` publishes the head through the existing elite canvas with always-visible policy, one bar and no phase label. The existing pause menu grows its panel to accommodate the eleventh selection entry.
+
+`GauntletCompletionSystem` uses head defeat as the authority whenever a boss exists, overriding support-wave completion. `EnemyWaveSpawnSystem` does not advance a boss-owned supporting wave. Replenishment stops immediately after head death; the ordinary run-complete UI consumes the existing single completion signal.
+
+Scene restart/selection unloads baked parts and requests the established ECS restart, which destroys old wave roots and their linked visual children. `BossEncounterReset` also supports the existing soft-reset path, restoring initial transforms, health, timers, histories, feedback, stage and hand states. Presentation draw slots are cleared every frame and when disabled. Player health and movement reset through the existing loader. No boss MonoBehaviour queries entities.
+
+## Verification tools
+
+`BossEncounterTests` covers ownership and real re-punch replacement, forbidden damage paths, invulnerability/duplicate contact, Dasher eligibility, hand stagger, threshold progression, replenish gating, completion, soft reset and route continuity. `BossTestRunner.Run` runs these with progression/player-impact/Dasher regressions and writes NUnit XML under `Temp/BossValidation`.
+
+`BossEncounterPlayCheck` is Editor-only instrumentation. It observes attacks in each stage, sets up real physical projectile/shield checks, tests same-instance special replenishment and exercises defeat, restart, selection and retry. It restores player health and injects stage-changing hits, so it cannot validate encounter duration or difficulty. `GauntletSequenceSmokeCheck` now hands off to it after all ten ordinary gauntlets and 39 waves reach the boss. Final evidence and limitations are recorded in `Docs/Validation/BossEncounter.md`.
