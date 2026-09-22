@@ -20,7 +20,7 @@ namespace CrowdPunch.Systems.Combat
                 SystemAPI.GetComponentLookup<EnemyLaunchState>(true);
 
             foreach (DynamicBuffer<CollisionDamageHistory> history in
-                     SystemAPI.Query<DynamicBuffer<CollisionDamageHistory>>().WithAll<Enemy>())
+                     SystemAPI.Query<DynamicBuffer<CollisionDamageHistory>>())
             {
                 for (int index = history.Length - 1; index >= 0; index--)
                 {

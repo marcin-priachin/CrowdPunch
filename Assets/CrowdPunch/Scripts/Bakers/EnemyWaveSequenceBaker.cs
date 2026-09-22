@@ -12,6 +12,11 @@ namespace CrowdPunch.Bakers
         public override void Bake(EnemyWaveSequenceAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.None);
+            if (authoring.bossEncounter != null)
+            {
+                if (authoring.Waves.Count != 1) throw new System.InvalidOperationException("Boss crowd requires exactly one bounded wave.");
+                AddComponent(entity, new BossCrowdSequence { Encounter=GetEntity(authoring.bossEncounter,TransformUsageFlags.Dynamic) });
+            }
             AddComponent(entity, new EnemyWaveSequence
             {
                 InitialSeed = authoring.RandomSeed,
@@ -121,6 +126,8 @@ namespace CrowdPunch.Bakers
 
                 definitions.Add(new EnemyWaveDefinition
                 {
+                    BossReplenishment=(byte)(wave.ReplenishWhileBossLives?1:0),
+                    BossReplenishDelay=math.max(0,wave.BossReplenishDelay),
                     TotalEnemyCount = totalCount,
                     TotalMinimumNormalCount = requestedMinimumNormalCount,
                     ProfileStart = profileStart,

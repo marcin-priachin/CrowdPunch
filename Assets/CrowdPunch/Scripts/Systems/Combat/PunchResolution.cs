@@ -50,7 +50,7 @@ namespace CrowdPunch.Systems.Combat
 
         public static bool TryApply(EntityManager manager, Entity target, in PunchSpecification punch)
         {
-            if (!manager.Exists(target) || !manager.HasComponent<Enemy>(target)
+            if (!manager.Exists(target) || manager.HasComponent<BossPart>(target) || !manager.HasComponent<Enemy>(target)
                 || !manager.HasComponent<LocalTransform>(target) || !manager.HasComponent<EnemyTier>(target)
                 || !manager.HasComponent<EnemyLaunchState>(target) || !manager.HasComponent<Health>(target)
                 || manager.HasComponent<RespawnRequest>(target) && manager.IsComponentEnabled<RespawnRequest>(target)) return false;

@@ -21,9 +21,8 @@ namespace CrowdPunch.Systems.Combat
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PhysicsWorldSingleton>();
-            candidates = state.GetEntityQuery(ComponentType.ReadOnly<Enemy>(),
-                ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<EnemyLaunchState>(),
-                ComponentType.ReadOnly<Health>());
+            candidates = new EntityQueryBuilder(Allocator.Temp).WithAll<LocalTransform, Health>()
+                .WithAny<Enemy, BossEncounter>().Build(ref state);
         }
 
         public void OnUpdate(ref SystemState state)

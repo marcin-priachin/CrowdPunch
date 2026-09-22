@@ -62,6 +62,11 @@ namespace CrowdPunch.Configuration
         private List<SpawnRectangle> spawnRectangles = new();
 
         [Header("Timing and cadence")]
+        [SerializeField, Tooltip("Used only by a boss-owned sequence; ordinary gauntlets ignore this.")]
+        private bool replenishWhileBossLives = true;
+        [SerializeField, Min(0)] private float bossReplenishDelay = 4f;
+        public bool ReplenishWhileBossLives => replenishWhileBossLives;
+        public float BossReplenishDelay => bossReplenishDelay;
         [SerializeField, Min(0f)] private float delayBeforeWave;
         [SerializeField, Tooltip("Condition used to activate the next wave after this wave has finished spawning. The cumulative option waits for all undefeated enemies owned by this sequence's current run.")]
         private EnemyWaveActivationMode activationMode = EnemyWaveActivationMode.AllEnemiesDefeated;

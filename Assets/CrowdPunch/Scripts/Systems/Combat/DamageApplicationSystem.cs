@@ -32,6 +32,7 @@ namespace CrowdPunch.Systems.Combat
                          Entity entity) in
                      SystemAPI.Query<RefRW<Health>, RefRO<DamageRequest>, RefRW<EnemyLaunchState>, RefRW<EnemyDamageState>>()
                          .WithAll<Enemy>()
+                         .WithNone<BossPart>()
                          .WithEntityAccess())
             {
                 if (launchState.ValueRO.Phase == EnemyLaunchPhase.Defeated)

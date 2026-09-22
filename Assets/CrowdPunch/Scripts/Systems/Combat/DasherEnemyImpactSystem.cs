@@ -15,6 +15,15 @@ namespace CrowdPunch.Systems.Combat
     [UpdateBefore(typeof(Physics.EnemyRecoverySystem))]
     public partial struct DasherEnemyImpactSystem : ISystem
     {
+        // Boss parts retain solver collision (category 8). They are intentionally excluded from the
+        // ordinary swept query, which would otherwise hit a head through its shielding hand.
+        internal static bool ResolveBossContact(EntityManager em, Entity source, Entity part,
+            float impulse, float minimumImpulse, double now, float3 point, float3 normal)
+        {
+            if (impulse < minimumImpulse) return false;
+            return BossImpactResolution.TryHit(em, source, part, impulse,
+                em.GetComponentData<DasherSettings>(source).BossDamage, now, point, normal);
+        }
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
@@ -51,7 +60,7 @@ namespace CrowdPunch.Systems.Combat
                 for (int i = 0; i < targets.Length; i++)
                 {
                     Entity target = targets[i];
-                    if (target == source) continue;
+                    if (target == source || state.EntityManager.HasComponent<BossPart>(target)) continue;
                     float combinedRadius = math.max(0f, sourceRadius.ValueRO.ContactRadius)
                         + math.max(0f, radii[target].ContactRadius);
                     if (DistanceSqToSegment(transforms[target].Position, start, end) > combinedRadius * combinedRadius) continue;

@@ -136,6 +136,8 @@ namespace CrowdPunch.Systems.Lifetime
                     respawnRequest.ValueRW.RespawnAt = respawnSettings.ValueRO.Enabled != 0
                         ? elapsedTime + RespawnDelaySeconds
                         : double.MaxValue;
+                    if (SystemAPI.HasComponent<BossCrowdMember>(enemy) && respawnSettings.ValueRO.Enabled != 0)
+                        respawnRequest.ValueRW.RespawnAt=elapsedTime+SystemAPI.GetComponent<BossCrowdMember>(enemy).ReplenishDelay;
                     DisableTransientState(ref state, enemy);
                 }
 
@@ -146,7 +148,7 @@ namespace CrowdPunch.Systems.Lifetime
                     continue;
                 }
 
-                if (SystemAPI.HasComponent<EliteWaveReplenishment>(enemy)
+                if ((SystemAPI.HasComponent<EliteWaveReplenishment>(enemy) || SystemAPI.HasComponent<BossCrowdMember>(enemy))
                     && respawnSettings.ValueRO.Enabled == 0)
                 {
                     respawnRequest.ValueRW.RespawnAt = double.MaxValue;
@@ -176,6 +178,11 @@ namespace CrowdPunch.Systems.Lifetime
                     if (NavigationGeometry.SpawnAllowed(grid, respawnPosition.xz, radius)) { foundPosition = true; break; }
                 }
                 if (!foundPosition) { respawnRequest.ValueRW.RespawnAt = elapsedTime + 1; continue; }
+                if (SystemAPI.HasComponent<BossCrowdMember>(enemy)
+                    && (!SystemAPI.HasSingleton<PhysicsWorldSingleton>()
+                    || !BossCrowdPlacement.TryFind(state.EntityManager,enemy,SystemAPI.GetSingleton<PhysicsWorldSingleton>(),
+                        playerSnapshot,grid,ref random,out respawnPosition)))
+                { respawnRequest.ValueRW.RespawnAt=elapsedTime+1; continue; }
                 transform.ValueRW.Position = respawnPosition;
                 SystemAPI.SetComponent(enemy, new EnemyGroundConstraint());
                 physicsVelocity.ValueRW = default;
@@ -188,7 +195,7 @@ namespace CrowdPunch.Systems.Lifetime
         private void RestoreEliteWaveOwnership(ref SystemState state, Entity enemy)
         {
             EntityManager entityManager = state.EntityManager;
-            if (!entityManager.HasComponent<EliteWaveReplenishment>(enemy)
+            if ((!entityManager.HasComponent<EliteWaveReplenishment>(enemy) && !entityManager.HasComponent<BossCrowdMember>(enemy))
                 || !entityManager.HasComponent<EnemyWaveOwnership>(enemy))
                 return;
 

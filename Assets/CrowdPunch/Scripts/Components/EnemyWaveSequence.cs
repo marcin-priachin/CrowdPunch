@@ -32,6 +32,8 @@ namespace CrowdPunch.Components
 
     public struct EnemyWaveDefinition : IBufferElementData
     {
+        public byte BossReplenishment;
+        public float BossReplenishDelay;
         public int TotalEnemyCount;
         public int TotalMinimumNormalCount;
         public int ProfileStart;

@@ -7,6 +7,8 @@ namespace CrowdPunch.Authoring
     [DisallowMultipleComponent]
     public sealed class EnemyWaveSequenceAuthoring : MonoBehaviour
     {
+        [Tooltip("Optional boss owner. Its single supporting wave completes only on boss defeat.")]
+        public BossEncounterAuthoring bossEncounter;
         [SerializeField, Tooltip("Ordered wave assets. Each asset remains independently reusable and editable.")]
         private List<EnemyWaveSettings> waves = new();
         [SerializeField, Min(1), Tooltip("Deterministic selection and candidate-position seed.")]

@@ -16,14 +16,16 @@ namespace CrowdPunch.Components
         PlayerPunch,
         EnemyCollision,
         Explosion,
-        ElitePunch
+        ElitePunch,
+        BossAttack
     }
 
     public enum EnemyLaunchOwner : byte
     {
         None,
         Player,
-        Enemy
+        Enemy,
+        Boss
     }
 
     /// <summary>

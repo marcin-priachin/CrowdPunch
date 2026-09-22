@@ -107,7 +107,7 @@ namespace CrowdPunch.Systems.Combat
                          .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
-                if (target == explosive || launchState.ValueRO.Phase == EnemyLaunchPhase.Defeated
+                if (SystemAPI.HasComponent<BossPart>(target) || target == explosive || launchState.ValueRO.Phase == EnemyLaunchPhase.Defeated
                     || math.distancesq(transform.ValueRO.Position, center) > radiusSquared)
                 {
                     continue;

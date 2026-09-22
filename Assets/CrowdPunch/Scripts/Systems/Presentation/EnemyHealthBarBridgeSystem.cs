@@ -46,6 +46,10 @@ namespace CrowdPunch.Systems.Presentation
                     string.Empty);
             }
 
+            foreach (var (boss,health,transform,entity) in SystemAPI.Query<RefRO<BossEncounter>,RefRO<Health>,RefRO<LocalTransform>>().WithEntityAccess())
+                if(boss.ValueRO.Cycle!=BossCycle.Defeated)
+                    EnemyHealthBarCanvasRegistry.Publish(entity.Index,transform.ValueRO.Position+new Unity.Mathematics.float3(0,2.8f,0),
+                        health.ValueRO.Normalized,true,true,string.Empty);
             EnemyHealthBarCanvasRegistry.EndFrame();
         }
 

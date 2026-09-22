@@ -45,6 +45,13 @@ namespace CrowdPunch.Systems.Initialization
                          .WithEntityAccess())
             {
                 ref EnemyWaveSequence sequence = ref sequenceReference.ValueRW;
+                bool bossOwned = SystemAPI.HasComponent<BossCrowdSequence>(sequenceEntity);
+                if (bossOwned)
+                {
+                    var bossEntity=SystemAPI.GetComponent<BossCrowdSequence>(sequenceEntity).Encounter;
+                    if (!SystemAPI.HasComponent<BossEncounter>(bossEntity)
+                        || SystemAPI.GetComponent<BossEncounter>(bossEntity).Cycle==BossCycle.Defeated) continue;
+                }
                 if (sequence.Initialized == 0)
                 {
                     InitializeSequence(commands, sequenceEntity, waves, ref sequence, now);
@@ -57,6 +64,7 @@ namespace CrowdPunch.Systems.Initialization
                 EnemyWaveDefinition wave = waves[sequence.CurrentWaveIndex];
                 if (sequence.Phase == EnemyWaveRuntimePhase.AwaitingActivation)
                 {
+                    if (bossOwned) continue; // Supporting defeats never complete or advance a boss encounter.
                     bool shouldAdvance;
                     if (wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed)
                         shouldAdvance = now >= sequence.NextActionAt;
@@ -280,6 +288,10 @@ namespace CrowdPunch.Systems.Initialization
                     continue;
                 }
                 commands.SetComponent(enemy, new EnemyRespawnSettings { Enabled = 0 });
+                if (entityManager.HasComponent<BossCrowdSequence>(sequenceEntity))
+                    commands.AddComponent(enemy,new BossCrowdMember {
+                        Encounter=entityManager.GetComponentData<BossCrowdSequence>(sequenceEntity).Encounter,
+                        ReplenishDelay=wave.BossReplenishment!=0?wave.BossReplenishDelay:-1 });
                 commands.AddComponent(enemy, new EnemyWaveOwnership
                 {
                     Sequence = sequenceEntity,
@@ -397,7 +409,7 @@ namespace CrowdPunch.Systems.Initialization
                 random.NextFloat(-selected.Depth * 0.5f, selected.Depth * 0.5f));
         }
 
-        private static bool IsSafe(PhysicsWorldSingleton world, PlayerSnapshot player, float3 position,
+        internal static bool IsSafe(PhysicsWorldSingleton world, PlayerSnapshot player, float3 position,
             float clearance, float minimumPlayerDistance, NativeList<float4> occupiedEnemies,
             NativeList<float4> accepted)
         {

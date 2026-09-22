@@ -40,7 +40,9 @@ namespace CrowdPunch.Systems.Physics
             {
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Launched) continue;
                 Entity target = launch.ValueRO.HomingTarget;
-                if (!IsValidTarget(target, transforms, launchStates, health, respawns)) continue;
+                bool livingBoss = SystemAPI.HasComponent<BossEncounter>(target)
+                    && SystemAPI.GetComponent<BossEncounter>(target).Cycle != BossCycle.Defeated;
+                if (!livingBoss && !IsValidTarget(target, transforms, launchStates, health, respawns)) continue;
 
                 velocity.ValueRW.Linear = EnemyLaunchHoming.RotateHorizontalVelocity(
                     velocity.ValueRO.Linear,

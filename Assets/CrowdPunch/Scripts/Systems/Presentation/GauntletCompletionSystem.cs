@@ -34,6 +34,9 @@ namespace CrowdPunch.Systems.Presentation
             int sequenceCount = allSequences.CalculateEntityCount();
             bool isComplete = sequenceCount > 0
                 && completedSequences.CalculateEntityCount() == sequenceCount;
+            // BOSS-007: head defeat is authoritative even if supporting waves are cleared or mis-signalled.
+            foreach (var boss in SystemAPI.Query<RefRO<BossEncounter>>())
+                isComplete = boss.ValueRO.Cycle == BossCycle.Defeated;
 
             if (isComplete && !completionReported)
             {

@@ -40,6 +40,7 @@ namespace CrowdPunch.Systems.Initialization
                     if (EntityManager.Exists(projectileRoot)) EntityManager.DestroyEntity(projectileRoot);
             }
             ResetWaveSequences();
+            BossEncounterReset.Reset(EntityManager);
             EntityQuery oldWaveEnemies = SystemAPI.QueryBuilder().WithAll<EnemyWaveOwnership>().Build();
             using (NativeArray<Entity> waveEnemyRoots = oldWaveEnemies.ToEntityArray(Allocator.Temp))
             {
