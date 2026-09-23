@@ -99,7 +99,7 @@ namespace CrowdPunch.Editor
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
         }
 
-        private static Dictionary<string, Material> CreateMaterials()
+        internal static Dictionary<string, Material> CreateMaterials()
         {
             var result = new Dictionary<string, Material>();
             var shader = Shader.Find("Universal Render Pipeline/Lit");
@@ -146,7 +146,7 @@ namespace CrowdPunch.Editor
             }
         }
 
-        private static Mesh TileModel(string model, int columns, int rows, out string[] materialNames)
+        internal static Mesh TileModel(string model, int columns, int rows, out string[] materialNames)
         {
             var source = AssetDatabase.LoadAssetAtPath<GameObject>($"{Kit}/{model}.fbx");
             var filter = source.GetComponentInChildren<MeshFilter>();

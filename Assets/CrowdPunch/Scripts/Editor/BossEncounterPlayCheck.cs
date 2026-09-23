@@ -90,11 +90,18 @@ namespace CrowdPunch.Editor
             {
                 if(sequence.Phase!=EnemyWaveRuntimePhase.AwaitingActivation || enemies.Length!=authoredCount) return;
                 Require(body!=Entity.Null,"Boss crowd has no launchable Baseline body");
+                ValidateRoundCourt(em);
                 Record($"PASS baked head + two kinematic hands; {baselines} Baseline + {specials} living specials; no ordinary boss tags");
                 stage=1; mask=0; playerHitMask=0; step=2; since=now; frames.Clear(); return;
             }
             if(step==2)
             {
+                var headTransform=em.GetComponentData<LocalTransform>(head);
+                float2 inward=math.forward(headTransform.Rotation).xz;
+                // Every point in the enclosed polygon must remain in the head's front half-plane.
+                Require(math.dot(tuning.Center-headTransform.Position.xz,inward)>
+                    BossRoundArenaBuilder.CourtRadius/math.cos(math.PI/BossRoundArenaBuilder.Segments),
+                    "Round court allows a player position behind the moving head");
                 frames.Add(Time.unscaledDeltaTime*1000);
                 foreach(var e in new[]{boss.LeftHand,boss.RightHand})
                 {
@@ -120,14 +127,14 @@ namespace CrowdPunch.Editor
                 // Hold a controlled collision court using the existing physics motion system.
                 world.Unmanaged.GetExistingSystemState<BossHandCoordinationSystem>().Enabled=false;
                 boss.Cycle=BossCycle.Opening; boss.InvulnerableUntil=0; em.SetComponentData(head,boss);
-                PlacePart(em,head,new float3(0,tuning.HeadHeight,10)); PlacePart(em,boss.LeftHand,new float3(-7,tuning.HandHeight,10)); PlacePart(em,boss.RightHand,new float3(7,tuning.HandHeight,10));
+                PlacePart(em,head,new float3(0,tuning.HeadHeight,BossRoundArenaBuilder.RouteRadius)); PlacePart(em,boss.LeftHand,new float3(-7,tuning.HandHeight,10)); PlacePart(em,boss.RightHand,new float3(7,tuning.HandHeight,10));
                 int n=0; foreach(var e in enemies) { var tr=em.GetComponentData<LocalTransform>(e); tr.Position=new float3(-15+n++*2,0,-10); em.SetComponentData(e,tr); em.SetComponentData(e,new PhysicsVelocity()); }
                 step=3; since=now; return;
             }
             if(step==3 && now-since>1)
             {
                 healthBefore=em.GetComponentData<Health>(head).Current; bounceObserved=false;
-                Shoot(em,body,EnemyLaunchCause.PlayerPunch,new float3(0,0,4)); step=4; since=now; return;
+                Shoot(em,body,EnemyLaunchCause.PlayerPunch,new float3(0,0,14)); step=4; since=now; return;
             }
             if(step==4)
             {
@@ -144,7 +151,7 @@ namespace CrowdPunch.Editor
                 }
                 if(now-since<=1) return;
                 Require(bounceObserved,"Real solver projectile did not reach/damage head");
-                healthBefore=em.GetComponentData<Health>(head).Current; Shoot(em,body,EnemyLaunchCause.BossAttack,new float3(0,0,4)); step=5; since=now; return;
+                healthBefore=em.GetComponentData<Health>(head).Current; Shoot(em,body,EnemyLaunchCause.BossAttack,new float3(0,0,14)); step=5; since=now; return;
             }
             if(step==5 && now-since>1)
             {
@@ -204,6 +211,22 @@ namespace CrowdPunch.Editor
                 Require(player.CurrentHealth==player.MaxHealth && boss.Stage==1 && !flow.RunComplete,"Death retry failed");
                 Record("PASS death/retry and replay restore player and boss; COMPLETE"); Capture("replay"); Stop();
             }
+        }
+        private static void ValidateRoundCourt(EntityManager em)
+        {
+            using var query=em.CreateEntityQuery(typeof(PhysicsWorldSingleton));
+            var collision=query.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
+            var filter=new CollisionFilter { BelongsTo=uint.MaxValue, CollidesWith=1u };
+            using var sphere=Unity.Physics.SphereCollider.Create(new SphereGeometry { Radius=1 },filter);
+            for(int i=0;i<720;i++)
+            {
+                float angle=i*math.PI/360;
+                var direction=new float3(math.sin(angle),0,math.cos(angle));
+                var input=new ColliderCastInput(sphere,new float3(0,2,0),new float3(0,2,0)+direction*60);
+                Require(collision.CastCollider(input,out ColliderCastHit hit),"Gap in baked round perimeter");
+                Require(hit.Fraction*60<18.1f && hit.Fraction*60>17.8f,"Unexpected round perimeter clearance");
+            }
+            Record("PASS 720 baked player-sized 60m sweeps blocked by round rim, including segment seams");
         }
         private static void PlacePart(EntityManager em,Entity e,float3 p)
         { var tr=em.GetComponentData<LocalTransform>(e); tr.Position=p; em.SetComponentData(e,tr); em.SetComponentData(e,new BossMotionTarget { Position=p,Rotation=tr.Rotation }); em.SetComponentData(e,new PhysicsVelocity()); }

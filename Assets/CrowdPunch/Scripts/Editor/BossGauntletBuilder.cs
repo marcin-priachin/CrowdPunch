@@ -41,9 +41,6 @@ namespace CrowdPunch.Editor
                 var wave=CreateWave();
                 var gold=Material("Hand Gold",new Color(.9f,.62f,.25f));
                 var cuff=Material("Hand Cuffs",new Color(.3f,.14f,.47f));
-                var lane=Material("Boss Court Lines",new Color(.55f,.48f,.3f));
-                var wall=AssetDatabase.LoadAssetAtPath<Material>(Root+"Data/GauntletLayouts/GauntletWalls.mat");
-                var floor=AssetDatabase.LoadAssetAtPath<Material>(Root+"Materials/Ground.mat");
                 var headMesh=HeadMesh(out Material headMaterial);
                 Scene sub=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive); SceneManager.SetActiveScene(sub);
                 var arena=new GameObject("Boss Arena Bounds").AddComponent<ArenaAuthoring>(); arena.transform.position=new Vector3(0,1,0);
@@ -51,14 +48,7 @@ namespace CrowdPunch.Editor
                 arenaData.FindProperty("defeatSize").vector3Value=new Vector3(54,22,50); arenaData.ApplyModifiedPropertiesWithoutUndo();
                 var game=new GameObject("Shared Game Settings").AddComponent<GameSettingsAuthoring>();
                 var gd=new SerializedObject(game); gd.FindProperty("settings").objectReferenceValue=AssetDatabase.LoadAssetAtPath<GameRuntimeSettings>(Root+"Data/Settings/GameRuntimeSettings.asset"); gd.ApplyModifiedPropertiesWithoutUndo();
-                Box("Arena Floor",new Vector3(0,-1.3f,0),new Vector3(44,.6f,40),floor,true);
-                Box("North Rail",new Vector3(0,0,20.75f),new Vector3(47,2,1.5f),wall,true);
-                Box("South Rail",new Vector3(0,0,-20.75f),new Vector3(47,2,1.5f),wall,true);
-                Box("East Rail",new Vector3(22.75f,0,0),new Vector3(1.5f,2,40),wall,true);
-                Box("West Rail",new Vector3(-22.75f,0,0),new Vector3(1.5f,2,40),wall,true);
-                Box("Backdrop",new Vector3(0,-2,0),new Vector3(200,.1f,200),wall,false);
-                Box("Center Lane",new Vector3(0,-.985f,0),new Vector3(1,.02f,32),lane,false);
-                Box("Cross Lane",new Vector3(0,-.985f,0),new Vector3(36,.02f,1),lane,false);
+                BossRoundArenaBuilder.Create(arena, settings);
                 var crowd=new GameObject("Boss Supporting Crowd").AddComponent<EnemyWaveSequenceAuthoring>();
                 var wd=new SerializedObject(crowd); wd.FindProperty("waves").arraySize=1; wd.FindProperty("waves").GetArrayElementAtIndex(0).objectReferenceValue=wave;
                 wd.FindProperty("minimumPlayerDistance").floatValue=5; wd.FindProperty("placementAttemptsPerEnemy").intValue=40; wd.FindProperty("randomSeed").longValue=11011; wd.ApplyModifiedPropertiesWithoutUndo();
@@ -105,7 +95,7 @@ namespace CrowdPunch.Editor
             string[] profiles={"EnemySpawnSettings","RangedEnemySpawnSettings"}; int[] counts={12,1};
             for(int i=0;i<2;i++) { var e=entries.GetArrayElementAtIndex(i); e.FindPropertyRelative("Settings").objectReferenceValue=AssetDatabase.LoadAssetAtPath<EnemySpawnSettings>(Root+"Data/Settings/Enemies/"+profiles[i]+".asset"); e.FindPropertyRelative("MinimumCount").intValue=counts[i]; e.FindPropertyRelative("Weight").floatValue=0; }
             var ranges=d.FindProperty("spawnRectangles"); ranges.arraySize=1; var r=ranges.GetArrayElementAtIndex(0);
-            r.FindPropertyRelative("Center").vector3Value=new Vector3(0,2,0); r.FindPropertyRelative("Width").floatValue=32; r.FindPropertyRelative("Depth").floatValue=28;
+            r.FindPropertyRelative("Center").vector3Value=new Vector3(0,2,0); r.FindPropertyRelative("Width").floatValue=24; r.FindPropertyRelative("Depth").floatValue=24;
             d.FindProperty("spawnMode").intValue=0; d.FindProperty("delayBeforeWave").floatValue=1;
             d.FindProperty("replenishWhileBossLives").boolValue=true; d.FindProperty("bossReplenishDelay").floatValue=4;
             d.ApplyModifiedPropertiesWithoutUndo(); AssetDatabase.CreateAsset(w,WavePath); return w;
@@ -126,17 +116,6 @@ namespace CrowdPunch.Editor
         {
             var go=GameObject.CreatePrimitive(PrimitiveType.Sphere); go.name=name; UnityEngine.Object.DestroyImmediate(go.GetComponent<Collider>());
             go.transform.SetParent(parent,false); go.transform.localPosition=p; go.transform.localScale=scale; go.GetComponent<MeshRenderer>().sharedMaterial=mat;
-        }
-        private static void Box(string name,Vector3 p,Vector3 size,Material mat,bool collision)
-        {
-            var go=GameObject.CreatePrimitive(PrimitiveType.Cube); go.name=name; go.transform.position=p; go.transform.localScale=size;
-            go.GetComponent<MeshRenderer>().sharedMaterial=mat;
-            if(!collision) UnityEngine.Object.DestroyImmediate(go.GetComponent<Collider>());
-            else if(name.EndsWith("Rail",StringComparison.Ordinal))
-            {
-                // The hybrid player's sweep is elevated above its feet, so low visual rails need taller collision.
-                var collider=go.GetComponent<BoxCollider>(); collider.center=new Vector3(0,.4f,0); collider.size=new Vector3(1,1.8f,1);
-            }
         }
         private static Material Material(string name,Color color)
         {

@@ -475,7 +475,7 @@ Use configurable thresholds initially near two-thirds and one-third health. Stag
 
 Status: Must
 
-Use a configurable perimeter route or authored edge positions. Keep all parts in valid encounter bounds, move smoothly through corners, and coordinate travel with attacks so movement preserves promised recovery openings. The physical weak spot intersects existing ground-plane body trajectories. Preserve the normal camera and readable court. Moving hands are not baked navigation obstacles and do not trigger per-frame navigation-grid rebuilds.
+Gauntlet 11 uses a round court with the same nature-kit terrain as the preceding gauntlets. A closed perimeter prevents the player from moving behind the boss, while the head remains exposed to launched enemies from inside the court. Use a configurable perimeter route or authored edge positions. Keep all parts in valid encounter bounds, move smoothly through corners, and coordinate travel with attacks so movement preserves promised recovery openings. The physical weak spot intersects existing ground-plane body trajectories. Preserve the normal camera and readable court. Moving hands are not baked navigation obstacles and do not trigger per-frame navigation-grid rebuilds.
 
 ### BOSS-006 - Bounded Supporting Crowd
 

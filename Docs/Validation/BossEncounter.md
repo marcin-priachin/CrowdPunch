@@ -137,3 +137,34 @@ skipped because the current authored wave contains no special. Editor frames had
 median **16.69 ms** and p95 **20.17 ms** during this controlled run. The probe restores
 player health, so hit masks show contact eligibility, not normal-run lethality or
 encounter duration. Normal input-driven playtesting is still needed for BOSS-009.
+
+## Round nature arena (2026-09-23, BOSS-005)
+
+Gauntlet 11 now uses a grass disk and the preceding gauntlets' nature-kit rock rim.
+The closed 19m court sits inside the head's 20m circular route. The head protrudes
+inward so grounded launched bodies hit it before the wall. Supporting spawn bounds
+are 24m square, inside the court; existing fist sizes and attack tuning are preserved.
+See the [game-camera view](BossEncounter/round-arena.png).
+
+Both C# builds succeeded with zero errors and existing project/package warnings.
+The [EditMode run](BossEncounter/round-arena-editmode-results.xml) passed 56/56.
+The [live check](BossEncounter/round-arena-playcheck.txt) passed 720 player-sized
+60m collider sweeps around the baked boundary, including seams. Throughout all three
+stages it asserted that the entire court remained in front of the actual moving head.
+A grounded launched body damaged the head at its rim position and rebounded away
+from the player. Shielding, ownership, completion, restart and retry also passed.
+Median Editor frame time was 16.69ms, p95 20.19ms with the authored six-body crowd;
+this is not a representative large-crowd benchmark or a difficulty playtest.
+
+### Floor seam correction (COMBAT-018, BOSS-005)
+
+An isolated 25m/s grounded launch reproduced an invisible stop at the disk center.
+The triangle-mesh floor generated multiple slanted contact normals at its radial
+seams, cutting horizontal speed from 23.78 to 3.50m/s in one step. The floor now
+bakes as a convex hull, retaining the same disk visuals and perimeter geometry.
+The identical launch crossed the center at 23.67m/s with upward floor normals and
+continued to the real rim. A diagonal crossing was also checked in the live solver.
+The editor/runtime build passed with zero errors and existing warnings.
+Traces: [before](BossEncounter/floor-seams-before.txt),
+[after](BossEncounter/floor-seams-after.txt),
+[diagonal](BossEncounter/floor-seams-diagonal.txt).

@@ -29,6 +29,8 @@ Its separate head/hand components never enter ordinary Enemy queries. The dedica
 settings asset and one supporting EnemyWaveSettings wave own tuning; focused coordination,
 physics motion, collision, replenishment, reset and presentation systems implement the encounter.
 
+Gauntlet 11 uses `BossRoundArenaBuilder` (**Crowd Punch > Levels > Apply Round Boss Arena**), also called by the boss rebuild recipe. A grass disk and 64 overlapping rock perimeter colliders enclose a 19m court; the head follows a 20m circular route and protrudes inward. The existing player collision bridge blocks traversal behind the head. The supporting wave spawn rectangle is inscribed inside the court. Shared nature materials and the `rock_largeA` / `ground_grass` meshes reuse the earlier visual recipe. No runtime system or ownership change is needed.
+
 The ten gauntlet SubScenes use nature-kit environment visuals authored by
 `Scripts/Editor/GauntletNatureEnvironment.cs` (**Crowd Punch > Levels > Apply Nature Kit Environment**).
 It fits `rock_largeA`, `path_stone`, `ground_pathTile`, and `ground_grass` from
