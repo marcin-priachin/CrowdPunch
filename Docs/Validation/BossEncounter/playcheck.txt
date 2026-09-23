@@ -1,0 +1,23 @@
+Live boss probe following all ten gauntlets. Controlled stage hits and projectile placements; not balance evidence.
+PASS baked head + two kinematic hands; exactly 12 Baseline + 1 Ranged; no ordinary boss tags
+STAGE 1: active Slam; position float3(-1.422609f, 6.300841f, -1.098846f); route 0.0
+STAGE 1: active Lunge; position float3(-8.640816f, 0.4f, 11.74085f); route 7.0
+STAGE 1: active Sweep; position float3(18.82385f, 0.4f, 3.228132f); route 14.0
+PASS stage 1 observed slam/lunge/sweep with recovery; head route=21.0
+STAGE 2: active Slam; position float3(13.59085f, 5.329812f, -0.8792765f); route 21.0
+STAGE 2: active Lunge; position float3(16.00937f, 0.4f, 4.699233f); route 28.0
+STAGE 2: active Sweep; position float3(16.17894f, 0.4f, -7.985094f); route 35.0
+PASS stage 2 observed slam/lunge/sweep with recovery; head route=42.0
+STAGE 3: active Slam; position float3(7.036734f, 6.4f, -12.3937f); route 42.0
+STAGE 3: active Lunge; position float3(13.07467f, 0.4f, -2.185884f); route 42.0
+STAGE 3: active Sweep; position float3(9.524275f, 0.4f, -13.99498f); route 49.0
+PASS stage 3 observed slam/lunge/sweep with recovery; head route=56.0
+Editor frame samples=5490; median=15.55ms; p95=20.70ms (includes Editor overhead)
+PASS real grounded launched-body collision damaged reachable head
+PASS boss-owned physical impact cannot damage head
+PASS physical hand shielding blocks head hit and produces stagger
+PASS same special entity pooled and safely returned; special population stayed <=1
+PASS boss death completed run with supporting enemies alive
+PASS restart removes old parts and resets boss health, stage, hits, completion
+PASS scene selection removes boss and supporting crowd
+PASS death/retry and replay restore player and boss; COMPLETE
