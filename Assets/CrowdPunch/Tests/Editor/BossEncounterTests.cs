@@ -2,6 +2,7 @@ using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Levels;
 using CrowdPunch.Mono.UI;
+using CrowdPunch.Systems.AI;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Initialization;
 using CrowdPunch.Systems.Lifetime;
@@ -44,7 +45,7 @@ namespace CrowdPunch.Tests
         private Entity Part(BossPartKind kind)
         {
             var e=em.CreateEntity(typeof(BossPart),typeof(BossImpactFeedback),typeof(BossMotionTarget),typeof(PhysicsVelocity),typeof(LocalTransform));
-            em.SetComponentData(e,new BossPart { Kind=kind,InitialRotation=quaternion.identity });
+            em.SetComponentData(e,new BossPart { Kind=kind,Radius=kind==BossPartKind.Head?2:2.6f,InitialRotation=quaternion.identity });
             em.SetComponentData(e,LocalTransform.Identity); em.AddBuffer<CollisionDamageHistory>(e);
             if(kind!=BossPartKind.Head) { em.AddComponentData(e,new BossHand { Phase=BossHandPhase.Active }); em.AddBuffer<BossScatterHistory>(e); }
             return e;
@@ -173,6 +174,45 @@ namespace CrowdPunch.Tests
             {
                 float3 p=BossPerimeterRoute.Position(d,tuning);
                 Assert.LessOrEqual(math.distance(previous,p),.051f); Assert.IsTrue(math.all(math.abs(p.xz-tuning.Center)<tuning.BoundsExtents-2)); previous=p;
+            }
+        }
+        [Test] public void Boss005_HandRetargetCannotCarryItsEnlargedColliderOutOfBounds()
+        {
+            float radius=em.GetComponentData<BossPart>(left).Radius;
+            float3 position=new float3(0,tuning.HandHeight,-tuning.BoundsExtents.y+radius+.05f);
+            float3 incoming=new float3(0,0,-30);
+            float dt=.02f;
+            float3 limited=BossMotionSystem.LimitToBounds(position,incoming,dt,tuning,radius);
+            Assert.Greater(limited.z,incoming.z);
+            Assert.GreaterOrEqual(position.z+limited.z*dt,-tuning.BoundsExtents.y+radius-.0001f);
+        }
+        [TestCase(0)] [TestCase(1)] [TestCase(2)]
+        public void Boss002_AttackLocksThePlayersPositionAcrossTheCourt(int attackIndex)
+        {
+            var player=em.CreateEntity(typeof(PlayerSnapshot));
+            em.SetComponentData(head,LocalTransform.FromPosition(new float3(15,tuning.HeadHeight,13)));
+            em.SetComponentData(left,LocalTransform.FromPosition(new float3(15,tuning.HandHeight,13)));
+            em.SetComponentData(right,LocalTransform.FromPosition(new float3(17,tuning.HandHeight,13)));
+            em.SetComponentData(left,new BossHand { Phase=BossHandPhase.Ready });
+            em.SetComponentData(right,new BossHand { Phase=BossHandPhase.Ready });
+            world.SetTime(new TimeData(1,.02f));
+            var coordinator=world.GetOrCreateSystem<BossHandCoordinationSystem>();
+
+            foreach(var target in new[]{new float3(20,0,18),new float3(-18,0,-16)})
+            {
+                em.SetComponentData(player,new PlayerSnapshot { Position=target,IsAvailable=true });
+                em.SetComponentData(head,new BossEncounter { LeftHand=left,RightHand=right,Stage=1,
+                    Cycle=BossCycle.Opening,Remaining=0,AttackIndex=attackIndex });
+                em.SetComponentData(left,new BossHand { Phase=BossHandPhase.Ready });
+                em.SetComponentData(right,new BossHand { Phase=BossHandPhase.Ready });
+                coordinator.Update(world.Unmanaged);
+
+                var hand=em.GetComponentData<BossHand>(left);
+                Assert.AreEqual((BossAttack)attackIndex,hand.Attack);
+                Assert.That(math.distance(hand.Target.xz,target.xz),Is.LessThan(.001f));
+                em.SetComponentData(player,new PlayerSnapshot { Position=float3.zero,IsAvailable=true });
+                coordinator.Update(world.Unmanaged);
+                Assert.That(math.distance(em.GetComponentData<BossHand>(left).Target.xz,target.xz),Is.LessThan(.001f));
             }
         }
         [Test] public void Boss001_HeadBounceTurnsAPlayerBoundShotSidewaysWithoutAddingSpeed()

@@ -28,9 +28,13 @@ namespace CrowdPunch.Systems.Combat
                     if(hand.ValueRO.Attack==BossAttack.Slam)
                         hit=current.y<=t.HandHeight+.5f && math.distance(current.xz,player.Position.xz)<=t.Slam.Width+player.Radius;
                     else
+                    {
+                        if(hand.ValueRO.Attack==BossAttack.Lunge)
+                            radius=math.max(part.ValueRO.Radius,t.Lunge.Width)+player.Radius;
                         hit=LaunchedEnemyPlayerImpactSystem.SegmentIntersectsSphere(
                             new float3(hand.ValueRO.PreviousPosition.x,0,hand.ValueRO.PreviousPosition.z),new float3(current.x,0,current.z),
                             new float3(player.Position.x,0,player.Position.z),radius);
+                    }
                     if(hit && PlayerBridgeRegistry.TryGetBridge(out var bridge))
                     {
                         hand.ValueRW.PlayerHit=1;

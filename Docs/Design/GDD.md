@@ -457,6 +457,8 @@ Status: Must
 
 Hands physically intercept bodies, ignore player punches and cannot be permanently destroyed. Eligible launched impacts can briefly stagger them, with configurable duration and repeat protection plus clear blocked/stagger feedback. Ground slam, straight lunging punch and broad sweep each have readable anticipation, committed active movement with locked targeting, and recovery. One coordinated state owns each hand's motion; stagger and transitions cleanly cancel hitboxes. Recovery must permit deliberate shots with the current punch cooldown.
 
+Each attack aims at the player's position sampled when its anticipation begins, including positions near the arena edge or behind the head. Moving after that commitment remains the player's way to dodge. Attack footprints and travel speed should make the hands a meaningful threat without removing readable anticipation or recovery.
+
 ### BOSS-003 - Boss Launch Ownership
 
 Status: Must

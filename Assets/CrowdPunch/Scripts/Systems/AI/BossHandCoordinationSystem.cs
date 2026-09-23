@@ -57,9 +57,8 @@ namespace CrowdPunch.Systems.AI
                     if(Settled(left)&&Settled(right)) boss.Remaining-=dt;
                     if(boss.Remaining<=0)
                     {
-                        Entity attacking=boss.NextHand==0?boss.LeftHand:boss.RightHand;
-                        if(boss.NextHand==0) BeginAttack(ref left,lp,player.Position,t,boss.AttackIndex,factor,head.ValueRO.Position,forward);
-                        else BeginAttack(ref right,rp,player.Position,t,boss.AttackIndex,factor,head.ValueRO.Position,forward);
+                        if(boss.NextHand==0) BeginAttack(ref left,lp,player.Position,t,boss.AttackIndex,factor,forward);
+                        else BeginAttack(ref right,rp,player.Position,t,boss.AttackIndex,factor,forward);
                         boss.AttackIndex++; boss.Cycle=BossCycle.Attacking; boss.Remaining=t.CoordinationDelay;
                         boss.SecondAttackPending=(byte)(boss.Stage==3?1:0);
                     }
@@ -71,8 +70,8 @@ namespace CrowdPunch.Systems.AI
                         boss.Remaining-=dt;
                         if(boss.Remaining<=0)
                         {
-                            if(boss.NextHand==0 && Settled(right)) { BeginAttack(ref right,rp,player.Position,t,boss.AttackIndex++,factor,head.ValueRO.Position,forward); boss.SecondAttackPending=0; }
-                            else if(boss.NextHand!=0 && Settled(left)) { BeginAttack(ref left,lp,player.Position,t,boss.AttackIndex++,factor,head.ValueRO.Position,forward); boss.SecondAttackPending=0; }
+                            if(boss.NextHand==0 && Settled(right)) { BeginAttack(ref right,rp,player.Position,t,boss.AttackIndex++,factor,forward); boss.SecondAttackPending=0; }
+                            else if(boss.NextHand!=0 && Settled(left)) { BeginAttack(ref left,lp,player.Position,t,boss.AttackIndex++,factor,forward); boss.SecondAttackPending=0; }
                         }
                     }
                     if(boss.SecondAttackPending==0 && Settled(left)&&Settled(right))
@@ -100,18 +99,13 @@ namespace CrowdPunch.Systems.AI
             if(h.Phase==BossHandPhase.Recovery && h.Remaining<=0) h.Phase=BossHandPhase.Returning;
         }
 
-        private static void BeginAttack(ref BossHand h,float3 position,float3 player,in BossTuning t,int index,float factor,float3 head,float3 front)
+        private static void BeginAttack(ref BossHand h,float3 position,float3 player,in BossTuning t,int index,float factor,float3 front)
         {
             h.Attack=(BossAttack)(index%3); var a=AttackTuning(h.Attack,t);
             h.Direction=math.normalizesafe(new float3(player.x-position.x,0,player.z-position.z),new float3(0,0,-1));
             float distance=math.min(a.Reach,math.distance(position.xz,player.xz));
             h.Start=position; h.Start.y=t.HandHeight;
-            h.Target=BossPerimeterRoute.Clamp(h.Start+h.Direction*distance,t); h.Target.y=t.HandHeight;
-            // Keep committed paths on the arena-facing side of the head, including a player behind it.
-            float depth=math.dot(h.Target-head,front);
-            h.Target+=front*math.max(0,5-depth);
-            h.Target=BossPerimeterRoute.Clamp(h.Target,t);
-            if(h.Attack==BossAttack.Sweep) h.Target=BossPerimeterRoute.Clamp(h.Target,t,a.Width+1.5f);
+            h.Target=h.Start+h.Direction*distance; h.Target.y=t.HandHeight;
             h.Direction=math.normalizesafe(new float3(h.Target.x-position.x,0,h.Target.z-position.z),front);
             h.Phase=BossHandPhase.Anticipation; h.Duration=h.Remaining=a.Anticipation*factor;
             h.AttackSequence++; h.PlayerHit=0;
@@ -121,10 +115,11 @@ namespace CrowdPunch.Systems.AI
             int sign,in BossTuning t,float factor,EntityManager em,Entity entity,quaternion rotation)
         {
             var a=AttackTuning(h.Attack,t);
+            float radius=em.GetComponentData<BossPart>(entity).Radius;
             if(h.Phase==BossHandPhase.Anticipation && h.Remaining<=0)
             { h.Phase=BossHandPhase.Active; h.Duration=h.Remaining=a.Active*factor; h.PreviousPosition=position; }
             else if(h.Phase==BossHandPhase.Active && h.Remaining<=0
-                && math.distancesq(position,BossPerimeterRoute.Clamp(StrikeEnd(h,a),t))<.09f)
+                && math.distancesq(position,BossPerimeterRoute.Clamp(StrikeEnd(h,a),t,radius))<.09f)
             { h.Phase=BossHandPhase.Recovery; h.Duration=h.Remaining=a.Recovery; }
             float3 target=position;
             float3 attackSide=math.cross(math.up(),h.Direction);
@@ -154,11 +149,11 @@ namespace CrowdPunch.Systems.AI
                 if(boss.Stage==3 && boss.Cycle==BossCycle.Relocating) shield=true;
                 target=head+side*(shield?t.ShieldOffset:t.OpenOffset)*sign+forward*(shield?t.ShieldForward:1);
                 target.y=t.HandHeight;
-                target=BossPerimeterRoute.Clamp(target,t);
+                target=BossPerimeterRoute.Clamp(target,t,radius);
                 if(math.distancesq(position,target)<.16f) h.Phase=shield?BossHandPhase.Shielding:BossHandPhase.Ready;
                 else h.Phase=BossHandPhase.Returning;
             }
-            target=BossPerimeterRoute.Clamp(target,t);
+            target=BossPerimeterRoute.Clamp(target,t,radius);
             em.SetComponentData(entity,new BossMotionTarget { Position=target, Rotation=rotation });
         }
         private static void Hold(EntityManager em,Entity e,float3 p,quaternion q) => em.SetComponentData(e,new BossMotionTarget { Position=p,Rotation=q });

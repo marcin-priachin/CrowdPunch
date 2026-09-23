@@ -23,7 +23,7 @@ namespace CrowdPunch.Editor
     {
         private const string Key="CrowdPunch.BossCheck";
         private const string Output="Temp/BossValidation/playcheck.txt";
-        private static int step,stage,mask;
+        private static int step,stage,mask,playerHitMask;
         private static double since;
         private static Entity body,special,oldHead;
         private static float healthBefore;
@@ -34,7 +34,7 @@ namespace CrowdPunch.Editor
         public static void Start()
         {
             Directory.CreateDirectory("Temp/BossValidation"); File.WriteAllText(Output,"Live Editor probe: player health restored; stage hits injected; collision probes place existing bodies. Not a duration/difficulty playtest.\n");
-            step=0; SessionState.SetBool(Key,true); EditorApplication.isPlaying=true;
+            step=0; body=special=oldHead=Entity.Null; SessionState.SetBool(Key,true); EditorApplication.isPlaying=true;
         }
         public static void BeginLive()
         { Directory.CreateDirectory("Temp/BossValidation"); File.WriteAllText(Output,"Live boss probe following all ten gauntlets. Controlled stage hits and projectile placements; not balance evidence.\n"); step=1; since=EditorApplication.timeSinceStartup; SessionState.SetBool(Key,true); }
@@ -64,13 +64,20 @@ namespace CrowdPunch.Editor
             if(heads.CalculateEntityCount()!=1) { Require(now-since<30,"Boss did not load"); return; }
             var head=heads.GetSingletonEntity(); var boss=em.GetComponentData<BossEncounter>(head); var tuning=em.GetComponentData<BossTuning>(head);
             using var crowd=em.CreateEntityQuery(typeof(BossCrowdMember)); using var enemies=crowd.ToEntityArray(Allocator.Temp);
-            Require(enemies.Length<=13,"Unbounded crowd root count");
-            int specials=0;
+            using var waveQuery=em.CreateEntityQuery(typeof(EnemyWaveSequence),typeof(BossCrowdSequence));
+            if(waveQuery.CalculateEntityCount()!=1) return;
+            var sequenceEntity=waveQuery.GetSingletonEntity();
+            var sequence=em.GetComponentData<EnemyWaveSequence>(sequenceEntity);
+            var waves=em.GetBuffer<EnemyWaveDefinition>(sequenceEntity);
+            if(waves.Length==0) return;
+            int authoredCount=waves[0].TotalEnemyCount+waves[0].TotalEliteCount;
+            Require(enemies.Length<=authoredCount,"Unbounded crowd root count");
+            int specials=0,baselines=0;
             foreach(var e in enemies)
             {
                 if(em.GetComponentData<CrowdPunch.Components.EnemyArchetype>(e).Value!=EnemyArchetypeKind.Baseline)
                 { special=e; if(!em.IsComponentEnabled<RespawnRequest>(e)) specials++; }
-                else if(body==Entity.Null || !em.Exists(body)) body=e;
+                else { baselines++; if(body==Entity.Null || !em.Exists(body)) body=e; }
             }
             Require(specials<=1,"Duplicate special enemy");
             foreach(var e in new[]{head,boss.LeftHand,boss.RightHand})
@@ -81,9 +88,10 @@ namespace CrowdPunch.Editor
             }
             if(step==1)
             {
-                if(enemies.Length!=13 || special==Entity.Null) return;
-                Record("PASS baked head + two kinematic hands; exactly 12 Baseline + 1 Ranged; no ordinary boss tags");
-                stage=1; mask=0; step=2; since=now; frames.Clear(); return;
+                if(sequence.Phase!=EnemyWaveRuntimePhase.AwaitingActivation || enemies.Length!=authoredCount) return;
+                Require(body!=Entity.Null,"Boss crowd has no launchable Baseline body");
+                Record($"PASS baked head + two kinematic hands; {baselines} Baseline + {specials} living specials; no ordinary boss tags");
+                stage=1; mask=0; playerHitMask=0; step=2; since=now; frames.Clear(); return;
             }
             if(step==2)
             {
@@ -93,17 +101,20 @@ namespace CrowdPunch.Editor
                     var h=em.GetComponentData<BossHand>(e);
                     if(h.Phase==BossHandPhase.Active && (mask&(1<<(int)h.Attack))==0)
                     { mask|=1<<(int)h.Attack; Record($"STAGE {stage}: active {h.Attack}; position {em.GetComponentData<LocalTransform>(e).Position}; route {boss.RouteDistance:0.0}"); }
+                    if(h.Phase==BossHandPhase.Active && h.PlayerHit!=0)
+                        playerHitMask|=1<<(int)h.Attack;
                 }
                 Require(now-since<150,"Attack coordinator stalled in stage "+stage);
                 if(mask!=7 || boss.Cycle!=BossCycle.Opening) return;
-                Record($"PASS stage {stage} observed slam/lunge/sweep with recovery; head route={boss.RouteDistance:0.0}");
+                Record($"PASS stage {stage} observed slam/lunge/sweep with recovery; player-hit mask={playerHitMask}; head route={boss.RouteDistance:0.0}");
+                if(stage==1) Require(playerHitMask!=0,"Boss attacks never reached the player in stage 1");
                 Capture("stage"+stage);
                 if(stage<3)
                 {
                     var launch=em.GetComponentData<EnemyLaunchState>(body); EnemyLaunchTransition.Begin(ref launch,EnemyLaunchCause.PlayerPunch,10); em.SetComponentData(body,launch);
                     em.SetComponentEnabled<RespawnRequest>(body,false);
                     Require(BossImpactResolution.TryHit(em,body,head,10,99999,world.Time.ElapsedTime,float3.zero,math.forward()),"Injected threshold hit rejected");
-                    stage++; mask=0; since=now; return;
+                    stage++; mask=0; playerHitMask=0; since=now; return;
                 }
                 frames.Sort(); Record($"Editor frame samples={frames.Count}; median={frames[frames.Count/2]:0.00}ms; p95={frames[(int)(frames.Count*.95f)]:0.00}ms (includes Editor overhead)");
                 // Hold a controlled collision court using the existing physics motion system.
@@ -148,17 +159,19 @@ namespace CrowdPunch.Editor
                 Require(em.GetComponentData<Health>(head).Current==healthBefore,"Shield allowed head damage");
                 Require(em.GetComponentData<BossHand>(boss.LeftHand).Phase==BossHandPhase.Staggered,"Blocked projectile did not stagger hand");
                 Record("PASS physical hand shielding blocks head hit and produces stagger");
-                em.SetComponentData(special,new DamageRequest { Amount=99999 }); em.SetComponentEnabled<DamageRequest>(special,true);
-                pooled=false; step=7; since=now; return;
+                if(special!=Entity.Null)
+                {
+                    em.SetComponentData(special,new DamageRequest { Amount=99999 }); em.SetComponentEnabled<DamageRequest>(special,true);
+                    pooled=false; step=7; since=now; return;
+                }
+                DefeatBoss(em,world,body,head); step=8; since=now; return;
             }
             if(step==7)
             {
                 if(em.IsComponentEnabled<RespawnRequest>(special)) pooled=true;
                 if(!pooled || em.IsComponentEnabled<RespawnRequest>(special)) { Require(now-since<25,"Special failed to replenish"); return; }
                 Record("PASS same special entity pooled and safely returned; special population stayed <=1");
-                var launch=em.GetComponentData<EnemyLaunchState>(body); EnemyLaunchTransition.Begin(ref launch,EnemyLaunchCause.PlayerPunch,10); em.SetComponentData(body,launch);
-                completionBefore=GauntletCompletionRegistry.Sequence;
-                BossImpactResolution.TryHit(em,body,head,10,99999,world.Time.ElapsedTime,float3.zero,math.forward()); step=8; since=now; return;
+                DefeatBoss(em,world,body,head); step=8; since=now; return;
             }
             if(step==8)
             {
@@ -194,6 +207,13 @@ namespace CrowdPunch.Editor
         }
         private static void PlacePart(EntityManager em,Entity e,float3 p)
         { var tr=em.GetComponentData<LocalTransform>(e); tr.Position=p; em.SetComponentData(e,tr); em.SetComponentData(e,new BossMotionTarget { Position=p,Rotation=tr.Rotation }); em.SetComponentData(e,new PhysicsVelocity()); }
+        private static void DefeatBoss(EntityManager em,World world,Entity body,Entity head)
+        {
+            var launch=em.GetComponentData<EnemyLaunchState>(body);
+            EnemyLaunchTransition.Begin(ref launch,EnemyLaunchCause.PlayerPunch,10); em.SetComponentData(body,launch);
+            completionBefore=GauntletCompletionRegistry.Sequence;
+            BossImpactResolution.TryHit(em,body,head,10,99999,world.Time.ElapsedTime,float3.zero,math.forward());
+        }
         private static void Shoot(EntityManager em,Entity e,EnemyLaunchCause cause,float3 p)
         {
             var tr=em.GetComponentData<LocalTransform>(e); var ground=em.GetComponentData<EnemyGroundConstraint>(e); p.y=ground.HasGround!=0?ground.Height:tr.Position.y;

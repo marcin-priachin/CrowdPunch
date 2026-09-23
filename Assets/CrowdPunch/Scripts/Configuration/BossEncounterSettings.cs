@@ -22,8 +22,8 @@ namespace CrowdPunch.Configuration
         [Min(0)] public float moveDistance = 7;
         public float headHeight = 1.05f, handHeight = .4f;
         [Header("Hands and openings")]
-        [Min(1)] public float handSpeed = 22;
-        [Min(1)] public float handAcceleration = 80;
+        [Min(1)] public float handSpeed = 44;
+        [Min(1)] public float handAcceleration = 160;
         [Min(2)] public float openOffset = 4.7f;
         [Min(0)] public float shieldOffset = 1.45f;
         [Min(1)] public float shieldForward = 3.5f;
@@ -35,9 +35,9 @@ namespace CrowdPunch.Configuration
         [Min(0)] public float staggerProtection = 2.5f;
         [Min(0)] public float staggerMinimumImpulse = 2;
         [Header("Committed attacks: anticipation / active / recovery / reach / width")]
-        public BossAttackTuning slam = new BossAttackTuning { Anticipation=1.6f, Active=.45f, Recovery=2.8f, Reach=17, Width=3 };
-        public BossAttackTuning lunge = new BossAttackTuning { Anticipation=1.4f, Active=.7f, Recovery=2.8f, Reach=17, Width=1.5f };
-        public BossAttackTuning sweep = new BossAttackTuning { Anticipation=1.8f, Active=1.2f, Recovery=3, Reach=12, Width=6 };
+        public BossAttackTuning slam = new BossAttackTuning { Anticipation=1.6f, Active=.225f, Recovery=2.8f, Reach=60, Width=6 };
+        public BossAttackTuning lunge = new BossAttackTuning { Anticipation=1.4f, Active=.35f, Recovery=2.8f, Reach=60, Width=3 };
+        public BossAttackTuning sweep = new BossAttackTuning { Anticipation=1.8f, Active=1.2f, Recovery=3, Reach=60, Width=12 };
         [Header("Player hits and boss-owned crowd scattering")]
         [Min(0), Tooltip("Health points; ReceiveEnemyHit converts these to the player health fraction.")]
         public float playerDamage = 15;

@@ -21,12 +21,12 @@ MonoBehaviour:
   routeExtents: {x: 15, y: 13}
   boundsExtents: {x: 21, y: 19}
   cornerRadius: 5
-  moveSpeed: 6
-  moveDistance: 7
+  moveSpeed: 20
+  moveDistance: 30
   headHeight: 1.05
   handHeight: 0.4
-  handSpeed: 22
-  handAcceleration: 80
+  handSpeed: 44
+  handAcceleration: 160
   openOffset: 4.7
   shieldOffset: 1.45
   shieldForward: 3.5
@@ -38,22 +38,22 @@ MonoBehaviour:
   staggerMinimumImpulse: 2
   slam:
     Anticipation: 1.6
-    Active: 0.45
+    Active: 0.225
     Recovery: 2.8
-    Reach: 17
-    Width: 3
+    Reach: 60
+    Width: 6
   lunge:
     Anticipation: 1.4
-    Active: 0.7
+    Active: 0.35
     Recovery: 2.8
-    Reach: 17
-    Width: 1.5
+    Reach: 60
+    Width: 3
   sweep:
     Anticipation: 1.8
     Active: 1.2
     Recovery: 3
-    Reach: 12
-    Width: 6
+    Reach: 60
+    Width: 12
   playerDamage: 15
   playerKnockback: 12
   playerInvulnerability: 0.8

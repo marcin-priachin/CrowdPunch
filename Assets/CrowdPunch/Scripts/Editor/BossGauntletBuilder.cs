@@ -114,11 +114,12 @@ namespace CrowdPunch.Editor
         private static BossPartAuthoring Hand(string name,BossPartKind kind,BossEncounterAuthoring encounter,Vector3 position,Material gold,Material cuff)
         {
             var go=new GameObject(name); position.y=encounter.settings.handHeight; go.transform.position=position; go.transform.rotation=encounter.transform.rotation;
-            var part=go.AddComponent<BossPartAuthoring>(); part.encounter=encounter; part.kind=kind; part.radius=1.3f; part.height=2.6f;
-            Primitive("Palm",go.transform,new Vector3(0,0,0),new Vector3(2.4f,2,1.9f),gold);
-            for(int i=0;i<4;i++) Primitive("Knuckle "+i,go.transform,new Vector3((i-1.5f)*.52f,.42f,.75f),new Vector3(.67f,.85f,.7f),gold);
-            Primitive("Thumb",go.transform,new Vector3(kind==BossPartKind.LeftHand?1.05f:-1.05f,-.3f,.15f),new Vector3(.75f,1.3f,.85f),gold);
-            Primitive("Cuff",go.transform,new Vector3(0,-.05f,-.8f),new Vector3(2.1f,1.75f,.6f),cuff);
+            var part=go.AddComponent<BossPartAuthoring>(); part.encounter=encounter; part.kind=kind; part.radius=2.6f; part.height=5.2f;
+            var model=new GameObject("Model").transform; model.SetParent(go.transform,false); model.localScale=Vector3.one*2;
+            Primitive("Palm",model,new Vector3(0,0,0),new Vector3(2.4f,2,1.9f),gold);
+            for(int i=0;i<4;i++) Primitive("Knuckle "+i,model,new Vector3((i-1.5f)*.52f,.42f,.75f),new Vector3(.67f,.85f,.7f),gold);
+            Primitive("Thumb",model,new Vector3(kind==BossPartKind.LeftHand?1.05f:-1.05f,-.3f,.15f),new Vector3(.75f,1.3f,.85f),gold);
+            Primitive("Cuff",model,new Vector3(0,-.05f,-.8f),new Vector3(2.1f,1.75f,.6f),cuff);
             return part;
         }
         private static void Primitive(string name,Transform parent,Vector3 p,Vector3 scale,Material mat)

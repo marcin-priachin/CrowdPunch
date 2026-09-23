@@ -106,3 +106,34 @@ player-owned head hit, the rebound retained **17.35 m/s** horizontal speed and h
 **0.000** normalized velocity component toward the player. The already edited boss
 movement speed of 6 was preserved in the asset. The probe restores player health and
 injects threshold hits, so this remains behavior verification rather than balance evidence.
+
+## Larger, faster player-aimed attacks - 2026-09-23
+
+The user's current authoring enlarges both hand visuals and physics radii to 2.6 m,
+raises head movement speed to 20 m/s and route travel to 30 m, and changes the
+supporting wave to six Baseline enemies. Those edits were retained. The attack tuning
+now doubles hand speed and acceleration to 44 m/s and 160 m/s^2. Slam radius is 6 m,
+lunge half-width 3 m and sweep half-travel 12 m. Slam/lunge active times are halved
+to 0.225/0.35 s; the sweep retains 1.2 s because its doubled travel already doubles
+traversal speed. Reach is 60 m so a locked player position anywhere in the court can
+be targeted. Anticipation and recovery times remain as authored (BOSS-002/005).
+
+The coordinator now locks the player's actual arena position at anticipation entry;
+it no longer pushes targets in front of the head or pulls edge sweep targets to the
+court center. The lunge's player-hit sweep uses its authored width, while hand movement
+and active completion respect the enlarged collider radius. The latter was necessary:
+the initial fast-hand probe caught residual outward momentum carrying a hand past the
+arena edge after retargeting. A per-step velocity limit corrected that failure.
+
+The final [EditMode results](BossEncounter/attack-tuning-editmode-results.xml) passed
+**56/56** focused regressions, including all three locked attack targets near an edge
+and across the court plus a fast-hand boundary case. Both runtime and Editor C# builds
+had zero errors. The [live boss probe](BossEncounter/attack-tuning-playcheck.txt)
+completed all three stages with slam, lunge and sweep in each, kept every part inside
+bounds, and recorded player-hit masks of **3, 6 and 1** for stages 1-3
+(slam = 1, lunge = 2, sweep = 4). It also passed the head impact, shielding, completion,
+restart, selection and death/retry checks. The special-enemy replenishment check was
+skipped because the current authored wave contains no special. Editor frames had
+median **16.69 ms** and p95 **20.17 ms** during this controlled run. The probe restores
+player health, so hit masks show contact eligibility, not normal-run lethality or
+encounter duration. Normal input-driven playtesting is still needed for BOSS-009.
