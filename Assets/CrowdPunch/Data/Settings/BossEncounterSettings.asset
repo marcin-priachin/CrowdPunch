@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca64a287feb3d0740b719b69dd6cb112, type: 3}
   m_Name: BossEncounterSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.BossEncounterSettings
-  health: 600
+  health: 300
   hitInvulnerability: 0.85
   stageTwoThreshold: 0.666667
   stageThreeThreshold: 0.333333
@@ -25,8 +25,8 @@ MonoBehaviour:
   moveDistance: 30
   headHeight: 1.05
   handHeight: 0.4
-  handSpeed: 44
-  handAcceleration: 160
+  handSpeed: 88
+  handAcceleration: 320
   openOffset: 4.7
   shieldOffset: 1.45
   shieldForward: 3.5
@@ -37,19 +37,19 @@ MonoBehaviour:
   staggerProtection: 2.5
   staggerMinimumImpulse: 2
   slam:
-    Anticipation: 1.6
+    Anticipation: 0.1
     Active: 0.225
     Recovery: 2.8
     Reach: 60
     Width: 6
   lunge:
-    Anticipation: 1.4
+    Anticipation: 0.1
     Active: 0.35
     Recovery: 2.8
     Reach: 60
     Width: 3
   sweep:
-    Anticipation: 1.8
+    Anticipation: 0.1
     Active: 1.2
     Recovery: 3
     Reach: 60
