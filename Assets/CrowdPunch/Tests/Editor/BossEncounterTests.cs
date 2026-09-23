@@ -175,6 +175,29 @@ namespace CrowdPunch.Tests
                 Assert.LessOrEqual(math.distance(previous,p),.051f); Assert.IsTrue(math.all(math.abs(p.xz-tuning.Center)<tuning.BoundsExtents-2)); previous=p;
             }
         }
+        [Test] public void Boss001_HeadBounceTurnsAPlayerBoundShotSidewaysWithoutAddingSpeed()
+        {
+            float3 before=new float3(1,2,-12);
+            float3 body=new float3(0,0,8), head=new float3(0,0,10), player=new float3(0,0,0);
+            float3 after=BossHeadBounceSystem.Redirect(before,body,head,player,source.Index);
+            Assert.That(math.dot(after.xz,math.normalizesafe((player-body).xz)),Is.LessThanOrEqualTo(.0001f));
+            Assert.That(math.length(after.xz),Is.EqualTo(math.length(before.xz)).Within(.0001f));
+            Assert.AreEqual(before.y,after.y);
+            Assert.That(math.dot(after.xz,math.normalizesafe((body-head).xz)),Is.GreaterThanOrEqualTo(-.0001f));
+        }
+        [Test] public void Boss001_HeadBouncePreservesAlreadySafeSolverMotion()
+        {
+            float3 body=new float3(0,0,8), head=new float3(0,0,10), player=new float3(0,0,0);
+            foreach(var before in new[]{new float3(0,1,8),new float3(0,1,0)})
+                Assert.AreEqual(before,BossHeadBounceSystem.Redirect(before,body,head,player,source.Index));
+        }
+        [Test] public void Boss001_HeadBounceChoosesTheSideAwayFromTheHead()
+        {
+            float3 body=new float3(1,0,8), head=new float3(0,0,10), player=new float3(0,0,0);
+            float3 after=BossHeadBounceSystem.Redirect(new float3(-2,0,-10),body,head,player,source.Index);
+            Assert.That(math.dot(after.xz,math.normalizesafe((player-body).xz)),Is.LessThanOrEqualTo(.0001f));
+            Assert.That(math.dot(after.xz,math.normalizesafe((body-head).xz)),Is.GreaterThanOrEqualTo(-.0001f));
+        }
         [Test] public void Boss001_ExplosionAndGenericDamageCannotDamageOrLaunchParts()
         {
             em.CreateEntity(typeof(PlayerSnapshot));

@@ -1,0 +1,23 @@
+Live Editor probe: player health restored; stage hits injected; collision probes place existing bodies. Not a duration/difficulty playtest.
+PASS baked head + two kinematic hands; exactly 12 Baseline + 1 Ranged; no ordinary boss tags
+STAGE 1: active Slam; position float3(-1.98038f, 6.300804f, -1.234866f); route 0.0
+STAGE 1: active Lunge; position float3(-8.034063f, 0.4f, 12.30614f); route 7.0
+STAGE 1: active Sweep; position float3(12.78319f, 0.4f, -1.946592f); route 14.0
+PASS stage 1 observed slam/lunge/sweep with recovery; head route=21.0
+STAGE 2: active Slam; position float3(11.11553f, 6.300506f, -0.9551123f); route 21.0
+STAGE 2: active Lunge; position float3(16.84881f, 0.4f, 4.619987f); route 28.0
+STAGE 2: active Sweep; position float3(11.06506f, 0.4f, -7.658657f); route 35.0
+PASS stage 2 observed slam/lunge/sweep with recovery; head route=42.0
+STAGE 3: active Slam; position float3(-2.456545f, 6.4f, -17.5f); route 42.0
+STAGE 3: active Lunge; position float3(13.44743f, 0.4f, -2.498098f); route 42.0
+STAGE 3: active Sweep; position float3(5.608338f, 0.4f, -17.25941f); route 49.0
+PASS stage 3 observed slam/lunge/sweep with recovery; head route=56.0
+Editor frame samples=4985; median=16.68ms; p95=20.36ms (includes Editor overhead)
+PASS real grounded launched-body head collision damaged head and redirected rebound; player dot=0.000, speed=17.35
+PASS boss-owned physical impact cannot damage head
+PASS physical hand shielding blocks head hit and produces stagger
+PASS same special entity pooled and safely returned; special population stayed <=1
+PASS boss death completed run with supporting enemies alive
+PASS restart removes old parts and resets boss health, stage, hits, completion
+PASS scene selection removes boss and supporting crowd
+PASS death/retry and replay restore player and boss; COMPLETE

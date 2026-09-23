@@ -28,7 +28,7 @@ namespace CrowdPunch.Editor
         private static Entity body,special,oldHead;
         private static float healthBefore;
         private static uint completionBefore;
-        private static bool pooled;
+        private static bool pooled,bounceObserved;
         private static readonly List<float> frames=new();
         static BossEncounterPlayCheck() { EditorApplication.update+=Tick; }
         public static void Start()
@@ -115,12 +115,24 @@ namespace CrowdPunch.Editor
             }
             if(step==3 && now-since>1)
             {
-                healthBefore=em.GetComponentData<Health>(head).Current; Shoot(em,body,EnemyLaunchCause.PlayerPunch,new float3(0,0,4)); step=4; since=now; return;
+                healthBefore=em.GetComponentData<Health>(head).Current; bounceObserved=false;
+                Shoot(em,body,EnemyLaunchCause.PlayerPunch,new float3(0,0,4)); step=4; since=now; return;
             }
-            if(step==4 && now-since>1)
+            if(step==4)
             {
-                Require(em.GetComponentData<Health>(head).Current<healthBefore,"Real solver projectile did not reach/damage head");
-                Record("PASS real grounded launched-body collision damaged reachable head");
+                if(!bounceObserved && em.GetComponentData<Health>(head).Current<healthBefore)
+                {
+                    var position=em.GetComponentData<LocalTransform>(body).Position;
+                    var velocity=em.GetComponentData<PhysicsVelocity>(body).Linear;
+                    float2 towardPlayer=math.normalizesafe(((float3)player.transform.position-position).xz);
+                    float playerComponent=math.dot(math.normalizesafe(velocity.xz),towardPlayer);
+                    Require(math.length(velocity.xz)>.01f && playerComponent<=.05f,
+                        "Physical head rebound still points toward the player");
+                    bounceObserved=true;
+                    Record($"PASS real grounded launched-body head collision damaged head and redirected rebound; player dot={playerComponent:0.000}, speed={math.length(velocity.xz):0.00}");
+                }
+                if(now-since<=1) return;
+                Require(bounceObserved,"Real solver projectile did not reach/damage head");
                 healthBefore=em.GetComponentData<Health>(head).Current; Shoot(em,body,EnemyLaunchCause.BossAttack,new float3(0,0,4)); step=5; since=now; return;
             }
             if(step==5 && now-since>1)

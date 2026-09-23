@@ -87,3 +87,22 @@ BOSS-009 targets approximately 2-3 minutes without a forced timer. This requires
 input-driven playtesting; injected threshold hits cannot establish it. Keep the current
 tuning provisional. OQ-001 still leaves representative target hardware, crowd size and
 frame-rate acceptance unresolved; Editor timing is descriptive evidence only.
+
+## Head rebound direction - 2026-09-23
+
+After a launched body contacts the head, `BossHeadBounceSystem` changes only a
+player-bound horizontal rebound into a sideways direction. It runs after the existing
+launched-body/player impact check, preserves the solver's horizontal speed and vertical
+motion, and clears a homing lock on the head. Already safe rebounds are unchanged
+(BOSS-001, COMBAT-004/015). This is an implementation of the player's requested
+head-rebound behavior, not a new general collision rule.
+
+The focused [EditMode run](BossEncounter/head-bounce-editmode-results.xml) passed **52/52**
+tests, including direct player-bound, already safe and off-center rebound cases.
+`dotnet build` of runtime and Editor assemblies passed with zero errors. The
+[live boss probe](BossEncounter/head-bounce-playcheck.txt) completed all stages and the
+existing ownership, shielding, replenishment and lifecycle checks. On the physical
+player-owned head hit, the rebound retained **17.35 m/s** horizontal speed and had
+**0.000** normalized velocity component toward the player. The already edited boss
+movement speed of 6 was preserved in the asset. The probe restores player health and
+injects threshold hits, so this remains behavior verification rather than balance evidence.

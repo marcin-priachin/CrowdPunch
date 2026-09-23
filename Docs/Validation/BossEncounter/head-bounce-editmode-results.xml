@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="52" result="Passed" total="52" passed="52" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-23 10:46:01Z" end-time="2026-09-23 10:46:05Z" duration="4.0267496">
+  <test-suite type="TestSuite" id="1000" name="CrowdPunch" fullname="CrowdPunch" runstate="Runnable" testcasecount="160" result="Passed" start-time="2026-09-23 10:46:01Z" end-time="2026-09-23 10:46:05Z" duration="4.026750" total="52" passed="52" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1194" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/pc/Documents/CrowdPunch/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="159" result="Passed" start-time="2026-09-23 10:46:01Z" end-time="2026-09-23 10:46:05Z" duration="3.927028" total="52" passed="52" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="9772" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1195" name="CrowdPunch" fullname="CrowdPunch" runstate="Runnable" testcasecount="159" result="Passed" start-time="2026-09-23 10:46:01Z" end-time="2026-09-23 10:46:05Z" duration="3.829607" total="52" passed="52" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1196" name="Tests" fullname="CrowdPunch.Tests" runstate="Runnable" testcasecount="159" result="Passed" start-time="2026-09-23 10:46:01Z" end-time="2026-09-23 10:46:05Z" duration="3.729358" total="52" passed="52" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1001" name="BossEncounterTests" fullname="CrowdPunch.Tests.BossEncounterTests" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" testcasecount="23" result="Passed" start-time="2026-09-23 10:46:01Z" end-time="2026-09-23 10:46:02Z" duration="0.602099" total="23" passed="23" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="ParameterizedMethod" id="1016" name="Boss001_DasherUsesSameEligibilityAndInvulnerability" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_DasherUsesSameEligibilityAndInvulnerability" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-23 10:46:01Z" end-time="2026-09-23 10:46:02Z" duration="0.300785" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1013" name="Boss001_DasherUsesSameEligibilityAndInvulnerability(Player,True)" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_DasherUsesSameEligibilityAndInvulnerability(Player,True)" methodname="Boss001_DasherUsesSameEligibilityAndInvulnerability" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="1507401828" result="Passed" start-time="2026-09-23 10:46:01Z" end-time="2026-09-23 10:46:02Z" duration="0.195863" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1014" name="Boss001_DasherUsesSameEligibilityAndInvulnerability(Boss,False)" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_DasherUsesSameEligibilityAndInvulnerability(Boss,False)" methodname="Boss001_DasherUsesSameEligibilityAndInvulnerability" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="316877407" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.001146" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1015" name="Boss001_DasherUsesSameEligibilityAndInvulnerability(Enemy,False)" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_DasherUsesSameEligibilityAndInvulnerability(Enemy,False)" methodname="Boss001_DasherUsesSameEligibilityAndInvulnerability" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="757881745" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.000926" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1026" name="Boss001_ExplosionAndGenericDamageCannotDamageOrLaunchParts" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_ExplosionAndGenericDamageCannotDamageOrLaunchParts" methodname="Boss001_ExplosionAndGenericDamageCannotDamageOrLaunchParts" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="1237601282" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.032214" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1007" name="Boss001_ExplosiveBodyContactRequestsOrdinaryDetonationOnlyWhileLaunched" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_ExplosiveBodyContactRequestsOrdinaryDetonationOnlyWhileLaunched" methodname="Boss001_ExplosiveBodyContactRequestsOrdinaryDetonationOnlyWhileLaunched" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="501598264" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.002075" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1025" name="Boss001_HeadBounceChoosesTheSideAwayFromTheHead" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_HeadBounceChoosesTheSideAwayFromTheHead" methodname="Boss001_HeadBounceChoosesTheSideAwayFromTheHead" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="903202830" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.003965" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1024" name="Boss001_HeadBouncePreservesAlreadySafeSolverMotion" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_HeadBouncePreservesAlreadySafeSolverMotion" methodname="Boss001_HeadBouncePreservesAlreadySafeSolverMotion" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="79671168" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.001200" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1023" name="Boss001_HeadBounceTurnsAPlayerBoundShotSidewaysWithoutAddingSpeed" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_HeadBounceTurnsAPlayerBoundShotSidewaysWithoutAddingSpeed" methodname="Boss001_HeadBounceTurnsAPlayerBoundShotSidewaysWithoutAddingSpeed" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="1278180681" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.001232" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1012" name="Boss001_InvulnerabilityAndDuplicateContactsNeverBecomeDelayedDamage" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_InvulnerabilityAndDuplicateContactsNeverBecomeDelayedDamage" methodname="Boss001_InvulnerabilityAndDuplicateContactsNeverBecomeDelayedDamage" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="586415420" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.000994" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1005" name="Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.003947" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1002" name="Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead(ElitePunch)" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead(ElitePunch)" methodname="Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="2086049632" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.001132" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1003" name="Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead(BossAttack)" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead(BossAttack)" methodname="Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="1895119265" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.000770" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1004" name="Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead(Explosion)" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead(Explosion)" methodname="Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="1219464194" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.000808" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1006" name="Boss001_PlayerPropagationRemainsEligible" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_PlayerPropagationRemainsEligible" methodname="Boss001_PlayerPropagationRemainsEligible" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="101489029" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.000858" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1027" name="Boss001_RangedProjectileCrossingHeadCannotDamageIt" fullname="CrowdPunch.Tests.BossEncounterTests.Boss001_RangedProjectileCrossingHeadCannotDamageIt" methodname="Boss001_RangedProjectileCrossingHeadCannotDamageIt" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="1076793636" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.008220" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1011" name="Boss002_PlayerPunchCannotAffectParts" fullname="CrowdPunch.Tests.BossEncounterTests.Boss002_PlayerPunchCannotAffectParts" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.089004" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1009" name="Boss002_PlayerPunchCannotAffectParts(Head)" fullname="CrowdPunch.Tests.BossEncounterTests.Boss002_PlayerPunchCannotAffectParts(Head)" methodname="Boss002_PlayerPunchCannotAffectParts" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="1578730664" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.002132" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1010" name="Boss002_PlayerPunchCannotAffectParts(LeftHand)" fullname="CrowdPunch.Tests.BossEncounterTests.Boss002_PlayerPunchCannotAffectParts(LeftHand)" methodname="Boss002_PlayerPunchCannotAffectParts" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="2010676354" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.001118" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1017" name="Boss002_StaggerInterruptsActiveStrikeAndHasRepeatProtection" fullname="CrowdPunch.Tests.BossEncounterTests.Boss002_StaggerInterruptsActiveStrikeAndHasRepeatProtection" methodname="Boss002_StaggerInterruptsActiveStrikeAndHasRepeatProtection" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="533620301" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.001347" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1008" name="Boss003_RealFreshPunchReclaimsBossBodyAndReplacesMomentum" fullname="CrowdPunch.Tests.BossEncounterTests.Boss003_RealFreshPunchReclaimsBossBodyAndReplacesMomentum" methodname="Boss003_RealFreshPunchReclaimsBossBodyAndReplacesMomentum" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="1686971658" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.002685" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1018" name="Boss004_BurstStopsAtEachThresholdAndCancelsBothHitboxes" fullname="CrowdPunch.Tests.BossEncounterTests.Boss004_BurstStopsAtEachThresholdAndCancelsBothHitboxes" methodname="Boss004_BurstStopsAtEachThresholdAndCancelsBothHitboxes" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="1962469740" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.002070" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1022" name="Boss005_RoundedPerimeterIsContinuousAndAlwaysInsideBounds" fullname="CrowdPunch.Tests.BossEncounterTests.Boss005_RoundedPerimeterIsContinuousAndAlwaysInsideBounds" methodname="Boss005_RoundedPerimeterIsContinuousAndAlwaysInsideBounds" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="861320710" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.021012" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1019" name="Boss006_ReplenishmentStopsWithBossDeathAndDoesNotCreateExtraEntities" fullname="CrowdPunch.Tests.BossEncounterTests.Boss006_ReplenishmentStopsWithBossDeathAndDoesNotCreateExtraEntities" methodname="Boss006_ReplenishmentStopsWithBossDeathAndDoesNotCreateExtraEntities" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="112849785" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.005377" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1020" name="Boss007_CrowdCompletionCannotWinAndHeadDefeatReportsOnce" fullname="CrowdPunch.Tests.BossEncounterTests.Boss007_CrowdCompletionCannotWinAndHeadDefeatReportsOnce" methodname="Boss007_CrowdCompletionCannotWinAndHeadDefeatReportsOnce" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="341128330" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.007415" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1021" name="Boss007_RestartClearsAllBossAndCrowdOwnership" fullname="CrowdPunch.Tests.BossEncounterTests.Boss007_RestartClearsAllBossAndCrowdOwnership" methodname="Boss007_RestartClearsAllBossAndCrowdOwnership" classname="CrowdPunch.Tests.BossEncounterTests" runstate="Runnable" seed="1972754118" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.015038" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1035" name="DasherObstacleRedirectTests" fullname="CrowdPunch.Tests.DasherObstacleRedirectTests" classname="CrowdPunch.Tests.DasherObstacleRedirectTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.041353" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1037" name="Enemy005HeadOnObstacleRedirectReflectsWhenSolverStopsHorizontalMotion" fullname="CrowdPunch.Tests.DasherObstacleRedirectTests.Enemy005HeadOnObstacleRedirectReflectsWhenSolverStopsHorizontalMotion" methodname="Enemy005HeadOnObstacleRedirectReflectsWhenSolverStopsHorizontalMotion" classname="CrowdPunch.Tests.DasherObstacleRedirectTests" runstate="Runnable" seed="1277756214" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.000560" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1036" name="Enemy005ObstacleRedirectUsesSolvedLaunchLikeDirection" fullname="CrowdPunch.Tests.DasherObstacleRedirectTests.Enemy005ObstacleRedirectUsesSolvedLaunchLikeDirection" methodname="Enemy005ObstacleRedirectUsesSolvedLaunchLikeDirection" classname="CrowdPunch.Tests.DasherObstacleRedirectTests" runstate="Runnable" seed="1916011923" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.000209" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1132" name="GauntletProgressionTests" fullname="CrowdPunch.Tests.GauntletProgressionTests" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" testcasecount="16" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:05Z" duration="2.873642" total="16" passed="16" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="ParameterizedMethod" id="1144" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:04Z" duration="1.820522" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1134" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(1)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(1)" methodname="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="786316643" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:02Z" duration="0.340022" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1135" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(2)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(2)" methodname="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="1049170535" result="Passed" start-time="2026-09-23 10:46:02Z" end-time="2026-09-23 10:46:03Z" duration="0.156236" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1136" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(3)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(3)" methodname="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="83161905" result="Passed" start-time="2026-09-23 10:46:03Z" end-time="2026-09-23 10:46:03Z" duration="0.146410" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1137" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(4)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(4)" methodname="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="366366080" result="Passed" start-time="2026-09-23 10:46:03Z" end-time="2026-09-23 10:46:03Z" duration="0.149236" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1138" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(5)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(5)" methodname="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="664669506" result="Passed" start-time="2026-09-23 10:46:03Z" end-time="2026-09-23 10:46:03Z" duration="0.176722" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1139" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(6)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(6)" methodname="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="555626077" result="Passed" start-time="2026-09-23 10:46:03Z" end-time="2026-09-23 10:46:03Z" duration="0.153627" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1140" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(7)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(7)" methodname="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="218117473" result="Passed" start-time="2026-09-23 10:46:03Z" end-time="2026-09-23 10:46:03Z" duration="0.151634" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1141" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(8)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(8)" methodname="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="1419879542" result="Passed" start-time="2026-09-23 10:46:03Z" end-time="2026-09-23 10:46:04Z" duration="0.144293" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1142" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(9)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(9)" methodname="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="46882491" result="Passed" start-time="2026-09-23 10:46:04Z" end-time="2026-09-23 10:46:04Z" duration="0.141447" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1143" name="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(10)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(10)" methodname="Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="1742777407" result="Passed" start-time="2026-09-23 10:46:04Z" end-time="2026-09-23 10:46:04Z" duration="0.161415" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="ParameterizedMethod" id="1149" name="Enemy011_OutOfBoundsPooledNormalCannotStrandTheEncounter" fullname="CrowdPunch.Tests.GauntletProgressionTests.Enemy011_OutOfBoundsPooledNormalCannotStrandTheEncounter" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-23 10:46:04Z" end-time="2026-09-23 10:46:04Z" duration="0.326456" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1147" name="Enemy011_OutOfBoundsPooledNormalCannotStrandTheEncounter(False)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Enemy011_OutOfBoundsPooledNormalCannotStrandTheEncounter(False)" methodname="Enemy011_OutOfBoundsPooledNormalCannotStrandTheEncounter" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="380754625" result="Passed" start-time="2026-09-23 10:46:04Z" end-time="2026-09-23 10:46:04Z" duration="0.169334" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1148" name="Enemy011_OutOfBoundsPooledNormalCannotStrandTheEncounter(True)" fullname="CrowdPunch.Tests.GauntletProgressionTests.Enemy011_OutOfBoundsPooledNormalCannotStrandTheEncounter(True)" methodname="Enemy011_OutOfBoundsPooledNormalCannotStrandTheEncounter" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="1906133697" result="Passed" start-time="2026-09-23 10:46:04Z" end-time="2026-09-23 10:46:04Z" duration="0.153153" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1145" name="Enemy011_PooledDefeatedEliteCannotRestartReplenishment" fullname="CrowdPunch.Tests.GauntletProgressionTests.Enemy011_PooledDefeatedEliteCannotRestartReplenishment" methodname="Enemy011_PooledDefeatedEliteCannotRestartReplenishment" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="1969147371" result="Passed" start-time="2026-09-23 10:46:04Z" end-time="2026-09-23 10:46:04Z" duration="0.156067" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1133" name="Loop002_ActiveSequenceAndBuildSettingsContainElevenOrderedLevels" fullname="CrowdPunch.Tests.GauntletProgressionTests.Loop002_ActiveSequenceAndBuildSettingsContainElevenOrderedLevels" methodname="Loop002_ActiveSequenceAndBuildSettingsContainElevenOrderedLevels" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="803080705" result="Passed" start-time="2026-09-23 10:46:04Z" end-time="2026-09-23 10:46:05Z" duration="0.187378" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1150" name="Loop006_CompletionRequiresEverySequenceAndReportsOnce" fullname="CrowdPunch.Tests.GauntletProgressionTests.Loop006_CompletionRequiresEverySequenceAndReportsOnce" methodname="Loop006_CompletionRequiresEverySequenceAndReportsOnce" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="1734742341" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.143078" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1146" name="Loop006_RestartDestroysShotsAndLinkedBodiesAndResetsEncounter" fullname="CrowdPunch.Tests.GauntletProgressionTests.Loop006_RestartDestroysShotsAndLinkedBodiesAndResetsEncounter" methodname="Loop006_RestartDestroysShotsAndLinkedBodiesAndResetsEncounter" classname="CrowdPunch.Tests.GauntletProgressionTests" runstate="Runnable" seed="997953111" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.138993" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1151" name="LaunchedEnemyPlayerImpactTests" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" testcasecount="11" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.111431" total="11" passed="11" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1159" name="DynamicMassConvertsVelocityToEstimatedImpulse" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.DynamicMassConvertsVelocityToEstimatedImpulse" methodname="DynamicMassConvertsVelocityToEstimatedImpulse" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="1118309817" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000309" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1152" name="EnemyAndPlayerTargetsUseSharedCollisionDamageCurve" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.EnemyAndPlayerTargetsUseSharedCollisionDamageCurve" methodname="EnemyAndPlayerTargetsUseSharedCollisionDamageCurve" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="1486403582" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000272" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1164" name="EnemyRepunchDoesNotUsePlayerReplacementRule" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.EnemyRepunchDoesNotUsePlayerReplacementRule" methodname="EnemyRepunchDoesNotUsePlayerReplacementRule" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="874023740" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000178" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1156" name="LaunchedBodyCanDamagePlayerRegardlessOfOwner" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.LaunchedBodyCanDamagePlayerRegardlessOfOwner" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.004979" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1154" name="LaunchedBodyCanDamagePlayerRegardlessOfOwner(Player)" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.LaunchedBodyCanDamagePlayerRegardlessOfOwner(Player)" methodname="LaunchedBodyCanDamagePlayerRegardlessOfOwner" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="447364313" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000314" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1155" name="LaunchedBodyCanDamagePlayerRegardlessOfOwner(Enemy)" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.LaunchedBodyCanDamagePlayerRegardlessOfOwner(Enemy)" methodname="LaunchedBodyCanDamagePlayerRegardlessOfOwner" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="67243927" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000066" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1157" name="LaunchedBodyDamagesPlayerOnlyOncePerLaunchSequence" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.LaunchedBodyDamagesPlayerOnlyOncePerLaunchSequence" methodname="LaunchedBodyDamagesPlayerOnlyOncePerLaunchSequence" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="229242242" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000144" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1153" name="LaunchOwnershipStillTracksItsCause" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.LaunchOwnershipStillTracksItsCause" methodname="LaunchOwnershipStillTracksItsCause" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="1576144014" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000119" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1163" name="Player004_FirstAndRecoveringPunchesReplaceVelocityToMatchPreview" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.Player004_FirstAndRecoveringPunchesReplaceVelocityToMatchPreview" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.099633" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1161" name="Player004_FirstAndRecoveringPunchesReplaceVelocityToMatchPreview(Active)" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.Player004_FirstAndRecoveringPunchesReplaceVelocityToMatchPreview(Active)" methodname="Player004_FirstAndRecoveringPunchesReplaceVelocityToMatchPreview" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="215036578" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000344" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1162" name="Player004_FirstAndRecoveringPunchesReplaceVelocityToMatchPreview(Recovering)" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.Player004_FirstAndRecoveringPunchesReplaceVelocityToMatchPreview(Recovering)" methodname="Player004_FirstAndRecoveringPunchesReplaceVelocityToMatchPreview" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="1687525112" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000082" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1160" name="RepunchReplacesExistingLinearAndAngularVelocity" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.RepunchReplacesExistingLinearAndAngularVelocity" methodname="RepunchReplacesExistingLinearAndAngularVelocity" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="2005726476" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000184" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1158" name="SweptBodyDetectsPlayerBetweenFrames" fullname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests.SweptBodyDetectsPlayerBetweenFrames" methodname="SweptBodyDetectsPlayerBetweenFrames" classname="CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests" runstate="Runnable" seed="128862391" result="Passed" start-time="2026-09-23 10:46:05Z" end-time="2026-09-23 10:46:05Z" duration="0.000252" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[Saving results to: C:/Users/pc/AppData/LocalLow/DefaultCompany/CrowdPunch\TestResults.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
