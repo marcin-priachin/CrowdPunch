@@ -18,8 +18,6 @@ namespace CrowdPunch.Systems.Presentation
         {
             new ReadabilityJob
             {
-                Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
-                ArmorSettings = SystemAPI.GetComponentLookup<EnemyArmorSettings>(true),
                 Archetypes = SystemAPI.GetComponentLookup<EnemyArchetype>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
@@ -32,8 +30,6 @@ namespace CrowdPunch.Systems.Presentation
         [BurstCompile]
         private partial struct ReadabilityJob : IJobEntity
         {
-            [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
-            [ReadOnly] public ComponentLookup<EnemyArmorSettings> ArmorSettings;
             [ReadOnly] public ComponentLookup<EnemyArchetype> Archetypes;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
@@ -52,14 +48,9 @@ namespace CrowdPunch.Systems.Presentation
                     EnemyArchetypeKind.Ranged => new float3(0.06f, 0.55f, 1f),
                     EnemyArchetypeKind.Explosive => new float3(1f, 0.3f, 0.035f),
                     EnemyArchetypeKind.Elite => new float3(0.62f, 0.13f, 0.85f),
+                    EnemyArchetypeKind.Armored => new float3(0.55f, 0.60f, 0.66f),
                     _ => new float3(0.32f, 0.52f, 0.46f)
                 };
-                if (Armors.HasComponent(enemy) && ArmorSettings.HasComponent(enemy))
-                {
-                    var tuning = ArmorSettings[enemy];
-                    body = Armors[enemy].Stages switch { 3 => tuning.FullColor.xyz, 2 => tuning.ChippedColor.xyz,
-                        1 => tuning.CrackedColor.xyz, _ => tuning.BrokenColor.xyz };
-                }
                 EnemyLaunchPhase phase = Launches[enemy].Phase;
                 bool preparing = kind == EnemyArchetypeKind.Baseline && Contacts.HasComponent(enemy)
                     && Contacts[enemy].IsWindingUp != 0

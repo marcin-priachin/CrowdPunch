@@ -393,7 +393,7 @@ A meaningful launched-enemy impact removes one stage regardless of player, elite
 
 Count each source body once per continuous source launch against a target. A short configurable protection window suppresses additional armor loss and health damage, including through the breaking transition. An explosive body's impact and its associated explosion count as one event against each Armored target in either order, including when breaking armor; repeated explosion evaluation cannot add another stage loss or damage outcome. Fresh spawning, pooled reuse and restart restore all three stages and clear transient state.
 
-Active Armored enemies continuously pursue the player with obstacle navigation and local separation, independently of baseline pressure slots, surround positions, wind-ups or lunge schedules. Start near baseline charging speed. Stagger suspends pursuit; launch, recovery, defeat, pooling and unavailable-player states suppress movement normally. Chase steering must preserve launch and recoil velocity. Ordinary contact damage and player pushback apply. Use Orc_Skull.fbx and embedded sampled animations, plus distinct configurable full/chipped/cracked/broken colors that remain readable between impacts; no runtime Animator per crowd enemy.
+Active Armored enemies continuously pursue the player with obstacle navigation and local separation, independently of baseline pressure slots, surround positions, wind-ups or lunge schedules. Start near baseline charging speed. Stagger suspends pursuit; launch, recovery, defeat, pooling and unavailable-player states suppress movement normally. Chase steering must preserve launch and recoil velocity. Ordinary contact damage and player pushback apply. Use Orc_Skull.fbx and embedded sampled animations, with a stable body tint and a compact overhead indicator showing one icon per remaining armor stage. The indicator disappears when armor breaks or the enemy is unavailable; no runtime Animator per crowd enemy.
 
 ### ENEMY-015 - Armored Introduction And Ammunition
 
@@ -407,7 +407,7 @@ An opted-in encounter supplies one Baseline when undefeated protected Armored en
 
 Status: Must
 
-Do not attach persistent health bars, names, status icons, targeting markers, or other persistent UI to normal enemies. There will be too many of them, and such UI would add noise to an already busy screen. Armored enemies have no health bar or additional status UI, including after armor breaks. Other normal enemies may show a temporary health bar for one second after receiving damage; another damaging hit refreshes that interval.
+Do not attach persistent health bars, names, targeting markers, or other persistent UI to normal enemies. Armored is the sole exception for a compact indicator with one icon per remaining armor stage; it never shows a health bar, and its indicator disappears when armor breaks. Other normal enemies may show a temporary health bar for one second after receiving damage; another damaging hit refreshes that interval.
 
 ### INFO-002 — Minimal HUD
 

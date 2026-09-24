@@ -13,7 +13,7 @@ namespace CrowdPunch.Tests
             Directory.CreateDirectory("Temp/ArmoredValidation");
             api=ScriptableObject.CreateInstance<TestRunnerApi>(); api.RegisterCallbacks(new Results());
             api.Execute(new ExecutionSettings(new Filter { testMode=TestMode.EditMode,
-                testNames=new[]{"CrowdPunch.Tests.ArmoredEnemyTests", "CrowdPunch.Tests.EnemyAnimationTests", "CrowdPunch.Tests.CombatFeedbackTests", "CrowdPunch.Tests.EnemyPrefabCollisionContactTests", "CrowdPunch.Tests.ElitePunchGeometryTests", "CrowdPunch.Tests.EnemyArenaDistributionTests", "CrowdPunch.Tests.NavigationSystemTests", "CrowdPunch.Tests.BossEncounterTests","CrowdPunch.Tests.GauntletProgressionTests",
+                testNames=new[]{"CrowdPunch.Tests.ArmoredEnemyTests", "CrowdPunch.Tests.ArmoredShieldIndicatorTests", "CrowdPunch.Tests.EnemyAnimationTests", "CrowdPunch.Tests.CombatFeedbackTests", "CrowdPunch.Tests.EnemyPrefabCollisionContactTests", "CrowdPunch.Tests.ElitePunchGeometryTests", "CrowdPunch.Tests.EnemyArenaDistributionTests", "CrowdPunch.Tests.NavigationSystemTests", "CrowdPunch.Tests.BossEncounterTests","CrowdPunch.Tests.GauntletProgressionTests",
                     "CrowdPunch.Tests.LaunchedEnemyPlayerImpactTests","CrowdPunch.Tests.DasherObstacleRedirectTests"} }));
         }
         private sealed class Results : ICallbacks

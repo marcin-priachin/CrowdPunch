@@ -3,6 +3,7 @@ using System.IO;
 using CrowdPunch.Components;
 using CrowdPunch.Mono.Levels;
 using CrowdPunch.Mono.Player;
+using CrowdPunch.Mono.UI;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Initialization;
 using CrowdPunch.Systems.Presentation;
@@ -89,6 +90,7 @@ namespace CrowdPunch.Editor
                     if (em.HasComponent<EnemyArmor>(e)) target = e; else if (source == Entity.Null) source = e;
                 Require(target != Entity.Null && source != Entity.Null && enemies.Length == 7, "Opening composition");
                 Require(em.GetComponentData<EnemyArmor>(target).Stages == 3, "Fresh armor");
+                Require(VisibleShields() == 3, "Fresh shield indicator");
                 if (em.GetComponentData<DesiredMovement>(target).Speed <= 0)
                 { Require(now - since < 30, "Continuous pursuit not active"); return; }
                 using var animationQuery = em.CreateEntityQuery(typeof(EnemyAnimation), typeof(EnemyAnimationPlayback));
@@ -130,6 +132,7 @@ namespace CrowdPunch.Editor
                 byte stages = em.GetComponentData<EnemyArmor>(target).Stages;
                 if (stages == 3 - hit) { Require(now - since < 5, "Solver body did not hit armor"); return; }
                 Require(stages == 2 - hit, "One body consumed multiple stages");
+                Require(VisibleShields() == stages, "Shield indicator did not follow armor stage");
                 if (hit < 2)
                 {
                     Require(em.GetComponentData<Health>(target).Current == initialHealth, "Armor lost health");
@@ -159,6 +162,7 @@ namespace CrowdPunch.Editor
                 if (sequence.Phase != EnemyWaveRuntimePhase.AwaitingActivation) return;
                 foreach (var e in enemies) if (em.HasComponent<EnemyArmor>(e))
                 { target = e; Require(em.GetComponentData<EnemyArmor>(e).Stages == 3, "Restart did not restore armor"); }
+                Require(VisibleShields() == 3, "Restart did not restore shield indicator");
                 foreach (var e in enemies) if (!em.HasComponent<EnemyArmor>(e)) Defeat(em, e);
                 Record("PASS restart restores fresh armor; exhausted original ammunition"); Next(6); return;
             }
@@ -208,6 +212,21 @@ namespace CrowdPunch.Editor
         }
         private static void Next(int value) { step=value; since=EditorApplication.timeSinceStartup; }
         private static void Require(bool condition,string message) { if(!condition) throw new InvalidOperationException(message); }
+        private static int VisibleShields()
+        {
+            var canvas = Object.FindFirstObjectByType<EnemyHealthBarCanvas>();
+            if (canvas == null) return 0;
+            int visible = 0;
+            foreach (Transform root in canvas.transform)
+            {
+                if (!root.gameObject.activeInHierarchy) continue;
+                var row = root.Find("Shields");
+                if (row == null || !row.gameObject.activeInHierarchy) continue;
+                foreach (Transform icon in row)
+                    if (icon.gameObject.activeInHierarchy) visible++;
+            }
+            return visible;
+        }
         private static void Record(string value) => File.AppendAllText(Output,value+"\n");
         private static void Capture(string name)
         {

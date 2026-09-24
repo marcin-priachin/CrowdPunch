@@ -105,8 +105,7 @@ namespace CrowdPunch.Editor
             }
 
             if ((EnemyArchetype)serializedObject.FindProperty("archetype").enumValueIndex == EnemyArchetype.Armored)
-                DrawSection("Armor", new[] { "armorStaggerDuration", "armorKnockbackSpeed", "armorInvulnerabilityDuration",
-                    "armorFullColor", "armorChippedColor", "armorCrackedColor", "armorBrokenColor" });
+                DrawSection("Armor", new[] { "armorStaggerDuration", "armorKnockbackSpeed", "armorInvulnerabilityDuration" });
             serializedObject.ApplyModifiedProperties();
         }
 

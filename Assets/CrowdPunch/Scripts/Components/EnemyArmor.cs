@@ -1,12 +1,10 @@
 using Unity.Entities;
-using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
     public struct EnemyArmorSettings : IComponentData
     {
         public float StaggerDuration, KnockbackSpeed, InvulnerabilityDuration;
-        public float4 FullColor, ChippedColor, CrackedColor, BrokenColor;
     }
 
     public struct EnemyArmor : IComponentData

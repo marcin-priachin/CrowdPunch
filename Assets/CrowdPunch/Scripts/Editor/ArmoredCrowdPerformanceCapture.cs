@@ -92,8 +92,9 @@ namespace CrowdPunch.Editor
             var handles = new[] { world.GetExistingSystem<EnemyChaseSystem>(), world.GetExistingSystem<EnemyNavigationSystem>(),
                 world.GetExistingSystem<EnemyMovementSystem>(), world.GetExistingSystem<EnemyLaunchCollisionSystem>(),
                 world.GetExistingSystem<CollisionDamageHistoryCleanupSystem>(), world.GetExistingSystem<PunchAimAssistSystem>(),
-                world.GetExistingSystem<EnemyReadabilitySystem>(), world.GetExistingSystem<EnemyAnimationSystem>() };
-            string[] names = { "Chase + separation", "Navigation", "Movement", "Collision (settled contacts)", "Hit-history cleanup", "Aim-assist", "Readability", "Sampled animation" };
+                world.GetExistingSystem<EnemyReadabilitySystem>(), world.GetExistingSystem<EnemyAnimationSystem>(),
+                world.GetExistingSystem<EnemyHealthBarBridgeSystem>() };
+            string[] names = { "Chase + separation", "Navigation", "Movement", "Collision (settled contacts)", "Hit-history cleanup", "Aim-assist", "Readability", "Sampled animation", "Health/shield canvas bridge" };
             var report = new StringBuilder();
             report.AppendLine($"UTC {DateTime.UtcNow:O}; Unity {Application.unityVersion}; roots {roots.Length}; active {active}; armored {armorCount}; armor history entries {histories}");
             report.AppendLine("250-body mixed crowd, five seconds of actual Editor simulation before capture. Completed-update microbenchmark: 20 warmups + 120 samples/system, job completion included. Physics/time frozen during measurement, settled contacts, no punch request. Not whole-frame FPS or a collision-burst/standalone benchmark. Allocations cover calling thread only.");

@@ -80,7 +80,9 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ### 2026-09-24 - Armored And Post-Boss Progression
 
-Decision: Add Armored as a fifth normal archetype with three event-deduplicated armor stages, blocked-punch cooldown confirmation, continuous pursuit outside pressure allocation, and persistent model/color feedback without UI. Introduce it in Gauntlet_12 with a one-at-a-time encounter ammunition safeguard. The Gauntlet_11 boss completes its level and advances to Gauntlet_12; bosses are not the end of the game.
+Decision: Add Armored as a fifth normal archetype with three event-deduplicated armor stages, blocked-punch cooldown confirmation, continuous pursuit outside pressure allocation, and readable armor feedback. Introduce it in Gauntlet_12 with a one-at-a-time encounter ammunition safeguard. The Gauntlet_11 boss completes its level and advances to Gauntlet_12; bosses are not the end of the game.
+
+Amendment: Replace the originally approved armor-stage color coding with a compact overhead indicator showing one shield per remaining stage. Keep a single stable model tint and transient impact feedback. Armored alone receives this exception to INFO-001's minimal normal-enemy UI rule.
 
 Rationale: Repeated deliberate body shots teach the core crowd-projectile interaction. Shared damage/launch ownership preserves coherent outcomes and the safeguard prevents exhausted ammunition from stranding the encounter. This revises the earlier roster and boss-finale decisions; unrelated pacing, progression and art questions remain open.
 

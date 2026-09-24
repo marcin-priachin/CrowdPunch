@@ -1,10 +1,11 @@
-UTC 2026-09-24T18:59:08.1046755Z; Unity 6000.3.10f1; roots 250; active 250; armored 49; armor history entries 0
+UTC 2026-09-24T20:58:01.8115408Z; Unity 6000.3.10f1; roots 250; active 250; armored 49; armor history entries 0
 250-body mixed crowd, five seconds of actual Editor simulation before capture. Completed-update microbenchmark: 20 warmups + 120 samples/system, job completion included. Physics/time frozen during measurement, settled contacts, no punch request. Not whole-frame FPS or a collision-burst/standalone benchmark. Allocations cover calling thread only.
-Chase + separation: 0.048114 ms/update, 0 managed bytes / 120 updates
-Navigation: 0.024083 ms/update, 0 managed bytes / 120 updates
-Movement: 0.006900 ms/update, 0 managed bytes / 120 updates
-Collision (settled contacts): 0.063739 ms/update, 0 managed bytes / 120 updates
-Hit-history cleanup: 0.004000 ms/update, 0 managed bytes / 120 updates
-Aim-assist: 0.367035 ms/update, 0 managed bytes / 120 updates
-Readability: 0.154960 ms/update, 0 managed bytes / 120 updates
-Sampled animation: 0.124058 ms/update, 0 managed bytes / 120 updates
+Chase + separation: 0.046878 ms/update, 0 managed bytes / 120 updates
+Navigation: 0.023606 ms/update, 0 managed bytes / 120 updates
+Movement: 0.072713 ms/update, 0 managed bytes / 120 updates
+Collision (settled contacts): 0.064215 ms/update, 0 managed bytes / 120 updates
+Hit-history cleanup: 0.003996 ms/update, 0 managed bytes / 120 updates
+Aim-assist: 0.450943 ms/update, 0 managed bytes / 120 updates
+Readability: 0.068314 ms/update, 0 managed bytes / 120 updates
+Sampled animation: 0.056363 ms/update, 0 managed bytes / 120 updates
+Health/shield canvas bridge: 0.292274 ms/update, 0 managed bytes / 120 updates

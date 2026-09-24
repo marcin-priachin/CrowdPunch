@@ -240,6 +240,9 @@ This is presentation only: camera-forward facing and gameplay punch direction st
 | Enemy body feedback | ECS rendering | Baked `EnemyVisualOwner` connects root/child renderers to gameplay state; `EnemyReadabilitySystem` writes body color. `DasherPresentationSystem` retains ownership of Dasher color/shape. |
 | Temporary normal health and elite health UI | ECS â†’ presentation registry â†’ Canvas | `EnemyHealthBarVisibility`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas`; no repeated normal launch/recovery text, and zero-health normal bars are suppressed. |
 
+The same presentation registry and pooled Canvas now draw one shield icon per remaining Armored armor stage.
+The canvas never queries enemy entities, and Armored does not publish health bars.
+
 MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exposes the one active `PlayerEcsBridge` to the few managed systems that cross the boundary.
 
 ## Update Flow
@@ -972,10 +975,13 @@ Navigation participation anchors now default to the clearance-valid spacing-boun
 ## Armored And Gauntlet_12 (ENEMY-014/015)
 
 Armored appends serialized archetype value 5 and stays Normal tier. EnemySpawnSettings owns
-three armor timing/recoil values and four persistent colors; shared profile baking and spawn
+three armor timing/recoil values; shared profile baking and spawn
 initialization add EnemyArmorSettings, EnemyArmor and ArmorHitHistory only to this archetype.
 Recovery leaves armor alone. Pooling and restart reset it; wave reload destroys old owned roots.
-Armored never publishes an individual health bar, even after armor breaks.
+Armored never publishes an individual health bar. The existing health-bar presentation bridge
+publishes its remaining armor count to the pooled screen-space Canvas instead. The Canvas displays
+one shield icon per stage, hides the indicator on break, defeat or pooling, and reuses views across spawns.
+GameBootstrap keeps Canvas ownership; MonoBehaviour UI does not query enemy entities.
 
 ArmorHitResolution is shared by solver body impacts, swept launched-Dasher impacts and explosions.
 Per-target history stores source entity and launch sequence, sharing identity between an explosive
@@ -992,7 +998,8 @@ Elite selection, stale/area punch resolution and direct boss scattering reject p
 EnemyChaseSystem uses its existing local-separation neighborhood and writes direct player pursuit
 for Armored without allocating pressure slots. Navigation remains the path owner. Armored uses
 MoveSpeed * ChargeSpeedMultiplier; stagger never lets normal movement overwrite recoil velocity.
-EnemyReadabilitySystem selects stage color before EnemyImpactVisualSystem composes transient flashes.
+EnemyReadabilitySystem uses one stable Armored tint at every stage; EnemyImpactVisualSystem still
+composes transient flashes over it. The shield indicator alone communicates the stage count.
 EnemyAnimationProfile.Armored reuses CPA3 sampling: Idle/Run, HitReact on armor-hit sequence changes,
 a sideways Idle flight pose, Jump_Land recovery and Death defeat. Physics never depends on the poses.
 EnemyArmoredPrefabBuilder regenerates the Orc_Skull prefab, controller, materials and samples.
@@ -1009,7 +1016,7 @@ queries enemies and no alternate runtime spawning framework is introduced.
 GauntletProgressionBuilder.BuildArmored authors only Gauntlet_12 and its two waves (1+6, then 3+12
 Armored+Baseline), navigation, opening hint and Bootstrap/build-list registration. Nature-kit rendering
 uses the existing recipe. Rebuilding the original ten or boss preserves later sequence entries.
-Default armor tuning: 0.30 s stagger, 3 m/s planar recoil, 0.25 s hit protection; stage colors are
-steel blue, teal, amber and rust red. These remain provisional Inspector tuning.
+Default armor tuning: 0.30 s stagger, 3 m/s planar recoil, 0.25 s hit protection.
+The stable body tint and shield icons are presentation constants.
 
 Scene, physics, regression and crowd-cost evidence is recorded in [Armored validation](../Validation/Armored.md).
