@@ -174,8 +174,8 @@ namespace CrowdPunch.Systems.Combat
                 if (Armors.HasComponent(target))
                 {
                     // Use the existing meaningful-impact thresholds, independent of launch ownership.
-                    if (estimatedImpulse < math.max(.01f, MinimumPropagationImpulse)) return;
                     var armor = Armors[target];
+                    if (armor.Stages > 0 && estimatedImpulse < math.max(.01f, MinimumPropagationImpulse)) return;
                     float damage = EnemyCollisionDamage.Calculate(LaunchStateLookup[source].LaunchDamage,
                         estimatedImpulse, new EnemyLaunchSettings { MinimumDamageImpulse = MinimumDamageImpulse,
                             BaseCollisionDamageMultiplier = BaseDamageMultiplier,

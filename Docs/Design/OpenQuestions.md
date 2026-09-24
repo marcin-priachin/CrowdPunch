@@ -97,7 +97,7 @@ GDD rules: BOSS-001 through BOSS-009, MVP-002, MVP-005, LOOP-006.
 
 ### 2026-09-04 — OQ-002
 
-Decision: The initial four standard MVP enemy types were Baseline, Explosive, Ranged, and Dasher; Armored was approved as a fifth on 2026-09-24. Elite enemies are a separate special encounter tier and do not count toward the four standard enemy slots.
+Decision: The initial four standard MVP enemy types were Baseline, Explosive, Ranged, and Dasher; Armored was approved as a fifth on 2026-09-24. Elite enemies are a separate special encounter tier and do not count toward the standard enemy slots.
 
 Rationale: These roles are already established in the playable design and provide distinct crowd functions: a neutral chain body, a collision-triggered area threat, positional ranged pressure, and a committed high-mobility threat. Keeping elites separate preserves a simple standard roster while allowing rarer crowd-manipulation threats.
 

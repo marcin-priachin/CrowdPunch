@@ -30,9 +30,9 @@ Fresh player punches map to Player ownership; active boss scattering maps to Bos
 
 `BossVisualBaker` connects renderer material colors to part ownership. `BossPresentationSystem` tints anticipation amber, active hands red, shielding blue, recovery dim, stagger cyan, head immunity pulsing cyan and transitions gold. Impact flashes and bounded impact messages reuse combat feedback/camera effects. `BossAttackTelegraphs` receives only draw parameters for two reusable world-space line slots, never entities; it draws the committed slam area, lunge lane or sweep footprint. No extra HUD is created.
 
-`EnemyHealthBarBridgeSystem` publishes the head through the existing elite canvas with always-visible policy, one bar and no phase label. The existing pause menu grows its panel to accommodate the eleventh selection entry.
+`EnemyHealthBarBridgeSystem` publishes the head through the existing elite canvas with always-visible policy, one bar and no phase label. The existing pause menu grows its panel to accommodate the authored selection entries, including Gauntlet_12.
 
-`GauntletCompletionSystem` uses head defeat as the authority whenever a boss exists, overriding support-wave completion. `EnemyWaveSpawnSystem` does not advance a boss-owned supporting wave. Replenishment stops immediately after head death; the ordinary run-complete UI consumes the existing single completion signal.
+`GauntletCompletionSystem` uses head defeat as the authority whenever a boss exists, overriding support-wave completion. `EnemyWaveSpawnSystem` does not advance a boss-owned supporting wave. Replenishment stops immediately after head death; GauntletSequence consumes the single completion signal and advances to Gauntlet_12. Run completion is reserved for the final authored level.
 
 Scene restart/selection unloads baked parts and requests the established ECS restart, which destroys old wave roots and their linked visual children. `BossEncounterReset` also supports the existing soft-reset path, restoring initial transforms, health, timers, histories, feedback, stage and hand states. Presentation draw slots are cleared every frame and when disabled. Player health and movement reset through the existing loader. No boss MonoBehaviour queries entities.
 

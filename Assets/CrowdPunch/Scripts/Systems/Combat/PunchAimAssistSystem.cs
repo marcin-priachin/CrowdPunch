@@ -59,6 +59,7 @@ namespace CrowdPunch.Systems.Combat
                          .WithEntityAccess())
             {
                 bool isInPunchVolume = hasPreview
+                    && !ArmorHitResolution.IsProtected(state.EntityManager, source)
                     && PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, volume)
                     && PunchResolution.Contains(transform.ValueRO.Position, volume);
                 if (!isInPunchVolume)

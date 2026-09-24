@@ -63,6 +63,9 @@ namespace CrowdPunch.Editor
             {
                 using var bosses = em.CreateEntityQuery(typeof(BossEncounter));
                 if (flow.CurrentLevelIndex != 10 || bosses.IsEmpty) return;
+                // Scene load queues a restart. Wait for the supporting wave to prove that reset has run.
+                if (sequenceQuery.CalculateEntityCount() != 1 || em.GetComponentData<EnemyWaveSequence>(
+                    sequenceQuery.GetSingletonEntity()).Phase != EnemyWaveRuntimePhase.AwaitingActivation) return;
                 var head = bosses.GetSingletonEntity(); var boss = em.GetComponentData<BossEncounter>(head);
                 boss.Cycle = BossCycle.Defeated; em.SetComponentData(head, boss);
                 Record("Injected boss defeat to exercise actual completion/progression"); Next(10); return;
@@ -86,7 +89,8 @@ namespace CrowdPunch.Editor
                     if (em.HasComponent<EnemyArmor>(e)) target = e; else if (source == Entity.Null) source = e;
                 Require(target != Entity.Null && source != Entity.Null && enemies.Length == 7, "Opening composition");
                 Require(em.GetComponentData<EnemyArmor>(target).Stages == 3, "Fresh armor");
-                Require(em.GetComponentData<DesiredMovement>(target).Speed > 0, "Continuous pursuit not active");
+                if (em.GetComponentData<DesiredMovement>(target).Speed <= 0)
+                { Require(now - since < 30, "Continuous pursuit not active"); return; }
                 using var animationQuery = em.CreateEntityQuery(typeof(EnemyAnimation), typeof(EnemyAnimationPlayback));
                 using var visuals = animationQuery.ToEntityArray(Allocator.Temp);
                 int animated = 0;

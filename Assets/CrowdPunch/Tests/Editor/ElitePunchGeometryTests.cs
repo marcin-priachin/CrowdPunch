@@ -193,6 +193,26 @@ namespace CrowdPunch.Tests
             Assert.AreEqual(0f, em.GetComponentData<DesiredMovement>(elite).Speed);
         }
 
+        [Test]
+        public void Enemy014_EliteSelectionAndStaleReservationRejectProtectedArmor()
+        {
+            using var world = new World("Elite armor exclusion");
+            Entity elite = CreateEliteAttempt(world, out Entity target);
+            var em = world.EntityManager;
+            em.AddComponentData(target, EnemyArmor.Fresh);
+            var system = world.GetOrCreateSystemManaged<ElitePunchSystem>();
+            system.Update();
+            Assert.AreEqual(Entity.Null, em.GetComponentData<ElitePunchState>(elite).Target);
+            Assert.AreEqual(Entity.Null, em.GetComponentData<ElitePunchReservation>(target).Owner);
+            em.SetComponentData(elite, new ElitePunchState { Phase = ElitePunchPhase.SelectingTarget });
+            system.Update();
+            Assert.AreEqual(Entity.Null, em.GetComponentData<ElitePunchState>(elite).Target);
+            em.SetComponentData(target, new EnemyArmor());
+            em.SetComponentData(elite, new ElitePunchState { Phase = ElitePunchPhase.SelectingTarget });
+            system.Update();
+            Assert.AreEqual(target, em.GetComponentData<ElitePunchState>(elite).Target);
+        }
+
         private static Entity CreateEliteAttempt(World world, out Entity target)
         {
             world.SetTime(new TimeData(1, .02f));

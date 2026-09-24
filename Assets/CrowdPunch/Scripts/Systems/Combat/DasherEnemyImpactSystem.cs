@@ -117,8 +117,8 @@ namespace CrowdPunch.Systems.Combat
 
             if (armors.HasComponent(target))
             {
-                if (math.length(dash.PreservedLaunchedVelocity) < math.max(.01f, launchSettings.UsefulMomentumSpeed)) return;
                 var armor = armors[target];
+                if (armor.Stages > 0 && math.length(dash.PreservedLaunchedVelocity) < math.max(.01f, launchSettings.UsefulMomentumSpeed)) return;
                 var outcome = ArmorHitResolution.Resolve(ref armor, armorSettings[target], armorHistory[target],
                     source, sequence, elapsed, damage);
                 armors[target] = armor;

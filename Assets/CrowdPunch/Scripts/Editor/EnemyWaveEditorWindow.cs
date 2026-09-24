@@ -50,6 +50,7 @@ namespace CrowdPunch.Editor
             DrawSection("Normal enemies", "totalEnemyCount", "enemies");
             DrawSection("Fixed elite enemies", "eliteEnemies");
             DrawSpawnAreas();
+            DrawSection("Armored ammunition safeguard", "armoredAmmunitionProfile");
             DrawTiming();
             EditorGUILayout.EndScrollView();
 

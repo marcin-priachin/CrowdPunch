@@ -1,0 +1,15 @@
+Controlled Editor validation: placed bodies, injected launches/defeats, restored player health. Not balance evidence.
+PASS opening 1 Armored + 6 Baselines; sampled skin matrices finite; active pursuit
+PASS protected punch confirms cooldown connection, no impulse or trajectory preview
+PASS real solver impact 1, cause PlayerPunch, armor=2, health=100
+PASS real solver impact 2, cause ElitePunch, armor=1, health=100
+PASS real solver impact 3, cause BossAttack, armor=0, health=100
+PASS surviving broken enemy recovers unarmored
+PASS restart restores fresh armor; exhausted original ammunition
+PASS one safe owned replacement; cumulative undefeated=2
+PASS one safe owned replacement; cumulative undefeated=2
+PASS one safe owned replacement; cumulative undefeated=2
+PASS replacements drain correctly; second wave has 15 enemies
+PASS Gauntlet_12 final-level completion
+Injected boss defeat to exercise actual completion/progression
+PASS boss completion advances to Gauntlet_12, removing boss and supporting crowd

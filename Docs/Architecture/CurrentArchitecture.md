@@ -1011,3 +1011,5 @@ Armored+Baseline), navigation, opening hint and Bootstrap/build-list registratio
 uses the existing recipe. Rebuilding the original ten or boss preserves later sequence entries.
 Default armor tuning: 0.30 s stagger, 3 m/s planar recoil, 0.25 s hit protection; stage colors are
 steel blue, teal, amber and rust red. These remain provisional Inspector tuning.
+
+Scene, physics, regression and crowd-cost evidence is recorded in [Armored validation](../Validation/Armored.md).

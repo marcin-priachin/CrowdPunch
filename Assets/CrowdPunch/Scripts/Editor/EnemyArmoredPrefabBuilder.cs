@@ -264,6 +264,10 @@ namespace CrowdPunch.Editor
             {
                 settings = ScriptableObject.CreateInstance<EnemySpawnSettings>();
                 AssetDatabase.CreateAsset(settings, SettingsPath);
+                var defaults = new SerializedObject(settings);
+                defaults.FindProperty("moveSpeed").floatValue = 8f;
+                defaults.FindProperty("chargeSpeedMultiplier").floatValue = 1.25f;
+                defaults.ApplyModifiedPropertiesWithoutUndo();
             }
             if (prefab == null) throw new InvalidOperationException("Could not load Armored settings or prefab.");
             var serialized = new SerializedObject(settings);

@@ -3,6 +3,7 @@ using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Initialization;
 using CrowdPunch.Systems.Lifetime;
 using CrowdPunch.Systems.Physics;
+using CrowdPunch.Systems.Movement;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Core;
@@ -189,6 +190,54 @@ namespace CrowdPunch.Tests
             Assert.That(PunchResolution.TryApply(em, armored, punch), Is.False);
             Assert.That(em.IsComponentEnabled<ExternalImpulse>(armored), Is.False);
             Stages(0); Assert.That(PunchResolution.TryApply(em, armored, punch), Is.True);
+        }
+
+        [Test] public void Enemy014_StaggerPreservesRecoilThenMovementResumes()
+        {
+            em.CreateEntity(typeof(ArenaBounds));
+            em.AddComponent<PhysicsMass>(armored);
+            em.AddComponentData(armored, new EnemyMovementSettings { Acceleration = 100, BrakingAcceleration = 100 });
+            em.SetComponentData(armored, new DesiredMovement { Direction = math.forward(), Speed = 10 });
+            em.SetComponentData(armored, new PhysicsVelocity { Linear = new float3(0, 0, -3) });
+            var armor = em.GetComponentData<EnemyArmor>(armored); armor.StaggerUntil = 1.3; em.SetComponentData(armored, armor);
+            var movement = world.GetOrCreateSystem<EnemyMovementSystem>();
+            movement.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            Assert.That(em.GetComponentData<PhysicsVelocity>(armored).Linear.z, Is.EqualTo(-3));
+            Time(2); movement.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            Assert.That(em.GetComponentData<PhysicsVelocity>(armored).Linear.z, Is.EqualTo(10));
+            em.SetComponentData(armored, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            em.SetComponentData(armored, new PhysicsVelocity { Linear = new float3(0, 0, 25) });
+            movement.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            Assert.That(em.GetComponentData<PhysicsVelocity>(armored).Linear.z, Is.EqualTo(25));
+        }
+
+        [Test] public void Enemy014_HistoryExpiresWithSourceLaunchAndPooling()
+        {
+            var source = Explosive();
+            ArmorHitResolution.Resolve(em, armored, source, 1, 1, 10);
+            var cleanup = world.GetOrCreateSystem<CollisionDamageHistoryCleanupSystem>();
+            cleanup.Update(world.Unmanaged);
+            Assert.That(em.GetBuffer<ArmorHitHistory>(armored).Length, Is.EqualTo(1));
+            em.SetComponentData(source, new ExplosiveEnemyState { HasExploded = 1 });
+            em.SetComponentData(source, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated, LaunchSequence = 1 });
+            cleanup.Update(world.Unmanaged);
+            Assert.That(em.GetBuffer<ArmorHitHistory>(armored).Length, Is.EqualTo(1), "Blast identity survives defeat until pooling");
+            em.SetComponentData(source, new RespawnRequest { IsPooled = 1 });
+            cleanup.Update(world.Unmanaged);
+            Assert.That(em.GetBuffer<ArmorHitHistory>(armored).Length, Is.Zero);
+        }
+
+        [TestCase(3, 100)] [TestCase(0, 85)]
+        public void Enemy014_GentleDasherCannotStripArmor_BrokenTargetUsesOrdinaryRules(int stages, int health)
+        {
+            Stages((byte)stages); var source = Enemy(float3.zero);
+            em.SetComponentData(source, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            em.AddComponentData(source, new DasherSettings { LaunchedEnemyDamage = 15, LaunchedEnemyKnockback = 18 });
+            em.AddComponentData(source, new DasherState { PreviousPosition = new float3(0, 0, 2), PreservedLaunchedVelocity = new float3(0, 0, .1f) });
+            em.AddBuffer<DasherHitHistory>(source);
+            world.GetOrCreateSystem<DasherEnemyImpactSystem>().Update(world.Unmanaged); Damage();
+            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(stages));
+            Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(health));
         }
 
         [Test] public void Enemy014_PoolingRestoresArmorAndClearsHistory()

@@ -47,7 +47,8 @@ namespace CrowdPunch.Tests
                 FeedbackTimeController.CancelEffects();
                 Assert.That(Time.timeScale, Is.EqualTo(1f));
                 FeedbackTimeController.Freeze(.03f);
-                controller.SendMessage("OnDisable");
+                typeof(FeedbackTimeController).GetMethod("OnDisable", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(controller, null);
                 Object.DestroyImmediate(go);
                 Assert.That(Time.timeScale, Is.EqualTo(1f));
             }

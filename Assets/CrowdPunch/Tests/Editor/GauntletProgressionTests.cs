@@ -56,7 +56,7 @@ namespace CrowdPunch.Tests
                 Assert.That(enabled.Skip(13), Is.EquivalentTo(new[] {
                     Root + "NavigationValidation/NavigationValidationBootstrap.unity",
                     Root + "NavigationValidation/NavigationValidationArena.unity" }),
-                    "The two separate validation scenes must not enter the ten-level progression.");
+                    "The two separate validation scenes must not enter the playable progression.");
                 Assert.That(enabled[0], Is.EqualTo(Root + "Bootstrap.unity"));
                 for (int i = 0; i < 12; i++)
                 {
