@@ -49,11 +49,8 @@ namespace CrowdPunch.Systems.Combat
                 if (SystemAPI.HasComponent<EnemyArmor>(entity))
                 {
                     var armor = SystemAPI.GetComponent<EnemyArmor>(entity);
-                    if (armor.Stages > 0) appliedDamage = 0;
-                    else if (SystemAPI.Time.ElapsedTime < armor.ProtectedUntil || armor.PendingBreakDamage > 0)
-                        appliedDamage = math.min(appliedDamage, armor.PendingBreakDamage);
-                    armor.PendingBreakDamage = 0;
-                    SystemAPI.SetComponent(entity, armor);
+                    if (armor.Stages > 0 || SystemAPI.Time.ElapsedTime < armor.ProtectedUntil)
+                        appliedDamage = 0;
                 }
                 health.ValueRW.Current = math.clamp(
                     health.ValueRO.Current - appliedDamage,

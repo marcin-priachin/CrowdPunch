@@ -987,10 +987,10 @@ ArmorHitResolution is shared by solver body impacts, swept launched-Dasher impac
 Per-target history stores source entity and launch sequence, sharing identity between an explosive
 body and its blast. A protected contact is consumed so sustained contact cannot become a late hit.
 History cleanup follows current source launches, retaining exploded sources until pooling/reset.
-It does not accumulate across source lifetimes. First hits write a modest planar recoil and a
-stagger deadline; chase and movement both honor the deadline. Breaking falls through to the existing
-source-specific launch and damage pipeline. PendingBreakDamage permits exactly the breaking damage
-through DamageApplicationSystem while the post-hit deadline still excludes unrelated damage.
+It does not accumulate across source lifetimes. Two accepted shield hits write a modest planar recoil and a
+stagger deadline; chase and movement both honor the deadline. The second hit removes the last shield
+without launching or damaging health. Subsequent eligible hits use the existing source-specific launch
+and damage pipeline. DamageApplicationSystem blocks health damage through the post-hit protection window.
 Player punch detection reports connection separately from PunchResolution's gameplay result.
 Preview filters protected sources; assist/homing candidate eligibility deliberately retains them.
 Elite selection, stale/area punch resolution and direct boss scattering reject protected targets.

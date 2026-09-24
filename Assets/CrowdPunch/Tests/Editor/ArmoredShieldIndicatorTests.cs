@@ -44,7 +44,7 @@ namespace CrowdPunch.Tests
                 em.SetComponentEnabled<RespawnRequest>(enemy, false);
                 em.SetComponentEnabled<EnemyHealthBarVisibility>(enemy, true);
                 var bridge = world.GetOrCreateSystem<EnemyHealthBarBridgeSystem>();
-                for (byte remaining = 3; remaining >= 1; remaining--)
+                for (byte remaining = 2; remaining >= 1; remaining--)
                 {
                     em.SetComponentData(enemy, new EnemyArmor { Stages = remaining });
                     bridge.Update(world.Unmanaged);

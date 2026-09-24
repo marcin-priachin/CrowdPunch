@@ -64,13 +64,13 @@ namespace CrowdPunch.Tests
         private void Explode() => world.GetOrCreateSystemManaged<ExplosionResolutionSystem>().Update();
         private void Stages(byte stages) { var a = em.GetComponentData<EnemyArmor>(armored); a.Stages = stages; em.SetComponentData(armored, a); }
 
-        [Test] public void Enemy014_FirstTwoExplosionsOnlyStaggerAndRecoil_ThirdLaunchesAndDamagesOnce()
+        [Test] public void Enemy014_TwoShieldsAbsorbHits_NextExplosionLaunchesAndDamagesOnce()
         {
             for (int i = 0; i < 3; i++)
             {
                 Time(1 + i); var source = Explosive(); Explode(); Damage();
                 var armor = em.GetComponentData<EnemyArmor>(armored);
-                Assert.That(armor.Stages, Is.EqualTo(2 - i));
+                Assert.That(armor.Stages, Is.EqualTo(math.max(0, 1 - i)));
                 Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(i < 2 ? 100 : 80));
                 Assert.That(em.GetComponentData<EnemyLaunchState>(armored).Phase,
                     Is.EqualTo(i < 2 ? EnemyLaunchPhase.Active : EnemyLaunchPhase.Launched));
@@ -89,24 +89,18 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.Zero);
         }
 
-        [TestCase(false, 3)] [TestCase(true, 3)] [TestCase(false, 1)] [TestCase(true, 1)]
+        [TestCase(false, 2)] [TestCase(true, 2)] [TestCase(false, 1)] [TestCase(true, 1)]
         public void Enemy014_ExplosiveBodyAndBlastShareIdentityInEitherOrder(bool blastFirst, int stages)
         {
             Stages((byte)stages); var source = Explosive();
             if (blastFirst) Explode();
-            var outcome = ArmorHitResolution.Resolve(em, armored, source, 1, 1, 12);
-            if (outcome == ArmorHitOutcome.Broken)
-            {
-                var launch = em.GetComponentData<EnemyLaunchState>(armored);
-                EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.EnemyCollision, 12);
-                em.SetComponentData(armored, launch);
-                em.SetComponentData(armored, new DamageRequest { Amount = 12 });
-                em.SetComponentEnabled<DamageRequest>(armored, true);
-            }
+            Assert.That(ArmorHitResolution.Resolve(em, armored, source, 1, 1, 12),
+                Is.EqualTo(blastFirst ? ArmorHitOutcome.Blocked : ArmorHitOutcome.Absorbed));
             if (!blastFirst) Explode();
             Damage();
             Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(stages - 1));
-            Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(stages == 1 ? (blastFirst ? 80 : 88) : 100));
+            Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(100));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(armored).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
             // Replay after protection has expired, without relying on explosion system ordering.
             Assert.That(ArmorHitResolution.Resolve(em, armored, source, 1, 2, 20), Is.EqualTo(ArmorHitOutcome.Blocked));
         }
@@ -119,7 +113,7 @@ namespace CrowdPunch.Tests
             Assert.That(ArmorHitResolution.Resolve(em, armored, second, 1, 1.1, 10), Is.EqualTo(ArmorHitOutcome.Blocked));
             Assert.That(ArmorHitResolution.Resolve(em, armored, second, 1, 2, 10), Is.EqualTo(ArmorHitOutcome.Blocked));
             Assert.That(ArmorHitResolution.Resolve(em, armored, source, 2, 2, 10), Is.EqualTo(ArmorHitOutcome.Absorbed));
-            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(1));
+            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.Zero);
         }
 
         [Test] public void Player009_ProtectedPunchConfirmsConnectionWithoutAnyGameplayEffect()
@@ -133,7 +127,7 @@ namespace CrowdPunch.Tests
             Assert.That(em.IsComponentEnabled<ExternalImpulse>(armored), Is.False);
             Assert.That(em.IsComponentEnabled<DamageRequest>(armored), Is.False);
             Assert.That(em.GetComponentData<EnemyLaunchState>(armored).LaunchSequence, Is.Zero);
-            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(3));
+            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(2));
         }
 
         [Test] public void Enemy014_OrdinaryDamageBlockedAndBreakingProtectionSurvivesTransition()
@@ -141,11 +135,14 @@ namespace CrowdPunch.Tests
             em.SetComponentData(armored, new DamageRequest { Amount = 30 }); em.SetComponentEnabled<DamageRequest>(armored, true);
             Damage(); Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(100));
             Stages(1); Explosive(); Explode();
-            // An unrelated damage path cannot add damage to the accepted break.
+            // Neither the last shield hit nor an unrelated burst event may damage health.
             em.SetComponentData(armored, new DamageRequest { Amount = 50 }); Damage();
-            Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(80));
+            Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(100));
             em.SetComponentData(armored, new DamageRequest { Amount = 30 }); em.SetComponentEnabled<DamageRequest>(armored, true);
-            Damage(); Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(80));
+            Damage(); Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(100));
+            Time(2); em.SetComponentData(armored, new DamageRequest { Amount = 30 });
+            em.SetComponentEnabled<DamageRequest>(armored, true); Damage();
+            Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(70));
         }
 
         [Test] public void Combat014_UnarmoredPunchAndRepunchReplaceLaunchNormally()
@@ -177,10 +174,10 @@ namespace CrowdPunch.Tests
             em.AddComponentData(source, new DasherState { PreviousPosition = new float3(0, 0, 2), PreservedLaunchedVelocity = new float3(0, 0, 18) });
             em.AddBuffer<DasherHitHistory>(source);
             world.GetOrCreateSystem<DasherEnemyImpactSystem>().Update(world.Unmanaged); Damage();
-            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(2));
+            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(1));
             Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(100));
             Time(2); world.GetOrCreateSystem<DasherEnemyImpactSystem>().Update(world.Unmanaged);
-            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(2));
+            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(1));
         }
 
         [Test] public void Enemy014_EliteStaleAndAreaPunchesCannotBypassArmor()
@@ -227,7 +224,7 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetBuffer<ArmorHitHistory>(armored).Length, Is.Zero);
         }
 
-        [TestCase(3, 100)] [TestCase(0, 85)]
+        [TestCase(2, 100)] [TestCase(0, 85)]
         public void Enemy014_GentleDasherCannotStripArmor_BrokenTargetUsesOrdinaryRules(int stages, int health)
         {
             Stages((byte)stages); var source = Enemy(float3.zero);
@@ -246,7 +243,7 @@ namespace CrowdPunch.Tests
             var arena = em.CreateEntity(typeof(ArenaBounds)); em.SetComponentData(arena, new ArenaBounds { Extents = new float3(10) });
             em.SetComponentEnabled<RespawnRequest>(armored, true);
             world.GetOrCreateSystem<EnemyRespawnSystem>().Update(world.Unmanaged);
-            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(3));
+            Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(2));
             Assert.That(em.GetBuffer<ArmorHitHistory>(armored).Length, Is.Zero);
             Assert.That(em.GetComponentData<EnemyArmor>(armored).ProtectedUntil, Is.Zero);
         }
@@ -259,7 +256,7 @@ namespace CrowdPunch.Tests
             Assert.That(ArmoredAmmunitionSupply.NeedsAmmunition(em, enemies, sequence, 1), Is.True);
             Assert.That(ArmoredAmmunitionSupply.NeedsAmmunition(em, enemies, sequence, 2), Is.False);
             Stages(0); Assert.That(ArmoredAmmunitionSupply.NeedsAmmunition(em, enemies, sequence, 1), Is.False);
-            Stages(3); em.SetComponentEnabled<RespawnRequest>(armored, true);
+            Stages(2); em.SetComponentEnabled<RespawnRequest>(armored, true);
             Assert.That(ArmoredAmmunitionSupply.NeedsAmmunition(em, enemies, sequence, 1), Is.False);
         }
     }

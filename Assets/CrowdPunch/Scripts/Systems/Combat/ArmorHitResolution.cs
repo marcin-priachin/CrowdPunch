@@ -4,7 +4,7 @@ using Unity.Mathematics;
 
 namespace CrowdPunch.Systems.Combat
 {
-    internal enum ArmorHitOutcome : byte { Ordinary, Blocked, Absorbed, Broken }
+    internal enum ArmorHitOutcome : byte { Ordinary, Blocked, Absorbed }
 
     // ENEMY-014: body and explosion share identity; accepted and protected contacts are consumed.
     internal static class ArmorHitResolution
@@ -25,10 +25,8 @@ namespace CrowdPunch.Systems.Combat
             armor.Stages--;
             armor.HitSequence++;
             armor.ProtectedUntil = now + math.max(0f, settings.InvulnerabilityDuration);
-            armor.StaggerUntil = armor.Stages > 0 ? now + math.max(0f, settings.StaggerDuration) : 0;
-            if (armor.Stages > 0) return ArmorHitOutcome.Absorbed;
-            armor.PendingBreakDamage = math.max(0f, damage);
-            return ArmorHitOutcome.Broken;
+            armor.StaggerUntil = now + math.max(0f, settings.StaggerDuration);
+            return ArmorHitOutcome.Absorbed;
         }
 
         public static ArmorHitOutcome Resolve(EntityManager em, Entity target, Entity source,

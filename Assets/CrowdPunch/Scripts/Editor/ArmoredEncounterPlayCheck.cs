@@ -89,8 +89,8 @@ namespace CrowdPunch.Editor
                 foreach (var e in enemies)
                     if (em.HasComponent<EnemyArmor>(e)) target = e; else if (source == Entity.Null) source = e;
                 Require(target != Entity.Null && source != Entity.Null && enemies.Length == 7, "Opening composition");
-                Require(em.GetComponentData<EnemyArmor>(target).Stages == 3, "Fresh armor");
-                Require(VisibleShields() == 3, "Fresh shield indicator");
+                Require(em.GetComponentData<EnemyArmor>(target).Stages == 2, "Fresh armor");
+                Require(VisibleShields() == 2, "Fresh shield indicator");
                 if (em.GetComponentData<DesiredMovement>(target).Speed <= 0)
                 { Require(now - since < 30, "Continuous pursuit not active"); return; }
                 using var animationQuery = em.CreateEntityQuery(typeof(EnemyAnimation), typeof(EnemyAnimationPlayback));
@@ -130,15 +130,17 @@ namespace CrowdPunch.Editor
             if (step == 2)
             {
                 byte stages = em.GetComponentData<EnemyArmor>(target).Stages;
-                if (stages == 3 - hit) { Require(now - since < 5, "Solver body did not hit armor"); return; }
-                Require(stages == 2 - hit, "One body consumed multiple stages");
+                if (hit < 2 && stages == 2 - hit || hit == 2 &&
+                    em.GetComponentData<EnemyLaunchState>(target).Phase != EnemyLaunchPhase.Launched)
+                { Require(now - since < 5, "Solver body did not hit target"); return; }
+                Require(stages == math.max(0, 1 - hit), "One body consumed multiple shields");
                 Require(VisibleShields() == stages, "Shield indicator did not follow armor stage");
                 if (hit < 2)
                 {
                     Require(em.GetComponentData<Health>(target).Current == initialHealth, "Armor lost health");
                     Require(em.GetComponentData<EnemyLaunchState>(target).Phase == EnemyLaunchPhase.Active, "Armor launched early");
                 }
-                else Require(em.GetComponentData<EnemyLaunchState>(target).Phase == EnemyLaunchPhase.Launched, "Breaking body did not launch");
+                else Require(em.GetComponentData<EnemyLaunchState>(target).Phase == EnemyLaunchPhase.Launched, "Unshielded body did not launch");
                 Record($"PASS real solver impact {hit + 1}, cause {em.GetComponentData<EnemyLaunchState>(source).LastCause}, armor={stages}, health={em.GetComponentData<Health>(target).Current}");
                 Capture("armor-" + stages); Place(em, source, new float3(-8, 0, 8));
                 hit++; Next(3); return;
@@ -146,7 +148,7 @@ namespace CrowdPunch.Editor
             if (step == 3 && now - since > .7)
             {
                 if (hit < 3) { Shoot(em); Next(2); return; }
-                Require(em.GetComponentData<Health>(target).Current < initialHealth, "Break damage missing");
+                Require(em.GetComponentData<Health>(target).Current < initialHealth, "Unshielded hit damage missing");
                 em.SetComponentData(target, new PhysicsVelocity()); Next(4); return;
             }
             if (step == 4)
@@ -161,8 +163,8 @@ namespace CrowdPunch.Editor
             {
                 if (sequence.Phase != EnemyWaveRuntimePhase.AwaitingActivation) return;
                 foreach (var e in enemies) if (em.HasComponent<EnemyArmor>(e))
-                { target = e; Require(em.GetComponentData<EnemyArmor>(e).Stages == 3, "Restart did not restore armor"); }
-                Require(VisibleShields() == 3, "Restart did not restore shield indicator");
+                { target = e; Require(em.GetComponentData<EnemyArmor>(e).Stages == 2, "Restart did not restore armor"); }
+                Require(VisibleShields() == 2, "Restart did not restore shield indicator");
                 foreach (var e in enemies) if (!em.HasComponent<EnemyArmor>(e)) Defeat(em, e);
                 Record("PASS restart restores fresh armor; exhausted original ammunition"); Next(6); return;
             }

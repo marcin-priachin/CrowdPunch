@@ -217,7 +217,7 @@ namespace CrowdPunch.Mono.UI
             shieldRow.pivot = new Vector2(.5f, 0f);
             shieldRow.anchoredPosition = new Vector2(0f, 3f);
             shieldRow.sizeDelta = new Vector2(0f, 22f);
-            var icons = new UnityEngine.UI.Image[3];
+            var icons = new UnityEngine.UI.Image[2];
             for (int index = 0; index < icons.Length; index++)
             {
                 var iconObject = new GameObject("Shield " + (index + 1), typeof(RectTransform),
@@ -226,7 +226,7 @@ namespace CrowdPunch.Mono.UI
                 var iconRect = (RectTransform)iconObject.transform;
                 iconRect.SetParent(shieldRow, false);
                 iconRect.anchorMin = iconRect.anchorMax = new Vector2(.5f, .5f);
-                iconRect.anchoredPosition = new Vector2((index - 1) * 20f, 0f);
+                iconRect.anchoredPosition = new Vector2((index - .5f) * 20f, 0f);
                 iconRect.sizeDelta = new Vector2(16f, 19f);
                 var icon = iconObject.GetComponent<UnityEngine.UI.Image>();
                 icon.sprite = shieldSprite;
