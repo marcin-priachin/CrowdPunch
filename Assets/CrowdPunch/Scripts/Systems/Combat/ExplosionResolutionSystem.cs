@@ -113,6 +113,20 @@ namespace CrowdPunch.Systems.Combat
                     continue;
                 }
 
+                float3 armorDirection = math.normalizesafe(new float3(transform.ValueRO.Position.x - center.x, 0,
+                    transform.ValueRO.Position.z - center.z), new float3(0, 0, 1));
+                uint sourceSequence = SystemAPI.HasComponent<EnemyLaunchState>(explosive)
+                    ? SystemAPI.GetComponent<EnemyLaunchState>(explosive).LaunchSequence : 0;
+                var armorOutcome = ArmorHitResolution.Resolve(EntityManager, target, explosive, sourceSequence,
+                    SystemAPI.Time.ElapsedTime, settings.Damage);
+                if (armorOutcome == ArmorHitOutcome.Blocked) continue;
+                if (armorOutcome == ArmorHitOutcome.Absorbed)
+                {
+                    var velocity = EntityManager.GetComponentData<Unity.Physics.PhysicsVelocity>(target);
+                    velocity.Linear.xz = armorDirection.xz * SystemAPI.GetComponent<EnemyArmorSettings>(target).KnockbackSpeed;
+                    EntityManager.SetComponentData(target, velocity);
+                    continue;
+                }
                 QueueDamage(target, settings.Damage);
                 if (SystemAPI.HasComponent<ExplosiveEnemyState>(target)
                     && SystemAPI.GetComponent<ExplosiveEnemyState>(target).HasExploded == 0)

@@ -111,6 +111,11 @@ namespace CrowdPunch.Systems.Initialization
                     SystemAPI.SetComponent(enemy, new EnemyContactAttemptState());
                 }
                 SystemAPI.GetBuffer<CollisionDamageHistory>(enemy).Clear();
+                    if (SystemAPI.HasComponent<EnemyArmor>(enemy))
+                    {
+                        SystemAPI.SetComponent(enemy, EnemyArmor.Fresh);
+                        SystemAPI.GetBuffer<ArmorHitHistory>(enemy).Clear();
+                    }
 
                 if (SystemAPI.HasComponent<EnemyImpactFeedback>(enemy))
                     SystemAPI.SetComponent(enemy, new EnemyImpactFeedback());
@@ -145,6 +150,8 @@ namespace CrowdPunch.Systems.Initialization
                 sequence.ValueRW.CurrentWaveIndex = 0;
                 sequence.ValueRW.SpawnedCount = 0;
                 sequence.ValueRW.DefeatedCount = 0;
+                sequence.ValueRW.AmmunitionSpawnedCount = 0;
+                sequence.ValueRW.NextAmmunitionCheckAt = 0;
                 sequence.ValueRW.UndefeatedCount = 0;
                 sequence.ValueRW.EliteSpawnedCount = 0;
                 sequence.ValueRW.EliteProfileCursor = 0;

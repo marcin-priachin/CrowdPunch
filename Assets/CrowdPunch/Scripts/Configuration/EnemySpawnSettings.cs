@@ -12,7 +12,8 @@ namespace CrowdPunch.Configuration
         Ranged,
         Explosive,
         Dasher,
-        Elite
+        Elite,
+        Armored = 5
     }
 
     [Serializable]
@@ -165,6 +166,22 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float eliteWindUpDuration;
         [SerializeField] private bool eliteEnableTelegraph;
         [SerializeField, Min(0f)] private float eliteTelegraphDuration = 0.25f;
+
+        [Header("Armor")]
+        [SerializeField, Min(0f)] private float armorStaggerDuration = 0.3f;
+        [SerializeField, Min(0f)] private float armorKnockbackSpeed = 3f;
+        [SerializeField, Min(0f)] private float armorInvulnerabilityDuration = 0.25f;
+        [SerializeField] private Color armorFullColor = new Color(0.22f, 0.42f, 0.72f, 1f);
+        [SerializeField] private Color armorChippedColor = new Color(0.1f, 0.8f, 0.75f, 1f);
+        [SerializeField] private Color armorCrackedColor = new Color(1f, 0.65f, 0.12f, 1f);
+        [SerializeField] private Color armorBrokenColor = new Color(0.72f, 0.25f, 0.18f, 1f);
+        public EnemyArmorSettings ArmorSettings => new EnemyArmorSettings
+        {
+            StaggerDuration = armorStaggerDuration, KnockbackSpeed = armorKnockbackSpeed,
+            InvulnerabilityDuration = armorInvulnerabilityDuration,
+            FullColor = (Vector4)armorFullColor, ChippedColor = (Vector4)armorChippedColor,
+            CrackedColor = (Vector4)armorCrackedColor, BrokenColor = (Vector4)armorBrokenColor
+        };
 
         public GameObject EnemyPrefab => enemyPrefab;
         public GameObject RangedProjectilePrefab => rangedProjectilePrefab;

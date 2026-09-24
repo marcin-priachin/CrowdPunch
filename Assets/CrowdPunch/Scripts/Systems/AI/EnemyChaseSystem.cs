@@ -98,6 +98,8 @@ namespace CrowdPunch.Systems.AI
 
             JobHandle chaseJob = new EnemyChaseJob
             {
+                Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
+                Now = SystemAPI.Time.ElapsedTime,
                 PlayerSnapshot = playerSnapshot,
                 ArenaBounds = arenaBounds,
                 DeltaTime = SystemAPI.Time.DeltaTime,
@@ -169,6 +171,8 @@ namespace CrowdPunch.Systems.AI
         [WithNone(typeof(RespawnRequest))]
         private partial struct EnemyChaseJob : IJobEntity
         {
+            [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
+            public double Now;
             public PlayerSnapshot PlayerSnapshot;
             public ArenaBounds ArenaBounds;
             public float DeltaTime;
@@ -190,7 +194,8 @@ namespace CrowdPunch.Systems.AI
                 in EnemyLaunchState launchState)
             {
                 navigation = default;
-                if (launchState.Phase != EnemyLaunchPhase.Active)
+                if (launchState.Phase != EnemyLaunchPhase.Active
+                    || Armors.HasComponent(entity) && Now < Armors[entity].StaggerUntil)
                 {
                     EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
                     desiredMovement = default;
@@ -215,6 +220,16 @@ namespace CrowdPunch.Systems.AI
                     movementSettings.SeparationWeight,
                     archetypeSeparationDistances);
 
+                if (archetype.Value == EnemyArchetypeKind.Armored)
+                {
+                    EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
+                    float speed = movementSettings.MoveSpeed * movementSettings.ChargeSpeedMultiplier;
+                    desiredMovement.Direction = math.normalizesafe(math.normalizesafe(toPlayer) + separation);
+                    desiredMovement.Speed = speed;
+                    navigation = NavigationIntent.Travel(new float3(PlayerSnapshot.Position.x, transform.Position.y,
+                        PlayerSnapshot.Position.z), speed, 0f, separation);
+                    return;
+                }
                 bool explosiveInContactRange = archetype.Value == EnemyArchetypeKind.Explosive
                     && distanceToPlayer <= math.max(0f, contactSettings.AttemptDistance);
                 if (IsPressureEnemy(entity) || explosiveInContactRange)

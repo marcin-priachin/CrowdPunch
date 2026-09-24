@@ -76,6 +76,10 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(1)] private int batchSize = 10;
         [SerializeField, Min(0f)] private float batchInterval = 1f;
 
+        [Header("Armored ammunition safeguard")]
+        [SerializeField, Tooltip("Optional Baseline profile. Supplies one body when protected Armored enemies have no usable ammunition after initial spawning.")]
+        private EnemySpawnSettings armoredAmmunitionProfile;
+        public EnemySpawnSettings ArmoredAmmunitionProfile => armoredAmmunitionProfile;
         public int TotalEnemyCount => totalEnemyCount;
         public IReadOnlyList<WeightedEnemy> Enemies => enemies;
         public IReadOnlyList<FixedEliteEnemy> EliteEnemies => eliteEnemies;

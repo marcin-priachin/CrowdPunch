@@ -61,6 +61,14 @@ namespace CrowdPunch.Editor
                 using var crowdQuery=em.CreateEntityQuery(typeof(BossCrowdMember)); Require(crowdQuery.IsEmpty,"Boss crowd leaked after scene switch");
                 Record("PASS scene selection removes boss and supporting crowd"); flow.SelectLevel(10); step=12; since=now; return;
             }
+            if(step==8 && flow.CurrentLevelIndex==11)
+            {
+                Require(!flow.RunComplete && heads.IsEmpty,"Boss did not advance cleanly to Gauntlet_12");
+                Require(GauntletCompletionRegistry.Sequence==completionBefore+1,"Completion did not fire exactly once");
+                Record("PASS boss death advances to Gauntlet_12 with supporting enemies alive");
+                world.Unmanaged.GetExistingSystemState<BossHandCoordinationSystem>().Enabled=true;
+                flow.SelectLevel(10); step=9; since=now; return;
+            }
             if(heads.CalculateEntityCount()!=1) { Require(now-since<30,"Boss did not load"); return; }
             var head=heads.GetSingletonEntity(); var boss=em.GetComponentData<BossEncounter>(head); var tuning=em.GetComponentData<BossTuning>(head);
             using var crowd=em.CreateEntityQuery(typeof(BossCrowdMember)); using var enemies=crowd.ToEntityArray(Allocator.Temp);
@@ -171,22 +179,14 @@ namespace CrowdPunch.Editor
                     em.SetComponentData(special,new DamageRequest { Amount=99999 }); em.SetComponentEnabled<DamageRequest>(special,true);
                     pooled=false; step=7; since=now; return;
                 }
-                DefeatBoss(em,world,body,head); step=8; since=now; return;
+                oldHead=head; DefeatBoss(em,world,body,head); step=8; since=now; return;
             }
             if(step==7)
             {
                 if(em.IsComponentEnabled<RespawnRequest>(special)) pooled=true;
                 if(!pooled || em.IsComponentEnabled<RespawnRequest>(special)) { Require(now-since<25,"Special failed to replenish"); return; }
                 Record("PASS same special entity pooled and safely returned; special population stayed <=1");
-                DefeatBoss(em,world,body,head); step=8; since=now; return;
-            }
-            if(step==8)
-            {
-                if(!flow.RunComplete) { Require(now-since<8,"Boss defeat did not finish run"); return; }
-                Require(GauntletCompletionRegistry.Sequence==completionBefore+1,"Completion did not fire exactly once");
-                Record("PASS boss death completed run with supporting enemies alive");
-                oldHead=head; world.Unmanaged.GetExistingSystemState<BossHandCoordinationSystem>().Enabled=true;
-                flow.RestartCurrentLevel(); step=9; since=now; return;
+                oldHead=head; DefeatBoss(em,world,body,head); step=8; since=now; return;
             }
             if(step==9)
             {

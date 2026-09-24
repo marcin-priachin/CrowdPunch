@@ -97,6 +97,11 @@ namespace CrowdPunch.Systems.Lifetime
                         });
                     }
                     SystemAPI.GetBuffer<CollisionDamageHistory>(enemy).Clear();
+                    if (SystemAPI.HasComponent<EnemyArmor>(enemy))
+                    {
+                        SystemAPI.SetComponent(enemy, EnemyArmor.Fresh);
+                        SystemAPI.GetBuffer<ArmorHitHistory>(enemy).Clear();
+                    }
                     if (SystemAPI.HasComponent<EnemyImpactFeedback>(enemy))
                         SystemAPI.SetComponent(enemy, new EnemyImpactFeedback());
                     if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))

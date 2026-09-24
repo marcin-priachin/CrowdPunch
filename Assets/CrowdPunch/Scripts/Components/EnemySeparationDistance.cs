@@ -26,6 +26,7 @@ namespace CrowdPunch.Components
         public float DasherMin;
         public float DasherMax;
         public float DasherWeight;
+        public float ArmoredMin, ArmoredMax, ArmoredWeight;
 
         public void Set(EnemyArchetypeKind archetype, float minimum, float maximum, float weight)
         {
@@ -40,6 +41,9 @@ namespace CrowdPunch.Components
                     break;
                 case EnemyArchetypeKind.Dasher:
                     DasherMin = minimum; DasherMax = maximum; DasherWeight = weight;
+                    break;
+                case EnemyArchetypeKind.Armored:
+                    ArmoredMin = minimum; ArmoredMax = maximum; ArmoredWeight = weight;
                     break;
                 case EnemyArchetypeKind.Elite:
                     BaselineMin = minimum; BaselineMax = maximum; BaselineWeight = weight;
@@ -64,6 +68,7 @@ namespace CrowdPunch.Components
         public float ExplosiveWeight;
         public float Dasher;
         public float DasherWeight;
+        public float Armored, ArmoredWeight;
 
         public float GetDistance(EnemyArchetypeKind archetype, float fallback)
         {
@@ -78,6 +83,7 @@ namespace CrowdPunch.Components
                 EnemyArchetypeKind.Ranged => Ranged,
                 EnemyArchetypeKind.Explosive => Explosive,
                 EnemyArchetypeKind.Dasher => Dasher,
+                EnemyArchetypeKind.Armored => Armored,
                 EnemyArchetypeKind.Elite => Baseline,
                 _ => Baseline
             };
@@ -96,6 +102,7 @@ namespace CrowdPunch.Components
                 EnemyArchetypeKind.Ranged => RangedWeight,
                 EnemyArchetypeKind.Explosive => ExplosiveWeight,
                 EnemyArchetypeKind.Dasher => DasherWeight,
+                EnemyArchetypeKind.Armored => ArmoredWeight,
                 EnemyArchetypeKind.Elite => BaselineWeight,
                 _ => BaselineWeight
             };

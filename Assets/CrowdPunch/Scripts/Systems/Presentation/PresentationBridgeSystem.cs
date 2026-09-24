@@ -66,7 +66,8 @@ namespace CrowdPunch.Systems.Presentation
                          .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
-                if (!EnemyLaunchTransition.IsLaunchable(tier.ValueRO)
+                if (ArmorHitResolution.IsProtected(state.EntityManager, enemy)
+                    || !EnemyLaunchTransition.IsLaunchable(tier.ValueRO)
                     || !EnemyLaunchTransition.CanReceivePlayerPunch(launchState.ValueRO, health.ValueRO))
                 {
                     continue;

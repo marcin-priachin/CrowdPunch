@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-09-22
+Last updated: 2026-09-24
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -78,9 +78,18 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-09-24 - Armored And Post-Boss Progression
+
+Decision: Add Armored as a fifth normal archetype with three event-deduplicated armor stages, blocked-punch cooldown confirmation, continuous pursuit outside pressure allocation, and persistent model/color feedback without UI. Introduce it in Gauntlet_12 with a one-at-a-time encounter ammunition safeguard. The Gauntlet_11 boss completes its level and advances to Gauntlet_12; bosses are not the end of the game.
+
+Rationale: Repeated deliberate body shots teach the core crowd-projectile interaction. Shared damage/launch ownership preserves coherent outcomes and the safeguard prevents exhausted ammunition from stranding the encounter. This revises the earlier roster and boss-finale decisions; unrelated pacing, progression and art questions remain open.
+
+GDD rules: ENEMY-014, ENEMY-015, PLAYER-003/004/009, COMBAT-016, INFO-001/004, LOOP-002/006, BOSS-007, MVP-001/003/005.
+
+
 ### 2026-09-22 - OQ-007
 
-Decision: Gauntlet 11 is a head and two detached hands. Player-owned launched bodies and their propagated chains damage the head; boss-scattered bodies and their descendants do not. Hands physically shield, stagger without destruction, and perform committed slam, lunge and sweep attacks. Three health-based stages escalate coordination. A bounded wave-configured crowd replenishes while the boss lives; head defeat completes the run. Reuse the Orc Blob model and elite health-bar presentation.
+Decision: Gauntlet 11 is a head and two detached hands. Player-owned launched bodies and their propagated chains damage the head; boss-scattered bodies and their descendants do not. Hands physically shield, stagger without destruction, and perform committed slam, lunge and sweep attacks. Three health-based stages escalate coordination. A bounded wave-configured crowd replenishes while the boss lives; head defeat completes the gauntlet and advances to later authored content (revised 2026-09-24). Reuse the Orc Blob model and elite health-bar presentation.
 
 Rationale: The encounter tests deliberate crowd-mediated shots through readable physical protection, while preserving player controls, ordinary enemy mechanics, and the existing hybrid ownership boundary. Threshold damage is clamped with overflow discarded so burst damage cannot skip a stage. The 2-3 minute target remains tuning work rather than a forced timer.
 
@@ -88,9 +97,9 @@ GDD rules: BOSS-001 through BOSS-009, MVP-002, MVP-005, LOOP-006.
 
 ### 2026-09-04 — OQ-002
 
-Decision: The four standard MVP enemy types are Baseline, Explosive, Ranged, and Dasher. Elite enemies are a separate special encounter tier and do not count toward the four standard enemy slots.
+Decision: The initial four standard MVP enemy types were Baseline, Explosive, Ranged, and Dasher; Armored was approved as a fifth on 2026-09-24. Elite enemies are a separate special encounter tier and do not count toward the four standard enemy slots.
 
-Rationale: These roles are already established in the playable design and provide distinct crowd functions: a neutral chain body, a collision-triggered area threat, positional ranged pressure, and a committed high-mobility threat. Keeping elites separate preserves the intended four-type standard roster while allowing rarer crowd-manipulation threats.
+Rationale: These roles are already established in the playable design and provide distinct crowd functions: a neutral chain body, a collision-triggered area threat, positional ranged pressure, and a committed high-mobility threat. Keeping elites separate preserves a simple standard roster while allowing rarer crowd-manipulation threats.
 
 GDD rules: ENEMY-001 through ENEMY-013, MVP-003
 

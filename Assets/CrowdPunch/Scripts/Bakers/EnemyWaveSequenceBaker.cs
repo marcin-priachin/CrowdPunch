@@ -113,19 +113,27 @@ namespace CrowdPunch.Bakers
                     totalArea += area;
                 }
 
+                EnemySpawnProfile ammunition = default;
+                bool hasAmmunition = wave.ArmoredAmmunitionProfile != null;
+                bool ammunitionValid = !hasAmmunition || wave.ArmoredAmmunitionProfile.Archetype == Configuration.EnemyArchetype.Baseline
+                    && EnemySpawnProfileBaking.TryCreate(this, wave.ArmoredAmmunitionProfile, out ammunition)
+                    && ammunition.SpawnClearance > 0f;
+                if (!ammunitionValid) Debug.LogError($"Wave '{wave.name}' needs a valid Baseline ammunition profile.", authoring);
                 int totalCount = math.max(0, wave.TotalEnemyCount);
                 int weightedNormalCount = totalCount - requestedMinimumNormalCount;
                 bool normalValid = (weightedNormalCount <= 0 || totalWeight > 0f)
                     && requestedMinimumNormalCount == validMinimumNormalCount
                     && requestedMinimumNormalCount <= totalCount;
                 bool eliteValid = totalEliteCount == requestedEliteCount;
-                bool valid = normalValid && eliteValid
+                bool valid = ammunitionValid && normalValid && eliteValid
                     && (totalCount + requestedEliteCount == 0 || totalArea > 0f);
                 if (!valid)
                     Debug.LogError($"Wave '{wave.name}' cannot spawn: ensure it has a positive-area range, valid positive-weight profiles with prefab colliders, and profile minimums no greater than its normal-enemy total.", authoring);
 
                 definitions.Add(new EnemyWaveDefinition
                 {
+                    AmmunitionProfile = ammunition,
+                    AmmunitionSafeguard = hasAmmunition && ammunitionValid ? (byte)1 : (byte)0,
                     BossReplenishment=(byte)(wave.ReplenishWhileBossLives?1:0),
                     BossReplenishDelay=math.max(0,wave.BossReplenishDelay),
                     TotalEnemyCount = totalCount,

@@ -280,6 +280,7 @@ namespace CrowdPunch.Systems.AI
 
         private bool IsCandidate(Entity elite, Entity target, ElitePunchSettings s)
         {
+            if (ArmorHitResolution.IsProtected(EntityManager, target)) return false;
             if (target == elite || !EntityManager.Exists(target) || EntityManager.GetComponentData<EnemyTier>(target).Value != EnemyCombatTier.Normal) return false;
             if (EntityManager.HasComponent<RespawnRequest>(target) && EntityManager.IsComponentEnabled<RespawnRequest>(target)) return false;
             if (EntityManager.HasComponent<ElitePunchReservation>(target)) { var r = EntityManager.GetComponentData<ElitePunchReservation>(target); if (r.Owner != Entity.Null && r.Owner != elite && s.AllowSharedTargets == 0 && EntityManager.Exists(r.Owner)) return false; }

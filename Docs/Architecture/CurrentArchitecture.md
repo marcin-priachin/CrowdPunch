@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-09-22
+Last inspected: 2026-09-24
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -19,7 +19,7 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_11` each contain their matching ECS SubScene. Eleven gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss. The separate navigation validation scenes remain outside progression.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_12` each contain their matching ECS SubScene. Twelve gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
@@ -256,7 +256,7 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 
 `GauntletSequence` belongs to the persistent Bootstrap scene and loads one configured gauntlet scene additively at a time. A gauntlet scene owns its presentation layout, one `GauntletLevel` marker with an authored player entry point, and an ECS SubScene for level-specific collision and encounter data. The transition pauses scaled simulation, unloads the previous scene and its baked entities, loads the next scene, places the GameObject player at the authored entry point, and requests the established ECS restart reset. It never queries or retains enemy entities.
 
-`GauntletCompletionSystem` runs in `GamePresentationGroup` and reports through the narrow `GauntletCompletionRegistry`. Ordinary gauntlets require every loaded wave sequence to complete; an empty loading interval cannot advance. When a boss is loaded, head defeat is authoritative and supporting-wave completion cannot win early. The Bootstrap flow consumes one completion signal and loads the next scene (LOOP-002/006). Gauntlet 10 advances to The Gatekeeper; boss defeat sets `GauntletSequence.RunComplete`. The existing pause menu presents Run Complete, Play Again, and eleven selectable levels (BOSS-007).
+`GauntletCompletionSystem` runs in `GamePresentationGroup` and reports through the narrow `GauntletCompletionRegistry`. Ordinary gauntlets require every loaded wave sequence to complete; an empty loading interval cannot advance. When a boss is loaded, head defeat is authoritative and supporting-wave completion cannot win early. The Bootstrap flow consumes one completion signal and loads the next scene (LOOP-002/006). Gauntlet 10 advances to The Gatekeeper; boss defeat advances to Gauntlet_12 (Crack the Shell). Only the final authored gauntlet sets `GauntletSequence.RunComplete`. The existing pause menu presents Run Complete, Play Again, and twelve selectable levels (BOSS-007).
 
 `GauntletLevel` owns optional opening-hint text alongside its entry transform. `GauntletSequence` publishes that text and an entry counter to the existing `PauseMenu`, which shows a ten-second hint in levels 1-2 and a two-column selection grid in the menu. This is GameObject presentation metadata, not an enemy bridge. The authored display names are separate from scene-loading names. The existing restart button now delegates through `GameBootstrap` to `RestartCurrentLevel` when a gauntlet is active, resetting final-completion state and reusing the additive reload path. Legacy scenes still use soft restart.
 
@@ -967,3 +967,47 @@ Real Input System dash verification produced two starts/two ends, including an e
 The dedicated validation arena adds baked rectangular solids, class-based clearance and reachable regions, explicit tactical intent, a shared budgeted A* scheduler, and optional editor diagnostics. The original ten-level progression is unchanged. See [Navigation ownership, settings, and system order](Navigation.md) and [performed validation and profiling](../Validation/NavigationValidation.md). Projectile cover, explosion occlusion, and terrain-aware homing are not introduced: existing projectiles pass static solids, explosions remain radial, and launched-body homing may select an obstructed target while physical wall collision remains active.
 
 Navigation participation anchors now default to the clearance-valid spacing-bounds centre (or nearest valid cell), with an optional explicit override for disconnected layouts. See [anchor selection](Navigation.md#spawning-and-lifecycle). This is baked configuration, not a per-frame search.
+
+
+## Armored And Gauntlet_12 (ENEMY-014/015)
+
+Armored appends serialized archetype value 5 and stays Normal tier. EnemySpawnSettings owns
+three armor timing/recoil values and four persistent colors; shared profile baking and spawn
+initialization add EnemyArmorSettings, EnemyArmor and ArmorHitHistory only to this archetype.
+Recovery leaves armor alone. Pooling and restart reset it; wave reload destroys old owned roots.
+Armored never publishes an individual health bar, even after armor breaks.
+
+ArmorHitResolution is shared by solver body impacts, swept launched-Dasher impacts and explosions.
+Per-target history stores source entity and launch sequence, sharing identity between an explosive
+body and its blast. A protected contact is consumed so sustained contact cannot become a late hit.
+History cleanup follows current source launches, retaining exploded sources until pooling/reset.
+It does not accumulate across source lifetimes. First hits write a modest planar recoil and a
+stagger deadline; chase and movement both honor the deadline. Breaking falls through to the existing
+source-specific launch and damage pipeline. PendingBreakDamage permits exactly the breaking damage
+through DamageApplicationSystem while the post-hit deadline still excludes unrelated damage.
+Player punch detection reports connection separately from PunchResolution's gameplay result.
+Preview filters protected sources; assist/homing candidate eligibility deliberately retains them.
+Elite selection, stale/area punch resolution and direct boss scattering reject protected targets.
+
+EnemyChaseSystem uses its existing local-separation neighborhood and writes direct player pursuit
+for Armored without allocating pressure slots. Navigation remains the path owner. Armored uses
+MoveSpeed * ChargeSpeedMultiplier; stagger never lets normal movement overwrite recoil velocity.
+EnemyReadabilitySystem selects stage color before EnemyImpactVisualSystem composes transient flashes.
+EnemyAnimationProfile.Armored reuses CPA3 sampling: Idle/Run, HitReact on armor-hit sequence changes,
+a sideways Idle flight pose, Jump_Land recovery and Death defeat. Physics never depends on the poses.
+EnemyArmoredPrefabBuilder regenerates the Orc_Skull prefab, controller, materials and samples.
+
+Wave settings optionally reference a Baseline armoredAmmunitionProfile. Its baked profile is used
+only after the wave's original pending spawn queue drains. ArmoredAmmunitionSupply checks owned
+current-generation bodies at most four times per second and uses the wave's existing ranges,
+physics clearance, player distance and navigation checks. One supplemental root replaces the previous
+counted supplemental root, keeping live allocation bounded. Each addition increments cumulative
+undefeated count and a per-wave supplemental budget; ordinary defeat counting decrements/increments
+the established counters. Wave completion includes that budget. Restart resets it. No MonoBehaviour
+queries enemies and no alternate runtime spawning framework is introduced.
+
+GauntletProgressionBuilder.BuildArmored authors only Gauntlet_12 and its two waves (1+6, then 3+12
+Armored+Baseline), navigation, opening hint and Bootstrap/build-list registration. Nature-kit rendering
+uses the existing recipe. Rebuilding the original ten or boss preserves later sequence entries.
+Default armor tuning: 0.30 s stagger, 3 m/s planar recoil, 0.25 s hit protection; stage colors are
+steel blue, teal, amber and rust red. These remain provisional Inspector tuning.

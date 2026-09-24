@@ -13,6 +13,8 @@ namespace CrowdPunch.Components
         public int CurrentWaveIndex;
         public int SpawnedCount;
         public int DefeatedCount;
+        public int AmmunitionSpawnedCount;
+        public double NextAmmunitionCheckAt;
         public int UndefeatedCount;
         public int EliteSpawnedCount;
         public int EliteProfileCursor;
@@ -32,6 +34,8 @@ namespace CrowdPunch.Components
 
     public struct EnemyWaveDefinition : IBufferElementData
     {
+        public EnemySpawnProfile AmmunitionProfile;
+        public byte AmmunitionSafeguard;
         public byte BossReplenishment;
         public float BossReplenishDelay;
         public int TotalEnemyCount;

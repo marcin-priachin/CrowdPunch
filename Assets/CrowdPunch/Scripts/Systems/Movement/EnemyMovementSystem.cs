@@ -36,6 +36,8 @@ namespace CrowdPunch.Systems.Movement
 
             new EnemyMovementJob
             {
+                Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
+                Now = SystemAPI.Time.ElapsedTime,
                 ArenaBounds = arenaBounds,
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel();
@@ -46,10 +48,13 @@ namespace CrowdPunch.Systems.Movement
         [WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
         private partial struct EnemyMovementJob : IJobEntity
         {
+            [Unity.Collections.ReadOnly] public ComponentLookup<EnemyArmor> Armors;
+            public double Now;
             public ArenaBounds ArenaBounds;
             public float DeltaTime;
 
             private void Execute(
+                Entity entity,
                 ref PhysicsVelocity physicsVelocity,
                 ref PhysicsMass physicsMass,
                 EnabledRefRO<RespawnRequest> respawnRequest,
@@ -74,7 +79,8 @@ namespace CrowdPunch.Systems.Movement
                     return;
                 }
 
-                if (launchState.Phase != EnemyLaunchPhase.Active)
+                if (launchState.Phase != EnemyLaunchPhase.Active
+                    || Armors.HasComponent(entity) && Now < Armors[entity].StaggerUntil)
                 {
                     return;
                 }

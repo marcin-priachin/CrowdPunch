@@ -29,6 +29,7 @@ namespace CrowdPunch.Systems.Presentation
                          .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
                          .WithEntityAccess())
             {
+                if (SystemAPI.HasComponent<EnemyArmor>(enemy)) continue;
                 EnemyLaunchPhase phase = launchState.ValueRO.Phase;
                 bool alwaysVisible = policy.ValueRO.Value == EnemyHealthBarPolicyKind.AlwaysWhileAlive;
                 if (respawnRequest.ValueRO || phase == EnemyLaunchPhase.Defeated

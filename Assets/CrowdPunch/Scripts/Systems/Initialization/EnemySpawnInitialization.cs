@@ -99,6 +99,8 @@ namespace CrowdPunch.Systems.Initialization
                 Explosive = NextDistance(settings.ExplosiveMin, settings.ExplosiveMax, ref random),
                 ExplosiveWeight = math.max(0f, settings.ExplosiveWeight),
                 Dasher = NextDistance(settings.DasherMin, settings.DasherMax, ref random),
+                Armored = NextDistance(settings.ArmoredMin, settings.ArmoredMax, ref random),
+                ArmoredWeight = math.max(0f, settings.ArmoredWeight),
                 DasherWeight = math.max(0f, settings.DasherWeight)
             };
         }
@@ -116,6 +118,13 @@ namespace CrowdPunch.Systems.Initialization
             in EnemySpawnProfile profile,
             ref Random random)
         {
+            if (profile.Archetype == EnemyArchetypeKind.Armored)
+            {
+                commandBuffer.AddComponent(enemy, profile.ArmorSettings);
+                commandBuffer.AddComponent(enemy, EnemyArmor.Fresh);
+                commandBuffer.AddBuffer<ArmorHitHistory>(enemy);
+                return;
+            }
             if (profile.Archetype == EnemyArchetypeKind.Elite)
             {
                 commandBuffer.AddComponent(enemy, profile.ElitePunchSettings);

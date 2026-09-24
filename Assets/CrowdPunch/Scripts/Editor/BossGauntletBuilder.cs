@@ -73,8 +73,8 @@ namespace CrowdPunch.Editor
                 Scene bootstrap=EditorSceneManager.OpenScene(Root+"Scenes/Bootstrap.unity",OpenSceneMode.Single);
                 var sequence=UnityEngine.Object.FindFirstObjectByType<GauntletSequence>();
                 var sd=new SerializedObject(sequence); var names=sd.FindProperty("levelSceneNames"); var titles=sd.FindProperty("levelDisplayNames");
-                if(names.arraySize!=10 && names.arraySize!=11) throw new InvalidOperationException("Expected ten gauntlets before the boss.");
-                names.arraySize=titles.arraySize=11; names.GetArrayElementAtIndex(10).stringValue="Gauntlet_11"; titles.GetArrayElementAtIndex(10).stringValue="11 The Gatekeeper";
+                if(names.arraySize<10) throw new InvalidOperationException("Expected ten gauntlets before the boss.");
+                names.arraySize=titles.arraySize=Math.Max(11,names.arraySize); names.GetArrayElementAtIndex(10).stringValue="Gauntlet_11"; titles.GetArrayElementAtIndex(10).stringValue="11 The Gatekeeper";
                 sd.ApplyModifiedPropertiesWithoutUndo();
                 if(sequence.GetComponent<BossAttackTelegraphs>()==null) sequence.gameObject.AddComponent<BossAttackTelegraphs>();
                 EditorSceneManager.MarkSceneDirty(bootstrap); EditorSceneManager.SaveScene(bootstrap);

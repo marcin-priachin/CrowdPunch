@@ -63,6 +63,7 @@ namespace CrowdPunch.Systems.Combat
             var boss=em.GetComponentData<BossEncounter>(part.Encounter);
             if(boss.Cycle==BossCycle.Defeated || boss.Cycle==BossCycle.Transition
                 || !em.HasComponent<EnemyLaunchState>(c.Body) || !em.HasComponent<EnemyTier>(c.Body)
+                || ArmorHitResolution.IsProtected(em, c.Body)
                 || !EnemyLaunchTransition.IsLaunchable(em.GetComponentData<EnemyTier>(c.Body))
                 || em.IsComponentEnabled<RespawnRequest>(c.Body)) return;
             var launch=em.GetComponentData<EnemyLaunchState>(c.Body);

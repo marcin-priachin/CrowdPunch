@@ -18,7 +18,11 @@ namespace CrowdPunch.Editor
         private const string Scenes = "Assets/CrowdPunch/Scenes/Gauntlets";
 
         [MenuItem("Crowd Punch/Levels/Apply Nature Kit Environment")]
-        public static void Apply()
+        public static void Apply() => ApplyRange(1, 12);
+
+        public static void ApplyLevel(int level) => ApplyRange(level, level);
+
+        private static void ApplyRange(int first, int last)
         {
             if (EditorApplication.isPlaying)
                 throw new InvalidOperationException("Exit Play mode before authoring environments.");
@@ -33,9 +37,11 @@ namespace CrowdPunch.Editor
             var setup = EditorSceneManager.GetSceneManagerSetup();
             try
             {
-                for (int i = 1; i <= 10; i++)
+                for (int i = first; i <= last; i++)
                 {
+                    if (i == 11) continue; // Boss uses its own round arena recipe.
                     string id = $"Gauntlet_{i:00}";
+                    if (!File.Exists($"{Scenes}/{id}/{id} Sub Scene.unity")) continue;
                     var scene = EditorSceneManager.OpenScene($"{Scenes}/{id}/{id} Sub Scene.unity", OpenSceneMode.Single);
                     var layout = scene.GetRootGameObjects().Single(g => g.name.StartsWith("Layout - "));
                     int index = 0;

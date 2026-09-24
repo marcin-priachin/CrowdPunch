@@ -65,13 +65,19 @@ namespace CrowdPunch.Systems.Initialization
                 if (sequence.Phase == EnemyWaveRuntimePhase.AwaitingActivation)
                 {
                     if (bossOwned) continue; // Supporting defeats never complete or advance a boss encounter.
+                    if (wave.AmmunitionSafeguard != 0 && now >= sequence.NextAmmunitionCheckAt)
+                    {
+                        sequence.NextAmmunitionCheckAt = now + .25d;
+                        ArmoredAmmunitionSupply.TrySpawn(state.EntityManager, commands, sequenceEntity, ref sequence,
+                            wave, ranges, physicsWorld, navigationGrid, player, occupiedEnemies);
+                    }
                     bool shouldAdvance;
                     if (wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed)
                         shouldAdvance = now >= sequence.NextActionAt;
                     else if (wave.ActivationMode == (byte)EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated)
                         shouldAdvance = sequence.UndefeatedCount == 0;
                     else
-                        shouldAdvance = sequence.DefeatedCount >= wave.TotalEnemyCount + wave.TotalEliteCount;
+                        shouldAdvance = sequence.DefeatedCount >= wave.TotalEnemyCount + wave.TotalEliteCount + sequence.AmmunitionSpawnedCount;
                     if (shouldAdvance)
                     {
                         Debug.Log($"Wave {sequence.CurrentWaveIndex} activation condition satisfied " +
@@ -195,6 +201,8 @@ namespace CrowdPunch.Systems.Initialization
             sequence.CurrentWaveIndex = 0;
             sequence.SpawnedCount = 0;
             sequence.DefeatedCount = 0;
+            sequence.AmmunitionSpawnedCount = 0;
+            sequence.NextAmmunitionCheckAt = 0;
             sequence.UndefeatedCount = 0;
             sequence.EliteSpawnedCount = 0;
             sequence.EliteProfileCursor = 0;
@@ -220,6 +228,8 @@ namespace CrowdPunch.Systems.Initialization
             sequence.CurrentWaveIndex++;
             sequence.SpawnedCount = 0;
             sequence.DefeatedCount = 0;
+            sequence.AmmunitionSpawnedCount = 0;
+            sequence.NextAmmunitionCheckAt = 0;
             sequence.EliteSpawnedCount = 0;
             sequence.EliteProfileCursor = 0;
             sequence.EliteProfileSpawnedInEntry = 0;

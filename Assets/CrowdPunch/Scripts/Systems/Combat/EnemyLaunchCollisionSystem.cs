@@ -36,6 +36,9 @@ namespace CrowdPunch.Systems.Combat
                 .Build();
             EnemyCollisionJob job = new EnemyCollisionJob
             {
+                Armors = SystemAPI.GetComponentLookup<EnemyArmor>(),
+                ArmorSettings = SystemAPI.GetComponentLookup<EnemyArmorSettings>(true),
+                ArmorHistory = SystemAPI.GetBufferLookup<ArmorHitHistory>(),
                 MassLookup = SystemAPI.GetComponentLookup<PhysicsMass>(true),
                 FeedbackLookup = SystemAPI.GetComponentLookup<EnemyImpactFeedback>(),
                 ElapsedTime = SystemAPI.Time.ElapsedTime,
@@ -68,6 +71,9 @@ namespace CrowdPunch.Systems.Combat
         [BurstCompile]
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
+            public ComponentLookup<EnemyArmor> Armors;
+            [ReadOnly] public ComponentLookup<EnemyArmorSettings> ArmorSettings;
+            public BufferLookup<ArmorHitHistory> ArmorHistory;
             [ReadOnly] public ComponentLookup<PhysicsMass> MassLookup;
             public ComponentLookup<EnemyImpactFeedback> FeedbackLookup;
             public double ElapsedTime;
@@ -165,6 +171,32 @@ namespace CrowdPunch.Systems.Combat
                 CollisionEvent.Details details = collisionEvent.CalculateDetails(ref World);
                 float estimatedImpulse = math.max(0f, details.EstimatedImpulse);
 
+                if (Armors.HasComponent(target))
+                {
+                    // Use the existing meaningful-impact thresholds, independent of launch ownership.
+                    if (estimatedImpulse < math.max(.01f, MinimumPropagationImpulse)) return;
+                    var armor = Armors[target];
+                    float damage = EnemyCollisionDamage.Calculate(LaunchStateLookup[source].LaunchDamage,
+                        estimatedImpulse, new EnemyLaunchSettings { MinimumDamageImpulse = MinimumDamageImpulse,
+                            BaseCollisionDamageMultiplier = BaseDamageMultiplier,
+                            DamageMultiplierPerExcessImpulse = DamageMultiplierPerExcessImpulse,
+                            MaximumCollisionDamageMultiplier = MaximumDamageMultiplier });
+                    var outcome = ArmorHitResolution.Resolve(ref armor, ArmorSettings[target], ArmorHistory[target],
+                        source, LaunchStateLookup[source].LaunchSequence, ElapsedTime, damage);
+                    Armors[target] = armor;
+                    if (outcome == ArmorHitOutcome.Blocked) return;
+                    if (outcome == ArmorHitOutcome.Absorbed)
+                    {
+                        if (VelocityLookup.HasComponent(target))
+                        {
+                            var velocity = VelocityLookup[target];
+                            float3 direction = TransformLookup[target].Position - TransformLookup[source].Position;
+                            velocity.Linear.xz = math.normalizesafe(direction.xz, new float2(0, 1)) * ArmorSettings[target].KnockbackSpeed;
+                            VelocityLookup[target] = velocity;
+                        }
+                        return;
+                    }
+                }
                 // Establish launch before queuing damage so lethal collision damage is deferred deterministically.
                 if (estimatedImpulse >= MinimumPropagationImpulse)
                 {

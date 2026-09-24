@@ -101,6 +101,7 @@ namespace CrowdPunch.Systems.AI
                         continue;
                     }
 
+                    if (enemy != projectile && EntityManager.HasComponent<EnemyArmor>(enemy)) continue;
                     LocalTransform transform = EntityManager.GetComponentData<LocalTransform>(enemy);
                     EnemyMovementSettings movementSettings = EntityManager.GetComponentData<EnemyMovementSettings>(enemy);
                     DesiredMovement movement = EntityManager.GetComponentData<DesiredMovement>(enemy);
@@ -190,6 +191,7 @@ namespace CrowdPunch.Systems.AI
         {
             return entity != Entity.Null
                 && EntityManager.Exists(entity)
+                && !CrowdPunch.Systems.Combat.ArmorHitResolution.IsProtected(EntityManager, entity)
                 && EntityManager.HasComponent<EnemyTier>(entity)
                 && EntityManager.GetComponentData<EnemyTier>(entity).Value == EnemyCombatTier.Normal
                 && EntityManager.HasComponent<EnemyLaunchState>(entity)

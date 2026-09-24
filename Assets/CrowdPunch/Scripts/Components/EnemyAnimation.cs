@@ -10,7 +10,8 @@ namespace CrowdPunch.Components
         Explosive,
         Ranged,
         Elite,
-        Baseline
+        Baseline,
+        Armored
     }
 
     public struct EnemyAnimation : IComponentData
@@ -23,6 +24,7 @@ namespace CrowdPunch.Components
 
     public struct EnemyAnimationPlayback : IComponentData
     {
+        public uint ArmorHitSequence;
         public float Phase;
         public float2 Movement;
         public byte Initialized;

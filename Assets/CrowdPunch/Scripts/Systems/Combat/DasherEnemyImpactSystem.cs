@@ -31,6 +31,11 @@ namespace CrowdPunch.Systems.Combat
                 .WithAll<Enemy, LocalTransform, EnemyContactDamageSettings, EnemyLaunchState, KnockbackResponse>()
                 .WithNone<RespawnRequest>().Build();
             NativeArray<Entity> targets = targetQuery.ToEntityArray(Allocator.Temp);
+            var armors = SystemAPI.GetComponentLookup<EnemyArmor>();
+            var armorSettings = SystemAPI.GetComponentLookup<EnemyArmorSettings>(true);
+            var armorHistory = SystemAPI.GetBufferLookup<ArmorHitHistory>();
+            var velocities = SystemAPI.GetComponentLookup<Unity.Physics.PhysicsVelocity>();
+            var launchSettings = SystemAPI.HasSingleton<EnemyLaunchSettings>() ? SystemAPI.GetSingleton<EnemyLaunchSettings>() : default;
             var feedbacks = SystemAPI.GetComponentLookup<EnemyImpactFeedback>();
             double elapsed = SystemAPI.Time.ElapsedTime;
             ComponentLookup<LocalTransform> transforms = SystemAPI.GetComponentLookup<LocalTransform>(true);
@@ -67,7 +72,8 @@ namespace CrowdPunch.Systems.Combat
                     ResolveImpact(source, target, sourceTransform.ValueRO.Position,
                         transforms[target].Position, dash.ValueRO, settings.ValueRO, history,
                         ref launches, ref tiers, ref enemyTiers, ref damageRequests, ref impulses,
-                        ref explosiveStates, ref detonationRequests, ref feedbacks, elapsed);
+                        ref explosiveStates, ref detonationRequests, ref feedbacks, elapsed,
+                        ref armors, ref armorSettings, ref armorHistory, ref velocities, launchSettings);
                 }
             }
             targets.Dispose();
@@ -81,7 +87,10 @@ namespace CrowdPunch.Systems.Combat
             ref ComponentLookup<DamageRequest> damageRequests, ref ComponentLookup<ExternalImpulse> impulses,
             ref ComponentLookup<ExplosiveEnemyState> explosiveStates,
             ref ComponentLookup<ExplosiveDetonationRequest> detonationRequests,
-            ref ComponentLookup<EnemyImpactFeedback> feedbacks, double elapsed)
+            ref ComponentLookup<EnemyImpactFeedback> feedbacks, double elapsed,
+            ref ComponentLookup<EnemyArmor> armors, ref ComponentLookup<EnemyArmorSettings> armorSettings,
+            ref BufferLookup<ArmorHitHistory> armorHistory,
+            ref ComponentLookup<Unity.Physics.PhysicsVelocity> velocities, EnemyLaunchSettings launchSettings)
         {
             EnemyLaunchState targetLaunch = launches[target];
             if (targetLaunch.Phase != EnemyLaunchPhase.Active && targetLaunch.Phase != EnemyLaunchPhase.Recovering) return;
@@ -106,6 +115,23 @@ namespace CrowdPunch.Systems.Combat
                 : tier == KnockbackResponseTier.PlayerElite ? settings.EliteKnockback
                 : settings.LaunchedEnemyKnockback;
 
+            if (armors.HasComponent(target))
+            {
+                if (math.length(dash.PreservedLaunchedVelocity) < math.max(.01f, launchSettings.UsefulMomentumSpeed)) return;
+                var armor = armors[target];
+                var outcome = ArmorHitResolution.Resolve(ref armor, armorSettings[target], armorHistory[target],
+                    source, sequence, elapsed, damage);
+                armors[target] = armor;
+                if (outcome == ArmorHitOutcome.Blocked) return;
+                if (outcome == ArmorHitOutcome.Absorbed)
+                {
+                    var velocity = velocities[target];
+                    velocity.Linear.xz = math.normalizesafe(dash.PreservedLaunchedVelocity.xz, new float2(0, 1))
+                        * armorSettings[target].KnockbackSpeed;
+                    velocities[target] = velocity;
+                    return;
+                }
+            }
             if (enemyTiers.HasComponent(target) && EnemyLaunchTransition.IsLaunchable(enemyTiers[target]))
             {
                 EnemyLaunchTransition.Begin(

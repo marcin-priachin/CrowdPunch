@@ -12,6 +12,7 @@ namespace CrowdPunch.Components
         public float NavigationRadius;
         public EnemyMovementSettings MovementSettings;
         public EnemyArchetypeSeparationSettings ArchetypeSeparationSettings;
+        public EnemyArmorSettings ArmorSettings;
         public Health Health;
         public EnemyContactDamageSettings ContactDamageSettings;
         public RangedEnemySettings RangedSettings;

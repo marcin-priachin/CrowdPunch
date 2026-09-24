@@ -32,7 +32,8 @@ namespace CrowdPunch.Tests
             {
                 Time.timeScale = 1f;
                 var controller = go.AddComponent<FeedbackTimeController>();
-                controller.SendMessage("Awake"); // EditMode does not dispatch MonoBehaviour lifecycle.
+                typeof(FeedbackTimeController).GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(controller, null); // EditMode does not dispatch MonoBehaviour lifecycle.
                 FeedbackTimeController.Freeze(.03f);
                 Assert.That(Time.timeScale, Is.Zero);
                 FeedbackTimeController.SetPaused(true);

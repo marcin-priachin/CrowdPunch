@@ -46,6 +46,15 @@ namespace CrowdPunch.Systems.Combat
                 float appliedDamage = health.ValueRO.Current <= 0f
                     ? 0f
                     : math.max(0f, damageRequest.ValueRO.Amount);
+                if (SystemAPI.HasComponent<EnemyArmor>(entity))
+                {
+                    var armor = SystemAPI.GetComponent<EnemyArmor>(entity);
+                    if (armor.Stages > 0) appliedDamage = 0;
+                    else if (SystemAPI.Time.ElapsedTime < armor.ProtectedUntil || armor.PendingBreakDamage > 0)
+                        appliedDamage = math.min(appliedDamage, armor.PendingBreakDamage);
+                    armor.PendingBreakDamage = 0;
+                    SystemAPI.SetComponent(entity, armor);
+                }
                 health.ValueRW.Current = math.clamp(
                     health.ValueRO.Current - appliedDamage,
                     0f,

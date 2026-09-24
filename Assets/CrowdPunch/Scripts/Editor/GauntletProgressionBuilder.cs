@@ -22,13 +22,13 @@ namespace CrowdPunch.Editor
         private static readonly string[] ProfileNames =
         {
             "EnemySpawnSettings", "RangedEnemySpawnSettings", "ExplosiveEnemySpawnSettings",
-            "EnemyDasherSpawnSettings", "EliteEnemySpawnSettings"
+            "EnemyDasherSpawnSettings", "EliteEnemySpawnSettings", "ArmoredEnemySpawnSettings"
         };
 
         private sealed class Wave
         {
             public string Name;
-            public int B, R, X, D, E;
+            public int B, R, X, D, E, A;
             public float Delay = 3f, NextAfter = -1f, Interval = 3f;
             public int Batch;
             public EnemyWaveSettings.SpawnRectangle[] Ranges;
@@ -162,7 +162,7 @@ namespace CrowdPunch.Editor
                 var serialized = new SerializedObject(sequence);
                 var names = serialized.FindProperty("levelSceneNames");
                 var titles = serialized.FindProperty("levelDisplayNames");
-                names.arraySize = titles.arraySize = designs.Length;
+                names.arraySize = titles.arraySize = Mathf.Max(names.arraySize, designs.Length);
                 var build = new List<EditorBuildSettingsScene> { new EditorBuildSettingsScene(bootstrap.path,true) };
                 for (int i=0;i<designs.Length;i++)
                 {
@@ -171,6 +171,10 @@ namespace CrowdPunch.Editor
                     titles.GetArrayElementAtIndex(i).stringValue = $"{i+1:00} {designs[i].Name}";
                     build.Add(new EditorBuildSettingsScene(Scenes+id+".unity",true));
                 }
+                for (int i = designs.Length; i < names.arraySize; i++)
+                    build.Add(new EditorBuildSettingsScene(Scenes + names.GetArrayElementAtIndex(i).stringValue + ".unity", true));
+                foreach (var existing in EditorBuildSettings.scenes)
+                    if (!build.Exists(s => s.path == existing.path)) build.Add(existing);
                 serialized.ApplyModifiedPropertiesWithoutUndo();
                 EditorSceneManager.MarkSceneDirty(bootstrap);
                 EditorSceneManager.SaveScene(bootstrap);
@@ -179,6 +183,61 @@ namespace CrowdPunch.Editor
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(previous); }
             Debug.Log("Authored ten gauntlets and 39 exact-composition wave assets. Enemy profiles and prefabs were only read.");
+        }
+
+        [MenuItem("Crowd Punch/Levels/Build Armored Gauntlet 12")]
+        public static void BuildArmored()
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before authoring.");
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+                if (SceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save open scenes before authoring.");
+            var previous = EditorSceneManager.GetSceneManagerSetup();
+            try
+            {
+                var profiles = new EnemySpawnSettings[ProfileNames.Length];
+                for (int i = 0; i < profiles.Length; i++)
+                    profiles[i] = AssetDatabase.LoadAssetAtPath<EnemySpawnSettings>(Root + "Data/Settings/Enemies/" + ProfileNames[i] + ".asset");
+                if (profiles[5] == null) throw new InvalidOperationException("Rebuild the Armored prefab first.");
+                var range = new[] { Range(0, 3, 18, 14) };
+                var design = new Level { Name = "Crack the Shell", Outline = Clipped(28, 30, 3),
+                    Spacing = new Vector2(23, 25), Entry = new Vector2(0, -10),
+                    Lanes = new[] { new Vector4(-5, 1, 2, 22), new Vector4(5, 1, 2, 22) },
+                    Waves = new[] {
+                        new Wave { Name = "First Shell", B = 6, A = 1, Delay = 2, Ranges = range },
+                        new Wave { Name = "Three Shells", B = 12, A = 3, Delay = 3, Ranges = range }
+                    } };
+                BuildLevel(11, design, profiles, AssetDatabase.LoadAssetAtPath<Material>(Root + "Materials/Ground.mat"),
+                    MaterialAsset("GauntletWalls", new Color(.13f,.19f,.24f)),
+                    MaterialAsset("GauntletLanes", new Color(.43f,.48f,.4f)),
+                    MaterialAsset("GauntletBackdrop", new Color(.08f,.105f,.13f)));
+                var sub = EditorSceneManager.OpenScene(Scenes + "Gauntlet_12/Gauntlet_12 Sub Scene.unity", OpenSceneMode.Single);
+                var arena = UnityEngine.Object.FindFirstObjectByType<ArenaAuthoring>();
+                var navigation = arena.gameObject.AddComponent<NavigationArenaAuthoring>();
+                navigation.settings = AssetDatabase.LoadAssetAtPath<NavigationSettings>(Root + "Data/Settings/NavigationSettings.asset");
+                var encounter = UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>();
+                var wd = new SerializedObject(encounter); wd.FindProperty("minimumPlayerDistance").floatValue = 4;
+                wd.ApplyModifiedPropertiesWithoutUndo();
+                EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
+                var main = EditorSceneManager.OpenScene(Scenes + "Gauntlet_12.unity", OpenSceneMode.Single);
+                var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
+                marker.FindProperty("openingHint").stringValue = "Launch bodies into blue armor. Three hits crack it open. Punches alone cannot break armor.";
+                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
+                var bootstrap = EditorSceneManager.OpenScene(Root + "Scenes/Bootstrap.unity", OpenSceneMode.Single);
+                var sequence = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
+                var names = sequence.FindProperty("levelSceneNames"); var titles = sequence.FindProperty("levelDisplayNames");
+                names.arraySize = titles.arraySize = Mathf.Max(12, names.arraySize);
+                names.GetArrayElementAtIndex(11).stringValue = "Gauntlet_12";
+                titles.GetArrayElementAtIndex(11).stringValue = "12 Crack the Shell";
+                sequence.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(bootstrap); EditorSceneManager.SaveScene(bootstrap);
+                var build = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+                build.RemoveAll(s => s.path == Scenes + "Gauntlet_12.unity");
+                int boss = build.FindIndex(s => s.path == Scenes + "Gauntlet_11.unity");
+                build.Insert(boss + 1, new EditorBuildSettingsScene(Scenes + "Gauntlet_12.unity", true));
+                EditorBuildSettings.scenes = build.ToArray();
+                GauntletNatureEnvironment.ApplyLevel(12);
+                AssetDatabase.SaveAssets();
+            }
+            finally { EditorSceneManager.RestoreSceneManagerSetup(previous); }
         }
 
         private static void BuildLevel(int index, Level design, EnemySpawnSettings[] profiles,
@@ -278,8 +337,9 @@ namespace CrowdPunch.Editor
             bool created=asset==null;
             if(created) asset=ScriptableObject.CreateInstance<EnemyWaveSettings>();
             var data=new SerializedObject(asset);
-            int[] counts={recipe.B,recipe.R,recipe.X,recipe.D};
-            data.FindProperty("totalEnemyCount").intValue=recipe.B+recipe.R+recipe.X+recipe.D;
+            int[] counts={recipe.B,recipe.R,recipe.X,recipe.D,0,recipe.A};
+            data.FindProperty("totalEnemyCount").intValue=recipe.B+recipe.R+recipe.X+recipe.D+recipe.A;
+            data.FindProperty("armoredAmmunitionProfile").objectReferenceValue = recipe.A > 0 ? profiles[0] : null;
             var entries=data.FindProperty("enemies");
             entries.ClearArray();
             for(int i=0;i<counts.Length;i++)

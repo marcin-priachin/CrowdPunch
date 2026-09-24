@@ -18,6 +18,7 @@ namespace CrowdPunch.Systems.Presentation
         {
             new PlaybackJob
             {
+                Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
                 Movement = SystemAPI.GetComponentLookup<DesiredMovement>(true),
                 Settings = SystemAPI.GetComponentLookup<EnemyMovementSettings>(true),
                 Transforms = SystemAPI.GetComponentLookup<LocalTransform>(true),
@@ -35,6 +36,7 @@ namespace CrowdPunch.Systems.Presentation
         [BurstCompile]
         private partial struct PlaybackJob : IJobEntity
         {
+            [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movement;
             [ReadOnly] public ComponentLookup<EnemyMovementSettings> Settings;
             [ReadOnly] public ComponentLookup<LocalTransform> Transforms;
@@ -79,6 +81,33 @@ namespace CrowdPunch.Systems.Presentation
                 if (animation.Profile == (byte)EnemyAnimationProfile.Ranged)
                 {
                     AnimateRanged(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Armored)
+                {
+                    if (launch.Phase == EnemyLaunchPhase.Launched)
+                    {
+                        playback.HitActive = 0;
+                        AnimateBaseline(owner, ref playback, ref skin, ref samples, launch);
+                    }
+                    else if (launch.Phase == EnemyLaunchPhase.Recovering)
+                    {
+                        if (playback.WasLaunched != 0) { playback.ImpactPhase = 0; playback.WasLaunched = 0; }
+                        playback.ImpactPhase = math.saturate(playback.ImpactPhase + DeltaTime / math.max(.01f, samples.Durations[2]));
+                        float recoveryFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                        int from = (int)recoveryFrame;
+                        ApplyFrame(ref skin, ref samples, 2, from, math.min(from + 1, samples.FrameCount - 1), math.frac(recoveryFrame));
+                    }
+                    else
+                    {
+                        if (Armors.HasComponent(owner) && playback.ArmorHitSequence != Armors[owner].HitSequence)
+                        {
+                            playback.ArmorHitSequence = Armors[owner].HitSequence;
+                            playback.HitActive = 1;
+                            playback.HitPhase = 0;
+                        }
+                        AnimateElite(owner, ref playback, ref skin, ref samples, launch);
+                    }
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Elite)
@@ -179,7 +208,8 @@ namespace CrowdPunch.Systems.Presentation
             private void AnimateDasher(Entity owner, ref EnemyAnimationPlayback playback,
                 ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
             {
-                bool dashing = Dashers.HasComponent(owner) && Dashers[owner].Phase == DasherPhase.Dashing;
+                bool dashing = launch.Phase == EnemyLaunchPhase.Active
+                    && Dashers.HasComponent(owner) && Dashers[owner].Phase == DasherPhase.Dashing;
                 if (launch.Phase == EnemyLaunchPhase.Launched || dashing)
                 {
                     playback.Landing = 0;

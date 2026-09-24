@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-09-22
+Last updated: 2026-09-24
 
 ## How To Read This Document
 
@@ -58,7 +58,7 @@ The player approaches or is pressured by a crowd, chooses position and launch di
 
 Status: Must
 
-A run progresses through a fixed sequence of small, closed gauntlet levels and culminates in defeating a boss. Each gauntlet uses a distinct compact layout and a bounded crowd encounter rather than an open level or branching route.
+A run progresses through a fixed sequence of small, closed gauntlet levels and includes a boss encounter before later gauntlets. Defeating a boss completes its gauntlet; it does not end the game. Each gauntlet uses a distinct compact layout and a bounded crowd encounter rather than an open level or branching route.
 
 ### LOOP-003 — Run Duration
 
@@ -110,7 +110,7 @@ Status: Must
 
 When an attack is committed, the player should not be uncertain about its initial launch direction. Later deviations caused by real collisions are desirable physical outcomes, not aiming ambiguity.
 
-Player punches use configurable range-based aim assistance limited by a configurable maximum horizontal angle from player facing. When an enemy first enters the live punch volume, cast a ray from that enemy along the player's facing direction for the configured assist range. A ray-hit enemy inside the angular limit becomes that source enemy's locked launch target; later valid ray-hit enemies replace the lock, while a ray miss retains it only while it remains within both limits. If the initial ray has no enemy target, use the eligible enemy within the range and angular limits with the smallest planar angle from the facing direction as the initial lock. The lock clears when the source leaves the punch volume. Launch and preview both point from the source toward its current locked target. An assist range of zero disables this behavior. Aim assistance changes launch direction only and does not expand or redirect the punch volume.
+Player punches use configurable range-based aim assistance limited by a configurable maximum horizontal angle from player facing. When an enemy first enters the live punch volume, cast a ray from that enemy along the player's facing direction for the configured assist range. A ray-hit enemy inside the angular limit becomes that source enemy's locked launch target; later valid ray-hit enemies replace the lock, while a ray miss retains it only while it remains within both limits. If the initial ray has no enemy target, use the eligible enemy within the range and angular limits with the smallest planar angle from the facing direction as the initial lock. Protected Armored enemies do not originate a launch preview, but remain valid targets for aim assistance and launched-body homing from another body. The lock clears when the source leaves the punch volume. Launch and preview both point from the source toward its current locked target. An assist range of zero disables this behavior. Aim assistance changes launch direction only and does not expand or redirect the punch volume.
 
 ### PLAYER-005 — Consistent Punch During Dash
 
@@ -143,7 +143,7 @@ Represent punch cooldown on the player model's `hand_r` bone rather than with a 
 
 Status: Must
 
-Punches use a configurable cooldown that begins only when the punch hits at least one eligible enemy. A missed punch does not activate cooldown. Hitting multiple enemies with one punch starts cooldown only once. Punch input rejected by cooldown does not alter dash movement.
+Punches use a configurable cooldown that begins only when the punch hits at least one eligible enemy. A punch connecting with a protected Armored enemy activates cooldown despite applying no damage, push, stagger, or launch. A missed punch does not activate cooldown. Hitting multiple enemies with one punch starts cooldown only once. Punch input rejected by cooldown does not alter dash movement.
 
 ### PLAYER-010 — Supported Input Methods
 
@@ -257,7 +257,7 @@ A launched body can damage the player as a physical projectile regardless of whe
 
 Status: Must
 
-Ordinary melee enemies remain distributed across the arena while a limited configurable number of the closest eligible enemies actively approach and surround the player. The pressure allocation must retain arena-wide launch opportunities rather than drawing the whole crowd into one group. Ranged positioning, committed Dasher behavior, and elite crowd support override this baseline allocation, and local enemy separation continues to influence movement in both roles.
+Ordinary melee enemies remain distributed across the arena while a limited configurable number of the closest eligible enemies actively approach and surround the player. The pressure allocation must retain arena-wide launch opportunities rather than drawing the whole crowd into one group. Ranged positioning, committed Dasher behavior, continuous Armored pursuit, and elite crowd support override this baseline allocation, and local enemy separation continues to influence movement in both roles.
 
 ### COMBAT-018 — Ground-Plane Enemy Physics
 
@@ -357,7 +357,7 @@ Except for its authored dash and launched-impact modifiers, the Dasher follows o
 
 Status: Must
 
-While at least one non-defeated elite is active in the arena, active normal enemies cooperate with the nearest active elite to make its projectile punch easier to execute. The closest eligible active normal enemy to the elite is always selected as its projectile regardless of spawn order or its distance from the player, and that choice is re-evaluated during setup at the elite's retarget interval. Before waiting, the projectile adjusts to the nearest sampled staging position whose path and resulting elite-to-behind-projectile approach lane are not blocked by static geometry or another non-defeated enemy. If the selected projectile is beside an obstacle, it must keep moving far enough away to provide clearance for the elite's full behind-projectile aiming position and approach lane before the elite approaches. It stops only once that lane is clear, anchoring a stable setup position; until then, the elite waits and does not consume its setup timeout. The elite then repositions behind it within punch tolerance and steers through a side waypoint whenever a direct approach would cross the target's collision clearance, avoiding premature target contact before alignment. After launching a projectile, the elite retains its attack cooldown but uses that interval to approach the next closest eligible active normal rather than resuming ordinary player chase. Other active normal enemies steer laterally out of the projectile-to-player shot corridor. Launched, recovering, defeated, disabled, and pooled enemies do not perform this support movement. With multiple active elites, each normal enemy supports the nearest elite, with entity index used only as a deterministic exact-distance tie break.
+While at least one non-defeated elite is active in the arena, active normal enemies cooperate with the nearest active elite to make its projectile punch easier to execute. Normal enemies with armor remaining are ineligible, including stale selections and area punch resolution. After armor breaks, ordinary eligibility applies. The closest eligible active normal enemy to the elite is always selected as its projectile regardless of spawn order or its distance from the player, and that choice is re-evaluated during setup at the elite's retarget interval. Before waiting, the projectile adjusts to the nearest sampled staging position whose path and resulting elite-to-behind-projectile approach lane are not blocked by static geometry or another non-defeated enemy. If the selected projectile is beside an obstacle, it must keep moving far enough away to provide clearance for the elite's full behind-projectile aiming position and approach lane before the elite approaches. It stops only once that lane is clear, anchoring a stable setup position; until then, the elite waits and does not consume its setup timeout. The elite then repositions behind it within punch tolerance and steers through a side waypoint whenever a direct approach would cross the target's collision clearance, avoiding premature target contact before alignment. After launching a projectile, the elite retains its attack cooldown but uses that interval to approach the next closest eligible active normal rather than resuming ordinary player chase. Other active normal enemies steer laterally out of the projectile-to-player shot corridor. Launched, recovering, defeated, disabled, and pooled enemies do not perform this support movement. With multiple active elites, each normal enemy supports the nearest elite, with entity index used only as a deterministic exact-distance tie break.
 
 ### ENEMY-010 — Explosive Proximity Pressure
 
@@ -383,11 +383,31 @@ Status: Must
 
 An unexploded Explosive detonates when it collides with another enemy while either participant is `Launched`, or when it reaches the player while still `Active`. The explosion resolves immediately, deals configured damage throughout its radius, applies the configured knockback for the affected target tier, launches ordinary affected enemies through the shared launch lifecycle, may trigger other unexploded Explosives in range during the same resolution, damages and knocks back the player when in range, and defeats the exploding enemy. An Explosive can detonate only once.
 
+### ENEMY-014 - Armored Normal Enemy
+
+Status: Must
+
+Armored is a normal archetype available in EnemySpawnSettings and weighted/guaranteed EnemyWaveSettings entries. It starts with three armor stages. While stages remain, player punches connect for hit-confirmed cooldown but cause no damage, launch, stagger or push, and no trajectory preview originates from that enemy. It remains a valid aim-assist/homing target for other launched bodies. Elites cannot select or launch protected Armored enemies; special launch paths, including direct boss scattering, must not bypass armor.
+
+A meaningful launched-enemy impact removes one stage regardless of player, elite or boss launch origin; propagated chains and launched Dashers qualify. Explosions also remove one stage. Ordinary crowd contact and all other ordinary damage do not. The first two accepted hits briefly interrupt pursuit and cause modest recoil without entering Launched or losing health. The third removes armor and uses that event's existing ordinary launch/damage rules exactly once. Earlier armor hits never accumulate health damage. Preserve deferred defeat, recovery and pooling; a survivor stays unarmored after recovery and can be punched and re-punched normally.
+
+Count each source body once per continuous source launch against a target. A short configurable protection window suppresses additional armor loss and health damage, including through the breaking transition. An explosive body's impact and its associated explosion count as one event against each Armored target in either order, including when breaking armor; repeated explosion evaluation cannot add another stage loss or damage outcome. Fresh spawning, pooled reuse and restart restore all three stages and clear transient state.
+
+Active Armored enemies continuously pursue the player with obstacle navigation and local separation, independently of baseline pressure slots, surround positions, wind-ups or lunge schedules. Start near baseline charging speed. Stagger suspends pursuit; launch, recovery, defeat, pooling and unavailable-player states suppress movement normally. Chase steering must preserve launch and recoil velocity. Ordinary contact damage and player pushback apply. Use Orc_Skull.fbx and embedded sampled animations, plus distinct configurable full/chipped/cracked/broken colors that remain readable between impacts; no runtime Animator per crowd enemy.
+
+### ENEMY-015 - Armored Introduction And Ammunition
+
+Status: Must
+
+Gauntlet_12 follows the Gauntlet_11 boss. Introduce one Armored with Baseline launch ammunition, then several Armored with a supporting Baseline crowd. Retain compact arena styling, navigation and space for repeated aligned shots.
+
+An opted-in encounter supplies one Baseline when undefeated protected Armored enemies remain and no other usable ammunition remains. Broken-armor enemies count as ammunition when otherwise punchable. Respect existing bodies and pending spawns, safe placement, encounter ownership, defeat counters and cleanup. Repeat only as needed; stop when no protected enemies need support. Replacements must neither complete a wave early nor prevent its eventual completion, and must not survive restart or scene unloading.
+
 ### INFO-001 — No Persistent Normal-Enemy UI
 
 Status: Must
 
-Do not attach persistent health bars, names, status icons, targeting markers, or other persistent UI to normal enemies. There will be too many of them, and such UI would add noise to an already busy screen. A normal enemy may show a temporary health bar for one second after receiving damage; another damaging hit refreshes that interval.
+Do not attach persistent health bars, names, status icons, targeting markers, or other persistent UI to normal enemies. There will be too many of them, and such UI would add noise to an already busy screen. Armored enemies have no health bar or additional status UI, including after armor breaks. Other normal enemies may show a temporary health bar for one second after receiving damage; another damaging hit refreshes that interval.
 
 ### INFO-002 — Minimal HUD
 
@@ -487,7 +507,7 @@ EnemyWaveSettings owns supporting composition, population and replenishment usin
 
 Status: Must
 
-The complete encounter is gauntlet 11 after the existing ten. Gauntlet 10 advances to it; head defeat triggers the existing run-complete flow once. Supporting wave completion cannot win early. Build configuration, sequence, display names and selection include the boss. Restart, death/retry, selection, unloading and replay reset or remove parts, attacks, ownership, replenishment, feedback and completion while preserving existing player reset conventions.
+The complete encounter is gauntlet 11 after the existing ten. Gauntlet 10 advances to it; head defeat completes that gauntlet once and advances to Gauntlet_12 through the existing sequence. Completing Gauntlet_12 uses normal final-level completion until further levels are authored. Supporting wave completion cannot win early. Build configuration, sequence, display names and selection include the boss. Restart, death/retry, selection, unloading and replay reset or remove parts, attacks, ownership, replenishment, feedback and completion while preserving existing player reset conventions.
 
 ### BOSS-008 - Presentation And Configuration
 
@@ -507,7 +527,7 @@ Target approximately 2-3 minutes through tuning and playtesting, without a force
 
 Status: Must
 
-A fixed sequence of small, closed gauntlet levels leading to the boss. The MVP does not require open levels, branching routes, or seamless traversal between gauntlets.
+A fixed sequence of small, closed gauntlet levels including the boss and continuing afterward. The MVP does not require open levels, branching routes, or seamless traversal between gauntlets.
 
 ### MVP-002 — Boss
 
@@ -519,7 +539,7 @@ One complete boss encounter that proves crowd-mediated boss interaction.
 
 Status: Must
 
-Four standard enemy types: Baseline, Explosive, Ranged, and Dasher. Elite enemies are an additional special encounter layer and do not count toward the four standard enemy types. Their distribution across gauntlets remains encounter-pacing and tuning work.
+Five standard enemy types: Baseline, Explosive, Ranged, Dasher, and Armored. Elite enemies are an additional special encounter layer and do not count toward the five standard enemy types. Their distribution across gauntlets remains encounter-pacing and tuning work.
 
 ### MVP-004 — Weapons
 
@@ -531,7 +551,7 @@ Two weapons. Their exact identities and acquisition model remain unresolved.
 
 Status: Must
 
-The MVP must support a start-to-boss-to-win-or-loss run rather than only a combat sandbox.
+The MVP must support a start-through-boss-and-later-gauntlets-to-win-or-loss run rather than only a combat sandbox.
 
 ## Explicit Non-Goals For The Current Baseline
 

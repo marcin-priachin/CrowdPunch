@@ -50,6 +50,12 @@ namespace CrowdPunch.Systems.Combat
                          .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
+                if (ArmorHitResolution.IsProtected(state.EntityManager, enemy))
+                {
+                    punchRequest.HitEnemy |= PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, punch)
+                        && PunchResolution.Contains(transform.ValueRO.Position, punch);
+                    continue;
+                }
                 PunchSpecification targetPunch = punch;
                 if (PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, punch)
                     && PunchResolution.Contains(transform.ValueRO.Position, punch)

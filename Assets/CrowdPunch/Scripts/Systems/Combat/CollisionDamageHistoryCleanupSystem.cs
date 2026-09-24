@@ -39,6 +39,23 @@ namespace CrowdPunch.Systems.Combat
                     }
                 }
             }
+            var explosives = SystemAPI.GetComponentLookup<ExplosiveEnemyState>(true);
+            var respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true);
+            foreach (var history in SystemAPI.Query<DynamicBuffer<ArmorHitHistory>>())
+                for (int i = history.Length - 1; i >= 0; i--)
+                {
+                    var hit = history[i];
+                    bool expired = !launchStateLookup.HasComponent(hit.Source);
+                    if (!expired)
+                    {
+                        var source = launchStateLookup[hit.Source];
+                        bool exploded = explosives.HasComponent(hit.Source) && explosives[hit.Source].HasExploded != 0;
+                        expired = source.LaunchSequence != hit.LaunchSequence
+                            || source.Phase != EnemyLaunchPhase.Launched && !exploded
+                            || respawns.HasComponent(hit.Source) && respawns[hit.Source].IsPooled != 0;
+                    }
+                    if (expired) history.RemoveAtSwapBack(i);
+                }
             foreach (var (hand,history) in SystemAPI.Query<RefRO<BossHand>,DynamicBuffer<BossScatterHistory>>())
                 for(int i=history.Length-1;i>=0;i--)
                     if(history[i].AttackSequence!=hand.ValueRO.AttackSequence || !launchStateLookup.HasComponent(history[i].Body))
