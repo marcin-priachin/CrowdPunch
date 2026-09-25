@@ -114,7 +114,12 @@ namespace CrowdPunch.Mono.UI
             view.StateLabel.gameObject.SetActive(false);
             view.ShieldIndicator.SetActive(true);
             for (int index = 0; index < view.ShieldIcons.Length; index++)
+            {
                 view.ShieldIcons[index].gameObject.SetActive(index < remaining);
+                if (index < remaining)
+                    view.ShieldIcons[index].rectTransform.anchoredPosition =
+                        new Vector2((index - (remaining - 1) * .5f) * 20f, 0f);
+            }
         }
 
         private bool TryProject(Vector3 worldPosition, out Vector2 localPosition)

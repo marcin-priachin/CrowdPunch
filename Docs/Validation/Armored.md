@@ -1,17 +1,18 @@
 # Armored and Gauntlet_12 validation
 
-Validated in Unity 6000.3.10f1 on 2026-09-24. Requirements: ENEMY-014/015,
+Validated in Unity 6000.3.10f1 on 2026-09-25. Requirements: ENEMY-014/015,
 PLAYER-004/009, COMBAT-014/017, INFO-001/004, LOOP-002 and BOSS-007.
 
 ## Implemented content and defaults
 
-- Armored is serialized archetype 5, Normal tier, with three armor stages and no health bar.
+- Armored is serialized archetype 5, Normal tier, with two shield stages and no health bar.
   A small overhead row displays one shield icon per remaining stage and hides at zero.
 - Protected punches confirm cooldown without gameplay effects or an originating trajectory preview.
   Launched bodies of any ownership and explosions strip stages; source-launch identity and a shared
   protection deadline deduplicate body/blast events and multi-contact bursts.
-- First two hits: no health loss or launch, 0.30 s stagger and 3 m/s planar recoil.
-  Protection lasts 0.25 s, including after the break. The breaking event uses ordinary damage/launch.
+- Both shield hits: no health loss or launch, 0.30 s stagger and 3 m/s planar recoil.
+  Protection lasts 0.25 s, including after the last shield disappears. A subsequent eligible
+  hit uses ordinary damage/launch.
 - The model keeps one slate tint (0.55, 0.60, 0.66) at every armor stage. Transient hit flashes
   still play. The shield count uses a shared Sprite on the existing pooled screen-space Canvas.
 - Authored profile: 30 health; 8 m/s movement times 1.25 charge multiplier = 10 m/s pursuit.
@@ -28,9 +29,9 @@ PLAYER-004/009, COMBAT-014/017, INFO-001/004, LOOP-002 and BOSS-007.
 ## Automated regression and compilation
 
 [Unity EditMode results](Armored/editmode-results.xml): **148 passed, 0 failed, 0 skipped**.
-Coverage includes armor stages, damage-on-break, surviving recovery, blocked punch confirmation,
+Coverage includes shield stages, damage after shield removal, surviving recovery, blocked punch confirmation,
 unarmored punches/re-punches, assist targets, source-launch and invulnerability deduplication,
-explosive event orders (including breaking hits), launched Dasher ownership and gentle contacts,
+explosive event orders (including last-shield hits), launched Dasher ownership and gentle contacts,
 elite selection/stale reservations/area resolution, recoil preservation, pooling, ammunition
 eligibility, shield-count UI across break/reuse/pooling, prefab physics, sampled animation,
 navigation, boss rules and twelve-level scene wiring.
@@ -43,15 +44,16 @@ Unity imported/compiled the new code, generated prefab/samples/materials, and ba
 [Controlled Play Mode log](Armored/playcheck.txt) passes the full sequence:
 
 - Real Unity Physics solver impacts with player-, elite- and boss-origin launch causes remove one
-  stage each; the first two preserve health/Active phase, the third launches and later applies damage.
-- A surviving broken enemy recovers without armor. Restart restores three stages.
+  shield each for the first two hits, preserving health/Active phase. The third hit launches and
+  later applies damage without a shield indicator.
+- A surviving unshielded enemy recovers without armor. Restart restores two shields.
 - A geometrically connected protected punch reports a hit, writes no impulse and produces no preview.
 - Three consecutive ammunition shortages each produce exactly one owned replacement; cumulative
   undefeated count stays correct. The next wave contains fifteen enemies and final completion succeeds.
 - Boss defeat triggers the real progression signal, loads Gauntlet_12 and removes boss/crowd ownership.
 - Baked Armored render entities have valid sample blobs and finite skin matrices.
 - A [Game View capture](Armored/shield-gameview.png) shows three otherwise equally tinted
-  Armored enemies with three, two and one shield icons directly above their models. These
+  Armored enemies with two, one and zero shield icons directly above their models. These
   states were arranged for visual inspection after live hit-count verification.
 - The latest live check also verifies the shield count at spawn, after each real solver hit,
   on break, and after restart.

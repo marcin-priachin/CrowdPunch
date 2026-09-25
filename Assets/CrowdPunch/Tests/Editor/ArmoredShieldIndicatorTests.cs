@@ -61,6 +61,8 @@ namespace CrowdPunch.Tests
                         Assert.That(icon.GetComponent<UnityEngine.UI.Image>().sprite, Is.Not.Null);
                     }
                     Assert.That(visible, Is.EqualTo(remaining));
+                    if (remaining == 1)
+                        Assert.That(((RectTransform)shields.GetChild(0)).anchoredPosition.x, Is.Zero);
                 }
                 em.SetComponentData(enemy, new EnemyArmor());
                 bridge.Update(world.Unmanaged);

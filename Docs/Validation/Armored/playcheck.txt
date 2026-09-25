@@ -1,8 +1,8 @@
 Controlled Editor validation: placed bodies, injected launches/defeats, restored player health. Not balance evidence.
 PASS opening 1 Armored + 6 Baselines; sampled skin matrices finite; active pursuit
 PASS protected punch confirms cooldown connection, no impulse or trajectory preview
-PASS real solver impact 1, cause PlayerPunch, armor=2, health=100
-PASS real solver impact 2, cause ElitePunch, armor=1, health=100
+PASS real solver impact 1, cause PlayerPunch, armor=1, health=100
+PASS real solver impact 2, cause ElitePunch, armor=0, health=100
 PASS real solver impact 3, cause BossAttack, armor=0, health=100
 PASS surviving broken enemy recovers unarmored
 PASS restart restores fresh armor; exhausted original ammunition
