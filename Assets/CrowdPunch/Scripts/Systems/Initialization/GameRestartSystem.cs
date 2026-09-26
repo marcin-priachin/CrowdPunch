@@ -41,6 +41,15 @@ namespace CrowdPunch.Systems.Initialization
             }
             ResetWaveSequences();
             BossEncounterReset.Reset(EntityManager);
+            foreach (var rebounds in SystemAPI.Query<DynamicBuffer<BarricadeRebound>>()) rebounds.Clear();
+            foreach (var (wall, collider, history) in SystemAPI.Query<RefRW<Barricade>, RefRW<PhysicsCollider>, DynamicBuffer<BarricadeHitHistory>>())
+            {
+                wall.ValueRW.HitsRemaining = wall.ValueRO.RequiredHits;
+                wall.ValueRW.HitSequence = 0;
+                wall.ValueRW.LastHitTime = 0;
+                collider.ValueRW.Value = wall.ValueRO.IntactCollider;
+                history.Clear();
+            }
             EntityQuery oldWaveEnemies = SystemAPI.QueryBuilder().WithAll<EnemyWaveOwnership>().Build();
             using (NativeArray<Entity> waveEnemyRoots = oldWaveEnemies.ToEntityArray(Allocator.Temp))
             {

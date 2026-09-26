@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-09-24
+Last updated: 2026-09-26
 
 ## How To Read This Document
 
@@ -143,7 +143,7 @@ Represent punch cooldown on the player model's `hand_r` bone rather than with a 
 
 Status: Must
 
-Punches use a configurable cooldown that begins only when the punch hits at least one eligible enemy. A punch connecting with a protected Armored enemy activates cooldown despite applying no damage, push, stagger, or launch. A missed punch does not activate cooldown. Hitting multiple enemies with one punch starts cooldown only once. Punch input rejected by cooldown does not alter dash movement.
+Punches use a configurable cooldown that begins when the punch hits at least one eligible enemy or an intact barricade. A punch connecting with a protected Armored enemy or intact barricade activates cooldown despite applying no damage, push, stagger, or launch to it. A missed punch does not activate cooldown. Hitting multiple targets with one punch starts cooldown only once. Punch input rejected by cooldown does not alter dash movement.
 
 ### PLAYER-010 — Supported Input Methods
 
@@ -270,6 +270,38 @@ Enemies may fall from their initial spawn height until they reach the ground. Af
 Status: Must
 
 Enemy spacing and arena-wide distribution use an authored movement volume that is independent from the authored out-of-bounds defeat volume. Leaving the spacing volume does not itself defeat an enemy; leaving the defeat volume requests pooling for respawning enemies or terminal defeat for fixed encounter enemies. The two volumes may use different centers and sizes so launched bodies can travel beyond the ordinary crowd area before being removed.
+
+## Barricade Objective
+
+### BARRICADE-001 - Break And Exit
+
+Status: Must
+
+Add Gauntlet_13 only, after Gauntlet_12. Its objective is to destroy one solid barricade with shared durability, then reach the exposed exit. Surviving enemies need not be cleared and remain hostile. Use a broad, unobstructed approach. Existing gauntlets retain their encounters and layouts.
+
+### BARRICADE-002 - Counted Hits
+
+Status: Must
+
+Launched enemy bodies and explosions reduce a fixed hit count, initially three. Each enemy counts once per continuous launch; a re-punch starts a new eligible launch. Different bodies in the same chain each count. An exploder's body impact and associated explosion together count once. Eligible launch ownership is configurable in a settings asset, defaulting to all launched bodies, including elite-owned and boss-owned bodies and their descendants. Explosions can count independently of whether their source was launched. Direct player punches do no barricade damage but consume cooldown (PLAYER-009).
+
+### BARRICADE-003 - Physical Response
+
+Status: Must
+
+Bodies rebound from an intact barricade and remain eligible for ordinary crowd collisions and propagation. The destroying body continues through the broken barricade. The intact barricade blocks player traversal; destruction exposes the exit. Rebound strength is configurable tuning.
+
+### BARRICADE-004 - Existing Aiming And Feedback
+
+Status: Must
+
+An intact barricade participates as a target in the existing enemy aim-assist mechanics, with the same ray selection, lock retention, angular and range limits, and fallback selection. Launch and short initial trajectory preview agree (PLAYER-003/004); no separate barricade alignment mechanic is introduced. Propagated aim correction and launched-body homing also accept it. Broken barricades cease to be targets. Show distinct visual damage stages and impact/destruction effects, without a health bar. Show one brief nonblocking opening instruction through the existing tutorial presentation. Previewing the rebound path is not required.
+
+### BARRICADE-005 - Bounded Replenishing Crowd
+
+Status: Must
+
+Continuously replenish a configurable bounded crowd of Baseline melee enemies with occasional Explosives while the barricade is intact. Stop pending and future replenishment immediately when it breaks; surviving enemies continue their normal behavior. Crowd composition, replenishment timing, visual effect parameters, and exit placement use configurable implementation defaults. Do not add a second harder barricade level or a finite-wave fallback ammunition system.
 
 ## Effects And Combinations
 

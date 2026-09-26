@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-09-24
+Last inspected: 2026-09-26
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -19,7 +19,7 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_12` each contain their matching ECS SubScene. Twelve gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss. The separate navigation validation scenes remain outside progression.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_13` each contain their matching ECS SubScene. Thirteen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
@@ -1020,3 +1020,68 @@ Default armor tuning: 0.30 s stagger, 3 m/s planar recoil, 0.25 s hit protection
 The stable body tint and shield icons are presentation constants.
 
 Scene, physics, regression and crowd-cost evidence is recorded in [Armored validation](../Validation/Armored.md).
+
+## Barricade And Gauntlet_13 (BARRICADE-001..005)
+
+Gauntlet_13, "Break Through", follows the unchanged Gauntlet_12. The main scene supplies the
+entry and nonblocking opening hint. Its SubScene contains a 28 x 36 m court, one solid
+28 x 4 x 1.2 m barricade at z=11, and a green exit at z=15. It reuses the nature environment,
+existing Baseline/Explosive prefabs, wave placement and pooling. The Bootstrap selector and
+build list contain thirteen gauntlets. This is the last currently authored level, not a
+decision about the final game's total length.
+
+`BarricadeAuthoring` and `BarricadeBaker` bake shared hit-count state, collider references,
+exit geometry and tuning from `Data/Settings/BarricadeSettings.asset`. The collider is a
+dedicated static Unity Physics box; changing durability never changes an enemy's archetype.
+The baker owns immutable intact and zero-filter collider blobs, swapping the component's
+reference on destruction instead of mutating a shared collider. No enemy health component
+or health-bar presentation is attached to the barricade.
+
+`BarricadeImpactSystem` runs last in pre-physics, after launch homing and ground constraint.
+Swept AABBs cheaply reject distant bodies; remaining launches cast their actual collider
+through the upcoming fixed-step displacement in the existing collision world. The closest
+blocking lateral hit is authoritative, so a nearer enemy or solid is not shot through.
+`BarricadeHitResolution` counts source entity + launch sequence once. Owner masks accept
+Player/Enemy/Boss/unowned launches by default. Independent radial explosions also use this
+resolution and the closest point on the box; an explosive impact requests the existing
+explosion pipeline, sharing its identity with the blast. History expires on pooling,
+destruction or a changed source launch sequence, and restart clears it.
+
+Destroying hits swap the collider before the physics world rebuild and preserve incoming
+velocity. Intact hits queue a `BarricadeRebound` buffer entry; `BarricadeReboundSystem` runs
+after physics and before ordinary launch propagation and explosions. It reflects horizontal
+incoming velocity at the configured multiplier, clears the homing lock, and corrects only
+normal penetration if a fast discrete step tunneled through the contact plane. It does not
+perform normal enemy movement. A wall broken by another body in that step cancels pending
+rebounds, letting the bodies continue through. Ordinary collisions, damage, ownership and
+recovery remain under their existing systems.
+
+The existing punch detection tests overlap against the box surface and returns its existing
+connection result for cooldown, with no barricade damage. The barricade is an additional
+candidate for the existing persistent punch lock, propagated correction and homing. Selection
+still uses target centers and the same ranges, angles, ray replacement and tie-breaking rules.
+The existing initial-direction preview follows that lock; it does not predict rebound.
+
+An optional `BarricadeCrowdSequence` link on `EnemyWaveSequenceAuthoring` requires one wave
+and excludes a boss owner. Initial allocation remains `EnemyWaveSpawnSystem`; its finite
+allocation never advances by kills for this objective. Spawned roots carry
+`BarricadeCrowdMember`. Replenishment enables the existing `EnemyRespawnSystem` while the wall
+is intact, reusing the wave's safe placement routine (currently named `BossCrowdPlacement`),
+authored ranges and ownership counters. The saved wave contains 14 Baselines and 2 Explosives;
+composition and the 16-root bound are editable in `CP13_01_Barricade_Crowd.asset`. Pool delay is
+2 seconds after the ordinary defeat/pooling animation. Destruction stops the pending initial
+queue and pending respawns; it never changes a surviving enemy's attack or health state.
+
+`GauntletCompletionSystem` reports this objective only when durability is zero and the
+available player's snapshot enters the 2 m exit radius. It ignores surviving crowd count and
+uses the existing additive transition/completion registry. `GameRestartSystem` restores
+durability, collider and buffers; level reload removes the wave-owned crowd as before.
+
+`BarricadeVisualAuthoring`/baking and `BarricadePresentationSystem` own presentation-only
+entities: solid plate/ribs, one then two crack rows, configurable flash and shrinking/scattering
+debris. They never change the collision geometry. Impacts use the existing player presentation
+bridge and particle pool, without a new HUD. Defaults are 0.85 rebound, 0.18 s flash and 0.65 s
+debris. `GauntletProgressionBuilder.BuildBarricade` authors only level 13 and its assets;
+rebuilding resets that level's recipe while preserving existing barricade tuning.
+
+See [Barricade validation](../Validation/Barricade.md) for actual checks and remaining playtests.

@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-09-24
+Last updated: 2026-09-26
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -77,6 +77,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-09-26 - Barricade And Gauntlet_13
+
+Decision: Implement only Gauntlet_13 with a reusable three-hit barricade, launched-body/explosion damage deduplicated per source launch, intact rebound and destroying-hit pass-through, existing aim assistance, a continuously replenishing bounded Baseline/Explosive crowd, and completion on reaching the exposed exit. Direct punches consume cooldown without damaging it. Stop replenishment on destruction; survivors stay hostile. Use visual damage stages without a health bar and one nonblocking opening hint.
+
+Rationale: The level teaches launching the crowd into an environmental objective without introducing another attack model. Independently breakable sections, direct punch damage, a conventional health pool, double-counted explosive impact/blast, finite-wave fallback ammunition, neutralized survivors, separate barricade aim alignment, and an additional level were rejected in the final referenced design conversation.
+
+GDD rules: BARRICADE-001 through BARRICADE-005, PLAYER-003/004/009, LOOP-006. Rebound tuning, composition, effect parameters and exact exit placement are implementation defaults. The existing initial-direction preview is retained; it does not predict rebound. Broader pacing, art direction and performance targets remain open under their existing questions.
 
 ### 2026-09-24 - Armored And Post-Boss Progression
 

@@ -71,6 +71,9 @@ namespace CrowdPunch.Systems.Combat
                 punchRequest.HitEnemy |= PunchResolution.TryApply(state.EntityManager, enemy, targetPunch);
             }
 
+            foreach (var (wall, transform) in SystemAPI.Query<RefRO<Barricade>, RefRO<LocalTransform>>())
+                punchRequest.HitEnemy |= BarricadeHitResolution.ContainsPunch(wall.ValueRO, transform.ValueRO, punch);
+
             punchRequest.IsResolved = true;
             SystemAPI.SetComponent(punchEntity, punchRequest);
             SystemAPI.SetComponentEnabled<PunchRequest>(punchEntity, false);

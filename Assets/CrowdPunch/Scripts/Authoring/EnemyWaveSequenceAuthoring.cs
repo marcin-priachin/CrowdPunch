@@ -9,6 +9,8 @@ namespace CrowdPunch.Authoring
     {
         [Tooltip("Optional boss owner. Its single supporting wave completes only on boss defeat.")]
         public BossEncounterAuthoring bossEncounter;
+        [Tooltip("Optional barricade objective. Its bounded crowd replenishes until the barricade breaks.")]
+        public BarricadeAuthoring barricade;
         [SerializeField, Tooltip("Ordered wave assets. Each asset remains independently reusable and editable.")]
         private List<EnemyWaveSettings> waves = new();
         [SerializeField, Min(1), Tooltip("Deterministic selection and candidate-position seed.")]

@@ -38,6 +38,15 @@ namespace CrowdPunch.Systems.Presentation
             foreach (var boss in SystemAPI.Query<RefRO<BossEncounter>>())
                 isComplete = boss.ValueRO.Cycle == BossCycle.Defeated;
 
+            // BARRICADE-001: surviving enemies are irrelevant; reaching the exposed exit is required.
+            foreach (var wall in SystemAPI.Query<RefRO<Barricade>>())
+            {
+                var player = SystemAPI.HasSingleton<PlayerSnapshot>() ? SystemAPI.GetSingleton<PlayerSnapshot>() : default;
+                isComplete = wall.ValueRO.HitsRemaining == 0 && player.IsAvailable
+                    && Unity.Mathematics.math.distancesq(player.Position.xz, wall.ValueRO.ExitPosition.xz)
+                        <= wall.ValueRO.ExitRadius * wall.ValueRO.ExitRadius;
+            }
+
             if (isComplete && !completionReported)
             {
                 completionReported = true;

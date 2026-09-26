@@ -13,7 +13,7 @@ using UnityEngine.SceneManagement;
 namespace CrowdPunch.Editor
 {
     /// <summary>Explicit authoring recipe for the ten-gauntlet first playtest (LOOP-002/006).</summary>
-    public static class GauntletProgressionBuilder
+    public static partial class GauntletProgressionBuilder
     {
         private const string Root = "Assets/CrowdPunch/";
         private const string Scenes = Root + "Scenes/Gauntlets/";

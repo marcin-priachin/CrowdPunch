@@ -42,7 +42,9 @@ namespace CrowdPunch.Systems.Physics
                 Entity target = launch.ValueRO.HomingTarget;
                 bool livingBoss = SystemAPI.HasComponent<BossEncounter>(target)
                     && SystemAPI.GetComponent<BossEncounter>(target).Cycle != BossCycle.Defeated;
-                if (!livingBoss && !IsValidTarget(target, transforms, launchStates, health, respawns)) continue;
+                bool intactBarricade = SystemAPI.HasComponent<Barricade>(target)
+                    && SystemAPI.GetComponent<Barricade>(target).HitsRemaining > 0;
+                if (!livingBoss && !intactBarricade && !IsValidTarget(target, transforms, launchStates, health, respawns)) continue;
 
                 velocity.ValueRW.Linear = EnemyLaunchHoming.RotateHorizontalVelocity(
                     velocity.ValueRO.Linear,

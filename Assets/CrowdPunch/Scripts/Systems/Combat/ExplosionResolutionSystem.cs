@@ -99,6 +99,15 @@ namespace CrowdPunch.Systems.Combat
             float radius = math.max(0f, settings.Radius);
             float radiusSquared = radius * radius;
 
+            uint blastSequence = SystemAPI.GetComponent<EnemyLaunchState>(explosive).LaunchSequence;
+            foreach (var (wall, wallTransform, target) in
+                SystemAPI.Query<RefRO<Barricade>, RefRO<LocalTransform>>().WithEntityAccess())
+            {
+                float3 point = BarricadeHitResolution.ClosestPoint(wall.ValueRO, wallTransform.ValueRO, center);
+                if (wall.ValueRO.HitsRemaining > 0 && math.distancesq(point, center) <= radiusSquared)
+                    BarricadeHitResolution.TryHit(EntityManager, target, explosive, blastSequence, SystemAPI.Time.ElapsedTime, point);
+            }
+
             foreach ((RefRO<LocalTransform> transform,
                          RefRW<EnemyLaunchState> launchState,
                          Entity target) in

@@ -21,7 +21,7 @@ PLAYER-004/009, COMBAT-014/017, INFO-001/004, LOOP-002 and BOSS-007.
   Two skinned renderers bake CPA3 samples (32 phases/motion), with no runtime crowd Animator.
 - Gauntlet_12, "Crack the Shell": 1 Armored + 6 Baselines, then 3 Armored + 12 Baselines.
   Nature-kit arena, baked navigation, open shot lanes, opening hint, twelve-entry selection and progression.
-  The boss advances here; this level currently ends the authored sequence.
+  The boss advances here; this was the last authored level at validation time; Gauntlet_13 now follows it.
 - Opted-in waves supply one safe Baseline when protected armor remains without usable ammunition.
   The check runs at most 4 Hz after pending initial spawns drain, uses shared spawn profiles, and
   includes supplemental bodies in defeat accounting. Repeated replacement keeps one spare root per wave.

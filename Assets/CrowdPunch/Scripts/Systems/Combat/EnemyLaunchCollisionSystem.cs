@@ -32,11 +32,12 @@ namespace CrowdPunch.Systems.Combat
         {
             EnemyLaunchSettings settings = SystemAPI.GetSingleton<EnemyLaunchSettings>();
             EntityQuery correctionCandidateQuery = SystemAPI.QueryBuilder()
-                .WithAll<Enemy, LocalTransform, EnemyLaunchState, Health>()
+                .WithAll<LocalTransform>().WithAny<Enemy, Barricade>()
                 .Build();
             EnemyCollisionJob job = new EnemyCollisionJob
             {
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(),
+                Barricades = SystemAPI.GetComponentLookup<Barricade>(true),
                 ArmorSettings = SystemAPI.GetComponentLookup<EnemyArmorSettings>(true),
                 ArmorHistory = SystemAPI.GetBufferLookup<ArmorHitHistory>(),
                 MassLookup = SystemAPI.GetComponentLookup<PhysicsMass>(true),
@@ -72,6 +73,7 @@ namespace CrowdPunch.Systems.Combat
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
             public ComponentLookup<EnemyArmor> Armors;
+            [ReadOnly] public ComponentLookup<Barricade> Barricades;
             [ReadOnly] public ComponentLookup<EnemyArmorSettings> ArmorSettings;
             public BufferLookup<ArmorHitHistory> ArmorHistory;
             [ReadOnly] public ComponentLookup<PhysicsMass> MassLookup;
@@ -262,16 +264,16 @@ namespace CrowdPunch.Systems.Combat
                 for (int i = 0; i < CorrectionCandidates.Length; i++)
                 {
                     Entity candidate = CorrectionCandidates[i];
+                    bool wall = Barricades.HasComponent(candidate) && Barricades[candidate].HitsRemaining > 0;
                     if (candidate == source || candidate == launchedTarget
                         || IsUnavailable(candidate)
-                        || !LaunchStateLookup.HasComponent(candidate)
                         || !TransformLookup.HasComponent(candidate)
-                        || !HealthLookup.HasComponent(candidate)) continue;
+                        || !wall && (!LaunchStateLookup.HasComponent(candidate) || !HealthLookup.HasComponent(candidate))) continue;
 
-                    EnemyLaunchState candidateLaunch = LaunchStateLookup[candidate];
-                    if ((candidateLaunch.Phase != EnemyLaunchPhase.Active
+                    EnemyLaunchState candidateLaunch = wall ? default : LaunchStateLookup[candidate];
+                    if (!wall && ((candidateLaunch.Phase != EnemyLaunchPhase.Active
                          && candidateLaunch.Phase != EnemyLaunchPhase.Recovering)
-                        || HealthLookup[candidate].Current <= 0f) continue;
+                        || HealthLookup[candidate].Current <= 0f)) continue;
 
                     float3 offset = TransformLookup[candidate].Position - launchedPosition;
                     offset.y = 0f;

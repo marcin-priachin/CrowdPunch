@@ -46,6 +46,12 @@ namespace CrowdPunch.Systems.Initialization
             {
                 ref EnemyWaveSequence sequence = ref sequenceReference.ValueRW;
                 bool bossOwned = SystemAPI.HasComponent<BossCrowdSequence>(sequenceEntity);
+                bool barricadeOwned = SystemAPI.HasComponent<BarricadeCrowdSequence>(sequenceEntity);
+                if (barricadeOwned)
+                {
+                    var wall = SystemAPI.GetComponent<BarricadeCrowdSequence>(sequenceEntity).Barricade;
+                    if (!SystemAPI.HasComponent<Barricade>(wall) || SystemAPI.GetComponent<Barricade>(wall).HitsRemaining <= 0) continue;
+                }
                 if (bossOwned)
                 {
                     var bossEntity=SystemAPI.GetComponent<BossCrowdSequence>(sequenceEntity).Encounter;
@@ -64,7 +70,7 @@ namespace CrowdPunch.Systems.Initialization
                 EnemyWaveDefinition wave = waves[sequence.CurrentWaveIndex];
                 if (sequence.Phase == EnemyWaveRuntimePhase.AwaitingActivation)
                 {
-                    if (bossOwned) continue; // Supporting defeats never complete or advance a boss encounter.
+                    if (bossOwned || barricadeOwned) continue; // Objective-owned crowds never complete by clearing enemies.
                     if (wave.AmmunitionSafeguard != 0 && now >= sequence.NextAmmunitionCheckAt)
                     {
                         sequence.NextAmmunitionCheckAt = now + .25d;
@@ -298,6 +304,9 @@ namespace CrowdPunch.Systems.Initialization
                     continue;
                 }
                 commands.SetComponent(enemy, new EnemyRespawnSettings { Enabled = 0 });
+                if (entityManager.HasComponent<BarricadeCrowdSequence>(sequenceEntity))
+                    commands.AddComponent(enemy, new BarricadeCrowdMember {
+                        Barricade = entityManager.GetComponentData<BarricadeCrowdSequence>(sequenceEntity).Barricade });
                 if (entityManager.HasComponent<BossCrowdSequence>(sequenceEntity))
                     commands.AddComponent(enemy,new BossCrowdMember {
                         Encounter=entityManager.GetComponentData<BossCrowdSequence>(sequenceEntity).Encounter,

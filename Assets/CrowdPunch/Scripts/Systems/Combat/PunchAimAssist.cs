@@ -63,6 +63,8 @@ namespace CrowdPunch.Systems.Combat
 
         public static bool IsValidTarget(EntityManager manager, Entity source, Entity target)
         {
+            if (target != Entity.Null && manager.HasComponent<Barricade>(target))
+                return manager.GetComponentData<Barricade>(target).HitsRemaining > 0;
             if (target != Entity.Null && manager.HasComponent<BossEncounter>(target))
                 return manager.GetComponentData<BossEncounter>(target).Cycle != BossCycle.Defeated;
             if (target == Entity.Null || target == source || !manager.Exists(target)
