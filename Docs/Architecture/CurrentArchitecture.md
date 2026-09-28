@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-09-26
+Last inspected: 2026-09-28
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -19,7 +19,7 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_13` each contain their matching ECS SubScene. Thirteen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss. The separate navigation validation scenes remain outside progression.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_14` each contain their matching ECS SubScene. Fourteen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
@@ -1027,8 +1027,8 @@ Gauntlet_13, "Break Through", follows the unchanged Gauntlet_12. The main scene 
 entry and nonblocking opening hint. Its SubScene contains a 28 x 36 m court, one solid
 28 x 4 x 1.2 m barricade at z=11, and a green exit at z=15. It reuses the nature environment,
 existing Baseline/Explosive prefabs, wave placement and pooling. The Bootstrap selector and
-build list contain thirteen gauntlets. This is the last currently authored level, not a
-decision about the final game's total length.
+build list now continue to Gauntlet_14. The authored sequence is not a decision about the
+final game's total length.
 
 `BarricadeAuthoring` and `BarricadeBaker` bake shared hit-count state, collider references,
 exit geometry and tuning from `Data/Settings/BarricadeSettings.asset`. The collider is a
@@ -1085,3 +1085,56 @@ debris. `GauntletProgressionBuilder.BuildBarricade` authors only level 13 and it
 rebuilding resets that level's recipe while preserving existing barricade tuning.
 
 See [Barricade validation](../Validation/Barricade.md) for actual checks and remaining playtests.
+
+## Rotating Cover And Gauntlet_14 (COVER-001..005)
+
+Gauntlet_14, "Return to Sender", is saved after Gauntlet_13 in Bootstrap and Build Settings.
+Its 34 x 34 m court surrounds a central barricade target and a 5 m radius rotating cover.
+`RotatingTargetSettings.asset` supplies four required hits (covered targets clamp to at least two),
+the existing ownership mask, target rebound and damage feedback. `RotatingCoverSettings.asset`
+supplies a 75 degree opening, 35 degrees/second default continuous rotation, rotate/pause and
+reversal modes, optional pause/acceleration on accepted hits, and a 1.0 reflection multiplier.
+Settings are baked: edit assets, let Unity rebake, then reload the level. Wave composition and
+placement remain in `CP14_01_Rotating_Cover_Crowd.asset` (14 Baselines, 2 Explosives).
+
+`RotatingCoverBaker` builds one immutable compound arc collider from 36 overlapping boxes.
+The ECS root rotates before the existing `BarricadeImpactSystem`. `CoverGeometry` supplies
+the identical panel geometry to baking and presentation; panels explicitly request nonuniform
+scale transform data. A separate stationary cylinder is query-visible to the existing player
+collision bridge. Its manually owned transforms survive baking. `CoverEnclosureContactSystem`
+runs between Unity Physics contact creation and Jacobian creation and disables cylinder
+contacts only for `Launched` bodies. Walking/recovering bodies and the player remain blocked;
+ordinary enemy-enemy contacts and the shield/target colliders are unaffected. Navigation bakes
+a conservative square footprint around the enclosure through the existing grid baker, so walking
+routes and safe wave placement do not enter it. The low plinth marks the walking exclusion.
+
+`BarricadeImpactSystem` includes cover bounds in its existing broadphase rejection and queries
+the current cover pose directly, since the collision world available before physics contains
+the previous pose. Launched sweeps ignore the stationary enclosure; nearer enemies and ordinary
+solids still block shots. Shield hits queue `CoverReflection` instead of target damage or explosion.
+`CoverReflectionSystem` runs after physics, before launch propagation/explosions. It corrects
+normal penetration for tunneled impacts, redirects incoming planar speed toward the player
+snapshot sampled for that impact step, applies the multiplier and clears homing. It preserves
+launch sequence, ownership, damage history and recovery timers. No launch-distance component
+was added: the user explicitly selected preserving the existing damping/momentum model.
+
+The original target hit resolver, history, crack/flash/debris presentation and explosive request
+pipeline are reused. For a covered target only, blast damage requires an eligible launched
+source inside the enclosure; outside blasts cannot damage it, even with a large radius. Target
+impact and explosion share source plus launch sequence and count once. Aim-assist rays ignore
+cover/enclosure but otherwise retain existing target selection; fallback selection, homing and
+the short direction preview still accept the intact target. No preview predicts shield motion.
+
+`Barricade.CompleteOnDestruction` selects immediate completion for this target; Gauntlet_13
+still requires its exit. The existing barricade link to wave allocation/pooling supplies bounded
+replenishment using the shared boss/elite-era safe placement infrastructure. Target destruction
+stops pending allocation/respawns, and completion uses the existing registry/level flow.
+Restart clears pending cover reflections and restores angle, rotation timers and observed-hit
+state alongside target durability/history; scene reload removes the encounter and owned crowd.
+
+`GauntletProgressionBuilder.BuildRotatingCover` authors only Gauntlet_14 and registers it without
+rewriting earlier level content. Rebuilding preserves existing target/cover tuning assets but
+reapplies the wave/layout recipe. The plinth is generated from geometry settings by that recipe.
+No new player control, enemy archetype, health bar, progression system or launch-range model exists.
+Balance, final art and run-duration tuning remain future playtesting work. See
+[Rotating cover validation](../Validation/RotatingCover.md) for measured checks and limitations.

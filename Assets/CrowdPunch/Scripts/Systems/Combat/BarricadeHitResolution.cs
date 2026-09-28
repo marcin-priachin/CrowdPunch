@@ -8,6 +8,18 @@ namespace CrowdPunch.Systems.Combat
 {
     internal static class BarricadeHitResolution
     {
+        public static bool AllowsExplosion(EntityManager em, in Barricade wall, Entity source, float3 center)
+        {
+            if (wall.Cover == Entity.Null) return true;
+            if (!em.HasComponent<RotatingCover>(wall.Cover) || !em.HasComponent<EnemyLaunchState>(source)) return false;
+            var cover = em.GetComponentData<RotatingCover>(wall.Cover);
+            var launch = em.GetComponentData<EnemyLaunchState>(source);
+            float radius = cover.Radius - cover.Thickness;
+            // COVER-004: outside blasts cannot shoot through the shield, even beside its opening.
+            return launch.Phase == EnemyLaunchPhase.Launched && Allows(wall.Sources, launch.Owner)
+                && math.distancesq(center.xz, em.GetComponentData<LocalTransform>(wall.Cover).Position.xz) < radius * radius;
+        }
+
         public static bool Allows(BarricadeLaunchSources sources, EnemyLaunchOwner owner)
         {
             var flag = owner == EnemyLaunchOwner.Player ? BarricadeLaunchSources.Player

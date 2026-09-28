@@ -68,7 +68,7 @@ namespace CrowdPunch.Systems.Combat
                     continue;
                 }
 
-                Entity rayTarget = RaycastTarget(collisionWorld, source, transform.ValueRO.Position, direction,
+                Entity rayTarget = RaycastTarget(state.EntityManager, collisionWorld, source, transform.ValueRO.Position, direction,
                     bridge.PunchPreviewAimAssistRange, ref hits);
                 if (PunchAimAssist.IsValidTarget(state.EntityManager, source, rayTarget)
                     && PunchAimAssist.IsWithinAssistLimits(state.EntityManager, rayTarget,
@@ -93,7 +93,7 @@ namespace CrowdPunch.Systems.Combat
             hits.Dispose();
         }
 
-        private static Entity RaycastTarget(CollisionWorld world, Entity source, float3 start, float3 direction,
+        private static Entity RaycastTarget(EntityManager em, CollisionWorld world, Entity source, float3 start, float3 direction,
             float range, ref NativeList<RaycastHit> hits)
         {
             hits.Clear();
@@ -110,6 +110,7 @@ namespace CrowdPunch.Systems.Combat
             for (int i = 0; i < hits.Length; i++)
             {
                 RaycastHit hit = hits[i];
+                if (em.HasComponent<RotatingCover>(hit.Entity) || em.HasComponent<CoverEnclosure>(hit.Entity)) continue;
                 if (hit.Entity == source || hit.Fraction >= closestFraction) continue;
                 closest = hit.Entity;
                 closestFraction = hit.Fraction;

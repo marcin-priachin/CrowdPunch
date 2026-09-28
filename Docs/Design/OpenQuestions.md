@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-09-26
+Last updated: 2026-09-28
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -77,6 +77,23 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-09-28 - Rotating Cover And Gauntlet_14
+
+Decision: Add a single central target protected by rotating cover, using Gauntlet_13's target
+and the existing bounded replenishment infrastructure. Three rotation modes and three hit
+responses are configurable. Cover returns bodies toward the impact-time player position without
+homing; exploders reflect without detonating on cover. Outside blasts cannot damage the target,
+and admitted explosive impact/blast count once. Preserve existing aim assist and preview.
+Target destruction completes immediately, with no exit or cleanup requirement.
+
+Implementation clarification: the repository has no launch-distance budget. The user selected
+preserving impact-time momentum, damping and the same launch/recovery state over introducing
+an explicit distance cap. A configurable speed multiplier defaults to 1.0. This supersedes the
+chat's literal remaining-distance wording. Higher multipliers may increase physical travel distance.
+
+GDD rules: COVER-001 through COVER-005. Initial geometry, rotation speed, hit count and crowd
+composition were delegated to implementation/playtesting. No other open design question is resolved.
 
 ### 2026-09-26 - Barricade And Gauntlet_13
 

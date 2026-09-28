@@ -44,6 +44,15 @@ namespace CrowdPunch.Systems.Combat
                 if (wall.ValueRO.HitsRemaining > 0)
                     wallBounds.Add(wall.ValueRO.IntactCollider.Value.CalculateAabb(
                         new RigidTransform(transform.ValueRO.Rotation, transform.ValueRO.Position), transform.ValueRO.Scale));
+            using var covers = new NativeList<RigidBody>(Allocator.Temp);
+            foreach (var (cover, collider, transform, entity) in
+                SystemAPI.Query<RefRO<RotatingCover>, RefRO<PhysicsCollider>, RefRO<LocalTransform>>().WithEntityAccess())
+            {
+                var body = new RigidBody { Entity = entity, Collider = collider.ValueRO.Value,
+                    WorldFromBody = new RigidTransform(transform.ValueRO.Rotation, transform.ValueRO.Position), Scale = transform.ValueRO.Scale };
+                covers.Add(body);
+                wallBounds.Add(body.Collider.Value.CalculateAabb(body.WorldFromBody, body.Scale));
+            }
             var hits = new NativeList<ColliderCastHit>(Allocator.Temp);
             foreach (var (transform, collider, launch, velocity, source) in
                 SystemAPI.Query<RefRO<LocalTransform>, RefRO<PhysicsCollider>, RefRO<EnemyLaunchState>, RefRO<PhysicsVelocity>>()
@@ -64,6 +73,12 @@ namespace CrowdPunch.Systems.Combat
                 var input = new ColliderCastInput(collider.ValueRO.Value, transform.ValueRO.Position,
                     transform.ValueRO.Position + displacement, transform.ValueRO.Rotation, transform.ValueRO.Scale);
                 world.CastCollider(input, ref hits);
+                // The broadphase still contains the previous step's rotating pose. Query the
+                // current authored shield pose directly, keeping nearer ordinary bodies authoritative.
+                for (int i = hits.Length - 1; i >= 0; i--)
+                    if (em.HasComponent<CoverEnclosure>(hits[i].Entity) || em.HasComponent<RotatingCover>(hits[i].Entity))
+                        hits.RemoveAtSwapBack(i);
+                foreach (var coverBody in covers) coverBody.CastCollider(input, ref hits);
                 ColliderCastHit closest = default;
                 float fraction = float.MaxValue;
                 foreach (var hit in hits)
@@ -73,7 +88,18 @@ namespace CrowdPunch.Systems.Combat
                     if (math.dot(incoming, hit.SurfaceNormal) >= -.001f) continue;
                     closest = hit; fraction = hit.Fraction;
                 }
-                if (fraction == float.MaxValue || !em.HasComponent<Barricade>(closest.Entity)) continue;
+                if (fraction == float.MaxValue) continue;
+                if (em.HasComponent<RotatingCover>(closest.Entity))
+                {
+                    float3 contactCenter = transform.ValueRO.Position + displacement * closest.Fraction;
+                    var player = SystemAPI.HasSingleton<PlayerSnapshot>() ? SystemAPI.GetSingleton<PlayerSnapshot>() : default;
+                    em.GetBuffer<CoverReflection>(closest.Entity).Add(new CoverReflection {
+                        Source = source, LaunchSequence = launch.ValueRO.LaunchSequence,
+                        ContactCenter = contactCenter, Normal = math.normalizesafe(new float3(closest.SurfaceNormal.x, 0, closest.SurfaceNormal.z)),
+                        IncomingVelocity = incoming, PlayerPosition = player.IsAvailable ? player.Position : contactCenter - incoming });
+                    continue;
+                }
+                if (!em.HasComponent<Barricade>(closest.Entity)) continue;
                 var wall = em.GetComponentData<Barricade>(closest.Entity);
                 if (BarricadeHitResolution.Allows(wall.Sources, launch.ValueRO.Owner))
                     BarricadeHitResolution.TryHit(em, closest.Entity, source, launch.ValueRO.LaunchSequence, now, closest.Position);

@@ -104,7 +104,8 @@ namespace CrowdPunch.Systems.Combat
                 SystemAPI.Query<RefRO<Barricade>, RefRO<LocalTransform>>().WithEntityAccess())
             {
                 float3 point = BarricadeHitResolution.ClosestPoint(wall.ValueRO, wallTransform.ValueRO, center);
-                if (wall.ValueRO.HitsRemaining > 0 && math.distancesq(point, center) <= radiusSquared)
+                if (wall.ValueRO.HitsRemaining > 0 && math.distancesq(point, center) <= radiusSquared
+                    && BarricadeHitResolution.AllowsExplosion(EntityManager, wall.ValueRO, explosive, center))
                     BarricadeHitResolution.TryHit(EntityManager, target, explosive, blastSequence, SystemAPI.Time.ElapsedTime, point);
             }
 

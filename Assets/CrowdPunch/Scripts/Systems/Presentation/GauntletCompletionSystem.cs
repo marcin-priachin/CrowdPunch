@@ -42,9 +42,9 @@ namespace CrowdPunch.Systems.Presentation
             foreach (var wall in SystemAPI.Query<RefRO<Barricade>>())
             {
                 var player = SystemAPI.HasSingleton<PlayerSnapshot>() ? SystemAPI.GetSingleton<PlayerSnapshot>() : default;
-                isComplete = wall.ValueRO.HitsRemaining == 0 && player.IsAvailable
+                isComplete = wall.ValueRO.HitsRemaining == 0 && (wall.ValueRO.CompleteOnDestruction != 0 || player.IsAvailable
                     && Unity.Mathematics.math.distancesq(player.Position.xz, wall.ValueRO.ExitPosition.xz)
-                        <= wall.ValueRO.ExitRadius * wall.ValueRO.ExitRadius;
+                        <= wall.ValueRO.ExitRadius * wall.ValueRO.ExitRadius);
             }
 
             if (isComplete && !completionReported)

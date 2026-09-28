@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-09-26
+Last updated: 2026-09-28
 
 ## How To Read This Document
 
@@ -302,6 +302,56 @@ An intact barricade participates as a target in the existing enemy aim-assist me
 Status: Must
 
 Continuously replenish a configurable bounded crowd of Baseline melee enemies with occasional Explosives while the barricade is intact. Stop pending and future replenishment immediately when it breaks; surviving enemies continue their normal behavior. Crowd composition, replenishment timing, visual effect parameters, and exit placement use configurable implementation defaults. Do not add a second harder barricade level or a finite-wave fallback ammunition system.
+
+## Rotating Cover Objective
+
+### COVER-001 - Central Protected Target
+
+Status: Must
+
+Add Gauntlet_14 after Gauntlet_13, with one central target using the existing barricade hit-count,
+eligible launch-source settings, direct-punch immunity and damage feedback. A solid enclosure
+keeps the player and walking enemies outside. Launched bodies can reach the target through
+one rotating opening. Earlier gauntlet encounters and layouts remain unchanged.
+
+### COVER-002 - Configurable Rotation
+
+Status: Must
+
+Expose continuous constant-speed rotation (default), rotate/pause/repeat, and continuous rotation
+with periodic reversals. Expose successful-hit responses: no change (default), briefly pause,
+or increase rotation speed with accumulated damage. Opening width, rotation rates, durations,
+required hits and wave composition are configurable. Exact starting values are implementation tuning.
+
+### COVER-003 - Return Shots
+
+Status: Must
+
+Shield impacts redirect launched bodies toward the player's position sampled at impact, without
+homing. Multiply the incoming speed by a configurable float, default 1.0. Preserve the existing
+continuous launch, ownership, collision history, damping and recovery state; do not reapply a full
+launch impulse or reset recovery. Bodies retain ordinary crowd collisions, chain reactions and
+player damage. The implementation clarification on 2026-09-28 explicitly preserves the existing
+momentum-based travel model rather than introducing an explicit remaining-distance budget.
+
+### COVER-004 - Explosions And Aiming
+
+Status: Must
+
+Exploders reflect from cover without detonating there; ordinary collision behavior resumes on the
+return path. Explosions outside the enclosure cannot damage the protected target. An exploder
+must be launched through the opening into the enclosure; its target impact and explosion share
+one counted hit. Reuse normal target aim assistance even while covered, without steering around
+the shield. Keep the existing initial trajectory preview, without rotation or reflection prediction.
+
+### COVER-005 - Persistent Progress And Completion
+
+Status: Must
+
+Require multiple successful hits with a configurable count and no timeout or progress reset.
+Use the existing bounded replenishing-wave infrastructure while the target lives. Target destruction
+immediately completes the level through normal gauntlet completion; neither reaching an exit nor
+clearing survivors is required. Restart/retry restores the target, cover motion, crowd and completion.
 
 ## Effects And Combinations
 

@@ -17,6 +17,8 @@ namespace CrowdPunch.Components
         public BarricadeLaunchSources Sources;
         public float3 Size, ExitPosition;
         public float ExitRadius;
+        public byte CompleteOnDestruction;
+        public Entity Cover;
         public double LastHitTime;
         public uint HitSequence;
         public float3 LastHitPosition;

@@ -41,6 +41,12 @@ namespace CrowdPunch.Systems.Initialization
             }
             ResetWaveSequences();
             BossEncounterReset.Reset(EntityManager);
+            foreach (var reflections in SystemAPI.Query<DynamicBuffer<CoverReflection>>()) reflections.Clear();
+            foreach (var (cover, motion, transform) in SystemAPI.Query<RefRO<RotatingCover>, RefRW<RotatingCoverState>, RefRW<LocalTransform>>())
+            {
+                motion.ValueRW = new RotatingCoverState { Angle = cover.ValueRO.InitialAngle };
+                transform.ValueRW.Rotation = quaternion.RotateY(cover.ValueRO.InitialAngle);
+            }
             foreach (var rebounds in SystemAPI.Query<DynamicBuffer<BarricadeRebound>>()) rebounds.Clear();
             foreach (var (wall, collider, history) in SystemAPI.Query<RefRW<Barricade>, RefRW<PhysicsCollider>, DynamicBuffer<BarricadeHitHistory>>())
             {

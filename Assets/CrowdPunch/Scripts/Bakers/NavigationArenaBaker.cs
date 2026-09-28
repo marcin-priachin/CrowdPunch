@@ -13,13 +13,23 @@ namespace CrowdPunch.Bakers
             if (authoring.settings == null) throw new System.InvalidOperationException("Navigation arena needs NavigationSettings.");
             DependsOn(authoring.settings); var arena = GetComponent<ArenaAuthoring>();
             var obstacles = GetComponentsInChildren<SolidObstacleAuthoring>();
-            var rectangles = new NativeArray<NavigationRectangle>(obstacles.Length, Allocator.Temp);
+            var covers = GetComponentsInChildren<RotatingCoverAuthoring>();
+            var rectangles = new NativeArray<NavigationRectangle>(obstacles.Length + covers.Length, Allocator.Temp);
             for (int i = 0; i < obstacles.Length; i++)
             {
                 var obstacle = obstacles[i]; DependsOn(obstacle); DependsOn(obstacle.transform);
                 float2 p = new float2(obstacle.transform.position.x, obstacle.transform.position.z);
                 float2 half = new float2(obstacle.Size.x, obstacle.Size.y) * .5f;
                 rectangles[i] = new NavigationRectangle { Minimum = p - half, Maximum = p + half };
+            }
+            for (int i = 0; i < covers.Length; i++)
+            {
+                var cover = covers[i]; DependsOn(cover); DependsOn(cover.transform);
+                if (cover.settings == null) throw new System.InvalidOperationException("Cover navigation requires settings.");
+                DependsOn(cover.settings);
+                float2 centerOfCover = new float2(cover.transform.position.x, cover.transform.position.z);
+                float radius = math.max(3, cover.settings.radius) + math.clamp(cover.settings.thickness, .1f, 1);
+                rectangles[obstacles.Length + i] = new NavigationRectangle { Minimum = centerOfCover - radius, Maximum = centerOfCover + radius };
             }
             float2 center = new float2(authoring.transform.position.x, authoring.transform.position.z) + arena.SpacingCenterOffset.xz;
             float3 radii = (float3)authoring.settings.clearanceRadii + authoring.settings.clearanceMargin;
