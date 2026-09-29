@@ -19,7 +19,7 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_14` each contain their matching ECS SubScene. Fourteen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss. The separate navigation validation scenes remain outside progression.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_16` each contain their matching ECS SubScene. Sixteen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
@@ -1194,3 +1194,58 @@ the existing collider/history reset and wave-root cleanup. Scene reload restores
 `GauntletProgressionBuilder.BuildShell` rebuilds only level 15, preserving existing tuning assets
 and earlier sequence entries. Balance, final geometry/art/audio and whole-game performance targets
 remain future work. See [Shell validation](../Validation/Shell.md) for verification and playtests.
+
+## Knock Into Place And Gauntlet_16 (TRACK-001..005)
+
+Gauntlet_16 follows the shell level in Bootstrap, selection and Build Settings. Its open 32 x 34m
+arena contains one orange block on a 10m rail from z=-5 to z=5, side arrows and a blue socket.
+Two objective-owned wave sequences reuse the existing bounded pool: 12 Baselines begin after
+two seconds and two Explosives join after ten seconds. Both replenish until physical docking.
+Previous level content is unchanged. `GauntletProgressionBuilder.BuildTrack` rebuilds only level 16
+and its assets; it preserves existing tuning assets and reapplies geometry/wave recipes.
+
+`TrackObjectAuthoring`/`TrackObjectBaker` add track settings, motion state and an infinite-mass
+kinematic body to the existing barricade solid. `TrackObjectSettings.asset` owns five net hits,
+0.35-second slide duration, launch eligibility and optional push damage. `TrackSolidSettings.asset`
+owns the existing rebound, replenishment and impact-flash tuning. The solid's one-hit flag is only
+an unfinished/completed marker; impacts never decrement it. The collider remains intact after docking.
+
+`BarricadeImpactSystem` retains its launched-body broadphase and nearest-blocker casts, including
+relative sweeps against the current moving track pose. Ordinary rebound and Explosive detonation
+are unchanged. `TrackObjectHitResolution` converts signed track direction into a clamped integer
+destination. Impact and explosion share the existing source/launch history. `ExplosionResolutionSystem`
+dispatches in-range blasts using the vector from blast origin to current object position. The
+common cleanup bounds history by source lifetime/relaunch. Direct punches skip the track target
+without confirming cooldown by themselves. Existing aim selection, propagated aim correction,
+homing and short trajectory preview accept its barricade target data until docking.
+
+After swept impact detection, `TrackObjectMotionSystem` writes kinematic velocity toward a smoothstep
+pose. A new hit restarts easing from the actual position toward the updated destination; no hit
+waits for an earlier step to finish. Unity Physics integrates the body. In post-physics,
+`TrackCharacterPushSystem` resolves swept overlap for non-launched characters by testing free
+side positions and then both ends against solid geometry. Ordinary enemy locomotion remains
+velocity-owned; these writes are obstacle penetration corrections. Launched bodies retain the
+shared rebound path. The authored track has clearance on all sides; arbitrary enclosed custom
+tracks are not validated. Optional damage queues existing `DamageRequest` or player health events,
+deduplicated by character across a continuous slide. Mid-slide retargets preserve that history.
+
+Player corrections pass through `PlayerEcsBridge.ReceiveObstacleDisplacement` to `PlayerController`,
+which owns the GameObject transform. The system also refreshes the ECS player snapshot for later
+post-physics consumers. Neither player MonoBehaviour queries or stores enemies. `TrackObjectArrivalSystem`
+then removes numerical rail drift, stops velocity, locks at the physical endpoint and marks the
+shared objective complete. Existing replenishment and completion systems stop supply and report the
+win without survivor cleanup. `TrackSocketPresentationSystem` colors socket pieces green on locking.
+
+`TrackNavigationSystem` owns a runtime replacement for the immutable baked navigation grid. It adds
+the current block AABB and rebuilds after a quarter-cell displacement or a movement-state change.
+Moving footprints include that threshold as padding. Existing navigation detects a changed blob,
+cancels stale searches and revalidates paths; safe spawn checks use the same footprint. The system
+disposes only its own blobs, restores the original when the object disappears, and handles scene
+unload. This intentionally bounded single-object implementation avoids changing global navigation
+ownership. Its `CrowdPunch.TrackNavigation` profiler marker includes rebuild work.
+
+`GameRestartSystem` resets pose, destination, timers, velocity and push history alongside shared
+hit history and crowd teardown. Scene reload restores the baked state. The three unresolved
+eligibility/damage edge cases are exposed as provisional options, with defaults and alternatives
+documented in `OpenQuestions.md`; no wider design question is resolved by these choices.
+See [Track validation](../Validation/TrackObject.md) for evidence, limitations and playtests.

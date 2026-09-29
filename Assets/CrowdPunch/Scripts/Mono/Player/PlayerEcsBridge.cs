@@ -194,6 +194,17 @@ namespace CrowdPunch.Mono.Player
             HasPendingMovement = false;
         }
 
+        /// <summary>Applies an ECS obstacle correction through the player-owned transform controller.</summary>
+        public event System.Action<Vector3> ObstacleDisplacementReceived;
+
+        public void ReceiveObstacleDisplacement(float3 position)
+        {
+            Position = position;
+            MovementStart = MovementEnd = ResolvedMovementPosition = position;
+            HasPendingMovement = false;
+            ObstacleDisplacementReceived?.Invoke(new Vector3(position.x, position.y, position.z));
+        }
+
         public void ClearMovement()
         {
             HasPendingMovement = false;

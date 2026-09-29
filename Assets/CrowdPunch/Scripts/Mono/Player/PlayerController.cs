@@ -77,6 +77,7 @@ namespace CrowdPunch.Mono.Player
 
         private void Start()
         {
+            ecsBridge.ObstacleDisplacementReceived += ApplyObstacleDisplacement;
             if (playerHealth == null)
             {
                 playerHealth = GetComponent<PlayerHealth>();
@@ -104,6 +105,7 @@ namespace CrowdPunch.Mono.Player
 
         private void OnDestroy()
         {
+            if (ecsBridge != null) ecsBridge.ObstacleDisplacementReceived -= ApplyObstacleDisplacement;
             if (playerHealth != null)
             {
                 playerHealth.DamageAccepted -= ApplyKnockback;
@@ -195,6 +197,13 @@ namespace CrowdPunch.Mono.Player
             transform.position = new Vector3(resolved.x, resolved.y, resolved.z);
             appliedMovementSequence = resolvedSequence;
             ecsBridge.PublishPlayerSnapshot(transform.position, transform.forward, settings.PlayerRadius);
+        }
+
+        private void ApplyObstacleDisplacement(Vector3 position)
+        {
+            transform.position = position;
+            appliedMovementSequence = ecsBridge.ResolvedMovementSequence;
+            ecsBridge.PublishPlayerSnapshot(position, transform.forward, settings.PlayerRadius);
         }
 
         private void ApplyKnockback(Vector3 impulse)

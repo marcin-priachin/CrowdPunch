@@ -73,6 +73,7 @@ namespace CrowdPunch.Systems.Combat
 
             foreach (var (wall, transform, target) in SystemAPI.Query<RefRO<Barricade>, RefRO<LocalTransform>>().WithEntityAccess())
             {
+                if (SystemAPI.HasComponent<TrackObject>(target)) continue;
                 if (!BarricadeHitResolution.ContainsPunch(wall.ValueRO, transform.ValueRO, punch)) continue;
                 punchRequest.HitEnemy = true;
                 if (SystemAPI.HasComponent<ShellTarget>(target))

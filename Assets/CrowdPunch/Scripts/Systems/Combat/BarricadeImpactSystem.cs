@@ -53,6 +53,16 @@ namespace CrowdPunch.Systems.Combat
                 covers.Add(body);
                 wallBounds.Add(body.Collider.Value.CalculateAabb(body.WorldFromBody, body.Scale));
             }
+            foreach (var (track, collider, transform, entity) in
+                SystemAPI.Query<RefRO<TrackObject>, RefRO<PhysicsCollider>, RefRO<LocalTransform>>().WithEntityAccess())
+            {
+                covers.Add(new RigidBody { Entity = entity, Collider = collider.ValueRO.Value,
+                    WorldFromBody = new RigidTransform(transform.ValueRO.Rotation, transform.ValueRO.Position), Scale = transform.ValueRO.Scale });
+                var swept = collider.ValueRO.Value.Value.CalculateAabb(new RigidTransform(transform.ValueRO.Rotation, transform.ValueRO.Position), transform.ValueRO.Scale);
+                float3 delta = TrackDisplacement(em, entity, SystemAPI.Time.DeltaTime);
+                swept.Min = math.min(swept.Min, swept.Min + delta); swept.Max = math.max(swept.Max, swept.Max + delta);
+                wallBounds.Add(swept);
+            }
             var hits = new NativeList<ColliderCastHit>(Allocator.Temp);
             foreach (var (transform, collider, launch, velocity, source) in
                 SystemAPI.Query<RefRO<LocalTransform>, RefRO<PhysicsCollider>, RefRO<EnemyLaunchState>, RefRO<PhysicsVelocity>>()
@@ -76,16 +86,30 @@ namespace CrowdPunch.Systems.Combat
                 // The broadphase still contains the previous step's rotating pose. Query the
                 // current authored shield pose directly, keeping nearer ordinary bodies authoritative.
                 for (int i = hits.Length - 1; i >= 0; i--)
-                    if (em.HasComponent<CoverEnclosure>(hits[i].Entity) || em.HasComponent<RotatingCover>(hits[i].Entity))
+                    if (em.HasComponent<CoverEnclosure>(hits[i].Entity) || em.HasComponent<RotatingCover>(hits[i].Entity)
+                        || em.HasComponent<TrackObject>(hits[i].Entity))
                         hits.RemoveAtSwapBack(i);
-                foreach (var coverBody in covers) coverBody.CastCollider(input, ref hits);
+                foreach (var coverBody in covers)
+                {
+                    float3 trackDelta = TrackDisplacement(em, coverBody.Entity, SystemAPI.Time.DeltaTime);
+                    var relativeInput = new ColliderCastInput(collider.ValueRO.Value, transform.ValueRO.Position,
+                        transform.ValueRO.Position + displacement - trackDelta, transform.ValueRO.Rotation, transform.ValueRO.Scale);
+                    int first = hits.Length;
+                    coverBody.CastCollider(relativeInput, ref hits);
+                    for (int i = first; i < hits.Length; i++)
+                    {
+                        var hit = hits[i]; hit.Position += trackDelta * hit.Fraction; hits[i] = hit;
+                    }
+                }
                 ColliderCastHit closest = default;
                 float fraction = float.MaxValue;
                 foreach (var hit in hits)
                 {
                     if (hit.Entity == source || math.abs(hit.SurfaceNormal.y) > .7f || hit.Fraction >= fraction) continue;
                     if (em.HasComponent<Barricade>(hit.Entity) && em.GetComponentData<Barricade>(hit.Entity).HitsRemaining <= 0) continue;
-                    if (math.dot(incoming, hit.SurfaceNormal) >= -.001f) continue;
+                    float3 relativeIncoming = incoming - TrackDisplacement(em, hit.Entity, SystemAPI.Time.DeltaTime)
+                        / math.max(.0001f, SystemAPI.Time.DeltaTime);
+                    if (math.dot(relativeIncoming, hit.SurfaceNormal) >= -.001f) continue;
                     closest = hit; fraction = hit.Fraction;
                 }
                 if (fraction == float.MaxValue) continue;
@@ -101,7 +125,10 @@ namespace CrowdPunch.Systems.Combat
                 }
                 if (!em.HasComponent<Barricade>(closest.Entity)) continue;
                 var wall = em.GetComponentData<Barricade>(closest.Entity);
-                if (em.HasComponent<ShellTarget>(closest.Entity))
+                if (em.HasComponent<TrackObject>(closest.Entity))
+                    TrackObjectHitResolution.TryHit(em, closest.Entity, source, launch.ValueRO.LaunchSequence,
+                        incoming, false, now, closest.Position);
+                else if (em.HasComponent<ShellTarget>(closest.Entity))
                 {
                     float inverseMass = em.HasComponent<PhysicsMass>(source) ? em.GetComponentData<PhysicsMass>(source).InverseMass : 0;
                     float impulse = inverseMass > .0001f ? math.max(0, -math.dot(incoming, closest.SurfaceNormal)) / inverseMass : 0;
@@ -127,6 +154,14 @@ namespace CrowdPunch.Systems.Combat
                 }
             }
             hits.Dispose();
+        }
+
+        private static float3 TrackDisplacement(EntityManager em, Entity entity, float dt)
+        {
+            if (!em.HasComponent<TrackObject>(entity)) return float3.zero;
+            var track = em.GetComponentData<TrackObject>(entity);
+            var motion = em.GetComponentData<TrackObjectState>(entity);
+            return track.Direction * (TrackObjectMotion.Next(track, ref motion, dt) - motion.Distance);
         }
     }
 }

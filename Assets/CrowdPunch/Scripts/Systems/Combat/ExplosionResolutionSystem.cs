@@ -107,7 +107,10 @@ namespace CrowdPunch.Systems.Combat
                 if (wall.ValueRO.HitsRemaining > 0 && math.distancesq(point, center) <= radiusSquared
                     && BarricadeHitResolution.AllowsExplosion(EntityManager, wall.ValueRO, explosive, center))
                 {
-                    if (SystemAPI.HasComponent<ShellTarget>(target))
+                    if (SystemAPI.HasComponent<TrackObject>(target))
+                        TrackObjectHitResolution.TryHit(EntityManager, target, explosive, blastSequence,
+                            wallTransform.ValueRO.Position - center, true, SystemAPI.Time.ElapsedTime, point);
+                    else if (SystemAPI.HasComponent<ShellTarget>(target))
                         ShellHitResolution.Explosion(EntityManager, target, settings.Damage, SystemAPI.Time.ElapsedTime, point);
                     else BarricadeHitResolution.TryHit(EntityManager, target, explosive, blastSequence, SystemAPI.Time.ElapsedTime, point);
                 }

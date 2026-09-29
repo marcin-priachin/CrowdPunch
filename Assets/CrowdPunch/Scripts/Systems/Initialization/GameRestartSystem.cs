@@ -55,6 +55,14 @@ namespace CrowdPunch.Systems.Initialization
                 shell.ValueRW.ReplacementBatchActive = shell.ValueRW.LastHitBlocked = 0;
                 shell.ValueRW.ShellBrokenAt = 0;
             }
+            foreach (var (track, motion, pose, velocity, history) in
+                SystemAPI.Query<RefRO<TrackObject>, RefRW<TrackObjectState>, RefRW<LocalTransform>, RefRW<PhysicsVelocity>, DynamicBuffer<TrackPushHistory>>())
+            {
+                motion.ValueRW = default;
+                pose.ValueRW.Position = track.ValueRO.Start;
+                velocity.ValueRW = default;
+                history.Clear();
+            }
             foreach (var rebounds in SystemAPI.Query<DynamicBuffer<BarricadeRebound>>()) rebounds.Clear();
             foreach (var (wall, collider, history) in SystemAPI.Query<RefRW<Barricade>, RefRW<PhysicsCollider>, DynamicBuffer<BarricadeHitHistory>>())
             {

@@ -78,6 +78,35 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-09-29 - Knock Into Place And Gauntlet_16
+
+Decision: Adopt the final agreed design in conversation 6abb87ae-bbe4-83eb-9af8-9f1b3890742a.
+One bidirectional rail object advances by fixed steps from launched bodies and explosions,
+defaults to five net forward hits, retargets immediately, discards excess endpoint hits, and
+locks/completes on physical arrival. Preserve solid collision, ordinary launch rebound, shared
+aiming, bounded replenishment, Baseline-first introduction, and rail/socket placeholder visuals.
+
+Rejected: free movement, forward-only progress, direct-punch movement, strength-scaled steps,
+double-counted explosive impact/blast, banked hits, ignoring mid-slide hits, pass-through
+characters, survivor cleanup, extra objectives, extra counters and predictive rebound previews.
+
+GDD rules: TRACK-001 through TRACK-005. The following implementation edge cases remain
+provisional pending user clarification/playtesting; they are not silently promoted to design:
+
+- Player-only filtering affects body impacts by default; all explosions still count. An optional
+  setting can also reject blasts from currently non-player-owned launches; unlaunched blasts count.
+- Only destination-changing hits spend eligibility by default. An optional setting also spends it
+  on perpendicular or endpoint-clamped contacts.
+- Optional damaging pushes default to one damage to player and enemies once per continuous slide.
+  Retargeting without stopping stays one slide. Player damage can be disabled independently.
+- Numerical direction tolerance is 0.00001 on the normalized planar dot product. A centered blast
+  contributes no directional step. Safe displacement tries both sides then the ends; Gauntlet_16
+  deliberately leaves those routes open. Arbitrarily enclosed custom tracks need separate validation.
+
+Initial geometry (10m track in a 32 x 34m arena), 0.35-second slide, 12 Baselines at 2 seconds,
+two Explosives at 10 seconds, and existing replenishment delay are implementation defaults.
+Broader performance targets, final art and run pacing remain under their existing questions.
+
 ### 2026-09-29 - Shell And Gauntlet_15
 
 Decision: Adopt the final agreed shell design in the referenced "shell - Brainstorm Puzzle Levels"

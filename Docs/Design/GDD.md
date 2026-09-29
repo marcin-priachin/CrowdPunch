@@ -409,6 +409,60 @@ phases without health bars. Include a brief opening hint explaining explosions a
 successful shell-hit feedback. Geometry, colors, effects, baseline population, bounce strength
 and remaining timing values are implementation tuning, subject to playtesting.
 
+## Knock Into Place Objective
+
+### TRACK-001 - Track And Completion
+
+Status: Must
+
+Append Gauntlet_16, with one movable object and one destination at opposite ends of a fixed,
+bidirectional track. The object locks permanently and completes the level immediately when
+it physically reaches the destination, regardless of surviving enemies. Targeting the final
+step alone does not secure completion; opposite hits can still change its destination mid-slide.
+
+### TRACK-002 - Eligible Hits
+
+Status: Must
+
+Launched-enemy impacts and any explosion in range move the object; direct punches have no effect.
+Expose launch-source eligibility, defaulting to any launched enemy including elite/boss launches,
+with a player-launched-only option. Each enemy counts once per launch; relaunching permits another
+hit. A launched exploder's impact and associated blast contribute at most one step together.
+Every valid hit contributes the same fixed distance, independent of impact strength or blast range.
+
+### TRACK-003 - Accumulation And Motion
+
+Status: Must
+
+Expose required net forward hits, default five, and short smooth slide duration with a firm stop.
+Use the hit direction's component along the track: shallow angles still contribute a whole step,
+exactly perpendicular hits contribute nothing, and explosions push away from their origin.
+Accumulate hits during movement and immediately retarget, including stops and reversals. Clamp
+the destination at either endpoint and discard excess progress rather than banking it.
+
+### TRACK-004 - Physical Obstacle And Aiming
+
+Status: Must
+
+Block player and enemy traversal and account for changing position in navigation. The moving
+object pushes characters aside without being stopped by them. Expose push without damage
+(default) and push with damage. Launched enemies retain the existing obstacle-impact behavior.
+Use the same aim-assist mechanics as enemies, including the existing short initial-direction preview.
+
+### TRACK-005 - Introduction And Readability
+
+Status: Must
+
+Use an open arena with ample space at both sides and endpoints. Reuse bounded replenishing waves
+while the objective is unfinished, starting with Baselines and introducing Explosives later.
+Use a chunky block on a sliding base, a visible rail/groove, arrows toward the goal and a marked
+end socket that changes appearance when locked. Do not add a remaining-hit counter, extra
+objectives or a survivor-clearing requirement. Exact geometry, timing and composition remain tuning.
+
+The final conversation delegates implementation details for optional damage cadence, safe displacement,
+numerical tolerance and edge-case eligibility. Provisional implementation options are recorded in
+`OpenQuestions.md`; their defaults do not establish additional accepted design requirements.
+
 ## Effects And Combinations
 
 ### EFFECT-001 — Collision Propagation

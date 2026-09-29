@@ -43,22 +43,22 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Loop002_ActiveSequenceAndBuildSettingsContainFourteenOrderedLevels()
+        public void Loop002_ActiveSequenceAndBuildSettingsContainSixteenOrderedLevels()
         {
             Scene scene = EditorSceneManager.OpenScene(Root + "Bootstrap.unity", OpenSceneMode.Additive);
             try
             {
                 var sequence = Find<GauntletSequence>(scene);
                 var names = new SerializedObject(sequence).FindProperty("levelSceneNames");
-                Assert.That(names.arraySize, Is.EqualTo(15));
+                Assert.That(names.arraySize, Is.EqualTo(16));
                 string[] enabled = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-                Assert.That(enabled.Length, Is.EqualTo(18));
-                Assert.That(enabled.Skip(16), Is.EquivalentTo(new[] {
+                Assert.That(enabled.Length, Is.EqualTo(19));
+                Assert.That(enabled.Skip(17), Is.EquivalentTo(new[] {
                     Root + "NavigationValidation/NavigationValidationBootstrap.unity",
                     Root + "NavigationValidation/NavigationValidationArena.unity" }),
                     "The two separate validation scenes must not enter the playable progression.");
                 Assert.That(enabled[0], Is.EqualTo(Root + "Bootstrap.unity"));
-                for (int i = 0; i < 15; i++)
+                for (int i = 0; i < 16; i++)
                 {
                     string id = $"Gauntlet_{i + 1:00}";
                     Assert.That(names.GetArrayElementAtIndex(i).stringValue, Is.EqualTo(id));
@@ -83,6 +83,7 @@ namespace CrowdPunch.Tests
         [TestCase(13)]
         [TestCase(14)]
         [TestCase(15)]
+        [TestCase(16)]
         public void Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(int number)
         {
             string id = $"Gauntlet_{number:00}";
@@ -97,7 +98,8 @@ namespace CrowdPunch.Tests
                 Assert.That(reference.SceneGUID.ToString(), Is.EqualTo(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(reference.SceneAsset))));
                 sub = EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(reference.SceneAsset), OpenSceneMode.Additive);
                 var arena = Find<ArenaAuthoring>(sub);
-                var authoring = Find<EnemyWaveSequenceAuthoring>(sub);
+                var authorings = sub.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<EnemyWaveSequenceAuthoring>()).ToArray();
+                Assert.That(authorings.Length, Is.EqualTo(number == 16 ? 2 : 1));
                 var floor = Find<MeshCollider>(sub);
                 Assert.That(floor.sharedMesh, Is.Not.Null);
                 Assert.That(floor.convex, Is.True,
@@ -115,6 +117,8 @@ namespace CrowdPunch.Tests
                         AssertInside(outline, arena.transform.position + new Vector3(x * arena.SpacingSize.x / 2, 0, z * arena.SpacingSize.z / 2), 0.75f);
                 Assert.That(Find<GameSettingsAuthoring>(sub).Settings, Is.SameAs(
                     AssetDatabase.LoadAssetAtPath<GameRuntimeSettings>("Assets/CrowdPunch/Data/Settings/GameRuntimeSettings.asset")));
+                foreach (var authoring in authorings)
+                {
                 Assert.That(authoring.Waves.Count, Is.GreaterThan(0));
                 Assert.That(authoring.Waves.Last().ActivationMode, Is.EqualTo(EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated));
                 int outstandingBudget = 0;
@@ -152,6 +156,7 @@ namespace CrowdPunch.Tests
                     outstandingBudget += wave.TotalEnemyCount + wave.EliteEnemies.Sum(e => e.Count);
                     Assert.That(outstandingBudget, Is.LessThanOrEqualTo(30), "Bounded authored peak, including timed overlap");
                     if (wave.ActivationMode == EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated) outstandingBudget = 0;
+                }
                 }
                 foreach (GameObject root in sub.GetRootGameObjects())
                     foreach (Component component in root.GetComponentsInChildren<Component>(true)) Assert.That(component, Is.Not.Null, "Missing script");
