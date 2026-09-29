@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-09-28
+Last inspected: 2026-09-29
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -1138,3 +1138,59 @@ reapplies the wave/layout recipe. The plinth is generated from geometry settings
 No new player control, enemy archetype, health bar, progression system or launch-range model exists.
 Balance, final art and run-duration tuning remain future playtesting work. See
 [Rotating cover validation](../Validation/RotatingCover.md) for measured checks and limitations.
+
+## Shell And Gauntlet_15 (SHELL-001..006)
+
+Gauntlet_15, "Crack the Shell", follows Gauntlet_14 in Bootstrap, selection and Build Settings.
+The saved 30 x 30 m court contains one central stationary target, a navigation footprint and
+four surrounding spawn regions. Initial allocation is 12 Baselines and 2 Explosives, bounded
+to 14 roots by the existing wave/pool infrastructure. Earlier level content is preserved.
+
+`ShellTargetAuthoring`/`ShellTargetBaker` add independent shell/core state to a `BarricadeAuthoring`
+solid. `ShellTargetSettings.asset` owns three required explosions, five core health (the current
+Baseline profile's maximum at creation), and a two-second exploder replacement delay.
+Core health is independently editable; later Baseline tuning does not silently overwrite it.
+`ShellSolidSettings.asset` reuses rebound, Baseline pool delay, flash and debris tuning. Its
+hit count is only the solid's alive/completed flag; shell hits and core damage never pass through
+the ordinary barricade hit-count resolver. Wave population and regions live in
+`CP15_01_Shell_Crowd.asset`. Settings changes require rebaking/reloading as elsewhere.
+
+The existing pre-physics swept `BarricadeImpactSystem` branches to `ShellHitResolution` for
+shell targets. The same nearest-blocker cast, collision geometry, rebound queue and post-physics
+penetration correction are reused. Core body damage uses `EnemyCollisionDamage.Calculate`,
+with incoming normal speed divided by inverse mass estimating impact impulse against the static
+target. `BarricadeHitHistory` deduplicates core impacts by entity and launch sequence. Shell-only
+contacts do not spend core impact eligibility. Exploder contact still requests the ordinary
+post-physics explosion pipeline. That pipeline resolves every detonation once; shell targets
+receive blast damage independently of body-impact history. A single blast resolves either a shell
+hit or core damage, so the breaking blast cannot leak through. A subsequent blast in the same
+fixed step is a fresh attack and can damage the exposed core.
+
+`PunchDetectionSystem` reuses the solid overlap/cooldown confirmation, dispatching blocked shell
+punches or normal core damage. Neither phase has enemy movement, health bars, or the enemy
+launch lifecycle. The static collider remains unchanged across exposure. Core death alone marks
+the shared solid destroyed and lets `GauntletCompletionSystem` report immediate completion.
+Existing persistent aim selection, propagated correction, homing and short initial-direction
+preview accept the same solid in both phases. No bounce prediction was added. Navigation bakes
+the target footprint through `NavigationArenaBaker`; Mono player collision reads the normal ECS
+collision world through its established bridge.
+
+`BarricadeCrowdReplenishmentSystem` retains Baseline replenishment until core death.
+`ShellExploderReplenishmentSystem` runs after explosions and before respawn. Once initial wave
+allocation finishes, it starts a delay only when no living exploder remains, then releases both
+existing pooled slots. Per-member pending flags prevent an already returned slot being issued
+again while its partner waits for safe placement. Defeat animation, pooling and safe placement
+remain owned by `EnemyRespawnSystem`; those can extend the visible replacement delay. Exposure
+cancels pending replacements without changing survivors. No additional crowd entities are allocated.
+
+`ShellPresentationSystem` animates shell plates and core scars through the existing visual baking
+data and a `ShellVisual` marker. Shell cracks progress with explosion damage; core tint/scars
+progress with health loss. Shell break scatters/shrinks the armor, revealing turquoise core geometry.
+Blocked punches flash blue at low impact intensity; successful hits flash gold with the existing
+environment impact particles. There are no new UI bars. The opening hint uses `GauntletLevel`.
+
+`GameRestartSystem` resets shell/core health, replacement timers, flash state and break time alongside
+the existing collider/history reset and wave-root cleanup. Scene reload restores authored state.
+`GauntletProgressionBuilder.BuildShell` rebuilds only level 15, preserving existing tuning assets
+and earlier sequence entries. Balance, final geometry/art/audio and whole-game performance targets
+remain future work. See [Shell validation](../Validation/Shell.md) for verification and playtests.

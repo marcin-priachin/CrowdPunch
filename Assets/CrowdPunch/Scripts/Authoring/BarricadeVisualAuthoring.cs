@@ -7,5 +7,7 @@ namespace CrowdPunch.Authoring
         public BarricadeAuthoring barricade;
         [Range(0, 2)] public int crackStage;
         public Vector3 debrisDirection;
+        public bool shellVisual;
+        public bool shellCore;
     }
 }

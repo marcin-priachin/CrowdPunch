@@ -14,7 +14,8 @@ namespace CrowdPunch.Bakers
             DependsOn(authoring.settings); var arena = GetComponent<ArenaAuthoring>();
             var obstacles = GetComponentsInChildren<SolidObstacleAuthoring>();
             var covers = GetComponentsInChildren<RotatingCoverAuthoring>();
-            var rectangles = new NativeArray<NavigationRectangle>(obstacles.Length + covers.Length, Allocator.Temp);
+            var shells = GetComponentsInChildren<ShellTargetAuthoring>();
+            var rectangles = new NativeArray<NavigationRectangle>(obstacles.Length + covers.Length + shells.Length, Allocator.Temp);
             for (int i = 0; i < obstacles.Length; i++)
             {
                 var obstacle = obstacles[i]; DependsOn(obstacle); DependsOn(obstacle.transform);
@@ -30,6 +31,14 @@ namespace CrowdPunch.Bakers
                 float2 centerOfCover = new float2(cover.transform.position.x, cover.transform.position.z);
                 float radius = math.max(3, cover.settings.radius) + math.clamp(cover.settings.thickness, .1f, 1);
                 rectangles[obstacles.Length + i] = new NavigationRectangle { Minimum = centerOfCover - radius, Maximum = centerOfCover + radius };
+            }
+            for (int i = 0; i < shells.Length; i++)
+            {
+                var shell = shells[i]; DependsOn(shell.transform);
+                var solid = GetComponent<BarricadeAuthoring>(shell); DependsOn(solid);
+                float2 p = ((float3)shell.transform.position).xz;
+                float2 half = ((float3)solid.size).xz * .5f;
+                rectangles[obstacles.Length + covers.Length + i] = new NavigationRectangle { Minimum = p - half, Maximum = p + half };
             }
             float2 center = new float2(authoring.transform.position.x, authoring.transform.position.z) + arena.SpacingCenterOffset.xz;
             float3 radii = (float3)authoring.settings.clearanceRadii + authoring.settings.clearanceMargin;

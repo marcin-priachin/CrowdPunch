@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-09-28
+Last updated: 2026-09-29
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -77,6 +77,23 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-09-29 - Shell And Gauntlet_15
+
+Decision: Adopt the final agreed shell design in the referenced "shell - Brainstorm Puzzle Levels"
+conversation (6abb746a-5ed4-83eb-a3bb-a379ba5d49f5). Three nearby exploder explosions permanently
+break a central solid shell; the breaking blast cannot damage its core. The core has configurable
+Baseline health and accepts ordinary punch/body/blast damage, with independent explosive impact
+and blast damage. Replenish Baselines throughout; replenish two exploders only after zero remain
+while the shell is intact. Core death completes immediately. Use existing aiming and preview,
+blocked punches with cooldown, rebound for non-exploders, and in-world damage without bars.
+
+Rejected: launched-only or direct-hit-only shell damage, one-hit/regenerating/timed shells,
+restricted core attacks, combined impact/blast damage, survivor cleanup, exits, extra targets,
+additional enemy types, health bars, and extending trajectory prediction.
+
+GDD rules: SHELL-001 through SHELL-006. No significant open decision blocks this slice.
+OQ-001 performance targets, broader pacing, final art and audio remain unresolved.
 
 ### 2026-09-28 - Rotating Cover And Gauntlet_14
 

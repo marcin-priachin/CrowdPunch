@@ -17,6 +17,7 @@ namespace CrowdPunch.Bakers
             var color = renderer.sharedMaterial.color;
             float4 rgba = new float4(color.r, color.g, color.b, color.a);
             AddComponent(e, new URPMaterialPropertyBaseColor { Value = rgba });
+            if (a.shellVisual) AddComponent(e, new ShellVisual { IsCore = a.shellCore ? (byte)1 : (byte)0 });
             AddComponent(e, new BarricadeVisual { Barricade = GetEntity(a.barricade, TransformUsageFlags.Dynamic),
                 Color = rgba, Position = a.transform.localPosition, Scale = -1,
                 DebrisDirection = a.debrisDirection, CrackStage = (byte)a.crackStage });

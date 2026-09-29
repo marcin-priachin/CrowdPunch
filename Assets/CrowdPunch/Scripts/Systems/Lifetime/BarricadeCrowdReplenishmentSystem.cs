@@ -12,9 +12,13 @@ namespace CrowdPunch.Systems.Lifetime
     {
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var (member, respawn) in SystemAPI.Query<RefRO<BarricadeCrowdMember>, RefRW<EnemyRespawnSettings>>())
+            foreach (var (member, respawn, entity) in SystemAPI.Query<RefRO<BarricadeCrowdMember>, RefRW<EnemyRespawnSettings>>().WithEntityAccess())
+            {
+                if (SystemAPI.HasComponent<ShellTarget>(member.ValueRO.Barricade)
+                    && SystemAPI.HasComponent<ExplosiveEnemyState>(entity)) continue;
                 respawn.ValueRW.Enabled = (byte)(SystemAPI.HasComponent<Barricade>(member.ValueRO.Barricade)
                     && SystemAPI.GetComponent<Barricade>(member.ValueRO.Barricade).HitsRemaining > 0 ? 1 : 0);
+            }
         }
     }
 }

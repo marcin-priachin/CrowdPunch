@@ -47,6 +47,14 @@ namespace CrowdPunch.Systems.Initialization
                 motion.ValueRW = new RotatingCoverState { Angle = cover.ValueRO.InitialAngle };
                 transform.ValueRW.Rotation = quaternion.RotateY(cover.ValueRO.InitialAngle);
             }
+            foreach (var shell in SystemAPI.Query<RefRW<ShellTarget>>())
+            {
+                shell.ValueRW.ExplosionsRemaining = shell.ValueRO.RequiredExplosions;
+                shell.ValueRW.CoreHealth = shell.ValueRO.CoreMaxHealth;
+                shell.ValueRW.ReplaceExplodersAt = -1;
+                shell.ValueRW.ReplacementBatchActive = shell.ValueRW.LastHitBlocked = 0;
+                shell.ValueRW.ShellBrokenAt = 0;
+            }
             foreach (var rebounds in SystemAPI.Query<DynamicBuffer<BarricadeRebound>>()) rebounds.Clear();
             foreach (var (wall, collider, history) in SystemAPI.Query<RefRW<Barricade>, RefRW<PhysicsCollider>, DynamicBuffer<BarricadeHitHistory>>())
             {

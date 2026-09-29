@@ -54,6 +54,12 @@ namespace CrowdPunch.Editor
             if (player != null) { player.gameObject.SetActive(true); player.Restore(player.MaxHealth); }
             var em = world.EntityManager; em.CompleteAllTrackedJobs();
             if (step == 0) { flow.SelectLevel(13); Next(1, world); return; }
+            if (step == 10 && flow.CurrentLevelIndex == 14)
+            {
+                Require(!flow.RunComplete, "Cover destruction advances to the shell gauntlet");
+                Record("PASS target destruction advances to Gauntlet_15 without survivor cleanup"); Record("COMPLETE");
+                Stop(); EditorApplication.isPaused = true; return;
+            }
             using var covers = em.CreateEntityQuery(typeof(RotatingCover));
             using var bodies = em.CreateEntityQuery(typeof(Enemy), typeof(BarricadeCrowdMember));
             if (covers.CalculateEntityCount() != 1 || bodies.CalculateEntityCount() != 16) return;
@@ -141,13 +147,6 @@ namespace CrowdPunch.Editor
             else if (step == 9 && elapsed > .55)
             {
                 Require(wall.HitsRemaining == 1, "Third accepted hit"); Launch(em, source); Next(10, world);
-            }
-            else if (step == 10 && flow.RunComplete)
-            {
-                Require(wall.HitsRemaining == 0 && flow.RunComplete, "Destruction immediately completes authored run without cleanup");
-                Require(em.GetComponentData<EnemyRespawnSettings>(source).Enabled == 0, "Replenishment disabled on destruction");
-                Record("PASS final hit completes immediately and stops replenishment"); Record("COMPLETE");
-                Stop(); EditorApplication.isPaused = true;
             }
         }
         private static void Launch(EntityManager em, Entity e)

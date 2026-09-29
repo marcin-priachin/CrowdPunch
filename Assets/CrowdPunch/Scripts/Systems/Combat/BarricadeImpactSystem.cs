@@ -101,7 +101,15 @@ namespace CrowdPunch.Systems.Combat
                 }
                 if (!em.HasComponent<Barricade>(closest.Entity)) continue;
                 var wall = em.GetComponentData<Barricade>(closest.Entity);
-                if (BarricadeHitResolution.Allows(wall.Sources, launch.ValueRO.Owner))
+                if (em.HasComponent<ShellTarget>(closest.Entity))
+                {
+                    float inverseMass = em.HasComponent<PhysicsMass>(source) ? em.GetComponentData<PhysicsMass>(source).InverseMass : 0;
+                    float impulse = inverseMass > .0001f ? math.max(0, -math.dot(incoming, closest.SurfaceNormal)) / inverseMass : 0;
+                    float damage = SystemAPI.HasSingleton<EnemyLaunchSettings>()
+                        ? EnemyCollisionDamage.Calculate(launch.ValueRO.LaunchDamage, impulse, SystemAPI.GetSingleton<EnemyLaunchSettings>()) : 0;
+                    ShellHitResolution.Impact(em, closest.Entity, source, launch.ValueRO.LaunchSequence, damage, now, closest.Position);
+                }
+                else if (BarricadeHitResolution.Allows(wall.Sources, launch.ValueRO.Owner))
                     BarricadeHitResolution.TryHit(em, closest.Entity, source, launch.ValueRO.LaunchSequence, now, closest.Position);
 
                 // An explosive body requests its ordinary explosion even if this launch already hit the wall.

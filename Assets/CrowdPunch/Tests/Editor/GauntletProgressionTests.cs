@@ -50,15 +50,15 @@ namespace CrowdPunch.Tests
             {
                 var sequence = Find<GauntletSequence>(scene);
                 var names = new SerializedObject(sequence).FindProperty("levelSceneNames");
-                Assert.That(names.arraySize, Is.EqualTo(14));
+                Assert.That(names.arraySize, Is.EqualTo(15));
                 string[] enabled = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-                Assert.That(enabled.Length, Is.EqualTo(17));
-                Assert.That(enabled.Skip(15), Is.EquivalentTo(new[] {
+                Assert.That(enabled.Length, Is.EqualTo(18));
+                Assert.That(enabled.Skip(16), Is.EquivalentTo(new[] {
                     Root + "NavigationValidation/NavigationValidationBootstrap.unity",
                     Root + "NavigationValidation/NavigationValidationArena.unity" }),
                     "The two separate validation scenes must not enter the playable progression.");
                 Assert.That(enabled[0], Is.EqualTo(Root + "Bootstrap.unity"));
-                for (int i = 0; i < 14; i++)
+                for (int i = 0; i < 15; i++)
                 {
                     string id = $"Gauntlet_{i + 1:00}";
                     Assert.That(names.GetArrayElementAtIndex(i).stringValue, Is.EqualTo(id));
@@ -82,6 +82,7 @@ namespace CrowdPunch.Tests
         [TestCase(12)]
         [TestCase(13)]
         [TestCase(14)]
+        [TestCase(15)]
         public void Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(int number)
         {
             string id = $"Gauntlet_{number:00}";

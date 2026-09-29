@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-09-28
+Last updated: 2026-09-29
 
 ## How To Read This Document
 
@@ -352,6 +352,62 @@ Require multiple successful hits with a configurable count and no timeout or pro
 Use the existing bounded replenishing-wave infrastructure while the target lives. Target destruction
 immediately completes the level through normal gauntlet completion; neither reaching an exit nor
 clearing survivors is required. Restart/retry restores the target, cover motion, crowd and completion.
+
+## Shell Objective
+
+### SHELL-001 - Crack The Shell Introduction
+
+Status: Must
+
+Append Gauntlet_15 after the existing levels. One stationary central target is accessible from
+all sides. Use only Baseline enemies and Explosives. Destroying the exposed core completes
+the level immediately regardless of surviving enemies; no exit or cleanup is required.
+
+### SHELL-002 - Permanent Explosion-Only Shell
+
+Status: Must
+
+The shell takes three exploder explosions by default, configurable in settings. Any explosion
+whose radius reaches the target counts, including unlaunched exploders. Direct punches and
+launched-body impacts do no shell damage. Punches connect for normal cooldown and blocked-hit
+feedback. Shell damage persists and breaking it permanently exposes the core. The breaking
+explosion must not damage the newly exposed core; a fresh attack is required.
+
+### SHELL-003 - Ordinary Core Damage
+
+Status: Must
+
+The core defaults to the Baseline enemy's maximum health, with its own configurable health.
+An already exposed core takes ordinary damage from direct punches, launched bodies and
+explosions. Each body can deal impact damage once per continuous launch. A launched exploder's
+impact and explosion are separate damaging events against an already exposed core.
+
+### SHELL-004 - Solid Target And Existing Aiming
+
+Status: Must
+
+Both phases block player and enemy movement. Launched non-exploders rebound and continue
+flying; launched exploders detonate on target impact. Reuse the same aim-assist rules as enemies
+in both phases, including the existing initial-direction preview. Treat the target as solid;
+do not extend preview functionality to predict a bounce.
+
+### SHELL-005 - Replenishment In Both Phases
+
+Status: Must
+
+Maintain a configurable bounded Baseline population in both phases. While the shell is intact,
+provide two exploders and replenish the pair only when none remain, after a configurable delay.
+Do not top up when one survives. Once the shell breaks, cancel guaranteed exploder replacements
+while retaining existing exploders. Core destruction stops replenishment through level completion.
+
+### SHELL-006 - In-World Durability
+
+Status: Must
+
+Use a chunky placeholder shell, a clearly distinct core, and visual damage progression in both
+phases without health bars. Include a brief opening hint explaining explosions and distinct
+successful shell-hit feedback. Geometry, colors, effects, baseline population, bounce strength
+and remaining timing values are implementation tuning, subject to playtesting.
 
 ## Effects And Combinations
 

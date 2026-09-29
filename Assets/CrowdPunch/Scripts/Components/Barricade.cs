@@ -32,7 +32,11 @@ namespace CrowdPunch.Components
     }
 
     public struct BarricadeCrowdSequence : IComponentData { public Entity Barricade; }
-    public struct BarricadeCrowdMember : IComponentData { public Entity Barricade; }
+    public struct BarricadeCrowdMember : IComponentData
+    {
+        public Entity Barricade;
+        public byte ShellReplacementPending;
+    }
 
     public struct BarricadeRebound : IBufferElementData
     {
