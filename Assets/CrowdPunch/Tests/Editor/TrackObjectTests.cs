@@ -31,6 +31,7 @@ namespace CrowdPunch.Tests
             em.SetComponentData(target, track); em.SetComponentData(target, LocalTransform.Identity);
             em.SetComponentData(target, new Barricade { HitsRemaining = 1, RequiredHits = 1, CompleteOnDestruction = 1 });
             em.AddBuffer<BarricadeHitHistory>(target); em.AddBuffer<TrackPushHistory>(target);
+            em.AddBuffer<TrackPushContact>(target);
         }
         [TearDown] public void Cleanup() => world.Dispose();
 
@@ -138,6 +139,15 @@ namespace CrowdPunch.Tests
                 Assert.That(em.IsComponentEnabled<DamageRequest>(character), Is.EqualTo(damaging));
                 Assert.That(em.GetComponentData<DamageRequest>(character).Amount, Is.EqualTo(damaging ? 2 : 0));
                 Assert.That(playerHits, Is.EqualTo(damaging && playerDamage ? 1 : 0));
+                // A successful physics separation must not erase the push's damage eligibility.
+                var separated = em.CreateEntity(typeof(Enemy), typeof(NavigationAgent), typeof(EnemyLaunchState), typeof(LocalTransform), typeof(DamageRequest));
+                em.SetComponentData(separated, new NavigationAgent { Radius = .5f });
+                em.SetComponentData(separated, LocalTransform.FromPosition(new float3(0, 0, 1)));
+                em.SetComponentEnabled<DamageRequest>(separated, false);
+                world.GetOrCreateSystem<TrackPushContactSystem>().Update(world.Unmanaged);
+                em.SetComponentData(separated, LocalTransform.FromPosition(new float3(8, 0, 1)));
+                system.Update(world.Unmanaged);
+                Assert.That(em.GetComponentData<DamageRequest>(separated).Amount, Is.EqualTo(damaging ? 2 : 0));
             }
             finally
             {
@@ -159,7 +169,7 @@ namespace CrowdPunch.Tests
 
         [Test] public void Track004_NavigationRebuildsFootprintAndReopensPreviousPosition()
         {
-            var collider = BoxCollider.Create(new BoxGeometry { Size = new float3(3), Orientation = quaternion.identity });
+            var collider = Unity.Physics.BoxCollider.Create(new BoxGeometry { Size = new float3(3), Orientation = quaternion.identity });
             var wall = em.GetComponentData<Barricade>(target); wall.IntactCollider = collider; em.SetComponentData(target, wall);
             var rectangles = new NativeArray<NavigationRectangle>(0, Allocator.Temp);
             var blob = NavigationGridConstruction.Build(new float2(-15), new float2(15), 1, new float3(.5f, .8f, 1.5f), rectangles, Allocator.Persistent);

@@ -2,16 +2,19 @@ using CrowdPunch.Components;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
 using Unity.Entities;
+using Unity.Burst;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Physics
 {
+    [BurstCompile]
     [UpdateInGroup(typeof(GamePrePhysicsGroup), OrderLast = true)]
     [UpdateAfter(typeof(BarricadeImpactSystem))]
     public partial struct TrackObjectMotionSystem : ISystem
     {
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             float dt = SystemAPI.Time.DeltaTime;

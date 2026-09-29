@@ -1,15 +1,18 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using Unity.Entities;
+using Unity.Burst;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Physics
 {
+    [BurstCompile]
     [UpdateInGroup(typeof(GamePostPhysicsGroup), OrderFirst = true)]
     public partial struct TrackObjectArrivalSystem : ISystem
     {
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             foreach (var (track, motion, pose, velocity, wall) in

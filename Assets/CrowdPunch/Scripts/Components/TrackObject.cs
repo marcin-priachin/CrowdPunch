@@ -25,6 +25,11 @@ namespace CrowdPunch.Components
         public Entity Character;
     }
 
+    public struct TrackPushContact : IBufferElementData
+    {
+        public Entity Character;
+    }
+
     public struct TrackSocketVisual : IComponentData
     {
         public Entity Object;

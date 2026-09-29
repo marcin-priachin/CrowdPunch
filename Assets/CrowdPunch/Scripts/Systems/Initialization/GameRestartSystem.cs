@@ -64,6 +64,7 @@ namespace CrowdPunch.Systems.Initialization
                 history.Clear();
             }
             foreach (var rebounds in SystemAPI.Query<DynamicBuffer<BarricadeRebound>>()) rebounds.Clear();
+            foreach (var contacts in SystemAPI.Query<DynamicBuffer<TrackPushContact>>()) contacts.Clear();
             foreach (var (wall, collider, history) in SystemAPI.Query<RefRW<Barricade>, RefRW<PhysicsCollider>, DynamicBuffer<BarricadeHitHistory>>())
             {
                 wall.ValueRW.HitsRemaining = wall.ValueRO.RequiredHits;

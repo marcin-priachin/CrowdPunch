@@ -3,6 +3,7 @@ using CrowdPunch.Systems.Groups;
 using CrowdPunch.Systems.InputBridge;
 using CrowdPunch.Utilities;
 using Unity.Collections;
+using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Profiling;
@@ -11,6 +12,7 @@ using Unity.Transforms;
 namespace CrowdPunch.Systems.AI
 {
     // The baked grid stays immutable. Only this system owns and disposes its replacement blobs.
+    [BurstCompile]
     [UpdateInGroup(typeof(GamePrePhysicsGroup), OrderFirst = true)]
     [UpdateBefore(typeof(PlayerObstacleCollisionSystem))]
     public partial struct TrackNavigationSystem : ISystem
@@ -23,6 +25,7 @@ namespace CrowdPunch.Systems.AI
 
         public void OnDestroy(ref SystemState state) { if (owned.IsCreated) owned.Dispose(); }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             using var marker = Marker.Auto();

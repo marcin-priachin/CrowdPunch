@@ -27,6 +27,7 @@ namespace CrowdPunch.Bakers
                 PlayerBodiesOnly = a.settings.playerLaunchedBodiesOnly ? (byte)1 : (byte)0 });
             AddComponent<TrackObjectState>(e);
             AddBuffer<TrackPushHistory>(e);
+            AddBuffer<TrackPushContact>(e);
             // Infinite mass lets the solver push dynamic bodies without stalling the objective.
             AddComponent(e, PhysicsMass.CreateKinematic(MassProperties.UnitSphere));
             AddComponent<PhysicsVelocity>(e);

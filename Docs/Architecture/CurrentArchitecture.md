@@ -1227,7 +1227,9 @@ side positions and then both ends against solid geometry. Ordinary enemy locomot
 velocity-owned; these writes are obstacle penetration corrections. Launched bodies retain the
 shared rebound path. The authored track has clearance on all sides; arbitrary enclosed custom
 tracks are not validated. Optional damage queues existing `DamageRequest` or player health events,
-deduplicated by character across a continuous slide. Mid-slide retargets preserve that history.
+deduplicated by character across a continuous slide. `TrackPushContactSystem` preserves pre-physics
+swept contact eligibility so successful solver separation cannot erase optional damage. Mid-slide
+retargets preserve the damage history; stationary/cancelled motion cannot deal push damage.
 
 Player corrections pass through `PlayerEcsBridge.ReceiveObstacleDisplacement` to `PlayerController`,
 which owns the GameObject transform. The system also refreshes the ECS player snapshot for later
@@ -1242,7 +1244,10 @@ Moving footprints include that threshold as padding. Existing navigation detects
 cancels stale searches and revalidates paths; safe spawn checks use the same footprint. The system
 disposes only its own blobs, restores the original when the object disappears, and handles scene
 unload. This intentionally bounded single-object implementation avoids changing global navigation
-ownership. Its `CrowdPunch.TrackNavigation` profiler marker includes rebuild work.
+ownership. The system is Burst compiled; its `CrowdPunch.TrackNavigation` profiler marker includes
+rebuild work. A warm Editor check at the 14-root cap measured 0.234ms mean / 0.242ms maximum
+over 30 forced footprint rebuilds. Managed fallback before asynchronous Burst compilation measured
+about 17ms; these are isolated rebuild timings, not whole-frame or player-build guarantees.
 
 `GameRestartSystem` resets pose, destination, timers, velocity and push history alongside shared
 hit history and crowd teardown. Scene reload restores the baked state. The three unresolved

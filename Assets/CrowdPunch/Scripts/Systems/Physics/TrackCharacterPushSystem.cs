@@ -26,6 +26,9 @@ namespace CrowdPunch.Systems.Physics
                 float3 start = track.ValueRO.Start + track.ValueRO.Direction * motion.ValueRO.Distance;
                 float3 end = track.ValueRO.Start + track.ValueRO.Direction * motion.ValueRO.NextDistance;
                 if (math.distancesq(start, end) < 1e-10f) continue;
+                if (track.ValueRO.DamagingPush != 0)
+                    foreach (var contact in SystemAPI.GetBuffer<TrackPushContact>(target))
+                        DamageEnemy(state.EntityManager, target, contact.Character, track.ValueRO.PushDamage);
                 foreach (var (character, agent, launch, entity) in SystemAPI.Query<RefRW<LocalTransform>, RefRO<NavigationAgent>, RefRO<EnemyLaunchState>>()
                     .WithAll<Enemy>().WithNone<RespawnRequest>().WithEntityAccess())
                 {
@@ -33,14 +36,7 @@ namespace CrowdPunch.Systems.Physics
                     if (launch.ValueRO.Phase == EnemyLaunchPhase.Launched || launch.ValueRO.Phase == EnemyLaunchPhase.Defeated) continue;
                     float radius = agent.ValueRO.Radius;
                     if (!TrackPushGeometry.Intersects(character.ValueRO.Position, radius, start, end, pose.ValueRO.Rotation, wall.ValueRO.Size)) continue;
-                    if (track.ValueRO.DamagingPush != 0 && RecordPush(state.EntityManager, target, entity))
-                    {
-                        var damage = state.EntityManager.IsComponentEnabled<DamageRequest>(entity)
-                            ? state.EntityManager.GetComponentData<DamageRequest>(entity) : default;
-                        damage.Amount += track.ValueRO.PushDamage;
-                        state.EntityManager.SetComponentData(entity, damage);
-                        state.EntityManager.SetComponentEnabled<DamageRequest>(entity, true);
-                    }
+                    if (track.ValueRO.DamagingPush != 0) DamageEnemy(state.EntityManager, target, entity, track.ValueRO.PushDamage);
                     if (!TryDisplace(state.EntityManager, world, target, character.ValueRO.Position, radius, end,
                         pose.ValueRO.Rotation, wall.ValueRO.Size, track.ValueRO.Direction, out float3 safe)) continue;
                     // This is moving-obstacle penetration correction; ordinary movement remains velocity-owned.
@@ -59,6 +55,14 @@ namespace CrowdPunch.Systems.Physics
                     SystemAPI.SetSingleton(player);
                 }
             }
+        }
+
+        private static void DamageEnemy(EntityManager em, Entity target, Entity character, float amount)
+        {
+            if (!em.HasComponent<DamageRequest>(character) || !RecordPush(em, target, character)) return;
+            var damage = em.IsComponentEnabled<DamageRequest>(character) ? em.GetComponentData<DamageRequest>(character) : default;
+            damage.Amount += amount;
+            em.SetComponentData(character, damage); em.SetComponentEnabled<DamageRequest>(character, true);
         }
 
         private static bool RecordPush(EntityManager em, Entity target, Entity character)

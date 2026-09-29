@@ -137,6 +137,7 @@ namespace CrowdPunch.Editor
                 if (expected < 5) { expected++; Launch(em, body, pose.Position, 1); Next(8, world); }
                 else
                 {
+                    if (!flow.RunComplete) return; // Presentation-to-Mono completion is observed on the next frame.
                     Require(motion.Locked != 0 && flow.RunComplete && math.abs(pose.Position.z - 5) < .01f,
                         "Physical socket arrival locks and completes despite survivors");
                     Record("PASS physical socket completion with survivors");
@@ -169,7 +170,8 @@ namespace CrowdPunch.Editor
                 total += watch.Elapsed.TotalMilliseconds; maximum = System.Math.Max(maximum, watch.Elapsed.TotalMilliseconds);
             }
             em.SetComponentData(target, pose); system.Update(world.Unmanaged);
-            Record("PROFILE TrackNavigation at 14-root cap: 30 forced moving-footprint rebuilds; mean "
+            using var crowd = em.CreateEntityQuery(typeof(Enemy), typeof(BarricadeCrowdMember));
+            Record("PROFILE TrackNavigation with " + crowd.CalculateEntityCount() + " enemy roots: 30 forced moving-footprint rebuilds; mean "
                 + (total / 30).ToString("F3") + " ms, max " + maximum.ToString("F3") + " ms (Editor stopwatch, no whole-frame claim).");
         }
         private static void Launch(EntityManager em, Entity e, float3 center, float sign)
