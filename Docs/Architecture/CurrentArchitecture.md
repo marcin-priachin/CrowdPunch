@@ -307,7 +307,7 @@ Ordering between systems that share only a group should be made explicit when co
 `GamePostPhysicsGroup` runs as a direct child of `FixedStepSimulationSystemGroup` after `PhysicsSystemGroup`:
 
 - `EnemyLaunchCollisionSystem` interprets solver-resolved enemy impacts, resolves launch propagation first, applies configured smallest-angle direction correction to newly propagated horizontal velocity while preserving its solver-produced speed and vertical velocity, retains the selected candidate as that launch's homing target, and independently queues eligible impulse-scaled collision damage.
-- `WizardImpactZoneSystem` observes qualifying physics contacts before collision damage and also sweeps against the Mono player's snapshot. `WizardZoneSystem` resolves moving/fixed zone membership, ticks and force after launched-player impacts and explosions, before recovery. `WizardPlayerHitSystem` delivers its ECS hit buffer through the player bridge before recovery; per-zone player protection remains ECS-owned.
+- `WizardImpactZoneSystem` observes qualifying physics contacts before collision damage and also sweeps against the Mono player's snapshot. It also checks launched Dasher sweeps because their enemy solver contacts are disabled. A launched Wizard's first qualifying contact or an active/recovering Wizard hit by a launched enemy creates an immediate fixed zone; incoming source/continuous-flight history deduplicates repeated contacts. `WizardZoneSystem` resolves zone membership and player ticks for both kinds; only impact zones query and affect enemies. It runs after launched-player impacts and explosions, before recovery. `WizardPlayerHitSystem` delivers its ECS hit buffer through the player bridge before recovery; per-zone player protection remains ECS-owned.
 - `EnemyLaunchHomingSystem` runs before physics after gameplay impulses. A launched body with a player aim-assist or propagation target turns its horizontal velocity toward the still-living active/recovering target by the configured maximum degrees per second while preserving horizontal speed and vertical velocity (COMBAT-012, PLAYER-004).
 - `ExplosiveCollisionTriggerSystem` requests an explosive detonation when either participant in an enemy collision is `Launched`; `ExplosionResolutionSystem` then resolves explosion overlap chains to a same-frame fixed point before recovery.
 - `RangedProjectileSystem` evaluates each fixed trajectory, performs a swept player-radius hit check, forwards one accepted hit through `PlayerEcsBridge`, and destroys the projectile on hit, after falling below its authored world-space minimum altitude, or on expiry. It does not apply arena-bound cleanup because the unconstrained GameObject player can currently provide a valid target outside `ArenaBounds`.
@@ -1274,13 +1274,13 @@ retain their intentional movement ownership. Existing navigation and physics ste
 remain responsible for movement. `EnemyFacingSystem` applies Wizard turn tuning while
 facing the player; launched facing still follows velocity.
 
-A zone stores its source, baked settings, position, expiry, follow/active flags and scene/
+A zone stores its source, baked settings, explicit Cast/Impact kind, position, expiry, follow/active flags and scene/
 wave ownership. Its `WizardZoneTarget` buffer stores independent entry/tick clocks and
 player protection per target. Membership is refreshed every fixed step, including between
 damage ticks; leaving removes the record. Physics broadphase candidates are expanded for
 body travel since broadphase construction, then filtered by exact XZ radius plus the
-target's physical radius. The source, armor stages, bosses and non-enemy puzzle objects
-are excluded. Zone force writes post-physics velocity; strong force uses the shared launch
+target's physical radius. Cast zones check the player only. Impact zones exclude the source,
+armor stages, bosses and non-enemy puzzle objects from enemy effects. Impact-zone force writes post-physics velocity; strong force uses the shared launch
 transition only when starting a new normal-enemy flight. A dashing Dasher receives damage
 without force, and an elite receives force without launching.
 
@@ -1294,7 +1294,11 @@ retaining the existing accepted-damage/knockback path. MonoBehaviours never hold
 
 `EnemyLaunchState.ContinuousFlight` advances on a genuine entry into `Launched`.
 `LaunchSequence` still advances for re-punches as before. `WizardImpactZoneSystem` consumes
-one special impact per continuous flight and creates an immediately active fixed zone.
+one special impact per launched Wizard continuous flight. It also creates the same zone
+when a launched enemy strikes an active/recovering Wizard; `WizardIncomingImpactHistory`
+allows one zone per incoming source flight per Wizard and resets on Wizard pool/restart.
+An incoming enemy preserves its monotonic `ContinuousFlight` number across pooling, so
+the next genuine launch of the same entity remains distinguishable from the earlier one.
 Moving zones are cancelled by launch or defeat; fixed zones keep their own timer through
 source death, pooling, recovery and recasting. Scene/run ownership and `GameRestartSystem`
 remove old zones on unload/reset. Respawn and restart reset cast state.

@@ -43,6 +43,7 @@ namespace CrowdPunch.Systems.Initialization
             EntityManager.DestroyEntity(oldZones);
             foreach (var (settings, cast) in SystemAPI.Query<RefRO<WizardSettings>, RefRW<WizardCastState>>())
                 cast.ValueRW = new WizardCastState { Remaining = settings.ValueRO.Cooldown, RandomState = math.max(1u, cast.ValueRO.RandomState) };
+            foreach (var history in SystemAPI.Query<DynamicBuffer<WizardIncomingImpactHistory>>()) history.Clear();
             ResetWaveSequences();
             BossEncounterReset.Reset(EntityManager);
             foreach (var reflections in SystemAPI.Query<DynamicBuffer<CoverReflection>>()) reflections.Clear();

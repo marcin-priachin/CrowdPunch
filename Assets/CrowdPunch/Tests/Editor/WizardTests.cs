@@ -35,6 +35,7 @@ namespace CrowdPunch.Tests
             settings = WizardSettings.Default;
             em.AddComponentData(source, settings);
             em.AddComponentData(source, new WizardCastState { RandomState = 1, Remaining = 2 });
+            em.AddBuffer<WizardIncomingImpactHistory>(source);
             zone = Zone();
         }
         [TearDown] public void Cleanup() { world.Dispose(); physics.Dispose(); collider.Dispose(); }
@@ -58,6 +59,7 @@ namespace CrowdPunch.Tests
         {
             var e = em.CreateEntity(typeof(WizardZone));
             em.SetComponentData(e, new WizardZone { Source = source, Settings = settings, Active = active ? (byte)1 : (byte)0,
+                Kind = follow ? WizardZoneKind.Cast : WizardZoneKind.Impact,
                 Follow = follow ? (byte)1 : (byte)0, ExpiresAt = 3 });
             em.AddBuffer<WizardZoneTarget>(e); return e;
         }
@@ -78,6 +80,47 @@ namespace CrowdPunch.Tests
         }
         private float Health(Entity e) => em.GetComponentData<Health>(e).Current;
         private void Mode(WizardForceMode mode) { settings.ForceMode = mode; var z = em.GetComponentData<WizardZone>(zone); z.Settings = settings; em.SetComponentData(zone, z); }
+
+        [Test] public void Wizard003_CastZoneAffectsPlayerButNotEnemies()
+        {
+            var cast = em.GetComponentData<WizardZone>(zone); cast.Kind = WizardZoneKind.Cast;
+            cast.Settings.ForceMode = WizardForceMode.StrongKnockback; em.SetComponentData(zone, cast);
+            var go = new GameObject("Wizard cast player test"); var bridge = go.AddComponent<PlayerEcsBridge>();
+            var health = go.AddComponent<PlayerHealth>();
+            PlayerBridgeRegistry.TryGetBridge(out var previous); PlayerBridgeRegistry.Register(bridge);
+            try
+            {
+                foreach (string method in new[] { "Awake", "OnDisable", "OnEnable" })
+                    typeof(PlayerHealth).GetMethod(method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(health, null);
+                health.ResetHealth();
+                em.SetComponentData(playerEntity, new PlayerSnapshot { IsAvailable = true, Position = new float3(2, 0, 0), Radius = .5f });
+                Step(0);
+                Assert.That(health.CurrentHealth, Is.EqualTo(90));
+                Assert.That(Health(target), Is.EqualTo(100));
+                Assert.That(em.GetComponentData<PhysicsVelocity>(target).Linear, Is.EqualTo(float3.zero));
+                Assert.That(em.GetComponentData<EnemyLaunchState>(target).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+                Assert.That(em.GetBuffer<WizardZoneTarget>(zone).Length, Is.EqualTo(1));
+            }
+            finally { PlayerBridgeRegistry.Unregister(bridge); if (previous != null) PlayerBridgeRegistry.Register(previous); Object.DestroyImmediate(go); }
+        }
+
+        [Test] public void Wizard005_IncomingFlightCreatesOnlyOneZonePerWizard()
+        {
+            var history = em.GetBuffer<WizardIncomingImpactHistory>(source);
+            Assert.That(WizardImpactZoneSystem.RegisterIncoming(history, target, 1), Is.True);
+            Assert.That(WizardImpactZoneSystem.RegisterIncoming(history, target, 1), Is.False);
+            Assert.That(WizardImpactZoneSystem.RegisterIncoming(history, target, 2), Is.True);
+            Assert.That(WizardImpactZoneSystem.RegisterIncoming(history, Enemy(new float3(9, 0, 0)), 1), Is.True);
+            Assert.That(history.Length, Is.EqualTo(2));
+        }
+
+        [Test] public void Wizard005_FastLaunchedDasherSweepsThroughWizard()
+        {
+            Assert.That(WizardImpactZoneSystem.SweptImpact(new float3(0, 0, 0),
+                new float3(-5, 0, 0), new float3(5, 0, 0), 1), Is.True);
+            Assert.That(WizardImpactZoneSystem.SweptImpact(new float3(0, 0, 2),
+                new float3(-5, 0, 0), new float3(5, 0, 0), 1), Is.False);
+        }
 
         [Test] public void Wizard003_EntryTicksExitAndReentryAreIndependentPerTarget()
         {

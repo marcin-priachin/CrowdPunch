@@ -3,6 +3,8 @@ using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
+    public enum WizardZoneKind : byte { Cast, Impact }
+
     public struct WizardZone : IComponentData
     {
         public Entity Source;
@@ -12,6 +14,7 @@ namespace CrowdPunch.Components
         public int WaveIndex;
         public float3 Position;
         public WizardSettings Settings;
+        public WizardZoneKind Kind;
         public double ExpiresAt;
         public byte Follow, Active;
     }

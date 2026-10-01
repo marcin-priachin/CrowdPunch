@@ -59,23 +59,26 @@ namespace CrowdPunch.Systems.Combat
                 zoneRef.ValueRW = zone;
                 if (zone.Active == 0) continue;
                 for (int i = 0; i < targets.Length; i++) { var t = targets[i]; t.Seen = 0; targets[i] = t; }
-                float broadRadius = math.max(0, zone.Settings.Radius) + padding;
-                candidates.Clear();
-                physics.CollisionWorld.OverlapAabb(new OverlapAabbInput
+                if (zone.Kind == WizardZoneKind.Impact)
                 {
-                    Aabb = new Aabb { Min = new float3(zone.Position.x - broadRadius, -1e6f, zone.Position.z - broadRadius),
-                        Max = new float3(zone.Position.x + broadRadius, 1e6f, zone.Position.z + broadRadius) },
-                    Filter = CollisionFilter.Default
-                }, ref candidates);
-                foreach (int bodyIndex in candidates)
-                {
-                    Entity target = physics.Bodies[bodyIndex].Entity;
-                    if (target == zone.Source || !Valid(em, target) || em.HasComponent<BossPart>(target)) continue;
-                    if (em.HasComponent<EnemyArmor>(target) && em.GetComponentData<EnemyArmor>(target).Stages > 0) continue;
-                    float radius = em.HasComponent<NavigationAgent>(target) ? em.GetComponentData<NavigationAgent>(target).Radius : 0;
-                    float3 position = em.GetComponentData<LocalTransform>(target).Position;
-                    if (!Overlaps(zone.Position, zone.Settings.Radius, position, radius)) continue;
-                    if (Tick(targets, target, now, zone.Settings.TickInterval, 0)) HitEnemy(em, target, position, zone, now);
+                    float broadRadius = math.max(0, zone.Settings.Radius) + padding;
+                    candidates.Clear();
+                    physics.CollisionWorld.OverlapAabb(new OverlapAabbInput
+                    {
+                        Aabb = new Aabb { Min = new float3(zone.Position.x - broadRadius, -1e6f, zone.Position.z - broadRadius),
+                            Max = new float3(zone.Position.x + broadRadius, 1e6f, zone.Position.z + broadRadius) },
+                        Filter = CollisionFilter.Default
+                    }, ref candidates);
+                    foreach (int bodyIndex in candidates)
+                    {
+                        Entity target = physics.Bodies[bodyIndex].Entity;
+                        if (target == zone.Source || !Valid(em, target) || em.HasComponent<BossPart>(target)) continue;
+                        if (em.HasComponent<EnemyArmor>(target) && em.GetComponentData<EnemyArmor>(target).Stages > 0) continue;
+                        float radius = em.HasComponent<NavigationAgent>(target) ? em.GetComponentData<NavigationAgent>(target).Radius : 0;
+                        float3 position = em.GetComponentData<LocalTransform>(target).Position;
+                        if (!Overlaps(zone.Position, zone.Settings.Radius, position, radius)) continue;
+                        if (Tick(targets, target, now, zone.Settings.TickInterval, 0)) HitEnemy(em, target, position, zone, now);
+                    }
                 }
                 if (player.IsAvailable && Overlaps(zone.Position, zone.Settings.Radius, player.Position, player.Radius)
                     && Tick(targets, Entity.Null, now, zone.Settings.TickInterval, zone.Settings.PlayerInvulnerability))

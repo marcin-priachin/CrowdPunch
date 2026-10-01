@@ -80,8 +80,11 @@ namespace CrowdPunch.Systems.Lifetime
                         SystemAPI.SetComponent(enemy, new EnemyContactAttemptState());
                     }
                     if (SystemAPI.HasComponent<WizardCastState>(enemy))
+                    {
                         SystemAPI.SetComponent(enemy, new WizardCastState { Remaining = SystemAPI.GetComponent<WizardSettings>(enemy).Cooldown,
                             RandomState = math.max(1u, SystemAPI.GetComponent<WizardCastState>(enemy).RandomState) });
+                        SystemAPI.GetBuffer<WizardIncomingImpactHistory>(enemy).Clear();
+                    }
                     if (SystemAPI.HasComponent<RangedAttackState>(enemy))
                     {
                         RangedEnemySettings rangedSettings = SystemAPI.GetComponent<RangedEnemySettings>(enemy);
@@ -109,9 +112,12 @@ namespace CrowdPunch.Systems.Lifetime
                         SystemAPI.SetComponent(enemy, new EnemyImpactFeedback());
                     if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
                     {
+                        uint continuousFlight = SystemAPI.GetComponent<EnemyLaunchState>(enemy).ContinuousFlight;
                         SystemAPI.SetComponent(enemy, new EnemyLaunchState
                         {
-                            Phase = EnemyLaunchPhase.Active
+                            Phase = EnemyLaunchPhase.Active,
+                            // Incoming Wizard-zone deduplication must distinguish later flights of a pooled source.
+                            ContinuousFlight = continuousFlight
                         });
                     }
                     if (SystemAPI.HasComponent<ExplosiveEnemyState>(enemy))

@@ -125,6 +125,7 @@ namespace CrowdPunch.Systems.Initialization
                 commandBuffer.AddComponent(enemy, profile.WizardSettings);
                 commandBuffer.AddComponent(enemy, new WizardCastState { Remaining = profile.WizardSettings.Cooldown,
                     RandomState = random.NextUInt(1u, uint.MaxValue) });
+                commandBuffer.AddBuffer<WizardIncomingImpactHistory>(enemy);
                 var movement = profile.MovementSettings;
                 movement.MoveSpeed = profile.WizardSettings.ApproachSpeed;
                 movement.Acceleration = profile.WizardSettings.Acceleration;

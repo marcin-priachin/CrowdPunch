@@ -628,10 +628,11 @@ bodies ignore this avoidance. Avoidance cannot move a committed stationary caste
 
 Status: Must
 
-Zones follow their caster normally. Use cylindrical XZ overlap including target physical
-radius, ignoring cover and height. Hit the player, normal enemies, Elites and other Wizards;
-exclude source, BossParts and puzzle/environment objects. Intact armor is immune. Exploder
-zone damage alone never requests detonation. Recovering enemies remain targets.
+Cast zones follow their caster and affect the player only. Detached impact zones affect
+the player, normal enemies, Elites and other Wizards. Use cylindrical XZ overlap including
+target physical radius, ignoring cover and height. Exclude the source, BossParts and
+puzzle/environment objects from impact-zone effects. Intact armor is immune. Exploder
+impact-zone damage alone never requests detonation. Recovering enemies remain impact targets.
 
 Every zone is an ECS entity, with per-target timing in its own DynamicBuffer. Refresh
 membership each fixed simulation update using nearby spatial candidates and exact XZ tests.
@@ -661,9 +662,15 @@ Each genuine entry into Launched grants one stationary zone on its first collisi
 non-defeated enemy, player, or BossPart. Armored and Elite targets qualify; walls/environment
 and defeated cleanup bodies do not. Re-punch or redirection while already launched does not
 renew this allowance, although ordinary re-punch bookkeeping still resets under COMBAT-014/015.
+An active or recovering Wizard hit by a launched enemy also creates an immediate detached
+zone. A given incoming enemy flight can trigger each Wizard once; a later genuine flight can
+trigger it again. Launched Dasher hits use their swept gameplay collision path. If the Wizard
+is already launched, its own flight allowance governs the contact.
 
 The zone appears immediately at the Wizard's impact position projected to ground, without
-telegraph, and copies normal active-zone radius, duration, damage, timing, force and visuals.
+telegraph, and copies cast-zone radius, duration, player damage/timing/force and visuals.
+Unlike a cast zone, an impact zone also damages and pushes eligible enemies using the
+existing enemy settings.
 It remains independent through source recovery, recasting or death, while preserving source
 immunity. Ordinary impact damage and the zone entry hit both apply; global player protection
 from the collision cannot suppress the zone hit or its creation. Scene exit/restart clears zones.

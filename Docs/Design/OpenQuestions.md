@@ -82,6 +82,8 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 Decision: Adopt the final Wizard design in conversation 6abe10dd-838c-83ed-8b66-0308a282a96d,
 including per-target zone timers and the Q160 correction preserving already-launched state.
+The later 2026-10-01 correction makes cast zones player-only and adds detached impact zones
+when a launched enemy strikes an active or recovering Wizard; GDD WIZARD-003/005 governs both.
 GDD WIZARD-001..007 and [Wizard](Wizard.md) record the accepted requirements and rejected alternatives.
 Wizard is the sixth standard archetype. No significant Wizard gameplay question remains open.
 

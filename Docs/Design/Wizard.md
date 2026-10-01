@@ -1,8 +1,11 @@
 # Wizard accepted design
 
 Accepted 2026-10-01 from conversation `6abe10dd-838c-83ed-8b66-0308a282a96d`.
-This records the final agreed summary, including the continuous-launch correction (Q160).
+This records the original final agreed summary, including the continuous-launch correction (Q160).
 It is design, not verification evidence. See GDD WIZARD-001..007 and `../Validation/Wizard.md`.
+The 2026-10-01 follow-up correction governs the sections below: cast zones affect the
+player only; impact zones retain enemy effects and also trigger when a launched enemy
+hits an active or recovering Wizard.
 
 ## Agreed decisions
 
@@ -87,43 +90,37 @@ Wizard-specific hazard-spacing behavior is configurable:
 
 Launched enemies ignore this Wizard-spacing avoidance entirely.
 
-### 4. Normal damage zone
+### 4. Cast damage zone
 
 The normal zone:
 
 - follows the Wizard while active;
 - uses flat **XZ-plane/cylindrical** gameplay checks;
-- affects:
-  - player;
-  - normal enemies;
-  - elites;
-  - other Wizards;
-- does **not** affect BossParts;
-- does not affect non-enemy puzzle targets, barricades, track objects, cover, etc.;
+- affects the player only, including while dashing;
+- does not damage or push enemies, BossParts or puzzle/environment objects;
 - ignores line of sight and cover.
 
-The source Wizard is immune to its own zone.
-
-Other Wizards are not immune.
+Detached impact zones retain enemy damage/force against normal enemies, Elites and other Wizards;
+they exclude the source, BossParts and puzzle/environment objects.
 
 Overlapping Wizard zones **stack independently**.
 
-Armored enemy:
+For detached impact zones, an Armored enemy:
 
 - while armor remains: completely immune to Wizard-zone damage/effects;
 - after armor breaks: affected normally.
 
-Exploder:
+For detached impact zones, an Exploder:
 
 - takes Wizard-zone damage normally;
 - zone damage itself does **not** trigger its explosion.
 
-Dasher while actively dashing:
+For detached impact zones, a Dasher while actively dashing:
 
 - takes damage normally;
 - its committed dash trajectory is not changed by Wizard-zone force.
 
-Recovering enemies:
+For detached impact zones, Recovering enemies:
 
 - remain valid zone targets.
 
@@ -131,7 +128,7 @@ Recovering enemies:
 
 This changed from a zone-wide tick schedule to **per-zone, per-target timing**.
 
-For each target entering each zone:
+For each eligible target entering each zone (player for cast zones, player and eligible enemies for impact zones):
 
 - immediate damage on entry;
 - then that target gets its own timer;
@@ -149,12 +146,12 @@ If it re-enters:
 
 This applies even if the Wizard's moving zone causes a brief exit/re-entry.
 
-At normal cast activation, targets already standing inside the telegraph radius are treated as newly entering:
+At normal cast activation, the player already standing inside the telegraph radius is treated as newly entering:
 
 - immediate hit;
 - then normal per-target ticks.
 
-Multiple overlapping zones track the same player/enemy independently.
+Multiple overlapping zones track the same eligible player/enemy independently.
 
 Player Wizard-hit invulnerability is therefore **per zone**, not global.
 
@@ -163,13 +160,13 @@ Player Wizard-hit invulnerability is therefore **per zone**, not global.
 Defaults:
 
 - player damage per hit/tick: **10**;
-- enemy damage per hit/tick: **8**;
+- impact-zone enemy damage per hit/tick: **8** (cast zones do not hit enemies);
 - tick interval: **0.5 s**;
 - player Wizard-hit invulnerability: **0.5 s**.
 
 All exposed in Wizard settings.
 
-Wizard-zone damage can kill enemies normally.
+Impact-zone damage can kill enemies normally.
 
 Wizard-zone kills are treated as **enemy/environment damage**, not player kill/reward/chain credit.
 
@@ -233,7 +230,7 @@ Therefore:
 
 - ordinary damage without launch → cast continues;
 - Exploder damage/push → cast continues unless it causes loss of control;
-- another Wizard's zone → damage/push applies, but cast continues unless it launches/controls the Wizard.
+- another Wizard's detached impact zone → damage/push applies, but cast continues unless it launches/controls the Wizard.
 
 If Wizard enters `Launched` while its normal moving zone is active:
 
@@ -250,6 +247,10 @@ Wizard behaves like a normal launched projectile for ordinary collision rules.
 Additionally:
 
 **On the first qualifying collision of each genuine launch, it creates a stationary Wizard damage zone.**
+An active or recovering Wizard also creates that zone when struck by a launched enemy.
+Each incoming enemy's continuous flight can trigger one zone per Wizard. Subsequent contacts
+in the same flight do not repeat it; a later genuine flight may trigger again. When the
+Wizard is itself launched, its outgoing one-zone allowance handles that contact.
 
 Qualifying collision:
 
@@ -277,13 +278,13 @@ The special effect:
 
 ### 10. Stationary impact zone
 
-On the first qualifying launched-Wizard collision:
+On the first qualifying launched-Wizard collision or incoming launched-enemy hit:
 
 - center = Wizard position at collision time, projected onto ground plane;
 - activation is **immediate**;
 - no telegraph;
 - same radius as normal zone;
-- same damage;
+- same player damage and timing as the cast zone, plus the configured enemy damage/force;
 - same tick interval;
 - same force mode/values;
 - same active duration;
@@ -530,7 +531,7 @@ When the cap is reached and weighted selection rolls Wizard:
 The major alternatives we explicitly rejected were:
 
 - always-active Wizard aura;
-- player-only AoE;
+- player-only impact zones; cast zones were changed to player-only by the follow-up correction;
 - making Wizard immune to other Wizards;
 - allowing Wizard AoE to damage BossParts;
 - letting Wizard AoE affect puzzle/environment targets;

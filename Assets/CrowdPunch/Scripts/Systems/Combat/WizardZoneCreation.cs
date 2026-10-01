@@ -27,6 +27,7 @@ namespace CrowdPunch.Systems.Combat
                 }
             }
             var zone = new WizardZone { Source = source, Position = position, Settings = settings,
+                Kind = follow ? WizardZoneKind.Cast : WizardZoneKind.Impact,
                 Follow = follow ? (byte)1 : (byte)0, Active = active ? (byte)1 : (byte)0,
                 ExpiresAt = now + (active ? math.max(0, settings.ActiveDuration) : math.max(0, settings.TelegraphDuration)) };
             // Keep independent zones alive after their source dies, but never after their encounter unloads.
