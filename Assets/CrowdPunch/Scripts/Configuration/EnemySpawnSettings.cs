@@ -13,7 +13,8 @@ namespace CrowdPunch.Configuration
         Explosive,
         Dasher,
         Elite,
-        Armored = 5
+        Armored = 5,
+        Wizard = 6
     }
 
     [Serializable]
@@ -176,6 +177,10 @@ namespace CrowdPunch.Configuration
             StaggerDuration = armorStaggerDuration, KnockbackSpeed = armorKnockbackSpeed,
             InvulnerabilityDuration = armorInvulnerabilityDuration
         };
+
+        [Header("Wizard")]
+        [SerializeField] private WizardSettings wizardSettings = WizardSettings.Default;
+        public WizardSettings WizardSettings => wizardSettings;
 
         public GameObject EnemyPrefab => enemyPrefab;
         public GameObject RangedProjectilePrefab => rangedProjectilePrefab;

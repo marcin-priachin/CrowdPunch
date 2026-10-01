@@ -99,6 +99,8 @@ namespace CrowdPunch.Systems.Initialization
                 Explosive = NextDistance(settings.ExplosiveMin, settings.ExplosiveMax, ref random),
                 ExplosiveWeight = math.max(0f, settings.ExplosiveWeight),
                 Dasher = NextDistance(settings.DasherMin, settings.DasherMax, ref random),
+                Wizard = NextDistance(settings.WizardMin, settings.WizardMax, ref random),
+                WizardWeight = math.max(0f, settings.WizardWeight),
                 Armored = NextDistance(settings.ArmoredMin, settings.ArmoredMax, ref random),
                 ArmoredWeight = math.max(0f, settings.ArmoredWeight),
                 DasherWeight = math.max(0f, settings.DasherWeight)
@@ -118,6 +120,19 @@ namespace CrowdPunch.Systems.Initialization
             in EnemySpawnProfile profile,
             ref Random random)
         {
+            if (profile.Archetype == EnemyArchetypeKind.Wizard)
+            {
+                commandBuffer.AddComponent(enemy, profile.WizardSettings);
+                commandBuffer.AddComponent(enemy, new WizardCastState { Remaining = profile.WizardSettings.Cooldown,
+                    RandomState = random.NextUInt(1u, uint.MaxValue) });
+                var movement = profile.MovementSettings;
+                movement.MoveSpeed = profile.WizardSettings.ApproachSpeed;
+                movement.Acceleration = profile.WizardSettings.Acceleration;
+                movement.BrakingAcceleration = profile.WizardSettings.Braking;
+                movement.TurnSpeed = profile.WizardSettings.TurnSpeed;
+                commandBuffer.SetComponent(enemy, movement);
+                return;
+            }
             if (profile.Archetype == EnemyArchetypeKind.Armored)
             {
                 commandBuffer.AddComponent(enemy, profile.ArmorSettings);

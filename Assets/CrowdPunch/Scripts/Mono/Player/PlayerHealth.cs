@@ -50,6 +50,7 @@ namespace CrowdPunch.Mono.Player
             if (ecsBridge != null)
             {
                 ecsBridge.EnemyContactHitReceived += TryApplyEnemyContactHit;
+                ecsBridge.WizardHitReceived += ApplyWizardHit;
             }
         }
 
@@ -58,6 +59,7 @@ namespace CrowdPunch.Mono.Player
             if (ecsBridge != null)
             {
                 ecsBridge.EnemyContactHitReceived -= TryApplyEnemyContactHit;
+                ecsBridge.WizardHitReceived -= ApplyWizardHit;
             }
         }
 
@@ -93,6 +95,13 @@ namespace CrowdPunch.Mono.Player
             ApplyDamage(maxHealth * Mathf.Clamp01(damagePercent));
             invincibilityRemainingSeconds = Mathf.Max(0f, invincibilitySeconds);
             DamageAccepted?.Invoke(pushImpulse);
+        }
+
+        private void ApplyWizardHit(float amount, Vector3 impulse)
+        {
+            if (currentHealth <= 0) return;
+            ApplyDamage(amount);
+            DamageAccepted?.Invoke(impulse);
         }
 
         private void SetHealth(float value)

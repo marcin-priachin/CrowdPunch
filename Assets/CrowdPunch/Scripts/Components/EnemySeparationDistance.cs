@@ -27,12 +27,15 @@ namespace CrowdPunch.Components
         public float DasherMax;
         public float DasherWeight;
         public float ArmoredMin, ArmoredMax, ArmoredWeight;
+        public float WizardMin, WizardMax, WizardWeight;
 
         public void Set(EnemyArchetypeKind archetype, float minimum, float maximum, float weight)
         {
             OverrideMask |= (byte)(1 << (int)archetype);
             switch (archetype)
             {
+                case EnemyArchetypeKind.Wizard:
+                    WizardMin = minimum; WizardMax = maximum; WizardWeight = weight; break;
                 case EnemyArchetypeKind.Ranged:
                     RangedMin = minimum; RangedMax = maximum; RangedWeight = weight;
                     break;
@@ -69,6 +72,7 @@ namespace CrowdPunch.Components
         public float Dasher;
         public float DasherWeight;
         public float Armored, ArmoredWeight;
+        public float Wizard, WizardWeight;
 
         public float GetDistance(EnemyArchetypeKind archetype, float fallback)
         {
@@ -84,6 +88,7 @@ namespace CrowdPunch.Components
                 EnemyArchetypeKind.Explosive => Explosive,
                 EnemyArchetypeKind.Dasher => Dasher,
                 EnemyArchetypeKind.Armored => Armored,
+                EnemyArchetypeKind.Wizard => Wizard,
                 EnemyArchetypeKind.Elite => Baseline,
                 _ => Baseline
             };
@@ -103,6 +108,7 @@ namespace CrowdPunch.Components
                 EnemyArchetypeKind.Explosive => ExplosiveWeight,
                 EnemyArchetypeKind.Dasher => DasherWeight,
                 EnemyArchetypeKind.Armored => ArmoredWeight,
+                EnemyArchetypeKind.Wizard => WizardWeight,
                 EnemyArchetypeKind.Elite => BaselineWeight,
                 _ => BaselineWeight
             };

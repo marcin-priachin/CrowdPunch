@@ -87,6 +87,9 @@ namespace CrowdPunch.Editor
             {
                 switch ((EnemyArchetype)archetype.enumValueIndex)
                 {
+                    case EnemyArchetype.Wizard:
+                        DrawSection("Wizard", new[] { "wizardSettings" });
+                        break;
                     case EnemyArchetype.Ranged:
                         DrawSection("Ranged (provisional)", RangedProperties);
                         break;

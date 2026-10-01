@@ -30,6 +30,7 @@ namespace CrowdPunch.Systems.Combat
             float launchDamage,
             EnemyLaunchOwner owner)
         {
+            if (state.Phase != EnemyLaunchPhase.Launched) state.ContinuousFlight++;
             state.Phase = EnemyLaunchPhase.Launched;
             state.LastCause = cause;
             state.Owner = owner;

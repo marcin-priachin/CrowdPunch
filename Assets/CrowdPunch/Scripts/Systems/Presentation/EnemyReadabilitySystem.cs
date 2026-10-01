@@ -18,6 +18,7 @@ namespace CrowdPunch.Systems.Presentation
         {
             new ReadabilityJob
             {
+                Wizards = SystemAPI.GetComponentLookup<WizardCastState>(true),
                 Archetypes = SystemAPI.GetComponentLookup<EnemyArchetype>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
@@ -30,6 +31,7 @@ namespace CrowdPunch.Systems.Presentation
         [BurstCompile]
         private partial struct ReadabilityJob : IJobEntity
         {
+            [ReadOnly] public ComponentLookup<WizardCastState> Wizards;
             [ReadOnly] public ComponentLookup<EnemyArchetype> Archetypes;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
@@ -45,6 +47,7 @@ namespace CrowdPunch.Systems.Presentation
                 if (kind == EnemyArchetypeKind.Dasher) return; // Existing streak silhouette owns this role.
                 float3 body = kind switch
                 {
+                    EnemyArchetypeKind.Wizard => new float3(.65f, .15f, 1f),
                     EnemyArchetypeKind.Ranged => new float3(0.06f, 0.55f, 1f),
                     EnemyArchetypeKind.Explosive => new float3(1f, 0.3f, 0.035f),
                     EnemyArchetypeKind.Elite => new float3(0.62f, 0.13f, 0.85f),
@@ -64,6 +67,8 @@ namespace CrowdPunch.Systems.Presentation
                     && Contacts[enemy].IsAttempting != 0)
                     body = new float3(1f, 0.3f, 0.12f);
 
+                if (phase == EnemyLaunchPhase.Active && Wizards.HasComponent(enemy) && Wizards[enemy].IsCasting)
+                    body *= (Wizards[enemy].Phase == WizardCastPhase.Active ? 1.7f : 1.2f) + .2f * math.sin(Time * 10);
                 color.Value = new float4(body, 1f);
             }
         }

@@ -9,7 +9,8 @@ namespace CrowdPunch.Components
         Explosive,
         Dasher,
         Elite,
-        Armored = 5
+        Armored = 5,
+        Wizard = 6
     }
 
     /// <summary>Explicit spawn selection used without relying on prefab or presentation names.</summary>

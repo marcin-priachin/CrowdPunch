@@ -12,7 +12,7 @@ namespace CrowdPunch.Systems.Initialization
     internal static class ArmoredAmmunitionSupply
     {
         internal static bool NeedsAmmunition(EntityManager em, NativeArray<Entity> enemies,
-            Entity sequenceEntity, uint generation)
+            Entity sequenceEntity, uint generation, bool wizard = false, int waveIndex = -1)
         {
             bool protectedEnemy = false;
             for (int i = 0; i < enemies.Length; i++)
@@ -24,6 +24,14 @@ namespace CrowdPunch.Systems.Initialization
                     || em.HasComponent<RespawnRequest>(enemy) && em.IsComponentEnabled<RespawnRequest>(enemy)) continue;
                 var launch = em.GetComponentData<EnemyLaunchState>(enemy);
                 if (launch.Phase == EnemyLaunchPhase.Defeated) continue;
+                if (wizard)
+                {
+                    if (ownership.WaveIndex != waveIndex) continue;
+                    var kind = em.GetComponentData<EnemyArchetype>(enemy).Value;
+                    if (kind == EnemyArchetypeKind.Wizard) protectedEnemy = true;
+                    if (kind == EnemyArchetypeKind.Baseline) return false;
+                    continue;
+                }
                 if (ArmorHitResolution.IsProtected(em, enemy)) { protectedEnemy = true; continue; }
                 if (em.GetComponentData<EnemyTier>(enemy).Value == EnemyCombatTier.Normal
                     && EnemyLaunchTransition.CanReceivePlayerPunch(launch, em.GetComponentData<Health>(enemy))) return false;
@@ -34,13 +42,13 @@ namespace CrowdPunch.Systems.Initialization
         internal static void TrySpawn(EntityManager em, EntityCommandBuffer commands, Entity sequenceEntity,
             ref EnemyWaveSequence sequence, EnemyWaveDefinition wave, DynamicBuffer<EnemyWaveSpawnRange> ranges,
             PhysicsWorldSingleton physics, NavigationGrid navigation, PlayerSnapshot player,
-            NativeList<float4> occupied)
+            NativeList<float4> occupied, bool wizard = false)
         {
             using var query = em.CreateEntityQuery(ComponentType.ReadOnly<EnemyWaveOwnership>(),
                 ComponentType.ReadOnly<EnemyLaunchState>(), ComponentType.ReadOnly<Health>(), ComponentType.ReadOnly<EnemyTier>());
             using var enemies = query.ToEntityArray(Allocator.Temp);
-            if (!NeedsAmmunition(em, enemies, sequenceEntity, sequence.RunGeneration)) return;
-            var profile = wave.AmmunitionProfile;
+            if (!NeedsAmmunition(em, enemies, sequenceEntity, sequence.RunGeneration, wizard, sequence.CurrentWaveIndex)) return;
+            var profile = wizard ? wave.WizardAmmunitionProfile : wave.AmmunitionProfile;
             var random = new Random(sequence.RandomState == 0 ? 1u : sequence.RandomState);
             using var accepted = new NativeList<float4>(Allocator.Temp);
             for (int attempt = 0; attempt < math.max(1, sequence.PlacementAttemptsPerEnemy); attempt++)

@@ -79,6 +79,9 @@ namespace CrowdPunch.Systems.Lifetime
                     {
                         SystemAPI.SetComponent(enemy, new EnemyContactAttemptState());
                     }
+                    if (SystemAPI.HasComponent<WizardCastState>(enemy))
+                        SystemAPI.SetComponent(enemy, new WizardCastState { Remaining = SystemAPI.GetComponent<WizardSettings>(enemy).Cooldown,
+                            RandomState = math.max(1u, SystemAPI.GetComponent<WizardCastState>(enemy).RandomState) });
                     if (SystemAPI.HasComponent<RangedAttackState>(enemy))
                     {
                         RangedEnemySettings rangedSettings = SystemAPI.GetComponent<RangedEnemySettings>(enemy);

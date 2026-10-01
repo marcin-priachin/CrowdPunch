@@ -17,7 +17,8 @@ namespace CrowdPunch.Components
         EnemyCollision,
         Explosion,
         ElitePunch,
-        BossAttack
+        BossAttack,
+        WizardZone
     }
 
     public enum EnemyLaunchOwner : byte
@@ -39,6 +40,7 @@ namespace CrowdPunch.Components
         public float BelowUsefulMomentumSeconds;
         public float RecoverySecondsRemaining;
         public uint LaunchSequence;
+        public uint ContinuousFlight;
         public int FeedbackChainDepth;
         public float LaunchDamage;
         public uint PropagatedLaunchCount;

@@ -304,6 +304,12 @@ namespace CrowdPunch.Mono.Player
         }
 
         /// <summary>Routes configured enemy damage through the existing player health and invulnerability path.</summary>
+        public event Action<float, Vector3> WizardHitReceived;
+
+        /// <summary>Delivers damage already gated by an individual ECS zone's target timer.</summary>
+        public void ReceiveWizardHit(float amount, float3 impulse) =>
+            WizardHitReceived?.Invoke(amount, new Vector3(impulse.x, impulse.y, impulse.z));
+
         public void ReceiveEnemyHit(float damageAmount, float invincibilitySeconds, float3 pushImpulse)
         {
             float damagePercent = MaxHealth <= 0f ? 0f : Mathf.Max(0f, damageAmount) / MaxHealth;

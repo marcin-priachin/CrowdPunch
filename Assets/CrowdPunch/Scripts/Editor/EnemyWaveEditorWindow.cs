@@ -51,6 +51,7 @@ namespace CrowdPunch.Editor
             DrawSection("Fixed elite enemies", "eliteEnemies");
             DrawSpawnAreas();
             DrawSection("Armored ammunition safeguard", "armoredAmmunitionProfile");
+            DrawSection("Wizard options", "wizardAmmunitionProfile", "wizardAmmunitionDelay", "waitForPersistentHazards", "maximumWizardsAlive");
             DrawTiming();
             EditorGUILayout.EndScrollView();
 

@@ -18,6 +18,7 @@ namespace CrowdPunch.Systems.Presentation
         {
             new PlaybackJob
             {
+                Wizards = SystemAPI.GetComponentLookup<WizardCastState>(true),
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
                 Movement = SystemAPI.GetComponentLookup<DesiredMovement>(true),
                 Settings = SystemAPI.GetComponentLookup<EnemyMovementSettings>(true),
@@ -36,6 +37,7 @@ namespace CrowdPunch.Systems.Presentation
         [BurstCompile]
         private partial struct PlaybackJob : IJobEntity
         {
+            [ReadOnly] public ComponentLookup<WizardCastState> Wizards;
             [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movement;
             [ReadOnly] public ComponentLookup<EnemyMovementSettings> Settings;
@@ -68,6 +70,20 @@ namespace CrowdPunch.Systems.Presentation
                     playback.Initialized = 1;
                 }
                 EnemyLaunchState launch = Launches[owner];
+                if (animation.Profile == (byte)EnemyAnimationProfile.Wizard)
+                {
+                    bool casting = launch.Phase == EnemyLaunchPhase.Active && Wizards.HasComponent(owner) && Wizards[owner].IsCasting;
+                    if (casting)
+                    {
+                        playback.AttackPhase = playback.WasAttacking == 0 ? 0 : math.frac(playback.AttackPhase + DeltaTime / math.max(.01f, samples.Durations[2]));
+                        playback.WasAttacking = 1;
+                        float danceFrame = playback.AttackPhase * samples.FrameCount;
+                        int from = (int)danceFrame;
+                        ApplyFrame(ref skin, ref samples, 2, from, (from + 1) % samples.FrameCount, math.frac(danceFrame));
+                    }
+                    else { playback.WasAttacking = 0; AnimateBaseline(owner, ref playback, ref skin, ref samples, launch); }
+                    return;
+                }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Dasher)
                 {
                     AnimateDasher(owner, ref playback, ref skin, ref samples, launch);

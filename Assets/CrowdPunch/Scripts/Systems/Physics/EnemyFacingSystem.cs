@@ -25,6 +25,8 @@ namespace CrowdPunch.Systems.Physics
             PlayerSnapshot player = SystemAPI.GetSingleton<PlayerSnapshot>();
             new FacePlayerJob
             {
+                Wizards = SystemAPI.GetComponentLookup<WizardSettings>(true),
+                DeltaTime = SystemAPI.Time.DeltaTime,
                 PlayerPosition = player.Position,
                 PlayerAvailable = player.IsAvailable,
                 Dashers = SystemAPI.GetComponentLookup<DasherState>(true)
@@ -36,6 +38,8 @@ namespace CrowdPunch.Systems.Physics
         [WithNone(typeof(RespawnRequest))]
         private partial struct FacePlayerJob : IJobEntity
         {
+            [ReadOnly] public ComponentLookup<WizardSettings> Wizards;
+            public float DeltaTime;
             public float3 PlayerPosition;
             public bool PlayerAvailable;
             [ReadOnly] public ComponentLookup<DasherState> Dashers;
@@ -57,7 +61,9 @@ namespace CrowdPunch.Systems.Physics
                 toward.y = 0f;
                 if (math.lengthsq(toward) <= 0.0001f) return;
                 // Keep the physics capsule upright; animation supplies launched visual pitch.
-                transform.Rotation = quaternion.LookRotationSafe(toward, math.up());
+                var facing = quaternion.LookRotationSafe(toward, math.up());
+                transform.Rotation = !launched && Wizards.HasComponent(entity)
+                    ? math.slerp(transform.Rotation, facing, 1 - math.exp(-math.max(0, Wizards[entity].TurnSpeed) * DeltaTime)) : facing;
                 velocity.Angular.y = 0f;
             }
         }

@@ -47,7 +47,8 @@ namespace CrowdPunch.Systems.Combat
             {
                 if (launchState.ValueRO.Phase != EnemyLaunchPhase.Active
                     || archetype.ValueRO.Value == EnemyArchetypeKind.Explosive
-                    || archetype.ValueRO.Value == EnemyArchetypeKind.Dasher)
+                    || archetype.ValueRO.Value == EnemyArchetypeKind.Dasher
+                    || archetype.ValueRO.Value == EnemyArchetypeKind.Wizard)
                 {
                     continue;
                 }

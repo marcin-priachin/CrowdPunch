@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-09-29
+Last updated: 2026-10-01
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -77,6 +77,21 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-01 - Wizard And Gauntlet_17
+
+Decision: Adopt the final Wizard design in conversation 6abe10dd-838c-83ed-8b66-0308a282a96d,
+including per-target zone timers and the Q160 correction preserving already-launched state.
+GDD WIZARD-001..007 and [Wizard](Wizard.md) record the accepted requirements and rejected alternatives.
+Wizard is the sixth standard archetype. No significant Wizard gameplay question remains open.
+
+Implementation choices: 32 x 34m clipped court, two-second optional ammunition delay, fixed
+Wizard counts expressed through existing guaranteed-minimum profiles. Cap authoring rejects
+impossible guaranteed counts and capped weighted waves without an eligible non-Wizard fallback.
+Ground graphics reuse a procedural mesh and additive material; sampled Dance uses the existing
+profile-specific animation slot. These are implementation details, not broader design decisions.
+OQ-001 performance targets, final art/audio and whole-run pacing remain unresolved.
+
 
 ### 2026-09-29 - Knock Into Place And Gauntlet_16
 

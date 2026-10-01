@@ -40,6 +40,7 @@ namespace CrowdPunch.Bakers
                     Configuration.EnemyArchetype.Explosive => EnemyArchetypeKind.Explosive,
                     Configuration.EnemyArchetype.Dasher => EnemyArchetypeKind.Dasher,
                     Configuration.EnemyArchetype.Armored => EnemyArchetypeKind.Armored,
+                    Configuration.EnemyArchetype.Wizard => EnemyArchetypeKind.Wizard,
                     Configuration.EnemyArchetype.Elite => EnemyArchetypeKind.Elite,
                     _ => EnemyArchetypeKind.Baseline
                 },
@@ -47,6 +48,7 @@ namespace CrowdPunch.Bakers
                 MovementSettings = settings.MovementSettings,
                 ArchetypeSeparationSettings = settings.ArchetypeSeparationSettings,
                 ArmorSettings = settings.ArmorSettings,
+                WizardSettings = settings.WizardSettings,
                 Health = settings.Health,
                 ContactDamageSettings = settings.ContactDamageSettings,
                 RangedSettings = new RangedEnemySettings

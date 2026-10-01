@@ -39,6 +39,10 @@ namespace CrowdPunch.Systems.Initialization
                 foreach (Entity projectileRoot in projectileRoots)
                     if (EntityManager.Exists(projectileRoot)) EntityManager.DestroyEntity(projectileRoot);
             }
+            EntityQuery oldZones = SystemAPI.QueryBuilder().WithAll<WizardZone>().Build();
+            EntityManager.DestroyEntity(oldZones);
+            foreach (var (settings, cast) in SystemAPI.Query<RefRO<WizardSettings>, RefRW<WizardCastState>>())
+                cast.ValueRW = new WizardCastState { Remaining = settings.ValueRO.Cooldown, RandomState = math.max(1u, cast.ValueRO.RandomState) };
             ResetWaveSequences();
             BossEncounterReset.Reset(EntityManager);
             foreach (var reflections in SystemAPI.Query<DynamicBuffer<CoverReflection>>()) reflections.Clear();

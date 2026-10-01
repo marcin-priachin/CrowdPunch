@@ -2,7 +2,6 @@ using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Entities;
-using Unity.Mathematics;
 
 namespace CrowdPunch.Systems.Combat
 {
@@ -14,8 +13,6 @@ namespace CrowdPunch.Systems.Combat
     [UpdateAfter(typeof(PunchDetectionSystem))]
     public partial struct DamageApplicationSystem : ISystem
     {
-        private const float DamagedHealthBarDurationSeconds = 1f;
-
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
@@ -25,63 +22,9 @@ namespace CrowdPunch.Systems.Combat
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            foreach ((RefRW<Health> health,
-                         RefRO<DamageRequest> damageRequest,
-                         RefRW<EnemyLaunchState> launchState,
-                         RefRW<EnemyDamageState> damageState,
-                         Entity entity) in
-                     SystemAPI.Query<RefRW<Health>, RefRO<DamageRequest>, RefRW<EnemyLaunchState>, RefRW<EnemyDamageState>>()
-                         .WithAll<Enemy>()
-                         .WithNone<BossPart>()
-                         .WithEntityAccess())
-            {
-                if (launchState.ValueRO.Phase == EnemyLaunchPhase.Defeated)
-                {
-                    damageState.ValueRW.LastDamageReceived = 0f;
-                    damageState.ValueRW.IsDefeatDeferred = 0;
-                    SystemAPI.SetComponentEnabled<DamageRequest>(entity, false);
-                    continue;
-                }
-
-                float appliedDamage = health.ValueRO.Current <= 0f
-                    ? 0f
-                    : math.max(0f, damageRequest.ValueRO.Amount);
-                if (SystemAPI.HasComponent<EnemyArmor>(entity))
-                {
-                    var armor = SystemAPI.GetComponent<EnemyArmor>(entity);
-                    if (armor.Stages > 0 || SystemAPI.Time.ElapsedTime < armor.ProtectedUntil)
-                        appliedDamage = 0;
-                }
-                health.ValueRW.Current = math.clamp(
-                    health.ValueRO.Current - appliedDamage,
-                    0f,
-                    math.max(0f, health.ValueRO.Max));
-                damageState.ValueRW.LastDamageReceived = appliedDamage;
-
-                if (appliedDamage > 0f)
-                {
-                    SystemAPI.SetComponent(entity, new EnemyHealthBarVisibility
-                    {
-                        SecondsRemaining = DamagedHealthBarDurationSeconds
-                    });
-                    SystemAPI.SetComponentEnabled<EnemyHealthBarVisibility>(entity, true);
-                }
-
-                SystemAPI.SetComponentEnabled<DamageRequest>(entity, false);
-
-                if (health.ValueRO.Current <= 0f)
-                {
-                    if (launchState.ValueRO.Phase == EnemyLaunchPhase.Launched)
-                    {
-                        damageState.ValueRW.IsDefeatDeferred = 1;
-                        continue;
-                    }
-
-                    launchState.ValueRW.Phase = EnemyLaunchPhase.Defeated;
-                    damageState.ValueRW.IsDefeatDeferred = 0;
-                    SystemAPI.SetComponentEnabled<DeathRequest>(entity, true);
-                }
-            }
+            foreach (var (_, entity) in SystemAPI.Query<RefRO<DamageRequest>>().WithAll<Enemy>().WithAll<Health>().WithAll<EnemyLaunchState>().WithAll<EnemyDamageState>()
+                .WithNone<BossPart>().WithEntityAccess())
+                EnemyDamageResolution.ApplyPending(state.EntityManager, entity, SystemAPI.Time.ElapsedTime);
         }
     }
 }

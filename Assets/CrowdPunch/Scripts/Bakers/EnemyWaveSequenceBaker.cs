@@ -125,19 +125,35 @@ namespace CrowdPunch.Bakers
                     && EnemySpawnProfileBaking.TryCreate(this, wave.ArmoredAmmunitionProfile, out ammunition)
                     && ammunition.SpawnClearance > 0f;
                 if (!ammunitionValid) Debug.LogError($"Wave '{wave.name}' needs a valid Baseline ammunition profile.", authoring);
+                EnemySpawnProfile wizardAmmunition = default;
+                bool wizardSupply = wave.WizardAmmunitionProfile != null;
+                bool wizardValid = !wizardSupply || wave.WizardAmmunitionProfile.Archetype == Configuration.EnemyArchetype.Baseline &&
+                    EnemySpawnProfileBaking.TryCreate(this, wave.WizardAmmunitionProfile, out wizardAmmunition) && wizardAmmunition.SpawnClearance > 0;
+                int wizardMinimum = 0; float otherWeight = 0;
+                for (int p = profileStart; p < profiles.Length; p++)
+                    if (profiles[p].Profile.Archetype == EnemyArchetypeKind.Wizard) wizardMinimum += profiles[p].MinimumCount;
+                    else otherWeight += profiles[p].Weight;
+                if (wave.MaximumWizardsAlive > 0 && (wizardMinimum > wave.MaximumWizardsAlive ||
+                    wave.TotalEnemyCount > requestedMinimumNormalCount && otherWeight <= 0)) wizardValid = false;
+                if (!wizardValid) Debug.LogError($"Wave '{wave.name}' needs valid Wizard ammunition, guaranteed Wizards within its cap, and a non-Wizard weighted fallback when capped.", authoring);
                 int totalCount = math.max(0, wave.TotalEnemyCount);
                 int weightedNormalCount = totalCount - requestedMinimumNormalCount;
                 bool normalValid = (weightedNormalCount <= 0 || totalWeight > 0f)
                     && requestedMinimumNormalCount == validMinimumNormalCount
                     && requestedMinimumNormalCount <= totalCount;
                 bool eliteValid = totalEliteCount == requestedEliteCount;
-                bool valid = ammunitionValid && normalValid && eliteValid
+                bool valid = wizardValid && ammunitionValid && normalValid && eliteValid
                     && (totalCount + requestedEliteCount == 0 || totalArea > 0f);
                 if (!valid)
                     Debug.LogError($"Wave '{wave.name}' cannot spawn: ensure it has a positive-area range, valid positive-weight profiles with prefab colliders, and profile minimums no greater than its normal-enemy total.", authoring);
 
                 definitions.Add(new EnemyWaveDefinition
                 {
+                    WizardAmmunitionProfile = wizardAmmunition,
+                    WizardAmmunitionSafeguard = wizardSupply ? (byte)1 : (byte)0,
+                    WizardAmmunitionDelay = math.max(0, wave.WizardAmmunitionDelay),
+                    WaitForPersistentHazards = wave.WaitForPersistentHazards ? (byte)1 : (byte)0,
+                    MaximumWizardsAlive = math.max(0, wave.MaximumWizardsAlive),
                     AmmunitionProfile = ammunition,
                     AmmunitionSafeguard = hasAmmunition && ammunitionValid ? (byte)1 : (byte)0,
                     BossReplenishment=(byte)(wave.ReplenishWhileBossLives?1:0),

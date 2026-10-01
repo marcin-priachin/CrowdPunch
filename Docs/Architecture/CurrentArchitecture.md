@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-09-29
+Last inspected: 2026-10-01
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -19,7 +19,7 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_16` each contain their matching ECS SubScene. Sixteen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss. The separate navigation validation scenes remain outside progression.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_17` each contain their matching ECS SubScene. Seventeen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss and gauntlet 17 introduces Wizards. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
@@ -293,7 +293,7 @@ Each random enemy owns `RandomEnemySpawnRegion`; each authored enemy instead own
 1. `PlayerBridgeSystem` copies the latest GameObject player snapshot, health, and punch request into ECS.
 2. `EnemyChaseSystem` produces explicit tactical destinations and a separate separation vector for navigation, alongside the legacy blended movement intent used when assistance is disabled. `EnemyCrowdPressureSettings` supplies a global cap, and the closest active baseline or explosive enemies up to that cap receive pressure assignments. Every other ordinary melee enemy owns a stable low-discrepancy coverage slot across the inset `ArenaBounds` rectangle and moves back toward that slot when released from pressure, preserving arena-wide interior launch opportunities rather than roaming between edge-heavy waypoints (COMBAT-016). Slot restoration uses normal movement speed while an enemy is materially displaced and reduces, but does not disable, separation influence until it nears the assigned area; this prevents crowd repulsion from overpowering interior coverage. An active explosive inside its authored contact-attempt range bypasses the pressure cap, continuously targets the player, and suppresses active-enemy separation until it leaves range or ceases to be active, ensuring crowd avoidance cannot prevent its intended collision (ENEMY-010). If that direct player target lies beyond the navigation spacing grid but the complete route is clear of authored static obstacles, `EnemyNavigationSystem` preserves the direct physics pursuit instead of resolving the goal back to the grid edge; this keeps COMBAT-017's distribution volume separate from physically reachable arena space. Other assigned enemies approach deterministic surround-ring slots, using normal speed outside their authored charge distance and the charge multiplier inside it. When a slot is compressed by the inset arena bounds, the system samples deterministic golden-angle alternatives and selects the candidate that preserves the most intended radius. Assigned enemies use per-enemy randomized intervals to make brief, speed-scaled contact attempts toward the player. Each enemy uses its spawn-selected default separation distance and weight unless its profile's override array contains an entry for the nearby enemy's explicit archetype, and ordinary contact attempts retain separation with an independently authored weight. Ranged, Dasher, and elite systems retain their later archetype-specific overrides.
 3. `RangedEnemyPositioningSystem`, `DasherDecisionSystem`, `ElitePunchSystem`, and `EliteCrowdSupportSystem` make their existing tactical overrides. Each intent writer publishes an explicit `NavigationIntent` destination, arrival behavior, mode, and separate local-separation vector alongside legacy `DesiredMovement`. Destinations are never reconstructed from a blended direction.
-4. `EnemyNavigationSystem` runs explicitly after all five intent writers, including `EnemyChaseSystem`, and before both movement systems. It resolves clearance-valid direct travel or a budgeted cached route, then applies terrain-safe local steering to `DesiredMovement`. `EnemyMovementSystem` remains the normal Unity Physics velocity owner and rejects non-`Active` enemies. `DasherMovementSystem` retains committed straight-dash velocity ownership. See [Static obstacles and navigation](Navigation.md) for scheduler, settings, lifecycle, and inspection details.
+4. `WizardCastSystem` advances cast state after the player bridge and wave spawning. `WizardPositioningSystem` writes its dedicated distance-band intent, and `WizardHazardAvoidanceSystem` adds local zone avoidance after the other tactical writers. `EnemyNavigationSystem` runs after these intent writers and before both movement systems. It resolves clearance-valid direct travel or a budgeted cached route, then applies terrain-safe local steering to `DesiredMovement`. `EnemyMovementSystem` remains the normal Unity Physics velocity owner and rejects non-`Active` enemies. `DasherMovementSystem` retains committed straight-dash velocity ownership. See [Static obstacles and navigation](Navigation.md) for scheduler, settings, lifecycle, and inspection details.
 5. `PunchAimAssistSystem` maintains an ECS-owned target lock for each punchable enemy in the live punch volume. A physics ray from the source enemy along player facing replaces the lock when it hits another eligible enemy inside the configured range and horizontal-angle limit; misses retain the lock only while it remains within those limits, and the smallest-angle rule supplies an initial in-cone fallback. `PunchDetectionSystem` uses that locked direction for each hit, clears existing linear and angular velocity before a normal player launch in any eligible state, starts a fresh `Launched` sequence with the current punch data, and enables impulse and damage requests (PLAYER-003, PLAYER-004, COMBAT-014).
 6. `DamageApplicationSystem` applies enabled damage requests, clamps health, and resolves immediate defeat or records launch-deferred defeat.
 7. `RangedEnemyAttackSystem` evaluates ranged state after punch and damage resolution, cancels invalid wind-ups, predicts a fire-time intercept from the collision-resolved player velocity and configured lead multiplier, and instantiates a projectile when a valid wind-up completes. The projectile locks that target and does not home (ENEMY-002, ENEMY-003).
@@ -307,6 +307,7 @@ Ordering between systems that share only a group should be made explicit when co
 `GamePostPhysicsGroup` runs as a direct child of `FixedStepSimulationSystemGroup` after `PhysicsSystemGroup`:
 
 - `EnemyLaunchCollisionSystem` interprets solver-resolved enemy impacts, resolves launch propagation first, applies configured smallest-angle direction correction to newly propagated horizontal velocity while preserving its solver-produced speed and vertical velocity, retains the selected candidate as that launch's homing target, and independently queues eligible impulse-scaled collision damage.
+- `WizardImpactZoneSystem` observes qualifying physics contacts before collision damage and also sweeps against the Mono player's snapshot. `WizardZoneSystem` resolves moving/fixed zone membership, ticks and force after launched-player impacts and explosions, before recovery. `WizardPlayerHitSystem` delivers its ECS hit buffer through the player bridge before recovery; per-zone player protection remains ECS-owned.
 - `EnemyLaunchHomingSystem` runs before physics after gameplay impulses. A launched body with a player aim-assist or propagation target turns its horizontal velocity toward the still-living active/recovering target by the configured maximum degrees per second while preserving horizontal speed and vertical velocity (COMBAT-012, PLAYER-004).
 - `ExplosiveCollisionTriggerSystem` requests an explosive detonation when either participant in an enemy collision is `Launched`; `ExplosionResolutionSystem` then resolves explosion overlap chains to a same-frame fixed point before recovery.
 - `RangedProjectileSystem` evaluates each fixed trajectory, performs a swept player-radius hit check, forwards one accepted hit through `PlayerEcsBridge`, and destroys the projectile on hit, after falling below its authored world-space minimum altitude, or on expiry. It does not apply arena-bound cleanup because the unconstrained GameObject player can currently provide a valid target outside `ArenaBounds`.
@@ -526,7 +527,8 @@ priority on defeat. Generated instanced materials live under `Materials/Enemies/
 CPA3 sample blobs, the controller, prefab, materials, and `EliteEnemySpawnSettings` reference can be rebuilt
 through **Crowd Punch > Enemies > Rebuild Elite Prefab** (ENEMY-009, INFO-004).
 
-All damage continues through `DamageRequest` and `DamageApplicationSystem`. Punches, launched-body collision damage,
+All enemy damage continues through `DamageRequest` and the shared health resolver; `DamageApplicationSystem`
+handles pre-physics requests and Wizard zones resolve their ticks before post-physics recovery. Punches, launched-body collision damage,
 explosions, and launched Dashers can therefore defeat an elite normally. `EnemyLaunchTransition` is gated by `EnemyTier`:
 normal targets enter the shared `Launched` lifecycle, while elite targets receive the applicable existing elite-tier
 impulse without changing launch phase. This preserves normal deferred-defeat and future boss-tier behavior.
@@ -1254,3 +1256,67 @@ hit history and crowd teardown. Scene reload restores the baked state. The three
 eligibility/damage edge cases are exposed as provisional options, with defaults and alternatives
 documented in `OpenQuestions.md`; no wider design question is resolved by these choices.
 See [Track validation](../Validation/TrackObject.md) for evidence, limitations and playtests.
+
+## Wizard And Gauntlet_17 (WIZARD-001..007)
+
+Wizard is an explicit sixth standard `EnemyArchetypeKind`. `WizardEnemySpawnSettings`
+bakes `WizardSettings` through the shared spawn profile, and `EnemySpawnInitialization`
+adds its dedicated `WizardCastState`. Normal contact damage excludes Wizards. Punches,
+aim assist, preview, health, launch, recovery and pooling use the existing enemy systems.
+Wizard movement tuning overrides its movement components; shared Ranged tuning is not used.
+
+`WizardCastSystem` owns cooldown, probability checks, telegraph and active duration. It
+creates a first-class `WizardZone` entity with an ECB-remapped reference in the cast state.
+`WizardPositioningSystem` owns range-band decisions and optional casting stops. It writes
+intent only. `WizardHazardAvoidanceSystem` adds separation from other Wizards' reserved
+radii and independent zones before navigation; stopped casters and committed Dashers
+retain their intentional movement ownership. Existing navigation and physics steering
+remain responsible for movement. `EnemyFacingSystem` applies Wizard turn tuning while
+facing the player; launched facing still follows velocity.
+
+A zone stores its source, baked settings, position, expiry, follow/active flags and scene/
+wave ownership. Its `WizardZoneTarget` buffer stores independent entry/tick clocks and
+player protection per target. Membership is refreshed every fixed step, including between
+damage ticks; leaving removes the record. Physics broadphase candidates are expanded for
+body travel since broadphase construction, then filtered by exact XZ radius plus the
+target's physical radius. The source, armor stages, bosses and non-enemy puzzle objects
+are excluded. Zone force writes post-physics velocity; strong force uses the shared launch
+transition only when starting a new normal-enemy flight. A dashing Dasher receives damage
+without force, and an elite receives force without launching.
+
+`EnemyDamageResolution` is the shared health/request resolver used by pre-physics
+`DamageApplicationSystem` and same-step zone ticks before recovery. It preserves deferred
+defeat, armor protection and one-shot death requests. No explosive detonation request is
+created by zone damage. `WizardPlayerHit` is a singleton buffer written by the Burst zone
+system and drained by managed `WizardPlayerHitSystem`. `PlayerEcsBridge.WizardHitReceived`
+delivers damage and impulse to `PlayerHealth`, bypassing global invulnerability while
+retaining the existing accepted-damage/knockback path. MonoBehaviours never hold enemies.
+
+`EnemyLaunchState.ContinuousFlight` advances on a genuine entry into `Launched`.
+`LaunchSequence` still advances for re-punches as before. `WizardImpactZoneSystem` consumes
+one special impact per continuous flight and creates an immediately active fixed zone.
+Moving zones are cancelled by launch or defeat; fixed zones keep their own timer through
+source death, pooling, recovery and recasting. Scene/run ownership and `GameRestartSystem`
+remove old zones on unload/reset. Respawn and restart reset cast state.
+
+`EnemyWizard.prefab` uses Blob/Wizard.fbx and the established sampled ECS skinning path.
+`EnemyAnimationProfile.Wizard` selects Idle, Walk, looping Dance for both cast phases,
+the established launched pose and Death. Root motion is disabled. Rebuild its controller,
+samples, materials, prefab and settings reference with **Crowd Punch > Enemies > Rebuild
+Wizard Prefab**. `WizardZonePresentationSystem` draws a shared procedural disc using
+`Resources/WizardZone.mat` and the additive URP `WizardZone.shader`; the full radius and
+outer ring pulse during telegraph and brighten while active. The Wizard's body remains
+violet through shared readability data. No extra HUD element is introduced.
+
+Wave assets expose optional Wizard Baseline supply, supply delay, persistent-zone waiting
+and an alive-Wizard cap (zero means unlimited). These features default off for existing
+waves. Supply reuses existing safe placement, ownership and wave-count accounting and
+cancels a pending replacement when the last living Wizard dies. Weighted selection
+rerolls eligible non-Wizard profiles at the cap and reserves capacity for outstanding
+guaranteed Wizard allocations; invalid minimum/cap combinations are rejected in baking.
+
+**Crowd Punch > Levels > Build Wizard Gauntlet 17** builds Gauntlet_17, its matching SubScene,
+two wave assets and progression references. It introduces 6 Baselines + 1 Wizard, then
+12 Baselines + 2 Wizards in an open clipped court. Both waves enable delayed Baseline
+supply and wait for defeated enemies plus expired zones; Wizards themselves are finite.
+See [Wizard validation](../Validation/Wizard.md) for checks and remaining playtests.

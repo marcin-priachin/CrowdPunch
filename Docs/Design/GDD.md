@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-09-29
+Last updated: 2026-10-01
 
 ## How To Read This Document
 
@@ -595,6 +595,106 @@ Gauntlet_12 follows the Gauntlet_11 boss. Introduce one Armored with Baseline la
 
 An opted-in encounter supplies one Baseline when undefeated protected Armored enemies remain and no other usable ammunition remains. Broken-armor enemies count as ammunition when otherwise punchable. Respect existing bodies and pending spawns, safe placement, encounter ownership, defeat counters and cleanup. Repeat only as needed; stop when no protected enemies need support. Replacements must neither complete a wave early nor prevent its eventual completion, and must not survive restart or scene unloading.
 
+### WIZARD-001 - Role And Baseline Rules
+
+Status: Must
+
+Wizard is a normal, baseline-health, medium-range area-denial archetype using
+`Models/UltimateMonsters/Blob/Wizard.fbx`. It has no contact attack. Normal punch damage,
+launching, aim assistance, initial-direction preview, collisions, recovery, deferred death
+and pooling remain available. Wizard state and tuning are explicit ECS data.
+The full final accepted decisions and rejected alternatives are recorded in [Wizard](Wizard.md).
+
+### WIZARD-002 - Casting And Positioning
+
+Status: Must
+
+Use cooldown -> periodic probability checks -> telegraph -> active -> cooldown. Defaults:
+2s initial/post-cast/post-recovery cooldown, .5s checks, 12m engagement, 1s telegraph,
+3s active duration and 4m radius. Chance is clamped base 15% plus proximity up to 35%
+(linear from 12m to 4m) plus actual player approach velocity up to 35% (full at 4m/s).
+Cooldown counts outside engagement; no line-of-sight check or cooldown randomization.
+Committed casts continue out of range and face the player throughout. Damage/push alone
+does not interrupt; launch, recovery, defeat or explicit control loss cancels the moving zone.
+
+Dedicated movement defaults: preferred 6-9m, approach 3m/s, retreat 4m/s, acceleration and
+braking 10m/s2, turn response 10. Casting defaults to stopping during both phases; alternatives
+stop only in telegraph or keep moving throughout. Positioning continues during cooldown.
+Normal separation remains. Reserve Wizard hazard radius during Telegraph/Active by default,
+with an always-reserve option; avoid other Wizards' moving and stationary hazards. Launched
+bodies ignore this avoidance. Avoidance cannot move a committed stationary caster.
+
+### WIZARD-003 - Zone Membership And Damage
+
+Status: Must
+
+Zones follow their caster normally. Use cylindrical XZ overlap including target physical
+radius, ignoring cover and height. Hit the player, normal enemies, Elites and other Wizards;
+exclude source, BossParts and puzzle/environment objects. Intact armor is immune. Exploder
+zone damage alone never requests detonation. Recovering enemies remain targets.
+
+Every zone is an ECS entity, with per-target timing in its own DynamicBuffer. Refresh
+membership each fixed simulation update using nearby spatial candidates and exact XZ tests.
+Entry (including activation) hits immediately, then every .5s from that target's entry.
+Exit or invalidation removes tracking; reentry hits immediately with fresh timers. Overlapping
+zones stack independently. Defaults are 10 player damage, 8 enemy damage and .5s player
+protection per zone, independent of ordinary/global invulnerability. Zone kills receive no
+player kill/reward/chain credit. All values are configurable.
+
+### WIZARD-004 - Force And Deferred Death
+
+Status: Must
+
+Modes are damage only, small outward push (default), and strong knockback. Default enemy
+speeds are 3/12m/s and player speeds 2/8m/s for small/strong force. Apply on each accepted
+entry/tick; at the center damage applies but force has no arbitrary direction. Small push
+never launches. Strong force can launch normals; Elites only receive physical push. An
+already-launched body keeps its existing launch bookkeeping while velocity changes.
+Committed Dashers take damage but keep their trajectory. Player dash grants no immunity.
+Lethal launched targets retain deferred death and remain force targets, with no further HP loss.
+
+### WIZARD-005 - Launched Impact Zone
+
+Status: Must
+
+Each genuine entry into Launched grants one stationary zone on its first collision with a
+non-defeated enemy, player, or BossPart. Armored and Elite targets qualify; walls/environment
+and defeated cleanup bodies do not. Re-punch or redirection while already launched does not
+renew this allowance, although ordinary re-punch bookkeeping still resets under COMBAT-014/015.
+
+The zone appears immediately at the Wizard's impact position projected to ground, without
+telegraph, and copies normal active-zone radius, duration, damage, timing, force and visuals.
+It remains independent through source recovery, recasting or death, while preserving source
+immunity. Ordinary impact damage and the zone entry hit both apply; global player protection
+from the collision cannot suppress the zone hit or its creation. Scene exit/restart clears zones.
+
+### WIZARD-006 - Readability And Animation
+
+Status: Must
+
+Use permanent violet tint, soft/pulsing telegraph and brighter active treatment on both body
+and full-radius ground disc with clear ring. Overlaps blend additively. Stationary zones use
+the same active treatment. Dance loops continuously through telegraph and active, interrupting
+immediately for launch/recovery. Use embedded Idle/Walk/Death as appropriate, with root motion
+disabled and ECS movement authoritative. No new HUD or normal-enemy health bars.
+
+### WIZARD-007 - Waves And Gauntlet_17
+
+Status: Must
+
+Append a compact Wizard introduction without extra hazards: wave one is 6 Baselines + 1 Wizard;
+wave two is 12 Baselines + 2 Wizards. Wait for every enemy and persistent zone before advancing.
+Wizards do not replenish. Use a brief nonblocking opening hint about damaging zones and
+launching enemies into Wizards, without revealing their launched special effect.
+
+Expose reusable wave options, disabled by default: ensure a Baseline is available while a
+Wizard remains; wait for persistent hazards before advancing; maximum live Wizards (unlimited
+default). Live Active/Launched/Recovering Baselines count as ammunition. Delayed replacements
+use ordinary safe placement and wave ownership/counting, cancel if the last Wizard dies before
+spawn, and remain if already spawned. Weighted Wizard rolls at cap reroll eligible other
+weighted archetypes without delaying/skipping the spawn. Gauntlet_17 enables both safeguards
+and uses fixed authored Wizard counts. Later waves can use Wizard as an ordinary weighted type.
+
 ### INFO-001 — No Persistent Normal-Enemy UI
 
 Status: Must
@@ -731,7 +831,7 @@ One complete boss encounter that proves crowd-mediated boss interaction.
 
 Status: Must
 
-Five standard enemy types: Baseline, Explosive, Ranged, Dasher, and Armored. Elite enemies are an additional special encounter layer and do not count toward the five standard enemy types. Their distribution across gauntlets remains encounter-pacing and tuning work.
+Six standard enemy types: Baseline, Explosive, Ranged, Dasher, Armored, and Wizard. Elite enemies are an additional special encounter layer and do not count toward the six standard enemy types. Their distribution across gauntlets remains encounter-pacing and tuning work.
 
 ### MVP-004 — Weapons
 

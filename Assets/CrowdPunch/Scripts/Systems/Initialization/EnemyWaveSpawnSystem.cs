@@ -77,6 +77,22 @@ namespace CrowdPunch.Systems.Initialization
                         ArmoredAmmunitionSupply.TrySpawn(state.EntityManager, commands, sequenceEntity, ref sequence,
                             wave, ranges, physicsWorld, navigationGrid, player, occupiedEnemies);
                     }
+                    if (wave.WizardAmmunitionSafeguard != 0)
+                    {
+                        using var supplyQuery = state.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<EnemyWaveOwnership>(),
+                            ComponentType.ReadOnly<EnemyLaunchState>(), ComponentType.ReadOnly<Health>(), ComponentType.ReadOnly<EnemyTier>());
+                        using var supplyEnemies = supplyQuery.ToEntityArray(Allocator.Temp);
+                        bool needed = ArmoredAmmunitionSupply.NeedsAmmunition(state.EntityManager, supplyEnemies, sequenceEntity,
+                            sequence.RunGeneration, true, sequence.CurrentWaveIndex);
+                        if (!needed) sequence.WizardSupplyAt = 0;
+                        else if (sequence.WizardSupplyAt == 0) sequence.WizardSupplyAt = now + math.max(.001f, wave.WizardAmmunitionDelay);
+                        else if (now >= sequence.WizardSupplyAt)
+                        {
+                            ArmoredAmmunitionSupply.TrySpawn(state.EntityManager, commands, sequenceEntity, ref sequence,
+                                wave, ranges, physicsWorld, navigationGrid, player, occupiedEnemies, true);
+                            sequence.WizardSupplyAt = now + math.max(.001f, wave.WizardAmmunitionDelay);
+                        }
+                    }
                     bool shouldAdvance;
                     if (wave.ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed)
                         shouldAdvance = now >= sequence.NextActionAt;
@@ -84,6 +100,10 @@ namespace CrowdPunch.Systems.Initialization
                         shouldAdvance = sequence.UndefeatedCount == 0;
                     else
                         shouldAdvance = sequence.DefeatedCount >= wave.TotalEnemyCount + wave.TotalEliteCount + sequence.AmmunitionSpawnedCount;
+                    if (shouldAdvance && wave.WaitForPersistentHazards != 0)
+                        foreach (var zone in SystemAPI.Query<RefRO<WizardZone>>())
+                            if (zone.ValueRO.Sequence == sequenceEntity && zone.ValueRO.RunGeneration == sequence.RunGeneration &&
+                                zone.ValueRO.WaveIndex <= sequence.CurrentWaveIndex && now < zone.ValueRO.ExpiresAt) shouldAdvance = false;
                     if (shouldAdvance)
                     {
                         Debug.Log($"Wave {sequence.CurrentWaveIndex} activation condition satisfied " +
@@ -209,6 +229,7 @@ namespace CrowdPunch.Systems.Initialization
             sequence.DefeatedCount = 0;
             sequence.AmmunitionSpawnedCount = 0;
             sequence.NextAmmunitionCheckAt = 0;
+            sequence.WizardSupplyAt = 0;
             sequence.UndefeatedCount = 0;
             sequence.EliteSpawnedCount = 0;
             sequence.EliteProfileCursor = 0;
@@ -216,6 +237,7 @@ namespace CrowdPunch.Systems.Initialization
             sequence.NormalMinimumProfileCursor = 0;
             sequence.NormalMinimumRound = 0;
             sequence.NormalMinimumSpawnedCount = 0;
+            sequence.WizardMinimumSpawnedCount = 0;
             sequence.RandomState = sequence.InitialSeed == 0 ? 1u : sequence.InitialSeed;
             if (waves.Length == 0)
             {
@@ -236,12 +258,14 @@ namespace CrowdPunch.Systems.Initialization
             sequence.DefeatedCount = 0;
             sequence.AmmunitionSpawnedCount = 0;
             sequence.NextAmmunitionCheckAt = 0;
+            sequence.WizardSupplyAt = 0;
             sequence.EliteSpawnedCount = 0;
             sequence.EliteProfileCursor = 0;
             sequence.EliteProfileSpawnedInEntry = 0;
             sequence.NormalMinimumProfileCursor = 0;
             sequence.NormalMinimumRound = 0;
             sequence.NormalMinimumSpawnedCount = 0;
+            sequence.WizardMinimumSpawnedCount = 0;
             if (sequence.CurrentWaveIndex >= waves.Length)
             {
                 sequence.Phase = EnemyWaveRuntimePhase.Complete;
@@ -261,6 +285,21 @@ namespace CrowdPunch.Systems.Initialization
         {
             MathematicsRandom random = new MathematicsRandom(sequence.RandomState == 0 ? 1u : sequence.RandomState);
             NativeList<float4> accepted = new NativeList<float4>(Allocator.Temp);
+            int wizardMinimum = 0;
+            for (int i = 0; i < wave.ProfileCount; i++)
+                if (profiles[wave.ProfileStart + i].Profile.Archetype == EnemyArchetypeKind.Wizard) wizardMinimum += profiles[wave.ProfileStart + i].MinimumCount;
+            int wizards = 0;
+            if (wave.MaximumWizardsAlive > 0)
+            {
+                using var q = entityManager.CreateEntityQuery(ComponentType.ReadOnly<WizardSettings>(), ComponentType.ReadOnly<EnemyWaveOwnership>(), ComponentType.ReadOnly<EnemyLaunchState>());
+                using var roots = q.ToEntityArray(Allocator.Temp);
+                foreach (var root in roots)
+                {
+                    var owner = entityManager.GetComponentData<EnemyWaveOwnership>(root);
+                    if (owner.Sequence == sequenceEntity && owner.RunGeneration == sequence.RunGeneration && owner.WaveIndex == sequence.CurrentWaveIndex &&
+                        entityManager.GetComponentData<EnemyLaunchState>(root).Phase != EnemyLaunchPhase.Defeated) wizards++;
+                }
+            }
             int spawned = 0;
             for (int index = 0; index < requested; index++)
             {
@@ -277,6 +316,9 @@ namespace CrowdPunch.Systems.Initialization
                     selectedProfile = SelectNormalProfile(ref random, wave, profiles, ref sequence,
                         sequence.SpawnedCount - sequence.EliteSpawnedCount, out selectedMinimum).Profile;
                 }
+                if (!selectedMinimum && selectedProfile.Archetype == EnemyArchetypeKind.Wizard &&
+                    wave.MaximumWizardsAlive > 0 && wizards >= wave.MaximumWizardsAlive - math.max(0, wizardMinimum - sequence.WizardMinimumSpawnedCount))
+                    selectedProfile = SelectNonWizard(ref random, wave, profiles).Profile;
                 bool found = false;
                 float3 position = default;
                 for (int attempt = 0; attempt < math.max(1, sequence.PlacementAttemptsPerEnemy); attempt++)
@@ -321,6 +363,7 @@ namespace CrowdPunch.Systems.Initialization
                     commands.AddComponent<EliteWaveReplenishment>(enemy);
                 accepted.Add(new float4(position, selectedProfile.SpawnClearance));
                 spawned++;
+                if (selectedProfile.Archetype == EnemyArchetypeKind.Wizard) wizards++;
                 sequence.SpawnedCount++;
                 sequence.UndefeatedCount++;
                 if (spawningElite)
@@ -339,6 +382,7 @@ namespace CrowdPunch.Systems.Initialization
                     if (selectedMinimum)
                     {
                         sequence.NormalMinimumSpawnedCount++;
+                        if (selectedProfile.Archetype == EnemyArchetypeKind.Wizard) sequence.WizardMinimumSpawnedCount++;
                         AdvanceNormalMinimumCursor(wave, profiles, ref sequence);
                     }
                 }
@@ -346,6 +390,22 @@ namespace CrowdPunch.Systems.Initialization
             sequence.RandomState = random.state;
             accepted.Dispose();
             return spawned;
+        }
+
+        internal static EnemyWaveProfile SelectNonWizard(ref MathematicsRandom random, EnemyWaveDefinition wave, DynamicBuffer<EnemyWaveProfile> profiles)
+        {
+            float total = 0;
+            for (int i = 0; i < wave.ProfileCount; i++)
+                if (profiles[wave.ProfileStart + i].Profile.Archetype != EnemyArchetypeKind.Wizard) total += math.max(0, profiles[wave.ProfileStart + i].Weight);
+            float roll = random.NextFloat() * total;
+            EnemyWaveProfile fallback = default;
+            for (int i = 0; i < wave.ProfileCount; i++)
+            {
+                var p = profiles[wave.ProfileStart + i];
+                if (p.Profile.Archetype == EnemyArchetypeKind.Wizard || p.Weight <= 0) continue;
+                fallback = p; roll -= p.Weight; if (roll < 0) return p;
+            }
+            return fallback;
         }
 
         internal static EnemyWaveProfile SelectProfile(ref MathematicsRandom random, EnemyWaveDefinition wave,

@@ -13,6 +13,7 @@ namespace CrowdPunch.Components
         public EnemyMovementSettings MovementSettings;
         public EnemyArchetypeSeparationSettings ArchetypeSeparationSettings;
         public EnemyArmorSettings ArmorSettings;
+        public WizardSettings WizardSettings;
         public Health Health;
         public EnemyContactDamageSettings ContactDamageSettings;
         public RangedEnemySettings RangedSettings;
