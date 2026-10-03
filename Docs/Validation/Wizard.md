@@ -4,6 +4,8 @@ Date: 2026-10-01. Requirements: WIZARD-001..007, PLAYER-003/004, COMBAT-002/003.
 
 Follow-up correction: cast zones now affect only the player. Impact zones retain enemy
 effects and can also be triggered when a launched enemy hits an active/recovering Wizard.
+The 2026-10-02 settings change separates Cast Radius and Impact Radius. Both current authored
+values were migrated from 12m to 12m; the existing 0.5s telegraph tuning is preserved.
 
 ## Implemented
 
@@ -26,6 +28,21 @@ The complete accepted decisions remain in [Wizard design](../Design/Wizard.md); 
 ownership and update order are in [Current architecture](../Architecture/CurrentArchitecture.md).
 
 ## Verification
+
+2026-10-03: Unity recompilation succeeds and all **265/265 editor tests pass**, including
+30 Wizard cases and the prior independent-radius regression. The new WIZARD-002 tests
+also pass the command-line C# build with 0 errors and the existing 271 warnings. They
+verify zero-chance guaranteed casting, cooldown/range/player-availability gates, and
+bypassing a pending check interval. Cast Whenever In Range is implemented and defaults off.
+Playtest both modes after rebaking/reloading: enter engagement range with cooldown ready,
+then confirm telegraph starts immediately only in the guaranteed mode.
+
+2026-10-02 radius settings update: `dotnet build Assembly-CSharp.csproj --no-restore`
+passes with 0 errors and the existing 271 warnings. Added `Wizard003_CastAndImpactUseIndependentRadii`
+to exercise different player/enemy bounds, and extended probability coverage so Impact Radius
+cannot affect casting chance. Unity tools were unavailable for this session; these updated
+tests have now passed in Unity on 2026-10-03; the Inspector migration still needs visual confirmation. The checks below were
+completed on 2026-10-01 before the radius split.
 
 - Unity 6000.3.10f1 compiles and bakes the saved content. The final Console compilation
   flag is clear. The existing Synty `ToolDownloader` window error remains on Play Mode entry;
@@ -107,6 +124,8 @@ all possible overlapping force combinations, or production performance on target
 
 1. Select **17 Violet Court**. Check the 6-9m positioning, approach-sensitive casts, one-second
    telegraph, three-second zone, Dance loop, and readability when two violet zones overlap.
+   In Wizard settings, set different Cast Radius and Impact Radius values, rebake/reload,
+   and check that each disc, damage boundary and avoidance distance matches its own value.
 2. Punch Wizards and launch other enemies into them. Check normal aim assist/preview,
    interruption, immediate impact zones and surviving zones after the Wizard dies. Re-punch
    a flying Wizard and confirm it cannot create another zone until a later genuine launch.

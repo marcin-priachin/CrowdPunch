@@ -17,6 +17,7 @@ namespace CrowdPunch.Components
         public WizardZoneKind Kind;
         public double ExpiresAt;
         public byte Follow, Active;
+        public float Radius => Kind == WizardZoneKind.Cast ? Settings.CastRadius : Settings.ImpactRadius;
     }
 
     [InternalBufferCapacity(0)]

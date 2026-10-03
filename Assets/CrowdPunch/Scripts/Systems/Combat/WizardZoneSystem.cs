@@ -61,7 +61,7 @@ namespace CrowdPunch.Systems.Combat
                 for (int i = 0; i < targets.Length; i++) { var t = targets[i]; t.Seen = 0; targets[i] = t; }
                 if (zone.Kind == WizardZoneKind.Impact)
                 {
-                    float broadRadius = math.max(0, zone.Settings.Radius) + padding;
+                    float broadRadius = math.max(0, zone.Radius) + padding;
                     candidates.Clear();
                     physics.CollisionWorld.OverlapAabb(new OverlapAabbInput
                     {
@@ -76,11 +76,11 @@ namespace CrowdPunch.Systems.Combat
                         if (em.HasComponent<EnemyArmor>(target) && em.GetComponentData<EnemyArmor>(target).Stages > 0) continue;
                         float radius = em.HasComponent<NavigationAgent>(target) ? em.GetComponentData<NavigationAgent>(target).Radius : 0;
                         float3 position = em.GetComponentData<LocalTransform>(target).Position;
-                        if (!Overlaps(zone.Position, zone.Settings.Radius, position, radius)) continue;
+                        if (!Overlaps(zone.Position, zone.Radius, position, radius)) continue;
                         if (Tick(targets, target, now, zone.Settings.TickInterval, 0)) HitEnemy(em, target, position, zone, now);
                     }
                 }
-                if (player.IsAvailable && Overlaps(zone.Position, zone.Settings.Radius, player.Position, player.Radius)
+                if (player.IsAvailable && Overlaps(zone.Position, zone.Radius, player.Position, player.Radius)
                     && Tick(targets, Entity.Null, now, zone.Settings.TickInterval, zone.Settings.PlayerInvulnerability))
                 {
                     float strength = zone.Settings.ForceMode == WizardForceMode.DamageOnly ? 0 :

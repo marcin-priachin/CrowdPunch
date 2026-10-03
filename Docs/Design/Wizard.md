@@ -6,6 +6,10 @@ It is design, not verification evidence. See GDD WIZARD-001..007 and `../Validat
 The 2026-10-01 follow-up correction governs the sections below: cast zones affect the
 player only; impact zones retain enemy effects and also trigger when a launched enemy
 hits an active or recovering Wizard.
+The 2026-10-02 correction gives cast and impact zones independently configurable radii.
+The 2026-10-03 correction adds optional Cast Whenever In Range (default off): once cooldown
+is ready and the available player is in engagement range, start telegraph immediately,
+bypassing probability checks and their interval. All other cast lifecycle rules still apply.
 
 ## Agreed decisions
 
@@ -36,7 +40,7 @@ Defaults, all exposed in Wizard settings:
 - engagement range: **12 m**;
 - telegraph duration: **1.0 s**;
 - active duration: **3.0 s**;
-- zone radius: **4.0 m**.
+- cast-zone radius: **4.0 m**; independently configurable impact-zone radius: **4.0 m**.
 
 Cast probability is additive and clamped to 100%:
 
@@ -283,7 +287,7 @@ On the first qualifying launched-Wizard collision or incoming launched-enemy hit
 - center = Wizard position at collision time, projected onto ground plane;
 - activation is **immediate**;
 - no telegraph;
-- same radius as normal zone;
+- separately configured Impact Radius (default 4m), independent of Cast Radius;
 - same player damage and timing as the cast zone, plus the configured enemy damage/force;
 - same tick interval;
 - same force mode/values;

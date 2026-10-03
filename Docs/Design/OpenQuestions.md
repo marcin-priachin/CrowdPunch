@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-01
+Last updated: 2026-10-03
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -77,6 +77,18 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-03 - Optional Guaranteed Wizard Casting
+
+Decision: Expose Cast Whenever In Range, default off (WIZARD-002). When enabled, a ready
+Wizard starts telegraph immediately with an available player in engagement range,
+bypassing cast chance and check interval. Cooldown and the committed cast lifecycle still apply.
+
+### 2026-10-02 - Independent Wizard Zone Radii
+
+Decision: Cast zones and zones caused by impacts have separate radius settings (WIZARD-002/005).
+Both retain the previously authored radius during migration. Cast probability uses Cast Radius;
+each zone's damage bounds, visuals and avoidance use that zone kind's radius.
 
 ### 2026-10-01 - Wizard And Gauntlet_17
 

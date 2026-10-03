@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-01
+Last updated: 2026-10-03
 
 ## How To Read This Document
 
@@ -611,9 +611,12 @@ Status: Must
 
 Use cooldown -> periodic probability checks -> telegraph -> active -> cooldown. Defaults:
 2s initial/post-cast/post-recovery cooldown, .5s checks, 12m engagement, 1s telegraph,
-3s active duration and 4m radius. Chance is clamped base 15% plus proximity up to 35%
+3s active duration and 4m cast radius. Cast Radius and Impact Radius are separate settings.
+Chance is clamped base 15% plus proximity up to 35%
 (linear from 12m to 4m) plus actual player approach velocity up to 35% (full at 4m/s).
 Cooldown counts outside engagement; no line-of-sight check or cooldown randomization.
+Optional Cast Whenever In Range (default off) starts telegraph as soon as cooldown is ready
+and the available player is in engagement range, bypassing probability and check interval.
 Committed casts continue out of range and face the player throughout. Damage/push alone
 does not interrupt; launch, recovery, defeat or explicit control loss cancels the moving zone.
 
@@ -668,7 +671,8 @@ trigger it again. Launched Dasher hits use their swept gameplay collision path. 
 is already launched, its own flight allowance governs the contact.
 
 The zone appears immediately at the Wizard's impact position projected to ground, without
-telegraph, and copies cast-zone radius, duration, player damage/timing/force and visuals.
+telegraph, and uses its separate Impact Radius (default 4m). It copies cast-zone duration,
+player damage/timing/force and visuals.
 Unlike a cast zone, an impact zone also damages and pushes eligible enemies using the
 existing enemy settings.
 It remains independent through source recovery, recasting or death, while preserving source

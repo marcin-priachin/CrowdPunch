@@ -8,8 +8,13 @@ namespace CrowdPunch.Components
     [System.Serializable]
     public struct WizardSettings : IComponentData
     {
-        public float Cooldown, CheckInterval, EngagementRange, TelegraphDuration, ActiveDuration, Radius;
+        public float Cooldown, CheckInterval, EngagementRange, TelegraphDuration, ActiveDuration;
+        [UnityEngine.Serialization.FormerlySerializedAs("Radius")]
+        public float CastRadius;
+        public float ImpactRadius;
         public float BaseChance, ProximityBonus, ApproachBonus, FullApproachSpeed;
+        [UnityEngine.Tooltip("Start casting immediately when cooldown is ready and the player is in engagement range, bypassing chance and check interval.")]
+        public bool CastWheneverInRange;
         public float PreferredMinimum, PreferredMaximum, ApproachSpeed, RetreatSpeed, Acceleration, Braking, TurnSpeed;
         public float PlayerDamage, EnemyDamage, TickInterval, PlayerInvulnerability;
         public float EnemyPush, EnemyKnockback, PlayerPush, PlayerKnockback;
@@ -20,7 +25,7 @@ namespace CrowdPunch.Components
         public static WizardSettings Default => new WizardSettings
         {
             Cooldown = 2, CheckInterval = .5f, EngagementRange = 12, TelegraphDuration = 1,
-            ActiveDuration = 3, Radius = 4, BaseChance = .15f, ProximityBonus = .35f,
+            ActiveDuration = 3, CastRadius = 4, ImpactRadius = 4, BaseChance = .15f, ProximityBonus = .35f,
             ApproachBonus = .35f, FullApproachSpeed = 4, PreferredMinimum = 6, PreferredMaximum = 9,
             ApproachSpeed = 3, RetreatSpeed = 4, Acceleration = 10, Braking = 10, TurnSpeed = 10,
             PlayerDamage = 10, EnemyDamage = 8, TickInterval = .5f, PlayerInvulnerability = .5f,

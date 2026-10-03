@@ -37,7 +37,7 @@ namespace CrowdPunch.Systems.AI
                 {
                     if (hazard.Source == entity) continue;
                     float3 delta = pose.ValueRO.Position - hazard.Position; delta.y = 0;
-                    float radius = math.max(0, hazard.Settings.Radius) + agent.ValueRO.Radius + 1;
+                    float radius = math.max(0, hazard.Radius) + agent.ValueRO.Radius + 1;
                     float distance = math.length(delta);
                     if (distance < radius && distance > .0001f) away += delta / distance * (1 - distance / radius) * 5;
                 }

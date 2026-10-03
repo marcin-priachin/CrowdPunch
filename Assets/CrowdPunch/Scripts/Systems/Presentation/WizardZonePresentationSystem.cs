@@ -41,7 +41,7 @@ namespace CrowdPunch.Systems.Presentation
                 properties.SetColor("_Color", new Color(.55f, .08f, 1f, (active ? .42f : .16f) * pulse));
                 var position = (Vector3)zone.ValueRO.Position;
                 properties.SetFloat("_Ring", active ? .85f : .5f);
-                Graphics.DrawMesh(disc, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * zone.ValueRO.Settings.Radius),
+                Graphics.DrawMesh(disc, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * zone.ValueRO.Radius),
                     material, 0, null, 0, properties, ShadowCastingMode.Off, false);
             }
         }

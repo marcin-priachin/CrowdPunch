@@ -151,13 +151,15 @@ MonoBehaviour:
     Cooldown: 2
     CheckInterval: 0.5
     EngagementRange: 12
-    TelegraphDuration: 1
+    TelegraphDuration: 0.5
     ActiveDuration: 3
-    Radius: 8
+    CastRadius: 12
+    ImpactRadius: 6
     BaseChance: 0.15
     ProximityBonus: 0.35
     ApproachBonus: 0.35
     FullApproachSpeed: 4
+    CastWheneverInRange: 1
     PreferredMinimum: 6
     PreferredMaximum: 9
     ApproachSpeed: 3

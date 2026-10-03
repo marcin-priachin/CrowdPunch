@@ -81,6 +81,27 @@ namespace CrowdPunch.Tests
         private float Health(Entity e) => em.GetComponentData<Health>(e).Current;
         private void Mode(WizardForceMode mode) { settings.ForceMode = mode; var z = em.GetComponentData<WizardZone>(zone); z.Settings = settings; em.SetComponentData(zone, z); }
 
+        [Test] public void Wizard003_CastAndImpactUseIndependentRadii()
+        {
+            em.DestroyEntity(zone);
+            settings.CastRadius = 2; settings.ImpactRadius = 5;
+            zone = Zone(follow: true); var impact = Zone();
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(4.5f, 0, 0)));
+            em.SetComponentData(playerEntity, new PlayerSnapshot { IsAvailable = true, Position = new float3(4.5f, 0, 0), Radius = .5f });
+            Step(0);
+            Assert.That(Health(target), Is.EqualTo(92));
+            Assert.That(em.GetBuffer<WizardZoneTarget>(zone).Length, Is.Zero);
+            Assert.That(em.GetBuffer<WizardZoneTarget>(impact).Length, Is.EqualTo(2));
+
+            settings.CastRadius = 6; settings.ImpactRadius = 1;
+            var castData = em.GetComponentData<WizardZone>(zone); castData.Settings = settings; em.SetComponentData(zone, castData);
+            var impactData = em.GetComponentData<WizardZone>(impact); impactData.Settings = settings; em.SetComponentData(impact, impactData);
+            Step(.1);
+            Assert.That(Health(target), Is.EqualTo(92));
+            Assert.That(em.GetBuffer<WizardZoneTarget>(zone).Length, Is.EqualTo(1));
+            Assert.That(em.GetBuffer<WizardZoneTarget>(impact).Length, Is.Zero);
+        }
+
         [Test] public void Wizard003_CastZoneAffectsPlayerButNotEnemies()
         {
             var cast = em.GetComponentData<WizardZone>(zone); cast.Kind = WizardZoneKind.Cast;
@@ -219,6 +240,7 @@ namespace CrowdPunch.Tests
         }
         [Test] public void Wizard002_ProbabilityUsesProximityAndActualApproachSpeed()
         {
+            settings.ImpactRadius = 100;
             Assert.That(WizardCastSystem.Chance(settings, 12, -4), Is.EqualTo(.15f).Within(.0001));
             Assert.That(WizardCastSystem.Chance(settings, 4, 4), Is.EqualTo(.85f).Within(.0001));
             Assert.That(WizardCastSystem.Chance(settings, 8, 2), Is.EqualTo(.5f).Within(.0001));
@@ -256,6 +278,43 @@ namespace CrowdPunch.Tests
         {
             world.SetTime(new TimeData(now, dt));
             world.GetOrCreateSystem<WizardCastSystem>().Update(world.Unmanaged);
+        }
+        [Test] public void Wizard002_GuaranteedCastingStillRequiresCooldownRangeAndAvailablePlayer()
+        {
+            em.DestroyEntity(zone);
+            settings.CastWheneverInRange = true;
+            settings.BaseChance = settings.ProximityBonus = settings.ApproachBonus = 0;
+            em.SetComponentData(source, settings);
+            em.SetComponentData(playerEntity, new PlayerSnapshot { IsAvailable = true, Position = new float3(7, 0, 0) });
+            Cast(1, 1);
+            Assert.That(em.GetComponentData<WizardCastState>(source).Phase, Is.EqualTo(WizardCastPhase.Cooldown));
+            em.SetComponentData(playerEntity, new PlayerSnapshot { IsAvailable = true, Position = new float3(13, 0, 0) });
+            Cast(2, 1);
+            Assert.That(em.GetComponentData<WizardCastState>(source).Phase, Is.EqualTo(WizardCastPhase.Checking));
+            em.SetComponentData(playerEntity, new PlayerSnapshot { Position = new float3(7, 0, 0) });
+            Cast(3, 1);
+            Assert.That(em.GetComponentData<WizardCastState>(source).Phase, Is.EqualTo(WizardCastPhase.Checking));
+            em.SetComponentData(playerEntity, new PlayerSnapshot { IsAvailable = true, Position = new float3(12, 0, 0) });
+            Cast(4, .02f);
+            var cast = em.GetComponentData<WizardCastState>(source);
+            Assert.That(cast.Phase, Is.EqualTo(WizardCastPhase.Telegraph));
+            Assert.That(em.Exists(cast.MovingZone), Is.True);
+            Assert.That(cast.RandomState, Is.EqualTo(1u));
+        }
+        [Test] public void Wizard002_GuaranteedCastingBypassesPendingProbabilityCheck()
+        {
+            em.DestroyEntity(zone);
+            settings.BaseChance = settings.ProximityBonus = settings.ApproachBonus = 0;
+            em.SetComponentData(source, settings);
+            em.SetComponentData(source, new WizardCastState { RandomState = 1, Phase = WizardCastPhase.Checking });
+            em.SetComponentData(playerEntity, new PlayerSnapshot { IsAvailable = true, Position = new float3(7, 0, 0) });
+            Cast(0, .02f);
+            var cast = em.GetComponentData<WizardCastState>(source);
+            Assert.That(cast.Phase, Is.EqualTo(WizardCastPhase.Checking));
+            Assert.That(cast.Remaining, Is.EqualTo(settings.CheckInterval));
+            settings.CastWheneverInRange = true; em.SetComponentData(source, settings);
+            Cast(.02, .02f);
+            Assert.That(em.GetComponentData<WizardCastState>(source).Phase, Is.EqualTo(WizardCastPhase.Telegraph));
         }
         [Test] public void Wizard002_CastPersistsOutOfRangeAndDamageAloneDoesNotCancel()
         {

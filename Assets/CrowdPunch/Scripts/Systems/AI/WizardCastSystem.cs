@@ -18,7 +18,7 @@ namespace CrowdPunch.Systems.AI
 
         public static float Chance(WizardSettings s, float distance, float approachSpeed) => math.saturate(
             s.BaseChance + s.ProximityBonus * math.saturate((s.EngagementRange - distance) /
-            math.max(.001f, s.EngagementRange - s.Radius)) + s.ApproachBonus *
+            math.max(.001f, s.EngagementRange - s.CastRadius)) + s.ApproachBonus *
             math.saturate(approachSpeed / math.max(.001f, s.FullApproachSpeed)));
 
         public void OnUpdate(ref SystemState state)
@@ -63,16 +63,21 @@ namespace CrowdPunch.Systems.AI
                             cast.Remaining = math.max(0, s.Cooldown); break;
                     }
                 }
-                if (cast.Phase == WizardCastPhase.Checking && cast.Remaining <= 0 && player.IsAvailable)
+                if (cast.Phase == WizardCastPhase.Checking &&
+                    (s.CastWheneverInRange || cast.Remaining <= 0) && player.IsAvailable)
                 {
                     float3 towardWizard = pose.ValueRO.Position - player.Position; towardWizard.y = 0;
                     float distance = math.length(towardWizard);
                     if (distance <= s.EngagementRange)
                     {
-                        var random = new Random(math.max(1u, cast.RandomState));
-                        float approach = math.dot(player.Velocity, math.normalizesafe(towardWizard));
-                        bool start = random.NextFloat() < Chance(s, distance, approach);
-                        cast.RandomState = random.state; cast.Remaining = math.max(.001f, s.CheckInterval);
+                        bool start = s.CastWheneverInRange;
+                        if (!start)
+                        {
+                            var random = new Random(math.max(1u, cast.RandomState));
+                            float approach = math.dot(player.Velocity, math.normalizesafe(towardWizard));
+                            start = random.NextFloat() < Chance(s, distance, approach);
+                            cast.RandomState = random.state; cast.Remaining = math.max(.001f, s.CheckInterval);
+                        }
                         if (start)
                         {
                             cast.Phase = WizardCastPhase.Telegraph; cast.Remaining = math.max(0, s.TelegraphDuration);

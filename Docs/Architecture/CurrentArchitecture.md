@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-10-01
+Last inspected: 2026-10-03
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -1266,6 +1266,8 @@ aim assist, preview, health, launch, recovery and pooling use the existing enemy
 Wizard movement tuning overrides its movement components; shared Ranged tuning is not used.
 
 `WizardCastSystem` owns cooldown, probability checks, telegraph and active duration. It
+supports `WizardSettings.CastWheneverInRange`, default false, to bypass probability and
+check interval after cooldown while retaining player availability and engagement range gates. It
 creates a first-class `WizardZone` entity with an ECB-remapped reference in the cast state.
 `WizardPositioningSystem` owns range-band decisions and optional casting stops. It writes
 intent only. `WizardHazardAvoidanceSystem` adds separation from other Wizards' reserved
@@ -1276,7 +1278,10 @@ facing the player; launched facing still follows velocity.
 
 A zone stores its source, baked settings, explicit Cast/Impact kind, position, expiry, follow/active flags and scene/
 wave ownership. Its `WizardZoneTarget` buffer stores independent entry/tick clocks and
-player protection per target. Membership is refreshed every fixed step, including between
+player protection per target. `WizardSettings.CastRadius` and `ImpactRadius` are separate
+Inspector fields. `WizardZone.Radius` selects the radius by kind for damage membership,
+ground visuals and avoidance. Casting probability and caster reservations use Cast Radius.
+Membership is refreshed every fixed step, including between
 damage ticks; leaving removes the record. Physics broadphase candidates are expanded for
 body travel since broadphase construction, then filtered by exact XZ radius plus the
 target's physical radius. Cast zones check the player only. Impact zones exclude the source,
