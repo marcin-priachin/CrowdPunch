@@ -43,22 +43,22 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Loop002_ActiveSequenceAndBuildSettingsContainSeventeenOrderedLevels()
+        public void Loop002_ActiveSequenceAndBuildSettingsContainEighteenOrderedLevels()
         {
             Scene scene = EditorSceneManager.OpenScene(Root + "Bootstrap.unity", OpenSceneMode.Additive);
             try
             {
                 var sequence = Find<GauntletSequence>(scene);
                 var names = new SerializedObject(sequence).FindProperty("levelSceneNames");
-                Assert.That(names.arraySize, Is.EqualTo(17));
+                Assert.That(names.arraySize, Is.EqualTo(18));
                 string[] enabled = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-                Assert.That(enabled.Length, Is.EqualTo(20));
-                Assert.That(enabled.Skip(18), Is.EquivalentTo(new[] {
+                Assert.That(enabled.Length, Is.EqualTo(21));
+                Assert.That(enabled.Skip(19), Is.EquivalentTo(new[] {
                     Root + "NavigationValidation/NavigationValidationBootstrap.unity",
                     Root + "NavigationValidation/NavigationValidationArena.unity" }),
                     "The two separate validation scenes must not enter the playable progression.");
                 Assert.That(enabled[0], Is.EqualTo(Root + "Bootstrap.unity"));
-                for (int i = 0; i < 17; i++)
+                for (int i = 0; i < 18; i++)
                 {
                     string id = $"Gauntlet_{i + 1:00}";
                     Assert.That(names.GetArrayElementAtIndex(i).stringValue, Is.EqualTo(id));
@@ -85,6 +85,7 @@ namespace CrowdPunch.Tests
         [TestCase(15)]
         [TestCase(16)]
         [TestCase(17)]
+        [TestCase(18)]
         public void Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(int number)
         {
             string id = $"Gauntlet_{number:00}";
@@ -155,7 +156,7 @@ namespace CrowdPunch.Tests
                                 AssertInside(outline, range.Center + new Vector3(x * range.Width / 2, 0, z * range.Depth / 2), 1.1f);
                     }
                     outstandingBudget += wave.TotalEnemyCount + wave.EliteEnemies.Sum(e => e.Count);
-                    Assert.That(outstandingBudget, Is.LessThanOrEqualTo(30), "Bounded authored peak, including timed overlap");
+                    Assert.That(outstandingBudget, Is.LessThanOrEqualTo(number == 18 ? 32 : 30), "Bounded authored peak, including timed overlap (PROTECT-004 permits 32)");
                     if (wave.ActivationMode == EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated) outstandingBudget = 0;
                 }
                 }

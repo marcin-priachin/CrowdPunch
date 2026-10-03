@@ -27,6 +27,8 @@ namespace CrowdPunch.Systems.Combat
         public void OnUpdate(ref SystemState state)
         {
             PlayerSnapshot player = SystemAPI.GetSingleton<PlayerSnapshot>();
+            bool defending = SystemAPI.HasSingleton<ProtectedPoint>();
+            var attackers = defending ? SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true).AsNativeArray() : default;
             float deltaTime = SystemAPI.Time.DeltaTime;
             EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.Temp);
 
@@ -52,6 +54,7 @@ namespace CrowdPunch.Systems.Combat
 
                 float distance = math.distance(transform.ValueRO.Position.xz, player.Position.xz);
                 bool inRange = distance <= math.max(0f, settings.ValueRO.EngagementRange);
+                inRange &= !defending || ProtectedPointAttacker.Contains(attackers, shooter);
 
                 if (attack.ValueRO.Phase == RangedAttackPhase.InitialDelay
                     || attack.ValueRO.Phase == RangedAttackPhase.Cooldown)

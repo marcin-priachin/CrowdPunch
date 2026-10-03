@@ -19,7 +19,7 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_17` each contain their matching ECS SubScene. Seventeen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss and gauntlet 17 introduces Wizards. The separate navigation validation scenes remain outside progression.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_18` each contain their matching ECS SubScene. Eighteen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss, gauntlet 17 introduces Wizards, and gauntlet 18 introduces protected-point defense. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
@@ -1256,6 +1256,54 @@ hit history and crowd teardown. Scene reload restores the baked state. The three
 eligibility/damage edge cases are exposed as provisional options, with defaults and alternatives
 documented in `OpenQuestions.md`; no wider design question is resolved by these choices.
 See [Track validation](../Validation/TrackObject.md) for evidence, limitations and playtests.
+
+## Protected Point And Gauntlet_18 (PROTECT-001..004)
+
+Implemented: Gauntlet_18, "Hold the Line", follows the Wizard level in Bootstrap, level
+selection and Build Settings. The 32 x 96m rectangular floor has a noncolliding turquoise
+8 x 4m ground zone at z=-46. Spawn rectangles occupy the opposite end, z=37..45.
+`ProtectedPointAuthoring` and its Baker attach the objective and selection buffer to the
+existing wave-sequence entity. `ProtectedPointSettings.asset` exposes threshold (one) and
+new-attack selection cap (three). Zone coordinates/size are authored in the SubScene.
+The three CP18 wave assets own exact composition, batches and cadence; puzzle ammunition
+supply and persistent-hazard gating are disabled. The first wave has a three-second entry delay.
+
+`ProtectedPointPrioritySystem` runs after player bridging and wave spawning, before chase
+and Wizard casting. It maintains the closest eligible in-range roots in a small sorted
+`ProtectedPointAttacker` buffer, filtered by wave owner and run generation. Distances use XZ;
+ties use entity index. Melee range is the larger of contact-attempt range and physical contact
+reach; Ranged/Wizard use engagement range and Dashers use their preparation band. Staggered
+Armored enemies cannot take slots. Selection is O(enemies * configured cap), with no all-pairs query.
+
+`EnemyChaseSystem` reuses separation and writes the zone destination for unselected enemies.
+Selected melee retains normal contact cadence; committed Baseline attempts finish. Ranged
+and Wizard positioning holds selected attackers in place and otherwise preserves zone intent;
+their attack systems gate new wind-ups/casts. Dasher positioning keeps zone intent until
+selected, after which existing preparation, dash and recovery own movement. Existing navigation
+and physics velocity steering are reused. Facing follows movement while advancing. Contact
+damage and Explosive player-contact detonation obey selection; launched impacts and area
+effects retain ordinary resolution. Committed attacks may finish after losing selection.
+
+Last in post-physics, after recovery, bounds and lifetime handling, `ProtectedPointBreachSystem` checks Active root centres
+against the inclusive XZ rectangle. Launched and recovering bodies can be moved back out
+before becoming Active. A breach decrements shared undefeated accounting, increments the
+current wave's resolved count, and ECB-destroys the root and linked visuals immediately.
+Moving Wizard zones are removed with their owner; detached zones keep their existing lifetime.
+No death explosion or replacement is generated. After removal, the managed system requests
+the existing one-step pre-physics rebuild guard because destroyed Dashers can own unique
+colliders still referenced by the preceding collision world. Spawn progression stops at the breach threshold.
+
+`GauntletCompletionSystem` checks failure before completion and reports it once through
+`GauntletFailureRegistry`. `GauntletSequence.RunFailed` drives the existing pause menu's
+"PROTECTED ZONE BREACHED" / "Retry Level" result. MonoBehaviours never inspect enemy entities.
+Scene retry restores authored state; `GameRestartSystem` also resets breach/selection state
+alongside its existing wave teardown. Level transitions consume stale failure signals.
+
+**Crowd Punch > Levels > Build Protected Point Gauntlet 18** rebuilds only this level and
+registers it, preserving the dedicated threshold/cap settings while reapplying the layout and
+wave recipe. Earlier scenes and shared archetype tuning are preserved. Difficulty, final art,
+full-run duration and camera suitability for this longer court remain future validation work.
+See [Protected point validation](../Validation/ProtectedPoint.md) for measured checks and playtests.
 
 ## Wizard And Gauntlet_17 (WIZARD-001..007)
 

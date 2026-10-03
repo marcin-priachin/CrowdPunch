@@ -16,18 +16,21 @@ namespace CrowdPunch.Mono.Levels
         private int currentLevelIndex = -1;
         private Scene currentLevelScene;
         private uint observedCompletionSequence;
+        private uint observedFailureSequence;
         private bool transitionInProgress;
 
         public int LevelCount => levelSceneNames?.Length ?? 0;
         public int CurrentLevelIndex => currentLevelIndex;
         public bool TransitionInProgress => transitionInProgress;
         public bool RunComplete { get; private set; }
+        public bool RunFailed { get; private set; }
         public uint LevelEntrySequence { get; private set; }
         public string OpeningHint { get; private set; }
 
         private void Start()
         {
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;
+            observedFailureSequence = GauntletFailureRegistry.Sequence;
             if (loadFirstLevelOnStart && levelSceneNames is { Length: > 0 })
             {
                 StartCoroutine(LoadLevel(0));
@@ -36,6 +39,13 @@ namespace CrowdPunch.Mono.Levels
 
         private void Update()
         {
+            if (!transitionInProgress && observedFailureSequence != GauntletFailureRegistry.Sequence)
+            {
+                observedFailureSequence = GauntletFailureRegistry.Sequence;
+                RunFailed = true;
+                RunComplete = false;
+            }
+            if (RunFailed) return;
             uint completionSequence = GauntletCompletionRegistry.Sequence;
             if (transitionInProgress || completionSequence == observedCompletionSequence)
             {
@@ -99,6 +109,7 @@ namespace CrowdPunch.Mono.Levels
 
             transitionInProgress = true;
             RunComplete = false;
+            RunFailed = false;
             FeedbackTimeController.SetTransition(true);
 
             if (currentLevelScene.IsValid() && currentLevelScene.isLoaded)
@@ -129,6 +140,7 @@ namespace CrowdPunch.Mono.Levels
 
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;
             FeedbackTimeController.SetTransition(false);
+            observedFailureSequence = GauntletFailureRegistry.Sequence;
             transitionInProgress = false;
         }
 

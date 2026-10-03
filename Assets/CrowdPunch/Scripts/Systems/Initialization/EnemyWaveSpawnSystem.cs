@@ -45,6 +45,7 @@ namespace CrowdPunch.Systems.Initialization
                          .WithEntityAccess())
             {
                 ref EnemyWaveSequence sequence = ref sequenceReference.ValueRW;
+                if (SystemAPI.HasComponent<ProtectedPoint>(sequenceEntity) && SystemAPI.GetComponent<ProtectedPoint>(sequenceEntity).Failed) continue;
                 bool bossOwned = SystemAPI.HasComponent<BossCrowdSequence>(sequenceEntity);
                 bool barricadeOwned = SystemAPI.HasComponent<BarricadeCrowdSequence>(sequenceEntity);
                 if (barricadeOwned)

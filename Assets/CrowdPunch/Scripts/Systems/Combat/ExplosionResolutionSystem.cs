@@ -59,6 +59,8 @@ namespace CrowdPunch.Systems.Combat
 
         private void RequestPlayerContactDetonations(PlayerSnapshot player)
         {
+            bool defending = SystemAPI.HasSingleton<ProtectedPoint>();
+            var attackers = defending ? SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true).AsNativeArray() : default;
             if (!player.IsAvailable)
             {
                 return;
@@ -68,14 +70,15 @@ namespace CrowdPunch.Systems.Combat
                          RefRO<EnemyContactDamageSettings> contact,
                          RefRO<EnemyLaunchState> launchState,
                          RefRO<ExplosiveEnemyState> explosiveState,
-                         EnabledRefRW<ExplosiveDetonationRequest> requestEnabled) in
+                         EnabledRefRW<ExplosiveDetonationRequest> requestEnabled, Entity entity) in
                      SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyContactDamageSettings>,
                              RefRO<EnemyLaunchState>, RefRO<ExplosiveEnemyState>,
                              EnabledRefRW<ExplosiveDetonationRequest>>()
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>()
-                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
+                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState).WithEntityAccess())
             {
+                if (defending && !ProtectedPointAttacker.Contains(attackers, entity)) continue;
                 if (explosiveState.ValueRO.HasExploded != 0
                     || launchState.ValueRO.Phase != EnemyLaunchPhase.Active)
                 {

@@ -12,6 +12,7 @@ namespace CrowdPunch.Systems.Presentation
         private EntityQuery allSequences;
         private EntityQuery completedSequences;
         private bool completionReported;
+        private bool failureReported;
 
         protected override void OnCreate()
         {
@@ -31,6 +32,15 @@ namespace CrowdPunch.Systems.Presentation
 
         protected override void OnUpdate()
         {
+            bool failed = SystemAPI.HasSingleton<ProtectedPoint>() && SystemAPI.GetSingleton<ProtectedPoint>().Failed;
+            if (failed)
+            {
+                if (!failureReported) GauntletFailureRegistry.ReportFailure();
+                failureReported = true;
+                completionReported = false;
+                return;
+            }
+            failureReported = false;
             int sequenceCount = allSequences.CalculateEntityCount();
             bool isComplete = sequenceCount > 0
                 && completedSequences.CalculateEntityCount() == sequenceCount;

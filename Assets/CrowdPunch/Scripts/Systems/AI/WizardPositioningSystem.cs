@@ -19,11 +19,19 @@ namespace CrowdPunch.Systems.AI
         public void OnUpdate(ref SystemState state)
         {
             var player = SystemAPI.GetSingleton<PlayerSnapshot>();
+            bool defending = SystemAPI.HasSingleton<ProtectedPoint>();
+            var attackers = defending ? SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true).AsNativeArray() : default;
             var grid = SystemAPI.HasSingleton<NavigationGrid>() ? SystemAPI.GetSingleton<NavigationGrid>() : default;
-            foreach (var (s, cast, launch, pose, agent, movement, navigation) in
+            foreach (var (s, cast, launch, pose, agent, movement, navigation, entity) in
                 SystemAPI.Query<RefRO<WizardSettings>, RefRO<WizardCastState>, RefRO<EnemyLaunchState>, RefRO<LocalTransform>,
-                    RefRO<NavigationAgent>, RefRW<DesiredMovement>, RefRW<NavigationIntent>>().WithNone<RespawnRequest>())
+                    RefRO<NavigationAgent>, RefRW<DesiredMovement>, RefRW<NavigationIntent>>().WithNone<RespawnRequest>().WithEntityAccess())
             {
+                if (defending && launch.ValueRO.Phase == EnemyLaunchPhase.Active && player.IsAvailable)
+                {
+                    if (cast.ValueRO.IsCasting || ProtectedPointAttacker.Contains(attackers, entity))
+                    { movement.ValueRW = default; navigation.ValueRW = default; }
+                    continue;
+                }
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Active || !player.IsAvailable || cast.ValueRO.StopsMovement(s.ValueRO))
                 { movement.ValueRW = default; navigation.ValueRW = default; continue; }
                 float3 delta = player.Position - pose.ValueRO.Position; delta.y = 0;

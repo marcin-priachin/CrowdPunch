@@ -18,6 +18,8 @@ namespace CrowdPunch.Systems.AI
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            bool defending = SystemAPI.HasSingleton<ProtectedPoint>();
+            var attackers = defending ? SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true).AsNativeArray() : default;
             using var hazards = new NativeList<WizardZone>(Allocator.Temp);
             foreach (var zone in SystemAPI.Query<RefRO<WizardZone>>())
                 if (zone.ValueRO.Follow == 0 && SystemAPI.Time.ElapsedTime < zone.ValueRO.ExpiresAt) hazards.Add(zone.ValueRO);
@@ -30,6 +32,10 @@ namespace CrowdPunch.Systems.AI
                 RefRO<NavigationAgent>, RefRW<NavigationIntent>, RefRW<DesiredMovement>>().WithAll<Enemy>().WithNone<RespawnRequest>().WithEntityAccess())
             {
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Active) continue;
+                if (defending && (SystemAPI.HasComponent<RangedEnemySettings>(entity) || SystemAPI.HasComponent<WizardSettings>(entity))
+                    && (ProtectedPointAttacker.Contains(attackers, entity)
+                        || SystemAPI.HasComponent<WizardCastState>(entity) && SystemAPI.GetComponent<WizardCastState>(entity).IsCasting
+                        || SystemAPI.HasComponent<RangedAttackState>(entity) && SystemAPI.GetComponent<RangedAttackState>(entity).Phase == RangedAttackPhase.WindUp)) continue;
                 if (SystemAPI.HasComponent<DasherState>(entity) && SystemAPI.GetComponent<DasherState>(entity).Phase != DasherPhase.Positioning) continue;
                 if (SystemAPI.HasComponent<WizardCastState>(entity) && SystemAPI.GetComponent<WizardCastState>(entity).StopsMovement(SystemAPI.GetComponent<WizardSettings>(entity))) continue;
                 float3 away = 0;

@@ -495,7 +495,70 @@ Status: May
 
 If the final combination set becomes too large to learn naturally, provide a compact reference or discovery record. Do not add it during the MVP merely in anticipation of scale.
 
+## Protected-Point Level
+
+### PROTECT-001 - Layout And Progression
+
+Status: Must
+
+Append Gauntlet_18 after Gauntlet_17. Its arena is 32 x 96 metres, with an 8 x 4 metre
+marked ground zone centred against one short border. Enemies spawn near the opposite
+short border. This deliberately longer defense arena is an exception to the compact
+gauntlet layout default in LOOP-002. Reuse existing player controls and combat.
+
+### PROTECT-002 - Objective Priority And Player Attacks
+
+Status: Must
+
+All participating enemies prioritize reaching the protected zone. Only the closest eligible
+active enemies with the player in their attack range may begin player attacks, up to an
+exposed limit defaulting to three. Zero disables new player attacks. Route blocking is not
+required. This replaces ordinary crowd-pressure allocation, Explosive proximity exceptions,
+Armored unconditional pursuit, and Ranged/Wizard/Dasher distance-band positioning in this mode.
+Ranged enemies and Wizards advance toward the zone unless selected to attack, when they stop.
+Dashers dash only against the player, never as a way to reach the objective.
+
+Later clarification (2026-10-03): already committed attacks finish when a closer enemy takes
+the slot; the closest-enemy limit gates new attacks. This includes attack preparation already
+begun, Ranged wind-up, Wizard casts and committed dashes. Ordinary launch/defeat interruption
+still applies. Consequently, finishing attacks can temporarily exceed the selection limit.
+
+### PROTECT-003 - Breaches And Defeat
+
+Status: Must
+
+Only enemies in the shared `Active` phase count as breaches. `Launched`, `Recovering` and
+`Defeated` enemies do not. Breaching enemies disappear and are resolved for wave progression.
+An enemy still inside the zone when it becomes `Active` can breach then. Expose a breach
+threshold in settings, default one: the first breach causes defeat. Failure takes precedence
+over simultaneous wave completion. Restart restores the objective, waves and crowd.
+
+### PROTECT-004 - Finite Wave Schedule
+
+Status: Must
+
+Use the following editable starting composition:
+
+| Enemy | Wave 1 | Wave 2 | Wave 3 |
+| --- | ---: | ---: | ---: |
+| Baseline | 14 | 16 | 20 |
+| Explosive | 2 | 4 | 4 |
+| Ranged | 0 | 2 | 3 |
+| Dasher | 0 | 2 | 3 |
+| Armored | 0 | 0 | 1 |
+| Wizard | 0 | 0 | 1 |
+| Total | 16 | 24 | 32 |
+
+Spawn four enemies every three seconds. After all enemies from a wave are defeated or
+have breached, wait five seconds before starting the next wave. Batch size, interval,
+inter-wave delay and composition are tunable in wave assets. Clearing all three waves
+without reaching the breach threshold wins. No timed-survival goal or replenishing supply
+is required. Persistent Wizard zones retain their ordinary lifetime but do not delay clearance.
+
 ## Enemies And Information
+
+Protected-point levels use PROTECT-002's objective priority instead of the ordinary pursuit
+and positioning rules below. Other archetype combat and interruption rules still apply.
 
 ### ENEMY-001 — Ranged Enemy Positioning
 

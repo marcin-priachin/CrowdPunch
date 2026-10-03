@@ -91,12 +91,13 @@ namespace CrowdPunch.Mono.UI
             }
             hintSecondsRemaining = Mathf.Max(0, hintSecondsRemaining - Time.deltaTime);
             openingHint.gameObject.SetActive(!isPaused && hintSecondsRemaining > 0 && !string.IsNullOrEmpty(openingHint.text));
-            bool complete = gauntletSequence != null && gauntletSequence.RunComplete;
+            bool failed = gauntletSequence != null && gauntletSequence.RunFailed;
+            bool complete = gauntletSequence != null && (gauntletSequence.RunComplete || failed);
             if (complete && !showingCompletion)
             {
                 showingCompletion = true;
-                menuTitle.text = "RUN COMPLETE";
-                firstButton.GetComponentInChildren<Text>().text = "Play Again";
+                menuTitle.text = failed ? "PROTECTED ZONE BREACHED" : "RUN COMPLETE";
+                firstButton.GetComponentInChildren<Text>().text = failed ? "Retry Level" : "Play Again";
                 SetPaused(true);
             }
             else if (!complete && showingCompletion)
@@ -191,6 +192,7 @@ namespace CrowdPunch.Mono.UI
             firstButton = CreateButton(panel.transform, "Resume", () =>
             {
                 if (gauntletSequence != null && gauntletSequence.RunComplete) SelectLevel(0);
+                else if (gauntletSequence != null && gauntletSequence.RunFailed) SelectLevel(gauntletSequence.CurrentLevelIndex);
                 else SetPaused(false);
             });
             CreateLabel(panel.transform, "SELECT LEVEL", 22, 48f);

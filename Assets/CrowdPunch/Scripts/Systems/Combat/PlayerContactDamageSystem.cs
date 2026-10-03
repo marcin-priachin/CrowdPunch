@@ -33,6 +33,8 @@ namespace CrowdPunch.Systems.Combat
             }
 
             bool hasHit = false;
+            bool defending = SystemAPI.HasSingleton<ProtectedPoint>();
+            var attackers = defending ? SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true).AsNativeArray() : default;
             float closestDistanceSquared = float.MaxValue;
             float hitDamagePercent = 0f;
             float hitInvincibilitySeconds = 0f;
@@ -40,11 +42,14 @@ namespace CrowdPunch.Systems.Combat
 
             foreach ((RefRO<LocalTransform> transform, RefRO<EnemyContactDamageSettings> contactSettings,
                          RefRO<EnemyLaunchState> launchState,
-                         RefRO<EnemyArchetype> archetype) in
+                         RefRO<EnemyArchetype> archetype, Entity entity) in
                      SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyContactDamageSettings>, RefRO<EnemyLaunchState>, RefRO<EnemyArchetype>>()
                          .WithAll<Enemy>()
-                         .WithNone<RespawnRequest>())
+                         .WithNone<RespawnRequest>().WithEntityAccess())
             {
+                bool committed = SystemAPI.HasComponent<EnemyContactAttemptState>(entity)
+                    && SystemAPI.GetComponent<EnemyContactAttemptState>(entity).IsAttempting != 0;
+                if (defending && !ProtectedPointAttacker.Contains(attackers, entity) && !committed) continue;
                 if (launchState.ValueRO.Phase != EnemyLaunchPhase.Active
                     || archetype.ValueRO.Value == EnemyArchetypeKind.Explosive
                     || archetype.ValueRO.Value == EnemyArchetypeKind.Dasher

@@ -23,14 +23,16 @@ namespace CrowdPunch.Systems.Physics
         public void OnUpdate(ref SystemState state)
         {
             PlayerSnapshot player = SystemAPI.GetSingleton<PlayerSnapshot>();
-            new FacePlayerJob
+            state.Dependency = new FacePlayerJob
             {
                 Wizards = SystemAPI.GetComponentLookup<WizardSettings>(true),
+                Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
+                Movements = SystemAPI.GetComponentLookup<DesiredMovement>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 PlayerPosition = player.Position,
                 PlayerAvailable = player.IsAvailable,
                 Dashers = SystemAPI.GetComponentLookup<DasherState>(true)
-            }.ScheduleParallel();
+            }.ScheduleParallel(state.Dependency);
         }
 
         [BurstCompile]
@@ -39,6 +41,8 @@ namespace CrowdPunch.Systems.Physics
         private partial struct FacePlayerJob : IJobEntity
         {
             [ReadOnly] public ComponentLookup<WizardSettings> Wizards;
+            public bool Defending;
+            [ReadOnly] public ComponentLookup<DesiredMovement> Movements;
             public float DeltaTime;
             public float3 PlayerPosition;
             public bool PlayerAvailable;
@@ -59,6 +63,8 @@ namespace CrowdPunch.Systems.Physics
                         ? Dashers[entity].LockedDirection
                         : PlayerPosition - transform.Position;
                 toward.y = 0f;
+                if (Defending && !launched && !committedDash && Movements.HasComponent(entity) && Movements[entity].Speed > 0)
+                    toward = Movements[entity].Direction;
                 if (math.lengthsq(toward) <= 0.0001f) return;
                 // Keep the physics capsule upright; animation supplies launched visual pitch.
                 var facing = quaternion.LookRotationSafe(toward, math.up());

@@ -33,24 +33,33 @@ namespace CrowdPunch.Systems.AI
                         Archetype = archetype.ValueRO.Value
                     });
 
-            state.Dependency = new DecisionJob { Player = player, Grid = grid, Enemies = enemies.AsDeferredJobArray(), DeltaTime = SystemAPI.Time.DeltaTime }
+            var attackers = SystemAPI.HasSingleton<ProtectedPoint>() ? SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true).ToNativeArray(Allocator.TempJob)
+                : new NativeArray<ProtectedPointAttacker>(0, Allocator.TempJob);
+            state.Dependency = new DecisionJob { Player = player, Grid = grid, Enemies = enemies.AsDeferredJobArray(), DeltaTime = SystemAPI.Time.DeltaTime,
+                Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
+                Attackers = attackers }
                 .ScheduleParallel(state.Dependency);
             state.Dependency = enemies.Dispose(state.Dependency);
+            state.Dependency = attackers.Dispose(state.Dependency);
         }
 
         [BurstCompile, WithAll(typeof(Enemy)), WithNone(typeof(RespawnRequest))]
         private partial struct DecisionJob : IJobEntity
         {
             public PlayerSnapshot Player;
+            public bool Defending;
+            [ReadOnly] public NativeArray<ProtectedPointAttacker> Attackers;
             public NavigationGrid Grid;
             [ReadOnly] public NativeArray<EnemySeparationNeighbor> Enemies;
             public float DeltaTime;
 
-            private void Execute(ref DesiredMovement movement, ref NavigationIntent navigation, ref DasherState state, in DasherSettings settings,
+            private void Execute(Entity entity, ref DesiredMovement movement, ref NavigationIntent navigation, ref DasherState state, in DasherSettings settings,
                 in EnemyMovementSettings movementSettings, in NavigationAgent agent, in EnemySeparationDistance separationDistance,
                 in EnemyArchetypeSeparationDistances archetypeSeparationDistances,
                 in EnemyLaunchState launch, in LocalTransform transform)
             {
+                if (Defending && state.Phase == DasherPhase.Positioning && launch.Phase == EnemyLaunchPhase.Active
+                    && Player.IsAvailable && !ProtectedPointAttacker.Contains(Attackers, entity)) return;
                 navigation = default;
                 if (launch.Phase != EnemyLaunchPhase.Active || !Player.IsAvailable)
                 {

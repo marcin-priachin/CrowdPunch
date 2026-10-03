@@ -24,6 +24,8 @@ namespace CrowdPunch.Systems.AI
         public void OnUpdate(ref SystemState state)
         {
             var player = SystemAPI.GetSingleton<PlayerSnapshot>();
+            bool defending = SystemAPI.HasSingleton<ProtectedPoint>();
+            var attackers = defending ? SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true).AsNativeArray() : default;
             double now = SystemAPI.Time.ElapsedTime;
             using var commands = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (settings, castRef, launch, pose, entity) in
@@ -64,7 +66,8 @@ namespace CrowdPunch.Systems.AI
                     }
                 }
                 if (cast.Phase == WizardCastPhase.Checking &&
-                    (s.CastWheneverInRange || cast.Remaining <= 0) && player.IsAvailable)
+                    (s.CastWheneverInRange || cast.Remaining <= 0) && player.IsAvailable
+                    && (!defending || ProtectedPointAttacker.Contains(attackers, entity)))
                 {
                     float3 towardWizard = pose.ValueRO.Position - player.Position; towardWizard.y = 0;
                     float distance = math.length(towardWizard);

@@ -61,6 +61,11 @@ namespace CrowdPunch.Systems.AI
             EnemyCrowdPressureSettings pressureSettings = SystemAPI.GetSingleton<EnemyCrowdPressureSettings>();
             NativeList<EnemySeparationNeighbor> activeEnemies = new NativeList<EnemySeparationNeighbor>(Allocator.TempJob);
             NativeList<PressureCandidate> pressureCandidates = new NativeList<PressureCandidate>(Allocator.TempJob);
+            bool defending = SystemAPI.HasSingleton<ProtectedPoint>();
+            var objective = defending ? SystemAPI.GetSingleton<ProtectedPoint>() : default;
+            if (defending)
+                foreach (var attacker in SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true))
+                    pressureCandidates.Add(new PressureCandidate { Entity = attacker.Enemy, DistanceSq = attacker.DistanceSq });
 
             foreach ((RefRO<LocalTransform> transform, EnabledRefRO<RespawnRequest> respawnRequest,
                          RefRO<EnemyLaunchState> launchState, RefRO<EnemyArchetype> archetype,
@@ -78,7 +83,7 @@ namespace CrowdPunch.Systems.AI
                         Archetype = archetype.ValueRO.Value
                     });
 
-                    if (playerSnapshot.IsAvailable && IsOrdinaryMelee(archetype.ValueRO.Value))
+                    if (!defending && playerSnapshot.IsAvailable && IsOrdinaryMelee(archetype.ValueRO.Value))
                     {
                         float3 toPlayer = transform.ValueRO.Position - playerSnapshot.Position;
                         toPlayer.y = 0f;
@@ -99,6 +104,8 @@ namespace CrowdPunch.Systems.AI
             JobHandle chaseJob = new EnemyChaseJob
             {
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
+                Defending = defending,
+                Objective = objective,
                 Now = SystemAPI.Time.ElapsedTime,
                 PlayerSnapshot = playerSnapshot,
                 ArenaBounds = arenaBounds,
@@ -171,6 +178,8 @@ namespace CrowdPunch.Systems.AI
         [WithNone(typeof(RespawnRequest))]
         private partial struct EnemyChaseJob : IJobEntity
         {
+            public bool Defending;
+            public ProtectedPoint Objective;
             [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
             public double Now;
             public PlayerSnapshot PlayerSnapshot;
@@ -220,6 +229,18 @@ namespace CrowdPunch.Systems.AI
                     movementSettings.SeparationWeight,
                     archetypeSeparationDistances);
 
+                bool committed = archetype.Value == EnemyArchetypeKind.Baseline
+                    && (contactAttempt.IsAttempting != 0 || contactAttempt.IsWindingUp != 0);
+                if (Defending && !IsPressureEnemy(entity) && !committed)
+                {
+                    EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
+                    float3 destination = new float3(Objective.Center.x, transform.Position.y, Objective.Center.y);
+                    desiredMovement.Direction = math.normalizesafe(math.normalizesafe(destination - transform.Position) + separation);
+                    desiredMovement.Speed = Objective.Failed ? 0 : movementSettings.MoveSpeed;
+                    navigation = NavigationIntent.Travel(destination, desiredMovement.Speed, 0, separation);
+                    return;
+                }
+
                 if (archetype.Value == EnemyArchetypeKind.Armored)
                 {
                     EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
@@ -232,7 +253,7 @@ namespace CrowdPunch.Systems.AI
                 }
                 bool explosiveInContactRange = archetype.Value == EnemyArchetypeKind.Explosive
                     && distanceToPlayer <= math.max(0f, contactSettings.AttemptDistance);
-                if (IsPressureEnemy(entity) || explosiveInContactRange)
+                if (IsPressureEnemy(entity) || explosiveInContactRange || Defending && committed)
                 {
                     bool usesCommitment = archetype.Value == EnemyArchetypeKind.Baseline
                         && contactSettings.AttemptWindUpDuration > 0f;

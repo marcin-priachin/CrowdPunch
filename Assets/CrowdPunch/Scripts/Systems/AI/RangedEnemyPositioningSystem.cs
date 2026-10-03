@@ -45,13 +45,19 @@ namespace CrowdPunch.Systems.AI
                 }
             }
 
+            var attackers = SystemAPI.HasSingleton<ProtectedPoint>() ? SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true).ToNativeArray(Allocator.TempJob)
+                : new NativeArray<ProtectedPointAttacker>(0, Allocator.TempJob);
             state.Dependency = new PositioningJob
             {
                 Player = player,
+                Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
+                Attackers = attackers,
+                Attacks = SystemAPI.GetComponentLookup<RangedAttackState>(true),
                 Grid = grid,
                 ActiveEnemies = activeEnemies.AsDeferredJobArray()
             }.ScheduleParallel(state.Dependency);
             state.Dependency = activeEnemies.Dispose(state.Dependency);
+            state.Dependency = attackers.Dispose(state.Dependency);
         }
 
         [BurstCompile]
@@ -60,10 +66,14 @@ namespace CrowdPunch.Systems.AI
         private partial struct PositioningJob : IJobEntity
         {
             public PlayerSnapshot Player;
+            public bool Defending;
+            [ReadOnly] public NativeArray<ProtectedPointAttacker> Attackers;
+            [ReadOnly] public ComponentLookup<RangedAttackState> Attacks;
             public NavigationGrid Grid;
             [ReadOnly] public NativeArray<EnemySeparationNeighbor> ActiveEnemies;
 
             private void Execute(
+                Entity entity,
                 ref DesiredMovement movement,
                 ref NavigationIntent navigation,
                 ref RangedPositioningState positioning,
@@ -74,6 +84,14 @@ namespace CrowdPunch.Systems.AI
                 in EnemyLaunchState launchState,
                 in LocalTransform transform)
             {
+                if (Defending && launchState.Phase == EnemyLaunchPhase.Active && Player.IsAvailable)
+                {
+                    if (ProtectedPointAttacker.Contains(Attackers, entity)
+                        || Attacks.HasComponent(entity) && Attacks[entity].Phase == RangedAttackPhase.WindUp)
+                    { movement = default; navigation = default; positioning.Mode = RangedPositioningMode.Hold; }
+                    else positioning.Mode = RangedPositioningMode.Approach;
+                    return;
+                }
                 navigation = default;
                 if (launchState.Phase != EnemyLaunchPhase.Active || !Player.IsAvailable)
                 {

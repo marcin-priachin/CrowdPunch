@@ -78,6 +78,22 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-03 - Protected Point And Gauntlet_18
+
+Decision: Adopt the final decisions from Codex chat 01a1025f-eb6f-76e2-8618-83032c5bf7df:
+32 x 96m arena, marked 8 x 4m end zone, opposite-end spawning, closest three in-range
+player attackers, Active-only disappearing breaches, first-breach defeat by default,
+and finite 16/24/32 waves in batches of four every three seconds with five-second cleared-wave pauses.
+The later answer in the implementation chat preserves already committed attacks when selection changes.
+PROTECT-001..004 are authoritative. The earlier route-blocking-only alternative is superseded.
+
+Implementation details: XZ root-centre zone inclusion, existing per-archetype attack ranges,
+three-second opening delay, player entry 12m from the defended border, and the existing pause
+menu for defeat/retry. Zone geometry belongs to scene authoring; threshold and attack cap
+belong to a dedicated settings asset. No replenishment or Wizard-hazard completion gate is
+enabled in these finite waves. Balance, art, camera and OQ-001 performance targets remain
+playtest work; this does not resolve the broader run-duration or progression questions.
+
 ### 2026-10-03 - Optional Guaranteed Wizard Casting
 
 Decision: Expose Cast Whenever In Range, default off (WIZARD-002). When enabled, a ready
