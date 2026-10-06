@@ -2,6 +2,7 @@ using CrowdPunch.Components;
 using CrowdPunch.Systems.AI;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Lifetime;
+using CrowdPunch.Systems.Initialization;
 using NUnit.Framework;
 using Unity.Core;
 using Unity.Entities;
@@ -107,6 +108,39 @@ namespace CrowdPunch.Tests
             var scene = em.CreateEntity(); var r = em.GetComponentData<TrailSource>(record); r.SceneOwner = scene; em.SetComponentData(record, r);
             em.DestroyEntity(scene); world.GetExistingSystem<TrailExpirySystem>().Update(world.Unmanaged);
             Assert.That(em.Exists(section), Is.False); Assert.That(em.Exists(record), Is.False);
+        }
+
+        [TestCase(EnemyWaveRuntimePhase.AwaitingActivation, 0, true)]
+        [TestCase(EnemyWaveRuntimePhase.AwaitingActivation, 1, false)]
+        [TestCase(EnemyWaveRuntimePhase.Spawning, 0, false)]
+        [TestCase(EnemyWaveRuntimePhase.PreWaveDelay, 0, false)]
+        [TestCase(EnemyWaveRuntimePhase.Complete, 0, true)]
+        public void Trail007_ClearSectionsAndClocksOnlyAfterAllSpawnedEnemiesDefeated(EnemyWaveRuntimePhase phase, int remaining, bool clears)
+        {
+            Entity sequence = em.CreateEntity(typeof(EnemyWaveSequence));
+            em.SetComponentData(sequence, new EnemyWaveSequence { RunGeneration = 1, Phase = phase, UndefeatedCount = remaining });
+            var owner = em.GetComponentData<TrailSource>(record); owner.Sequence = sequence; owner.RunGeneration = 1;
+            owner.ExpiresAt = 60; em.SetComponentData(record, owner);
+            world.GetOrCreateSystem<TrailWaveCleanupSystem>().Update(world.Unmanaged);
+            Assert.That(em.Exists(section), Is.EqualTo(!clears));
+            Assert.That(em.Exists(record), Is.EqualTo(!clears), "Shared damage clocks must clear with their sections");
+        }
+
+        [Test] public void Trail007_UnexpiredTrailsCannotBlockClearedWaveAdvancement()
+        {
+            using var physics = new PhysicsWorld(0, 0, 0);
+            em.AddComponentData(em.CreateEntity(), new PhysicsWorldSingleton { PhysicsWorld = physics });
+            Entity sequence = em.CreateEntity(typeof(EnemyWaveSequence), typeof(EnemyWaveEncounterComplete));
+            em.SetComponentData(sequence, new EnemyWaveSequence { RunGeneration = 1, Initialized = 1,
+                Phase = EnemyWaveRuntimePhase.AwaitingActivation, UndefeatedCount = 0, DefeatedCount = 1 });
+            var waves = em.AddBuffer<EnemyWaveDefinition>(sequence);
+            waves.Add(new EnemyWaveDefinition { ActivationMode = 2, TotalEnemyCount = 1, WaitForPersistentHazards = 1 });
+            waves.Add(new EnemyWaveDefinition { DelayBeforeWave = 3 });
+            em.AddBuffer<EnemyWaveProfile>(sequence); em.AddBuffer<EnemyWaveEliteProfile>(sequence); em.AddBuffer<EnemyWaveSpawnRange>(sequence);
+            var owner = em.GetComponentData<TrailSource>(record); owner.Sequence = sequence; owner.RunGeneration = 1;
+            owner.ExpiresAt = 60; em.SetComponentData(record, owner);
+            world.GetOrCreateSystem<EnemyWaveSpawnSystem>().Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<EnemyWaveSequence>(sequence).CurrentWaveIndex, Is.EqualTo(1));
         }
     }
 }

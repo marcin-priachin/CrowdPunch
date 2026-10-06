@@ -106,9 +106,6 @@ namespace CrowdPunch.Systems.Initialization
                         foreach (var zone in SystemAPI.Query<RefRO<WizardZone>>())
                             if (zone.ValueRO.Sequence == sequenceEntity && zone.ValueRO.RunGeneration == sequence.RunGeneration &&
                                 zone.ValueRO.WaveIndex <= sequence.CurrentWaveIndex && now < zone.ValueRO.ExpiresAt) shouldAdvance = false;
-                        foreach (var source in SystemAPI.Query<RefRO<TrailSource>>())
-                            if (source.ValueRO.Sequence == sequenceEntity && source.ValueRO.RunGeneration == sequence.RunGeneration &&
-                                source.ValueRO.WaveIndex <= sequence.CurrentWaveIndex && now < source.ValueRO.ExpiresAt) shouldAdvance = false;
                     }
                     if (shouldAdvance)
                     {

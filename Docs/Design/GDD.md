@@ -809,7 +809,7 @@ Both trail types share one visual style with distinct colors, show the full dama
 
 Status: Must
 
-Append one open compact arena as Gauntlet_19 after Hold the Line. Its editable finite waves contain six Baselines plus one Trail, then twelve Baselines plus two Trails. No Baseline replenishment occurs. Both wave advancement and final completion wait for all enemies to be defeated and remaining trails to expire.
+Append one open compact arena as Gauntlet_19 after Hold the Line. Its editable finite waves contain six Baselines plus one Trail, then twelve Baselines plus two Trails. No Baseline replenishment occurs. Once all enemies are defeated, remove remaining trails and their damage tracking immediately. Trails do not delay wave advancement or final completion. Sections otherwise retain their independent lifetimes under TRAIL-002.
 
 ### INFO-001 — No Persistent Normal-Enemy UI
 

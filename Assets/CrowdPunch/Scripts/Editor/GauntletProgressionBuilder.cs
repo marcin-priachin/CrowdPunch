@@ -340,7 +340,7 @@ namespace CrowdPunch.Editor
             int[] counts={recipe.B,recipe.R,recipe.X,recipe.D,0,recipe.A,recipe.Wizard,recipe.Trail};
             data.FindProperty("totalEnemyCount").intValue=recipe.B+recipe.R+recipe.X+recipe.D+recipe.A+recipe.Wizard+recipe.Trail;
             data.FindProperty("wizardAmmunitionProfile").objectReferenceValue = recipe.Wizard > 0 ? profiles[0] : null;
-            data.FindProperty("waitForPersistentHazards").boolValue = recipe.Wizard > 0 || recipe.Trail > 0;
+            data.FindProperty("waitForPersistentHazards").boolValue = recipe.Wizard > 0;
             data.FindProperty("armoredAmmunitionProfile").objectReferenceValue = recipe.A > 0 ? profiles[0] : null;
             var entries=data.FindProperty("enemies");
             entries.ClearArray();

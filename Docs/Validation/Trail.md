@@ -10,7 +10,7 @@ Date: 2026-10-06. Requirements: TRAIL-001..007, COMBAT-010/011/014/018, PLAYER-0
   Normal width/lifetime/damage: 1.2m / 5s / 4. Launched: 2m / 6s / 8. Tick .75s, player protection .35s,
   circling 8m, orbit/approach/retreat 3 / 3.5 / 4 m/s, reversal 4s. Colors are green and orange.
 - Gauntlet_19 Slippery Circuit follows Hold the Line in Bootstrap, selector and Build Settings.
-  The compact open court has editable finite 6+1 and 12+2 waves, no Baseline supply, and hazard waiting.
+  The compact open court has editable finite 6+1 and 12+2 waves, no Baseline supply, and immediate trail cleanup on full enemy defeat.
 
 ## Completed checks
 
@@ -33,7 +33,7 @@ Controlled baked-world `TrailPlayCheck` ran in actual advancing Play mode (frame
   Source death/reuse preserves old sections and ownership. The project has no numeric reward economy;
   ownership and lethal source lifetime/chain depth are retained in EnemyDamageState.
 - The dedicated player bridge bypasses ordinary hit protection and delivers zero impulse.
-- Real restart clears old clocks/sections; first-wave advancement and final completion wait for expiry.
+- Real restart clears old clocks/sections; first-wave advancement and final completion clear trails without waiting for expiry.
 
 The same full check passed after replacing repeated physics-candidate lookups with a snapshot/spatial grid.
 Game-camera renders were inspected for the Fish model, green normal trail, wider orange launched trail,
@@ -42,10 +42,17 @@ Logs: `Temp/TrailValidation/playcheck.txt`. States/positions/defeats were delibe
 player restored; these checks do not establish encounter balance or a human controller playtest.
 
 Unity EditMode regressions passed: 24 GauntletProgression, 29 Wizard, 20 ArmoredEnemy,
-1 EnemyLandingLifetime, 7 EnemyPrefabCollisionContact, and 10 TrailInteraction cases (91 total).
+1 EnemyLandingLifetime, 7 EnemyPrefabCollisionContact, and 16 TrailInteraction cases (97 total).
 Focused Trail cases cover intact armor and its clock, elite damage without force/launch, boss/environment
 exclusion, lethal damage without explosive detonation, independent player protection/source stacking,
 pooled target clocks, committed Dasher/launched avoidance exemptions, source death and scene-owner cleanup.
+The follow-up TRAIL-007 correction adds cases for immediate section/clock cleanup, preserving trails
+while enemies remain, ignoring empty spawn-batch gaps, and advancing despite unexpired trails.
+The revised baked-world check injects 60-second trails before clearing each wave and verifies they
+disappear instead of delaying the second wave or final completion. Wizard hazard waiting remains unchanged.
+`TrailPlayCheck.StartClearProgression()` passed with the user's current authored tuning; it does not
+require or replace the original tuning defaults. All 16 Trail interaction tests and 29 Wizard
+regressions passed after this correction, and the serial runtime build reported zero errors.
 
 ## Crowd cost
 

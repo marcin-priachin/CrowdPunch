@@ -27,6 +27,7 @@ namespace CrowdPunch.Editor
     public static class TrailPlayCheck
     {
         private const string Key = "CrowdPunch.TrailCheck";
+        private const string ClearOnlyKey = "CrowdPunch.TrailClearOnly";
         private const string Output = "Temp/TrailValidation/playcheck.txt";
         private static int step;
         private static double since, simSince;
@@ -35,6 +36,7 @@ namespace CrowdPunch.Editor
         static TrailPlayCheck() { since = EditorApplication.timeSinceStartup; EditorApplication.update += Tick; }
         public static void Start()
         {
+            SessionState.SetBool(ClearOnlyKey, false);
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode first.");
             Directory.CreateDirectory("Temp/TrailValidation");
             File.WriteAllText(Output, "TRAIL-001..007 controlled baked-world validation. Injected states; not a balance playtest.\n");
@@ -42,6 +44,11 @@ namespace CrowdPunch.Editor
             step = 0; since = EditorApplication.timeSinceStartup;
             SessionState.SetBool(Key, true); EditorApplication.isPaused = false;
             EditorApplication.isPlaying = true;
+        }
+        public static void StartClearProgression()
+        {
+            Start();
+            SessionState.SetBool(ClearOnlyKey, true);
         }
         public static void Stop() => SessionState.SetBool(Key, false);
         private static void Tick()
@@ -74,6 +81,11 @@ namespace CrowdPunch.Editor
                 foreach (var e in enemies)
                     if (em.HasComponent<TrailEmitter>(e)) { source = e; trails++; } else baselines++;
                 Require(trails == 1 && baselines == 6, "Opening 6+1 composition");
+                if (SessionState.GetBool(ClearOnlyKey, false))
+                {
+                    Record("PASS actual 6+1 baked wave with current authored tuning");
+                    Next(3, world); return;
+                }
                 var settings = em.GetComponentData<TrailSettings>(source);
                 Require(settings.EnemyDamage == TrailEnemyDamageMode.Both && settings.Immunity == TrailImmunityMode.OwnSource &&
                     settings.Avoidance == TrailAvoidanceMode.DamagingTrails, "Baked defaults");
@@ -112,29 +124,29 @@ namespace CrowdPunch.Editor
                 using var values = records.ToComponentDataArray<TrailSource>(Allocator.Temp);
                 foreach (var r in values) Require(r.RunGeneration == sequence.RunGeneration, "Stale restart record");
                 foreach (var e in enemies) Defeat(em, e);
-                InjectGate(em, sequenceEntity, sequence, world.Time.ElapsedTime + 1.5);
-                Record("PASS restart removes old source clocks and sections; injected wave-one defeat + expiry gate");
+                InjectGate(em, sequenceEntity, sequence, world.Time.ElapsedTime + 60);
+                Record("PASS restart removes old source clocks and sections; injected wave-one defeat + 60-second trails");
                 Next(4, world); return;
             }
             if (step == 4)
             {
                 if (world.Time.ElapsedTime - simSince < 1)
-                { Require(sequence.CurrentWaveIndex == 0, "Wave advanced before trail expiry"); return; }
+                { if (world.Time.ElapsedTime - simSince > .1) { using var oldTrails = em.CreateEntityQuery(typeof(TrailSection)); Require(oldTrails.IsEmpty, "Trails remained after wave clear"); } return; }
                 if (sequence.CurrentWaveIndex != 1 || sequence.Phase != EnemyWaveRuntimePhase.AwaitingActivation) return;
                 int trails = 0, living = 0;
                 foreach (var e in enemies) if (em.GetComponentData<EnemyLaunchState>(e).Phase != EnemyLaunchPhase.Defeated && !em.IsComponentEnabled<RespawnRequest>(e))
                 { living++; if (em.HasComponent<TrailEmitter>(e)) trails++; }
                 Require(living == 14 && trails == 2, "Second wave 12+2 / no replenishment");
                 foreach (var e in enemies) Defeat(em, e);
-                InjectGate(em, sequenceEntity, sequence, world.Time.ElapsedTime + 1.5);
-                Record("PASS wave-one expiry gate and actual second 12+2 finite wave"); Next(5, world); return;
+                InjectGate(em, sequenceEntity, sequence, world.Time.ElapsedTime + 60);
+                Record("PASS trails clear on defeat and actual second 12+2 finite wave"); Next(5, world); return;
             }
             if (step == 5)
             {
-                if (world.Time.ElapsedTime - simSince < 1)
-                { Require(!flow.RunComplete, "Final completion before trail expiry"); return; }
                 if (!flow.RunComplete) return;
-                Record("PASS final completion after all bodies defeated and trails expire");
+                using var oldTrails = em.CreateEntityQuery(typeof(TrailSection));
+                Require(oldTrails.IsEmpty, "Final trails remained after clear");
+                Record("PASS final completion clears trails without waiting for expiry");
                 Stop(); EditorApplication.isPaused = true;
             }
         }

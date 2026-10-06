@@ -1404,7 +1404,10 @@ All baked enemies have `EnemyLifetime`, incremented at pooling and restart. A de
 stores source entity + lifetime, scene/sequence/run/wave ownership, latest expiry and a
 `TrailDamageTarget` buffer. Sections share this record across normal/launch transitions. Source
 death, pooling and reuse never remove or mutate old sections. The record outlives its enemy and
-expires when its last section does. Scene/run invalidation and `GameRestartSystem` remove both
+expires when its last section does. `TrailWaveCleanupSystem` runs after defeat counting and removes
+sections and source clocks immediately once a fully spawned finite encounter has no undefeated enemies.
+It does not mistake empty spawn-batch gaps for wave clearance or interrupt objective-owned replenishing crowds.
+Scene/run invalidation and `GameRestartSystem` remove both
 records and sections, plus pending player hits.
 
 `TrailDamageSystem` runs after emission and Wizard-zone damage, before recovery. It snapshots eligible
@@ -1440,7 +1443,8 @@ Each retains full width while alpha fades through the last 35% of its lifetime.
 
 **Crowd Punch > Levels > Build Trail Gauntlet 19** authors only Slippery Circuit: an open 32 x 34m
 clipped court, 6 Baselines + 1 Trail then 12 Baselines + 2 Trails. Waves use guaranteed counts,
-no ammunition supply, and persistent-hazard waiting. `EnemyWaveSpawnSystem` now includes TrailSource
-expiry in the existing optional hazard gate. Bootstrap/build/selector append 19 after Hold the Line.
+no ammunition supply, and no Trail expiry gate. Trail cleanup on defeat lets wave advancement and final
+completion proceed without waiting; the optional Wizard-zone hazard gate remains unchanged.
+Bootstrap/build/selector append 19 after Hold the Line.
 Starting tuning is 1.2m/5s/4 damage normal, 2m/6s/8 damage launched, .75s ticks, .35s player
 protection, 8m circling distance and 4s reversals. See [Trail validation](../Validation/Trail.md).

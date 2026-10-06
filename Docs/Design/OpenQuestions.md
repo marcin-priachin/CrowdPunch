@@ -78,6 +78,13 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-06 - Clear Trails On Wave Defeat
+
+Decision: The implementation-chat correction supersedes the original Trail expiry gate.
+When all spawned enemies in a finite wave are defeated, clear its remaining trails and
+shared damage clocks immediately. Trails must not block wave advancement or final completion
+(TRAIL-007). Keep independent lifetimes while enemies remain and preserve Wizard-zone rules.
+
 ### 2026-10-06 - Trail Enemy And Gauntlet_19
 
 Decision: Adopt the final agreed design in conversation 6ac3dbb3-6c8c-83eb-b491-f5d389645abf.
