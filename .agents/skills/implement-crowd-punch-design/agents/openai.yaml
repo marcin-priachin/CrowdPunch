@@ -1,0 +1,14 @@
+interface:
+  display_name: Implement Crowd Punch Design
+  short_description: Implement agreed gameplay from a design conversation
+  default_prompt: Use $implement-crowd-punch-design to implement the attached design
+    conversation in the current Crowd Punch repository.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
