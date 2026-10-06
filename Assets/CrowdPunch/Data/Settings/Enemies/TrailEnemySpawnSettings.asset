@@ -18,11 +18,11 @@ MonoBehaviour:
   initialCount: 250
   radius: 20
   respawnEnabled: 0
-  moveSpeed: 4
-  wanderSpeed: 1.5
+  moveSpeed: 64
+  wanderSpeed: 64
   chargeDistance: 12
   chargeSpeedMultiplier: 1.75
-  acceleration: 12
+  acceleration: 32
   brakingAcceleration: 8
   turnSpeed: 12
   stoppingDistance: 1.25

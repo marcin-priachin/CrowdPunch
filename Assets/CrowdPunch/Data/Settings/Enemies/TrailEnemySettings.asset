@@ -13,21 +13,21 @@ MonoBehaviour:
   m_Name: TrailEnemySettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.TrailEnemySettings
   settings:
-    EnemyDamage: 1
-    Immunity: 0
+    EnemyDamage: 0
+    Immunity: 1
     Avoidance: 1
     NormalWidth: 1.2
-    NormalLifetime: 5
+    NormalLifetime: 10
     NormalDamage: 4
     LaunchedWidth: 2
     LaunchedLifetime: 6
     LaunchedDamage: 8
     TickInterval: 0.75
     PlayerProtection: 0.35
-    CirclingDistance: 8
-    OrbitSpeed: 3
-    ApproachSpeed: 3.5
-    RetreatSpeed: 4
+    CirclingDistance: 4
+    OrbitSpeed: 64
+    ApproachSpeed: 64
+    RetreatSpeed: 64
     ReversalInterval: 4
     SectionSpacing: 0.4
     MinimumSpeed: 0.05
