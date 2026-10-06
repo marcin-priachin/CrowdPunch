@@ -83,7 +83,8 @@ namespace CrowdPunch.Configuration
         [Header("Wizard wave options")]
         [SerializeField] private EnemySpawnSettings wizardAmmunitionProfile;
         [SerializeField, Min(0)] private float wizardAmmunitionDelay = 2;
-        [SerializeField] private bool waitForPersistentHazards;
+        [SerializeField, Tooltip("Wait for owned Wizard zones and Trail sections to expire before advancing or completing.")]
+        private bool waitForPersistentHazards;
         [SerializeField, Min(0), Tooltip("Zero is unlimited. Applies to weighted Wizard selection; guaranteed counts must fit the cap.")]
         private int maximumWizardsAlive;
         public EnemySpawnSettings WizardAmmunitionProfile => wizardAmmunitionProfile;

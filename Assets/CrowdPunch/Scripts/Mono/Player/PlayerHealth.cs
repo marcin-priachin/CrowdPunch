@@ -51,6 +51,7 @@ namespace CrowdPunch.Mono.Player
             {
                 ecsBridge.EnemyContactHitReceived += TryApplyEnemyContactHit;
                 ecsBridge.WizardHitReceived += ApplyWizardHit;
+                ecsBridge.TrailDamageReceived += ApplyTrailDamage;
             }
         }
 
@@ -60,6 +61,7 @@ namespace CrowdPunch.Mono.Player
             {
                 ecsBridge.EnemyContactHitReceived -= TryApplyEnemyContactHit;
                 ecsBridge.WizardHitReceived -= ApplyWizardHit;
+                ecsBridge.TrailDamageReceived -= ApplyTrailDamage;
             }
         }
 
@@ -102,6 +104,13 @@ namespace CrowdPunch.Mono.Player
             if (currentHealth <= 0) return;
             ApplyDamage(amount);
             DamageAccepted?.Invoke(impulse);
+        }
+
+        private void ApplyTrailDamage(float amount)
+        {
+            if (currentHealth <= 0 || amount <= 0) return;
+            ApplyDamage(amount);
+            DamageAccepted?.Invoke(Vector3.zero);
         }
 
         private void SetHealth(float value)

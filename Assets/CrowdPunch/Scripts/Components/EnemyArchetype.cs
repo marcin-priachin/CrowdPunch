@@ -10,7 +10,8 @@ namespace CrowdPunch.Components
         Dasher,
         Elite,
         Armored = 5,
-        Wizard = 6
+        Wizard = 6,
+        Trail = 7
     }
 
     /// <summary>Explicit spawn selection used without relying on prefab or presentation names.</summary>

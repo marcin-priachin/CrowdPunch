@@ -75,6 +75,13 @@ namespace CrowdPunch.Systems.Lifetime
                     health.ValueRW.Current = health.ValueRO.Max;
                     healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
                     damageState.ValueRW = default;
+                    var lifetime = SystemAPI.GetComponent<EnemyLifetime>(enemy);
+                    lifetime.Generation++;
+                    if (lifetime.Generation == 0) lifetime.Generation = 1;
+                    SystemAPI.SetComponent(enemy, lifetime);
+                    if (SystemAPI.HasComponent<TrailEmitter>(enemy))
+                        SystemAPI.SetComponent(enemy, new TrailEmitter { OrbitSign = 1,
+                            ReverseRemaining = SystemAPI.GetComponent<TrailSettings>(enemy).ReversalInterval });
                     if (SystemAPI.HasComponent<EnemyContactAttemptState>(enemy))
                     {
                         SystemAPI.SetComponent(enemy, new EnemyContactAttemptState());

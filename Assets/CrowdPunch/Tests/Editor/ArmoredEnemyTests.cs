@@ -42,7 +42,7 @@ namespace CrowdPunch.Tests
                 typeof(EnemyDamageState), typeof(PhysicsVelocity), typeof(LocalTransform), typeof(DamageRequest),
                 typeof(ExternalImpulse), typeof(DeathRequest), typeof(RespawnRequest), typeof(EnemyHealthBarVisibility),
                 typeof(EnemyContactDamageSettings), typeof(KnockbackResponse), typeof(DesiredMovement), typeof(HealthBar),
-                typeof(KnockbackRecovery), typeof(EnemyRespawnSettings));
+                typeof(KnockbackRecovery), typeof(EnemyRespawnSettings), typeof(EnemyLifetime));
             em.SetComponentData(e, LocalTransform.FromPosition(position));
             em.SetComponentData(e, new Health { Current = 100, Max = 100 });
             em.SetComponentData(e, new EnemyContactDamageSettings { ContactRadius = .5f });

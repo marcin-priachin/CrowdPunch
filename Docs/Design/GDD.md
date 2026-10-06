@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-03
+Last updated: 2026-10-06
 
 ## How To Read This Document
 
@@ -769,6 +769,48 @@ spawn, and remain if already spawned. Weighted Wizard rolls at cap reroll eligib
 weighted archetypes without delaying/skipping the spawn. Gauntlet_17 enables both safeguards
 and uses fixed authored Wizard counts. Later waves can use Wizard as an ordinary weighted type.
 
+### TRAIL-001 - Circling Crowd Weapon
+
+Status: Must
+
+Trail is a standard enemy with Baseline health. It circles the player at medium distance and periodically reverses direction. It has no normal contact attack. Ordinary punches, dash-punches, launching, propagation, recovery, aim assistance and trajectory previews remain available.
+
+### TRAIL-002 - Persistent Ground Sections
+
+Status: Must
+
+Only moving Active or Launched Trail enemies produce sections. Stationary, Recovering and Defeated enemies produce none. Launched trails project onto ground beneath the flight path. Sections activate immediately, expire independently after a fixed lifetime, and retain their original damage, immunity and ownership through source launch, recovery, death or pooling. Pooled lifetimes have distinct source identities. Restart and scene exit clear trails and damage tracking.
+
+### TRAIL-003 - Damage And Timing
+
+Status: Must
+
+Trail overlap uses XZ distance and target radius, ignoring target height. Trail deals damage only, without push, slow or launch. First eligible contact damages immediately; continued contact ticks at the configured interval. Every target shares one cooldown per source lifetime across all sections, including normal and launched sections. Exit/reentry retains that cooldown; overlapping sections cannot multiply damage. Different sources stack independently. Player protection is trail-specific; ordinary invulnerability and dash do not block trail damage.
+
+### TRAIL-004 - Eligibility And Credit
+
+Status: Must
+
+Intact armor is immune; elites receive damage. Boss parts and puzzle/environment objects are unaffected. Damage alone never detonates Exploders, launches targets or propagates a launch chain. Player-owned launched sections receive player kill and chain-reward credit; normal and enemy-owned launched sections receive none. Shared launched deferred-defeat rules remain in force.
+
+### TRAIL-005 - Configurable Alternatives
+
+Status: Must
+
+A dedicated settings asset exposes enemy damage from launched sections only or both section types (default both); source immunity to own sections only, all trails of this enemy type, or none (default own only); and no avoidance or avoidance of damaging trails (default avoidance). Launched enemies and committed Dashers ignore avoidance. Existing obstacle navigation remains relevant. Normal and launched width, lifetime and damage are separate settings. Damage interval, player protection, circling distance, movement speeds and reversal interval are tunable. Starting numeric values are delegated implementation/playtest tuning.
+
+### TRAIL-006 - Readability
+
+Status: Must
+
+Both trail types share one visual style with distinct colors, show the full damaging width and fade toward expiry. Use Blob/Fish.fbx supplied by the user, with suitable existing animations. Placeholder colors and animation choices are delegated. Add no individual normal-enemy health bars or other HUD elements.
+
+### TRAIL-007 - Gauntlet_19
+
+Status: Must
+
+Append one open compact arena as Gauntlet_19 after Hold the Line. Its editable finite waves contain six Baselines plus one Trail, then twelve Baselines plus two Trails. No Baseline replenishment occurs. Both wave advancement and final completion wait for all enemies to be defeated and remaining trails to expire.
+
 ### INFO-001 — No Persistent Normal-Enemy UI
 
 Status: Must
@@ -905,7 +947,7 @@ One complete boss encounter that proves crowd-mediated boss interaction.
 
 Status: Must
 
-Six standard enemy types: Baseline, Explosive, Ranged, Dasher, Armored, and Wizard. Elite enemies are an additional special encounter layer and do not count toward the six standard enemy types. Their distribution across gauntlets remains encounter-pacing and tuning work.
+Seven standard enemy types: Baseline, Explosive, Ranged, Dasher, Armored, Wizard, and Trail. Elite enemies are an additional special encounter layer and do not count toward the seven standard enemy types. Their distribution across gauntlets remains encounter-pacing and tuning work.
 
 ### MVP-004 — Weapons
 

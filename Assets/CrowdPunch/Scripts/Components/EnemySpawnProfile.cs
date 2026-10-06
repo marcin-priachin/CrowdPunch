@@ -14,6 +14,7 @@ namespace CrowdPunch.Components
         public EnemyArchetypeSeparationSettings ArchetypeSeparationSettings;
         public EnemyArmorSettings ArmorSettings;
         public WizardSettings WizardSettings;
+        public TrailSettings TrailSettings;
         public Health Health;
         public EnemyContactDamageSettings ContactDamageSettings;
         public RangedEnemySettings RangedSettings;

@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0b050ffe6236e34aa3a0321c194a92d, type: 3}
+  m_Name: TrailEnemySettings
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.TrailEnemySettings
+  settings:
+    EnemyDamage: 1
+    Immunity: 0
+    Avoidance: 1
+    NormalWidth: 1.2
+    NormalLifetime: 5
+    NormalDamage: 4
+    LaunchedWidth: 2
+    LaunchedLifetime: 6
+    LaunchedDamage: 8
+    TickInterval: 0.75
+    PlayerProtection: 0.35
+    CirclingDistance: 8
+    OrbitSpeed: 3
+    ApproachSpeed: 3.5
+    RetreatSpeed: 4
+    ReversalInterval: 4
+    SectionSpacing: 0.4
+    MinimumSpeed: 0.05
+    NormalColor:
+      x: 0.05
+      y: 0.85
+      z: 0.45
+      w: 0.55
+    LaunchedColor:
+      x: 1
+      y: 0.48
+      z: 0.08
+      w: 0.65

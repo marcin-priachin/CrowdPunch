@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-10-03
+Last inspected: 2026-10-06
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -19,7 +19,7 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_18` each contain their matching ECS SubScene. Eighteen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss, gauntlet 17 introduces Wizards, and gauntlet 18 introduces protected-point defense. The separate navigation validation scenes remain outside progression.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_19` each contain their matching ECS SubScene. Nineteen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss, gauntlet 17 introduces Wizards, gauntlet 18 introduces protected-point defense, and gauntlet 19 introduces Trail enemies. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
@@ -1377,3 +1377,70 @@ two wave assets and progression references. It introduces 6 Baselines + 1 Wizard
 12 Baselines + 2 Wizards in an open clipped court. Both waves enable delayed Baseline
 supply and wait for defeated enemies plus expired zones; Wizards themselves are finite.
 See [Wizard validation](../Validation/Wizard.md) for checks and remaining playtests.
+
+## Trail Enemy And Gauntlet_19 (TRAIL-001..007)
+
+Trail appends archetype value 7, stays Normal tier, and uses Baseline health. Its spawn profile
+references `Data/Settings/Enemies/TrailEnemySettings.asset`, a dedicated `TrailEnemySettings`
+ScriptableObject. Shared profile baking explicitly depends on that asset; spawning adds
+`TrailSettings` and `TrailEmitter`. Per-archetype separation overrides support Trail. Contact
+damage excludes it. The health-bar presentation bridge never publishes a Trail health bar.
+Ordinary punch, preview, homing, collision propagation and recovery paths are reused.
+
+`TrailCirclingSystem` runs after chase and elite support, before hazard avoidance/navigation.
+It writes a short tangential travel goal plus radial correction, preserves crowd separation,
+reverses periodically and respects an elite's projectile reservation. Navigation owns obstacle
+handling and `EnemyMovementSystem` owns velocity steering. No normal enemy transform movement
+or separate physics motor is introduced.
+
+Post-physics `TrailExpirySystem` removes expired or unloaded encounter data. `TrailEmissionSystem`
+runs after ground reconciliation/explosions and before recovery. It samples actual horizontal
+travel in Active/Launched only, emits capsule sections using an ECB, and projects endpoints onto
+upward-facing static surfaces below the body. Section spacing is bounded by width to keep paths
+continuous. Stationary/recovering/defeated states break the emission anchor. Each section snapshots
+width, damage, timing, color, immunity/avoidance, launch ownership and chain depth.
+
+All baked enemies have `EnemyLifetime`, incremented at pooling and restart. A detached `TrailSource`
+stores source entity + lifetime, scene/sequence/run/wave ownership, latest expiry and a
+`TrailDamageTarget` buffer. Sections share this record across normal/launch transitions. Source
+death, pooling and reuse never remove or mutate old sections. The record outlives its enemy and
+expires when its last section does. Scene/run invalidation and `GameRestartSystem` remove both
+records and sections, plus pending player hits.
+
+`TrailDamageSystem` runs after emission and Wizard-zone damage, before recovery. It snapshots eligible
+enemies' current post-physics positions, radius, lifetime and armor state into a temporary 4m spatial
+grid; exact capsule overlap uses XZ and target radius. Each target enters one grid cell, so broadphase
+candidate enumeration cannot duplicate a target. This avoids repeated EntityManager lookups per section
+and does not depend on pre-integration physics broadphase positions.
+Armor stages/protection, defeated/pooled enemies, bosses and non-enemy objects are excluded. One
+source/target-lifetime timer survives exit/reentry and prevents overlapping or adjacent sections
+from multiplying damage. Player uses a separate entry in that same source buffer with interval
+at least the trail-specific protection duration; independent source records stack. Damage uses
+the shared resolver with no velocity writes, launch transition or explosive request. Earlier
+pending damage resolves separately before trail damage so it cannot acquire trail credit.
+
+`EnemyDamageState` records last damage and lethal damage source lifetime, ownership and chain
+depth. Lethal trail credit survives deferred defeat and later source reuse without altering the
+target's launch ownership. The repository has no numeric score/reward economy; these fields retain
+player kill/chain attribution for the existing/future consumers without inventing progression.
+`TrailPlayerHitSystem` drains an ECS hit buffer into `PlayerEcsBridge.TrailDamageReceived`.
+`PlayerHealth` accepts damage independently from ordinary invulnerability, with zero impulse.
+
+`TrailAvoidanceSystem` runs after other hazard decisions and before navigation. A Burst parallel
+job filters damage eligibility, cheaply rejects distant section bounds, and adds the strongest
+local capsule repulsion to movement/navigation separation. It ignores launched bodies, committed
+Dashers and explicitly anchored/stopped behavior. The None mode leaves intent alone. It never
+makes trails solid or changes launched-body collision physics.
+
+`EnemyTrailPrefabBuilder` samples Fish Idle/Walk/Death into the established CPA3 skinning path,
+using the common Baseline animation state mapping and a stable green body tint. Root motion is
+disabled and the physical capsule provides collision contacts. `TrailPresentationSystem` batches
+all ground capsules into one reusable mesh/draw, with green normal and orange launched colors.
+Each retains full width while alpha fades through the last 35% of its lifetime.
+
+**Crowd Punch > Levels > Build Trail Gauntlet 19** authors only Slippery Circuit: an open 32 x 34m
+clipped court, 6 Baselines + 1 Trail then 12 Baselines + 2 Trails. Waves use guaranteed counts,
+no ammunition supply, and persistent-hazard waiting. `EnemyWaveSpawnSystem` now includes TrailSource
+expiry in the existing optional hazard gate. Bootstrap/build/selector append 19 after Hold the Line.
+Starting tuning is 1.2m/5s/4 damage normal, 2m/6s/8 damage launched, .75s ticks, .35s player
+protection, 8m circling distance and 4s reversals. See [Trail validation](../Validation/Trail.md).

@@ -90,6 +90,9 @@ namespace CrowdPunch.Editor
                     case EnemyArchetype.Wizard:
                         DrawSection("Wizard", new[] { "wizardSettings" });
                         break;
+                    case EnemyArchetype.Trail:
+                        DrawSection("Trail", new[] { "trailSettings" });
+                        break;
                     case EnemyArchetype.Ranged:
                         DrawSection("Ranged (provisional)", RangedProperties);
                         break;

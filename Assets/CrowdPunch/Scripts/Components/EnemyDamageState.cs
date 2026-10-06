@@ -9,5 +9,9 @@ namespace CrowdPunch.Components
     {
         public float LastDamageReceived;
         public byte IsDefeatDeferred;
+        public EnemyLaunchOwner LastDamageOwner, DefeatOwner;
+        public Entity LastDamageSource, DefeatSource;
+        public uint LastDamageSourceLifetime, DefeatSourceLifetime;
+        public int LastDamageChainDepth, DefeatChainDepth;
     }
 }

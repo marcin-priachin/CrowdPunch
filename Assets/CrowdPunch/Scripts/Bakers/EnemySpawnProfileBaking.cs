@@ -22,6 +22,7 @@ namespace CrowdPunch.Bakers
             }
 
             baker.DependsOn(settings);
+            if (settings.TrailSettingsAsset != null) baker.DependsOn(settings.TrailSettingsAsset);
             Entity enemyPrefab = settings.EnemyPrefab == null
                 ? Entity.Null
                 : baker.GetEntity(settings.EnemyPrefab, TransformUsageFlags.Dynamic);
@@ -41,6 +42,7 @@ namespace CrowdPunch.Bakers
                     Configuration.EnemyArchetype.Dasher => EnemyArchetypeKind.Dasher,
                     Configuration.EnemyArchetype.Armored => EnemyArchetypeKind.Armored,
                     Configuration.EnemyArchetype.Wizard => EnemyArchetypeKind.Wizard,
+                    Configuration.EnemyArchetype.Trail => EnemyArchetypeKind.Trail,
                     Configuration.EnemyArchetype.Elite => EnemyArchetypeKind.Elite,
                     _ => EnemyArchetypeKind.Baseline
                 },
@@ -49,6 +51,7 @@ namespace CrowdPunch.Bakers
                 ArchetypeSeparationSettings = settings.ArchetypeSeparationSettings,
                 ArmorSettings = settings.ArmorSettings,
                 WizardSettings = settings.WizardSettings,
+                TrailSettings = settings.TrailSettings,
                 Health = settings.Health,
                 ContactDamageSettings = settings.ContactDamageSettings,
                 RangedSettings = new RangedEnemySettings

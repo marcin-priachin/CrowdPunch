@@ -101,6 +101,8 @@ namespace CrowdPunch.Systems.Initialization
                 Dasher = NextDistance(settings.DasherMin, settings.DasherMax, ref random),
                 Wizard = NextDistance(settings.WizardMin, settings.WizardMax, ref random),
                 WizardWeight = math.max(0f, settings.WizardWeight),
+                Trail = NextDistance(settings.TrailMin, settings.TrailMax, ref random),
+                TrailWeight = math.max(0f, settings.TrailWeight),
                 Armored = NextDistance(settings.ArmoredMin, settings.ArmoredMax, ref random),
                 ArmoredWeight = math.max(0f, settings.ArmoredWeight),
                 DasherWeight = math.max(0f, settings.DasherWeight)
@@ -120,6 +122,16 @@ namespace CrowdPunch.Systems.Initialization
             in EnemySpawnProfile profile,
             ref Random random)
         {
+            if (profile.Archetype == EnemyArchetypeKind.Trail)
+            {
+                commandBuffer.AddComponent(enemy, profile.TrailSettings);
+                commandBuffer.AddComponent(enemy, new TrailEmitter
+                {
+                    ReverseRemaining = profile.TrailSettings.ReversalInterval,
+                    OrbitSign = random.NextBool() ? 1 : -1
+                });
+                return;
+            }
             if (profile.Archetype == EnemyArchetypeKind.Wizard)
             {
                 commandBuffer.AddComponent(enemy, profile.WizardSettings);

@@ -48,6 +48,7 @@ namespace CrowdPunch.Systems.Presentation
                 float3 body = kind switch
                 {
                     EnemyArchetypeKind.Wizard => new float3(.65f, .15f, 1f),
+                    EnemyArchetypeKind.Trail => new float3(.12f, .85f, .5f),
                     EnemyArchetypeKind.Ranged => new float3(0.06f, 0.55f, 1f),
                     EnemyArchetypeKind.Explosive => new float3(1f, 0.3f, 0.035f),
                     EnemyArchetypeKind.Elite => new float3(0.62f, 0.13f, 0.85f),

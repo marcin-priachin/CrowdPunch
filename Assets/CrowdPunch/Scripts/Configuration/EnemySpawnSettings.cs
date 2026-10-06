@@ -14,7 +14,8 @@ namespace CrowdPunch.Configuration
         Dasher,
         Elite,
         Armored = 5,
-        Wizard = 6
+        Wizard = 6,
+        Trail = 7
     }
 
     [Serializable]
@@ -181,6 +182,11 @@ namespace CrowdPunch.Configuration
         [Header("Wizard")]
         [SerializeField] private WizardSettings wizardSettings = WizardSettings.Default;
         public WizardSettings WizardSettings => wizardSettings;
+
+        [Header("Trail")]
+        [SerializeField] private TrailEnemySettings trailSettings;
+        public TrailEnemySettings TrailSettingsAsset => trailSettings;
+        public TrailSettings TrailSettings => trailSettings != null ? trailSettings.Settings : TrailSettings.Default;
 
         public GameObject EnemyPrefab => enemyPrefab;
         public GameObject RangedProjectilePrefab => rangedProjectilePrefab;

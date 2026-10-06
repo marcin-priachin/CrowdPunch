@@ -41,6 +41,9 @@ namespace CrowdPunch.Systems.Initialization
             }
             EntityQuery oldZones = SystemAPI.QueryBuilder().WithAll<WizardZone>().Build();
             EntityManager.DestroyEntity(oldZones);
+            EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<TrailSection>().Build());
+            EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<TrailSource>().Build());
+            foreach (var hits in SystemAPI.Query<DynamicBuffer<TrailPlayerHit>>()) hits.Clear();
             foreach (var (settings, cast) in SystemAPI.Query<RefRO<WizardSettings>, RefRW<WizardCastState>>())
                 cast.ValueRW = new WizardCastState { Remaining = settings.ValueRO.Cooldown, RandomState = math.max(1u, cast.ValueRO.RandomState) };
             foreach (var history in SystemAPI.Query<DynamicBuffer<WizardIncomingImpactHistory>>()) history.Clear();
@@ -135,6 +138,13 @@ namespace CrowdPunch.Systems.Initialization
                 health.ValueRW.Current = health.ValueRO.Max;
                 healthBar.ValueRW.Normalized = health.ValueRO.Normalized;
                 damageState.ValueRW = default;
+                var lifetime = SystemAPI.GetComponent<EnemyLifetime>(enemy);
+                lifetime.Generation++;
+                if (lifetime.Generation == 0) lifetime.Generation = 1;
+                SystemAPI.SetComponent(enemy, lifetime);
+                if (SystemAPI.HasComponent<TrailEmitter>(enemy))
+                    SystemAPI.SetComponent(enemy, new TrailEmitter { OrbitSign = 1,
+                        ReverseRemaining = SystemAPI.GetComponent<TrailSettings>(enemy).ReversalInterval });
                 SystemAPI.SetComponent(enemy, new EnemyGroundConstraint());
                 if (SystemAPI.HasComponent<NavigationPathState>(enemy))
                 {

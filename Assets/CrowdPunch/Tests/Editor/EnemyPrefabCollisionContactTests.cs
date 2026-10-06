@@ -11,6 +11,7 @@ namespace CrowdPunch.Tests
         [TestCase("Assets/CrowdPunch/Prefabs/EnemyRanged.prefab")]
         [TestCase("Assets/CrowdPunch/Prefabs/EnemyExplosive.prefab")]
         [TestCase("Assets/CrowdPunch/Prefabs/EnemyDasher.prefab")]
+        [TestCase("Assets/CrowdPunch/Prefabs/EnemyTrail.prefab")]
         [TestCase("Assets/CrowdPunch/Prefabs/EliteEnemy.prefab")]
         public void Combat002EnemyPrefabsProvideCollisionContacts(string prefabPath)
         {

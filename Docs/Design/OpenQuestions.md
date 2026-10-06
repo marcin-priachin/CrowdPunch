@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-03
+Last updated: 2026-10-06
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -77,6 +77,20 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-06 - Trail Enemy And Gauntlet_19
+
+Decision: Adopt the final agreed design in conversation 6ac3dbb3-6c8c-83eb-b491-f5d389645abf.
+TRAIL-001..007 record circling/reversal, persistent source-lifetime sections, horizontal
+damage-only overlap, shared source/target timers, independent source stacking, player-specific
+protection, immunity/avoidance alternatives, launch ownership credit and finite 6+1 / 12+2 waves.
+Both trail types damage enemies and the player by default. Own-source immunity and damaging-trail
+avoidance are defaults. Fish.fbx was supplied in this implementation chat.
+
+Rejected: normal contact attacks, trail force/slow/launch, height restrictions, dash immunity,
+trail-triggered Exploder detonation and Baseline replenishment. Numerical tuning, placeholder
+colors and suitable model animations were delegated. No significant Trail design question remains.
+OQ-001 performance targets, art/audio, broader pacing and progression remain unresolved.
 
 ### 2026-10-03 - Protected Point And Gauntlet_18
 

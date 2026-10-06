@@ -7,7 +7,8 @@ namespace CrowdPunch.Systems.Combat
     internal static class EnemyDamageResolution
     {
         // Shared by pre-physics requests and same-step Wizard ticks before recovery.
-        public static void ApplyPending(EntityManager em, Entity target, double now)
+        public static void ApplyPending(EntityManager em, Entity target, double now,
+            EnemyLaunchOwner owner = EnemyLaunchOwner.None, Entity source = default, int chainDepth = 0, uint sourceLifetime = 0)
         {
             if (!em.IsComponentEnabled<DamageRequest>(target)) return;
             var health = em.GetComponentData<Health>(target);
@@ -28,6 +29,16 @@ namespace CrowdPunch.Systems.Combat
             damage.LastDamageReceived = amount;
             if (amount > 0)
             {
+                damage.LastDamageOwner = owner;
+                damage.LastDamageSource = source;
+                damage.LastDamageSourceLifetime = sourceLifetime;
+                damage.LastDamageChainDepth = owner == EnemyLaunchOwner.Player ? chainDepth : 0;
+                if (health.Current <= 0)
+                {
+                    damage.DefeatOwner = owner; damage.DefeatSource = source;
+                    damage.DefeatSourceLifetime = sourceLifetime;
+                    damage.DefeatChainDepth = damage.LastDamageChainDepth;
+                }
                 em.SetComponentData(target, new EnemyHealthBarVisibility { SecondsRemaining = 1 });
                 em.SetComponentEnabled<EnemyHealthBarVisibility>(target, true);
             }
