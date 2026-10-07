@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-06
+Last updated: 2026-10-07
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -77,6 +77,20 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-07 - Chicken Boss And Gauntlet_20
+
+Decision: Adopt the agreed summary and explicit decisions in Boss Design Options,
+conversation 6ac52668-a844-83eb-b4aa-6ee463abf246. CHICKEN-001..008 record fleeing,
+single/paired stages, punchable bouncing shots, dangerous returned shots/chains, ownership
+gates, any-source explosion damage, combined Exploder hits and immediate boss-owned completion.
+The supplied Chicken.fbx is present. Gauntlet_19 already existed, so the next encounter is 20.
+
+Rejected: rush markers/warnings, proximity cancellation of committed shots, homing after
+wall bounce, direct-punch damage, boss-owned body damage, safe redirected shots/chains,
+enemy-contact shot consumption, retained returned shots on boss contact and survivor cleanup.
+Numbers, arena and minor visuals were delegated. No blocking Chicken design question remains;
+2-3 minute balance, art/audio, camera and representative performance targets still need validation.
 
 ### 2026-10-06 - Clear Trails On Wave Defeat
 

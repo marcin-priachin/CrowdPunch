@@ -103,6 +103,13 @@ namespace CrowdPunch.Systems.Combat
             float radiusSquared = radius * radius;
 
             uint blastSequence = SystemAPI.GetComponent<EnemyLaunchState>(explosive).LaunchSequence;
+            foreach (var (chicken, chickenPose, target) in
+                SystemAPI.Query<RefRO<ChickenTuning>, RefRO<LocalTransform>>().WithAll<ChickenBoss>().WithEntityAccess())
+            {
+                float reach = radius + chicken.ValueRO.BodyRadius;
+                if (math.distancesq(chickenPose.ValueRO.Position, center) <= reach * reach)
+                    ChickenDamageResolution.Queue(EntityManager, target, explosive, blastSequence, settings.Damage);
+            }
             foreach (var (wall, wallTransform, target) in
                 SystemAPI.Query<RefRO<Barricade>, RefRO<LocalTransform>>().WithEntityAccess())
             {

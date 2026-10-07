@@ -13,9 +13,10 @@ namespace CrowdPunch.Bakers
         public override void Bake(EnemyAnimationAuthoring authoring)
         {
             var owner = GetComponentInParent<EnemyAuthoring>();
+            var chicken = GetComponentInParent<ChickenBossAuthoring>();
             var renderer = GetComponent<SkinnedMeshRenderer>();
             var animator = GetComponentInParent<Animator>();
-            if (owner == null || animator == null || authoring.Samples == null)
+            if (owner == null && chicken == null || animator == null || authoring.Samples == null)
                 throw new System.InvalidOperationException("Enemy animation needs an enemy owner, Animator and generated samples.");
 
             DependsOn(authoring.Samples);
@@ -55,7 +56,7 @@ namespace CrowdPunch.Bakers
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new EnemyAnimation
             {
-                Owner = GetEntity(owner, TransformUsageFlags.Dynamic),
+                Owner = chicken != null ? GetEntity(chicken, TransformUsageFlags.Dynamic) : GetEntity(owner, TransformUsageFlags.Dynamic),
                 Samples = blob,
                 Profile = (byte)authoring.Profile,
                 BlendResponse = math.max(0f, authoring.BlendResponse)

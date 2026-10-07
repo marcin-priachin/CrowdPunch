@@ -22,7 +22,7 @@ namespace CrowdPunch.Systems.Combat
         {
             state.RequireForUpdate<PhysicsWorldSingleton>();
             candidates = new EntityQueryBuilder(Allocator.Temp).WithAll<LocalTransform>()
-                .WithAny<Enemy, BossEncounter, Barricade>().Build(ref state);
+                .WithAny<Enemy, BossEncounter, Barricade, ChickenBoss>().Build(ref state);
         }
 
         public void OnUpdate(ref SystemState state)
@@ -89,6 +89,25 @@ namespace CrowdPunch.Systems.Combat
                     aimTarget.ValueRW.Target = fallback;
                 }
                 aimTarget.ValueRW.IsAiming = 1;
+            }
+            foreach (var (pose, aim, source) in SystemAPI.Query<RefRO<LocalTransform>, RefRW<PunchAimAssistTarget>>()
+                .WithAll<ChickenProjectile>().WithEntityAccess())
+            {
+                if (!hasPreview || !PunchResolution.Contains(pose.ValueRO.Position, volume)) { aim.ValueRW = default; continue; }
+                var ray = RaycastTarget(state.EntityManager, collisionWorld, source, pose.ValueRO.Position, direction,
+                    bridge.PunchPreviewAimAssistRange, ref hits);
+                if (PunchAimAssist.IsValidTarget(state.EntityManager, source, ray)
+                    && PunchAimAssist.IsWithinAssistLimits(state.EntityManager, ray, pose.ValueRO.Position, direction,
+                        bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewAimAssistMaximumAngleDegrees)) aim.ValueRW.Target = ray;
+                else if (aim.ValueRO.IsAiming == 0 || !PunchAimAssist.IsValidTarget(state.EntityManager, source, aim.ValueRO.Target)
+                    || !PunchAimAssist.IsWithinAssistLimits(state.EntityManager, aim.ValueRO.Target, pose.ValueRO.Position, direction,
+                        bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewAimAssistMaximumAngleDegrees))
+                {
+                    PunchAimAssist.TryGetFallbackTarget(state.EntityManager, source, pose.ValueRO.Position, direction,
+                        bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewAimAssistMaximumAngleDegrees, allCandidates, out var fallback);
+                    aim.ValueRW.Target = fallback;
+                }
+                aim.ValueRW.IsAiming = 1;
             }
             hits.Dispose();
         }

@@ -81,6 +81,15 @@ namespace CrowdPunch.Systems.Combat
                         BarricadeHitResolution.ClosestPoint(wall.ValueRO, transform.ValueRO, punch.Origin));
             }
 
+            foreach (var (projectile, pose, shot) in SystemAPI.Query<RefRW<ChickenProjectile>, RefRO<LocalTransform>>().WithEntityAccess())
+            {
+                if (!PunchResolution.Contains(pose.ValueRO.Position, punch)
+                    || !SystemAPI.HasComponent<ChickenTuning>(projectile.ValueRO.Boss)
+                    || SystemAPI.GetComponent<ChickenBoss>(projectile.ValueRO.Boss).Phase == ChickenPhase.Defeated) continue;
+                ChickenProjectilePunch.Redirect(state.EntityManager, shot, ref projectile.ValueRW, pose.ValueRO.Position,
+                    punch, SystemAPI.GetComponent<ChickenTuning>(projectile.ValueRO.Boss));
+                punchRequest.HitEnemy = true;
+            }
             punchRequest.IsResolved = true;
             SystemAPI.SetComponent(punchEntity, punchRequest);
             SystemAPI.SetComponentEnabled<PunchRequest>(punchEntity, false);

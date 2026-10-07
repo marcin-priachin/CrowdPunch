@@ -9,6 +9,8 @@ namespace CrowdPunch.Authoring
     {
         [Tooltip("Optional boss owner. Its single supporting wave completes only on boss defeat.")]
         public BossEncounterAuthoring bossEncounter;
+        [Tooltip("Optional Chicken boss owner; supports the existing bounded boss-crowd wave settings.")]
+        public ChickenBossAuthoring chickenBoss;
         [Tooltip("Optional barricade objective. Its bounded crowd replenishes until the barricade breaks.")]
         public BarricadeAuthoring barricade;
         [SerializeField, Tooltip("Ordered wave assets. Each asset remains independently reusable and editable.")]

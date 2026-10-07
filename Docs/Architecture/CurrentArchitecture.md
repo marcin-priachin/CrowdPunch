@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-10-06
+Last inspected: 2026-10-07
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -19,10 +19,15 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_19` each contain their matching ECS SubScene. Nineteen gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss, gauntlet 17 introduces Wizards, gauntlet 18 introduces protected-point defense, and gauntlet 19 introduces Trail enemies. The separate navigation validation scenes remain outside progression.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_20` each contain their matching ECS SubScene. Twenty gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss, gauntlet 17 introduces Wizards, gauntlet 18 introduces protected-point defense, gauntlet 19 introduces Trail enemies, and gauntlet 20 introduces the Chicken boss. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
+
+The Chicken encounter is described in [Chicken boss ownership and lifecycle](ChickenBoss.md).
+Its separate kinematic body, manual swept bouncing projectiles and combined hit resolver do not
+enter ordinary Enemy lifecycle queries. Both bosses share bounded wave ownership/replenishment,
+the health-bar bridge and level completion while retaining separate attack/damage state.
 
 The first boss is described in [Boss encounter ownership and lifecycle](BossEncounter.md).
 Its separate head/hand components never enter ordinary Enemy queries. The dedicated baked boss

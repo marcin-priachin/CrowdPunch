@@ -12,9 +12,14 @@ namespace CrowdPunch.Systems.Lifetime
         public void OnUpdate(ref SystemState state)
         {
             foreach(var (member,respawn) in SystemAPI.Query<RefRO<BossCrowdMember>,RefRW<EnemyRespawnSettings>>())
-                respawn.ValueRW.Enabled=(byte)(member.ValueRO.ReplenishDelay>=0
-                    && SystemAPI.HasComponent<BossEncounter>(member.ValueRO.Encounter)
-                    && SystemAPI.GetComponent<BossEncounter>(member.ValueRO.Encounter).Cycle!=BossCycle.Defeated?1:0);
+            {
+                var owner=member.ValueRO.Encounter;
+                bool alive=SystemAPI.HasComponent<BossEncounter>(owner)
+                    && SystemAPI.GetComponent<BossEncounter>(owner).Cycle!=BossCycle.Defeated
+                    || SystemAPI.HasComponent<ChickenBoss>(owner)
+                    && SystemAPI.GetComponent<ChickenBoss>(owner).Phase!=ChickenPhase.Defeated;
+                respawn.ValueRW.Enabled=(byte)(member.ValueRO.ReplenishDelay>=0 && alive?1:0);
+            }
         }
     }
 }

@@ -51,6 +51,7 @@ namespace CrowdPunch.Systems.Initialization
             foreach (var objective in SystemAPI.Query<RefRW<ProtectedPoint>>()) objective.ValueRW.Breaches = 0;
             foreach (var attackers in SystemAPI.Query<DynamicBuffer<ProtectedPointAttacker>>()) attackers.Clear();
             BossEncounterReset.Reset(EntityManager);
+            ChickenEncounterReset.Reset(EntityManager);
             foreach (var reflections in SystemAPI.Query<DynamicBuffer<CoverReflection>>()) reflections.Clear();
             foreach (var (cover, motion, transform) in SystemAPI.Query<RefRO<RotatingCover>, RefRW<RotatingCoverState>, RefRW<LocalTransform>>())
             {

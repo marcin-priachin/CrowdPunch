@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-06
+Last updated: 2026-10-07
 
 ## How To Read This Document
 
@@ -960,6 +960,87 @@ Two weapons. Their exact identities and acquisition model remain unresolved.
 Status: Must
 
 The MVP must support a start-through-boss-and-later-gauntlets-to-win-or-loss run rather than only a combat sandbox.
+
+## Chicken Boss (Agreed 2026-10-07)
+
+### CHICKEN-001 - Three-Stage Shot And Rush Cycle
+
+Status: Must
+
+The fleeing Chicken uses a stationary wind-up that tracks the player until release. Each shot
+immediately commits a reachable rush away with a strong sideways offset, followed by a brief pause.
+Stage one defaults to one shot, rush, pause; stage two to shot, rush, second shot from the new
+position, rush, pause; stage three to paired shots with faster rushes and shorter pauses. Single
+and paired patterns remain configurable per stage. Pair spacing must allow normal punch cooldown.
+Do not add rush warnings or destination markers.
+
+### CHICKEN-002 - Proximity, Solidity And Recovery
+
+Status: Must
+
+Expose finish-pause and interrupt-pause-and-flee responses, defaulting to interrupt and flee.
+Proximity never cancels a committed wind-up or shot. The solid boss damages the player only
+during rushes and pushes crowd bodies aside without dealing damage or initiating launches.
+Accepted damage briefly staggers it, interrupts rushes, cancels pending shots, starts temporary
+damage invulnerability, and begins a fresh attack cycle after recovery.
+
+### CHICKEN-003 - Punchable Bouncing Projectiles
+
+Status: Must
+
+Shots travel at a fixed punchable height with a committed firing direction. Expose fire-time
+position aim (default) and movement-leading aim. Walls reflect velocity while preserving speed.
+A configurable bounce limit and lifetime remove shots. Punches use the existing volume, dash-punch
+eligibility, hit-confirmed cooldown and assisted target selection. A punch replaces velocity with
+a configurable return speed, resets lifetime and bounce count and begins a fresh launch. Returned
+shots home using existing launch homing; the first wall bounce clears the lock until another punch.
+Use the existing short initial-direction preview for shots in the punch volume.
+
+### CHICKEN-004 - Projectile Contacts And Persistent Player Danger
+
+Status: Must
+
+Before and after redirection, shots damage and launch ordinary enemies and continue through them.
+Each enemy can be hit once per projectile launch. Preserve armor and launch eligibility rules.
+Projectiles and every launched-body chain remain dangerous to the player regardless of ownership.
+Player contact consumes a shot even when player protection rejects damage. A returned shot is
+consumed on boss contact whether or not boss invulnerability permits damage.
+
+### CHICKEN-005 - Boss Damage Eligibility And Combined Exploder Hits
+
+Status: Must
+
+Returned shots and player-owned launched-enemy impacts, including their propagated chains, can
+damage the Chicken. Direct punches, untouched boss shots and boss-owned body impacts/chains cannot.
+Any nearby explosion can damage it, including unlaunched and boss-owned Exploders. An Exploder body
+impact and its associated blast count as one combined hit using the higher eligible damage value.
+Consume protected contacts to prevent delayed repeat hits from sustained contact.
+
+### CHICKEN-006 - Encounter And Lifecycle
+
+Status: Must
+
+Append one introductory level after the current progression, selecting the next available number.
+Use an open arena with a solid perimeter and no interior obstacles, plus a small replenishing
+Baseline crowd. Population and composition belong in existing wave settings. Boss defeat immediately
+completes the encounter, stops replenishment and clears its projectiles, without survivor cleanup.
+Restart restores the boss, population, projectiles, timers and hit histories.
+
+### CHICKEN-007 - Configuration And Presentation
+
+Status: Must
+
+Use the supplied `Assets/CrowdPunch/Models/UltimateMonsters/Blob/Chicken.fbx`, the existing elite-style
+health bar, readable ownership colors that do not imply returned shots are safe, hit/invulnerability
+feedback and one brief opening hint. A dedicated boss settings asset exposes health/damage, stage
+thresholds/patterns, wind-up/spacing/pauses, rush/proximity, stagger/protection and projectile tuning.
+Initial numbers, arena size and minor model presentation are delegated to implementation/playtesting.
+
+### CHICKEN-008 - Duration Target
+
+Status: Should
+
+Target a roughly 2-3 minute fight through balance tuning, without a forced fight timer.
 
 ## Explicit Non-Goals For The Current Baseline
 

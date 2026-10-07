@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1be7ce4d81f0c04478214a9fcc1854ea, type: 3}
+  m_Name: ChickenBossSettings
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.ChickenBossSettings
+  health: 1800
+  stageTwoThreshold: 0.66
+  stageThreeThreshold: 0.33
+  stageOnePattern: 0
+  stageTwoPattern: 1
+  stageThreePattern: 1
+  pauseResponse: 0
+  shotAim: 0
+  openingPause: 2.5
+  windUp: 0.8
+  shotSpacing: 1.5
+  pause: 1.6
+  finalPauseMultiplier: 0.55
+  rushSpeed: 13
+  finalRushMultiplier: 1.35
+  rushDistance: 9
+  sidewaysWeight: 1.5
+  proximityDistance: 7
+  stagger: 0.65
+  invulnerability: 1.15
+  bodyRadius: 1.7
+  bodyHeight: 3.4
+  playerDamage: 14
+  playerProtection: 0.8
+  playerPush: 14
+  projectileRadius: 0.45
+  projectileHeight: 1
+  fireSpeed: 10
+  returnSpeed: 22
+  lifetime: 9
+  bounceLimit: 5
+  projectileDamage: 12
+  projectileLaunchSpeed: 16
+  returnedBossDamage: 75
+  bodyDamageMultiplier: 1

@@ -92,6 +92,13 @@ namespace CrowdPunch.Systems.Presentation
                     enemyPosition,
                     enemyPosition + launchDirection * bridge.PunchPreviewLength);
             }
+            foreach (var (pose, shot) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<ChickenProjectile>().WithEntityAccess())
+            {
+                if (!PunchResolution.Contains(pose.ValueRO.Position, volume)) continue;
+                volume.PositionWeight = positionWeight;
+                var direction = ChickenProjectilePunch.Direction(state.EntityManager, shot, pose.ValueRO.Position, volume);
+                bridge.AddTrajectoryPreview(pose.ValueRO.Position, pose.ValueRO.Position + direction * bridge.PunchPreviewLength);
+            }
         }
     }
 }

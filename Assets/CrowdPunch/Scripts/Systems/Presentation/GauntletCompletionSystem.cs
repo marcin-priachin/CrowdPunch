@@ -47,6 +47,8 @@ namespace CrowdPunch.Systems.Presentation
             // BOSS-007: head defeat is authoritative even if supporting waves are cleared or mis-signalled.
             foreach (var boss in SystemAPI.Query<RefRO<BossEncounter>>())
                 isComplete = boss.ValueRO.Cycle == BossCycle.Defeated;
+            foreach (var boss in SystemAPI.Query<RefRO<ChickenBoss>>())
+                isComplete = boss.ValueRO.Phase == ChickenPhase.Defeated;
 
             // BARRICADE-001: surviving enemies are irrelevant; reaching the exposed exit is required.
             foreach (var wall in SystemAPI.Query<RefRO<Barricade>>())

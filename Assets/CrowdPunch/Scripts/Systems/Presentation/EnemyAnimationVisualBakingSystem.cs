@@ -18,7 +18,8 @@ namespace CrowdPunch.Systems.Presentation
             foreach (var (animation, additional) in SystemAPI.Query<RefRO<EnemyAnimation>, DynamicBuffer<AdditionalEntitiesBakingData>>()
                          .WithOptions(EntityQueryOptions.IncludePrefab | EntityQueryOptions.IncludeDisabledEntities))
             {
-                commands.AddComponent(animation.ValueRO.Owner, new EnemyLandingAnimation
+                bool chicken = SystemAPI.HasComponent<ChickenBoss>(animation.ValueRO.Owner);
+                if (!chicken) commands.AddComponent(animation.ValueRO.Owner, new EnemyLandingAnimation
                 {
                     Duration = animation.ValueRO.Samples.Value.Durations[EnemyAnimationSamples.ImpactMotion]
                 });
@@ -26,8 +27,12 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     Entity entity = child.Value;
                     if (!SystemAPI.HasComponent<RenderBounds>(entity)) continue;
-                    commands.AddComponent<EnemyVisualDeformation>(entity);
-                    commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner });
+                    if (chicken) commands.AddComponent(entity, new ChickenVisualOwner { Value = animation.ValueRO.Owner });
+                    else
+                    {
+                        commands.AddComponent<EnemyVisualDeformation>(entity);
+                        commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner });
+                    }
                     commands.AddComponent(entity, new URPMaterialPropertyBaseColor { Value = new float4(1f) });
                 }
             }
