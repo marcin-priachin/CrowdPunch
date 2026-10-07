@@ -55,6 +55,10 @@ namespace CrowdPunch.Systems.Presentation
                 if(boss.ValueRO.Phase!=ChickenPhase.Defeated)
                     EnemyHealthBarCanvasRegistry.Publish(entity.Index,transform.ValueRO.Position+new Unity.Mathematics.float3(0,2,0),
                         health.ValueRO.Normalized,true,true,string.Empty);
+            foreach (var (boss,health,transform,entity) in SystemAPI.Query<RefRO<RollingBoss>,RefRO<Health>,RefRO<LocalTransform>>().WithEntityAccess())
+                if(boss.ValueRO.Phase!=RollingPhase.Defeated)
+                    EnemyHealthBarCanvasRegistry.Publish(entity.Index,transform.ValueRO.Position+new Unity.Mathematics.float3(0,2.2f,0),
+                        health.ValueRO.Normalized,true,true,string.Empty);
             foreach ((RefRO<EnemyArmor> armor, RefRO<LocalTransform> transform,
                          RefRO<EnemyLaunchState> launch, EnabledRefRO<RespawnRequest> respawn,
                          Entity enemy) in

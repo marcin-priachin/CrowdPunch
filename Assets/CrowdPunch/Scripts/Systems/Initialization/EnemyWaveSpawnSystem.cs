@@ -59,7 +59,9 @@ namespace CrowdPunch.Systems.Initialization
                     bool alive = SystemAPI.HasComponent<BossEncounter>(bossEntity)
                         && SystemAPI.GetComponent<BossEncounter>(bossEntity).Cycle != BossCycle.Defeated
                         || SystemAPI.HasComponent<ChickenBoss>(bossEntity)
-                        && SystemAPI.GetComponent<ChickenBoss>(bossEntity).Phase != ChickenPhase.Defeated;
+                        && SystemAPI.GetComponent<ChickenBoss>(bossEntity).Phase != ChickenPhase.Defeated
+                        || SystemAPI.HasComponent<RollingBoss>(bossEntity)
+                        && SystemAPI.GetComponent<RollingBoss>(bossEntity).Phase != RollingPhase.Defeated;
                     if (!alive) continue;
                 }
                 if (sequence.Initialized == 0)

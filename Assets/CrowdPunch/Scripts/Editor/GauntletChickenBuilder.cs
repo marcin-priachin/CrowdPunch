@@ -129,11 +129,11 @@ namespace CrowdPunch.Editor
             if(mat==null) { mat=new Material(template) { enableInstancing=true }; AssetDatabase.CreateAsset(mat,ChickenArt+"Chicken.mat"); }
             renderer.sharedMaterials=renderer.sharedMaterials.Select(_=>mat).ToArray();
             AssetDatabase.SaveAssets();
-            WriteChickenSamples(animator,renderer,clips);
+            WriteBossSamples(animator,renderer,clips,ChickenArt+"ChickenMovement.bytes",ChickenController);
             var animation=renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
             animation.Samples=AssetDatabase.LoadAssetAtPath<TextAsset>(ChickenArt+"ChickenMovement.bytes");
         }
-        private static void WriteChickenSamples(Animator animator,SkinnedMeshRenderer renderer,AnimationClip[] clips)
+        private static void WriteBossSamples(Animator animator,SkinnedMeshRenderer renderer,AnimationClip[] clips,string path,string controllerPath)
         {
             const int frames=32;
             animator.Rebind();
@@ -160,10 +160,9 @@ namespace CrowdPunch.Editor
                     }
                 }
             }
-            string hash=AssetDatabase.GetAssetDependencyHash(ChickenController).ToString()
+            string hash=AssetDatabase.GetAssetDependencyHash(controllerPath).ToString()
                 +AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(renderer.sharedMesh))
                 +AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(animator.avatar));
-            string path=ChickenArt+"ChickenMovement.bytes";
             using(var writer=new BinaryWriter(File.Create(path)))
             {
                 writer.Write(0x43504133); writer.Write(hash); writer.Write(renderer.bones.Length); writer.Write(frames);

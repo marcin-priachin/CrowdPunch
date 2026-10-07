@@ -11,7 +11,7 @@ single/paired/paired, interrupt-and-flee, position aim, 1800 health, 75 returned
 Shots use 0.45m radius at y=1, 10m/s outgoing and 22m/s returns, 9s lifetime and five bounces.
 Numbers target a 2-3 minute fight but do not enforce duration or establish final balance.
 
-`CP20_01_Chicken_Crowd.asset` owns 12 Baselines, composition, safe spawn rectangles,
+`CP20_01_Chicken_Crowd.asset` owns 3 Baselines, composition, safe spawn rectangles,
 initial delay and three-second recycling. `EnemyWaveSequenceAuthoring.chickenBoss` uses
 existing `BossCrowdSequence`/`BossCrowdMember`. Spawn and replenish gates now recognize
 either living boss type. The level has a convex 36x36m floor and four solid perimeter rails,

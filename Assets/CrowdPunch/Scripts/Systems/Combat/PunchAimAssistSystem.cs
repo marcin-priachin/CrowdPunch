@@ -22,7 +22,7 @@ namespace CrowdPunch.Systems.Combat
         {
             state.RequireForUpdate<PhysicsWorldSingleton>();
             candidates = new EntityQueryBuilder(Allocator.Temp).WithAll<LocalTransform>()
-                .WithAny<Enemy, BossEncounter, Barricade, ChickenBoss>().Build(ref state);
+                .WithAny<Enemy, BossEncounter, Barricade, ChickenBoss, RollingBoss>().Build(ref state);
         }
 
         public void OnUpdate(ref SystemState state)

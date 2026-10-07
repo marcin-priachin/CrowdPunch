@@ -78,6 +78,18 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-07 - Rolling Blob And Gauntlet_21
+
+Decision: Adopt the final summary and explicit answers in Boss Rolling Design,
+conversation 6ac6ab4f-c4d8-83ed-9ea0-83f31ae8bd34. ROLL-001..007 record committed
+cycle timing, six configurable modes, protected rolls, resistance-aware Boss-owned
+launches, any-source vulnerable explosions, combined hits, stage clamping and lifecycle.
+No blocking gameplay question remains. Exact balance, arena, colors, animations and
+collision safeguards are delegated; 2-3 minute balance and OQ-001 targets still need validation.
+
+Rejected: hit-driven timer changes, protection-free hits, stage skipping, resistance
+overrides, direct boss punches and an extra vulnerability countdown.
+
 ### 2026-10-07 - Chicken Body Rebounds
 
 Decision: The implementation-chat correction requires launched enemies striking the Chicken

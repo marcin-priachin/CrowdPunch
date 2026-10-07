@@ -20,7 +20,7 @@ namespace CrowdPunch.Systems.Combat
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate(new EntityQueryBuilder(Allocator.Temp)
-                .WithAny<BossEncounter, ChickenBoss>().Build(ref state));
+                .WithAny<BossEncounter, ChickenBoss, RollingBoss>().Build(ref state));
             state.RequireForUpdate<PlayerSnapshot>();
             state.RequireForUpdate<SimulationSingleton>();
         }
@@ -35,6 +35,7 @@ namespace CrowdPunch.Systems.Combat
             {
                 Parts = SystemAPI.GetComponentLookup<BossPart>(true),
                 Chickens = SystemAPI.GetComponentLookup<ChickenBoss>(true),
+                Rollers = SystemAPI.GetComponentLookup<RollingBoss>(true),
                 Enemies = SystemAPI.GetComponentLookup<Enemy>(true),
                 Contacts = contacts
             };
@@ -102,15 +103,16 @@ namespace CrowdPunch.Systems.Combat
         {
             [ReadOnly] public ComponentLookup<BossPart> Parts;
             [ReadOnly] public ComponentLookup<ChickenBoss> Chickens;
+            [ReadOnly] public ComponentLookup<RollingBoss> Rollers;
             [ReadOnly] public ComponentLookup<Enemy> Enemies;
             public NativeList<HeadContact> Contacts;
 
             public void Execute(CollisionEvent collision)
             {
-                Entity head = Parts.HasComponent(collision.EntityA) || Chickens.HasComponent(collision.EntityA)
+                Entity head = Parts.HasComponent(collision.EntityA) || Chickens.HasComponent(collision.EntityA) || Rollers.HasComponent(collision.EntityA)
                     ? collision.EntityA : collision.EntityB;
                 Entity body = head == collision.EntityA ? collision.EntityB : collision.EntityA;
-                if ((Chickens.HasComponent(head) || Parts.HasComponent(head) && Parts[head].Kind == BossPartKind.Head)
+                if ((Rollers.HasComponent(head) || Chickens.HasComponent(head) || Parts.HasComponent(head) && Parts[head].Kind == BossPartKind.Head)
                     && Enemies.HasComponent(body))
                     Contacts.Add(new HeadContact { Head = head, Body = body });
             }

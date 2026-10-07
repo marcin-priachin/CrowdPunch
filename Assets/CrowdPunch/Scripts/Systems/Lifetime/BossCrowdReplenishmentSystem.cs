@@ -17,7 +17,9 @@ namespace CrowdPunch.Systems.Lifetime
                 bool alive=SystemAPI.HasComponent<BossEncounter>(owner)
                     && SystemAPI.GetComponent<BossEncounter>(owner).Cycle!=BossCycle.Defeated
                     || SystemAPI.HasComponent<ChickenBoss>(owner)
-                    && SystemAPI.GetComponent<ChickenBoss>(owner).Phase!=ChickenPhase.Defeated;
+                    && SystemAPI.GetComponent<ChickenBoss>(owner).Phase!=ChickenPhase.Defeated
+                    || SystemAPI.HasComponent<RollingBoss>(owner)
+                    && SystemAPI.GetComponent<RollingBoss>(owner).Phase!=RollingPhase.Defeated;
                 respawn.ValueRW.Enabled=(byte)(member.ValueRO.ReplenishDelay>=0 && alive?1:0);
             }
         }

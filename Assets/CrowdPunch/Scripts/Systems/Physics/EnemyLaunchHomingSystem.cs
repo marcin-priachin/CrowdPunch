@@ -46,6 +46,8 @@ namespace CrowdPunch.Systems.Physics
                     && SystemAPI.GetComponent<ChickenBoss>(target).Phase != ChickenPhase.Defeated;
                 bool intactBarricade = SystemAPI.HasComponent<Barricade>(target)
                     && SystemAPI.GetComponent<Barricade>(target).HitsRemaining > 0;
+                livingBoss |= SystemAPI.HasComponent<RollingBoss>(target)
+                    && Combat.RollingDamageResolution.CanTarget(SystemAPI.GetComponent<RollingBoss>(target),SystemAPI.GetComponent<RollingTuning>(target));
                 if (!livingBoss && !intactBarricade && !IsValidTarget(target, transforms, launchStates, health, respawns)) continue;
 
                 velocity.ValueRW.Linear = EnemyLaunchHoming.RotateHorizontalVelocity(

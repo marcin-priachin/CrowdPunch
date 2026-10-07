@@ -1047,6 +1047,74 @@ Status: Should
 
 Target a roughly 2-3 minute fight through balance tuning, without a forced fight timer.
 
+## Rolling Blob Boss (Agreed 2026-10-07)
+
+### ROLL-001 - Committed Vulnerability Cycle
+
+Status: Must
+
+Cycle through vulnerable pause, vulnerable player-tracking wind-up, and protected roll.
+Lock direction at roll start; do not steer between wall/obstacle redirects. Redirect immediately
+without another wind-up. Surviving damage never changes the current action or timer.
+Direct punches neither damage nor launch the boss; rolling rejects body and explosion damage.
+Accepted damage grants brief visible protection. A body damages once per launch; re-punch renews eligibility.
+
+### ROLL-002 - Stages And Duration
+
+Status: Must
+
+Use three health stages with increasing speed and shorter pauses. Clamp damage at each stage
+threshold and discard overflow. Stage changes preserve the committed action and timer; new tuning
+applies next cycle. Target roughly 2-3 minutes through tuning without enforcing a fight timer.
+
+### ROLL-003 - Configurable Modes
+
+Status: Must
+
+Expose physical reflection or collision-time re-aim (default re-aim); fixed-duration or bounce-count
+roll ending with maximum-duration safeguard (default duration); Player-owned-only or any launched
+body/chain eligibility (default Player-only); rolling-only or all-living-state player contact danger
+(default rolling-only); every-living-state or vulnerable-state-only aim/homing targeting (default
+every living state); and rolling-direction or outward crowd launch (default rolling direction).
+
+### ROLL-004 - Crowd And Physical Contacts
+
+Status: Must
+
+Rolling contact damages and launches ordinary enemies, starting fresh Boss-owned launches even
+for already-launched bodies. Player punches reclaim ownership. Passive contacts preserve ownership.
+All launched bodies/chains remain dangerous to the player (COMBAT-015). Protected Armored bodies
+receive pushback without shield/health loss; Elites receive damage/pushback without normal launch.
+Reuse boss sideways rebound handling in every state, preserving solver speed and vertical motion
+and clearing homing toward the contacted boss. Stationary contact remains solid and harmless by default.
+
+### ROLL-005 - Explosions And Combined Hits
+
+Status: Must
+
+Vulnerable states accept explosions from any source, including unlaunched and Boss-owned Exploders.
+An Exploder body impact and its associated blast count as one combined hit using existing maximum-damage
+resolution. Protection and per-source launch/lifetime history prevent duplicate damage.
+
+### ROLL-006 - Gauntlet_21 And Lifecycle
+
+Status: Must
+
+Add exactly Gauntlet_21 after Chicken Run. Use an enclosed arena with a few well-spaced solid interior
+obstacles, broad lanes and a small bounded replenishing Baseline crowd. Boss defeat completes immediately
+and stops replenishment; surviving support needs no cleanup. Retry, restart, selection and unloading
+reset or remove boss timers/state/history, supporting crowd and completion state.
+
+### ROLL-007 - Assets, Settings And Presentation
+
+Status: Must
+
+Use `Assets/CrowdPunch/Models/UltimateMonsters/Blob/GreenSpikyBlob.fbx`. A dedicated boss asset owns
+health, thresholds, protection, wind-up/pause/roll timing, bounce limits, speed, contact damage,
+launch/push and presentation tuning. Composition/replenishment remain wave-owned. Reuse one elite-style
+boss health bar without vulnerability countdown. Distinguish pause, wind-up, rolling and temporary
+hit protection; include one brief opening hint. Numbers, layout and minor presentation are delegated.
+
 ## Explicit Non-Goals For The Current Baseline
 
 - Conventional attack combo strings.

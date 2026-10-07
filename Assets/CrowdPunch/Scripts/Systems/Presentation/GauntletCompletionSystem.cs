@@ -49,6 +49,8 @@ namespace CrowdPunch.Systems.Presentation
                 isComplete = boss.ValueRO.Cycle == BossCycle.Defeated;
             foreach (var boss in SystemAPI.Query<RefRO<ChickenBoss>>())
                 isComplete = boss.ValueRO.Phase == ChickenPhase.Defeated;
+            foreach (var boss in SystemAPI.Query<RefRO<RollingBoss>>())
+                isComplete = boss.ValueRO.Phase == RollingPhase.Defeated;
 
             // BARRICADE-001: surviving enemies are irrelevant; reaching the exposed exit is required.
             foreach (var wall in SystemAPI.Query<RefRO<Barricade>>())

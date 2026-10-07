@@ -14,9 +14,10 @@ namespace CrowdPunch.Bakers
         {
             var owner = GetComponentInParent<EnemyAuthoring>();
             var chicken = GetComponentInParent<ChickenBossAuthoring>();
+            var rolling = GetComponentInParent<RollingBossAuthoring>();
             var renderer = GetComponent<SkinnedMeshRenderer>();
             var animator = GetComponentInParent<Animator>();
-            if (owner == null && chicken == null || animator == null || authoring.Samples == null)
+            if (owner == null && chicken == null && rolling == null || animator == null || authoring.Samples == null)
                 throw new System.InvalidOperationException("Enemy animation needs an enemy owner, Animator and generated samples.");
 
             DependsOn(authoring.Samples);
@@ -56,12 +57,13 @@ namespace CrowdPunch.Bakers
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new EnemyAnimation
             {
-                Owner = chicken != null ? GetEntity(chicken, TransformUsageFlags.Dynamic) : GetEntity(owner, TransformUsageFlags.Dynamic),
+                Owner = rolling != null ? GetEntity(rolling, TransformUsageFlags.Dynamic) : chicken != null ? GetEntity(chicken, TransformUsageFlags.Dynamic) : GetEntity(owner, TransformUsageFlags.Dynamic),
                 Samples = blob,
                 Profile = (byte)authoring.Profile,
                 BlendResponse = math.max(0f, authoring.BlendResponse)
             });
             AddComponent<EnemyAnimationPlayback>(entity);
+            if(rolling!=null) AddComponent(entity,new RollingAnimationPivot { Center=rolling.animationPivot });
         }
 
         private static float3 ReadColumn(BinaryReader reader) => new float3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());

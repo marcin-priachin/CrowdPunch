@@ -14,20 +14,26 @@ namespace CrowdPunch.Bakers
             Entity entity = GetEntity(TransformUsageFlags.None);
             if (authoring.barricade != null)
             {
-                if (authoring.Waves.Count != 1 || authoring.bossEncounter != null || authoring.chickenBoss != null)
+                if (authoring.Waves.Count != 1 || authoring.bossEncounter != null || authoring.chickenBoss != null || authoring.rollingBoss != null)
                     throw new System.InvalidOperationException("Barricade crowd requires one wave and no boss owner.");
                 AddComponent(entity, new BarricadeCrowdSequence { Barricade = GetEntity(authoring.barricade, TransformUsageFlags.Dynamic) });
             }
             if (authoring.bossEncounter != null)
             {
-                if (authoring.Waves.Count != 1) throw new System.InvalidOperationException("Boss crowd requires exactly one bounded wave.");
+                if (authoring.Waves.Count != 1 || authoring.chickenBoss != null || authoring.rollingBoss != null) throw new System.InvalidOperationException("Boss crowd requires exactly one bounded wave and owner.");
                 AddComponent(entity, new BossCrowdSequence { Encounter=GetEntity(authoring.bossEncounter,TransformUsageFlags.Dynamic) });
             }
             if (authoring.chickenBoss != null)
             {
-                if (authoring.Waves.Count != 1 || authoring.bossEncounter != null)
+                if (authoring.Waves.Count != 1 || authoring.bossEncounter != null || authoring.rollingBoss != null)
                     throw new System.InvalidOperationException("Chicken crowd requires one wave and one boss owner.");
                 AddComponent(entity, new BossCrowdSequence { Encounter=GetEntity(authoring.chickenBoss,TransformUsageFlags.Dynamic) });
+            }
+            if (authoring.rollingBoss != null)
+            {
+                if (authoring.Waves.Count != 1 || authoring.bossEncounter != null || authoring.chickenBoss != null)
+                    throw new System.InvalidOperationException("Rolling crowd requires one wave and one boss owner.");
+                AddComponent(entity,new BossCrowdSequence { Encounter=GetEntity(authoring.rollingBoss,TransformUsageFlags.Dynamic) });
             }
             AddComponent(entity, new EnemyWaveSequence
             {
