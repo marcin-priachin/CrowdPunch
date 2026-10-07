@@ -78,6 +78,13 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-07 - Chicken Body Rebounds
+
+Decision: The implementation-chat correction requires launched enemies striking the Chicken
+to deflect sideways instead of rebounding directly at the player. Reuse the first boss's
+solver-speed-preserving deflection and clear the contacted boss homing lock (CHICKEN-004).
+This does not remove COMBAT-015's persistent danger from launched bodies and their chains.
+
 ### 2026-10-07 - Chicken Boss And Gauntlet_20
 
 Decision: Adopt the agreed summary and explicit decisions in Boss Design Options,

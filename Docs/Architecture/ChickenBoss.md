@@ -51,6 +51,11 @@ during protection, applies health/stage changes once, cancels attacks and stops 
 History cleanup removes destroyed sources and obsolete launches/lifetimes. This gives an Exploder
 impact plus its associated same-step blast one combined maximum hit, without copying Gatekeeper rules.
 
+`BossHeadBounceSystem` now recognizes both the Gatekeeper head and Chicken body. After the
+current-step launched-body/player impact check, it deflects a launched body's player-bound
+solver rebound sideways, preserving horizontal speed, vertical motion, launch damage and ownership.
+It clears homing toward the contacted boss and leaves already-safe rebounds intact (CHICKEN-004).
+
 `ChickenProjectileCleanupSystem` removes surviving shots after same-step defeat or owner unload.
 Completion uses Chicken defeat without checking survivors. `ChickenEncounterReset` restores
 health, stage, pose, timers, velocity and history and destroys shots during shared soft reset.

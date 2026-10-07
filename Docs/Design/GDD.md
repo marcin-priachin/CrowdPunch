@@ -1006,6 +1006,11 @@ Projectiles and every launched-body chain remain dangerous to the player regardl
 Player contact consumes a shot even when player protection rejects damage. A returned shot is
 consumed on boss contact whether or not boss invulnerability permits damage.
 
+After a launched enemy physically strikes the Chicken, deflect any player-bound rebound
+sideways away from the boss, preserving solver speed and vertical motion. Clear its boss
+homing lock so it cannot steer straight back into the boss. Already-safe rebounds stay intact;
+launched bodies remain dangerous to the player through subsequent physical interactions.
+
 ### CHICKEN-005 - Boss Damage Eligibility And Combined Exploder Hits
 
 Status: Must

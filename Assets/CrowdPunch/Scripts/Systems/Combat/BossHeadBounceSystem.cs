@@ -19,7 +19,8 @@ namespace CrowdPunch.Systems.Combat
 
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<BossEncounter>();
+            state.RequireForUpdate(new EntityQueryBuilder(Allocator.Temp)
+                .WithAny<BossEncounter, ChickenBoss>().Build(ref state));
             state.RequireForUpdate<PlayerSnapshot>();
             state.RequireForUpdate<SimulationSingleton>();
         }
@@ -33,6 +34,7 @@ namespace CrowdPunch.Systems.Combat
             var collect = new CollectHeadContacts
             {
                 Parts = SystemAPI.GetComponentLookup<BossPart>(true),
+                Chickens = SystemAPI.GetComponentLookup<ChickenBoss>(true),
                 Enemies = SystemAPI.GetComponentLookup<Enemy>(true),
                 Contacts = contacts
             };
@@ -41,32 +43,35 @@ namespace CrowdPunch.Systems.Combat
 
             var em = state.EntityManager;
             foreach (var contact in contacts)
-            {
-                if (!em.HasComponent<EnemyLaunchState>(contact.Body)
-                    || !em.HasComponent<PhysicsVelocity>(contact.Body)
-                    || em.HasComponent<RespawnRequest>(contact.Body)
-                        && em.IsComponentEnabled<RespawnRequest>(contact.Body)) continue;
-
-                var launch = em.GetComponentData<EnemyLaunchState>(contact.Body);
-                if (launch.Phase != EnemyLaunchPhase.Launched) continue;
-
-                // The shot's head lock must not steer the body back into the head next step.
-                if (launch.HomingTarget == contact.Head)
-                {
-                    launch.HomingTarget = Entity.Null;
-                    em.SetComponentData(contact.Body, launch);
-                }
-
-                var velocity = em.GetComponentData<PhysicsVelocity>(contact.Body);
-                var redirected = Redirect(velocity.Linear,
-                    em.GetComponentData<LocalTransform>(contact.Body).Position,
-                    em.GetComponentData<LocalTransform>(contact.Head).Position,
-                    player.Position, contact.Body.Index);
-                if (math.all(redirected == velocity.Linear)) continue;
-                velocity.Linear = redirected;
-                em.SetComponentData(contact.Body, velocity);
-            }
+                ResolveContact(em, contact.Head, contact.Body, player.Position);
             contacts.Dispose();
+        }
+
+        internal static void ResolveContact(EntityManager em, Entity boss, Entity body, float3 playerPosition)
+        {
+            if (!em.HasComponent<EnemyLaunchState>(body)
+                || !em.HasComponent<PhysicsVelocity>(body)
+                || em.HasComponent<RespawnRequest>(body)
+                    && em.IsComponentEnabled<RespawnRequest>(body)) return;
+
+            var launch = em.GetComponentData<EnemyLaunchState>(body);
+            if (launch.Phase != EnemyLaunchPhase.Launched) return;
+
+            // Clear the boss lock so homing cannot undo the solver-contact deflection next step.
+            if (launch.HomingTarget == boss)
+            {
+                launch.HomingTarget = Entity.Null;
+                em.SetComponentData(body, launch);
+            }
+
+            var velocity = em.GetComponentData<PhysicsVelocity>(body);
+            var redirected = Redirect(velocity.Linear,
+                em.GetComponentData<LocalTransform>(body).Position,
+                em.GetComponentData<LocalTransform>(boss).Position,
+                playerPosition, body.Index);
+            if (math.all(redirected == velocity.Linear)) return;
+            velocity.Linear = redirected;
+            em.SetComponentData(body, velocity);
         }
 
         // Keep the solver's speed and vertical motion; remove only its player-bound component.
@@ -96,14 +101,16 @@ namespace CrowdPunch.Systems.Combat
         private struct CollectHeadContacts : ICollisionEventsJob
         {
             [ReadOnly] public ComponentLookup<BossPart> Parts;
+            [ReadOnly] public ComponentLookup<ChickenBoss> Chickens;
             [ReadOnly] public ComponentLookup<Enemy> Enemies;
             public NativeList<HeadContact> Contacts;
 
             public void Execute(CollisionEvent collision)
             {
-                Entity head = Parts.HasComponent(collision.EntityA) ? collision.EntityA : collision.EntityB;
+                Entity head = Parts.HasComponent(collision.EntityA) || Chickens.HasComponent(collision.EntityA)
+                    ? collision.EntityA : collision.EntityB;
                 Entity body = head == collision.EntityA ? collision.EntityB : collision.EntityA;
-                if (Parts.HasComponent(head) && Parts[head].Kind == BossPartKind.Head
+                if ((Chickens.HasComponent(head) || Parts.HasComponent(head) && Parts[head].Kind == BossPartKind.Head)
                     && Enemies.HasComponent(body))
                     Contacts.Add(new HeadContact { Head = head, Body = body });
             }

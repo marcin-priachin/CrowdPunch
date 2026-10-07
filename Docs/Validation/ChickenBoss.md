@@ -11,7 +11,7 @@ Scope: CHICKEN-001..008, PLAYER-003/004/005/009, COMBAT-015 and LOOP-006.
   Existing Unity package assembly-conflict warnings, deprecated aspect warnings and the
   existing unused aspect field remain. The default parallel MSBuild invocation exited
   without diagnostics; a single build worker succeeded.
-- `ChickenTestRunner.Run` passed 101 EditMode cases with zero failures/skips. This includes
+- `ChickenTestRunner.Run` passed 103 EditMode cases with zero failures/skips. This includes
   Chicken interactions, first-boss regressions, player-body impacts, launch homing, Trail
   interactions and all twenty progression scene/reference/bounds checks. NUnit results
   and summaries are saved under `Temp/ChickenValidation`.
@@ -21,6 +21,17 @@ Scope: CHICKEN-001..008, PLAYER-003/004/005/009, COMBAT-015 and LOOP-006.
   protected boss consumption, untouched-shot rejection, body ownership, maximum combined damage,
   protected/history repeat rejection, enemy pass-through/once-per-launch/re-punch eligibility,
   stagger/cancellation, defeat cleanup/completion and soft-reset state.
+- The rebound correction adds Chicken-contact tests for Player and Boss launch ownership:
+  outgoing velocity has no player-bound horizontal component, speed and vertical velocity
+  are preserved, the contacted boss homing lock clears, and the body retains its launch
+  ownership, damage, sequence and player-impact eligibility. Existing first-boss rebound
+  geometry regressions also pass. The C# build after this correction passed with zero errors.
+- A follow-up live Chicken solver contact produced lateral velocity (17.7673, -0.8175, 0),
+  a player-bound horizontal component effectively zero, and a cleared boss homing target.
+  The body retained Player ownership. Evidence is `Temp/ChickenValidation/rebound-live.txt`.
+  During the scripted switch into the encounter, the Editor also reported an invalid collider
+  blob in `PlayerObstacleCollisionSystem.Depenetrate`. That separate scene-transition error
+  was outside the changed rebound path; this check does not establish error-free scene loading.
 
 ## Instrumented live Editor evidence
 

@@ -44,6 +44,25 @@ namespace CrowdPunch.Tests
             em.SetComponentData(s,new ChickenProjectile { Boss=boss,Velocity=velocity,Launch=1,Redirected=redirected }); return s;
         }
         private void Projectiles() => world.GetOrCreateSystem<ChickenProjectileSystem>().Update(world.Unmanaged);
+        [TestCase(EnemyLaunchOwner.Player)] [TestCase(EnemyLaunchOwner.Boss)]
+        public void Chicken004_BossContactDeflectsPlayerBoundBodyAndClearsBossHoming(EnemyLaunchOwner owner)
+        {
+            var position=new float3(0,1,8);
+            var before=new float3(2,3,-15);
+            em.AddComponentData(source,LocalTransform.FromPosition(position));
+            em.AddComponentData(source,new PhysicsVelocity { Linear=before });
+            em.SetComponentData(source,new EnemyLaunchState { Phase=EnemyLaunchPhase.Launched,Owner=owner,
+                HomingTarget=boss,LaunchSequence=7,LaunchDamage=12 });
+            var playerPosition=em.GetComponentData<PlayerSnapshot>(player).Position;
+            BossHeadBounceSystem.ResolveContact(em,boss,source,playerPosition);
+            var after=em.GetComponentData<PhysicsVelocity>(source).Linear;
+            var launch=em.GetComponentData<EnemyLaunchState>(source);
+            Assert.LessOrEqual(math.dot(after.xz,math.normalizesafe((playerPosition-position).xz)),.0001f);
+            Assert.AreEqual(math.length(before.xz),math.length(after.xz),.0001f);
+            Assert.AreEqual(before.y,after.y); Assert.AreEqual(Entity.Null,launch.HomingTarget);
+            Assert.AreEqual(owner,launch.Owner); Assert.AreEqual(7,launch.LaunchSequence); Assert.AreEqual(12,launch.LaunchDamage);
+            Assert.IsTrue(LaunchedEnemyPlayerImpactSystem.CanDamagePlayer(launch));
+        }
         [Test] public void Chicken001_DefaultsAndAllStagePatterns()
         {
             Assert.AreEqual(ChickenPauseResponse.InterruptAndFlee,t.PauseResponse); Assert.AreEqual(ChickenShotAim.PlayerPosition,t.ShotAim);
