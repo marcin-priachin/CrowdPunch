@@ -33,7 +33,25 @@ namespace CrowdPunch.Editor
         private void OnEnable()
         {
             minSize = new Vector2(360, 150);
-            if (!EditorApplication.isPlayingOrWillChangePlaymode) RefreshLevels();
+            // Layout restoration calls OnEnable while scenes are still being restored.
+            // Opening a preview scene here can re-enter Unity's scene loading.
+            EditorApplication.delayCall -= RefreshLevelsAfterStartup;
+            EditorApplication.delayCall += RefreshLevelsAfterStartup;
+        }
+
+        private void OnDisable() => EditorApplication.delayCall -= RefreshLevelsAfterStartup;
+
+        private void RefreshLevelsAfterStartup()
+        {
+            if (this == null || EditorApplication.isPlayingOrWillChangePlaymode) return;
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                EditorApplication.delayCall += RefreshLevelsAfterStartup;
+                return;
+            }
+
+            RefreshLevels();
+            Repaint();
         }
 
         private void OnGUI()
