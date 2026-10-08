@@ -70,6 +70,14 @@ All game code is under `Assets/CrowdPunch/Scripts`:
 
 There are currently no game-specific assembly definitions; scripts compile into Unity's generated assemblies.
 
+`LevelPlayWindow` (**Window > Crowd Punch > Level Play**, also **Crowd Punch > Levels > Level Play Window**)
+reads Bootstrap's authored `GauntletSequence` in an isolated preview scene and starts Editor Play Mode
+from a selected gauntlet. It temporarily sets `EditorSceneManager.playModeStartScene` to Bootstrap;
+an editor-only, one-shot `SessionState` selection is consumed by `GauntletSequence.Start` before
+the usual first-level load. Normal additive loading, restart and onward progression remain owned
+by the sequence (LOOP-002/006). The previous Play Mode start scene is restored on returning to Edit Mode.
+The chosen level is remembered in local Editor preferences; no scene asset or build gameplay changes.
+
 ## Ownership Boundary
 
 `EnemyFacingSystem` runs in `GamePostPhysicsGroup` after respawn processing and the Dasher

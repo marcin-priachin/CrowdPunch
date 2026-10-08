@@ -9,6 +9,9 @@ namespace CrowdPunch.Mono.Levels
     /// <summary>Loads a fixed sequence of closed gauntlet scenes around the persistent Bootstrap scene.</summary>
     public sealed class GauntletSequence : MonoBehaviour
     {
+#if UNITY_EDITOR
+        public const string EditorStartLevelKey = "CrowdPunch.LevelLauncher.StartLevel";
+#endif
         [SerializeField] private string[] levelSceneNames;
         [SerializeField] private string[] levelDisplayNames;
         [SerializeField] private bool loadFirstLevelOnStart = true;
@@ -31,6 +34,17 @@ namespace CrowdPunch.Mono.Levels
         {
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;
             observedFailureSequence = GauntletFailureRegistry.Sequence;
+#if UNITY_EDITOR
+            // A one-shot editor override goes through the normal additive loading path (LOOP-002/006).
+            string editorStartLevel = UnityEditor.SessionState.GetString(EditorStartLevelKey, string.Empty);
+            UnityEditor.SessionState.EraseString(EditorStartLevelKey);
+            int editorStartIndex = levelSceneNames == null ? -1 : System.Array.IndexOf(levelSceneNames, editorStartLevel);
+            if (editorStartIndex >= 0)
+            {
+                StartCoroutine(LoadLevel(editorStartIndex));
+                return;
+            }
+#endif
             if (loadFirstLevelOnStart && levelSceneNames is { Length: > 0 })
             {
                 StartCoroutine(LoadLevel(0));
