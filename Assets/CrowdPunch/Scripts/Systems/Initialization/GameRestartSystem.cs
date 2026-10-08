@@ -53,6 +53,7 @@ namespace CrowdPunch.Systems.Initialization
             BossEncounterReset.Reset(EntityManager);
             ChickenEncounterReset.Reset(EntityManager);
             RollingEncounterReset.Reset(EntityManager);
+            DinoEncounterReset.Reset(EntityManager);
             foreach (var reflections in SystemAPI.Query<DynamicBuffer<CoverReflection>>()) reflections.Clear();
             foreach (var (cover, motion, transform) in SystemAPI.Query<RefRO<RotatingCover>, RefRW<RotatingCoverState>, RefRW<LocalTransform>>())
             {

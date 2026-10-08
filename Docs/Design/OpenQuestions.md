@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-07
+Last updated: 2026-10-08
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -77,6 +77,20 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-08 - Dino Pillars And Gauntlet_22
+
+Decision: Adopt the final agreed summary in Boss Pillar Design, conversation
+6ac79a98-f608-83ed-8503-1a550fa5810c. PILLAR-001..006 record continuous pursuit,
+slower-turning bursts, pillar-only damage, Player-owned toppling, locked direction,
+once-per-fall moving contacts, safe miss regeneration and complete lifecycle.
+Default toward-boss falling, damage-and-push response, and three successful hits;
+both alternative modes and one/two-hit requirements remain configurable.
+Numbers, layout, visuals, clips and collision safeguards are delegated. No blocking
+question remains; balance and OQ-001 crowd/target-hardware criteria still need playtesting.
+
+Rejected: regenerating successful pillars, explosion/non-Player toppling, ordinary boss
+damage, solid fallen obstacles, pillar ground markers and an extra standalone test level.
 
 ### 2026-10-07 - Rolling Blob And Gauntlet_21
 

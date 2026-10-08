@@ -20,7 +20,8 @@ namespace CrowdPunch.Systems.Presentation
             {
                 bool chicken = SystemAPI.HasComponent<ChickenBoss>(animation.ValueRO.Owner);
                 bool rolling = SystemAPI.HasComponent<RollingBoss>(animation.ValueRO.Owner);
-                if (!chicken && !rolling) commands.AddComponent(animation.ValueRO.Owner, new EnemyLandingAnimation
+                bool dino = SystemAPI.HasComponent<DinoBoss>(animation.ValueRO.Owner);
+                if (!chicken && !rolling && !dino) commands.AddComponent(animation.ValueRO.Owner, new EnemyLandingAnimation
                 {
                     Duration = animation.ValueRO.Samples.Value.Durations[EnemyAnimationSamples.ImpactMotion]
                 });
@@ -28,7 +29,8 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     Entity entity = child.Value;
                     if (!SystemAPI.HasComponent<RenderBounds>(entity)) continue;
-                    if (rolling) commands.AddComponent(entity, new RollingVisualOwner { Value = animation.ValueRO.Owner });
+                    if (dino) commands.AddComponent(entity, new DinoVisualOwner { Value = animation.ValueRO.Owner });
+                    else if (rolling) commands.AddComponent(entity, new RollingVisualOwner { Value = animation.ValueRO.Owner });
                     else if (chicken) commands.AddComponent(entity, new ChickenVisualOwner { Value = animation.ValueRO.Owner });
                     else
                     {

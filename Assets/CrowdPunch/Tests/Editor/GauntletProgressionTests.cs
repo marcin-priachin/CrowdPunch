@@ -43,22 +43,22 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Loop002_ActiveSequenceAndBuildSettingsContainTwentyOneOrderedLevels()
+        public void Loop002_ActiveSequenceAndBuildSettingsContainTwentyTwoOrderedLevels()
         {
             Scene scene = EditorSceneManager.OpenScene(Root + "Bootstrap.unity", OpenSceneMode.Additive);
             try
             {
                 var sequence = Find<GauntletSequence>(scene);
                 var names = new SerializedObject(sequence).FindProperty("levelSceneNames");
-                Assert.That(names.arraySize, Is.EqualTo(21));
+                Assert.That(names.arraySize, Is.EqualTo(22));
                 string[] enabled = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-                Assert.That(enabled.Length, Is.EqualTo(24));
-                Assert.That(enabled.Skip(22), Is.EquivalentTo(new[] {
+                Assert.That(enabled.Length, Is.EqualTo(25));
+                Assert.That(enabled.Skip(23), Is.EquivalentTo(new[] {
                     Root + "NavigationValidation/NavigationValidationBootstrap.unity",
                     Root + "NavigationValidation/NavigationValidationArena.unity" }),
                     "The two separate validation scenes must not enter the playable progression.");
                 Assert.That(enabled[0], Is.EqualTo(Root + "Bootstrap.unity"));
-                for (int i = 0; i < 21; i++)
+                for (int i = 0; i < 22; i++)
                 {
                     string id = $"Gauntlet_{i + 1:00}";
                     Assert.That(names.GetArrayElementAtIndex(i).stringValue, Is.EqualTo(id));
@@ -89,6 +89,7 @@ namespace CrowdPunch.Tests
         [TestCase(19)]
         [TestCase(20)]
         [TestCase(21)]
+        [TestCase(22)]
         public void Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(int number)
         {
             string id = $"Gauntlet_{number:00}";

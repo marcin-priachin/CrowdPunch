@@ -278,7 +278,7 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 
 `GauntletSequence` belongs to the persistent Bootstrap scene and loads one configured gauntlet scene additively at a time. A gauntlet scene owns its presentation layout, one `GauntletLevel` marker with an authored player entry point, and an ECS SubScene for level-specific collision and encounter data. The transition pauses scaled simulation, unloads the previous scene and its baked entities, loads the next scene, places the GameObject player at the authored entry point, and requests the established ECS restart reset. It never queries or retains enemy entities.
 
-`GauntletCompletionSystem` runs in `GamePresentationGroup` and reports through the narrow `GauntletCompletionRegistry`. Ordinary gauntlets require every loaded wave sequence to complete; an empty loading interval cannot advance. When a boss is loaded, its defeat state is authoritative and supporting-wave completion cannot win early. The Bootstrap flow consumes one completion signal and loads the next scene (LOOP-002/006). Gauntlet 10 advances to The Gatekeeper; its defeat advances to Gauntlet_12 (Crack the Shell). Chicken defeat advances to Gauntlet_21 (Rolling Blob). Only the final authored gauntlet sets `GauntletSequence.RunComplete`. The existing pause menu presents Run Complete, Play Again, and twenty-one selectable levels (BOSS-007, CHICKEN-006, ROLL-006).
+`GauntletCompletionSystem` runs in `GamePresentationGroup` and reports through the narrow `GauntletCompletionRegistry`. Ordinary gauntlets require every loaded wave sequence to complete; an empty loading interval cannot advance. When a boss is loaded, its defeat state is authoritative and supporting-wave completion cannot win early. The Bootstrap flow consumes one completion signal and loads the next scene (LOOP-002/006). Gauntlet 10 advances to The Gatekeeper; its defeat advances to Gauntlet_12 (Crack the Shell). Chicken defeat advances to Gauntlet_21 (Rolling Blob), and its defeat advances to Gauntlet_22 (Dino Pillars). Only the final authored gauntlet sets `GauntletSequence.RunComplete`. The existing pause menu presents Run Complete, Play Again, and twenty-two selectable levels (BOSS-007, CHICKEN-006, ROLL-006, PILLAR-006).
 
 `GauntletLevel` owns optional opening-hint text alongside its entry transform. `GauntletSequence` publishes that text and an entry counter to the existing `PauseMenu`, which shows a ten-second hint in levels 1-2 and a two-column selection grid in the menu. This is GameObject presentation metadata, not an enemy bridge. The authored display names are separate from scene-loading names. The existing restart button now delegates through `GameBootstrap` to `RestartCurrentLevel` when a gauntlet is active, resetting final-completion state and reusing the additive reload path. Legacy scenes still use soft restart.
 
@@ -1467,3 +1467,53 @@ completion proceed without waiting; the optional Wizard-zone hazard gate remains
 Bootstrap/build/selector append 19 after Hold the Line.
 Starting tuning is 1.2m/5s/4 damage normal, 2m/6s/8 damage launched, .75s ticks, .35s player
 protection, 8m circling distance and 4s reversals. See [Trail validation](../Validation/Trail.md).
+
+## Dino Pillars And Gauntlet_22 (PILLAR-001..006)
+
+`DinoBossAuthoring` and `FallingPillarAuthoring` bake the boss and exactly three scene-owned
+pillars. `DinoBossSettings.asset` is the dedicated tuning source; `DinoTuning` and
+`PillarTuning` contain only ECS data and immutable collider blobs. The boss owns `DinoBoss`,
+`Health` measured in required pillar hits, dynamic Unity Physics capsule/mass/velocity and
+no ordinary enemy launch components. Ordinary punch/explosion/body-damage paths therefore
+cannot launch or damage it. `PillarDamageResolution` alone changes boss health and stagger.
+
+`DinoCycleSystem` advances chase/warning/burst/stagger before physics. `DinoMotionSystem`
+turns toward the player, uses capsule sweeps and surface tangents around static obstacles,
+and steers horizontal velocity with bounded acceleration. Burst turning is slower;
+warning retains normal chase. `DinoContactSystem` locks only the ground axis after physics,
+publishes cooldown-limited player contacts through the existing bridge, and gives ordinary
+crowd bodies outward velocity without damage or launch-state changes.
+
+`PillarToppleSystem` runs after launch homing and grounding, sweeping Player-owned launched
+enemy colliders before the physics build. A nearer blocking contact remains authoritative.
+Toppling locks direction at impact, clears per-fall histories, reserves the triggering
+body's pass-through contact so launch mode cannot steal its launch, and swaps the solid box for
+an immutable zero-filter box before the solver. It never changes the triggering body.
+`PillarFallMotionSystem` rotates the scripted pillar around its base with an accelerating
+fall. `PillarFallContactSystem` runs after physics and before recovery/replenishment. It
+collects enemy contacts in a Burst job by subdividing the rotating box arc and target
+motion with conservative capsule padding,
+records each enemy once per fall and separate player/boss flags, and resolves shared enemy
+damage/deferred defeat. The alternate launch response starts explicit `EnvironmentImpact`
+launches owned by `Environment`; normal propagation inherits this ownership. These launches
+remain dangerous to the player and fail the Player-only pillar trigger.
+
+`PillarRegenerationSystem` hides fallen geometry after its brief linger. Successful pillars
+stay consumed; misses wait for their delay and player/boss clearance. Ordinary occupants
+receive outward velocity; collision is restored only after they actually clear the space.
+This avoids teleporting physics-driven enemies into an upright obstacle.
+
+Upright pillars join aim-assist candidates and launch homing. Falling/waiting/consumed
+pillars and immune Dino are ineligible. `DinoAnimationSystem` uses generated Dino Walk,
+Run, HitReact and Death samples through the established GPU skinning path. Presentation
+colors distinguish warning, burst, stagger, impact and regeneration; no ground marker or
+additional HUD is created. `EnemyHealthBarBridgeSystem` reuses the existing boss bar.
+
+`BossCrowdSequence`, spawning and replenishment now recognize Dino as an owner. The
+Gauntlet_22 wave asset supplies eight Baselines with a three-second respawn delay.
+`GauntletCompletionSystem` uses Dino defeat as authoritative regardless of crowd survivors.
+`DinoEncounterReset` restores health, timers, velocity, all pillar colliders/transforms,
+hit histories and sampled playback; additive unloading removes their SubScene entities.
+The authored sequence and Build Settings append Dino Pillars after Rolling Blob.
+Rebuild via **Crowd Punch > Levels > Build Dino Pillars Gauntlet 22**; existing boss/wave
+settings are preserved. See [Dino pillar validation](../Validation/DinoPillars.md).

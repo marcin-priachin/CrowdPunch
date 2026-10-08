@@ -12,6 +12,12 @@ namespace CrowdPunch.Bakers
         public override void Bake(EnemyWaveSequenceAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.None);
+            if (authoring.dinoBoss != null)
+            {
+                if (authoring.Waves.Count != 1 || authoring.barricade != null || authoring.bossEncounter != null || authoring.chickenBoss != null || authoring.rollingBoss != null)
+                    throw new System.InvalidOperationException("Dino crowd requires one bounded wave and one boss owner.");
+                AddComponent(entity, new BossCrowdSequence { Encounter = GetEntity(authoring.dinoBoss, TransformUsageFlags.Dynamic) });
+            }
             if (authoring.barricade != null)
             {
                 if (authoring.Waves.Count != 1 || authoring.bossEncounter != null || authoring.chickenBoss != null || authoring.rollingBoss != null)

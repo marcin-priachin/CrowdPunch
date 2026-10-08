@@ -63,6 +63,9 @@ namespace CrowdPunch.Systems.Combat
 
         public static bool IsValidTarget(EntityManager manager, Entity source, Entity target)
         {
+            if (target != Entity.Null && manager.HasComponent<DinoBoss>(target)) return false;
+            if (target != Entity.Null && manager.HasComponent<FallingPillar>(target))
+                return manager.GetComponentData<FallingPillar>(target).Phase == PillarPhase.Upright;
             if (target != Entity.Null && manager.HasComponent<RollingBoss>(target))
                 return RollingDamageResolution.CanTarget(manager.GetComponentData<RollingBoss>(target),manager.GetComponentData<RollingTuning>(target));
             if (target != Entity.Null && manager.HasComponent<ChickenBoss>(target))

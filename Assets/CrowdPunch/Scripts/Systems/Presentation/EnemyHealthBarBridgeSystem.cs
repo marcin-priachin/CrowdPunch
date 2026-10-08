@@ -74,6 +74,10 @@ namespace CrowdPunch.Systems.Presentation
                     transform.ValueRO.Position,
                     armor.ValueRO.Stages);
             }
+            foreach (var (boss,health,transform,entity) in SystemAPI.Query<RefRO<DinoBoss>,RefRO<Health>,RefRO<LocalTransform>>().WithEntityAccess())
+                if(boss.ValueRO.Phase!=DinoPhase.Defeated)
+                    EnemyHealthBarCanvasRegistry.Publish(entity.Index,transform.ValueRO.Position+new Unity.Mathematics.float3(0,2.5f,0),
+                        health.ValueRO.Normalized,true,true,string.Empty);
             EnemyHealthBarCanvasRegistry.EndFrame();
         }
 

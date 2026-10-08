@@ -8,6 +8,7 @@ namespace CrowdPunch.Systems.Combat
         public static EnemyLaunchOwner FromCause(EnemyLaunchCause cause)
         {
             if (cause == EnemyLaunchCause.BossAttack) return EnemyLaunchOwner.Boss;
+            if (cause == EnemyLaunchCause.EnvironmentImpact) return EnemyLaunchOwner.Environment;
             return cause == EnemyLaunchCause.PlayerPunch
                 ? EnemyLaunchOwner.Player
                 : cause == EnemyLaunchCause.None

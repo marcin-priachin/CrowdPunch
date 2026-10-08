@@ -18,7 +18,8 @@ namespace CrowdPunch.Components
         Explosion,
         ElitePunch,
         BossAttack,
-        WizardZone
+        WizardZone,
+        EnvironmentImpact
     }
 
     public enum EnemyLaunchOwner : byte
@@ -26,7 +27,8 @@ namespace CrowdPunch.Components
         None,
         Player,
         Enemy,
-        Boss
+        Boss,
+        Environment
     }
 
     /// <summary>

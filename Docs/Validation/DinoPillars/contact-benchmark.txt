@@ -1,0 +1,3 @@
+Isolated ECS fall-contact benchmark, 3 simultaneously falling pillars; 40 warmups + 240 measured updates. Wall-clock system cost excludes reset, physics, animation and rendering.
+8 enemies: mean 0.3391 ms; max 0.6698 ms per update
+200 enemies: mean 6.1555 ms; max 11.3104 ms per update

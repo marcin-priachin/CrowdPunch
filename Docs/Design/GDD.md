@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-07
+Last updated: 2026-10-08
 
 ## How To Read This Document
 
@@ -1114,6 +1114,79 @@ health, thresholds, protection, wind-up/pause/roll timing, bounce limits, speed,
 launch/push and presentation tuning. Composition/replenishment remain wave-owned. Reuse one elite-style
 boss health bar without vulnerability countdown. Distinguish pause, wind-up, rolling and temporary
 hit protection; include one brief opening hint. Numbers, layout and minor presentation are delegated.
+
+## Dino Pillar Boss (Agreed 2026-10-08)
+
+### PILLAR-001 - Continuous Pursuit And Pillar-Only Defeat
+
+Status: Must
+
+Dino repeats normal chase, a brief warning while still chasing normally, and a speed burst
+that continues steering with slower turning. Three health stages increase chase speed and
+shorten chase intervals. Only falling pillars damage him; punches, launched bodies,
+explosions and other attacks cannot damage or launch him. Each successful pillar contributes
+one hit and briefly staggers him, cancelling a burst. Another pillar may hit during stagger
+and refresh it. Required successful hits are configurable from 1 to 3, default 3.
+Normal chase, warning and burst contact damage the player with a configurable cooldown.
+Boss crowd contacts push without damage or starting launches.
+
+### PILLAR-002 - Player-Owned Body Trigger And Solidity
+
+Status: Must
+
+Exactly three pillars begin upright and solid to everyone. One Player-owned launched-enemy
+impact, including a propagated Player-owned chain, topples a pillar. Direct punches,
+explosions alone and non-Player launches cannot topple it. The triggering body continues
+through with its launch retained. Solid blocking ends when falling begins; falling and
+fallen pillars never trap characters. Dino navigates around upright pillars.
+
+### PILLAR-003 - Locked Direction And Moving Contacts
+
+Status: Must
+
+Expose incoming enemy travel direction and toward-boss fall modes, default toward boss.
+Lock the direction at impact using the boss position at that moment. The rotating pillar
+shape detects contact during its fall; each target receives at most one hit per fall.
+Falling pillars damage the boss, player and ordinary enemies. Communicate direction through
+the falling animation alone; do not add a ground marker.
+
+### PILLAR-004 - Configurable Ordinary Impact Response
+
+Status: Must
+
+Expose damage-and-push without starting a launch (default), and damage-and-launch for
+launchable ordinary enemies while pushing the player. Pillar-created launches and their
+propagated chains are Environment-owned and cannot topple other pillars. Preserve established
+launch resistance, armor and deferred-defeat rules. All launched bodies remain dangerous to
+the player under COMBAT-015.
+
+### PILLAR-005 - Consumption And Safe Regeneration
+
+Status: Must
+
+A successful boss hit permanently consumes that pillar. A missed pillar's fallen visual
+disappears, then it regenerates after a configurable few-second delay. Regeneration waits
+while the player or boss occupies its upright space and pushes ordinary enemies aside
+without damage or initiating launches. Restore solid blocking only when the space is clear.
+
+### PILLAR-006 - Targeting, Assets And Lifecycle
+
+Status: Must
+
+Upright pillars participate in existing launch aim assistance, homing and short trajectory
+previews. Exclude the immune boss and unavailable pillars from targeting. Use
+`Assets/CrowdPunch/Models/UltimateMonsters/Big/Dino.fbx` with supplied animations, one existing
+boss health bar and a brief opening hint. Show readable warning, burst, stagger, pillar
+impact and regeneration feedback in-world. A dedicated settings asset owns stage movement,
+turning, cycle/stagger/contact timing, pillar geometry/fall/regeneration and damage/push/launch
+strengths. Composition and replenishment remain in existing wave settings.
+
+Append exactly Gauntlet_22 after Rolling Blob: an enclosed otherwise open arena, three spaced
+pillars and a small replenishing Baseline crowd. Boss defeat completes immediately and stops
+replenishment; supporting survivors need not be defeated. Retry/restart restores boss,
+pillars, crowd, timers, histories and completion. Unloading removes encounter-owned state
+and effects. Numerical balance, layout, pillar visuals, clips, colors and collision safeguards
+are delegated to implementation; no additional encounter mechanics are authorized.
 
 ## Explicit Non-Goals For The Current Baseline
 

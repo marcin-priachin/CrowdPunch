@@ -1,0 +1,13 @@
+Controlled live probe: restores health, places physical shots, holds boss for geometry checks, and injects final fall contacts. Not a balance playtest.
+PASS baked Dino, three pillars, eight Baselines, sampled animation
+PASS live chase / moving warning / burst cycle
+PASS continuous pursuit around upright pillar: float3(-7.980043f, 1f, 5.46515f)
+PASS actual swept Player-owned shot topples and passes through; no solid falling collider
+PASS moving shape damages boss once and successful pillar stays consumed
+PASS incoming-direction miss disappears
+PASS regeneration waits while player occupies upright space
+PASS missed pillar restores after clearing crowd; ordinary body pushed without launch
+PASS three physical pillar hits complete immediately with surviving support; replenishment stops
+PASS retry restores full boss, all upright pillars, cleared histories and eight crowd
+PASS switching to Rolling removes Dino and all pillars
+PASS returning from Rolling creates fresh encounter; probe complete

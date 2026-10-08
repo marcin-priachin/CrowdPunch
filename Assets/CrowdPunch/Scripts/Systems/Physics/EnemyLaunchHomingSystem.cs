@@ -48,7 +48,9 @@ namespace CrowdPunch.Systems.Physics
                     && SystemAPI.GetComponent<Barricade>(target).HitsRemaining > 0;
                 livingBoss |= SystemAPI.HasComponent<RollingBoss>(target)
                     && Combat.RollingDamageResolution.CanTarget(SystemAPI.GetComponent<RollingBoss>(target),SystemAPI.GetComponent<RollingTuning>(target));
-                if (!livingBoss && !intactBarricade && !IsValidTarget(target, transforms, launchStates, health, respawns)) continue;
+                bool uprightPillar = SystemAPI.HasComponent<FallingPillar>(target)
+                    && SystemAPI.GetComponent<FallingPillar>(target).Phase == PillarPhase.Upright;
+                if (!livingBoss && !intactBarricade && !uprightPillar && !IsValidTarget(target, transforms, launchStates, health, respawns)) continue;
 
                 velocity.ValueRW.Linear = EnemyLaunchHoming.RotateHorizontalVelocity(
                     velocity.ValueRO.Linear,
