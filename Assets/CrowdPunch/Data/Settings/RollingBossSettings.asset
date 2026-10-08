@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 939c20787032e3041b14d95cd49c2e3e, type: 3}
   m_Name: RollingBossSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.RollingBossSettings
-  health: 1800
+  health: 500
   stageTwoThreshold: 0.66
   stageThreeThreshold: 0.33
-  pauseDurations: {x: 4, y: 3.2, z: 2.5}
-  rollSpeeds: {x: 9, y: 11, z: 13}
+  pauseDurations: {x: 2.5, y: 1.5, z: 1}
+  rollSpeeds: {x: 16, y: 19, z: 22}
   openingPause: 3
   windUp: 1.2
   rollDuration: 5
@@ -29,10 +29,10 @@ MonoBehaviour:
   contactDanger: 0
   targeting: 0
   crowdDirection: 0
-  bodyRadius: 1.8
-  bodyHeight: 3.6
+  bodyRadius: 3.6
+  bodyHeight: 7.2
   mass: 250
-  playerDamage: 14
+  playerDamage: 28
   playerProtection: 0.8
   playerPush: 14
   contactInterval: 0.8
