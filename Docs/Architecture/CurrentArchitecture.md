@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-10-07
+Last inspected: 2026-10-09
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -19,7 +19,7 @@ Crowd Punch uses a hybrid Unity architecture:
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_21` each contain their matching ECS SubScene. Twenty-one gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss, gauntlet 17 introduces Wizards, gauntlet 18 introduces protected-point defense, gauntlet 19 introduces Trail enemies, gauntlet 20 introduces the Chicken boss, and gauntlet 21 introduces the Rolling Blob. The separate navigation validation scenes remain outside progression.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_23` each contain their matching ECS SubScene. Twenty-three gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss, gauntlet 17 introduces Wizards, gauntlet 18 introduces protected-point defense, gauntlet 19 introduces Trail enemies, gauntlet 20 introduces the Chicken boss, gauntlet 21 introduces the Rolling Blob, gauntlet 22 introduces Dino Pillars, and gauntlet 23 introduces fixed ground hazards. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
 ## Source Layout
@@ -1535,3 +1535,63 @@ hit histories and sampled playback; additive unloading removes their SubScene en
 The authored sequence and Build Settings append Dino Pillars after Rolling Blob.
 Rebuild via **Crowd Punch > Levels > Build Dino Pillars Gauntlet 22**; existing boss/wave
 settings are preserved. See [Dino pillar validation](../Validation/DinoPillars.md).
+
+## Fixed Ground Hazards And Gauntlet_23 (GROUND-001..007)
+
+`GroundHazardAuthoring` bakes XZ circle or yaw-oriented rectangle footprints,
+per-patch damage/tick tuning, periodic durations/offset and first-wave introduction.
+Dimensions are explicit world metres; transform scale and height do not resize damage.
+`GroundHazardPolicyAuthoring` adds scene policy to the wave sequence from the dedicated
+`Data/Settings/GroundHazardSettings.asset`: Active-only avoidance and Wait Safely by default.
+Warning-and-Active and Cross As Last Resort remain exposed alternatives.
+
+Pre-physics `GroundHazardCycleSystem` runs before wave spawning, resetting patch epochs
+when sequence wave index or run generation changes. Epochs begin at the wave's pre-spawn
+delay. Later-wave patches are introduced then; introduced inactive patches stay visible.
+Spawn capture evaluates authored offsets when initialization/reset/advancement precedes
+the cycle system, preventing a one-update unsafe placement gap. Initial random, wave,
+shared spawn creation, soft restart and pooled respawn paths reject warning/active
+footprints independently of avoidance policy. Failed placement retains existing retries.
+
+`GroundHazardNavigationSystem` runs after terrain navigation and before both enemy motors.
+It retains the immutable terrain grid and adds a dynamic edge mask per clearance class,
+rebuilt by a Burst parallel job only when hazardous membership changes. It does not
+rebuild solid connectivity, create collision geometry or alter physics velocity. A Burst
+`IJobEntity` writes voluntary `DesiredMovement`, using a bounded FIFO and separate
+`GroundHazardRoute`/`GroundHazardWaypoint` data. Shared A* accepts optional edge masks;
+terrain callers keep previous behavior. Hazard searches use the existing navigation
+asset's expansion, slot, queue and path limits, with a separate budget from terrain.
+Radius-inclusive sweeps validate edges, shortcuts and braking probes. Activation invalidates
+cached routes/searches. Caught Active bodies sample 32 analytical footprint exits,
+preserving static clearance and other patches. Armor does not exempt avoidance. Launch,
+recovery, committed lunges/Dashers, stationary casters and reserved elite projectiles
+preserve existing movement ownership.
+
+Wait Safely brakes while routes are pending/unavailable. Cross As Last Resort keeps
+terrain's original movement only after an exhaustive unreachable result. Expansion/path
+limits and invalid anchors remain safe waits. Native scratch survives inactive cycles
+and is disposed on arena unload/world teardown. Pooling/restart invalidate versions and
+buffers; scene-owned roots disappear on unload.
+
+Post-physics `GroundHazardDamageSystem` runs after Trail damage and before recovery. Each
+baked enemy owns one `GroundHazardDamageClock`, shared across all patches and keyed by
+`EnemyLifetime`; exit, overlap and activation never clear it. Simultaneous overlaps select
+the highest-damage patch, with the longer interval breaking ties. Shared damage resolution
+preserves armor, pending-damage attribution and launched deferred defeat, without impulse
+or explosive requests. Current Player-owned launched victims receive Player lethal credit;
+other hazard damage uses Environment ownership. Existing launch ownership stays intact.
+
+One player clock and `GroundHazardPlayerHit` singleton buffer feed the dedicated
+`GroundHazardPlayerHitSystem`/`PlayerEcsBridge.GroundHazardDamageReceived` event.
+`PlayerHealth` accepts damage through the existing damage-only path, bypassing ordinary
+invulnerability and retaining dash/movement. MonoBehaviours do not query enemies.
+Restart clears pending hits/clocks and patch epochs. `GroundHazardPresentationSystem`
+draws matching footprints with a shared procedural mesh/material: slate inactive,
+full-area pulsing amber warning and bright red active. No additional HUD is created.
+
+**Crowd Punch > Levels > Build Ground Hazards Gauntlet 23** authors Hot Footing after Dino
+Pillars: a nature-kit 32 x 34m clipped court, two permanent patches and two periodic patches
+introduced in wave two. Editable waves contain 12 and 20 finite Baselines, with no supply
+or persistent-hazard completion gate. Broad side corridors and safe spawn ranges remain.
+Initial tuning is 12 damage every .75s; periodic timing is 3s inactive / 1.5s warning /
+2.5s active, with 0s/2s offsets. See [Ground hazard validation](../Validation/GroundHazards.md).

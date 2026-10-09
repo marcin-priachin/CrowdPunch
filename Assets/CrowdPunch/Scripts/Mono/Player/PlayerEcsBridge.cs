@@ -306,6 +306,8 @@ namespace CrowdPunch.Mono.Player
         /// <summary>Routes configured enemy damage through the existing player health and invulnerability path.</summary>
         public event Action<float, Vector3> WizardHitReceived;
         public event Action<float> TrailDamageReceived;
+        public event Action<float> GroundHazardDamageReceived;
+        public void ReceiveGroundHazardDamage(float amount) => GroundHazardDamageReceived?.Invoke(amount);
         public void ReceiveTrailDamage(float amount) => TrailDamageReceived?.Invoke(amount);
 
         /// <summary>Delivers damage already gated by an individual ECS zone's target timer.</summary>

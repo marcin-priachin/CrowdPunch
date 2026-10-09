@@ -33,6 +33,7 @@ namespace CrowdPunch.Systems.Lifetime
         public void OnUpdate(ref SystemState state)
         {
             double elapsedTime = SystemAPI.Time.ElapsedTime;
+            using var groundHazards = GroundHazardSpawnClearance.Capture(state.EntityManager);
             ArenaBounds arenaBounds = SystemAPI.GetSingleton<ArenaBounds>();
             PlayerSnapshot playerSnapshot = SystemAPI.HasSingleton<PlayerSnapshot>()
                 ? SystemAPI.GetSingleton<PlayerSnapshot>()
@@ -153,6 +154,12 @@ namespace CrowdPunch.Systems.Lifetime
                         var navigation = SystemAPI.GetComponent<NavigationPathState>(enemy); navigation.Reset();
                         SystemAPI.SetComponent(enemy, navigation); SystemAPI.GetBuffer<NavigationWaypoint>(enemy).Clear();
                     }
+                    if (SystemAPI.HasComponent<GroundHazardRoute>(enemy))
+                    {
+                        var route = SystemAPI.GetComponent<GroundHazardRoute>(enemy);
+                        SystemAPI.SetComponent(enemy,new GroundHazardRoute { Version = route.Version + 1 });
+                        SystemAPI.GetBuffer<GroundHazardWaypoint>(enemy).Clear();
+                    }
                     respawnRequest.ValueRW.IsPooled = 1;
                     respawnRequest.ValueRW.RespawnAt = respawnSettings.ValueRO.Enabled != 0
                         ? elapsedTime + RespawnDelaySeconds
@@ -198,7 +205,8 @@ namespace CrowdPunch.Systems.Lifetime
                 for (int attempt = 0; attempt < 32; attempt++)
                 {
                     respawnPosition = GetRespawnPosition(ref random, spawnBounds, playerSnapshot);
-                    if (NavigationGeometry.SpawnAllowed(grid, respawnPosition.xz, radius)) { foundPosition = true; break; }
+                    if (NavigationGeometry.SpawnAllowed(grid, respawnPosition.xz, radius) &&
+                        GroundHazardGeometry.Clear(groundHazards.AsArray(), respawnPosition.xz, respawnPosition.xz, radius)) { foundPosition = true; break; }
                 }
                 if (!foundPosition) { respawnRequest.ValueRW.RespawnAt = elapsedTime + 1; continue; }
                 if ((SystemAPI.HasComponent<BossCrowdMember>(enemy) || SystemAPI.HasComponent<BarricadeCrowdMember>(enemy))
@@ -206,6 +214,8 @@ namespace CrowdPunch.Systems.Lifetime
                     || !BossCrowdPlacement.TryFind(state.EntityManager,enemy,SystemAPI.GetSingleton<PhysicsWorldSingleton>(),
                         playerSnapshot,grid,ref random,out respawnPosition)))
                 { respawnRequest.ValueRW.RespawnAt=elapsedTime+1; continue; }
+                if (!GroundHazardGeometry.Clear(groundHazards.AsArray(), respawnPosition.xz, respawnPosition.xz, radius))
+                { respawnRequest.ValueRW.RespawnAt = elapsedTime + 1; continue; }
                 transform.ValueRW.Position = respawnPosition;
                 SystemAPI.SetComponent(enemy, new EnemyGroundConstraint());
                 physicsVelocity.ValueRW = default;

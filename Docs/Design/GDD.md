@@ -1196,6 +1196,75 @@ pillars, crowd, timers, histories and completion. Unloading removes encounter-ow
 and effects. Numerical balance, layout, pillar visuals, clips, colors and collision safeguards
 are delegated to implementation; no additional encounter mechanics are authorized.
 
+## Ground Hazards (Agreed 2026-10-09)
+
+### GROUND-001 - Fixed Shapes And Activation
+
+Status: Must
+
+Support fixed rectangle and circle patches, each authored as always active or periodic.
+Periodic patches repeat inactive -> warning -> active. Inactive and warning phases deal
+no damage. Each patch has its own durations and starting offset; every wave start and
+retry resets cycles to their authored offsets. Expose damage, interval, dimensions,
+inactive/warning/active durations and offset as editable tuning. Initial numbers are delegated.
+
+### GROUND-002 - Horizontal Damage Only
+
+Status: Must
+
+Active patches damage the player and living Active, Launched and Recovering enemies by
+horizontal overlap, ignoring height. Damage causes no slow, push, launch or trajectory
+change. Launched lethal victims retain the shared deferred-defeat behavior (COMBAT-011).
+
+### GROUND-003 - Shared Victim Cooldown And Player Protection
+
+Status: Must
+
+First eligible contact hits immediately, followed by the configured damage interval.
+All ground patches share one cooldown per victim. Overlaps, exit/reentry, switching
+patches and activation cycles cannot bypass an unexpired cooldown. Player dash and
+ordinary hit invulnerability do not prevent hazard damage.
+
+### GROUND-004 - Armor, Exploders And Kill Credit
+
+Status: Must
+
+Intact enemy armor prevents health damage and armor-stage loss. Armored enemies still
+avoid patches. Hazard kills never trigger Exploder explosions. Lethal hazard damage
+receives player chain credit only when the victim is currently in a Player-owned launch;
+otherwise it receives environmental credit. Preserve established launch ownership.
+
+### GROUND-005 - Voluntary Routing And Configurable Fallback
+
+Status: Must
+
+Enemies route around hazardous areas and try to leave when caught inside. Avoidance
+changes voluntary movement only; launches and physical collisions can force bodies
+into danger. Committed attacks, including Dasher charges and melee lunges already
+underway, finish normally without avoidance. Launched bodies retain existing physics.
+Expose Active-only avoidance (default) or Warning-and-Active avoidance, and Wait Safely
+(default) or Cross As Last Resort when no safe route exists. Local repulsion alone does
+not satisfy route finding.
+
+### GROUND-006 - Safe Spawning And Lifecycle
+
+Status: Must
+
+Spawn enemies outside warning and active patches, regardless of avoidance policy.
+Permanent patches leave safe routes and usable spawn space. Retry/restart and scene
+unloading reset or remove encounter cycles, shared damage clocks and cached hazard routes.
+
+### GROUND-007 - Gauntlet_23 And Presentation
+
+Status: Must
+
+Append exactly one compact Gauntlet_23 after Dino Pillars. Wave one introduces always-active
+patches with finite Baselines; wave two adds periodic patches. Complete once every
+finite-wave enemy is defeated; hazards never delay completion. Enemy counts and layout
+are delegated. Introduced periodic patches remain visible while inactive, with distinct
+inactive/warning/active appearances, a full-footprint pulsing warning and a brighter
+active state. Colors and effects are delegated; no additional HUD is required.
+
 ## Explicit Non-Goals For The Current Baseline
 
 - Conventional attack combo strings.

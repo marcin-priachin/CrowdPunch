@@ -31,7 +31,7 @@ namespace CrowdPunch.Utilities
             SetNode(slot, request.Start, new NavigationSearchNode { Stamp = s.Stamp, Cost = 0, Score = Heuristic(ref g, request.Start, request.Goal), Parent = -1, HeapIndex = -1 });
             Push(slot, request.Start);
         }
-        public int ExpandBudget(ref NavigationGridBlob g, int budget, int searchLimit)
+        public int ExpandBudget(ref NavigationGridBlob g, int budget, int searchLimit, NativeArray<GroundHazard> hazards = default, NativeArray<byte> hazardEdges = default)
         {
             int used = 0, idle = 0;
             while (used < budget && idle < Slots.Length)
@@ -39,11 +39,11 @@ namespace CrowdPunch.Utilities
                 int slot = Cursor; Cursor = (Cursor + 1) % Slots.Length; var s = Slots[slot];
                 if (s.Active == 0 || s.Result != NavigationSearchResult.Running) { idle++; continue; }
                 idle = 0;
-                Step(slot, ref g, searchLimit); used++;
+                Step(slot, ref g, searchLimit, hazards, hazardEdges); used++;
             }
             return used;
         }
-        private void Step(int slot, ref NavigationGridBlob g, int limit)
+        private void Step(int slot, ref NavigationGridBlob g, int limit, NativeArray<GroundHazard> hazards, NativeArray<byte> hazardEdges)
         {
             var s = Slots[slot];
             if (s.HeapCount == 0) { s.Result = NavigationSearchResult.Unreachable; Slots[slot] = s; return; }
@@ -51,10 +51,13 @@ namespace CrowdPunch.Utilities
             if (cell == s.Request.Goal) { s.Result = NavigationSearchResult.Found; s.End = cell; Slots[slot] = s; return; }
             if (s.Expanded >= limit) { s.Result = NavigationSearchResult.ExpansionLimit; Slots[slot] = s; return; }
             Slots[slot] = s; var current = GetNode(slot, cell); current.Closed = 1; SetNode(slot, cell, current);
-            byte edges = g.Edges[s.Request.Clearance * CellCount + cell];
+            int edgeIndex = s.Request.Clearance * CellCount + cell;
+            byte edges = hazardEdges.IsCreated ? hazardEdges[edgeIndex] : g.Edges[edgeIndex];
             for (int d = 0; d < 8; d++) if ((edges & (1 << d)) != 0)
                 {
                     int next = NavigationGeometry.Neighbor(ref g, cell, d); var node = GetNode(slot, next);
+                    if (!hazardEdges.IsCreated && !GroundHazardGeometry.Clear(hazards, NavigationGeometry.Center(ref g, cell),
+                        NavigationGeometry.Center(ref g, next), g.Radii[s.Request.Clearance])) continue;
                     float cost = current.Cost + (d < 4 ? 1f : 1.41421356f);
                     if (node.Stamp == s.Stamp && (node.Closed != 0 || cost >= node.Cost)) continue;
                     bool fresh = node.Stamp != s.Stamp;

@@ -26,6 +26,9 @@ namespace CrowdPunch.Bakers
             AddComponent<NavigationPathState>(entity);
             AddComponent<NavigationAgent>(entity);
             AddBuffer<NavigationWaypoint>(entity);
+            AddComponent<GroundHazardDamageClock>(entity);
+            AddComponent<GroundHazardRoute>(entity);
+            AddBuffer<GroundHazardWaypoint>(entity);
             AddComponent<PunchAimAssistTarget>(entity);
             AddComponent(entity, new EnemyLaunchState
             {

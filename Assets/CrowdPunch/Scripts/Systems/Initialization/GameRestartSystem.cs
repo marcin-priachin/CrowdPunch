@@ -44,6 +44,12 @@ namespace CrowdPunch.Systems.Initialization
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<TrailSection>().Build());
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<TrailSource>().Build());
             foreach (var hits in SystemAPI.Query<DynamicBuffer<TrailPlayerHit>>()) hits.Clear();
+            foreach (var hits in SystemAPI.Query<DynamicBuffer<GroundHazardPlayerHit>>()) hits.Clear();
+            foreach (var clock in SystemAPI.Query<RefRW<GroundHazardPlayerClock>>()) clock.ValueRW = default;
+            foreach (var clock in SystemAPI.Query<RefRW<GroundHazardDamageClock>>()) clock.ValueRW = default;
+            foreach (var status in SystemAPI.Query<RefRW<GroundHazardState>>()) status.ValueRW = default;
+            foreach (var route in SystemAPI.Query<RefRW<GroundHazardRoute>>()) route.ValueRW = new GroundHazardRoute { Version = route.ValueRO.Version + 1 };
+            foreach (var path in SystemAPI.Query<DynamicBuffer<GroundHazardWaypoint>>()) path.Clear();
             foreach (var (settings, cast) in SystemAPI.Query<RefRO<WizardSettings>, RefRW<WizardCastState>>())
                 cast.ValueRW = new WizardCastState { Remaining = settings.ValueRO.Cooldown, RandomState = math.max(1u, cast.ValueRO.RandomState) };
             foreach (var history in SystemAPI.Query<DynamicBuffer<WizardIncomingImpactHistory>>()) history.Clear();
@@ -102,6 +108,7 @@ namespace CrowdPunch.Systems.Initialization
             }
             Random random = Random.CreateFromIndex(1);
             NavigationGrid navigationGrid = SystemAPI.HasSingleton<NavigationGrid>() ? SystemAPI.GetSingleton<NavigationGrid>() : default;
+            using var groundHazards = GroundHazardSpawnClearance.Capture(EntityManager);
 
             foreach ((RefRW<LocalTransform> transform,
                          RefRW<Health> health,
@@ -115,6 +122,9 @@ namespace CrowdPunch.Systems.Initialization
                 if (SystemAPI.HasComponent<AuthoredEnemyInitialPosition>(enemy))
                 {
                     float3 position = SystemAPI.GetComponent<AuthoredEnemyInitialPosition>(enemy).Value;
+                    float radius = SystemAPI.HasComponent<NavigationAgent>(enemy) ? SystemAPI.GetComponent<NavigationAgent>(enemy).Radius : .5f;
+                    if (!GroundHazardGeometry.Clear(groundHazards.AsArray(),position.xz,position.xz,radius))
+                    { SystemAPI.SetComponent(enemy,new RespawnRequest()); SystemAPI.SetComponentEnabled<RespawnRequest>(enemy,true); continue; }
                     transform.ValueRW = LocalTransform.FromPosition(position);
                 }
                 else if (SystemAPI.HasComponent<RandomEnemySpawnRegion>(enemy))
@@ -125,7 +135,8 @@ namespace CrowdPunch.Systems.Initialization
                     for (int attempt = 0; attempt < 32; attempt++)
                     {
                         position = GetRandomSpawnPosition(ref random, region.Center, region.Radius);
-                        if (NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, radius)) { found = true; break; }
+                        if (NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, radius) &&
+                            GroundHazardGeometry.Clear(groundHazards.AsArray(),position.xz,position.xz,radius)) { found = true; break; }
                     }
                     if (!found)
                     {

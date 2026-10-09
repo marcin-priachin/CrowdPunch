@@ -78,6 +78,25 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-09 - Ground Hazards And Gauntlet_23
+
+Decision: Adopt the final agreed summary in Ground Hazard Design, conversation
+6ac8f571-f0a4-83ed-bdf9-c5b4b25b9c73. GROUND-001..007 record both shapes and activation
+modes, shared victim clocks, horizontal damage only, player protection bypass, armor
+immunity, no hazard death explosions, current-launch kill attribution, real routing,
+safe spawning, wave/retry resets and finite two-wave completion. Defaults are Active-only
+avoidance and Wait Safely; both alternatives remain configurable.
+
+Numbers, layout, enemy counts, minor visuals and configuration structure are delegated.
+No blocking design question remains. Balance/readability and OQ-001 hardware/performance
+targets still require playtesting. Rejected: warning damage, force/slow/launch, player
+protection, armor stripping, overlap multiplication, reentry resets and death explosions.
+
+Implementation choice: simultaneous overlaps select the highest-damage patch, with the
+longer interval breaking ties. One victim timer remains authoritative. Wave cycle epochs
+begin when the sequence enters that wave's pre-spawn delay; periodic patches for later
+waves are introduced at that epoch. These remain implementation details, not new rules.
+
 ### 2026-10-09 - Local Pillar Crowd
 
 Correction: Local enemies may move like ordinary enemies throughout `pillarCrowdRadius`.

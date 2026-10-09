@@ -32,6 +32,7 @@ namespace CrowdPunch.Systems.Initialization
 
             NavigationGrid navigationGrid = SystemAPI.HasSingleton<NavigationGrid>() ? SystemAPI.GetSingleton<NavigationGrid>() : default;
             int rejected = 0;
+            using var groundHazards = GroundHazardSpawnClearance.Capture(state.EntityManager);
             EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             Random random = Random.CreateFromIndex(1);
 
@@ -51,9 +52,11 @@ namespace CrowdPunch.Systems.Initialization
                         spawnSettings.Center,
                         spawnSettings.SpawnRadius);
                     int attempt = 0;
-                    while (!NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, spawnSettings.Profile.NavigationRadius) && attempt++ < 32)
+                    while ((!NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, spawnSettings.Profile.NavigationRadius) ||
+                        !GroundHazardGeometry.Clear(groundHazards.AsArray(), position.xz, position.xz, spawnSettings.Profile.NavigationRadius)) && attempt++ < 32)
                         position = GetRandomSpawnPosition(ref random, spawnSettings.Center, spawnSettings.SpawnRadius);
-                    if (!NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, spawnSettings.Profile.NavigationRadius)) { rejected++; continue; }
+                    if (!NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, spawnSettings.Profile.NavigationRadius) ||
+                        !GroundHazardGeometry.Clear(groundHazards.AsArray(), position.xz, position.xz, spawnSettings.Profile.NavigationRadius)) { rejected++; continue; }
                     Entity enemy = EnemySpawnInitialization.Create(
                         commandBuffer,
                         state.EntityManager,

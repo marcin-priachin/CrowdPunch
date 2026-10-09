@@ -12,7 +12,7 @@ This slice preserves the GameObject player / Entities enemy boundary, continuous
 
 Each class rounds an enemy's horizontal collider radius up, then adds the safety margin. Prefab baking derives capsule/sphere horizontal radius from their transformed shape; other collider shapes use conservative bounds. Oversized enemies are rejected instead of using insufficient clearance. Cell centres, every traversable edge, direct segments, and shortcuts use the same conservative rectangle inflation and inset arena boundary. Eight-direction edges additionally forbid diagonal corner cutting. Square corner inflation intentionally leaves more room than the exact rounded Minkowski boundary. Narrow passages can therefore be physically passable but unavailable to a larger navigation class.
 
-The immutable blob stores rectangle footprints, class-major connected-region IDs, and eight edge bits per cell. Region zero is blocked. Baking flood-fills each clearance class once; simulation never rebuilds the grid. There is a 65,536-cell authoring limit. Future hazard costs can extend the cost representation independently of solid connectivity; no hazard simulation or dynamic occupancy is implemented.
+The immutable blob stores rectangle footprints, class-major connected-region IDs, and eight edge bits per cell. Region zero is blocked. Baking flood-fills each clearance class once; simulation never rebuilds the solid grid. There is a 65,536-cell authoring limit. Fixed ground hazards use a separate dynamic edge overlay and bounded route scheduler after terrain navigation; see GROUND-001..007 in CurrentArchitecture.md. Patch changes do not alter solid connectivity or launched-body physics.
 
 ## Tactical intent and system order
 

@@ -21,6 +21,7 @@ namespace CrowdPunch.Systems.Initialization
             {
                 return Entity.Null;
             }
+            if (!Utilities.GroundHazardSpawnClearance.Allowed(entityManager, position.xz, profile.NavigationRadius)) return Entity.Null;
 
             EnemyMovementSettings movementSettings = profile.MovementSettings;
             float separationMin = math.max(0f, math.min(
