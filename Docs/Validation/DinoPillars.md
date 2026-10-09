@@ -2,7 +2,7 @@
 
 Scope: PILLAR-001..006, COMBAT-007/014/015/018, PLAYER-003/004 and LOOP-006.
 
-## Playable content and defaults
+## Original content and defaults (2026-10-08)
 
 Select **22 Dino Pillars** from the existing level menu or Level Play window.
 The authored sequence appends Gauntlet_22 immediately after Rolling Blob.
@@ -74,6 +74,53 @@ history and shared damage writes. It excludes setup/reset, Unity Physics, animat
 and target-hardware performance; it is not a complete game-frame benchmark.
 The authored encounter remains a small crowd. Large custom compositions need profiling and
 further tuning; OQ-001's performance targets remain unresolved.
+
+## Local pillar crowd update (2026-10-09)
+
+`Enemies Per Pillar` in `DinoBossSettings.asset` defaults to **2**, adding six local
+Baselines alongside the existing eight wave bodies. `Pillar Crowd Radius` defaults to
+4m. Local bodies use ordinary chase, contact and separation within that radius;
+ordinary launch/recovery physics remains intact and displaced Active survivors return
+through movement intent. The same bounded slots safely respawn nearby using the wave's
+three-second delay. Temporary launch, recovery, death and blocked placement can leave a
+slot unavailable until it returns; they do not generate unlimited replacement bodies.
+Missed pillars retain their local crowd. Successful pillars release surviving members
+to ordinary AI and disable their local respawning; boss defeat stops all replenishment.
+Zero enemies per pillar disables the additional crowd.
+
+The current edited arena, pillar placement, model size and boss movement tuning are
+preserved. A separate live check uses those actual authored positions to verify six
+local bodies, movement back after displacement, local respawn after ordinary lethal
+damage, consumption shutdown and exact slot recreation on retry. Evidence is saved in
+`DinoPillars/pillar-crowd-live.txt`.
+
+Current verification: **151 related boss/progression tests pass**, including all 31
+pillar cases; five additional crowd-distribution tests pass. Unity compilation and the
+single-node C# build pass with no new warnings. Scene validation now transforms floor
+vertices into world space before checking bounds, so scaled authored floors are checked
+correctly. The original `DinoPlayCheck` physical-shot recipe assumes its original pillar
+coordinates; the local-crowd live check uses the current edited layout.
+
+Repeated live-world system measurements (20 warmups + 120 samples) give mean supply/
+positioning costs of .0500/.0030ms at fourteen enemy roots and .0754/.0028ms at 200 roots.
+The synthetic extra roots are removed immediately afterwards. These measurements exclude
+physics, rendering and other AI; supply is measured with existing filled local slots.
+See `DinoPillars/pillar-crowd-profile.txt`.
+
+The movement correction removes fixed standing destinations. Ordinary movement goals and
+speeds remain unchanged inside the circle, while outside goals are clipped and outward
+motor velocity is limited at its boundary. Launched/Recovering bodies remain unconstrained.
+The live check with the current configured 8m radius observed two local bodies moving up
+to 12.022m from their initial positions over 482 updates; their maximum measured radius
+was 8.034m (solver tolerance .4m). Player movement was scripted inside the area and Dino
+was held in stagger, while enemy positions and velocities were not injected. Evidence:
+`DinoPillars/pillar-roaming-live.txt`.
+Repeated system timings at 14/200 enemy roots measured mean positioning .0028/.0028ms
+and shared motor .0055/.0851ms, excluding physics/rendering and other AI. Evidence:
+`DinoPillars/pillar-roaming-profile.txt`.
+The movement suite covers unchanged ordinary/committed intent inside the area, clipped
+outside goals, shaft detours, tangential/inward boundary motion and unrestricted launched
+and recovering velocity. Results: `DinoPillars/pillar-roaming-tests.txt`.
 
 ## Human playtesting remaining
 

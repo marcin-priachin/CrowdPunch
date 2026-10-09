@@ -1511,6 +1511,24 @@ additional HUD is created. `EnemyHealthBarBridgeSystem` reuses the existing boss
 
 `BossCrowdSequence`, spawning and replenishment now recognize Dino as an owner. The
 Gauntlet_22 wave asset supplies eight Baselines with a three-second respawn delay.
+`DinoTuning.EnemiesPerPillar` and `PillarCrowdRadius` additionally reserve two local
+Baseline bodies per unconsumed pillar, default radius 4m. `PillarCrowdSupplySystem` uses the
+wave's baked Baseline profile and normal ECB spawn initialization; each fixed slot owns
+one `PillarCrowdMember`, `BossCrowdMember` and `EnemyWaveOwnership`. It counts pooled or
+launched occupants too, so firing bodies cannot create unlimited replacements.
+`PillarCrowdPositioningSystem` runs after ordinary chase intent and before navigation,
+preserves ordinary crowd goals, speeds, contact cadence and separation when they fit within
+the pillar radius. Outside goals are clipped to that circle; displaced Active bodies return
+to its nearest inner edge. Small arc waypoints avoid crossing through the upright shaft.
+Local bodies participate in the ordinary crowd's chase-pressure allocation. The shared
+`EnemyMovementSystem` removes outward radial motor velocity at the local boundary, keeping
+tangential and inward movement. Launched/Recovering motion is untouched; consumed pillars
+release the constraint along with the local replenishment policy.
+`BossCrowdPlacement` safely respawns these bodies in their pillar sector instead of the
+general wave regions, with the wave's existing respawn delay. Space blocked by the player,
+boss or crowd retries later. Consumed pillars release survivors to normal AI and disable
+their respawn. Existing wave-owned reset and unloading remove every local body; resetting
+the sequence recreates exactly the configured slot count.
 `GauntletCompletionSystem` uses Dino defeat as authoritative regardless of crowd survivors.
 `DinoEncounterReset` restores health, timers, velocity, all pillar colliders/transforms,
 hit histories and sampled playback; additive unloading removes their SubScene entities.

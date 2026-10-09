@@ -111,7 +111,8 @@ namespace CrowdPunch.Tests
                 Assert.That(floor.convex, Is.True,
                     "VISION-004 / COMBAT-018: floor collision must not expose internal triangle edges");
                 Vector3[] vertices = floor.sharedMesh.vertices;
-                Vector2[] outline = vertices.Take(vertices.Length / 2).Select(v => new Vector2(v.x, v.z)).ToArray();
+                Vector2[] outline = vertices.Take(vertices.Length / 2).Select(floor.transform.TransformPoint)
+                    .Select(v => new Vector2(v.x, v.z)).ToArray();
                 AssertInside(outline, marker.PlayerEntryPoint.position, 0.6f);
                 Assert.That(marker.PlayerEntryPoint.position.y, Is.EqualTo(0.5f));
                 foreach (BoxCollider rail in sub.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<BoxCollider>()))

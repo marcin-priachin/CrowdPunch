@@ -39,6 +39,11 @@ namespace CrowdPunch.Configuration
         [Min(0)] public float pillarPlayerDamage = 18;
         [Min(0)] public float pillarPush = 9;
         [Min(.1f)] public float pillarLaunchSpeed = 17;
+        [Header("Local pillar ammunition")]
+        [Min(0), Tooltip("Extra replenishing Baselines per unconsumed pillar. Zero disables the local crowd.")]
+        public int enemiesPerPillar = 2;
+        [Min(2), Tooltip("Local crowd can move and chase inside this radius from its pillar, in metres.")]
+        public float pillarCrowdRadius = 4;
         [Header("In-world phase colors")]
         public Color chaseColor = new Color(.7f,1,.65f);
         public Color warningColor = new Color(1.5f,.85f,.15f);
@@ -47,6 +52,7 @@ namespace CrowdPunch.Configuration
 
         public DinoTuning BakeBoss() => new DinoTuning {
             RequiredHits=math.clamp(requiredSuccessfulHits,1,3),
+            EnemiesPerPillar=math.max(0,enemiesPerPillar), PillarCrowdRadius=math.max(2,pillarCrowdRadius),
             ChaseSpeeds=math.max(.1f,(float3)chaseSpeeds), ChaseDurations=math.max(.05f,(float3)chaseDurations),
             BurstMultiplier=math.max(1,burstSpeedMultiplier), ChaseTurnDegrees=math.max(0,chaseTurnDegrees),
             BurstTurnDegrees=math.min(math.max(0,burstTurnDegrees),math.max(0,chaseTurnDegrees)),

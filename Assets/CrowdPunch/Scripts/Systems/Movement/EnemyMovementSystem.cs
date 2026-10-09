@@ -37,6 +37,11 @@ namespace CrowdPunch.Systems.Movement
             new EnemyMovementJob
             {
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
+                PillarMembers = SystemAPI.GetComponentLookup<PillarCrowdMember>(true),
+                Pillars = SystemAPI.GetComponentLookup<FallingPillar>(true),
+                PillarSettings = SystemAPI.GetComponentLookup<PillarTuning>(true),
+                DinoBosses = SystemAPI.GetComponentLookup<DinoBoss>(true),
+                DinoSettings = SystemAPI.GetComponentLookup<DinoTuning>(true),
                 Now = SystemAPI.Time.ElapsedTime,
                 ArenaBounds = arenaBounds,
                 DeltaTime = SystemAPI.Time.DeltaTime
@@ -49,6 +54,11 @@ namespace CrowdPunch.Systems.Movement
         private partial struct EnemyMovementJob : IJobEntity
         {
             [Unity.Collections.ReadOnly] public ComponentLookup<EnemyArmor> Armors;
+            [Unity.Collections.ReadOnly] public ComponentLookup<PillarCrowdMember> PillarMembers;
+            [Unity.Collections.ReadOnly] public ComponentLookup<FallingPillar> Pillars;
+            [Unity.Collections.ReadOnly] public ComponentLookup<PillarTuning> PillarSettings;
+            [Unity.Collections.ReadOnly] public ComponentLookup<DinoBoss> DinoBosses;
+            [Unity.Collections.ReadOnly] public ComponentLookup<DinoTuning> DinoSettings;
             public double Now;
             public ArenaBounds ArenaBounds;
             public float DeltaTime;
@@ -110,6 +120,17 @@ namespace CrowdPunch.Systems.Movement
                 {
                     physicsVelocity.Linear.xz = RemoveOutwardBoundaryVelocity(transform.Position, physicsVelocity.Linear.xz);
                 }
+                if(PillarMembers.HasComponent(entity))
+                {
+                    Entity pillar=PillarMembers[entity].Pillar;
+                    if(Pillars.HasComponent(pillar) && DinoSettings.HasComponent(Pillars[pillar].Boss))
+                    {
+                        var p=Pillars[pillar]; var t=DinoSettings[p.Boss];
+                        if(Initialization.PillarCrowdPlacement.Needed(p,DinoBosses[p.Boss],t))
+                            physicsVelocity.Linear.xz=PillarCrowdBoundary.RemoveOutwardVelocity(transform.Position.xz,
+                                PillarSettings[pillar].InitialPosition.xz,t.PillarCrowdRadius,physicsVelocity.Linear.xz);
+                    }
+                }
             }
 
             private static float2 MoveTowards(float2 current, float2 target, float maxDelta)
@@ -161,4 +182,5 @@ namespace CrowdPunch.Systems.Movement
             }
         }
     }
+
 }

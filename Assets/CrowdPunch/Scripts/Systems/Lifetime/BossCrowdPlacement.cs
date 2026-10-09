@@ -29,6 +29,19 @@ namespace CrowdPunch.Systems.Lifetime
                 foreach(var e in entities) if(e!=body)
                     occupied.Add(new float4(em.GetComponentData<LocalTransform>(e).Position,em.GetComponentData<EnemySpawnClearance>(e).Value));
             bool found=false;
+            if(em.HasComponent<PillarCrowdMember>(body))
+            {
+                var member=em.GetComponentData<PillarCrowdMember>(body);
+                if(em.HasComponent<FallingPillar>(member.Pillar) && em.HasComponent<DinoTuning>(em.GetComponentData<FallingPillar>(member.Pillar).Boss))
+                {
+                    var pillar=em.GetComponentData<FallingPillar>(member.Pillar);
+                    var tuning=em.GetComponentData<DinoTuning>(pillar.Boss);
+                    if(PillarCrowdPlacement.Needed(pillar,em.GetComponentData<DinoBoss>(pillar.Boss),tuning))
+                        found=PillarCrowdPlacement.TryFind(em.GetComponentData<PillarTuning>(member.Pillar),tuning,member.Slot,clearance,radius,
+                            world,player,grid,occupied,ref random,out position);
+                }
+                occupied.Dispose(); accepted.Dispose(); return found;
+            }
             for(int i=0;i<sequence.PlacementAttemptsPerEnemy;i++)
             {
                 position=EnemyWaveSpawnSystem.SelectPosition(ref random,waves[owner.WaveIndex],ranges);

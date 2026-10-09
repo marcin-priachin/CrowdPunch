@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-08
+Last updated: 2026-10-09
 
 ## How To Read This Document
 
@@ -1179,7 +1179,15 @@ previews. Exclude the immune boss and unavailable pillars from targeting. Use
 boss health bar and a brief opening hint. Show readable warning, burst, stagger, pillar
 impact and regeneration feedback in-world. A dedicated settings asset owns stage movement,
 turning, cycle/stagger/contact timing, pillar geometry/fall/regeneration and damage/push/launch
-strengths. Composition and replenishment remain in existing wave settings.
+strengths. General crowd composition and replenishment remain in existing wave settings.
+The boss settings additionally expose the number of replenishing Baselines around
+each unconsumed pillar, default two per pillar. These enemies use ordinary crowd movement,
+separation, chase pressure and contact attacks freely within `pillarCrowdRadius`; do not
+pin them to fixed standing slots. Limit normal movement to that local area. Launched bodies
+retain normal physics and return after recovery; defeated local bodies respawn nearby through
+safe placement. Missed pillars retain their local crowd while waiting to regenerate.
+A successful pillar releases its survivors to normal crowd behavior and stops their local
+replenishment. Boss defeat, retry and unloading also apply to this extra crowd.
 
 Append exactly Gauntlet_22 after Rolling Blob: an enclosed otherwise open arena, three spaced
 pillars and a small replenishing Baseline crowd. Boss defeat completes immediately and stops

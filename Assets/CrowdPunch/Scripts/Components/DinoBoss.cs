@@ -15,6 +15,8 @@ namespace CrowdPunch.Components
     public struct DinoTuning : IComponentData
     {
         public int RequiredHits;
+        public int EnemiesPerPillar;
+        public float PillarCrowdRadius;
         public float3 ChaseSpeeds, ChaseDurations;
         public float BurstMultiplier, ChaseTurnDegrees, BurstTurnDegrees, Acceleration;
         public float WarningDuration, BurstDuration, StaggerDuration;

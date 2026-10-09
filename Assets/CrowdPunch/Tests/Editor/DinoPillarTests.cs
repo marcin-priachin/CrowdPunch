@@ -6,6 +6,7 @@ using CrowdPunch.Systems.Initialization;
 using CrowdPunch.Systems.Lifetime;
 using NUnit.Framework;
 using Unity.Core;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -189,6 +190,98 @@ namespace CrowdPunch.Tests
             em.SetComponentData(boss,new DinoBoss { Phase=DinoPhase.Defeated }); complete.Update(); complete.Update(); supply.Update(world.Unmanaged);
             Assert.AreEqual(before+1,CrowdPunch.Mono.Levels.GauntletCompletionRegistry.Sequence);
             Assert.AreEqual(0,em.GetComponentData<EnemyRespawnSettings>(body).Enabled);
+        }
+        [Test] public void Pillar006_LocalCrowdStaysNearPillarAndDoesNotOverrideLaunchPhysics()
+        {
+            em.AddComponentData(body,new PillarCrowdMember { Pillar=pillar,Slot=0 });
+            em.AddComponentData(body,new EnemyMovementSettings { MoveSpeed=4 }); em.AddComponent<DesiredMovement>(body); em.AddComponent<NavigationIntent>(body);
+            em.SetComponentData(body,LocalTransform.FromPosition(new float3(15,.5f,0)));
+            var system=world.GetOrCreateSystem<PillarCrowdPositioningSystem>(); system.Update(world.Unmanaged);
+            var intent=em.GetComponentData<NavigationIntent>(body);
+            Assert.LessOrEqual(math.distance(intent.Destination.xz,pt.InitialPosition.xz),bt.PillarCrowdRadius);
+            Assert.Greater(em.GetComponentData<DesiredMovement>(body).Speed,0);
+            em.SetComponentData(body,new EnemyLaunchState { Phase=EnemyLaunchPhase.Launched });
+            var sentinel=new DesiredMovement { Direction=new float3(1,0,0),Speed=99 }; em.SetComponentData(body,sentinel);
+            system.Update(world.Unmanaged); Assert.AreEqual(sentinel,em.GetComponentData<DesiredMovement>(body));
+            em.SetComponentData(body,new EnemyLaunchState()); em.SetComponentData(pillar,new FallingPillar { Boss=boss,Phase=PillarPhase.Consumed,HitBoss=1 });
+            system.Update(world.Unmanaged); Assert.AreEqual(sentinel,em.GetComponentData<DesiredMovement>(body));
+        }
+        [Test] public void Pillar006_LocalReplenishmentStopsOnConsumptionAndDefeat()
+        {
+            em.AddComponentData(body,new PillarCrowdMember { Pillar=pillar });
+            em.AddComponentData(body,new BossCrowdMember { Encounter=boss,ReplenishDelay=3 }); em.AddComponent<EnemyRespawnSettings>(body);
+            var system=world.GetOrCreateSystem<BossCrowdReplenishmentSystem>(); system.Update(world.Unmanaged);
+            Assert.AreEqual(1,em.GetComponentData<EnemyRespawnSettings>(body).Enabled);
+            em.SetComponentData(pillar,new FallingPillar { Boss=boss,Phase=PillarPhase.Waiting }); system.Update(world.Unmanaged);
+            Assert.AreEqual(1,em.GetComponentData<EnemyRespawnSettings>(body).Enabled);
+            em.SetComponentData(pillar,new FallingPillar { Boss=boss,HitBoss=1 }); system.Update(world.Unmanaged);
+            Assert.AreEqual(0,em.GetComponentData<EnemyRespawnSettings>(body).Enabled);
+            em.SetComponentData(pillar,new FallingPillar { Boss=boss }); em.SetComponentData(boss,new DinoBoss { Phase=DinoPhase.Defeated }); system.Update(world.Unmanaged);
+            Assert.AreEqual(0,em.GetComponentData<EnemyRespawnSettings>(body).Enabled);
+        }
+        [TestCase(NavigationMode.Travel)] [TestCase(NavigationMode.Committed)]
+        public void Pillar006_LocalCrowdKeepsOrdinaryMovementInsideRadius(NavigationMode mode)
+        {
+            em.AddComponentData(body,new PillarCrowdMember { Pillar=pillar });
+            em.AddComponentData(body,new EnemyMovementSettings { MoveSpeed=4 }); em.AddComponent<DesiredMovement>(body); em.AddComponent<NavigationIntent>(body);
+            em.SetComponentData(body,LocalTransform.FromPosition(new float3(3,.5f,0)));
+            var expected=new NavigationIntent { Destination=new float3(3,.5f,1),Speed=7,ArrivalDistance=.25f,Mode=mode,Separation=new float3(0,0,.2f) };
+            var desired=new DesiredMovement { Direction=math.forward(),Speed=7 };
+            em.SetComponentData(body,expected); em.SetComponentData(body,desired);
+            world.GetOrCreateSystem<PillarCrowdPositioningSystem>().Update(world.Unmanaged);
+            Assert.AreEqual(expected,em.GetComponentData<NavigationIntent>(body));
+            Assert.AreEqual(desired,em.GetComponentData<DesiredMovement>(body));
+        }
+        [Test] public void Pillar006_LocalGoalsClipToRadiusAndDetourAroundUprightShaft()
+        {
+            var goal=PillarCrowdPositioningSystem.Destination(pt,bt,new float3(3,.5f,0),new float3(12,.5f,1),false);
+            Assert.AreEqual(bt.PillarCrowdRadius,math.length(goal.xz),.001f);
+            var detour=PillarCrowdPositioningSystem.Destination(pt,bt,new float3(3,.5f,0),new float3(-3,.5f,0),true);
+            Assert.Greater(math.abs(detour.z),.5f);
+            Assert.LessOrEqual(math.length(detour.xz),bt.PillarCrowdRadius);
+        }
+        [Test] public void Pillar006_BoundaryKeepsTangentialAndInwardVelocity()
+        {
+            Assert.AreEqual(new float2(0,3),CrowdPunch.Systems.Movement.PillarCrowdBoundary.RemoveOutwardVelocity(new float2(4,0),float2.zero,4,new float2(2,3)));
+            Assert.AreEqual(new float2(-2,3),CrowdPunch.Systems.Movement.PillarCrowdBoundary.RemoveOutwardVelocity(new float2(4,0),float2.zero,4,new float2(-2,3)));
+            Assert.AreEqual(new float2(2,3),CrowdPunch.Systems.Movement.PillarCrowdBoundary.RemoveOutwardVelocity(new float2(2,0),float2.zero,4,new float2(2,3)));
+        }
+        [TestCase(EnemyLaunchPhase.Launched)] [TestCase(EnemyLaunchPhase.Recovering)]
+        public void Pillar006_MotorBoundaryDoesNotConstrainLaunchedBodies(EnemyLaunchPhase phase)
+        {
+            em.AddComponentData(body,new PillarCrowdMember { Pillar=pillar });
+            em.AddComponentData(body,new PhysicsMass { InverseMass=1 }); em.AddComponent<DesiredMovement>(body); em.AddComponent<EnemyMovementSettings>(body);
+            var arena=em.CreateEntity(typeof(ArenaBounds)); em.SetComponentData(arena,new ArenaBounds { Extents=new float3(30) });
+            em.SetComponentData(body,LocalTransform.FromPosition(new float3(4,.5f,0)));
+            em.SetComponentData(body,new EnemyLaunchState { Phase=phase });
+            em.SetComponentData(body,new PhysicsVelocity { Linear=new float3(20,0,3) });
+            world.GetOrCreateSystem<CrowdPunch.Systems.Movement.EnemyMovementSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            Assert.AreEqual(new float3(20,0,3),em.GetComponentData<PhysicsVelocity>(body).Linear);
+        }
+        [TestCase(0)] [TestCase(1)] [TestCase(4)]
+        public void Pillar006_SupplyHonorsCountAndReusesLaunchedOrPooledSlots(int count)
+        {
+            bt.EnemiesPerPillar=count; em.SetComponentData(boss,bt);
+            var physics=new PhysicsWorld(0,0,0);
+            try
+            {
+                var singleton=em.CreateEntity(typeof(PhysicsWorldSingleton)); em.SetComponentData(singleton,new PhysicsWorldSingleton { PhysicsWorld=physics });
+                var prefab=em.CreateEntity(typeof(Prefab),typeof(Enemy),typeof(LocalTransform),typeof(EnemyMovementSettings),typeof(NavigationAgent),typeof(Health),
+                    typeof(EnemyContactDamageSettings),typeof(EnemyContactAttemptState),typeof(EnemySeparationDistance),typeof(EnemyArchetypeSeparationDistances),
+                    typeof(KnockbackResponse),typeof(EnemyLaunchState),typeof(RespawnRequest));
+                var sequence=em.CreateEntity(typeof(BossCrowdSequence),typeof(EnemyWaveSequence));
+                em.SetComponentData(sequence,new BossCrowdSequence { Encounter=boss }); em.SetComponentData(sequence,new EnemyWaveSequence { Initialized=1,RunGeneration=1,RandomState=1 });
+                em.AddBuffer<EnemyWaveDefinition>(sequence).Add(new EnemyWaveDefinition { ProfileCount=1,BossReplenishDelay=3 });
+                em.AddBuffer<EnemyWaveProfile>(sequence).Add(new EnemyWaveProfile { Profile=new EnemySpawnProfile { EnemyPrefab=prefab,
+                    Archetype=EnemyArchetypeKind.Baseline,SpawnClearance=.5f,Health=new Health { Current=100,Max=100 } } });
+                var system=world.GetOrCreateSystem<PillarCrowdSupplySystem>(); system.Update(world.Unmanaged);
+                using var members=em.CreateEntityQuery(typeof(PillarCrowdMember)); Assert.AreEqual(count,members.CalculateEntityCount());
+                using var locals=members.ToEntityArray(Allocator.Temp);
+                foreach(var e in locals)
+                { em.SetComponentData(e,new EnemyLaunchState { Phase=EnemyLaunchPhase.Launched }); em.SetComponentEnabled<RespawnRequest>(e,true); }
+                system.Update(world.Unmanaged); Assert.AreEqual(count,members.CalculateEntityCount(),"Launching or pooling cannot grow the bounded local crowd");
+            }
+            finally { physics.Dispose(); }
         }
     }
 }

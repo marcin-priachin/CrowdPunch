@@ -1,0 +1,5 @@
+Isolated repeated system-update timing in live baked world; 20 warmups + 120 samples per system. Excludes physics, rendering and the rest of AI.
+14 enemy roots, supply: mean 0.0500ms, max 0.0930ms
+14 enemy roots, positioning: mean 0.0030ms, max 0.0114ms
+200 enemy roots, supply: mean 0.0754ms, max 0.1958ms
+200 enemy roots, positioning: mean 0.0028ms, max 0.0029ms

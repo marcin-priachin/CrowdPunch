@@ -62,18 +62,19 @@ namespace CrowdPunch.Editor
                 Require(pq.CalculateEntityCount()==0,"Pillars leaked on unload"); Record("PASS switching to Rolling removes Dino and all pillars");
                 sequence.SelectLevel(21); Next(11); return;
             }
-            if(bq.CalculateEntityCount()!=1 || pq.CalculateEntityCount()!=3 || eq.CalculateEntityCount()<8) return;
+            if(bq.CalculateEntityCount()!=1 || pq.CalculateEntityCount()!=3) return;
             var boss=bq.GetSingletonEntity(); var b=em.GetComponentData<DinoBoss>(boss); var bt=em.GetComponentData<DinoTuning>(boss);
+            if(eq.CalculateEntityCount()<8+3*bt.EnemiesPerPillar) return;
             using var pillars=pq.ToEntityArray(Allocator.Temp); using var enemies=eq.ToEntityArray(Allocator.Temp);
             Entity west=Entity.Null,east=Entity.Null,north=Entity.Null;
             foreach(var e in pillars)
             { var p=em.GetComponentData<PillarTuning>(e).InitialPosition; if(p.x<0) west=e; else if(p.x>0) east=e; else north=e; }
             if(step==0)
             {
-                Require(eq.CalculateEntityCount()==8,"Crowd is not bounded at authored eight");
+                Require(eq.CalculateEntityCount()==8+3*bt.EnemiesPerPillar,"Crowd is not bounded at wave count plus local pillar slots");
                 using var aq=em.CreateEntityQuery(typeof(EnemyAnimation)); bool sampled=false;
                 foreach(var a in aq.ToComponentDataArray<EnemyAnimation>(Allocator.Temp)) sampled|=a.Owner==boss && a.Samples.IsCreated;
-                Require(sampled,"Dino samples are not baked"); Record("PASS baked Dino, three pillars, eight Baselines, sampled animation");
+                Require(sampled,"Dino samples are not baked"); Record("PASS baked Dino, three pillars, eight wave Baselines plus configured local pillar crowd, sampled animation");
                 b.Remaining=.1f; em.SetComponentData(boss,b); oldBoss=boss; Next(1); return;
             }
             if(step==1)

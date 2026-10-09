@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-08
+Last updated: 2026-10-09
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -77,6 +77,20 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-09 - Local Pillar Crowd
+
+Correction: Local enemies may move like ordinary enemies throughout `pillarCrowdRadius`.
+The area limits normal movement, rather than assigning permanent standing positions.
+Normal pressure selection, chase/contact cadence and separation remain shared with other
+Baselines. Launch/recovery physics and local replenishment continue unchanged.
+
+Decision: Keep enemies around the Dino encounter's pillars with the amount configured in
+boss settings (PILLAR-006). Implement a bounded local Baseline group per unconsumed pillar,
+separate from the general wave crowd. Local bodies keep ordinary launch/recovery physics,
+return to their pillar afterwards, and safely respawn nearby. Consumed pillars release
+survivors and stop their local replenishment. Default two per pillar; general wave composition
+and respawn delay remain wave-owned.
 
 ### 2026-10-08 - Dino Pillars And Gauntlet_22
 

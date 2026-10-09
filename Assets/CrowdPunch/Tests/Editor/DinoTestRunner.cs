@@ -23,6 +23,7 @@ namespace CrowdPunch.Tests
                 TestRunnerApi.SaveResultToFile(r,"Temp/DinoValidation/editmode-results.xml");
                 File.WriteAllText("Temp/DinoValidation/editmode-summary.txt",$"Passed {r.PassCount}; failed {r.FailCount}; skipped {r.SkipCount}\n{r.Message}\n");
                 Debug.Log($"Dino and boss regression tests: {r.PassCount} passed, {r.FailCount} failed.");
+                api.UnregisterCallbacks(this);
             }
         }
     }

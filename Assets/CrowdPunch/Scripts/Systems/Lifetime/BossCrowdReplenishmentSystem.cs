@@ -11,7 +11,7 @@ namespace CrowdPunch.Systems.Lifetime
     {
         public void OnUpdate(ref SystemState state)
         {
-            foreach(var (member,respawn) in SystemAPI.Query<RefRO<BossCrowdMember>,RefRW<EnemyRespawnSettings>>())
+            foreach(var (member,respawn,entity) in SystemAPI.Query<RefRO<BossCrowdMember>,RefRW<EnemyRespawnSettings>>().WithEntityAccess())
             {
                 var owner=member.ValueRO.Encounter;
                 bool alive=SystemAPI.HasComponent<BossEncounter>(owner)
@@ -22,6 +22,13 @@ namespace CrowdPunch.Systems.Lifetime
                     && SystemAPI.GetComponent<RollingBoss>(owner).Phase!=RollingPhase.Defeated
                     || SystemAPI.HasComponent<DinoBoss>(owner)
                     && SystemAPI.GetComponent<DinoBoss>(owner).Phase!=DinoPhase.Defeated;
+                if(SystemAPI.HasComponent<PillarCrowdMember>(entity))
+                {
+                    var local=SystemAPI.GetComponent<PillarCrowdMember>(entity);
+                    alive=alive && SystemAPI.HasComponent<FallingPillar>(local.Pillar) && SystemAPI.HasComponent<DinoTuning>(owner)
+                        && Initialization.PillarCrowdPlacement.Needed(SystemAPI.GetComponent<FallingPillar>(local.Pillar),
+                            SystemAPI.GetComponent<DinoBoss>(owner),SystemAPI.GetComponent<DinoTuning>(owner));
+                }
                 respawn.ValueRW.Enabled=(byte)(member.ValueRO.ReplenishDelay>=0 && alive?1:0);
             }
         }
