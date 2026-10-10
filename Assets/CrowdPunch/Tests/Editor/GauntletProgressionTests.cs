@@ -43,7 +43,7 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Loop002_ActiveSequenceAndBuildSettingsContainTwentyThreeOrderedLevels()
+        public void Loop002_LegacySequenceIsPreservedOutsideCampaignBuild()
         {
             Scene scene = EditorSceneManager.OpenScene(Root + "Bootstrap.unity", OpenSceneMode.Additive);
             try
@@ -52,18 +52,16 @@ namespace CrowdPunch.Tests
                 var names = new SerializedObject(sequence).FindProperty("levelSceneNames");
                 Assert.That(names.arraySize, Is.EqualTo(23));
                 string[] enabled = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-                Assert.That(enabled.Length, Is.EqualTo(26));
-                Assert.That(enabled.Skip(24), Is.EquivalentTo(new[] {
-                    Root + "NavigationValidation/NavigationValidationBootstrap.unity",
-                    Root + "NavigationValidation/NavigationValidationArena.unity" }),
-                    "The two separate validation scenes must not enter the playable progression.");
+                Assert.That(enabled.Length, Is.EqualTo(11));
+                Assert.That(enabled.Skip(1).All(path => path.StartsWith(Root + "Campaign/")), Is.True);
                 Assert.That(enabled[0], Is.EqualTo(Root + "Bootstrap.unity"));
                 for (int i = 0; i < 23; i++)
                 {
                     string id = $"Gauntlet_{i + 1:00}";
                     Assert.That(names.GetArrayElementAtIndex(i).stringValue, Is.EqualTo(id));
-                    Assert.That(enabled[i + 1], Is.EqualTo(Root + "Gauntlets/" + id + ".unity"));
-                    Assert.That(sequence.GetLevelName(i), Does.StartWith($"{i + 1:00} "));
+                    Assert.That(AssetDatabase.LoadAssetAtPath<SceneAsset>(Root + "Gauntlets/" + id + ".unity"), Is.Not.Null);
+                    var titles = new SerializedObject(sequence).FindProperty("levelDisplayNames");
+                    Assert.That(titles.GetArrayElementAtIndex(i).stringValue, Does.StartWith($"{i + 1:00} "));
                 }
             }
             finally { EditorSceneManager.CloseScene(scene, true); }

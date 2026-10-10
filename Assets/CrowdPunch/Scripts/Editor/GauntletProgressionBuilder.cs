@@ -241,14 +241,18 @@ namespace CrowdPunch.Editor
         }
 
         private static void BuildLevel(int index, Level design, EnemySpawnSettings[] profiles,
-            Material ground, Material wall, Material stripe, Material backdrop)
+            Material ground, Material wall, Material stripe, Material backdrop,
+            string campaignRoot = null)
         {
-            string id = $"Gauntlet_{index+1:00}";
-            string directory = Scenes+id;
+            string id = campaignRoot == null ? $"Gauntlet_{index+1:00}" : $"Campaign_{index+1:00}";
+            string scenes = campaignRoot == null ? Scenes : Root + "Scenes/Campaign/";
+            string waveFolder = campaignRoot == null ? Waves : campaignRoot + "Waves/";
+            string layoutFolder = campaignRoot == null ? Layouts : campaignRoot + "Layouts/";
+            string directory = scenes+id;
             Directory.CreateDirectory(directory);
             AssetDatabase.Refresh();
             var waves = new EnemyWaveSettings[design.Waves.Length];
-            for (int i=0;i<waves.Length;i++) waves[i] = WaveAsset($"CP{index+1:00}_{i+1:00}_"+design.Waves[i].Name.Replace(' ','_'),design.Waves[i],profiles);
+            for (int i=0;i<waves.Length;i++) waves[i] = WaveAsset($"CP{index+1:00}_{i+1:00}_"+design.Waves[i].Name.Replace(' ','_'),design.Waves[i],profiles,waveFolder);
 
             Scene sub = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive);
             SceneManager.SetActiveScene(sub);
@@ -280,7 +284,7 @@ namespace CrowdPunch.Editor
             Box("Presentation Backdrop",layout,new Vector3(0,-2.1f,0),new Vector3(200,0.1f,200),backdrop,false);
             var floor = new GameObject("Continuous Convex Floor",typeof(MeshFilter),typeof(MeshRenderer),typeof(MeshCollider));
             floor.transform.SetParent(layout);
-            Mesh mesh=FloorMesh(id,design.Outline);
+            Mesh mesh=FloorMesh(id,design.Outline,layoutFolder);
             floor.GetComponent<MeshFilter>().sharedMesh=mesh;
             floor.GetComponent<MeshRenderer>().sharedMaterial=ground;
             floor.GetComponent<MeshCollider>().sharedMesh=mesh;
@@ -326,13 +330,13 @@ namespace CrowdPunch.Editor
             light.intensity=1.2f;
             light.shadows=LightShadows.Soft;
             light.transform.rotation=Quaternion.Euler(50,-30,0);
-            EditorSceneManager.SaveScene(main,Scenes+id+".unity");
+            EditorSceneManager.SaveScene(main,scenes+id+".unity");
             EditorSceneManager.CloseScene(main,true);
         }
 
-        private static EnemyWaveSettings WaveAsset(string name, Wave recipe, EnemySpawnSettings[] profiles)
+        private static EnemyWaveSettings WaveAsset(string name, Wave recipe, EnemySpawnSettings[] profiles, string folder = Waves)
         {
-            string path=Waves+name+".asset";
+            string path=folder+name+".asset";
             var asset=AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(path);
             bool created=asset==null;
             if(created) asset=ScriptableObject.CreateInstance<EnemyWaveSettings>();
@@ -404,9 +408,9 @@ namespace CrowdPunch.Editor
             return box;
         }
 
-        private static Mesh FloorMesh(string id, Vector2[] outline)
+        private static Mesh FloorMesh(string id, Vector2[] outline, string folder = Layouts)
         {
-            string path=Layouts+id+"_Floor.asset";
+            string path=folder+id+"_Floor.asset";
             Mesh mesh=AssetDatabase.LoadAssetAtPath<Mesh>(path);
             bool created=mesh==null;
             if(created) mesh=new Mesh {name=id+" Floor"};

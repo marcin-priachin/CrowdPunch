@@ -1,4 +1,6 @@
 using System.Collections;
+using System.IO;
+using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Mono.UI;
 using UnityEngine;
@@ -6,12 +8,17 @@ using UnityEngine.SceneManagement;
 
 namespace CrowdPunch.Mono.Levels
 {
-    /// <summary>Loads a fixed sequence of closed gauntlet scenes around the persistent Bootstrap scene.</summary>
+    public enum CampaignScreen { Playing, MainMenu, ReplayComplete, ChapterComplete, CampaignComplete }
+
+    /// <summary>Owns additive encounter loading, completion and campaign transitions (LOOP-002/006).</summary>
+    [DefaultExecutionOrder(-200)]
     public sealed class GauntletSequence : MonoBehaviour
     {
 #if UNITY_EDITOR
         public const string EditorStartLevelKey = "CrowdPunch.LevelLauncher.StartLevel";
+        public const string EditorLegacyKey = "CrowdPunch.LevelLauncher.Legacy";
 #endif
+        [SerializeField] private CampaignCatalog campaign;
         [SerializeField] private string[] levelSceneNames;
         [SerializeField] private string[] levelDisplayNames;
         [SerializeField] private bool loadFirstLevelOnStart = true;
@@ -21,8 +28,23 @@ namespace CrowdPunch.Mono.Levels
         private uint observedCompletionSequence;
         private uint observedFailureSequence;
         private bool transitionInProgress;
+        private bool legacyMode;
+        private bool replay;
+        private int editorStartIndex = -1;
+        private PlayerHealth playerHealth;
 
-        public int LevelCount => levelSceneNames?.Length ?? 0;
+        public CampaignCatalog Campaign => campaign;
+        public bool HasCampaign => campaign != null && !legacyMode;
+        public bool EditorPreview { get; private set; }
+        public CampaignProgress Progress { get; private set; }
+        public CampaignScreen Screen { get; private set; } = CampaignScreen.MainMenu;
+        public string LoadError { get; private set; }
+        public bool IsReplay => replay;
+        public int NextUnfinished => Progress.NextUnfinished(campaign);
+        public bool CanSelect(int index) => HasCampaign && campaign.Get(index)?.Available == true
+            && (EditorPreview || Progress.IsUnlocked(campaign, index));
+
+        public int LevelCount => HasCampaign ? campaign.Count : levelSceneNames?.Length ?? 0;
         public int CurrentLevelIndex => currentLevelIndex;
         public bool TransitionInProgress => transitionInProgress;
         public bool RunComplete { get; private set; }
@@ -30,22 +52,40 @@ namespace CrowdPunch.Mono.Levels
         public uint LevelEntrySequence { get; private set; }
         public string OpeningHint { get; private set; }
 
+        private void Awake()
+        {
+            playerHealth = Object.FindFirstObjectByType<PlayerHealth>(FindObjectsInactive.Include);
+#if UNITY_EDITOR
+            legacyMode = UnityEditor.SessionState.GetBool(EditorLegacyKey, false);
+            UnityEditor.SessionState.EraseBool(EditorLegacyKey);
+            string requested = UnityEditor.SessionState.GetString(EditorStartLevelKey, string.Empty);
+            UnityEditor.SessionState.EraseString(EditorStartLevelKey);
+            if (!string.IsNullOrEmpty(requested))
+            {
+                EditorPreview = true;
+                if (HasCampaign)
+                {
+                    for (int i = 0; i < campaign.Count; i++)
+                        if (campaign.Get(i).scenePath == requested) editorStartIndex = i;
+                }
+                else editorStartIndex = levelSceneNames == null ? -1 : System.Array.IndexOf(levelSceneNames, requested);
+            }
+#endif
+            if (HasCampaign)
+                Progress = new CampaignProgress(Path.Combine(Application.persistentDataPath,
+                    EditorPreview ? "campaign-editor-preview.json" : "campaign-v1.json"));
+        }
+
         private void Start()
         {
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;
             observedFailureSequence = GauntletFailureRegistry.Sequence;
-#if UNITY_EDITOR
-            // A one-shot editor override goes through the normal additive loading path (LOOP-002/006).
-            string editorStartLevel = UnityEditor.SessionState.GetString(EditorStartLevelKey, string.Empty);
-            UnityEditor.SessionState.EraseString(EditorStartLevelKey);
-            int editorStartIndex = levelSceneNames == null ? -1 : System.Array.IndexOf(levelSceneNames, editorStartLevel);
             if (editorStartIndex >= 0)
             {
                 StartCoroutine(LoadLevel(editorStartIndex));
                 return;
             }
-#endif
-            if (loadFirstLevelOnStart && levelSceneNames is { Length: > 0 })
+            if (!HasCampaign && loadFirstLevelOnStart && levelSceneNames is { Length: > 0 })
             {
                 StartCoroutine(LoadLevel(0));
             }
@@ -53,6 +93,9 @@ namespace CrowdPunch.Mono.Levels
 
         private void Update()
         {
+            if (currentLevelIndex < 0 || (HasCampaign && Screen != CampaignScreen.Playing)) return;
+            if (!transitionInProgress && playerHealth != null && playerHealth.CurrentHealth <= 0)
+                RunFailed = true;
             if (!transitionInProgress && observedFailureSequence != GauntletFailureRegistry.Sequence)
             {
                 observedFailureSequence = GauntletFailureRegistry.Sequence;
@@ -67,6 +110,16 @@ namespace CrowdPunch.Mono.Levels
             }
 
             observedCompletionSequence = completionSequence;
+            if (HasCampaign)
+            {
+                if (!EditorPreview) Progress.Complete(campaign.Get(currentLevelIndex).id);
+                if (replay) Screen = CampaignScreen.ReplayComplete;
+                else if (currentLevelIndex == campaign.Count - 1) Screen = CampaignScreen.CampaignComplete;
+                else if ((currentLevelIndex + 1) % 10 == 0) Screen = CampaignScreen.ChapterComplete;
+                else if (CanSelect(currentLevelIndex + 1)) StartCoroutine(LoadLevel(currentLevelIndex + 1));
+                else Screen = CampaignScreen.ChapterComplete;
+                return;
+            }
             if (levelSceneNames != null && currentLevelIndex + 1 < levelSceneNames.Length)
             {
                 StartCoroutine(LoadLevel(currentLevelIndex + 1));
@@ -87,6 +140,7 @@ namespace CrowdPunch.Mono.Levels
 
         public string GetLevelName(int levelIndex)
         {
+            if (HasCampaign) return campaign.Get(levelIndex)?.title ?? string.Empty;
             if (levelIndex >= 0 && levelIndex < LevelCount && levelDisplayNames != null
                 && levelIndex < levelDisplayNames.Length && !string.IsNullOrWhiteSpace(levelDisplayNames[levelIndex]))
                 return levelDisplayNames[levelIndex];
@@ -102,29 +156,56 @@ namespace CrowdPunch.Mono.Levels
             {
                 return;
             }
-
+            if (HasCampaign && !CanSelect(levelIndex)) return;
+            replay = HasCampaign && Progress.IsComplete(campaign.Get(levelIndex).id);
             StartCoroutine(LoadLevel(levelIndex));
+        }
+
+        public void ContinueCampaign()
+        {
+            if (HasCampaign && CanSelect(NextUnfinished)) SelectLevel(NextUnfinished);
+        }
+
+        public void NewCampaign()
+        {
+            if (!HasCampaign || transitionInProgress || EditorPreview) return;
+            if (Progress.Reset()) SelectLevel(0);
+        }
+
+        public void ReturnToMenu()
+        {
+            if (!HasCampaign || transitionInProgress) return;
+            Screen = CampaignScreen.MainMenu;
         }
 
         private IEnumerator LoadLevel(int levelIndex)
         {
-            string sceneName = levelSceneNames[levelIndex];
+            string sceneName = HasCampaign ? campaign.Get(levelIndex).scenePath : levelSceneNames[levelIndex];
             if (string.IsNullOrWhiteSpace(sceneName))
             {
                 Debug.LogError($"Gauntlet scene name at index {levelIndex} is empty.", this);
                 yield break;
             }
 
-            if (!Application.CanStreamedLevelBeLoaded(sceneName))
+            bool available = Application.CanStreamedLevelBeLoaded(sceneName);
+#if UNITY_EDITOR
+            string editorPath = HasCampaign ? sceneName : $"Assets/CrowdPunch/Scenes/Gauntlets/{sceneName}.unity";
+            available |= File.Exists(editorPath);
+#endif
+            if (!available)
             {
-                Debug.LogError($"Could not load gauntlet scene '{sceneName}'. Add it to Build Settings.", this);
+                LoadError = $"Could not load level '{sceneName}'.";
+                Debug.LogError(LoadError, this);
                 yield break;
             }
 
+            LoadError = null;
             transitionInProgress = true;
+            Screen = CampaignScreen.Playing;
             RunComplete = false;
             RunFailed = false;
             FeedbackTimeController.SetTransition(true);
+            FeedbackTimeController.SetPaused(false);
 
             if (currentLevelScene.IsValid() && currentLevelScene.isLoaded)
             {
@@ -135,9 +216,15 @@ namespace CrowdPunch.Mono.Levels
                 }
             }
 
-            AsyncOperation load = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            AsyncOperation load;
+#if UNITY_EDITOR
+            load = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(editorPath,
+                new LoadSceneParameters(LoadSceneMode.Additive));
+#else
+            load = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+#endif
             yield return load;
-            currentLevelScene = SceneManager.GetSceneByName(sceneName);
+            currentLevelScene = SceneManager.GetSceneByName(Path.GetFileNameWithoutExtension(sceneName));
             currentLevelIndex = levelIndex;
 
             GauntletLevel level = FindLevelMarker(currentLevelScene);

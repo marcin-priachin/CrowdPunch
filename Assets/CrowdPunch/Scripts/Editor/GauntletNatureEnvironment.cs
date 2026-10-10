@@ -22,7 +22,10 @@ namespace CrowdPunch.Editor
 
         public static void ApplyLevel(int level) => ApplyRange(level, level);
 
-        private static void ApplyRange(int first, int last)
+        public static void ApplyCampaignLevel(int level) => ApplyRange(level, level,
+            "Assets/CrowdPunch/Scenes/Campaign", "Assets/CrowdPunch/Data/Campaign/Layouts/Nature", "Campaign");
+
+        private static void ApplyRange(int first, int last, string scenes = Scenes, string meshes = Meshes, string prefix = "Gauntlet")
         {
             if (EditorApplication.isPlaying)
                 throw new InvalidOperationException("Exit Play mode before authoring environments.");
@@ -31,7 +34,7 @@ namespace CrowdPunch.Editor
                     throw new InvalidOperationException("Save open scenes before authoring environments.");
 
             Directory.CreateDirectory(Materials);
-            Directory.CreateDirectory(Meshes);
+            Directory.CreateDirectory(meshes);
             AssetDatabase.Refresh();
             var materials = CreateMaterials();
             var setup = EditorSceneManager.GetSceneManagerSetup();
@@ -40,9 +43,9 @@ namespace CrowdPunch.Editor
                 for (int i = first; i <= last; i++)
                 {
                     if (i == 11) continue; // Boss uses its own round arena recipe.
-                    string id = $"Gauntlet_{i:00}";
-                    if (!File.Exists($"{Scenes}/{id}/{id} Sub Scene.unity")) continue;
-                    var scene = EditorSceneManager.OpenScene($"{Scenes}/{id}/{id} Sub Scene.unity", OpenSceneMode.Single);
+                    string id = $"{prefix}_{i:00}";
+                    if (!File.Exists($"{scenes}/{id}/{id} Sub Scene.unity")) continue;
+                    var scene = EditorSceneManager.OpenScene($"{scenes}/{id}/{id} Sub Scene.unity", OpenSceneMode.Single);
                     var layout = scene.GetRootGameObjects().Single(g => g.name.StartsWith("Layout - "));
                     int index = 0;
                     foreach (Transform anchor in layout.transform)
@@ -86,7 +89,7 @@ namespace CrowdPunch.Editor
                             slots = names.Select(n => materials[n]).ToArray();
                             if (anchor.name == "Presentation Backdrop") slots = new[] { materials["Backdrop"] };
                         }
-                        string path = $"{Meshes}/{id}_{index++:00}.asset";
+                        string path = $"{meshes}/{id}_{index++:00}.asset";
                         mesh.name = Path.GetFileNameWithoutExtension(path);
                         var saved = AssetDatabase.LoadAssetAtPath<Mesh>(path);
                         if (saved == null) { AssetDatabase.CreateAsset(mesh, path); saved = mesh; }

@@ -1,0 +1,264 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e0bd2809709383498d0eed8cb644449, type: 3}
+  m_Name: Campaign
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.CampaignCatalog
+  chapterNames:
+  - First Impact
+  - Moving Ammunition
+  - Pressure and Space
+  - Living Hazards
+  - Better Angles
+  - Deliberate Reactions
+  - Control the Ground
+  - Crowd Mastery
+  levels:
+  - id: cp-001
+    title: First Line
+    scenePath: Assets/CrowdPunch/Scenes/Campaign/Campaign_01.unity
+  - id: cp-002
+    title: Choose the Angle
+    scenePath: Assets/CrowdPunch/Scenes/Campaign/Campaign_02.unity
+  - id: cp-003
+    title: Across the Court
+    scenePath: Assets/CrowdPunch/Scenes/Campaign/Campaign_03.unity
+  - id: cp-004
+    title: Break Through
+    scenePath: Assets/CrowdPunch/Scenes/Campaign/Campaign_04.unity
+  - id: cp-005
+    title: Crossfire
+    scenePath: Assets/CrowdPunch/Scenes/Campaign/Campaign_05.unity
+  - id: cp-006
+    title: Open the Lane
+    scenePath: Assets/CrowdPunch/Scenes/Campaign/Campaign_06.unity
+  - id: cp-007
+    title: Through the Opening
+    scenePath: Assets/CrowdPunch/Scenes/Campaign/Campaign_07.unity
+  - id: cp-008
+    title: Changing Sides
+    scenePath: Assets/CrowdPunch/Scenes/Campaign/Campaign_08.unity
+  - id: cp-009
+    title: One Good Shot
+    scenePath: Assets/CrowdPunch/Scenes/Campaign/Campaign_09.unity
+  - id: cp-010
+    title: The Gatekeeper
+    scenePath: Assets/CrowdPunch/Scenes/Campaign/Campaign_10.unity
+  - id: cp-011
+    title: First Fuse
+    scenePath: 
+  - id: cp-012
+    title: Crack the Shell
+    scenePath: 
+  - id: cp-013
+    title: Blast the Gate
+    scenePath: 
+  - id: cp-014
+    title: Committed Charge
+    scenePath: 
+  - id: cp-015
+    title: Crossed Threats
+    scenePath: 
+  - id: cp-016
+    title: Push the Block
+    scenePath: 
+  - id: cp-017
+    title: Moving Window
+    scenePath: 
+  - id: cp-018
+    title: Crowd Reaction
+    scenePath: 
+  - id: cp-019
+    title: Push from Behind
+    scenePath: 
+  - id: cp-020
+    title: Chicken Run
+    scenePath: 
+  - id: cp-021
+    title: Peel the Armor
+    scenePath: 
+  - id: cp-022
+    title: Heavy Traffic
+    scenePath: 
+  - id: cp-023
+    title: Borrowed Fist
+    scenePath: 
+  - id: cp-024
+    title: Hold the Line
+    scenePath: 
+  - id: cp-025
+    title: Hot Ground
+    scenePath: 
+  - id: cp-026
+    title: Safe Side
+    scenePath: 
+  - id: cp-027
+    title: Wait for the Warning
+    scenePath: 
+  - id: cp-028
+    title: Crowd Channels
+    scenePath: 
+  - id: cp-029
+    title: Window of Safety
+    scenePath: 
+  - id: cp-030
+    title: Rolling Blob
+    scenePath: 
+  - id: cp-031
+    title: Purple Warning
+    scenePath: 
+  - id: cp-032
+    title: Quiet Delivery
+    scenePath: 
+  - id: cp-033
+    title: Leave a Trail
+    scenePath: 
+  - id: cp-034
+    title: Break the Detour
+    scenePath: 
+  - id: cp-035
+    title: Moving Perimeter
+    scenePath: 
+  - id: cp-036
+    title: Distant Defense
+    scenePath: 
+  - id: cp-037
+    title: Blast Shelter
+    scenePath: 
+  - id: cp-038
+    title: The Crowd Moves
+    scenePath: 
+  - id: cp-039
+    title: Last Alignment
+    scenePath: 
+  - id: cp-040
+    title: Falling Giants
+    scenePath: 
+  - id: cp-041
+    title: Back to Bodies
+    scenePath: 
+  - id: cp-042
+    title: Outer Route
+    scenePath: 
+  - id: cp-043
+    title: Turn the Shot
+    scenePath: 
+  - id: cp-044
+    title: Stop and Go
+    scenePath: 
+  - id: cp-045
+    title: Armor in Motion
+    scenePath: 
+  - id: cp-046
+    title: Measured Push
+    scenePath: 
+  - id: cp-047
+    title: Divided Approach
+    scenePath: 
+  - id: cp-048
+    title: Firebreak
+    scenePath: 
+  - id: cp-049
+    title: Make Room
+    scenePath: 
+  - id: cp-050
+    title: Gatekeeper Returns
+    scenePath: 
+  - id: cp-051
+    title: Fresh Fuse
+    scenePath: 
+  - id: cp-052
+    title: Crossing Paths
+    scenePath: 
+  - id: cp-053
+    title: Reverse the Window
+    scenePath: 
+  - id: cp-054
+    title: Push Under Pressure
+    scenePath: 
+  - id: cp-055
+    title: Disrupt the Casters
+    scenePath: 
+  - id: cp-056
+    title: Clean Break
+    scenePath: 
+  - id: cp-057
+    title: Long Watch
+    scenePath: 
+  - id: cp-058
+    title: Moving Batteries
+    scenePath: 
+  - id: cp-059
+    title: Open Air
+    scenePath: 
+  - id: cp-060
+    title: Chicken Crossfire
+    scenePath: 
+  - id: cp-061
+    title: Stable Footing
+    scenePath: 
+  - id: cp-062
+    title: Side Door
+    scenePath: 
+  - id: cp-063
+    title: Draw a Line
+    scenePath: 
+  - id: cp-064
+    title: Shell Island
+    scenePath: 
+  - id: cp-065
+    title: Three Approaches
+    scenePath: 
+  - id: cp-066
+    title: Set the Pace
+    scenePath: 
+  - id: cp-067
+    title: Keep It Moving
+    scenePath: 
+  - id: cp-068
+    title: Shifting Front
+    scenePath: 
+  - id: cp-069
+    title: Straighten Up
+    scenePath: 
+  - id: cp-070
+    title: Rolling Pressure
+    scenePath: 
+  - id: cp-071
+    title: Find Your Feet
+    scenePath: 
+  - id: cp-072
+    title: Thread the Crowd
+    scenePath: 
+  - id: cp-073
+    title: Committed Lines
+    scenePath: 
+  - id: cp-074
+    title: Open the Last Gate
+    scenePath: 
+  - id: cp-075
+    title: Guard the Approach
+    scenePath: 
+  - id: cp-076
+    title: A Clear Purpose
+    scenePath: 
+  - id: cp-077
+    title: Final Stand
+    scenePath: 
+  - id: cp-078
+    title: Claim the Ground
+    scenePath: 
+  - id: cp-079
+    title: Room to Breathe
+    scenePath: 
+  - id: cp-080
+    title: Giants Fall Again
+    scenePath: 

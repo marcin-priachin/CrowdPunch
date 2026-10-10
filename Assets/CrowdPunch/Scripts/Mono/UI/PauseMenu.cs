@@ -24,6 +24,7 @@ namespace CrowdPunch.Mono.UI
         private float hintSecondsRemaining;
 
         private bool isPaused;
+        private CampaignMenu campaignMenu;
 
         public void Configure(InputActionAsset actions)
         {
@@ -55,13 +56,19 @@ namespace CrowdPunch.Mono.UI
         {
             gauntletSequence = FindFirstObjectByType<GauntletSequence>();
             EnsureEventSystem();
+            if (gauntletSequence != null && gauntletSequence.HasCampaign)
+            {
+                campaignMenu = gameObject.AddComponent<CampaignMenu>();
+                campaignMenu.Configure(gauntletSequence);
+                return;
+            }
             BuildMenu();
         }
 
         private void OnEnable()
         {
             pauseAction?.Enable();
-            ApplyCursorState(isPaused);
+            ApplyCursorState(campaignMenu != null || isPaused);
         }
 
         private void OnDisable()
@@ -83,6 +90,7 @@ namespace CrowdPunch.Mono.UI
 
         private void Update()
         {
+            if (campaignMenu != null) { campaignMenu.Tick(pauseAction); return; }
             if (gauntletSequence != null && observedLevelEntry != gauntletSequence.LevelEntrySequence)
             {
                 observedLevelEntry = gauntletSequence.LevelEntrySequence;
@@ -140,7 +148,7 @@ namespace CrowdPunch.Mono.UI
         {
             if (hasFocus)
             {
-                ApplyCursorState(isPaused);
+                ApplyCursorState(campaignMenu != null ? campaignMenu.IsOpen : isPaused);
             }
         }
 
@@ -220,7 +228,7 @@ namespace CrowdPunch.Mono.UI
             menuRoot.SetActive(false);
         }
 
-        private static GameObject CreateUiObject(string objectName, Transform parent)
+        internal static GameObject CreateUiObject(string objectName, Transform parent)
         {
             GameObject result = new GameObject(objectName, typeof(RectTransform));
             result.layer = parent.gameObject.layer;
@@ -228,7 +236,7 @@ namespace CrowdPunch.Mono.UI
             return result;
         }
 
-        private static Text CreateLabel(Transform parent, string value, int fontSize, float height)
+        internal static Text CreateLabel(Transform parent, string value, int fontSize, float height)
         {
             GameObject labelObject = CreateUiObject(value, parent);
             LayoutElement element = labelObject.AddComponent<LayoutElement>();
@@ -243,7 +251,7 @@ namespace CrowdPunch.Mono.UI
             return label;
         }
 
-        private static Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction action)
+        internal static Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction action)
         {
             GameObject buttonObject = CreateUiObject(label, parent);
             LayoutElement element = buttonObject.AddComponent<LayoutElement>();
@@ -295,7 +303,7 @@ namespace CrowdPunch.Mono.UI
             }
         }
 
-        private static void ExitGame()
+        internal static void ExitGame()
         {
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CrowdPunch.Mono.Levels;
+using CrowdPunch.Configuration;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -20,6 +21,7 @@ namespace CrowdPunch.Editor
         private readonly List<string> displayNames = new();
         private int selectedIndex;
         private string error;
+        private bool legacy;
 
         static LevelPlayWindow()
         {
@@ -56,10 +58,13 @@ namespace CrowdPunch.Editor
 
         private void OnGUI()
         {
-            EditorGUILayout.LabelField("Start from a gauntlet", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Starts Bootstrap and loads the selected level. Stopping Play Mode returns to your current editor scenes.", MessageType.Info);
+            EditorGUILayout.LabelField("Start from a level", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Starts Bootstrap with isolated Editor progress. Legacy launches never change campaign saves. Stopping Play Mode returns to your editor scenes.", MessageType.Info);
             using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
             {
+                EditorGUI.BeginChangeCheck();
+                legacy = GUILayout.Toolbar(legacy ? 1 : 0, new[] { "Campaign", "Legacy" }) == 1;
+                if (EditorGUI.EndChangeCheck()) RefreshLevels();
                 if (sceneNames.Count > 0)
                 {
                     EditorGUI.BeginChangeCheck();
@@ -93,11 +98,27 @@ namespace CrowdPunch.Editor
                 }
                 if (sequence == null) throw new InvalidOperationException("Bootstrap has no GauntletSequence.");
                 using var serialized = new SerializedObject(sequence);
+                if (!legacy)
+                {
+                    var catalog = serialized.FindProperty("campaign").objectReferenceValue as CampaignCatalog;
+                    if (catalog == null) throw new InvalidOperationException("Campaign has not been authored yet.");
+                    for (int i = 0; i < catalog.Count; i++)
+                    {
+                        var level = catalog.Get(i);
+                        if (!level.Available) continue;
+                        sceneNames.Add(level.scenePath);
+                        displayNames.Add($"{i + 1:00} {level.title}");
+                    }
+                }
+                else
+                {
                 SerializedProperty names = serialized.FindProperty("levelSceneNames");
+                SerializedProperty titles = serialized.FindProperty("levelDisplayNames");
                 for (int index = 0; index < names.arraySize; index++)
                 {
                     sceneNames.Add(names.GetArrayElementAtIndex(index).stringValue);
-                    displayNames.Add(sequence.GetLevelName(index));
+                    displayNames.Add(index < titles.arraySize ? titles.GetArrayElementAtIndex(index).stringValue : names.GetArrayElementAtIndex(index).stringValue);
+                }
                 }
                 selectedIndex = Mathf.Max(0, sceneNames.IndexOf(EditorPrefs.GetString(SelectionKey, string.Empty)));
                 if (sceneNames.Count == 0) error = "Bootstrap's level sequence is empty.";
@@ -112,19 +133,11 @@ namespace CrowdPunch.Editor
         private void StartSelectedLevel()
         {
             string selectedName = sceneNames[selectedIndex];
-            bool available = false;
-            foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
-            {
-                if (scene.enabled && File.Exists(scene.path) && Path.GetFileNameWithoutExtension(scene.path) == selectedName)
-                {
-                    available = true;
-                    break;
-                }
-            }
+            bool available = File.Exists(legacy ? $"Assets/CrowdPunch/Scenes/Gauntlets/{selectedName}.unity" : selectedName);
             SceneAsset bootstrap = AssetDatabase.LoadAssetAtPath<SceneAsset>(BootstrapPath);
             if (!available || bootstrap == null)
             {
-                error = bootstrap == null ? "Bootstrap scene is missing." : $"Enable '{selectedName}' in Build Settings before playing.";
+                error = bootstrap == null ? "Bootstrap scene is missing." : $"Scene '{selectedName}' is missing.";
                 return;
             }
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -133,6 +146,7 @@ namespace CrowdPunch.Editor
             SessionState.SetString(PreviousStartKey, AssetDatabase.GetAssetPath(EditorSceneManager.playModeStartScene));
             SessionState.SetBool(ActiveKey, true);
             SessionState.SetString(GauntletSequence.EditorStartLevelKey, selectedName);
+            SessionState.SetBool(GauntletSequence.EditorLegacyKey, legacy);
             EditorSceneManager.playModeStartScene = bootstrap;
             EditorApplication.isPlaying = true;
         }
@@ -145,6 +159,7 @@ namespace CrowdPunch.Editor
             SessionState.EraseBool(ActiveKey);
             SessionState.EraseString(PreviousStartKey);
             SessionState.EraseString(GauntletSequence.EditorStartLevelKey);
+            SessionState.EraseBool(GauntletSequence.EditorLegacyKey);
         }
     }
 }
