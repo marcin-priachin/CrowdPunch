@@ -114,6 +114,7 @@ namespace CrowdPunch.Mono.Player
 
         private void Update()
         {
+            if (FeedbackTimeController.IsSuspended) { LocomotionVelocity = Vector3.zero; return; }
             ApplyResolvedMovement(false);
 
             Vector2 moveInput = moveAction == null

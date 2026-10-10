@@ -1,10 +1,53 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-10-09
+Last inspected: 2026-10-10
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
+
+## Campaign Chapter 1 (2026-10-10)
+
+This section supersedes the historical fixed-run/build-registration descriptions below.
+Bootstrap now references `Data/Campaign/Campaign.asset`: 80 stable IDs, eight chapter names,
+and ten available scene paths. `Scenes/Campaign/Campaign_01` through `_10` are editable additive
+encounters with separate ECS SubScenes. Levels 4/6 use barricades, 7 uses rotating cover and
+10 uses the copied Gatekeeper arena with unchanged geometry and campaign-owned settings.
+Level 8 has a 100 x 100m floor and four finite waves of 40/60/76/94 enemies (270 total).
+Shared ordinary profiles, original 23 gauntlets and legacy tuning are preserved.
+
+`GauntletSequence` remains the sole scene lifecycle owner. It selects campaign paths or the
+preserved legacy scene arrays, handles completion/failure/retry, places and heals the player,
+and exposes menu state. `CampaignCatalog` owns authored identity/content availability;
+`CampaignProgress` owns versioned local JSON completion, sequential unlocks, backup recovery
+and atomic replacement. The normal save is `Application.persistentDataPath/campaign-v1.json`.
+Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded;
+Chapter 1 completion shows its milestone with the next chapter unavailable.
+
+`PauseMenu` routes campaign presentation to the narrow uGUI `CampaignMenu`, retaining its
+existing input asset and EventSystem. Main/selection/confirmation/pause/failure/milestone pages
+use controller-selectable buttons. Player movement/punch/look inputs are suspended while menu
+or transition gates are active. `FeedbackTimeController` still owns those independent time gates.
+No runtime MonoBehaviour queries enemy entities. Health binding occurs in Start because
+Bootstrap may create PlayerHealth after the sequence's early Awake.
+
+The existing Level Play window has Campaign and Legacy tabs. Campaign Editor previews permit
+any implemented level and do not write the normal campaign save; legacy launches use Editor-only
+scene loading without needing build registration or reading/writing campaign progress.
+`CampaignBuildRegistration` keeps Bootstrap and available campaign scenes in build registration,
+including after legacy recipes try to register their scenes. Validation/legacy scenes stay out.
+
+`CampaignChapterOneBuilder` reuses the existing geometry/wave/environment authoring functions
+with explicit campaign output folders. Its creation command refuses to overwrite an existing
+catalog; subsequent tuning is performed directly on saved assets. It reloads asset references
+after single-scene loads, which can unload cached Unity objects. Waves, floor meshes, objective
+and boss settings belong to the campaign; ordinary profiles and nature materials remain shared.
+
+`CampaignTests` covers progress persistence, corruption recovery, sequential unlocks, asset
+references and the large-wave specification. `CampaignLifecycleCheck` is an explicit Editor-only
+controlled probe using an isolated temporary save and injected defeats. It checks loaded ECS
+ownership, all ten transitions, retry, chapter completion and replay. Its evidence is not a
+human combat, duration or difficulty playtest. See `Docs/Verification/Chapter1.md` for results.
 
 ## Architectural Shape
 

@@ -43,6 +43,7 @@ namespace CrowdPunch.Mono.UI
 
         public void Tick(InputAction pause)
         {
+            if (IsOpen) root.transform.SetAsLastSibling();
             if (sequence.TransitionInProgress) { Close(); return; }
             if (entry != sequence.LevelEntrySequence)
             {

@@ -1,6 +1,6 @@
 # Crowd Punch: 80-level campaign proposal
 
-Date: 2026-10-10. Status: **Revised proposal for review; not implemented.** The user's amendment requiring one large wave-clear level per chapter is accepted; the complete encounter table remains pending review.
+Date: 2026-10-10. Status: **Approved design; Chapter 1 implementation authorized.** Includes the user's amendment requiring one large wave-clear level per chapter. Encounter numbers are starting tuning and remain subject to playtesting.
 
 Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation. Approval of this proposal authorizes the first ten levels and their campaign infrastructure; Chapters 2-8 remain future implementation batches.
 
@@ -185,4 +185,4 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 
 ## Review status
 
-The complete 80-row proposal is ready for review. No campaign scenes, settings, progression code, GDD decisions or legacy assets have been changed. Approval remains pending. Any requested edits will be incorporated before implementing Chapter 1.
+The user approved the revised 80-row table and instructed implementation of Chapter 1. Chapters 2-8 remain future implementation batches. See CurrentArchitecture.md for implemented ownership and the Chapter 1 verification record for actual checks and remaining playtest work.

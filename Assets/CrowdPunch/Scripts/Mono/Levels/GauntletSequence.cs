@@ -78,6 +78,8 @@ namespace CrowdPunch.Mono.Levels
 
         private void Start()
         {
+            // Bootstrap can instantiate the GameObject player after this sequence's early Awake.
+            playerHealth = Object.FindFirstObjectByType<PlayerHealth>(FindObjectsInactive.Include);
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;
             observedFailureSequence = GauntletFailureRegistry.Sequence;
             if (editorStartIndex >= 0)

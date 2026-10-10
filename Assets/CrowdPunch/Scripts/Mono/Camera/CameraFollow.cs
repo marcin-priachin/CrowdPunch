@@ -58,7 +58,8 @@ namespace CrowdPunch.Mono.Camera
 
             if (feedback == null) feedback = GetComponent<CombatCameraFeedback>();
             feedback?.RemoveOffset();
-            float horizontalLook = lookAction?.ReadValue<Vector2>().x ?? 0f;
+            float horizontalLook = CrowdPunch.Mono.Player.FeedbackTimeController.IsSuspended
+                ? 0f : lookAction?.ReadValue<Vector2>().x ?? 0f;
             bool usesJoystick = lookAction?.activeControl?.device is Gamepad
                 || lookAction?.activeControl?.device is Joystick;
             orbitAngle += usesJoystick

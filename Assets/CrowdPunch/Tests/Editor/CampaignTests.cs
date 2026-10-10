@@ -118,7 +118,11 @@ namespace CrowdPunch.Tests
                     }
                 }
             }
-            finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
+            finally
+            {
+                if(setup.Any(scene=>scene.isLoaded && scene.isActive)) EditorSceneManager.RestoreSceneManagerSetup(setup);
+                else EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+            }
         }
     }
 }

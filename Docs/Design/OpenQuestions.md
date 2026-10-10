@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-09
+Last updated: 2026-10-10
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -16,10 +16,6 @@ Which two weapons provide meaningfully different launch geometry while preservin
 
 ## Priority 2 — Needed For A Complete MVP Run
 
-### OQ-009 — Progression Model
-
-What changes during a run, what persists between runs, and what—if anything—is meta-progression?
-
 ### OQ-010 — Weapon Ownership
 
 Are weapons permanent unlocks, temporary pickups, run-start choices, replaceable equipment, limited-use opportunities, or another model?
@@ -27,10 +23,6 @@ Are weapons permanent unlocks, temporary pickups, run-start choices, replaceable
 ### OQ-011 — Effect Grammar
 
 What is the smallest shippable effect set, and what general transformation/event table governs collisions between those effects?
-
-### OQ-013 — Encounter Pacing
-
-How are gauntlet encounters, short transitions, recovery, and the boss distributed across a 15–20 minute run?
 
 ## Priority 3 — Validate After The Core Is Fun
 
@@ -49,10 +41,6 @@ What camera angle, distance, and dynamic behavior best preserve positioning accu
 ### OQ-017 — Input Targets
 
 Which controller and keyboard/mouse schemes are primary, and should the accepted range-based punch aim assistance vary between them?
-
-### OQ-018 — Difficulty Scaling
-
-Should difficulty grow mainly through crowd composition, density, speed, gauntlet layout, effect interactions, or boss behavior?
 
 ### OQ-019 — Audio Language
 
@@ -77,6 +65,23 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-10 - OQ-009, OQ-013, OQ-018: Campaign
+
+Decision: The user approved the complete 80-level campaign table and Chapter 1 implementation,
+including the amendment requiring one 100 x 100m wave-clear level per chapter targeting over
+three minutes. LOOP-002..008 define eight ten-level chapters, boss order, local saved completion
+and sequential unlocks, current-level retries, replay safety, campaign menus and encounter pacing.
+Difficulty uses composition, geometry, positioning, cadence and hazards with stable ordinary
+enemy stats. The old total-run duration and whole-run failure model are superseded.
+
+Legacy numbered content and settings remain preserved outside campaign/player builds. Campaign
+progress is level/chapter access only; weapons, cloud saves and an economy are not introduced.
+OQ-001 still requires target hardware/FPS and representative performance acceptance; the large
+arena counts are starting tuning, not evidence of achieved duration or performance.
+
+Reference: [Approved campaign table](Campaign80Proposal.md). Chapters 2-8 are designed future
+content; approval in this chat authorizes implementation of Chapter 1 and its campaign flow.
 
 ### 2026-10-09 - Ground Hazards And Gauntlet_23
 

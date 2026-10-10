@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-09
+Last updated: 2026-10-10
 
 ## How To Read This Document
 
@@ -58,19 +58,21 @@ The player approaches or is pressured by a crowd, chooses position and launch di
 
 Status: Must
 
-A run progresses through a fixed sequence of small, closed gauntlet levels and includes a boss encounter before later gauntlets. Defeating a boss completes its gauntlet; it does not end the game. Each gauntlet uses a distinct compact layout and a bounded crowd encounter rather than an open level or branching route.
+The campaign contains exactly 80 levels in eight chapters of ten. Every tenth level is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce all existing enemies, objectives and hazards by level 40. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
+
+Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 23 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
 
 ### LOOP-003 — Run Duration
 
 Status: Should
 
-The MVP should target a complete run of approximately 15–20 minutes.
+Most ordinary non-boss encounters target 1-2 minutes; introductions may be shorter. Large crowd levels follow LOOP-008. Boss introductions target 2-3 minutes and harder rematches 3-5 minutes. All durations are balance targets, not timers or enforced minimums. The former 15-20 minute total-run target is superseded.
 
 ### LOOP-004 — Failure
 
 Status: Must
 
-The player has health and loses the run when it reaches zero. Taking damage makes positioning a risk decision rather than a cost-free optimization puzzle.
+Zero player health fails only the current level. Retry restores that level and full player health while preserving completed levels and chapter unlocks. Every level entry restores full health. Existing objective failure rules also fail only the current level.
 
 ### LOOP-005 — Short Interruptions
 
@@ -82,7 +84,21 @@ Any pause, selection, or non-action interruption during a run should be very sho
 
 Status: Must
 
-Completing a gauntlet advances the run to the next authored gauntlet. Level transitions must be short, must not allow enemies or encounter state from the previous level to leak into the next, and must place the player at the next level's authored entry point.
+Ordinary campaign completion advances to the next level. Chapter completion shows Continue and chapter selection; final campaign completion offers replay access. Completing a replay returns to level selection with Retry and Next Level available when loadable, and never lowers progress. Transitions remain short, clear previous encounter state, and place the player at the authored entry point. During chapter-by-chapter development, unlocks may refer to future content, but unavailable scenes must never be loaded or mistaken for full campaign completion.
+
+### LOOP-007 - Campaign Persistence And Menus
+
+Status: Must
+
+Launch into a main menu with Continue, chapter/level selection and New Campaign. Confirm before clearing progress. Save completed levels and sequential unlocks locally; boss completion unlocks the next chapter. Continue resumes the next unfinished level. Previously unlocked levels remain replayable. Preserve keyboard/mouse and controller usability. Save format and stable identifiers are implementation choices. No cloud synchronization, economy or additional meta-progression is required.
+
+### LOOP-008 - Large Crowd Level And Difficulty Rhythm
+
+Status: Must
+
+Each chapter contains one 100 x 100 metre level with a larger enemy crowd and wave clearing as its only objective. Target longer than three minutes through sustained combat. The approved placement is levels 8, 18, 28, 38, 48, 58, 68 and 78, followed by shorter breathers before the bosses. Initial targets are 3.5-4.5 minutes in Chapters 1-4 and 4-5 minutes in Chapters 5-8. Counts and cadence are playtest tuning; no survival timer or forced delay is required.
+
+Difficulty grows through composition, positioning, geometry, spawn directions, cadence and hazards, with relief between peaks and after bosses. Ordinary enemy health, damage and speed remain consistent. Larger counts in these eight arenas complement this encounter design rather than becoming the sole difficulty mechanism.
 
 ## Player And Controls
 
