@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 939c20787032e3041b14d95cd49c2e3e, type: 3}
+  m_Name: L30_Rolling
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.RollingBossSettings
+  health: 500
+  stageTwoThreshold: 0.66
+  stageThreeThreshold: 0.33
+  pauseDurations: {x: 2.5, y: 1.5, z: 1}
+  rollSpeeds: {x: 16, y: 19, z: 22}
+  openingPause: 3
+  windUp: 1.2
+  rollDuration: 5
+  maximumRollDuration: 9
+  bounceLimit: 4
+  damageProtection: 0.75
+  rollingAim: 1
+  rollEnding: 0
+  bodyOwnership: 0
+  contactDanger: 0
+  targeting: 0
+  crowdDirection: 0
+  bodyRadius: 3.6
+  bodyHeight: 7.2
+  mass: 250
+  playerDamage: 28
+  playerProtection: 0.8
+  playerPush: 14
+  contactInterval: 0.8
+  crowdDamage: 8
+  launchSpeed: 16
+  resistantPush: 7
+  bodyDamageMultiplier: 1
+  pauseColor: {r: 0.45, g: 1, b: 0.35, a: 1}
+  windUpColor: {r: 1.6, g: 0.7, b: 0.08, a: 1}
+  rollColor: {r: 1.5, g: 0.18, b: 0.08, a: 1}
+  protectionColor: {r: 0.3, g: 1.4, b: 1.8, a: 1}
+  protectionPulse: 20
+  visualRollDegreesPerSecond: 480

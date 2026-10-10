@@ -6,11 +6,11 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
-## Campaign Chapters 1-2 (2026-10-10)
+## Campaign Chapters 1-3 (2026-10-10)
 
 This section supersedes the historical fixed-run/build-registration descriptions below.
 Bootstrap now references `Data/Campaign/Campaign.asset`: 80 stable IDs, eight chapter names,
-and twenty available scene paths. `Scenes/Campaign/Campaign_01` through `_20` are editable additive
+and thirty available scene paths. `Scenes/Campaign/Campaign_01` through `_30` are editable additive
 encounters with separate ECS SubScenes. Levels 4/6 use barricades, 7 uses rotating cover and
 10 uses the copied Gatekeeper arena with unchanged geometry and campaign-owned settings.
 Level 8 has a 100 x 100m floor and four finite waves of 40/60/76/94 enemies (270 total).
@@ -22,14 +22,28 @@ Level 18 has a 100 x 100m floor and finite waves of 52/70/88/108 (318 total). Th
 the existing zero-surviving-Exploders pair replenishment; tracks use existing physical arrival
 completion. No runtime objective or enemy ownership/system ordering changed.
 
+Chapter 3 adds armor with ammunition safeguards (21/28), Elite support (23/28),
+finite protected-point defense (24), permanent ground patches (25/26/28), periodic
+patches (27/28), a narrow gate (22), track (26), cover target (29), and Rolling Blob (30).
+Level 28 is 100 x 100m with 59/77/96/110 initial enemies including three total Elites
+(342 total before existing supply/replenishment). Hazard cycles are 4s inactive,
+1.5s warning and 2.5s active; level 28's periodic pair has a four-second offset.
+The defense batches four Baselines every four seconds across 12/16/20-enemy waves,
+with five-second inter-wave delays and first-breach failure. `CampaignChapterThreeBuilder`
+authors these assets using existing ECS systems and copies the Rolling Blob arena
+without geometry changes, with separate boss settings and six replenishing Baselines.
+Campaign gates from level 13 onward are 2m wide; solid side terrain seals the exit
+and sits behind the front of the gate so edge shots hit the gate before the rocks.
+
 `GauntletSequence` remains the sole scene lifecycle owner. It selects campaign paths or the
 preserved legacy scene arrays, handles completion/failure/retry, places and heals the player,
 and exposes menu state. `CampaignCatalog` owns authored identity/content availability;
 `CampaignProgress` owns versioned local JSON completion, sequential unlocks, backup recovery
 and atomic replacement. The normal save is `Application.persistentDataPath/campaign-v1.json`.
 Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded;
-Chapter 1 completion now offers Continue into Chapter 2. Chapter 2 completion unlocks Chapter 3,
-whose scenes remain unavailable. Existing stable-ID saves need no migration.
+Chapter 1 and 2 completion offer Continue into the next implemented chapter.
+Chapter 3 completion unlocks Chapter 4, whose scenes remain unavailable.
+Existing stable-ID saves need no migration.
 
 `PauseMenu` routes campaign presentation to the narrow uGUI `CampaignMenu`, retaining its
 existing input asset and EventSystem. Main/selection/confirmation/pause/failure/milestone pages
@@ -54,7 +68,7 @@ and boss settings belong to the campaign; ordinary profiles and nature materials
 shell/track objective visuals from legacy scenes and remaps cross-root socket references into
 the new scenes, with separate settings. The Chicken main/subscene pair is copied with arena
 transforms and collision meshes preserved. Its campaign crowd is six Baselines at a four-second
-replacement delay. Build registration now contains Bootstrap plus twenty encounters.
+replacement delay. Build registration now contains Bootstrap plus thirty encounters.
 
 `CampaignProgress` skips disk writes for already saved completions and retries transient file
 replacement locks with a bounded total delay of 70ms. Persistent I/O failures still surface in
@@ -68,7 +82,13 @@ human combat, duration or difficulty playtest. See `Docs/Verification/Chapter1.m
 `CampaignChapterTwoTests` checks existing-save continuation, Chapter 3 availability, objective
 references and the unchanged Chicken arena. `CampaignLifecycleCheck.StartChapterTwo()` starts
 at Gatekeeper using a temporary save and checks Chapter 2 plus the chapter boundary. See
-`Docs/Verification/Chapter2.md` for the current batch's evidence and playtest limits.
+`Docs/Verification/Chapter2.md` for that batch's evidence and playtest limits.
+`CampaignChapterThreeTests` covers continuation through level 30, mixed crowd counts,
+defense and hazard wiring, navigation clearance, and preservation of the Rolling Blob arena.
+`CampaignLifecycleCheck.StartChapterThree()` checks the Chicken-to-Chapter-3 boundary,
+defense failure/retry and batching, hazard phases, track arrival, and chapter completion
+using an isolated save. See `Docs/Verification/Chapter3.md` for results and the large-crowd
+profiling that led to the bounded Elite staging search described below.
 
 ## Architectural Shape
 
@@ -547,8 +567,16 @@ lane publishes `IsStaged`. With navigation enabled, staging also checks clearanc
 bounds for the projectile path and elite approach, plus navigation anchors at both destinations. A centre ray alone does
 not prove that an elite can reach the behind-projectile point. The target reservation publishes `IsStaged`; while it is false,
 `ElitePunchSystem` requests zero elite movement and does not spend setup timeout, preventing two moving goals from chasing
-one another. The expanding search is allocation-free and adds no tuning: sampling and
-clearance reuse the elite's existing crowd-corridor radius and position tolerance. Other active normal enemies in the finite
+one another. The expanding search checks at most 32 in-bounds cells per elite per update,
+with a 256-step limit for skipping out-of-bounds cells. `EliteStagingSearch` stores the
+outward cursor and a candidate in system-owned managed scratch, keyed by the versioned
+elite entity. A candidate is revalidated against current bodies and terrain before reuse.
+The search resets when its projectile or arena owner changes, or a participant moves
+more than four metres from its search origin; an exhausted search retries after half a
+second. Inactive elites and an unavailable player discard cached searches. This bounds
+the long-obstacle fallback in the 100 x 100m campaign arenas without changing staging
+clearance or publishing a pending search as a ready shot. Sampling and clearance reuse
+the elite's existing crowd-corridor radius and position tolerance. Other active normal enemies in the finite
 projectile-to-player corridor override chase intent with lateral movement toward the nearest side.
 Launched, recovering, defeated, disabled, and pooled enemies are excluded. When several elites are active, each normal
 supports its nearest active elite with entity index as the deterministic equal-distance tie break. The support layer only

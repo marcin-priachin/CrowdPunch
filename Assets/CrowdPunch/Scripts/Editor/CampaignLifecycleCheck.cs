@@ -25,11 +25,14 @@ namespace CrowdPunch.Editor
         private static int level=-1,wave=-1,observedWaves,phase;
         private static double at,entered;
         private static bool testedDeath,waitingForRetry;
+        private static bool testedBreach,waitingForBreachRetry;
+        private static int hazardPhases,lastDefenseSpawn=-1;
         private static string savePath;
         private static readonly List<float> frames=new();
         static CampaignLifecycleCheck() { EditorApplication.update+=Tick; }
         public static void Start() => StartChapter(1);
         public static void StartChapterTwo() => StartChapter(2);
+        public static void StartChapterThree() => StartChapter(3);
         private static void StartChapter(int chapter)
         {
             if(EditorApplication.isPlaying) throw new InvalidOperationException("Start in Edit mode.");
@@ -61,12 +64,19 @@ namespace CrowdPunch.Editor
                 savePath=Path.GetFullPath("Temp/CampaignValidation/progress-"+Guid.NewGuid()+".json");
                 typeof(GauntletSequence).GetField("<Progress>k__BackingField",BindingFlags.Instance|BindingFlags.NonPublic)
                     .SetValue(flow,new CampaignProgress(savePath));
-                // Chapter Two starts at Gatekeeper to exercise the newly available Continue boundary.
+                // Start at the preceding boss to exercise the newly available Continue boundary.
                 for(int i=0;i<Math.Max(0,FirstLevel-1);i++) flow.Progress.Complete(flow.Campaign.Get(i).id);
                 Record("PASS main menu; isolated test save installed; normal campaign save untouched.");
                 phase=1; flow.ContinueCampaign(); entered=EditorApplication.timeSinceStartup; return;
             }
             var player=Object.FindFirstObjectByType<PlayerHealth>(FindObjectsInactive.Include);
+            if(waitingForBreachRetry)
+            {
+                if(!flow.RunFailed) return;
+                Require(flow.NextUnfinished==23,"Breach changed campaign progress.");
+                waitingForBreachRetry=false; flow.RestartCurrentLevel(); wave=-1;
+                Record("PASS first active-enemy breach fails defense; retry resets objective and wave schedule."); return;
+            }
             if(waitingForRetry)
             {
                 if(!flow.RunFailed) return;
@@ -77,13 +87,13 @@ namespace CrowdPunch.Editor
             if(player!=null) { player.gameObject.SetActive(true); player.Restore(player.MaxHealth); }
             if(flow.Screen==CampaignScreen.ChapterComplete)
             {
-                if(Chapter==2 && flow.CurrentLevelIndex==9)
+                if(Chapter>1 && flow.CurrentLevelIndex==FirstLevel-1)
                 {
-                    Require(flow.NextUnfinished==10 && flow.CanSelect(10),"Chapter One Continue did not unlock installed Chapter Two.");
-                    Record("PASS Chapter One milestone unlocks Chapter Two; Continue loads First Fuse.");
+                    Require(flow.NextUnfinished==FirstLevel && flow.CanSelect(FirstLevel),"Previous milestone did not unlock installed chapter.");
+                    Record($"PASS previous chapter milestone unlocks Chapter {Chapter}; Continue loads its first level.");
                     flow.ContinueCampaign(); return;
                 }
-                int next=Chapter*10, expectedWaves=Chapter==1?19:17;
+                int next=Chapter*10, expectedWaves=Chapter==1?19:Chapter==2?17:20;
                 Require(observedWaves==expectedWaves,"Unexpected observed wave count: "+observedWaves);
                 Require(flow.CurrentLevelIndex==next-1 && flow.NextUnfinished==next,"Incorrect chapter milestone.");
                 Require(flow.Progress.IsUnlocked(flow.Campaign,next) && flow.CanSelect(next)==flow.Campaign.Get(next).Available,"Next chapter availability gate failed.");
@@ -116,7 +126,7 @@ namespace CrowdPunch.Editor
             var owner=query.GetSingletonEntity(); var sequence=em.GetComponentData<EnemyWaveSequence>(owner);
             if(level!=flow.CurrentLevelIndex)
             {
-                level=flow.CurrentLevelIndex; wave=-1; entered=now;
+                level=flow.CurrentLevelIndex; wave=-1; entered=now; hazardPhases=0;
                 Require(player.CurrentHealth==player.MaxHealth,"Level entry did not restore full health.");
                 Record($"ENTER {level+1:00}: {flow.GetLevelName(level)}; full health.");
             }
@@ -129,6 +139,36 @@ namespace CrowdPunch.Editor
                 var ownership=em.GetComponentData<EnemyWaveOwnership>(e);
                 Require(ownership.Sequence==owner && ownership.RunGeneration==sequence.RunGeneration,"Encounter-owned enemy leaked across transition/retry.");
             }
+            if(Chapter==3)
+            {
+                using var hazards=em.CreateEntityQuery(typeof(GroundHazard),typeof(GroundHazardState));
+                Require(hazards.CalculateEntityCount()==(level==27?3:level>=24 && level<=26?1:0),"Hazard leakage or missing baked patches.");
+                using var patches=hazards.ToComponentDataArray<GroundHazardState>(Allocator.Temp);
+                foreach(var patch in patches) hazardPhases|=1<<(int)patch.Phase;
+                if(level==23 && (sequence.Phase==EnemyWaveRuntimePhase.Spawning || sequence.Phase==EnemyWaveRuntimePhase.AwaitingActivation))
+                {
+                    if(!testedBreach && enemies.Length>0)
+                    {
+                        var e=enemies[0]; var transform=em.GetComponentData<Unity.Transforms.LocalTransform>(e);
+                        transform.Position=new Unity.Mathematics.float3(0,.55f,-46); em.SetComponentData(e,transform);
+                        var launch=em.GetComponentData<EnemyLaunchState>(e); launch.Phase=EnemyLaunchPhase.Active; em.SetComponentData(e,launch);
+                        testedBreach=true; waitingForBreachRetry=true; return;
+                    }
+                    if(wave!=sequence.CurrentWaveIndex)
+                    {
+                        wave=sequence.CurrentWaveIndex; observedWaves++; lastDefenseSpawn=0;
+                        Record($"WAVE 24.{wave+1}: finite defense, four per batch / four seconds; enemy defeats injected during advance.");
+                        ScreenCapture.CaptureScreenshot(Path.GetFullPath($"Temp/CampaignValidation/level24-wave{wave+1}.png"));
+                    }
+                    if(sequence.SpawnedCount!=lastDefenseSpawn)
+                    {
+                        Require(sequence.SpawnedCount-lastDefenseSpawn==4,"Defense did not spawn batches of four.");
+                        lastDefenseSpawn=sequence.SpawnedCount; Record($"DEFENSE BATCH {wave+1}: cumulative={lastDefenseSpawn}");
+                    }
+                    foreach(var e in enemies) InjectDefeat(em,e);
+                    return;
+                }
+            }
             if(sequence.Phase!=EnemyWaveRuntimePhase.AwaitingActivation) return;
             if(!testedDeath && level==FirstLevel)
             {
@@ -138,13 +178,14 @@ namespace CrowdPunch.Editor
             {
                 wave=sequence.CurrentWaveIndex; at=now; frames.Clear(); observedWaves++;
                 var definition=em.GetBuffer<EnemyWaveDefinition>(owner)[wave];
-                Require(definition.IsValid==1 && sequence.SpawnedCount==definition.TotalEnemyCount,"Wave did not finish spawning authored population.");
+                Require(definition.IsValid==1 && sequence.SpawnedCount==definition.TotalEnemyCount+definition.TotalEliteCount,"Wave did not finish spawning authored population.");
                 Record($"WAVE {level+1:00}.{wave+1}: spawned={sequence.SpawnedCount}; owned roots={enemies.Length}");
                 ScreenCapture.CaptureScreenshot(Path.GetFullPath($"Temp/CampaignValidation/level{level+1:00}-wave{wave+1}.png"));
             }
             frames.Add(Time.unscaledDeltaTime*1000);
-            if(now-at<(level==7 || level==17?15:4)) return;
-            if(level==3 || level==5 || level==6 || level==11 || level==12 || level==16)
+            if(now-at<(level==7 || level==17 || level==27?15:level==26?9:4)) return;
+            if(level==26 || level==27) Require(hazardPhases==7,"Periodic hazards did not show inactive, warning and active phases.");
+            if(level==3 || level==5 || level==6 || level==11 || level==12 || level==16 || level==21 || level==28)
             {
                 using var walls=em.CreateEntityQuery(typeof(Barricade));
                 Require(walls.CalculateEntityCount()==1,"Objective missing.");
@@ -166,7 +207,7 @@ namespace CrowdPunch.Editor
                 var head=bosses.GetSingletonEntity(); var state=em.GetComponentData<BossEncounter>(head);
                 state.Cycle=BossCycle.Defeated; em.SetComponentData(head,state);
             }
-            else if(level==15 || level==18)
+            else if(level==15 || level==18 || level==25)
             {
                 using var tracks=em.CreateEntityQuery(typeof(TrackObject),typeof(TrackObjectState));
                 Require(tracks.CalculateEntityCount()==1,"Track missing.");
@@ -184,12 +225,18 @@ namespace CrowdPunch.Editor
                 var boss=bosses.GetSingletonEntity(); var state=em.GetComponentData<ChickenBoss>(boss);
                 state.Phase=ChickenPhase.Defeated; em.SetComponentData(boss,state);
             }
+            else if(level==29)
+            {
+                using var bosses=em.CreateEntityQuery(typeof(RollingBoss));
+                Require(bosses.CalculateEntityCount()==1,"Rolling boss missing.");
+                var boss=bosses.GetSingletonEntity(); var state=em.GetComponentData<RollingBoss>(boss);
+                state.Phase=RollingPhase.Defeated; em.SetComponentData(boss,state);
+            }
             else
             {
                 foreach(var e in enemies)
                 {
-                    if(em.IsComponentEnabled<RespawnRequest>(e)) continue;
-                    em.SetComponentData(e,new DamageRequest{Amount=10000}); em.SetComponentEnabled<DamageRequest>(e,true);
+                    InjectDefeat(em,e);
                 }
             }
             if(frames.Count>0)
@@ -198,6 +245,14 @@ namespace CrowdPunch.Editor
                 frames.Clear();
             }
             at=now+1000;
+        }
+
+        private static void InjectDefeat(EntityManager em,Entity enemy)
+        {
+            if(em.IsComponentEnabled<RespawnRequest>(enemy)) return;
+            // This lifecycle probe bypasses armor deliberately; combat/supply tests cover its rules.
+            if(em.HasComponent<EnemyArmor>(enemy)) em.SetComponentData(enemy,default(EnemyArmor));
+            em.SetComponentData(enemy,new DamageRequest{Amount=10000}); em.SetComponentEnabled<DamageRequest>(enemy,true);
         }
     }
 }

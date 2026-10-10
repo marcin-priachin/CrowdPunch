@@ -38,7 +38,7 @@ namespace CrowdPunch.Tests
                 progress = new CampaignProgress(path);
                 Assert.That(progress.NextUnfinished(catalog),Is.EqualTo(20));
                 Assert.That(progress.IsUnlocked(catalog,20),Is.True);
-                Assert.That(catalog.Get(20).Available,Is.False);
+                Assert.That(catalog.Get(20).Available,Is.True);
                 Assert.That(progress.IsComplete("cp-001") && progress.IsComplete("cp-020"),Is.True);
             }
             finally { foreach (string suffix in new[]{"",".bak",".tmp"}) if(File.Exists(path+suffix)) File.Delete(path+suffix); }
@@ -162,7 +162,7 @@ namespace CrowdPunch.Tests
             }
         }
 
-        private static void AssertNavigationClearance(NavigationArenaAuthoring navigation, int number)
+        internal static void AssertNavigationClearance(NavigationArenaAuthoring navigation, int number)
         {
             Assert.That(navigation.settings,Is.Not.Null);
             var arena=navigation.GetComponent<ArenaAuthoring>();

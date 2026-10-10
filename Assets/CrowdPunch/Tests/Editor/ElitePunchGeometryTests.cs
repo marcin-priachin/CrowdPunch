@@ -45,8 +45,14 @@ namespace CrowdPunch.Tests
             em.SetComponentData(arena, new NavigationGrid { Data = blob });
             em.SetComponentData(arena, new NavigationRuntimeSettings { Enabled = 1 });
 
-            world.GetOrCreateSystemManaged<EliteCrowdSupportSystem>().Update();
-
+            var support=world.GetOrCreateSystemManaged<EliteCrowdSupportSystem>();
+            // A distant search spans updates; it must eventually find the same clear shot.
+            for(int i=0;i<100;i++)
+            {
+                support.Update();
+                if(em.GetComponentData<DesiredMovement>(target).Speed>0) break;
+                Assert.AreEqual(0,em.GetComponentData<ElitePunchReservation>(target).IsStaged);
+            }
             NavigationIntent intent = em.GetComponentData<NavigationIntent>(target);
             Assert.AreEqual(0, em.GetComponentData<ElitePunchReservation>(target).IsStaged);
             Assert.Greater(em.GetComponentData<DesiredMovement>(target).Speed, 0);

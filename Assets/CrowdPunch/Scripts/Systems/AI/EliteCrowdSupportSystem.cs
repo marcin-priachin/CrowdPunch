@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using CrowdPunch.Utilities;
@@ -16,6 +17,8 @@ namespace CrowdPunch.Systems.AI
     public partial class EliteCrowdSupportSystem : SystemBase
     {
         private EntityQuery normalEnemyQuery;
+        private readonly Dictionary<Entity, EliteStagingSearch> stagingSearches = new();
+        private readonly List<Entity> expiredSearches = new();
 
         protected override void OnCreate()
         {
@@ -26,7 +29,8 @@ namespace CrowdPunch.Systems.AI
                 ComponentType.ReadOnly<LocalTransform>(),
                 ComponentType.ReadWrite<DesiredMovement>(),
                 ComponentType.ReadOnly<EnemyMovementSettings>(),
-                ComponentType.ReadOnly<EnemyLaunchState>());
+                ComponentType.ReadOnly<EnemyLaunchState>(),
+                ComponentType.Exclude<RespawnRequest>());
         }
 
         protected override void OnUpdate()
@@ -34,6 +38,7 @@ namespace CrowdPunch.Systems.AI
             PlayerSnapshot player = SystemAPI.GetSingleton<PlayerSnapshot>();
             if (!player.IsAvailable)
             {
+                stagingSearches.Clear();
                 return;
             }
 
@@ -60,6 +65,24 @@ namespace CrowdPunch.Systems.AI
                     Settings = settings.ValueRO,
                     SelectedProjectile = punchState.ValueRO.Target
                 });
+            }
+
+            expiredSearches.Clear();
+            foreach (var entry in stagingSearches)
+            {
+                bool present = false;
+                foreach (var elite in elites)
+                {
+                    present |= elite.Entity == entry.Key;
+                }
+                if (!present)
+                {
+                    expiredSearches.Add(entry.Key);
+                }
+            }
+            foreach (var expired in expiredSearches)
+            {
+                stagingSearches.Remove(expired);
             }
 
             for (int eliteIndex = 0; eliteIndex < elites.Length; eliteIndex++)
@@ -225,6 +248,7 @@ namespace CrowdPunch.Systems.AI
                     enemies))
             {
                 isStaged = true;
+                stagingSearches.Remove(elite);
                 return projectilePosition;
             }
 
@@ -253,6 +277,7 @@ namespace CrowdPunch.Systems.AI
                         continue;
                     }
 
+                    stagingSearches.Remove(elite);
                     return candidate;
                 }
             }
@@ -305,37 +330,61 @@ namespace CrowdPunch.Systems.AI
                 return false;
             }
 
-            int2 origin = new int2(originCell % geometry.Size.x, originCell / geometry.Size.x);
-            int maximumRing = math.max(geometry.Size.x, geometry.Size.y);
-            for (int ring = 1; ring <= maximumRing; ring++)
+            Entity arena = SystemAPI.GetSingletonEntity<NavigationGrid>();
+            double now = SystemAPI.Time.ElapsedTime;
+            if (!stagingSearches.TryGetValue(elite, out var search)
+                || search.Projectile != projectile || search.Arena != arena
+                || math.distancesq(search.ProjectileOrigin, projectilePosition.xz) > 16
+                || math.distancesq(search.PlayerOrigin, playerPosition.xz) > 16
+                || math.distancesq(search.EliteOrigin, elitePosition.xz) > 16
+                || (search.RetryAt > 0 && now >= search.RetryAt))
             {
-                for (int x = -ring; x <= ring; x++)
+                search = new EliteStagingSearch
                 {
-                    if (TryStagingCell(origin + new int2(x, -ring), ref geometry, elite, projectile,
-                            elitePosition, projectilePosition, playerPosition, clearance,
-                            desiredPunchDistance, enemies, out stagingPosition)
-                        || TryStagingCell(origin + new int2(x, ring), ref geometry, elite, projectile,
-                            elitePosition, projectilePosition, playerPosition, clearance,
-                            desiredPunchDistance, enemies, out stagingPosition))
-                    {
-                        return true;
-                    }
-                }
-
-                for (int z = -ring + 1; z < ring; z++)
-                {
-                    if (TryStagingCell(origin + new int2(-ring, z), ref geometry, elite, projectile,
-                            elitePosition, projectilePosition, playerPosition, clearance,
-                            desiredPunchDistance, enemies, out stagingPosition)
-                        || TryStagingCell(origin + new int2(ring, z), ref geometry, elite, projectile,
-                            elitePosition, projectilePosition, playerPosition, clearance,
-                            desiredPunchDistance, enemies, out stagingPosition))
-                    {
-                        return true;
-                    }
-                }
+                    Projectile = projectile,
+                    Arena = arena,
+                    ProjectileOrigin = projectilePosition.xz,
+                    PlayerOrigin = playerPosition.xz,
+                    EliteOrigin = elitePosition.xz,
+                    Origin = new int2(originCell % geometry.Size.x, originCell / geometry.Size.x)
+                };
+                stagingSearches[elite] = search;
             }
-
+            if (search.RetryAt > now)
+            {
+                return false;
+            }
+            // ENEMY-009: revalidate the chosen position against current bodies/terrain.
+            if (search.HasCandidate && TryStagingCell(search.Candidate, ref geometry, elite, projectile,
+                    elitePosition, projectilePosition, playerPosition, clearance,
+                    desiredPunchDistance, enemies, out stagingPosition))
+            {
+                return true;
+            }
+            search.HasCandidate = false;
+            // Large arenas must not scan every cell synchronously when no nearby shot fits.
+            // Retain outward progress; waiting remains unstaged until a valid position is found.
+            for (int scanned = 0, checkedCells = 0; scanned < 256 && checkedCells < 32; scanned++)
+            {
+                if (!search.TryNext(geometry.Size, out var cell))
+                {
+                    search.RetryAt = now + .5;
+                    break;
+                }
+                if (math.any(cell < 0) || math.any(cell >= geometry.Size))
+                {
+                    continue;
+                }
+                checkedCells++;
+                if (!TryStagingCell(cell, ref geometry, elite, projectile, elitePosition, projectilePosition,
+                        playerPosition, clearance, desiredPunchDistance, enemies, out stagingPosition))
+                {
+                    continue;
+                }
+                search.Candidate = cell;
+                search.HasCandidate = true;
+                return true;
+            }
             return false;
         }
 
