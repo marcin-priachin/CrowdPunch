@@ -2,6 +2,7 @@ using CrowdPunch.Components;
 using CrowdPunch.Utilities;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -21,6 +22,8 @@ namespace CrowdPunch.Systems.Lifetime
         private const double RespawnDelaySeconds = 5d;
         private const float PoolSpeedThreshold = 0.75f;
         private const float PendingPoolBrakingAcceleration = 18f;
+        // This project simulates world 0 only. Reserve this unsimulated index for pooled bodies.
+        private const uint PooledPhysicsWorldIndex = uint.MaxValue;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -34,6 +37,7 @@ namespace CrowdPunch.Systems.Lifetime
         {
             double elapsedTime = SystemAPI.Time.ElapsedTime;
             using var groundHazards = GroundHazardSpawnClearance.Capture(state.EntityManager);
+            using var commands = new EntityCommandBuffer(Allocator.Temp);
             ArenaBounds arenaBounds = SystemAPI.GetSingleton<ArenaBounds>();
             PlayerSnapshot playerSnapshot = SystemAPI.HasSingleton<PlayerSnapshot>()
                 ? SystemAPI.GetSingleton<PlayerSnapshot>()
@@ -161,6 +165,10 @@ namespace CrowdPunch.Systems.Lifetime
                         SystemAPI.GetBuffer<GroundHazardWaypoint>(enemy).Clear();
                     }
                     respawnRequest.ValueRW.IsPooled = 1;
+                    // Keep the visible landing response in physics, then remove hidden bodies
+                    // before the next build. Coincident pooled colliders otherwise create O(n^2) contacts.
+                    if (state.EntityManager.HasComponent<PhysicsWorldIndex>(enemy))
+                        commands.SetSharedComponent(enemy, new PhysicsWorldIndex(PooledPhysicsWorldIndex));
                     respawnRequest.ValueRW.RespawnAt = respawnSettings.ValueRO.Enabled != 0
                         ? elapsedTime + RespawnDelaySeconds
                         : double.MaxValue;
@@ -222,7 +230,10 @@ namespace CrowdPunch.Systems.Lifetime
                 RestoreEliteWaveOwnership(ref state, enemy);
                 respawnRequest.ValueRW = default;
                 SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, false);
+                if (state.EntityManager.HasComponent<PhysicsWorldIndex>(enemy))
+                    commands.SetSharedComponent(enemy, new PhysicsWorldIndex());
             }
+            commands.Playback(state.EntityManager);
         }
 
         private void RestoreEliteWaveOwnership(ref SystemState state, Entity enemy)

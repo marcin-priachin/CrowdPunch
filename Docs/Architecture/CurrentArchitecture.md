@@ -6,11 +6,11 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
-## Campaign Chapters 1-3 (2026-10-10)
+## Campaign Chapters 1-4 (2026-10-10)
 
 This section supersedes the historical fixed-run/build-registration descriptions below.
 Bootstrap now references `Data/Campaign/Campaign.asset`: 80 stable IDs, eight chapter names,
-and thirty available scene paths. `Scenes/Campaign/Campaign_01` through `_30` are editable additive
+and forty available scene paths. `Scenes/Campaign/Campaign_01` through `_40` are editable additive
 encounters with separate ECS SubScenes. Levels 4/6 use barricades, 7 uses rotating cover and
 10 uses the copied Gatekeeper arena with unchanged geometry and campaign-owned settings.
 Level 8 has a 100 x 100m floor and four finite waves of 40/60/76/94 enemies (270 total).
@@ -35,14 +35,37 @@ without geometry changes, with separate boss settings and six replenishing Basel
 Campaign gates from level 13 onward are 2m wide; solid side terrain seals the exit
 and sits behind the front of the gate so edge shots hit the gate before the rocks.
 
+Chapter 4 introduces Wizards (31) and Trails (33), mixes defense attackers (36), and
+copies the complete Dino/pillar arena (40). Levels 32/39 use tracks, 34 a four-hit narrow
+gate plus periodic shortcut, 35 a four-hit rotating target with a Trail, and 37 a shell
+with a permanent hazard in the outer corner. Level 32 rotates rail, block, socket and
+markings together by -25 degrees. Level 38 has a 100 x 100m footprint and 70/86/102/120
+initial enemies (378 total including two Elites), with Wizard and armor supply safeguards.
+Wizard wave-clear encounters wait for persistent Wizard zones; Trails alone do not gate
+completion. Level 36 explicitly disables replenishment and hazard completion gates;
+its 18/21/23-enemy waves arrive in batches of up to four every three seconds. Dino retains
+three successful pillar hits and two local Baselines per unconsumed pillar in addition
+to eight general support enemies. Settings belong to the campaign, and shared mechanics,
+ordinary profiles, system ordering and boss arena geometry remain unchanged.
+
+The Chapter 4 multi-wave profile found hidden pooled bodies still generating contacts
+at their common storage position. `EnemyRespawnSystem` now queues a shared-component
+change through its local ECB when a body actually enters the pool: `PhysicsWorldIndex`
+becomes `uint.MaxValue`, reserved here as an unsimulated pool index. Visible landing
+responses stay in world 0. Safe respawn restores world 0 before the next physics build;
+colliders, masses, ownership, corpse timing and replenishment delays are preserved.
+The repository has one simulated physics world (0); adding another world must preserve
+this reserved-index contract. This prevents accumulated earlier waves from generating
+quadratic contacts below the arena, including costly Wizard collision-event scans.
+
 `GauntletSequence` remains the sole scene lifecycle owner. It selects campaign paths or the
 preserved legacy scene arrays, handles completion/failure/retry, places and heals the player,
 and exposes menu state. `CampaignCatalog` owns authored identity/content availability;
 `CampaignProgress` owns versioned local JSON completion, sequential unlocks, backup recovery
 and atomic replacement. The normal save is `Application.persistentDataPath/campaign-v1.json`.
 Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded;
-Chapter 1 and 2 completion offer Continue into the next implemented chapter.
-Chapter 3 completion unlocks Chapter 4, whose scenes remain unavailable.
+Chapters 1-3 completion offer Continue into the next implemented chapter.
+Chapter 4 completion unlocks Chapter 5, whose scenes remain unavailable.
 Existing stable-ID saves need no migration.
 
 `PauseMenu` routes campaign presentation to the narrow uGUI `CampaignMenu`, retaining its
@@ -68,7 +91,7 @@ and boss settings belong to the campaign; ordinary profiles and nature materials
 shell/track objective visuals from legacy scenes and remaps cross-root socket references into
 the new scenes, with separate settings. The Chicken main/subscene pair is copied with arena
 transforms and collision meshes preserved. Its campaign crowd is six Baselines at a four-second
-replacement delay. Build registration now contains Bootstrap plus thirty encounters.
+replacement delay. Build registration now contains Bootstrap plus forty encounters.
 
 `CampaignProgress` skips disk writes for already saved completions and retries transient file
 replacement locks with a bounded total delay of 70ms. Persistent I/O failures still surface in
@@ -89,6 +112,11 @@ defense and hazard wiring, navigation clearance, and preservation of the Rolling
 defense failure/retry and batching, hazard phases, track arrival, and chapter completion
 using an isolated save. See `Docs/Verification/Chapter3.md` for results and the large-crowd
 profiling that led to the bounded Elite staging search described below.
+`CampaignChapterFourBuilder` authors levels 31-40 without overwriting existing encounters.
+`CampaignChapterFourTests` covers save continuation, large-wave safeguards, navigation,
+objective references, and identical Dino/pillar geometry. `StartChapterFour()` extends the
+controlled lifecycle check through mixed defense, including final partial batches, and
+checks the six pillar ammunition bodies. Evidence is in `Docs/Verification/Chapter4.md`.
 
 ## Architectural Shape
 

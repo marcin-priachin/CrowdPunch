@@ -20,12 +20,13 @@ namespace CrowdPunch.Tests
             var enemy = em.CreateEntity(typeof(Enemy), typeof(RespawnRequest), typeof(DeathRequest),
                 typeof(EnemyLaunchState), typeof(EnemyLandingAnimation), typeof(LocalTransform),
                 typeof(Health), typeof(HealthBar), typeof(EnemyDamageState), typeof(EnemyRespawnSettings), typeof(EnemyLifetime),
-                typeof(PhysicsVelocity), typeof(KnockbackRecovery), typeof(DesiredMovement));
+                typeof(PhysicsVelocity), typeof(KnockbackRecovery), typeof(DesiredMovement), typeof(EnemyGroundConstraint));
             em.SetComponentData(enemy, LocalTransform.FromPosition(new float3(2f, 1f, 3f)));
             em.SetComponentData(enemy, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated, LaunchSequence = 1 });
             em.SetComponentData(enemy, new EnemyLandingAnimation { Duration = 1.4f });
             em.SetComponentEnabled<RespawnRequest>(enemy, false);
             em.SetComponentEnabled<KnockbackRecovery>(enemy, false);
+            em.AddSharedComponent(enemy, new PhysicsWorldIndex());
             em.AddBuffer<CollisionDamageHistory>(enemy);
             world.SetTime(new TimeData(10d, 0.02f));
             world.GetOrCreateSystem<DefeatedEnemyLifecycleSystem>().Update(world.Unmanaged);
@@ -35,11 +36,26 @@ namespace CrowdPunch.Tests
             world.GetOrCreateSystem<EnemyRespawnSystem>().Update(world.Unmanaged);
             em.CompleteAllTrackedJobs();
             Assert.That(em.GetComponentData<RespawnRequest>(enemy).IsPooled, Is.Zero);
+            Assert.That(em.GetSharedComponent<PhysicsWorldIndex>(enemy).Value, Is.Zero,
+                "The visible landing must still participate in physics.");
             Assert.That(em.GetComponentData<LocalTransform>(enemy).Position, Is.EqualTo(new float3(2f, 1f, 3f)));
             world.SetTime(new TimeData(11.5d, 0.02f));
             world.GetOrCreateSystem<EnemyRespawnSystem>().Update(world.Unmanaged);
             em.CompleteAllTrackedJobs();
             Assert.That(em.GetComponentData<RespawnRequest>(enemy).IsPooled, Is.EqualTo(1));
+            Assert.That(em.GetSharedComponent<PhysicsWorldIndex>(enemy).Value, Is.EqualTo(uint.MaxValue),
+                "Hidden pooled bodies must not collide with one another.");
+
+            // Exercise an actual respawn after pooling, including restoration for the next physics build.
+            em.SetComponentData(enemy, new EnemyRespawnSettings { Enabled = 1 });
+            var request = em.GetComponentData<RespawnRequest>(enemy);
+            request.RespawnAt = 12;
+            em.SetComponentData(enemy, request);
+            world.SetTime(new TimeData(12.1d, 0.02f));
+            world.GetOrCreateSystem<EnemyRespawnSystem>().Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+            Assert.That(em.IsComponentEnabled<RespawnRequest>(enemy), Is.False);
+            Assert.That(em.GetSharedComponent<PhysicsWorldIndex>(enemy).Value, Is.Zero);
         }
     }
 }
