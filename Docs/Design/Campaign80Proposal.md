@@ -1,8 +1,8 @@
 # Crowd Punch: 80-level campaign proposal
 
-Date: 2026-10-10. Status: **Approved design; Chapters 1-5 implementation authorized.** Includes the user's amendment requiring one large wave-clear level per chapter. Encounter numbers are starting tuning and remain subject to playtesting.
+Date: 2026-10-10. Status: **Approved design; Chapters 1-6 implementation authorized.** Includes the user's amendment requiring one large wave-clear level per chapter. Encounter numbers are starting tuning and remain subject to playtesting.
 
-Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2, 3, 4 and 5 in sequence. Levels 1-50 and their campaign infrastructure are authorized; Chapters 6-8 remain future implementation batches.
+Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2, 3, 4, 5 and 6 in sequence. Levels 1-60 and their campaign infrastructure are authorized; Chapters 7-8 remain future implementation batches.
 
 ## Reading the table
 
@@ -189,4 +189,4 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 
 ## Review status
 
-The user approved the revised 80-row table and instructed implementation of Chapter 1. Subsequent requests authorize Chapters 2-5. Chapters 6-8 remain future implementation batches. See CurrentArchitecture.md and Docs/Verification/Chapter1.md through Chapter5.md for implemented ownership, actual checks and remaining playtest work.
+The user approved the revised 80-row table and instructed implementation of Chapter 1. Subsequent requests authorize Chapters 2-6. Chapters 7-8 remain future implementation batches. See CurrentArchitecture.md and Docs/Verification/Chapter1.md through Chapter6.md for implemented ownership, actual checks and remaining playtest work.

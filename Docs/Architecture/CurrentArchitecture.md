@@ -6,11 +6,11 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
-## Campaign Chapters 1-5 (2026-10-10)
+## Campaign Chapters 1-6 (2026-10-10)
 
 This section supersedes the historical fixed-run/build-registration descriptions below.
 Bootstrap now references `Data/Campaign/Campaign.asset`: 80 stable IDs, eight chapter names,
-and fifty available scene paths. `Scenes/Campaign/Campaign_01` through `_50` are editable additive
+and sixty available scene paths. `Scenes/Campaign/Campaign_01` through `_60` are editable additive
 encounters with separate ECS SubScenes. Levels 4/6 use barricades, 7 uses rotating cover and
 10 uses the copied Gatekeeper arena with unchanged geometry and campaign-owned settings.
 Level 8 has a 100 x 100m floor and four finite waves of 40/60/76/94 enemies (270 total).
@@ -66,6 +66,23 @@ Exploders in its final wave. Ordinary Elite AI is unchanged.
 `EliteWaveReplenishmentSystem` also rejects those owners. This preserves finite
 22/26/26-enemy defense waves, arriving in batches up to four every three seconds.
 
+Chapter 6 adds levels 51-60 using existing runtime mechanics. Level 51 uses the shell
+and specialized Exploder pair, 53 reverses its 90-degree cover opening every five seconds
+at 30 degrees/s, 54 has a six-hit diagonal rail, and 56 a four-hit narrow gate. The
+protected-point encounter (57) has 22/26/26 finite normal enemies, no Elites, batches of
+four every three seconds and five-second cleared-wave pauses. Wizard encounters in 55
+and 58 use their existing ammunition and persistent-zone safeguards; armor supply applies
+where armor appears. Level 58 spans 100 x 100m with five waves of 77/96/102/118/138 initial
+enemies (531 including three Elites). Levels 54/58/60 each have two periodic 3 x 8m strips
+with four-second stagger, 4/1.5/2.5s inactive/warning/active cycles and safe spawn banks.
+The Chicken rematch (60) preserves the original arena's transforms and collision meshes,
+with campaign-owned 2100 health, movement-leading shots, .8s wind-up, 1.5s shot spacing,
+and unchanged single/paired/paired stages. Its support is eight Baselines and two
+Exploders with four-second replacements. No runtime enemy ownership or system ordering
+changes are needed. `CampaignChapterSixBuilder` authors the new scenes and settings;
+`CampaignLifecycleCheck.StartChapterSix` verifies the Chapter 5/6 boundary and progression
+using an isolated save and controlled completion injections.
+
 The Chapter 4 multi-wave profile found hidden pooled bodies still generating contacts
 at their common storage position. `EnemyRespawnSystem` now queues a shared-component
 change through its local ECB when a body actually enters the pool: `PhysicsWorldIndex`
@@ -82,8 +99,8 @@ and exposes menu state. `CampaignCatalog` owns authored identity/content availab
 `CampaignProgress` owns versioned local JSON completion, sequential unlocks, backup recovery
 and atomic replacement. The normal save is `Application.persistentDataPath/campaign-v1.json`.
 Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded;
-Chapters 1-4 completion offer Continue into the next implemented chapter.
-Chapter 5 completion unlocks Chapter 6, whose scenes remain unavailable.
+Chapters 1-5 completion offer Continue into the next implemented chapter.
+Chapter 6 completion unlocks Chapter 7, whose scenes remain unavailable.
 Existing stable-ID saves need no migration.
 
 `PauseMenu` routes campaign presentation to the narrow uGUI `CampaignMenu`, retaining its
