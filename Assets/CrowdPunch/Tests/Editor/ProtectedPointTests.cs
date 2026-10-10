@@ -1,4 +1,6 @@
+using System.IO;
 using System.Linq;
+using CrowdPunch.Authoring;
 using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Levels;
@@ -14,6 +16,8 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
 using EnemyArchetype = CrowdPunch.Components.EnemyArchetype;
 
 namespace CrowdPunch.Tests
@@ -52,6 +56,34 @@ namespace CrowdPunch.Tests
         }
         private void Select() => world.GetOrCreateSystem<ProtectedPointPrioritySystem>().Update(world.Unmanaged);
         private void Breach() => world.GetOrCreateSystem<ProtectedPointBreachSystem>().Update(world.Unmanaged);
+
+        [Test] public void Protect001_AllAuthoredProtectedZoneLevelsExcludeElites()
+        {
+            var setup=EditorSceneManager.GetSceneManagerSetup();
+            string scriptGuid=AssetDatabase.AssetPathToGUID("Assets/CrowdPunch/Scripts/Authoring/ProtectedPointAuthoring.cs");
+            var scenes=AssetDatabase.FindAssets("t:Scene",new[]{"Assets/CrowdPunch/Scenes"})
+                .Select(AssetDatabase.GUIDToAssetPath).Where(p=>File.ReadAllText(p).Contains(scriptGuid)).ToArray();
+            Assert.That(scenes.Length,Is.GreaterThanOrEqualTo(4),"Legacy defense and campaign levels 24, 36, 47.");
+            try
+            {
+                foreach(var path in scenes)
+                {
+                    var scene=EditorSceneManager.OpenScene(path);
+                    var sequences=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<EnemyWaveSequenceAuthoring>(true));
+                    foreach(var wave in sequences.SelectMany(s=>s.Waves).Where(w=>w!=null))
+                    {
+                        Assert.That(wave.EliteEnemies.Any(e=>e.Count>0),Is.False,path+": "+wave.name);
+                        Assert.That(wave.Enemies.Any(e=>e.Settings!=null && e.Settings.Archetype==Configuration.EnemyArchetype.Elite
+                            && (e.MinimumCount>0 || e.Weight>0)),Is.False,path+": "+wave.name);
+                    }
+                }
+            }
+            finally
+            {
+                if(setup.Any(s=>s.isLoaded && s.isActive)) EditorSceneManager.RestoreSceneManagerSetup(setup);
+                else EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+            }
+        }
 
         [Test] public void Protect001_EliteDefenseStaysFiniteWhileOrdinaryEliteWavesReplenish()
         {

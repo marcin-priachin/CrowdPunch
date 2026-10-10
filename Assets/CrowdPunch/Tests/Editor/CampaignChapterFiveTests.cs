@@ -56,7 +56,7 @@ namespace CrowdPunch.Tests
 
         [Test] public void Loop002_ChapterFiveHasSafeNavigationExactWavesAndWiredObjectives()
         {
-            int[][] populations={new[]{14,18},new[]{16},new[]{19,21},new[]{15},new[]{16,20,21},new[]{12},new[]{22,26,27},new[]{70,86,94,110,128},new[]{15,20},new[]{13}};
+            int[][] populations={new[]{14,18},new[]{16},new[]{19,21},new[]{15},new[]{16,20,21},new[]{12},new[]{22,26,26},new[]{70,86,94,110,128},new[]{15,20},new[]{13}};
             var setup=EditorSceneManager.GetSceneManagerSetup();
             try
             {

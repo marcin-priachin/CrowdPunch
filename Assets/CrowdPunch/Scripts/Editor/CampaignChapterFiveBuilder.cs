@@ -47,7 +47,7 @@ namespace CrowdPunch.Editor
             new Level { Name="Divided Approach", Outline=Rectangle(32,96), Spacing=new Vector2(30,94), Entry=new Vector2(0,-36), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Split Shooters",20,new[]{Range(0,41,24,8)},r:2,batch:4),
                 W("Split Dashers",24,new[]{Range(0,41,24,8)},d:2,delay:5,batch:4),
-                W("Divided Command",24,new[]{Range(0,41,24,8)},x:2,e:1,delay:5,batch:4) } },
+                W("Divided Command",24,new[]{Range(0,41,24,8)},x:2,delay:5,batch:4) } },
             new Level { Name="Firebreak", Outline=Rectangle(100,100), Spacing=new Vector2(96,96), Entry=new Vector2(0,-16), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("North Explosives",64,new[]{Range(0,30,48,16)},x:6),
                 new Wave {Name="West Trails",B=80,R=4,Trail=2,Ranges=new[]{Range(-30,0,16,40)}},
@@ -88,7 +88,7 @@ namespace CrowdPunch.Editor
                 EditorUtility.SetDirty(catalog); AssetDatabase.SaveAssets(); CampaignBuildRegistration.Apply();
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
-            Debug.Log("Chapter Five authored: levels 41-50, finite Elite defense, 488-enemy Firebreak and Gatekeeper rematch.");
+            Debug.Log("Chapter Five authored: levels 41-50, finite defense without Elites, 488-enemy Firebreak and Gatekeeper rematch.");
         }
 
         private static void AuthorChapterFiveInterior(int number)

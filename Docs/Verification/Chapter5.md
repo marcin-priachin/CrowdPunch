@@ -20,7 +20,7 @@ The creation recipe refuses to overwrite saved content.
 | 44 | Stop and Go | Hold 12B+2R+1X; four-hit cover target; 85-degree opening |
 | 45 | Armor in Motion | 14B+2A > 16B+2D+2A > 18B+2R+1E; periodic side crossing |
 | 46 | Measured Push | Hold 10B+2X; five net hits along a diagonal rail |
-| 47 | Divided Approach | 20B+2R > 24B+2D > 24B+2X+1E; finite defense |
+| 47 | Divided Approach | 20B+2R > 24B+2D > 24B+2X; finite defense |
 | 48 | Firebreak | 70 > 86 > 94 > 110 > 128; 100 x 100m wave-clear arena |
 | 49 | Make Room | 14B+1W > 18B+2R |
 | 50 | Gatekeeper Returns | Hold 12B+1R; three-stage boss, 360 health; two periodic side sectors |
@@ -73,5 +73,21 @@ A configurable warning floor preserves legacy encounters' .8s clamp.
 Human clear times, level 48's 4-5 minute target, the boss rematch's 3-4 minute target,
 encounter difficulty, and target-device performance require playtesting. OQ-001 hardware
 and FPS acceptance remain unresolved. Controlled Editor probes do not establish these.
-The question about Elite staging versus normal defense advancement remains pending;
-its final behavior and regression coverage must be completed before delivery.
+
+## Protected-zone clarification
+
+The user excluded Elites from all protected-zone levels. Level 47 now has 22/26/26
+normal enemies, with its final wave reduced to 24 Baselines and two Exploders.
+The asset and authoring recipe agree; future plan entries in levels 57, 75 and 77
+also omit their former Elite. OQ-020 is resolved, and ordinary Elite AI is unchanged.
+Follow-up validation passed: five Chapter 5 tests and 17 protected-point tests,
+including a scan of every authored protected-zone scene (legacy and campaign) for
+fixed or weighted Elite entries. Unity compilation passed; the single-worker .NET
+build passed with zero errors and 331 existing reference warnings. An initial parallel
+.NET invocation returned failure without diagnostics; retrying with one worker succeeded.
+A live level 47 Editor preview confirmed valid baked wave definitions, 22/26/26 actual
+normal spawns, no Elite entities, no enabled replenishment and successful completion
+after injected defeats. No runtime Console errors or warnings occurred. The normal
+campaign save was untouched; Unity was left stopped on Bootstrap. Evidence:
+`Temp/CampaignValidation/chapter5-defense-no-elites.txt`.
+Chapter 5 implementation is complete; the human playtest targets above remain.

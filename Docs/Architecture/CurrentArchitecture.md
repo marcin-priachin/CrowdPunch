@@ -50,7 +50,7 @@ ordinary profiles, system ordering and boss arena geometry remain unchanged.
 
 Chapter 5 adds levels 41-50: a four-hit narrow gate (42), stop-and-go cover with an
 85-degree opening and 3s rotation/1s pause (44), diagonal five-hit rail (46), finite
-Elite defense (47), and the Gatekeeper rematch (50). Level 48 spans 100 x 100m with
+defense without Elites (47), and the Gatekeeper rematch (50). Level 48 spans 100 x 100m with
 70/86/94/110/128 initial enemies (488 including two Elites); ordinary Elite, armor
 and Wizard safeguards still apply, while Trail remnants do not gate completion.
 Permanent 3 x 6m rectangular pairs sit in level 42's inner pockets and level 48's
@@ -60,9 +60,12 @@ periodic side sectors staggered by four seconds, and maintains 12 Baselines plus
 Ranged enemy with four-second replenishment. Its campaign settings use 360 health,
 .65/.65/.85s warnings and unchanged 2.8/2.8/3s recoveries. The configurable baked
 warning floor defaults to .8s so legacy tuning retains its previous behavior.
+Protected-zone levels exclude Elites (PROTECT-001); level 47 has 24 Baselines and two
+Exploders in its final wave. Ordinary Elite AI is unchanged.
 `EnemyWaveSpawnSystem` omits Elite replenishment tags in protected-point sequences;
 `EliteWaveReplenishmentSystem` also rejects those owners. This preserves finite
-22/26/27-enemy defense waves, arriving in batches up to four every three seconds.
+22/26/26-enemy defense waves, arriving in batches up to four every three seconds.
+
 The Chapter 4 multi-wave profile found hidden pooled bodies still generating contacts
 at their common storage position. `EnemyRespawnSystem` now queues a shared-component
 change through its local ECB when a body actually enters the pool: `PhysicsWorldIndex`

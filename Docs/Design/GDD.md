@@ -528,6 +528,10 @@ marked ground zone centred against one short border. Enemies spawn near the oppo
 short border. This deliberately longer defense arena is an exception to the compact
 gauntlet layout default in LOOP-002. Reuse existing player controls and combat.
 
+Clarification (2026-10-10): Elites are excluded from every level containing a protected
+zone, including campaign defense encounters. Use only normal enemy archetypes in
+these levels; Elite staging and replenishment rules do not apply.
+
 ### PROTECT-002 - Objective Priority And Player Attacks
 
 Status: Must
