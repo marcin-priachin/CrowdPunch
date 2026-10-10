@@ -118,7 +118,7 @@ namespace CrowdPunch.Editor
                 case 12: CopyCampaignObjective(sub,arena,encounter,number,false,Vector3.zero); break;
                 case 13:
                     CampaignRock(arena,new Vector2(0,-4),new Vector2Int(3,13));
-                    CampaignBarricade(number,encounter,30); break;
+                    CampaignBarricade(number,encounter); break;
                 case 15:
                     CampaignRock(arena,new Vector2(-2,-1),new Vector2Int(3,4));
                     CampaignRock(arena,new Vector2(0,2),new Vector2Int(3,4)); break;

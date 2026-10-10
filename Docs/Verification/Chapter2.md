@@ -79,6 +79,25 @@ are reused; campaign boss tuning is independent of the legacy settings.
 
 ## Remaining playtesting
 
+Gate-width amendment (2026-10-10, BARRICADE-006): level 13's plate and collider
+now measure 2m across following the user's revised width. Both damage stages fit
+inside the plate. Two 19 x 3m, 4m-high solid rock barriers join the gate edges and
+extend beyond the arena perimeter. The shared campaign builder applies this layout
+from level 13 onward. Unity compilation and all four Chapter 2 editor tests passed;
+the scene test checks sealed side approaches, exit clearance behind the barrier and
+navigation participation clearance. Difficulty still needs human playtesting.
+
+Gate collision repair (2026-10-10): the initial rocks protruded ahead of the gate
+and intercepted edge shots. Live casts with the baked enemy collider confirmed
+terrain was nearer at X=0.7m and 1m. The rocks now sit 1.2m farther toward the exit,
+overlapping the gate's rear half while exposing its front face. Live casts at
+X=0/0.4/0.7/1m hit the gate first. Controlled launched-body impacts reduced durability
+3 -> 2 -> 1 -> 0 in Play Mode. After destruction, a 0.5m-radius player-sized sphere
+cast crossed the central opening; equivalent casts at X=-8m/+8m remained blocked
+by terrain. The probe moved bodies and injected launch state/velocity, used inflated
+player health to isolate combat, and ran in Editor preview without campaign saves.
+All four Chapter 2 editor tests passed, including terrain overlap/front-face checks.
+
 Human clear times, level 18's greater-than-three-minute target, difficulty and
 readability need real playtesting. OQ-001 still leaves target hardware/FPS acceptance
 open. Editor timings include tooling and frame caps; they do not establish player-build

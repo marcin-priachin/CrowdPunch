@@ -87,6 +87,29 @@ namespace CrowdPunch.Tests
                         foreach (var visual in UnityEngine.Object.FindObjectsByType<BarricadeVisualAuthoring>(FindObjectsSortMode.None))
                             Assert.That(visual.barricade,Is.EqualTo(wall));
                     }
+                    if (n==13)
+                    {
+                        // BARRICADE-006: the only crossing into the exit area is the gate.
+                        Assert.That(wall.size.x,Is.EqualTo(2));
+                        var floor=AssetDatabase.LoadAssetAtPath<Mesh>(Data+"Layouts/Campaign_13_Floor.asset");
+                        var terrain=UnityEngine.Object.FindObjectsByType<SolidObstacleAuthoring>(FindObjectsSortMode.None)
+                            .Where(o=>o.name.StartsWith("Gate terrain")).OrderBy(o=>o.transform.position.x).ToArray();
+                        Assert.That(terrain.Length,Is.EqualTo(2));
+                        Assert.That(terrain[0].transform.position.x+terrain[0].Size.x*.5f,Is.EqualTo(-wall.size.x*.5f));
+                        Assert.That(terrain[1].transform.position.x-terrain[1].Size.x*.5f,Is.EqualTo(wall.size.x*.5f));
+                        Assert.That(terrain[0].transform.position.x-terrain[0].Size.x*.5f,Is.LessThan(floor.bounds.min.x));
+                        Assert.That(terrain[1].transform.position.x+terrain[1].Size.x*.5f,Is.GreaterThan(floor.bounds.max.x));
+                        foreach(var solid in terrain)
+                        {
+                            Assert.That(solid.height,Is.GreaterThanOrEqualTo(wall.size.y));
+                            float front=solid.transform.position.z-solid.Size.y*.5f;
+                            Assert.That(front,Is.GreaterThan(wall.transform.position.z-wall.size.z*.5f),"Terrain must not shield the gate's front face.");
+                            Assert.That(front,Is.LessThan(wall.transform.position.z+wall.size.z*.5f),"Terrain must overlap the gate to seal the side routes.");
+                            Assert.That(solid.Size.y,Is.GreaterThanOrEqualTo(wall.size.z));
+                        }
+                        Assert.That(wall.exit.position.z-wall.exitRadius,
+                            Is.GreaterThan(wall.transform.position.z+terrain[0].Size.y*.5f));
+                    }
                     if (n==12)
                     {
                         var shell = wall.GetComponent<ShellTargetAuthoring>();

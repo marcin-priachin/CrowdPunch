@@ -319,6 +319,12 @@ Status: Must
 
 Continuously replenish a configurable bounded crowd of Baseline melee enemies with occasional Explosives while the barricade is intact. Stop pending and future replenishment immediately when it breaks; surviving enemies continue their normal behavior. Crowd composition, replenishment timing, visual effect parameters, and exit placement use configurable implementation defaults. Do not add a second harder barricade level or a finite-wave fallback ammunition system.
 
+### BARRICADE-006 - Campaign Gate Width
+
+Status: Must
+
+Chapter 1's introductory campaign barricades retain their wide targets. From campaign level 13 onward, break-and-exit barricades must be 2 metres wide. Match the visible plate and damage-stage visuals to the collider. Solid terrain must seal the approach on both sides, connecting to the arena perimeter so the exit can only be reached through the gate opening after destruction. This campaign rule does not resize legacy gauntlets or other objective types.
+
 ## Rotating Cover Objective
 
 ### COVER-001 - Central Protected Target

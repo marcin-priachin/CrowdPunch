@@ -130,7 +130,7 @@ namespace CrowdPunch.Editor
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
         }
 
-        private static void CampaignRock(ArenaAuthoring arena,Vector2 position,Vector2Int footprint)
+        private static SolidObstacleAuthoring CampaignRock(ArenaAuthoring arena,Vector2 position,Vector2Int footprint)
         {
             var obstacle=new GameObject("Rock island").AddComponent<SolidObstacleAuthoring>();
             obstacle.transform.SetParent(arena.transform); obstacle.transform.position=new Vector3(position.x,-1,position.y);
@@ -145,6 +145,7 @@ namespace CrowdPunch.Editor
             visual.GetComponent<MeshFilter>().sharedMesh=saved;
             var materials=GauntletNatureEnvironment.CreateMaterials();
             visual.GetComponent<MeshRenderer>().sharedMaterials=slots.Select(n=>materials[n]).ToArray();
+            return obstacle;
         }
 
         private static T CampaignSettings<T>(string source,string name) where T : ScriptableObject
@@ -157,24 +158,50 @@ namespace CrowdPunch.Editor
             return AssetDatabase.LoadAssetAtPath<T>(destination);
         }
 
-        private static void CampaignBarricade(int number,EnemyWaveSequenceAuthoring encounter, float width = 0)
+        private static void CampaignBarricade(int number,EnemyWaveSequenceAuthoring encounter)
         {
             var tuning=CampaignSettings<BarricadeSettings>("BarricadeSettings",$"L{number:00}_Barricade");
             tuning.requiredHits=3; tuning.replenishDelay=4; EditorUtility.SetDirty(tuning);
-            if (width <= 0) width=number==4?22:28;
+            // BARRICADE-006: later gates use a narrow shot and a sealed exit approach.
+            float width = number >= 13
+                ? 2
+                : number == 4 ? 22 : 28;
             var target=new GameObject("Barricade").AddComponent<BarricadeAuthoring>();
             target.settings=tuning; target.size=new Vector3(width,4,1.2f); target.transform.position=new Vector3(0,1,11);
             var exit=new GameObject("Exit").transform; exit.position=new Vector3(0,.5f,16); target.exit=exit;
             encounter.barricade=target;
+            if(number>=13) CampaignGateTerrain(UnityEngine.Object.FindFirstObjectByType<ArenaAuthoring>(),target);
             var metal=MaterialAsset("BarricadeMetal",new Color(.22f,.34f,.39f));
             var crack=MaterialAsset("BarricadeCracks",new Color(.025f,.035f,.04f));
             BarricadePiece(target,"Solid plate",Vector3.zero,target.size,metal,0,new Vector3(0,-3,2));
             for(int stage=1;stage<=2;stage++)
+            {
+                if(number>=13)
+                    BarricadePiece(target,"Damage crack",new Vector3(0,stage-.9f,-.65f),new Vector3(width*.7f,.18f,.08f),crack,stage,Vector3.down);
+                else
                 for(int i=-2;i<=2;i++) BarricadePiece(target,"Damage crack",new Vector3(i*3,stage-.9f,-.65f),new Vector3(2,.18f,.08f),crack,stage,Vector3.down);
+            }
             var green=MaterialAsset("BarricadeExit",new Color(.2f,.95f,.55f));
             Box("Exit landing",exit,new Vector3(0,-.97f,16),new Vector3(5,.06f,3),green,false);
             Box("Exit post left",exit,new Vector3(-2.5f,.5f,17),new Vector3(.3f,3,.3f),green,false);
             Box("Exit post right",exit,new Vector3(2.5f,.5f,17),new Vector3(.3f,3,.3f),green,false);
+        }
+
+        private static void CampaignGateTerrain(ArenaAuthoring arena,BarricadeAuthoring gate)
+        {
+            // Extend beyond the perimeter and overlap the gate's rear half. Keeping
+            // the rocks behind its front face lets edge shots hit the gate first.
+            int span = Mathf.CeilToInt(arena.DefeatSize.x*.5f);
+            float halfGap = gate.size.x*.5f;
+            for(int side=-1;side<=1;side+=2)
+            {
+                var rock=CampaignRock(arena,new Vector2(gate.transform.position.x+side*(halfGap+span*.5f),gate.transform.position.z+1.2f),new Vector2Int(span,3));
+                rock.name=side<0 ? "Gate terrain left" : "Gate terrain right";
+                rock.height=gate.size.y;
+                var visual=rock.transform.GetChild(0);
+                visual.localPosition=Vector3.up*rock.height*.5f;
+                visual.localScale=new Vector3(span,rock.height,3);
+            }
         }
 
         private static void CampaignCover(ArenaAuthoring arena,EnemyWaveSequenceAuthoring encounter,
