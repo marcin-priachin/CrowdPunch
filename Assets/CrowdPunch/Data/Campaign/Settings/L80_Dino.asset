@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b1adfdc654f37049baf3dbdfd67e3b2, type: 3}
+  m_Name: L80_Dino
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.DinoBossSettings
+  requiredSuccessfulHits: 3
+  chaseSpeeds: {x: 10, y: 15, z: 20}
+  chaseDurations: {x: 6, y: 4.5, z: 3.5}
+  burstSpeedMultiplier: 1.9
+  chaseTurnDegrees: 180
+  burstTurnDegrees: 38
+  acceleration: 18
+  warningDuration: 1
+  burstDuration: 2.2
+  staggerDuration: 1.3
+  bodyRadius: 3
+  bodyHeight: 8
+  mass: 300
+  crowdPush: 6
+  contactDamage: 12
+  playerPush: 10
+  playerProtection: 0.8
+  contactCooldown: 0.9
+  fallDirection: 1
+  impactMode: 0
+  pillarHeight: 18
+  pillarWidth: 3
+  fallDuration: 1.35
+  fallenVisibility: 0.65
+  regenerationDelay: 4
+  pillarEnemyDamage: 35
+  pillarPlayerDamage: 18
+  pillarPush: 9
+  pillarLaunchSpeed: 17
+  enemiesPerPillar: 2
+  pillarCrowdRadius: 8
+  chaseColor: {r: 0.7, g: 1, b: 0.65, a: 1}
+  warningColor: {r: 1.5, g: 0.85, b: 0.15, a: 1}
+  burstColor: {r: 1.6, g: 0.3, b: 0.15, a: 1}
+  staggerColor: {r: 0.3, g: 1.3, b: 1.7, a: 1}

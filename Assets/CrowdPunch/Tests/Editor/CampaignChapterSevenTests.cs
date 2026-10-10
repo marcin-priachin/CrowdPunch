@@ -17,7 +17,7 @@ namespace CrowdPunch.Tests
         private const string Data="Assets/CrowdPunch/Data/Campaign/";
         private const string Scenes="Assets/CrowdPunch/Scenes/Campaign/";
 
-        [Test] public void Loop007_ChapterSixSaveContinuesThroughSevenAndUnlocksUnavailableEight()
+        [Test] public void Loop007_ChapterSixSaveContinuesThroughSevenAndUnlocksEight()
         {
             string path=Path.GetFullPath("Temp/CampaignTests/"+Guid.NewGuid()+".json");
             try
@@ -32,7 +32,7 @@ namespace CrowdPunch.Tests
                 progress=new CampaignProgress(path);
                 Assert.That(progress.NextUnfinished(catalog),Is.EqualTo(70));
                 Assert.That(progress.IsUnlocked(catalog,70),Is.True);
-                Assert.That(catalog.Get(70).Available,Is.False);
+                Assert.That(catalog.Get(70).Available,Is.True);
             }
             finally { foreach(var suffix in new[]{"",".bak",".tmp"}) if(File.Exists(path+suffix)) File.Delete(path+suffix); }
         }

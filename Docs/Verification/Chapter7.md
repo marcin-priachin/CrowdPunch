@@ -8,7 +8,7 @@ ENEMY-009/011/014/015, WIZARD-001..007, TRAIL-001..007.
 
 Open `Assets/CrowdPunch/Scenes/Bootstrap.unity` and press Play. Continue after Chapter 6
 loads level 61. Window > Crowd Punch > Level Play > Campaign offers previews without
-changing normal progress. Completing level 70 unlocks the future, unavailable Chapter 8.
+changing normal progress. Completing level 70 unlocks Chapter 8 (now installed; see Chapter8.md).
 Ten main scenes and ECS SubScenes, 20 wave assets, and separate objective settings live
 under `Assets/CrowdPunch/Scenes/Campaign` and `Assets/CrowdPunch/Data/Campaign`.
 Shared enemy profiles, runtime mechanics and earlier chapters retain their tuning.

@@ -37,6 +37,7 @@ namespace CrowdPunch.Editor
         public static void StartChapterFive() => StartChapter(5);
         public static void StartChapterSix() => StartChapter(6);
         public static void StartChapterSeven() => StartChapter(7);
+        public static void StartChapterEight() => StartChapter(8);
         private static void StartChapter(int chapter)
         {
             if(EditorApplication.isPlaying) throw new InvalidOperationException("Start in Edit mode.");
@@ -77,7 +78,7 @@ namespace CrowdPunch.Editor
             if(waitingForBreachRetry)
             {
                 if(!flow.RunFailed) return;
-                Require(flow.NextUnfinished==(Chapter==6?56:Chapter==5?46:Chapter==4?35:23),"Breach changed campaign progress.");
+                Require(flow.NextUnfinished==level,"Breach changed campaign progress.");
                 waitingForBreachRetry=false; flow.RestartCurrentLevel(); wave=-1;
                 Record("PASS first active-enemy breach fails defense; retry resets objective and wave schedule."); return;
             }
@@ -89,7 +90,7 @@ namespace CrowdPunch.Editor
                 Record("PASS player death opens failure; retry requested without progress loss."); return;
             }
             if(player!=null) { player.gameObject.SetActive(true); player.Restore(player.MaxHealth); }
-            if(flow.Screen==CampaignScreen.ChapterComplete)
+            if(flow.Screen==CampaignScreen.ChapterComplete || (Chapter==8 && flow.Screen==CampaignScreen.CampaignComplete))
             {
                 if(Chapter>1 && flow.CurrentLevelIndex==FirstLevel-1)
                 {
@@ -97,12 +98,13 @@ namespace CrowdPunch.Editor
                     Record($"PASS previous chapter milestone unlocks Chapter {Chapter}; Continue loads its first level.");
                     flow.ContinueCampaign(); return;
                 }
-                int next=Chapter*10, expectedWaves=Chapter==1?19:Chapter==2?17:Chapter==3?20:Chapter==4?18:Chapter==5?22:21;
+                int next=Chapter*10, expectedWaves=Chapter==1?19:Chapter==2?17:Chapter==3?20:Chapter==4?18:Chapter==5?22:Chapter==8?24:21;
                 Require(observedWaves==expectedWaves,"Unexpected observed wave count: "+observedWaves);
                 Require(flow.CurrentLevelIndex==next-1 && flow.NextUnfinished==next,"Incorrect chapter milestone.");
-                Require(flow.Progress.IsUnlocked(flow.Campaign,next) && flow.CanSelect(next)==flow.Campaign.Get(next).Available,"Next chapter availability gate failed.");
+                if(next==80) Require(flow.Screen==CampaignScreen.CampaignComplete && !flow.CanSelect(80) && !flow.Progress.IsUnlocked(flow.Campaign,80),"Final campaign completion gate failed.");
+                else Require(flow.Progress.IsUnlocked(flow.Campaign,next) && flow.CanSelect(next)==flow.Campaign.Get(next).Available,"Next chapter availability gate failed.");
                 Require(new CampaignProgress(savePath).NextUnfinished(flow.Campaign)==next,"Chapter progress did not survive reload.");
-                Record($"PASS Chapter {Chapter}, {expectedWaves} observed waves, saved next-chapter unlock and content availability gate.");
+                Record($"PASS Chapter {Chapter}, {expectedWaves} observed waves, saved progress and chapter/campaign completion gate.");
                 phase=2; flow.SelectLevel(FirstLevel); return;
             }
             if(phase==2 && flow.CurrentLevelIndex==FirstLevel)
@@ -128,7 +130,7 @@ namespace CrowdPunch.Editor
             // clock before waiting for its SubScene, not after the sequence finishes baking.
             if(level!=flow.CurrentLevelIndex)
             {
-                level=flow.CurrentLevelIndex; wave=-1; entered=now; hazardPhases=0;
+                level=flow.CurrentLevelIndex; wave=-1; entered=now; hazardPhases=0; testedBreach=false;
                 Require(player.CurrentHealth==player.MaxHealth,"Level entry did not restore full health.");
                 Record($"ENTER {level+1:00}: {flow.GetLevelName(level)}; full health.");
             }
@@ -148,11 +150,11 @@ namespace CrowdPunch.Editor
             if(Chapter>=3)
             {
                 using var hazards=em.CreateEntityQuery(typeof(GroundHazard),typeof(GroundHazardState));
-                int expectedHazards=Chapter==3?(level==27?3:level>=24 && level<=26?1:0):Chapter==4?(level==33 || level==36?1:0):Chapter==5?(level==41 || level==47 || level==49?2:level==44?1:0):Chapter==6?(level==49 || level==53 || level==57 || level==59?2:0):(level==59 || level==61 || level==63 || level==66 || level==69?2:level==64?1:level==67?3:0);
+                int expectedHazards=Chapter==3?(level==27?3:level>=24 && level<=26?1:0):Chapter==4?(level==33 || level==36?1:0):Chapter==5?(level==41 || level==47 || level==49?2:level==44?1:0):Chapter==6?(level==49 || level==53 || level==57 || level==59?2:0):Chapter==8?(level==69 || level==72 || level==73 || level==77 || level==79?2:0):(level==59 || level==61 || level==63 || level==66 || level==69?2:level==64?1:level==67?3:0);
                 Require(hazards.CalculateEntityCount()==expectedHazards,"Hazard leakage or missing baked patches.");
                 using var patches=hazards.ToComponentDataArray<GroundHazardState>(Allocator.Temp);
                 foreach(var patch in patches) hazardPhases|=1<<(int)patch.Phase;
-                if((level==23 || level==35 || level==46 || level==56) && (sequence.Phase==EnemyWaveRuntimePhase.Spawning || sequence.Phase==EnemyWaveRuntimePhase.AwaitingActivation))
+                if((level==23 || level==35 || level==46 || level==56 || level==74 || level==76) && (sequence.Phase==EnemyWaveRuntimePhase.Spawning || sequence.Phase==EnemyWaveRuntimePhase.AwaitingActivation))
                 {
                     if(!testedBreach && enemies.Length>0)
                     {
@@ -191,14 +193,14 @@ namespace CrowdPunch.Editor
                 ScreenCapture.CaptureScreenshot(Path.GetFullPath($"Temp/CampaignValidation/level{level+1:00}-wave{wave+1}.png"));
             }
             frames.Add(Time.unscaledDeltaTime*1000);
-            if(now-at<(level==7 || level==17 || level==27 || level==37 || level==47 || level==57 || level==67?15:level==26 || level==33 || level==44 || level==49 || level==53 || level==59 || level==61 || level==64 || level==66 || level==69?9:4)) return;
-            if(level==26 || level==27 || level==33 || level==44 || level==49 || level==53 || level==57 || level==59 || level==61 || level==64 || level==66 || level==67 || level==69) Require(hazardPhases==7,"Periodic hazards did not show inactive, warning and active phases.");
-            if(level==3 || level==5 || level==6 || level==11 || level==12 || level==16 || level==21 || level==28 || level==33 || level==34 || level==36 || level==41 || level==43 || level==50 || level==52 || level==55 || level==61 || level==63 || level==65)
+            if(now-at<(level==7 || level==17 || level==27 || level==37 || level==47 || level==57 || level==67 || level==77?15:level==26 || level==33 || level==44 || level==49 || level==53 || level==59 || level==61 || level==64 || level==66 || level==69 || level==72 || level==79?9:4)) return;
+            if(level==26 || level==27 || level==33 || level==44 || level==49 || level==53 || level==57 || level==59 || level==61 || level==64 || level==66 || level==67 || level==69 || level==72 || level==77 || level==79) Require(hazardPhases==7,"Periodic hazards did not show inactive, warning and active phases.");
+            if(level==3 || level==5 || level==6 || level==11 || level==12 || level==16 || level==21 || level==28 || level==33 || level==34 || level==36 || level==41 || level==43 || level==50 || level==52 || level==55 || level==61 || level==63 || level==65 || level==71 || level==73 || level==75)
             {
                 using var walls=em.CreateEntityQuery(typeof(Barricade));
                 Require(walls.CalculateEntityCount()==1,"Objective missing.");
                 var target=walls.GetSingletonEntity(); var wall=em.GetComponentData<Barricade>(target);
-                if(level==11 || level==36 || level==50 || level==63)
+                if(level==11 || level==36 || level==50 || level==63 || level==75)
                 {
                     var shell=em.GetComponentData<ShellTarget>(target);
                     Require(shell.RequiredExplosions==(level==63?4:3) && shell.CoreHealth>0,"Shell durability was not baked.");
@@ -240,7 +242,7 @@ namespace CrowdPunch.Editor
                 var boss=bosses.GetSingletonEntity(); var state=em.GetComponentData<RollingBoss>(boss);
                 state.Phase=RollingPhase.Defeated; em.SetComponentData(boss,state);
             }
-            else if(level==39)
+            else if(level==39 || level==79)
             {
                 using var bosses=em.CreateEntityQuery(typeof(DinoBoss));
                 using var pillars=em.CreateEntityQuery(typeof(FallingPillar));

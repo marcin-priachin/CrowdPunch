@@ -6,11 +6,11 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
-## Campaign Chapters 1-7 (2026-10-10)
+## Campaign Chapters 1-8 (2026-10-10)
 
 This section supersedes the historical fixed-run/build-registration descriptions below.
 Bootstrap now references `Data/Campaign/Campaign.asset`: 80 stable IDs, eight chapter names,
-and seventy available scene paths. `Scenes/Campaign/Campaign_01` through `_70` are editable additive
+and eighty available scene paths. `Scenes/Campaign/Campaign_01` through `_80` are editable additive
 encounters with separate ECS SubScenes. Levels 4/6 use barricades, 7 uses rotating cover and
 10 uses the copied Gatekeeper arena with unchanged geometry and campaign-owned settings.
 Level 8 has a 100 x 100m floor and four finite waves of 40/60/76/94 enemies (270 total).
@@ -103,6 +103,27 @@ a vertex fan. Chapter 7's stepped/notched floor visuals (61/64/69) were rebuilt;
 chapter assets were not regenerated. The continuous convex floor collider remains in
 place to avoid triangle-edge deflections, with enclosing walls limiting playable space.
 
+Chapter 8 adds levels 71-80 using the same runtime ownership and system order. Level 72
+has a four-hit cover with a 100-degree opening, 30 degrees/s rotation and six-second
+reversals; its bounded support includes a Wizard and a Trail. Level 74 uses the four-hit
+2m gate with recessed sealed terrain and two permanent hazard pockets. Level 76 uses
+three shell explosions and the existing specialized Exploder pair. Protected-point
+levels 75/77 have no Elites, no Wizard supply and no persistent-zone completion gate;
+their finite waves arrive in batches of four every three seconds with five-second
+cleared-wave pauses. The approved armor ammunition safeguard remains enabled only in
+75 wave 2 and 77 wave 1. Its replacement bodies retain wave ownership and count toward
+clearance and protected-zone breaches. Level 78 spans 100 x 100m with six waves of
+76/96/102/108/128/148 initial enemies (658 including four Elites), broad crescent islands,
+armor/Wizard safeguards and two periodic outer strips. Levels 73/80 also have paired
+periodic strips with four-second stagger. The Dino rematch (80) preserves the original
+arena and all three pillar positions, requires three successful pillar hits, uses
+6/4.5/3.5s chase stages and a one-second warning, and keeps two local Baselines per
+pillar plus 10 Baselines, one Ranged enemy and one Dasher in general support.
+`CampaignChapterEightBuilder` creates these scenes/settings; all 155 campaign waves and
+81 build scenes (Bootstrap plus levels 1-80) are registered. `StartChapterEight` on
+`CampaignLifecycleCheck` exercises the preceding milestone through the final campaign
+screen using controlled injections and an isolated save.
+
 The Chapter 4 multi-wave profile found hidden pooled bodies still generating contacts
 at their common storage position. `EnemyRespawnSystem` now queues a shared-component
 change through its local ECB when a body actually enters the pool: `PhysicsWorldIndex`
@@ -119,8 +140,8 @@ and exposes menu state. `CampaignCatalog` owns authored identity/content availab
 `CampaignProgress` owns versioned local JSON completion, sequential unlocks, backup recovery
 and atomic replacement. The normal save is `Application.persistentDataPath/campaign-v1.json`.
 Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded;
-Chapters 1-6 completion offer Continue into the next implemented chapter.
-Chapter 7 completion unlocks Chapter 8, whose scenes remain unavailable.
+Chapters 1-7 completion offer Continue into the next implemented chapter.
+Chapter 8 ends on CampaignComplete; index 80 is the completed-save sentinel and cannot load a scene.
 Existing stable-ID saves need no migration.
 
 `PauseMenu` routes campaign presentation to the narrow uGUI `CampaignMenu`, retaining its

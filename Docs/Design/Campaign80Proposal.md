@@ -2,7 +2,7 @@
 
 Date: 2026-10-10. Status: **Approved design; Chapters 1-7 implementation authorized.** Includes the user's amendment requiring one large wave-clear level per chapter. Encounter numbers are starting tuning and remain subject to playtesting.
 
-Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2, 3, 4, 5, 6 and 7 in sequence. Levels 1-70 and their campaign infrastructure are authorized; Chapter 8 remains a future implementation batch.
+Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2 through 8 in sequence. All 80 levels and their campaign infrastructure are authorized and implemented.
 
 ## Reading the table
 
@@ -189,4 +189,4 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 
 ## Review status
 
-The user approved the revised 80-row table and instructed implementation of Chapter 1. Subsequent requests authorize Chapters 2-7. Chapter 8 remains a future implementation batch. See CurrentArchitecture.md and Docs/Verification/Chapter1.md through Chapter7.md for implemented ownership, actual checks and remaining playtest work.
+The user approved the revised 80-row table and instructed implementation of Chapter 1. Subsequent requests authorize Chapters 2-8, completing the full campaign. See CurrentArchitecture.md and Docs/Verification/Chapter1.md through Chapter8.md for implemented ownership, actual checks and remaining playtest work.
