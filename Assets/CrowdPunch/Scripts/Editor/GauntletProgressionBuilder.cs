@@ -427,7 +427,12 @@ namespace CrowdPunch.Editor
                 int j=(i+1)%n;
                 triangles.AddRange(new[]{i,j,j+n,i,j+n,i+n});
             }
-            for(int i=1;i<n-1;i++) triangles.AddRange(new[]{0,i+1,i,n,n+i,n+i+1});
+            var surface=TriangulateFloorOutline(outline);
+            for(int i=0;i<surface.Count;i+=3)
+            {
+                int a=surface[i], b=surface[i+1], c=surface[i+2];
+                triangles.AddRange(new[]{a,c,b,n+a,n+b,n+c});
+            }
             mesh.vertices=vertices;
             mesh.uv=uv;
             mesh.triangles=triangles.ToArray();
@@ -436,6 +441,44 @@ namespace CrowdPunch.Editor
             if(created) AssetDatabase.CreateAsset(mesh,path);
             else EditorUtility.SetDirty(mesh);
             return mesh;
+        }
+
+        private static List<int> TriangulateFloorOutline(Vector2[] outline)
+        {
+            // LOOP-002: a fan overlaps concave steps/notches. Clip ears so every
+            // floor triangle stays inside the authored perimeter, facing upward.
+            float Cross(Vector2 a,Vector2 b,Vector2 c)
+                => (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+            var remaining=new List<int>();
+            float area=0;
+            for(int i=0;i<outline.Length;i++)
+            {
+                remaining.Add(i); var a=outline[i]; var b=outline[(i+1)%outline.Length];
+                area+=a.x*b.y-b.x*a.y;
+            }
+            if(area<0) remaining.Reverse();
+            var result=new List<int>();
+            while(remaining.Count>3)
+            {
+                bool clipped=false;
+                for(int i=0;i<remaining.Count;i++)
+                {
+                    int a=remaining[(i+remaining.Count-1)%remaining.Count],b=remaining[i],c=remaining[(i+1)%remaining.Count];
+                    if(Cross(outline[a],outline[b],outline[c])<=.00001f) continue;
+                    bool occupied=false;
+                    foreach(int p in remaining)
+                    {
+                        if(p==a || p==b || p==c) continue;
+                        if(Cross(outline[a],outline[b],outline[p])>=-.00001f
+                            && Cross(outline[b],outline[c],outline[p])>=-.00001f
+                            && Cross(outline[c],outline[a],outline[p])>=-.00001f) { occupied=true; break; }
+                    }
+                    if(occupied) continue;
+                    result.AddRange(new[]{a,b,c}); remaining.RemoveAt(i); clipped=true; break;
+                }
+                if(!clipped) throw new InvalidOperationException("Floor outline must be a simple, nondegenerate polygon.");
+            }
+            result.AddRange(remaining); return result;
         }
     }
 }

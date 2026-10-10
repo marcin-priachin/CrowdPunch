@@ -36,6 +36,7 @@ namespace CrowdPunch.Editor
         public static void StartChapterFour() => StartChapter(4);
         public static void StartChapterFive() => StartChapter(5);
         public static void StartChapterSix() => StartChapter(6);
+        public static void StartChapterSeven() => StartChapter(7);
         private static void StartChapter(int chapter)
         {
             if(EditorApplication.isPlaying) throw new InvalidOperationException("Start in Edit mode.");
@@ -147,7 +148,7 @@ namespace CrowdPunch.Editor
             if(Chapter>=3)
             {
                 using var hazards=em.CreateEntityQuery(typeof(GroundHazard),typeof(GroundHazardState));
-                int expectedHazards=Chapter==3?(level==27?3:level>=24 && level<=26?1:0):Chapter==4?(level==33 || level==36?1:0):Chapter==5?(level==41 || level==47 || level==49?2:level==44?1:0):(level==49 || level==53 || level==57 || level==59?2:0);
+                int expectedHazards=Chapter==3?(level==27?3:level>=24 && level<=26?1:0):Chapter==4?(level==33 || level==36?1:0):Chapter==5?(level==41 || level==47 || level==49?2:level==44?1:0):Chapter==6?(level==49 || level==53 || level==57 || level==59?2:0):(level==59 || level==61 || level==63 || level==66 || level==69?2:level==64?1:level==67?3:0);
                 Require(hazards.CalculateEntityCount()==expectedHazards,"Hazard leakage or missing baked patches.");
                 using var patches=hazards.ToComponentDataArray<GroundHazardState>(Allocator.Temp);
                 foreach(var patch in patches) hazardPhases|=1<<(int)patch.Phase;
@@ -190,17 +191,17 @@ namespace CrowdPunch.Editor
                 ScreenCapture.CaptureScreenshot(Path.GetFullPath($"Temp/CampaignValidation/level{level+1:00}-wave{wave+1}.png"));
             }
             frames.Add(Time.unscaledDeltaTime*1000);
-            if(now-at<(level==7 || level==17 || level==27 || level==37 || level==47 || level==57?15:level==26 || level==33 || level==44 || level==49 || level==53 || level==59?9:4)) return;
-            if(level==26 || level==27 || level==33 || level==44 || level==49 || level==53 || level==57 || level==59) Require(hazardPhases==7,"Periodic hazards did not show inactive, warning and active phases.");
-            if(level==3 || level==5 || level==6 || level==11 || level==12 || level==16 || level==21 || level==28 || level==33 || level==34 || level==36 || level==41 || level==43 || level==50 || level==52 || level==55)
+            if(now-at<(level==7 || level==17 || level==27 || level==37 || level==47 || level==57 || level==67?15:level==26 || level==33 || level==44 || level==49 || level==53 || level==59 || level==61 || level==64 || level==66 || level==69?9:4)) return;
+            if(level==26 || level==27 || level==33 || level==44 || level==49 || level==53 || level==57 || level==59 || level==61 || level==64 || level==66 || level==67 || level==69) Require(hazardPhases==7,"Periodic hazards did not show inactive, warning and active phases.");
+            if(level==3 || level==5 || level==6 || level==11 || level==12 || level==16 || level==21 || level==28 || level==33 || level==34 || level==36 || level==41 || level==43 || level==50 || level==52 || level==55 || level==61 || level==63 || level==65)
             {
                 using var walls=em.CreateEntityQuery(typeof(Barricade));
                 Require(walls.CalculateEntityCount()==1,"Objective missing.");
                 var target=walls.GetSingletonEntity(); var wall=em.GetComponentData<Barricade>(target);
-                if(level==11 || level==36 || level==50)
+                if(level==11 || level==36 || level==50 || level==63)
                 {
                     var shell=em.GetComponentData<ShellTarget>(target);
-                    Require(shell.RequiredExplosions==3 && shell.CoreHealth>0,"Shell durability was not baked.");
+                    Require(shell.RequiredExplosions==(level==63?4:3) && shell.CoreHealth>0,"Shell durability was not baked.");
                     shell.ExplosionsRemaining=0; shell.CoreHealth=0; em.SetComponentData(target,shell);
                 }
                 wall.HitsRemaining=0; em.SetComponentData(target,wall);
@@ -214,7 +215,7 @@ namespace CrowdPunch.Editor
                 var head=bosses.GetSingletonEntity(); var state=em.GetComponentData<BossEncounter>(head);
                 state.Cycle=BossCycle.Defeated; em.SetComponentData(head,state);
             }
-            else if(level==15 || level==18 || level==25 || level==31 || level==38 || level==45 || level==53)
+            else if(level==15 || level==18 || level==25 || level==31 || level==38 || level==45 || level==53 || level==68)
             {
                 using var tracks=em.CreateEntityQuery(typeof(TrackObject),typeof(TrackObjectState));
                 Require(tracks.CalculateEntityCount()==1,"Track missing.");
@@ -232,7 +233,7 @@ namespace CrowdPunch.Editor
                 var boss=bosses.GetSingletonEntity(); var state=em.GetComponentData<ChickenBoss>(boss);
                 state.Phase=ChickenPhase.Defeated; em.SetComponentData(boss,state);
             }
-            else if(level==29)
+            else if(level==29 || level==69)
             {
                 using var bosses=em.CreateEntityQuery(typeof(RollingBoss));
                 Require(bosses.CalculateEntityCount()==1,"Rolling boss missing.");

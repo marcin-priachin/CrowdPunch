@@ -6,11 +6,11 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
-## Campaign Chapters 1-6 (2026-10-10)
+## Campaign Chapters 1-7 (2026-10-10)
 
 This section supersedes the historical fixed-run/build-registration descriptions below.
 Bootstrap now references `Data/Campaign/Campaign.asset`: 80 stable IDs, eight chapter names,
-and sixty available scene paths. `Scenes/Campaign/Campaign_01` through `_60` are editable additive
+and seventy available scene paths. `Scenes/Campaign/Campaign_01` through `_70` are editable additive
 encounters with separate ECS SubScenes. Levels 4/6 use barricades, 7 uses rotating cover and
 10 uses the copied Gatekeeper arena with unchanged geometry and campaign-owned settings.
 Level 8 has a 100 x 100m floor and four finite waves of 40/60/76/94 enemies (270 total).
@@ -83,6 +83,26 @@ changes are needed. `CampaignChapterSixBuilder` authors the new scenes and setti
 `CampaignLifecycleCheck.StartChapterSix` verifies the Chapter 5/6 boundary and progression
 using an isolated save and controlled completion injections.
 
+Chapter 7 adds levels 61-70 without changing runtime ownership or system order. Level 62
+places its four-hit, 2m gate and exit to the northeast; unequal solid terrain spans seal
+both sides behind the gate's front face. Level 64 takes four shell explosions, 66 pauses
+its 90-degree cover for one second on each successful hit (otherwise 25 degrees/s), and
+69 uses a straight five-hit rail. Levels 62/67 have paired periodic strips, 64 has two
+permanent rectangular pockets, and 65 has one optional periodic side strip. Level 68
+spans 100 x 100m with six finite waves of 68/86/94/102/118/138 initial enemies (606 total,
+including two Elites), four separated islands, and three outer periodic strips offset
+by thirds of the eight-second cycle. Armor and Wizard safeguards use the existing
+wave settings; Trail remnants alone never gate completion. The Rolling Blob rematch
+(70) preserves the original arena geometry, uses 600 health, physical reflection and
+2.5/1.8/1.2s pauses with unchanged roll speeds, and maintains eight Baselines plus two
+Exploders. Two periodic outer pockets preserve its central space. All settings and
+waves are campaign-owned. `CampaignChapterSevenBuilder` creates the assets;
+`CampaignLifecycleCheck.StartChapterSeven` probes the Chapter 6/7 boundary and progression.
+The authoring floor mesh now triangulates concave outlines with ear clipping instead of
+a vertex fan. Chapter 7's stepped/notched floor visuals (61/64/69) were rebuilt; existing
+chapter assets were not regenerated. The continuous convex floor collider remains in
+place to avoid triangle-edge deflections, with enclosing walls limiting playable space.
+
 The Chapter 4 multi-wave profile found hidden pooled bodies still generating contacts
 at their common storage position. `EnemyRespawnSystem` now queues a shared-component
 change through its local ECB when a body actually enters the pool: `PhysicsWorldIndex`
@@ -99,8 +119,8 @@ and exposes menu state. `CampaignCatalog` owns authored identity/content availab
 `CampaignProgress` owns versioned local JSON completion, sequential unlocks, backup recovery
 and atomic replacement. The normal save is `Application.persistentDataPath/campaign-v1.json`.
 Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded;
-Chapters 1-5 completion offer Continue into the next implemented chapter.
-Chapter 6 completion unlocks Chapter 7, whose scenes remain unavailable.
+Chapters 1-6 completion offer Continue into the next implemented chapter.
+Chapter 7 completion unlocks Chapter 8, whose scenes remain unavailable.
 Existing stable-ID saves need no migration.
 
 `PauseMenu` routes campaign presentation to the narrow uGUI `CampaignMenu`, retaining its
