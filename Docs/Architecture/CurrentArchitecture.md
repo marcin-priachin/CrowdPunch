@@ -6,15 +6,21 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
-## Campaign Chapter 1 (2026-10-10)
+## Campaign Chapters 1-2 (2026-10-10)
 
 This section supersedes the historical fixed-run/build-registration descriptions below.
 Bootstrap now references `Data/Campaign/Campaign.asset`: 80 stable IDs, eight chapter names,
-and ten available scene paths. `Scenes/Campaign/Campaign_01` through `_10` are editable additive
+and twenty available scene paths. `Scenes/Campaign/Campaign_01` through `_20` are editable additive
 encounters with separate ECS SubScenes. Levels 4/6 use barricades, 7 uses rotating cover and
 10 uses the copied Gatekeeper arena with unchanged geometry and campaign-owned settings.
 Level 8 has a 100 x 100m floor and four finite waves of 40/60/76/94 enemies (270 total).
 Shared ordinary profiles, original 23 gauntlets and legacy tuning are preserved.
+
+Chapter 2 adds Exploder and Dasher combinations, a shell/core target in level 12, a barricade
+in 13, bidirectional tracks in 16/19, rotating cover in 17 and the Chicken boss in 20.
+Level 18 has a 100 x 100m floor and finite waves of 52/70/88/108 (318 total). The shell uses
+the existing zero-surviving-Exploders pair replenishment; tracks use existing physical arrival
+completion. No runtime objective or enemy ownership/system ordering changed.
 
 `GauntletSequence` remains the sole scene lifecycle owner. It selects campaign paths or the
 preserved legacy scene arrays, handles completion/failure/retry, places and heals the player,
@@ -22,7 +28,8 @@ and exposes menu state. `CampaignCatalog` owns authored identity/content availab
 `CampaignProgress` owns versioned local JSON completion, sequential unlocks, backup recovery
 and atomic replacement. The normal save is `Application.persistentDataPath/campaign-v1.json`.
 Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded;
-Chapter 1 completion shows its milestone with the next chapter unavailable.
+Chapter 1 completion now offers Continue into Chapter 2. Chapter 2 completion unlocks Chapter 3,
+whose scenes remain unavailable. Existing stable-ID saves need no migration.
 
 `PauseMenu` routes campaign presentation to the narrow uGUI `CampaignMenu`, retaining its
 existing input asset and EventSystem. Main/selection/confirmation/pause/failure/milestone pages
@@ -43,11 +50,25 @@ catalog; subsequent tuning is performed directly on saved assets. It reloads ass
 after single-scene loads, which can unload cached Unity objects. Waves, floor meshes, objective
 and boss settings belong to the campaign; ordinary profiles and nature materials remain shared.
 
+`CampaignChapterTwoBuilder` also refuses to overwrite an existing batch. It copies the complete
+shell/track objective visuals from legacy scenes and remaps cross-root socket references into
+the new scenes, with separate settings. The Chicken main/subscene pair is copied with arena
+transforms and collision meshes preserved. Its campaign crowd is six Baselines at a four-second
+replacement delay. Build registration now contains Bootstrap plus twenty encounters.
+
+`CampaignProgress` skips disk writes for already saved completions and retries transient file
+replacement locks with a bounded total delay of 70ms. Persistent I/O failures still surface in
+the existing error path. Tests exercise a deliberately locked backup and replay backup stability.
+
 `CampaignTests` covers progress persistence, corruption recovery, sequential unlocks, asset
 references and the large-wave specification. `CampaignLifecycleCheck` is an explicit Editor-only
 controlled probe using an isolated temporary save and injected defeats. It checks loaded ECS
 ownership, all ten transitions, retry, chapter completion and replay. Its evidence is not a
 human combat, duration or difficulty playtest. See `Docs/Verification/Chapter1.md` for results.
+`CampaignChapterTwoTests` checks existing-save continuation, Chapter 3 availability, objective
+references and the unchanged Chicken arena. `CampaignLifecycleCheck.StartChapterTwo()` starts
+at Gatekeeper using a temporary save and checks Chapter 2 plus the chapter boundary. See
+`Docs/Verification/Chapter2.md` for the current batch's evidence and playtest limits.
 
 ## Architectural Shape
 

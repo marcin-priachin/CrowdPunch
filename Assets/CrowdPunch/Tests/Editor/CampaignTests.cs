@@ -33,8 +33,10 @@ namespace CrowdPunch.Tests
             var reloaded=new CampaignProgress(path);
             Assert.That(reloaded.NextUnfinished(catalog),Is.EqualTo(10));
             Assert.That(reloaded.IsUnlocked(catalog,10),Is.True);
-            Assert.That(catalog.Get(10).Available,Is.False,"An unlocked future chapter is not loadable content.");
-            reloaded.Complete(catalog.Get(0).id);
+            Assert.That(catalog.Get(10).Available,Is.True,"Chapter Two is now installed.");
+            string backupBeforeReplay=File.ReadAllText(path+".bak");
+            Assert.That(reloaded.Complete(catalog.Get(0).id),Is.True);
+            Assert.That(File.ReadAllText(path+".bak"),Is.EqualTo(backupBeforeReplay));
             Assert.That(new CampaignProgress(path).NextUnfinished(catalog),Is.EqualTo(10));
             Assert.That(reloaded.Reset(),Is.True);
             Assert.That(new CampaignProgress(path).NextUnfinished(catalog),Is.Zero);
@@ -47,6 +49,24 @@ namespace CrowdPunch.Tests
             var restored=new CampaignProgress(path);
             Assert.That(restored.IsComplete(catalog.Get(0).id),Is.True);
             Assert.That(restored.NextUnfinished(catalog),Is.EqualTo(1));
+        }
+        [Test] public void Loop007_BriefBackupLockDoesNotLoseCompletion()
+        {
+            var progress=new CampaignProgress(path);
+            Assert.That(progress.Complete(catalog.Get(0).id),Is.True);
+            Assert.That(progress.Complete(catalog.Get(1).id),Is.True);
+            var locked=File.Open(path+".bak",FileMode.Open,FileAccess.Read,FileShare.None);
+            var release=System.Threading.Tasks.Task.Run(()=>
+            {
+                System.Threading.Thread.Sleep(25);
+                locked.Dispose();
+            });
+            try
+            {
+                Assert.That(progress.Complete(catalog.Get(2).id),Is.True);
+                Assert.That(new CampaignProgress(path).NextUnfinished(catalog),Is.EqualTo(3));
+            }
+            finally { release.Wait(); locked.Dispose(); }
         }
         [Test] public void Loop007_OutOfOrderCompletionDoesNotSkipLockedLevels()
         {
@@ -66,10 +86,10 @@ namespace CrowdPunch.Tests
         {
             Assert.That(catalog.Count,Is.EqualTo(80));
             Assert.That(catalog.levels.Select(l=>l.id).Distinct().Count(),Is.EqualTo(80));
-            Assert.That(catalog.levels.Count(l=>l.Available),Is.EqualTo(10));
+            Assert.That(catalog.levels.Count(l=>l.Available),Is.EqualTo(20));
             var waves=AssetDatabase.FindAssets("t:EnemyWaveSettings",new[]{"Assets/CrowdPunch/Data/Campaign/Waves"})
                 .Select(g=>AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(AssetDatabase.GUIDToAssetPath(g))).ToArray();
-            Assert.That(waves.Length,Is.EqualTo(19));
+            Assert.That(waves.Length,Is.EqualTo(35));
             foreach(var wave in waves)
             {
                 Assert.That(wave.Enemies.All(e=>e.Settings!=null && e.Settings.EnemyPrefab!=null),Is.True,wave.name);

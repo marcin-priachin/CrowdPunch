@@ -31,6 +31,9 @@ namespace CrowdPunch.Mono.Levels
             => index >= 0 && index < catalog.Count && index <= NextUnfinished(catalog);
         public bool Complete(string id)
         {
+            // A successful replay does not mutate progress or rotate the recovery backup.
+            // Retry a previous failed write even when its completion is already in memory.
+            if (data.completed.Contains(id) && Error == null) return true;
             if (!data.completed.Contains(id)) data.completed.Add(id);
             return Write();
         }
@@ -67,9 +70,23 @@ namespace CrowdPunch.Mono.Levels
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 string temporary = path + ".tmp";
-                File.WriteAllText(temporary, JsonUtility.ToJson(data, true));
-                if (File.Exists(path)) File.Replace(temporary, path, path + ".bak");
-                else File.Move(temporary, path);
+                string json = JsonUtility.ToJson(data, true);
+                for (int attempt = 0; ; attempt++)
+                {
+                    try
+                    {
+                        File.WriteAllText(temporary, json);
+                        if (File.Exists(path)) File.Replace(temporary, path, path + ".bak");
+                        else File.Move(temporary, path);
+                        break;
+                    }
+                    catch (IOException) when (attempt < 3)
+                    {
+                        // Windows file scanners can briefly lock the replacement or backup.
+                        // Bound the total retry delay to 70ms; permanent failures still surface.
+                        System.Threading.Thread.Sleep(10 << attempt);
+                    }
+                }
                 Error = null;
                 return true;
             }

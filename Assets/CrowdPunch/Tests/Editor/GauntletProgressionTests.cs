@@ -52,7 +52,8 @@ namespace CrowdPunch.Tests
                 var names = new SerializedObject(sequence).FindProperty("levelSceneNames");
                 Assert.That(names.arraySize, Is.EqualTo(23));
                 string[] enabled = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-                Assert.That(enabled.Length, Is.EqualTo(11));
+                var catalog = AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CrowdPunch.Editor.CampaignBuildRegistration.CatalogPath);
+                Assert.That(enabled.Length, Is.EqualTo(1 + catalog.levels.Count(level => level.Available)));
                 Assert.That(enabled.Skip(1).All(path => path.StartsWith(Root + "Campaign/")), Is.True);
                 Assert.That(enabled[0], Is.EqualTo(Root + "Bootstrap.unity"));
                 for (int i = 0; i < 23; i++)

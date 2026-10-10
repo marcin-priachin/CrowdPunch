@@ -107,7 +107,7 @@ namespace CrowdPunch.Editor
             var navigation = arena.gameObject.AddComponent<NavigationArenaAuthoring>();
             navigation.settings = AssetDatabase.LoadAssetAtPath<NavigationSettings>(Root+"Data/Settings/NavigationSettings.asset");
             navigation.overrideParticipationAnchor = true;
-            navigation.participationAnchor = design.Entry;
+            navigation.participationAnchor = ChapterTwoNavigationAnchor(number);
             var encounter = UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>();
             var data = new SerializedObject(encounter);
             data.FindProperty("minimumPlayerDistance").floatValue = number==18 ? 10 : 3;
@@ -137,6 +137,16 @@ namespace CrowdPunch.Editor
             EditorSceneManager.SaveScene(sub);
             AssetDatabase.SaveAssets();
         }
+
+        private static Vector2 ChapterTwoNavigationAnchor(int number) => number switch
+        {
+            13 => new Vector2(-7,-10),
+            14 => new Vector2(0,-11),
+            16 => new Vector2(0,-10),
+            18 => new Vector2(0,-16),
+            19 => new Vector2(2,-12),
+            _ => new Vector2(0,-9)
+        };
 
         // Reuse the complete authored objective visuals and remap cross-root references.
         // The legacy scenes are opened read-only; campaign tuning is always a separate asset.
@@ -190,7 +200,9 @@ namespace CrowdPunch.Editor
             var clone = UnityEngine.Object.Instantiate(source);
             clone.name = source.name;
             clone.transform.SetParent(null,true);
-            clone.transform.position += offset;
+            // Instantiate without a parent can retain local coordinates from a parented source.
+            clone.transform.SetPositionAndRotation(source.transform.position+offset,source.transform.rotation);
+            clone.transform.localScale = source.transform.lossyScale;
             SceneManager.MoveGameObjectToScene(clone,scene);
             return clone;
         }

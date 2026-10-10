@@ -80,8 +80,8 @@ progress is level/chapter access only; weapons, cloud saves and an economy are n
 OQ-001 still requires target hardware/FPS and representative performance acceptance; the large
 arena counts are starting tuning, not evidence of achieved duration or performance.
 
-Reference: [Approved campaign table](Campaign80Proposal.md). Chapters 2-8 are designed future
-content; approval in this chat authorizes implementation of Chapter 1 and its campaign flow.
+Reference: [Approved campaign table](Campaign80Proposal.md). The subsequent request to implement
+Chapter 2 extends the authorized batch through level 20. Chapters 3-8 remain future content.
 
 ### 2026-10-09 - Ground Hazards And Gauntlet_23
 

@@ -1,8 +1,8 @@
 # Crowd Punch: 80-level campaign proposal
 
-Date: 2026-10-10. Status: **Approved design; Chapter 1 implementation authorized.** Includes the user's amendment requiring one large wave-clear level per chapter. Encounter numbers are starting tuning and remain subject to playtesting.
+Date: 2026-10-10. Status: **Approved design; Chapters 1 and 2 implementation authorized.** Includes the user's amendment requiring one large wave-clear level per chapter. Encounter numbers are starting tuning and remain subject to playtesting.
 
-Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation. Approval of this proposal authorizes the first ten levels and their campaign infrastructure; Chapters 2-8 remain future implementation batches.
+Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapter 2 after Chapter 1 was delivered. Levels 1-20 and their campaign infrastructure are authorized; Chapters 3-8 remain future implementation batches.
 
 ## Reading the table
 
