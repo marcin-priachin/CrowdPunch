@@ -42,7 +42,7 @@ namespace CrowdPunch.Editor
             {
                 for (int i = first; i <= last; i++)
                 {
-                    if (i == 11) continue; // Boss uses its own round arena recipe.
+                    if (prefix == "Gauntlet" && i == 11) continue; // Legacy Gatekeeper has its own round arena.
                     string id = $"{prefix}_{i:00}";
                     if (!File.Exists($"{scenes}/{id}/{id} Sub Scene.unity")) continue;
                     var scene = EditorSceneManager.OpenScene($"{scenes}/{id}/{id} Sub Scene.unity", OpenSceneMode.Single);

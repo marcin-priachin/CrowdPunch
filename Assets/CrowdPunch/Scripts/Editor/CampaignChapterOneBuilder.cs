@@ -157,11 +157,11 @@ namespace CrowdPunch.Editor
             return AssetDatabase.LoadAssetAtPath<T>(destination);
         }
 
-        private static void CampaignBarricade(int number,EnemyWaveSequenceAuthoring encounter)
+        private static void CampaignBarricade(int number,EnemyWaveSequenceAuthoring encounter, float width = 0)
         {
             var tuning=CampaignSettings<BarricadeSettings>("BarricadeSettings",$"L{number:00}_Barricade");
             tuning.requiredHits=3; tuning.replenishDelay=4; EditorUtility.SetDirty(tuning);
-            float width=number==4?22:28;
+            if (width <= 0) width=number==4?22:28;
             var target=new GameObject("Barricade").AddComponent<BarricadeAuthoring>();
             target.settings=tuning; target.size=new Vector3(width,4,1.2f); target.transform.position=new Vector3(0,1,11);
             var exit=new GameObject("Exit").transform; exit.position=new Vector3(0,.5f,16); target.exit=exit;
@@ -177,12 +177,13 @@ namespace CrowdPunch.Editor
             Box("Exit post right",exit,new Vector3(2.5f,.5f,17),new Vector3(.3f,3,.3f),green,false);
         }
 
-        private static void CampaignCover(ArenaAuthoring arena,EnemyWaveSequenceAuthoring encounter)
+        private static void CampaignCover(ArenaAuthoring arena,EnemyWaveSequenceAuthoring encounter,
+            int number = 7, float opening = 100, float speed = 20)
         {
-            var targetSettings=CampaignSettings<BarricadeSettings>("RotatingTargetSettings","L07_Target");
+            var targetSettings=CampaignSettings<BarricadeSettings>("RotatingTargetSettings",$"L{number:00}_Target");
             targetSettings.requiredHits=3; targetSettings.replenishDelay=4; EditorUtility.SetDirty(targetSettings);
-            var tuning=CampaignSettings<RotatingCoverSettings>("RotatingCoverSettings","L07_Cover");
-            tuning.openingDegrees=100; tuning.degreesPerSecond=20; tuning.rotationMode=0; tuning.hitResponse=0;
+            var tuning=CampaignSettings<RotatingCoverSettings>("RotatingCoverSettings",$"L{number:00}_Cover");
+            tuning.openingDegrees=opening; tuning.degreesPerSecond=speed; tuning.rotationMode=0; tuning.hitResponse=0;
             tuning.reflectionSpeedMultiplier=1; EditorUtility.SetDirty(tuning);
             var target=new GameObject("Central Target").AddComponent<BarricadeAuthoring>();
             target.settings=targetSettings; target.size=new Vector3(2.4f,4,2.4f); target.transform.position=new Vector3(0,1,0);
@@ -214,11 +215,11 @@ namespace CrowdPunch.Editor
             UnityEngine.Object.DestroyImmediate(plinth.GetComponent<Collider>()); plinth.GetComponent<Renderer>().sharedMaterial=metal;
         }
 
-        private static void SetCampaignHint(int number)
+        private static void SetCampaignHint(int number, string hint = null)
         {
             var main=EditorSceneManager.OpenScene($"{CampaignScenes}Campaign_{number:00}.unity",OpenSceneMode.Single);
             var marker=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-            marker.FindProperty("openingHint").stringValue=ChapterOneHints[number-1]; marker.ApplyModifiedPropertiesWithoutUndo();
+            marker.FindProperty("openingHint").stringValue=hint ?? ChapterOneHints[number-1]; marker.ApplyModifiedPropertiesWithoutUndo();
             EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
         }
 
