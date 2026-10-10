@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd1fa9199dcdf5f4191dde09403141e5, type: 3}
+  m_Name: L44_Cover
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.RotatingCoverSettings
+  openingDegrees: 85
+  radius: 5
+  height: 4
+  thickness: 0.45
+  initialOpeningDegrees: 180
+  rotationMode: 1
+  degreesPerSecond: 30
+  rotateSeconds: 3
+  pauseSeconds: 1
+  reverseSeconds: 5
+  hitResponse: 0
+  hitPauseSeconds: 1
+  speedIncreasePerHit: 0.2
+  reflectionSpeedMultiplier: 1

@@ -86,10 +86,10 @@ namespace CrowdPunch.Tests
         {
             Assert.That(catalog.Count,Is.EqualTo(80));
             Assert.That(catalog.levels.Select(l=>l.id).Distinct().Count(),Is.EqualTo(80));
-            Assert.That(catalog.levels.Count(l=>l.Available),Is.EqualTo(40));
+            Assert.That(catalog.levels.Count(l=>l.Available),Is.EqualTo(50));
             var waves=AssetDatabase.FindAssets("t:EnemyWaveSettings",new[]{"Assets/CrowdPunch/Data/Campaign/Waves"})
                 .Select(g=>AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(AssetDatabase.GUIDToAssetPath(g))).ToArray();
-            Assert.That(waves.Length,Is.EqualTo(71));
+            Assert.That(waves.Length,Is.EqualTo(92));
             foreach(var wave in waves)
             {
                 Assert.That(wave.Enemies.All(e=>e.Settings!=null && e.Settings.EnemyPrefab!=null),Is.True,wave.name);

@@ -6,6 +6,17 @@ These questions are deliberately unresolved. Agents must not infer answers from 
 
 ## Priority 1 — Needed For The Next Playable Slice
 
+### OQ-020 - Elite Support During Protected-Point Defense
+
+Chapter 5 level 47 first combines an Elite with a finite defense wave. PROTECT-002
+prioritizes zone advancement and permits only selected enemies to begin player attacks;
+ENEMY-009 ordinarily makes normal enemies stop and stage the Elite's projectile shots.
+Should normals keep advancing while a selected Elite aims using moving bodies, or
+briefly stage shots for selected/committed Elite attacks? Asked on 2026-10-10; answer
+pending. The authored wave remains finite in either case. Final Elite attack-selection,
+support behavior and their regression coverage depend on this clarification; existing
+Elite AI is currently unchanged. Other Chapter 5 scenes and lifecycle checks are ready.
+
 ### OQ-001 — Prototype Success Criteria
 
 What crowd size, frame-rate target, target hardware, and minimum chain-reaction length should the first representative physics test prove?

@@ -35,6 +35,8 @@ namespace CrowdPunch.Configuration
         [Min(0)] public float staggerProtection = 2.5f;
         [Min(0)] public float staggerMinimumImpulse = 2;
         [Header("Committed attacks: anticipation / active / recovery / reach / width")]
+        [Min(.1f), Tooltip("Minimum baked warning; legacy encounters retain their 0.8 second floor.")]
+        public float minimumAnticipation = .8f;
         public BossAttackTuning slam = new BossAttackTuning { Anticipation=1.6f, Active=.225f, Recovery=2.8f, Reach=60, Width=6 };
         public BossAttackTuning lunge = new BossAttackTuning { Anticipation=1.4f, Active=.35f, Recovery=2.8f, Reach=60, Width=3 };
         public BossAttackTuning sweep = new BossAttackTuning { Anticipation=1.8f, Active=1.2f, Recovery=3, Reach=60, Width=12 };
@@ -63,9 +65,9 @@ namespace CrowdPunch.Configuration
             Slam=Clamp(slam), Lunge=Clamp(lunge), Sweep=Clamp(sweep)
         };
 
-        private static BossAttackTuning Clamp(BossAttackTuning a)
+        private BossAttackTuning Clamp(BossAttackTuning a)
         {
-            a.Anticipation=math.max(.8f,a.Anticipation); a.Active=math.max(.2f,a.Active);
+            a.Anticipation=math.max(math.max(.1f,minimumAnticipation),a.Anticipation); a.Active=math.max(.2f,a.Active);
             a.Recovery=math.max(1.25f,a.Recovery); a.Reach=math.max(2,a.Reach); a.Width=math.max(1,a.Width); return a;
         }
     }

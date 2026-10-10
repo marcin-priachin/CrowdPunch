@@ -53,6 +53,24 @@ namespace CrowdPunch.Tests
         private void Select() => world.GetOrCreateSystem<ProtectedPointPrioritySystem>().Update(world.Unmanaged);
         private void Breach() => world.GetOrCreateSystem<ProtectedPointBreachSystem>().Update(world.Unmanaged);
 
+        [Test] public void Protect001_EliteDefenseStaysFiniteWhileOrdinaryEliteWavesReplenish()
+        {
+            var elite=Enemy(10);
+            em.AddComponentData(elite,new EnemyTier { Value=EnemyCombatTier.Elite });
+            var normal=Enemy(11);
+            em.AddComponent<EliteWaveReplenishment>(normal);
+            em.AddComponentData(normal,new EnemyRespawnSettings { Enabled=1 });
+            var system=world.GetOrCreateSystem<EliteWaveReplenishmentSystem>();
+            system.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<EnemyRespawnSettings>(normal).Enabled,Is.Zero);
+            em.RemoveComponent<ProtectedPoint>(objective);
+            system.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<EnemyRespawnSettings>(normal).Enabled,Is.EqualTo(1));
+            em.SetComponentData(elite,new EnemyLaunchState { Phase=EnemyLaunchPhase.Defeated });
+            system.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<EnemyRespawnSettings>(normal).Enabled,Is.Zero);
+        }
+
         [Test] public void Protect002_SelectsClosestAcrossArchetypesAndReassignsSlots()
         {
             var far = Enemy(4); var baseline = Enemy(1); var wizard = Enemy(2); var ranged = Enemy(3); Enemy(6);

@@ -6,11 +6,11 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
-## Campaign Chapters 1-4 (2026-10-10)
+## Campaign Chapters 1-5 (2026-10-10)
 
 This section supersedes the historical fixed-run/build-registration descriptions below.
 Bootstrap now references `Data/Campaign/Campaign.asset`: 80 stable IDs, eight chapter names,
-and forty available scene paths. `Scenes/Campaign/Campaign_01` through `_40` are editable additive
+and fifty available scene paths. `Scenes/Campaign/Campaign_01` through `_50` are editable additive
 encounters with separate ECS SubScenes. Levels 4/6 use barricades, 7 uses rotating cover and
 10 uses the copied Gatekeeper arena with unchanged geometry and campaign-owned settings.
 Level 8 has a 100 x 100m floor and four finite waves of 40/60/76/94 enemies (270 total).
@@ -48,6 +48,21 @@ three successful pillar hits and two local Baselines per unconsumed pillar in ad
 to eight general support enemies. Settings belong to the campaign, and shared mechanics,
 ordinary profiles, system ordering and boss arena geometry remain unchanged.
 
+Chapter 5 adds levels 41-50: a four-hit narrow gate (42), stop-and-go cover with an
+85-degree opening and 3s rotation/1s pause (44), diagonal five-hit rail (46), finite
+Elite defense (47), and the Gatekeeper rematch (50). Level 48 spans 100 x 100m with
+70/86/94/110/128 initial enemies (488 including two Elites); ordinary Elite, armor
+and Wizard safeguards still apply, while Trail remnants do not gate completion.
+Permanent 3 x 6m rectangular pairs sit in level 42's inner pockets and level 48's
+outer pockets. Level 45 has a periodic side crossing. Level 50 copies the original
+boss transforms and collision meshes, adds navigation authoring and two 3 x 8m
+periodic side sectors staggered by four seconds, and maintains 12 Baselines plus one
+Ranged enemy with four-second replenishment. Its campaign settings use 360 health,
+.65/.65/.85s warnings and unchanged 2.8/2.8/3s recoveries. The configurable baked
+warning floor defaults to .8s so legacy tuning retains its previous behavior.
+`EnemyWaveSpawnSystem` omits Elite replenishment tags in protected-point sequences;
+`EliteWaveReplenishmentSystem` also rejects those owners. This preserves finite
+22/26/27-enemy defense waves, arriving in batches up to four every three seconds.
 The Chapter 4 multi-wave profile found hidden pooled bodies still generating contacts
 at their common storage position. `EnemyRespawnSystem` now queues a shared-component
 change through its local ECB when a body actually enters the pool: `PhysicsWorldIndex`
@@ -64,8 +79,8 @@ and exposes menu state. `CampaignCatalog` owns authored identity/content availab
 `CampaignProgress` owns versioned local JSON completion, sequential unlocks, backup recovery
 and atomic replacement. The normal save is `Application.persistentDataPath/campaign-v1.json`.
 Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded;
-Chapters 1-3 completion offer Continue into the next implemented chapter.
-Chapter 4 completion unlocks Chapter 5, whose scenes remain unavailable.
+Chapters 1-4 completion offer Continue into the next implemented chapter.
+Chapter 5 completion unlocks Chapter 6, whose scenes remain unavailable.
 Existing stable-ID saves need no migration.
 
 `PauseMenu` routes campaign presentation to the narrow uGUI `CampaignMenu`, retaining its

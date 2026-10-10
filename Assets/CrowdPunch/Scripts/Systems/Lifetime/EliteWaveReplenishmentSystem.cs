@@ -33,7 +33,8 @@ namespace CrowdPunch.Systems.Lifetime
                      SystemAPI.Query<RefRO<EnemyWaveOwnership>, RefRW<EnemyRespawnSettings>>()
                          .WithAll<EliteWaveReplenishment>())
             {
-                respawnSettings.ValueRW.Enabled = Contains(livingEliteWaves, ownership.ValueRO) ? (byte)1 : (byte)0;
+                respawnSettings.ValueRW.Enabled = !SystemAPI.HasComponent<ProtectedPoint>(ownership.ValueRO.Sequence)
+                    && Contains(livingEliteWaves, ownership.ValueRO) ? (byte)1 : (byte)0;
             }
 
             livingEliteWaves.Dispose();

@@ -34,6 +34,7 @@ namespace CrowdPunch.Editor
         public static void StartChapterTwo() => StartChapter(2);
         public static void StartChapterThree() => StartChapter(3);
         public static void StartChapterFour() => StartChapter(4);
+        public static void StartChapterFive() => StartChapter(5);
         private static void StartChapter(int chapter)
         {
             if(EditorApplication.isPlaying) throw new InvalidOperationException("Start in Edit mode.");
@@ -74,7 +75,7 @@ namespace CrowdPunch.Editor
             if(waitingForBreachRetry)
             {
                 if(!flow.RunFailed) return;
-                Require(flow.NextUnfinished==(Chapter==4?35:23),"Breach changed campaign progress.");
+                Require(flow.NextUnfinished==(Chapter==5?46:Chapter==4?35:23),"Breach changed campaign progress.");
                 waitingForBreachRetry=false; flow.RestartCurrentLevel(); wave=-1;
                 Record("PASS first active-enemy breach fails defense; retry resets objective and wave schedule."); return;
             }
@@ -94,7 +95,7 @@ namespace CrowdPunch.Editor
                     Record($"PASS previous chapter milestone unlocks Chapter {Chapter}; Continue loads its first level.");
                     flow.ContinueCampaign(); return;
                 }
-                int next=Chapter*10, expectedWaves=Chapter==1?19:Chapter==2?17:Chapter==3?20:18;
+                int next=Chapter*10, expectedWaves=Chapter==1?19:Chapter==2?17:Chapter==3?20:Chapter==4?18:22;
                 Require(observedWaves==expectedWaves,"Unexpected observed wave count: "+observedWaves);
                 Require(flow.CurrentLevelIndex==next-1 && flow.NextUnfinished==next,"Incorrect chapter milestone.");
                 Require(flow.Progress.IsUnlocked(flow.Campaign,next) && flow.CanSelect(next)==flow.Campaign.Get(next).Available,"Next chapter availability gate failed.");
@@ -142,14 +143,14 @@ namespace CrowdPunch.Editor
                 var ownership=em.GetComponentData<EnemyWaveOwnership>(e);
                 Require(ownership.Sequence==owner && ownership.RunGeneration==sequence.RunGeneration,"Encounter-owned enemy leaked across transition/retry.");
             }
-            if(Chapter==3 || Chapter==4)
+            if(Chapter>=3)
             {
                 using var hazards=em.CreateEntityQuery(typeof(GroundHazard),typeof(GroundHazardState));
-                int expectedHazards=Chapter==3?(level==27?3:level>=24 && level<=26?1:0):(level==33 || level==36?1:0);
+                int expectedHazards=Chapter==3?(level==27?3:level>=24 && level<=26?1:0):Chapter==4?(level==33 || level==36?1:0):(level==41 || level==47 || level==49?2:level==44?1:0);
                 Require(hazards.CalculateEntityCount()==expectedHazards,"Hazard leakage or missing baked patches.");
                 using var patches=hazards.ToComponentDataArray<GroundHazardState>(Allocator.Temp);
                 foreach(var patch in patches) hazardPhases|=1<<(int)patch.Phase;
-                if((level==23 || level==35) && (sequence.Phase==EnemyWaveRuntimePhase.Spawning || sequence.Phase==EnemyWaveRuntimePhase.AwaitingActivation))
+                if((level==23 || level==35 || level==46) && (sequence.Phase==EnemyWaveRuntimePhase.Spawning || sequence.Phase==EnemyWaveRuntimePhase.AwaitingActivation))
                 {
                     if(!testedBreach && enemies.Length>0)
                     {
@@ -167,7 +168,7 @@ namespace CrowdPunch.Editor
                     if(sequence.SpawnedCount!=lastDefenseSpawn)
                     {
                         var definition=em.GetBuffer<EnemyWaveDefinition>(owner)[wave];
-                        Require(sequence.SpawnedCount-lastDefenseSpawn==Math.Min(4,definition.TotalEnemyCount-lastDefenseSpawn),"Defense did not spawn batches of four with its final remainder.");
+                        Require(sequence.SpawnedCount-lastDefenseSpawn==Math.Min(4,definition.TotalEnemyCount+definition.TotalEliteCount-lastDefenseSpawn),"Defense did not spawn batches of four with its final remainder.");
                         lastDefenseSpawn=sequence.SpawnedCount; Record($"DEFENSE BATCH {wave+1}: cumulative={lastDefenseSpawn}");
                     }
                     foreach(var e in enemies) InjectDefeat(em,e);
@@ -188,9 +189,9 @@ namespace CrowdPunch.Editor
                 ScreenCapture.CaptureScreenshot(Path.GetFullPath($"Temp/CampaignValidation/level{level+1:00}-wave{wave+1}.png"));
             }
             frames.Add(Time.unscaledDeltaTime*1000);
-            if(now-at<(level==7 || level==17 || level==27 || level==37?15:level==26 || level==33?9:4)) return;
-            if(level==26 || level==27 || level==33) Require(hazardPhases==7,"Periodic hazards did not show inactive, warning and active phases.");
-            if(level==3 || level==5 || level==6 || level==11 || level==12 || level==16 || level==21 || level==28 || level==33 || level==34 || level==36)
+            if(now-at<(level==7 || level==17 || level==27 || level==37 || level==47?15:level==26 || level==33 || level==44 || level==49?9:4)) return;
+            if(level==26 || level==27 || level==33 || level==44 || level==49) Require(hazardPhases==7,"Periodic hazards did not show inactive, warning and active phases.");
+            if(level==3 || level==5 || level==6 || level==11 || level==12 || level==16 || level==21 || level==28 || level==33 || level==34 || level==36 || level==41 || level==43)
             {
                 using var walls=em.CreateEntityQuery(typeof(Barricade));
                 Require(walls.CalculateEntityCount()==1,"Objective missing.");
@@ -205,14 +206,14 @@ namespace CrowdPunch.Editor
                 if(wall.CompleteOnDestruction==0)
                     player.GetComponent<PlayerController>().SetLevelEntryPoint(wall.ExitPosition,Quaternion.identity);
             }
-            else if(level==9)
+            else if(level==9 || level==49)
             {
                 using var bosses=em.CreateEntityQuery(typeof(BossEncounter));
                 Require(bosses.CalculateEntityCount()==1,"Boss missing.");
                 var head=bosses.GetSingletonEntity(); var state=em.GetComponentData<BossEncounter>(head);
                 state.Cycle=BossCycle.Defeated; em.SetComponentData(head,state);
             }
-            else if(level==15 || level==18 || level==25 || level==31 || level==38)
+            else if(level==15 || level==18 || level==25 || level==31 || level==38 || level==45)
             {
                 using var tracks=em.CreateEntityQuery(typeof(TrackObject),typeof(TrackObjectState));
                 Require(tracks.CalculateEntityCount()==1,"Track missing.");

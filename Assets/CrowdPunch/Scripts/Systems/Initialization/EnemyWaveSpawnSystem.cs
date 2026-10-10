@@ -371,7 +371,8 @@ namespace CrowdPunch.Systems.Initialization
                     RunGeneration = sequence.RunGeneration,
                     WaveIndex = sequence.CurrentWaveIndex
                 });
-                if (!spawningElite && wave.TotalEliteCount > 0)
+                // PROTECT-001: defense populations are finite, including waves with elites.
+                if (!spawningElite && wave.TotalEliteCount > 0 && !entityManager.HasComponent<ProtectedPoint>(sequenceEntity))
                     commands.AddComponent<EliteWaveReplenishment>(enemy);
                 accepted.Add(new float4(position, selectedProfile.SpawnClearance));
                 spawned++;
