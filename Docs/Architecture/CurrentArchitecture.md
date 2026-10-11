@@ -1195,6 +1195,18 @@ Real Input System dash verification produced two starts/two ends, including an e
 
 ## Static Obstacles And Navigation
 
+When an active body has no terrain anchor after physics contact, `GroundHazardNavigationSystem` now uses the same
+actual-radius swept escape check as terrain navigation and checks the complete ingress segment against active hazards
+(COMBAT-017, GROUND-005). It cancels stale hazard routes and requests slow movement toward the clear interior cell.
+It does not send that escape through class-inflated `Safe`, which would reject the outside-margin starting point and
+cancel valid terrain escape whenever any active hazard exists in the arena. Hazard-intersecting escapes still wait.
+Verification on 2026-10-11 used three captured Campaign_28 positions along the obstacle spanning (-15,-11)..(-9,19).
+Terrain navigation requested 1.5 m/s at each position before the old hazard overlay reduced it to zero. The updated
+navigation/hazard/elite suites passed 56 cases in the Editor. In a two-second Campaign_28 physics replay, all three
+remained Active, moved roughly 10-11m and regained valid anchors. Temporary enemy health protection isolated movement
+from hazard defeat and was restored afterward; this was not a balance test. Evidence is in
+`Temp/obstacle-stuck-diagnosis.txt`, `Temp/obstacle-fix-regressions.txt` and `Temp/obstacle-fix-replay.txt`.
+
 The dedicated validation arena adds baked rectangular solids, class-based clearance and reachable regions, explicit tactical intent, a shared budgeted A* scheduler, and optional editor diagnostics. The original ten-level progression is unchanged. See [Navigation ownership, settings, and system order](Navigation.md) and [performed validation and profiling](../Validation/NavigationValidation.md). Projectile cover, explosion occlusion, and terrain-aware homing are not introduced: existing projectiles pass static solids, explosions remain radial, and launched-body homing may select an obstructed target while physical wall collision remains active.
 
 Navigation participation anchors now default to the clearance-valid spacing-bounds centre (or nearest valid cell), with an optional explicit override for disconnected layouts. See [anchor selection](Navigation.md#spawning-and-lifecycle). This is baked configuration, not a per-frame search.

@@ -45,6 +45,48 @@ namespace CrowdPunch.Tests
             world.GetOrCreateSystem<GroundHazardNavigationSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs();
             return em.GetComponentData<DesiredMovement>(enemy);
         }
+        [TestCase(-8.497503f, -6.403447f, false)]
+        [TestCase(-8.496792f, 3.921336f, false)]
+        [TestCase(-8.418610f, -11.31846f, false)]
+        [TestCase(-8.497503f, -6.403447f, true)]
+        public void Ground005_Combat017_HazardOverlayPreservesClearTerrainReentry(float x, float z, bool blocked)
+        {
+            using var obstacles = new NativeArray<NavigationRectangle>(new[] { new NavigationRectangle
+            { Minimum = new float2(-15,-11), Maximum = new float2(-9,19) } }, Allocator.Temp);
+            using var capturedGrid = NavigationGridConstruction.Build(new float2(-48), new float2(48), 1,
+                new float3(.62f,.97f,1.62f), obstacles, Allocator.Persistent);
+            em.SetComponentData(arena, new NavigationGrid { Data = capturedGrid });
+            var settings = em.GetComponentData<NavigationRuntimeSettings>(arena); settings.Enabled = 1;
+            em.SetComponentData(arena, settings);
+            em.AddComponent<NavigationDiagnostics>(arena);
+            em.AddComponent<NavigationPathState>(enemy); em.AddBuffer<NavigationWaypoint>(enemy);
+            em.SetComponentData(enemy, new NavigationAgent { Radius = .5f });
+            float3 position = new float3(x,0,z);
+            em.SetComponentData(enemy, LocalTransform.FromPosition(position));
+            Assert.AreEqual(-1, NavigationGeometry.Anchor(ref capturedGrid.Value, position.xz, 0));
+            Assert.True(NavigationGeometry.TryEscape(ref capturedGrid.Value, position.xz, .5f, 0, out float2 entry));
+            em.SetComponentData(patch, new GroundHazard
+            { Position = blocked ? new float3(entry.x,0,entry.y) : new float3(30,0,30), HalfSize = new float2(.1f) });
+            // The terrain system produces valid escape intent; the overlay must not veto it
+            // merely because unrelated active hazards exist elsewhere in this arena.
+            world.SetTime(new TimeData(0,.02f));
+            world.GetOrCreateSystem<EnemyNavigationSystem>().Update(world.Unmanaged);
+            Assert.Greater(em.GetComponentData<DesiredMovement>(enemy).Speed, 0);
+            world.GetOrCreateSystem<GroundHazardNavigationSystem>().Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+            var movement = em.GetComponentData<DesiredMovement>(enemy);
+            Assert.That(movement.Speed > 0, Is.EqualTo(!blocked));
+            if (!blocked)
+            {
+                Assert.That(movement.Speed, Is.LessThanOrEqualTo(1.5f));
+                Assert.Greater(math.dot(movement.Direction.xz, entry - position.xz), 0);
+            }
+            Assert.AreEqual(position, em.GetComponentData<LocalTransform>(enemy).Position);
+            // Release system-owned search bindings before the captured grid leaves scope.
+            em.DestroyEntity(enemy); em.DestroyEntity(arena); em.DestroyEntity(patch);
+            world.GetOrCreateSystem<GroundHazardNavigationSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<EnemyNavigationSystem>().Update(world.Unmanaged);
+        }
         [TestCase(GroundHazardShape.Rectangle)] [TestCase(GroundHazardShape.Circle)]
         public void Ground005_RoutesAroundWholePatchWithoutCrossingFootprint(GroundHazardShape shape)
         {

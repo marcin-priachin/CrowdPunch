@@ -155,6 +155,23 @@ namespace CrowdPunch.Systems.AI
                 float braking = movementSettings.BrakingAcceleration;
                 if (r.Revision != revision)
                 { r = new GroundHazardRoute { Version = r.Version + 1, Revision = revision, ProgressAt = now, LastPosition = position }; path.Clear(); }
+                if (NavigationGeometry.Anchor(ref g, position, cls) < 0)
+                {
+                    // COMBAT-017 / GROUND-005: terrain escape validates the actual body sweep.
+                    // Safe() uses class inflation and would reject this same starting position.
+                    // Check hazards on the complete escape segment without repeating that rejection.
+                    r.Version++; r.Pending = 0; r.Failed = 0; path.Clear();
+                    movement = default;
+                    if (NavigationGeometry.TryEscape(ref g, position, agent.Radius, cls, out float2 entry)
+                        && GroundHazardGeometry.Clear(patches, position, entry, radius))
+                    {
+                        float2 direction = math.normalizesafe(entry - position);
+                        float speed = math.min(math.min(goal.Speed, 1.5f),
+                            math.sqrt(6f * math.max(0f, math.distance(position, entry) - .05f)));
+                        movement = new DesiredMovement { Direction = new float3(direction.x, 0, direction.y), Speed = speed };
+                    }
+                    return;
+                }
                 if (!GroundHazardGeometry.Clear(patches, position, position, radius))
                 {
                     r.Version++; r.Pending = 0; r.Failed = 0; path.Clear();
