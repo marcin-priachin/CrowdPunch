@@ -13,6 +13,56 @@ namespace CrowdPunch.Tests
 {
     public sealed class ElitePunchGeometryTests
     {
+        [TestCase(ElitePunchPhase.Repositioning)]
+        [TestCase(ElitePunchPhase.WindUp)]
+        public void Enemy009_Combat017_EliteOutsideNavigationMarginReentersBeforeStagingHold(ElitePunchPhase phase)
+        {
+            using var world = new World("Paused elite bounds deadlock");
+            Entity elite = CreateEliteAttempt(world, out Entity target);
+            var em = world.EntityManager;
+            float3 position = new float3(14.537292f, -.5f, -.3160982f);
+            em.SetComponentData(elite, LocalTransform.FromPosition(position));
+            em.SetComponentData(elite, new EnemyMovementSettings { MoveSpeed = 30 });
+            em.AddComponentData(elite, new NavigationAgent { Radius = .75f });
+            em.AddBuffer<NavigationWaypoint>(elite);
+            em.AddComponentData(elite, new RespawnRequest());
+            em.SetComponentEnabled<RespawnRequest>(elite, false);
+            var attempt = em.GetComponentData<ElitePunchState>(elite);
+            attempt.Phase = phase;
+            attempt.TelegraphActive = 1;
+            em.SetComponentData(elite, attempt);
+            using var obstacles = new NativeArray<NavigationRectangle>(0, Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-15), new float2(15), 1,
+                new float3(.62f, .97f, 1.62f), obstacles, Allocator.Persistent);
+            Entity arena = em.CreateEntity(typeof(NavigationGrid), typeof(NavigationRuntimeSettings), typeof(NavigationDiagnostics));
+            em.SetComponentData(arena, new NavigationGrid { Data = blob });
+            em.SetComponentData(arena, new NavigationRuntimeSettings { Enabled = 1 });
+            Assert.AreEqual(-1, NavigationGeometry.Anchor(ref blob.Value, position.xz, 1));
+
+            world.GetOrCreateSystemManaged<ElitePunchSystem>().Update();
+            var navigation = world.GetOrCreateSystem<EnemyNavigationSystem>();
+            navigation.Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+
+            var intent = em.GetComponentData<NavigationIntent>(elite);
+            var movement = em.GetComponentData<DesiredMovement>(elite);
+            Assert.AreEqual(NavigationMode.Travel, intent.Mode);
+            Assert.That(movement.Speed, Is.GreaterThan(0).And.LessThanOrEqualTo(1.5f));
+            Assert.Greater(math.dot(movement.Direction, intent.Destination - position), 0);
+            Assert.AreEqual(position, em.GetComponentData<LocalTransform>(elite).Position);
+            Assert.AreEqual(target, em.GetComponentData<ElitePunchState>(elite).Target);
+            Assert.AreEqual(0, em.GetComponentData<ElitePunchState>(elite).SetupSeconds);
+            Assert.AreEqual(ElitePunchPhase.Repositioning, em.GetComponentData<ElitePunchState>(elite).Phase);
+            Assert.AreEqual(0, em.GetComponentData<ElitePunchState>(elite).TelegraphActive);
+            Assert.AreEqual(0, em.GetComponentData<ElitePunchReservation>(target).IsStaged);
+
+            // Once inside, ordinary unstaged-projectile waiting becomes authoritative again.
+            em.SetComponentData(elite, LocalTransform.FromPosition(intent.Destination));
+            world.GetOrCreateSystemManaged<ElitePunchSystem>().Update();
+            Assert.AreEqual(NavigationMode.Hold, em.GetComponentData<NavigationIntent>(elite).Mode);
+            Assert.AreEqual(0, em.GetComponentData<DesiredMovement>(elite).Speed);
+        }
+
         [Test]
         public void Enemy009_ProjectileMovesBeyondLocalSamplesToClearLongObstacleBeforeEliteApproaches()
         {

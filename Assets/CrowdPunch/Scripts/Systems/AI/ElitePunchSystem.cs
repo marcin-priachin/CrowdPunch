@@ -2,6 +2,7 @@ using CrowdPunch.Components;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
+using CrowdPunch.Utilities;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -56,6 +57,20 @@ namespace CrowdPunch.Systems.AI
                     Cancel(elite, ref state.ValueRW); movement.ValueRW = default; EntityManager.SetComponentData(elite, new NavigationIntent()); continue;
                 }
                 state.ValueRW.SecondsRemaining -= dt;
+                // ENEMY-009 / COMBAT-017: staging requires a valid elite anchor. Physics can
+                // push the waiting elite outside it, so reentry must precede the staging hold.
+                if (TryGetNavigationReentry(elite, transform.ValueRO.Position, out float3 reentry))
+                {
+                    if (state.ValueRO.Phase == ElitePunchPhase.WindUp)
+                        state.ValueRW.Phase = ElitePunchPhase.Repositioning;
+                    state.ValueRW.TelegraphActive = 0;
+                    float speed = math.max(0f, SystemAPI.GetComponent<EnemyMovementSettings>(elite).MoveSpeed);
+                    movement.ValueRW = new DesiredMovement
+                    { Direction = HorizontalDirection(transform.ValueRO.Position, reentry), Speed = speed };
+                    EntityManager.SetComponentData(elite, NavigationIntent.Travel(reentry, speed, .05f,
+                        float3.zero, NavigationGoalKind.ExactSetup));
+                    continue;
+                }
                 if (state.ValueRO.Phase == ElitePunchPhase.InitialDelay)
                 {
                     if (state.ValueRO.SecondsRemaining <= 0f) state.ValueRW.Phase = ElitePunchPhase.SelectingTarget;
@@ -225,6 +240,22 @@ namespace CrowdPunch.Systems.AI
                 ExecutePunch(elite, transform.ValueRO.Position, targetTransform.Position, player, settings.ValueRO, all, state.ValueRO.Target);
                 BeginCooldown(elite, settings.ValueRO, ref state.ValueRW);
             }
+        }
+
+        private bool TryGetNavigationReentry(Entity elite, float3 position, out float3 destination)
+        {
+            destination = position;
+            if (!SystemAPI.HasSingleton<NavigationGrid>() || !SystemAPI.HasSingleton<NavigationRuntimeSettings>()
+                || SystemAPI.GetSingleton<NavigationRuntimeSettings>().Enabled == 0) return false;
+            NavigationGrid grid = SystemAPI.GetSingleton<NavigationGrid>();
+            if (!grid.Data.IsCreated) return false;
+            ref NavigationGridBlob geometry = ref grid.Data.Value;
+            float radius = EntityManager.GetComponentData<NavigationAgent>(elite).Radius;
+            int clearance = NavigationGeometry.ClearanceClass(ref geometry, radius);
+            if (clearance < 0 || NavigationGeometry.Anchor(ref geometry, position.xz, clearance) >= 0
+                || !NavigationGeometry.TryEscape(ref geometry, position.xz, radius, clearance, out float2 entry)) return false;
+            destination = new float3(entry.x, position.y, entry.y);
+            return true;
         }
 
         private void SetNavigation(Entity elite, float3 position, float3 destination, float3 sideDirection,

@@ -63,6 +63,9 @@ namespace CrowdPunch.Systems.AI
             NativeList<PressureCandidate> pressureCandidates = new NativeList<PressureCandidate>(Allocator.TempJob);
             bool defending = SystemAPI.HasSingleton<ProtectedPoint>();
             var objective = defending ? SystemAPI.GetSingleton<ProtectedPoint>() : default;
+            Entity closestExplosive = Entity.Null;
+            float closestExplosiveDistanceSq = float.MaxValue;
+            var explosives = SystemAPI.GetComponentLookup<ExplosiveEnemyState>(true);
             if (defending)
                 foreach (var attacker in SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true))
                     pressureCandidates.Add(new PressureCandidate { Entity = attacker.Enemy, DistanceSq = attacker.DistanceSq });
@@ -82,6 +85,21 @@ namespace CrowdPunch.Systems.AI
                         Position = transform.ValueRO.Position,
                         Archetype = archetype.ValueRO.Value
                     });
+
+                    if (playerSnapshot.IsAvailable && archetype.ValueRO.Value == EnemyArchetypeKind.Explosive
+                        && explosives.HasComponent(entity) && explosives[entity].HasExploded == 0)
+                    {
+                        bool eligible = !defending;
+                        for (int index = 0; !eligible && index < pressureCandidates.Length; index++)
+                            eligible = pressureCandidates[index].Entity == entity;
+                        float distanceSq = math.distancesq(transform.ValueRO.Position.xz, playerSnapshot.Position.xz);
+                        if (eligible && (distanceSq < closestExplosiveDistanceSq
+                            || distanceSq == closestExplosiveDistanceSq && entity.Index < closestExplosive.Index))
+                        {
+                            closestExplosive = entity;
+                            closestExplosiveDistanceSq = distanceSq;
+                        }
+                    }
 
                     if (!defending && playerSnapshot.IsAvailable && IsOrdinaryMelee(archetype.ValueRO.Value))
                     {
@@ -104,6 +122,7 @@ namespace CrowdPunch.Systems.AI
             JobHandle chaseJob = new EnemyChaseJob
             {
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
+                ClosestExplosive = closestExplosive,
                 Defending = defending,
                 Objective = objective,
                 Now = SystemAPI.Time.ElapsedTime,
@@ -179,6 +198,7 @@ namespace CrowdPunch.Systems.AI
         private partial struct EnemyChaseJob : IJobEntity
         {
             public bool Defending;
+            public Entity ClosestExplosive;
             public ProtectedPoint Objective;
             [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
             public double Now;
@@ -286,11 +306,16 @@ namespace CrowdPunch.Systems.AI
                     if (usesCommitment && contactAttempt.IsAttempting != 0)
                         targetDirection = contactAttempt.CommittedDirection;
 
-                    float3 appliedSeparation = explosiveInContactRange
-                        ? float3.zero
+                    float3 appliedSeparation = archetype.Value == EnemyArchetypeKind.Explosive
+                        ? separation
                         : contactAttempt.IsAttempting != 0
                         ? math.normalizesafe(separation) * math.max(0f, contactSettings.AttemptSeparationWeight)
                         : separation;
+                    // ENEMY-010: only the nearest pursuing explosive may break a spacing deadlock.
+                    if (entity == ClosestExplosive && (explosiveInContactRange || contactAttempt.IsAttempting != 0)
+                        && math.lengthsq(targetDirection) > 0f
+                        && math.dot(targetDirection + appliedSeparation, math.normalizesafe(toPlayer)) <= 0f)
+                        appliedSeparation = float3.zero;
                     desiredMovement.Direction = math.normalizesafe(
                         targetDirection + appliedSeparation,
                         appliedSeparation);

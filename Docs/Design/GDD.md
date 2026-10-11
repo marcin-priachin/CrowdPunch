@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-10
+Last updated: 2026-10-11
 
 ## How To Read This Document
 
@@ -644,7 +644,7 @@ While at least one non-defeated elite is active in the arena, active normal enem
 
 Status: Must
 
-An active unexploded explosive enemy inside its authored contact-attempt range continuously approaches the player even when it is not selected by the ordinary crowd-pressure limit. During that close pursuit it targets the player directly and ignores active-enemy separation so crowd avoidance cannot prevent the intended collision. Outside that range it follows normal arena-wide distribution, pressure allocation, contact-attempt cadence, and separation.
+An active unexploded explosive enemy inside its authored contact-attempt range continuously approaches the player even when it is not selected by the ordinary crowd-pressure limit. During pursuit it retains its configured active-enemy separation distance and weight, including per-archetype overrides. If separation prevents progress toward the player, only the closest eligible pursuing unexploded explosive may ignore separation to reach the player. Outside that range it follows normal arena-wide distribution, pressure allocation, and contact-attempt cadence. Protected-point attacker selection remains authoritative.
 
 ### ENEMY-011 — Elite Wave Crowd Replenishment
 
