@@ -39,6 +39,7 @@ namespace CrowdPunch.Bakers
                 BaseCollisionDamageMultiplier = authoring.Settings.BaseCollisionDamageMultiplier,
                 DamageMultiplierPerExcessImpulse = authoring.Settings.DamageMultiplierPerExcessImpulse,
                 MaximumCollisionDamageMultiplier = authoring.Settings.MaximumCollisionDamageMultiplier,
+                PlayerOwnedLaunchDamageReduction = authoring.Settings.PlayerOwnedLaunchDamageReduction,
                 UsefulMomentumSpeed = authoring.Settings.UsefulMomentumSpeed,
                 LowMomentumPeriod = authoring.Settings.LowMomentumPeriod,
                 RecoveryDuration = authoring.Settings.RecoveryDuration

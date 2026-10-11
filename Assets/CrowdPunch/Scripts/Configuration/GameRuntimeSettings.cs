@@ -23,6 +23,8 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float baseCollisionDamageMultiplier = 0.25f;
         [SerializeField, Min(0f)] private float damageMultiplierPerExcessImpulse = 0.05f;
         [SerializeField, Min(0f)] private float maximumCollisionDamageMultiplier = 0.75f;
+        [Tooltip("Fraction of launched-body damage prevented when the current launch is player-owned, including propagated chains. 0 = full damage, 1 = no damage. Elite and boss launches are unaffected.")]
+        [SerializeField, Range(0f, 1f)] private float playerOwnedLaunchDamageReduction = 0.5f;
         [SerializeField, Min(0f)] private float usefulMomentumSpeed = 2f;
         [SerializeField, Min(0f)] private float lowMomentumPeriod = 0.25f;
         [SerializeField, Min(0f)] private float recoveryDuration = 0.6f;
@@ -36,6 +38,7 @@ namespace CrowdPunch.Configuration
         public float BaseCollisionDamageMultiplier => baseCollisionDamageMultiplier;
         public float DamageMultiplierPerExcessImpulse => damageMultiplierPerExcessImpulse;
         public float MaximumCollisionDamageMultiplier => maximumCollisionDamageMultiplier;
+        public float PlayerOwnedLaunchDamageReduction => Mathf.Clamp01(playerOwnedLaunchDamageReduction);
         public float UsefulMomentumSpeed => usefulMomentumSpeed;
         public float LowMomentumPeriod => lowMomentumPeriod;
         public float RecoveryDuration => recoveryDuration;

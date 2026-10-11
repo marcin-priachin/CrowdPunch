@@ -64,8 +64,8 @@ namespace CrowdPunch.Systems.Combat
                     continue;
                 }
 
-                float damage = EnemyCollisionDamage.Calculate(
-                    launchState.ValueRO.LaunchDamage,
+                float damage = CalculatePlayerDamage(
+                    launchState.ValueRO,
                     estimatedImpulse,
                     settings);
                 if (damage <= 0f)
@@ -99,6 +99,15 @@ namespace CrowdPunch.Systems.Combat
             }
 
             return math.length(linearVelocity) / inverseMass;
+        }
+
+        public static float CalculatePlayerDamage(in EnemyLaunchState launchState, float estimatedImpulse,
+            in EnemyLaunchSettings settings)
+        {
+            float damage = EnemyCollisionDamage.Calculate(launchState.LaunchDamage, estimatedImpulse, settings);
+            return launchState.Owner == EnemyLaunchOwner.Player
+                ? damage * (1f - math.saturate(settings.PlayerOwnedLaunchDamageReduction))
+                : damage;
         }
 
         public static bool CanDamagePlayer(in EnemyLaunchState launchState)
