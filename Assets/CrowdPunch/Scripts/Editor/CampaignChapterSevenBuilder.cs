@@ -152,6 +152,8 @@ namespace CrowdPunch.Editor
                     CampaignGround(encounter,number,"Southwest outer warning",new Vector2(-43,-30),true,16f/3); break;
                 case 69: CopyCampaignObjective(sub,arena,encounter,number,true,Vector3.zero); break;
             }
+            int trackIndex = Array.IndexOf(CampaignTrackLevels, number);
+            if (trackIndex > 0) AuthorProgressiveTrackRoute(sub, number, trackIndex + 1);
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub); AssetDatabase.SaveAssets();
         }
 

@@ -165,6 +165,8 @@ namespace CrowdPunch.Editor
                     CampaignRock(arena,new Vector2(15,-8),new Vector2Int(2,3));
                     CampaignRock(arena,new Vector2(0,14),new Vector2Int(6,2)); break;
             }
+            int trackIndex = Array.IndexOf(CampaignTrackLevels, number);
+            if (trackIndex > 0) AuthorProgressiveTrackRoute(sub, number, trackIndex + 1);
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub); AssetDatabase.SaveAssets();
         }
 

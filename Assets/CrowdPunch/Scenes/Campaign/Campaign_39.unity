@@ -241,7 +241,7 @@ Transform:
   m_GameObject: {fileID: 525094726}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: -15}
+  m_LocalPosition: {x: -10, y: 0.5, z: -21}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -277,8 +277,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.GauntletLevel
   playerEntryPoint: {fileID: 525094727}
-  openingHint: Work around the block to line up forward hits. The blue socket is
-    the destination.
+  openingHint: Launch bodies or blast the block along the turning arrows into the
+    blue socket. Change your shooting side at each corner; opposite hits push it
+    back.
 --- !u!4 &1101770902
 Transform:
   m_ObjectHideFlags: 0

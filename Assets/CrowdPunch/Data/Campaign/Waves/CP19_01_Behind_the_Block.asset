@@ -22,12 +22,12 @@ MonoBehaviour:
     Weight: 0
   eliteEnemies: []
   spawnRectangles:
-  - Center: {x: -9, y: 2, z: -2}
+  - Center: {x: -12, y: 2, z: 0}
     Width: 4
-    Depth: 24
-  - Center: {x: 11, y: 2, z: 0}
-    Width: 3
-    Depth: 24
+    Depth: 16
+  - Center: {x: 12, y: 2, z: 0}
+    Width: 4
+    Depth: 16
   replenishWhileBossLives: 1
   bossReplenishDelay: 4
   delayBeforeWave: 3

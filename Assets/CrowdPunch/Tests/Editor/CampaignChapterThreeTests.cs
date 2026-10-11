@@ -100,9 +100,7 @@ namespace CrowdPunch.Tests
                     if(n==26)
                     {
                         var track=crowd.barricade.GetComponent<TrackObjectAuthoring>();
-                        Assert.That(track.transform.position.x,Is.EqualTo(5));
-                        Assert.That(track.settings.requiredNetHits,Is.EqualTo(5));
-                        Assert.That(track.destination.position.z-track.transform.position.z,Is.EqualTo(10));
+                        CampaignTrackRouteTests.AssertProgressiveTrack(track,n);
                     }
                     var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);
                     Assert.That(patches.Length,Is.EqualTo(n==28?3:n==25||n==26||n==27?1:0));

@@ -13,12 +13,26 @@ namespace CrowdPunch.Bakers
             if (a.settings == null || a.destination == null)
                 throw new System.InvalidOperationException("Track object requires settings and destination.");
             DependsOn(a.settings); DependsOn(a.destination);
-            float3 delta = (float3)a.destination.position - (float3)a.transform.position;
-            if (math.abs(delta.y) > .01f || math.length(delta) < .1f)
-                throw new System.InvalidOperationException("Track must be horizontal with distinct endpoints.");
             var e = GetEntity(TransformUsageFlags.Dynamic);
+            var path = AddBuffer<TrackPathPoint>(e);
+            float3 previous = a.transform.position;
+            float length = 0;
+            path.Add(new TrackPathPoint { Position = previous });
+            var corners = a.corners ?? System.Array.Empty<UnityEngine.Transform>();
+            for (int i = 0; i <= corners.Length; i++)
+            {
+                var point = i == corners.Length ? a.destination : corners[i];
+                if (point == null) throw new System.InvalidOperationException("Track has a missing corner.");
+                DependsOn(point);
+                float3 delta = (float3)point.position - previous;
+                if (!math.all(math.isfinite(delta)) || math.abs(point.position.y - a.transform.position.y) > .01f || math.length(delta) < .1f)
+                    throw new System.InvalidOperationException("Track segments must be horizontal, finite and distinct.");
+                length += math.length(delta);
+                previous = point.position;
+                path.Add(new TrackPathPoint { Position = previous, Distance = length });
+            }
             AddComponent(e, new TrackObject {
-                Start = a.transform.position, Direction = math.normalize(delta), Length = math.length(delta),
+                Start = a.transform.position, Direction = math.normalize(path[1].Position - path[0].Position), Length = length,
                 RequiredNetHits = math.max(1, a.settings.requiredNetHits), SlideDuration = math.max(.05f, a.settings.slideDuration),
                 PushDamage = math.max(0, a.settings.pushDamage), DamagingPush = a.settings.damagingPush ? (byte)1 : (byte)0,
                 PushDamagesPlayer = a.settings.pushDamagesPlayer ? (byte)1 : (byte)0,

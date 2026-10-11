@@ -246,8 +246,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.GauntletLevel
   playerEntryPoint: {fileID: 459296685}
-  openingHint: Send bodies into the block from behind. Reach the blue socket in five
-    forward hits.
+  openingHint: Launch bodies or blast the block along the turning arrows into the
+    blue socket. Change your shooting side at each corner; opposite hits push it
+    back.
 --- !u!4 &130868046
 Transform:
   m_ObjectHideFlags: 0
@@ -289,7 +290,7 @@ Transform:
   m_GameObject: {fileID: 459296684}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: -14}
+  m_LocalPosition: {x: 10, y: 0.5, z: -16}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -15,14 +15,17 @@ namespace CrowdPunch.Systems.Physics
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var (track, motion, pose, velocity, wall) in
-                SystemAPI.Query<RefRO<TrackObject>, RefRW<TrackObjectState>, RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<Barricade>>())
+            var paths = SystemAPI.GetBufferLookup<TrackPathPoint>(true);
+            foreach (var (track, motion, pose, velocity, wall, entity) in
+                SystemAPI.Query<RefRO<TrackObject>, RefRW<TrackObjectState>, RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<Barricade>>().WithEntityAccess())
             {
                 // Kinematic integration owns the slide. Remove only floating-point drift from its rail.
                 motion.ValueRW.Distance = motion.ValueRO.NextDistance;
-                pose.ValueRW.Position = track.ValueRO.Start + track.ValueRO.Direction * motion.ValueRO.Distance;
+                paths.TryGetBuffer(entity, out var path);
+                pose.ValueRW.Position = TrackPathGeometry.Position(track.ValueRO, path, motion.ValueRO.Distance);
                 velocity.ValueRW = default;
-                if (motion.ValueRO.Moving == 0 || motion.ValueRO.Elapsed < track.ValueRO.SlideDuration) continue;
+                if (motion.ValueRO.Moving == 0 || motion.ValueRO.Elapsed < track.ValueRO.SlideDuration
+                    || math.abs(motion.ValueRO.Distance - track.ValueRO.Length * motion.ValueRO.TargetStep / track.ValueRO.RequiredNetHits) > .00001f) continue;
                 motion.ValueRW.Moving = 0;
                 if (motion.ValueRO.TargetStep != track.ValueRO.RequiredNetHits) continue;
                 motion.ValueRW.Locked = 1;

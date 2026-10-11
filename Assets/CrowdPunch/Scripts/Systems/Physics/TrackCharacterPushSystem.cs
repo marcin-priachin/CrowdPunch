@@ -19,12 +19,15 @@ namespace CrowdPunch.Systems.Physics
         public void OnUpdate(ref SystemState state)
         {
             var world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
+            var paths = SystemAPI.GetBufferLookup<TrackPathPoint>(true);
             foreach (var (track, motion, wall, pose, target) in SystemAPI.Query<RefRO<TrackObject>, RefRO<TrackObjectState>,
                 RefRO<Barricade>, RefRO<LocalTransform>>().WithEntityAccess())
             {
                 if (motion.ValueRO.Moving == 0 || motion.ValueRO.Locked != 0) continue;
-                float3 start = track.ValueRO.Start + track.ValueRO.Direction * motion.ValueRO.Distance;
-                float3 end = track.ValueRO.Start + track.ValueRO.Direction * motion.ValueRO.NextDistance;
+                paths.TryGetBuffer(target, out var path);
+                float3 start = TrackPathGeometry.Position(track.ValueRO, path, motion.ValueRO.Distance);
+                float3 end = TrackPathGeometry.Position(track.ValueRO, path, motion.ValueRO.NextDistance);
+                float3 direction = math.normalizesafe(end - start, track.ValueRO.Direction);
                 if (math.distancesq(start, end) < 1e-10f) continue;
                 if (track.ValueRO.DamagingPush != 0)
                     foreach (var contact in SystemAPI.GetBuffer<TrackPushContact>(target))
@@ -38,7 +41,7 @@ namespace CrowdPunch.Systems.Physics
                     if (!TrackPushGeometry.Intersects(character.ValueRO.Position, radius, start, end, pose.ValueRO.Rotation, wall.ValueRO.Size)) continue;
                     if (track.ValueRO.DamagingPush != 0) DamageEnemy(state.EntityManager, target, entity, track.ValueRO.PushDamage);
                     if (!TryDisplace(state.EntityManager, world, target, character.ValueRO.Position, radius, end,
-                        pose.ValueRO.Rotation, wall.ValueRO.Size, track.ValueRO.Direction, out float3 safe)) continue;
+                        pose.ValueRO.Rotation, wall.ValueRO.Size, direction, out float3 safe)) continue;
                     // This is moving-obstacle penetration correction; ordinary movement remains velocity-owned.
                     character.ValueRW.Position = safe;
                 }
@@ -47,7 +50,7 @@ namespace CrowdPunch.Systems.Physics
                 if (track.ValueRO.DamagingPush != 0 && track.ValueRO.PushDamagesPlayer != 0 && RecordPush(state.EntityManager, target, Entity.Null))
                     bridge.ReceiveEnemyHit(track.ValueRO.PushDamage, 0, float3.zero);
                 if (!TryDisplace(state.EntityManager, world, target, bridge.Position, bridge.Radius, end,
-                    pose.ValueRO.Rotation, wall.ValueRO.Size, track.ValueRO.Direction, out float3 playerSafe)) continue;
+                    pose.ValueRO.Rotation, wall.ValueRO.Size, direction, out float3 playerSafe)) continue;
                 bridge.ReceiveObstacleDisplacement(playerSafe);
                 if (SystemAPI.HasSingleton<PlayerSnapshot>())
                 {

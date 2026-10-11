@@ -244,5 +244,84 @@ namespace CrowdPunch.Tests
                 Assert.That(TrackPushGeometry.Intersects(safe, .5f, float3.zero, end, quaternion.identity, size), Is.False);
             }
         }
+
+        private DynamicBuffer<TrackPathPoint> TurningPath(int hand = -1)
+        {
+            track.Length = 20; track.RequiredNetHits = 10; em.SetComponentData(target, track);
+            var path = em.AddBuffer<TrackPathPoint>(target);
+            path.Add(new TrackPathPoint { Position = float3.zero });
+            path.Add(new TrackPathPoint { Position = new float3(0,0,10), Distance = 10 });
+            path.Add(new TrackPathPoint { Position = new float3(hand*10,0,10), Distance = 20 });
+            return path;
+        }
+
+        [TestCase(-1)] [TestCase(1)]
+        public void Track006_CornerAcceptsNextLegForwardAndPreviousLegBackward(int hand)
+        {
+            TurningPath(hand);
+            em.SetComponentData(target,new TrackObjectState { Distance=10, NextDistance=10, TargetStep=5 });
+            Assert.That(Hit(Source(), new float3(0,0,1)),Is.False,"Continuing straight at a turn must not advance the block.");
+            var body=Source();
+            Assert.That(Hit(body,new float3(hand,0,0)),Is.True);
+            Assert.That(Hit(body,new float3(hand,0,0),true),Is.False,"Impact and blast still deduplicate at a corner.");
+            Assert.That(em.GetComponentData<TrackObjectState>(target).TargetStep,Is.EqualTo(6));
+            Assert.That(Hit(Source(),new float3(0,0,-1)),Is.True,"A hit back along the incoming leg must reverse progress.");
+            Assert.That(em.GetComponentData<TrackObjectState>(target).TargetStep,Is.EqualTo(5));
+            em.SetComponentData(target,new TrackObjectState { Distance=12, NextDistance=12, TargetStep=6 });
+            Assert.That(Hit(Source(),new float3(-hand,0,0)),Is.True);
+            Assert.That(Hit(Source(),new float3(0,0,1)),Is.False,"Perpendicular contacts on the new leg remain ineligible.");
+        }
+
+        [Test] public void Track006_QueuedHitsVisitCornerBeforePhysicalDocking()
+        {
+            TurningPath(); var state=new TrackObjectState(); TrackObjectMotion.Retarget(track,ref state,10); em.SetComponentData(target,state);
+            var motion=world.GetOrCreateSystem<TrackObjectMotionSystem>();var arrival=world.GetOrCreateSystem<TrackObjectArrivalSystem>();
+            world.SetTime(new TimeData(.4,.4f)); motion.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<PhysicsVelocity>(target).Linear.x,Is.Zero,"The first sweep must stay on the incoming leg.");
+            arrival.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<LocalTransform>(target).Position,Is.EqualTo(new float3(0,0,10)));
+            Assert.That(em.GetComponentData<TrackObjectState>(target).Locked,Is.Zero);
+            Assert.That(em.GetComponentData<TrackObjectState>(target).Moving,Is.EqualTo(1));
+            Assert.That(em.GetComponentData<Barricade>(target).HitsRemaining,Is.EqualTo(1));
+            world.SetTime(new TimeData(.8,.4f));motion.Update(world.Unmanaged);arrival.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<LocalTransform>(target).Position,Is.EqualTo(new float3(-10,0,10)));
+            Assert.That(em.GetComponentData<TrackObjectState>(target).Locked,Is.EqualTo(1));
+            Assert.That(em.GetComponentData<Barricade>(target).HitsRemaining,Is.Zero);
+        }
+
+        [Test] public void Track006_ReversalVisitsCornerBeforeReturningAlongOldLeg()
+        {
+            TurningPath();var state=new TrackObjectState {Distance=14,NextDistance=14,TargetStep=7};
+            TrackObjectMotion.Retarget(track,ref state,4);em.SetComponentData(target,state);
+            em.SetComponentData(target,LocalTransform.FromPosition(new float3(-4,0,10)));
+            var motion=world.GetOrCreateSystem<TrackObjectMotionSystem>();var arrival=world.GetOrCreateSystem<TrackObjectArrivalSystem>();
+            world.SetTime(new TimeData(.4,.4f));motion.Update(world.Unmanaged);arrival.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<LocalTransform>(target).Position,Is.EqualTo(new float3(0,0,10)));
+            Assert.That(em.GetComponentData<TrackObjectState>(target).Moving,Is.EqualTo(1));
+            world.SetTime(new TimeData(.8,.4f));motion.Update(world.Unmanaged);arrival.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<LocalTransform>(target).Position,Is.EqualTo(new float3(0,0,8)));
+            Assert.That(em.GetComponentData<TrackObjectState>(target).Moving,Is.Zero);
+            Assert.That(em.GetComponentData<TrackObjectState>(target).Locked,Is.Zero);
+        }
+
+        [Test] public void Track006_CharacterPushFollowsTheOutgoingLeg()
+        {
+            TurningPath();var physics=new PhysicsWorld(0,0,0);
+            try
+            {
+                var p=em.CreateEntity(typeof(PhysicsWorldSingleton));em.SetComponentData(p,new PhysicsWorldSingleton {PhysicsWorld=physics});
+                var wall=em.GetComponentData<Barricade>(target);wall.Size=new float3(3);em.SetComponentData(target,wall);
+                em.SetComponentData(target,LocalTransform.FromPosition(new float3(0,0,10)));
+                em.SetComponentData(target,new TrackObjectState {Distance=10,NextDistance=12,Moving=1});
+                var enemy=em.CreateEntity(typeof(Enemy),typeof(NavigationAgent),typeof(EnemyLaunchState),typeof(LocalTransform));
+                em.SetComponentData(enemy,new NavigationAgent {Radius=.5f});
+                em.SetComponentData(enemy,LocalTransform.FromPosition(new float3(-1,0,10)));
+                world.GetOrCreateSystem<TrackCharacterPushSystem>().Update(world.Unmanaged);
+                var position=em.GetComponentData<LocalTransform>(enemy).Position;
+                Assert.That(math.abs(position.z-10),Is.GreaterThan(2),"Safe displacement must use the new leg's sides.");
+                Assert.That(TrackPushGeometry.Intersects(position,.5f,new float3(0,0,10),new float3(-2,0,10),quaternion.identity,wall.Size),Is.False);
+            }
+            finally {physics.Dispose();}
+        }
     }
 }

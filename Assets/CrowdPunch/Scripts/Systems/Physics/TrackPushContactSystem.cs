@@ -15,12 +15,14 @@ namespace CrowdPunch.Systems.Physics
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var (track, motion, wall, pose, contacts) in SystemAPI.Query<RefRO<TrackObject>, RefRO<TrackObjectState>,
-                RefRO<Barricade>, RefRO<LocalTransform>, DynamicBuffer<TrackPushContact>>())
+            var paths = SystemAPI.GetBufferLookup<TrackPathPoint>(true);
+            foreach (var (track, motion, wall, pose, contacts, target) in SystemAPI.Query<RefRO<TrackObject>, RefRO<TrackObjectState>,
+                RefRO<Barricade>, RefRO<LocalTransform>, DynamicBuffer<TrackPushContact>>().WithEntityAccess())
             {
                 contacts.Clear();
                 if (track.ValueRO.DamagingPush == 0 || motion.ValueRO.Moving == 0 || motion.ValueRO.Locked != 0) continue;
-                float3 end = track.ValueRO.Start + track.ValueRO.Direction * motion.ValueRO.NextDistance;
+                paths.TryGetBuffer(target, out var path);
+                float3 end = TrackPathGeometry.Position(track.ValueRO, path, motion.ValueRO.NextDistance);
                 if (math.distancesq(pose.ValueRO.Position, end) < 1e-10f) continue;
                 // Keep contact eligibility even when the solver successfully separates the enemy.
                 foreach (var (character, agent, launch, entity) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<NavigationAgent>, RefRO<EnemyLaunchState>>()

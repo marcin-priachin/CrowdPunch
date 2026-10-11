@@ -149,7 +149,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.GauntletLevel
   playerEntryPoint: {fileID: 700328596}
-  openingHint: Drive the block straight down the rail with five forward hits.
+  openingHint: Launch bodies or blast the block along the turning arrows into the
+    blue socket. Change your shooting side at each corner; opposite hits push it
+    back.
 --- !u!4 &122815238
 Transform:
   m_ObjectHideFlags: 0
@@ -191,7 +193,7 @@ Transform:
   m_GameObject: {fileID: 700328595}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: -15}
+  m_LocalPosition: {x: 20, y: 0.5, z: -26}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

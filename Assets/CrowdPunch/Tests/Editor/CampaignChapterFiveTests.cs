@@ -99,12 +99,10 @@ namespace CrowdPunch.Tests
                     if(n==46)
                     {
                         var track=crowd.barricade.GetComponent<TrackObjectAuthoring>();
-                        var delta=track.destination.position-track.transform.position;
-                        Assert.That(delta.magnitude,Is.EqualTo(10).Within(.001)); Assert.That(Mathf.Abs(delta.x),Is.GreaterThan(4));
-                        Assert.That(track.settings.requiredNetHits,Is.EqualTo(5));
+                        CampaignTrackRouteTests.AssertProgressiveTrack(track,n);
                         Assert.That(track.destination.GetComponentsInChildren<TrackSocketVisualAuthoring>().All(v=>v.trackObject==track),Is.True);
                         var marks=UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None).Where(r=>r.name=="Track rail" || r.name=="Direction arrow").ToArray();
-                        Assert.That(marks.Length,Is.EqualTo(22)); Assert.That(marks.All(r=>r.bounds.max.y>-.99f),Is.True);
+                        Assert.That(marks.Length,Is.EqualTo(18*(Array.IndexOf(CrowdPunch.Editor.GauntletProgressionBuilder.CampaignTrackLevels,n)+1))); Assert.That(marks.All(r=>r.bounds.max.y>-.99f),Is.True);
                     }
                     if(n==47)
                     {

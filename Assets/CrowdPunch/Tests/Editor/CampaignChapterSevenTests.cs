@@ -105,9 +105,7 @@ namespace CrowdPunch.Tests
                     if(n==69)
                     {
                         var track=crowd.barricade.GetComponent<TrackObjectAuthoring>();
-                        var delta=track.destination.position-track.transform.position;
-                        Assert.That(delta.magnitude,Is.EqualTo(10).Within(.001)); Assert.That(Mathf.Abs(delta.x),Is.LessThan(.001));
-                        Assert.That(track.settings.requiredNetHits,Is.EqualTo(5));
+                        CampaignTrackRouteTests.AssertProgressiveTrack(track,n);
                         Assert.That(track.destination.GetComponentsInChildren<TrackSocketVisualAuthoring>().All(v=>v.trackObject==track),Is.True);
                     }
                     var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);

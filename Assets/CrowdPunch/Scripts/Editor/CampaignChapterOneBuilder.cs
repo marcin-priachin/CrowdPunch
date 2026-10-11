@@ -246,6 +246,13 @@ namespace CrowdPunch.Editor
         {
             var main=EditorSceneManager.OpenScene($"{CampaignScenes}Campaign_{number:00}.unity",OpenSceneMode.Single);
             var marker=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
+            int trackIndex = Array.IndexOf(CampaignTrackLevels, number);
+            if (trackIndex > 0)
+            {
+                var start = ProgressiveTrackPoints(trackIndex + 1)[0];
+                ((Transform)marker.FindProperty("playerEntryPoint").objectReferenceValue).position = start + new Vector3(0,-.2f,-6);
+                hint = "Launch bodies or blast the block along the turning arrows into the blue socket. Change your shooting side at each corner; opposite hits push it back.";
+            }
             marker.FindProperty("openingHint").stringValue=hint ?? ChapterOneHints[number-1]; marker.ApplyModifiedPropertiesWithoutUndo();
             EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
         }

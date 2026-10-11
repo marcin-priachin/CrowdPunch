@@ -15,6 +15,8 @@ encounters with separate ECS SubScenes. Levels 4/6 use barricades, 7 uses rotati
 10 uses the copied Gatekeeper arena with unchanged geometry and campaign-owned settings.
 Level 8 has a 100 x 100m floor and four finite waves of 40/60/76/94 enemies (270 total).
 Shared ordinary profiles, original 23 gauntlets and legacy tuning are preserved.
+The 2026-10-11 TRACK-006 update supersedes the straight-rail lengths/hit counts in the
+chapter descriptions below; see Progressive campaign track routes for the current routes.
 
 Chapter 2 adds Exploder and Dasher combinations, a shell/core target in level 12, a barricade
 in 13, bidirectional tracks in 16/19, rotating cover in 17 and the Chicken boss in 20.
@@ -1514,6 +1516,35 @@ hit history and crowd teardown. Scene reload restores the baked state. The three
 eligibility/damage edge cases are exposed as provisional options, with defaults and alternatives
 documented in `OpenQuestions.md`; no wider design question is resolved by these choices.
 See [Track validation](../Validation/TrackObject.md) for evidence, limitations and playtests.
+
+## Progressive campaign track routes (2026-10-11)
+
+TRACK-006 updates the eight campaign track levels, leaving the legacy straight gauntlet
+and level 16 introduction intact. Levels 19/26/32/39/46/54/69 now have 20/30/40/50/60/70/80m
+routes made from 10m legs with alternating 90-degree turns. The 2m hit step gives 10-40 net
+forward hits. Floors, enclosing walls, bounds, entry aprons, navigation participation anchors,
+rail/arrows/socket visuals, crowd banks and hazard positions are authored to clear the full
+route. Existing support populations, replacement policies and hazard timing are retained.
+`CampaignTrackRouteBuilder` applies the upgrade in place and chapter authoring invokes the
+same route recipe; asset and scene identities remain stable.
+
+`TrackObjectAuthoring.corners` is an optional ordered Transform array. `TrackObjectBaker`
+validates horizontal, finite segments and stores positions plus cumulative arc distance in
+an immutable `TrackPathPoint` buffer. Empty corners bake a two-point straight path.
+`TrackObject.Length` is total route distance; its original Direction is the straight fallback
+and first-segment direction. `TrackPathGeometry` resolves positions, local forward/reverse
+hit directions and the next corner. At a vertex, forward impacts use the outgoing tangent;
+reverse impacts use the incoming tangent. Eligibility and per-launch deduplication are unchanged.
+
+The motion, arrival, relative launched-body sweep, pre-physics push-contact and post-physics
+character-displacement systems all use the same route positions. Motion caps each fixed-step
+distance at the next vertex before continuing, so physics and sweeps traverse one leg at a
+time. Even when easing time expires with queued hits, arrival keeps moving until the target
+arc distance is physically reached; an intermediate corner cannot lock or complete the level.
+Block rotation remains fixed, preserving the existing box-collision and navigation-footprint
+semantics. Retry resets arc distance/target to zero against the immutable baked route. Shared
+navigation ownership, hybrid bridges and system ordering are unchanged. See
+[progressive track verification](../Verification/ProgressiveTracks.md).
 
 ## Protected Point And Gauntlet_18 (PROTECT-001..004)
 

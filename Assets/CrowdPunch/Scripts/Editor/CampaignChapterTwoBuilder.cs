@@ -133,6 +133,8 @@ namespace CrowdPunch.Editor
                     CampaignRock(arena,new Vector2(-10,-27),new Vector2Int(7,6)); break;
                 case 19: CopyCampaignObjective(sub,arena,encounter,number,true,new Vector3(5,0,0)); break;
             }
+            int trackIndex = Array.IndexOf(CampaignTrackLevels, number);
+            if (trackIndex > 0) AuthorProgressiveTrackRoute(sub, number, trackIndex + 1);
             EditorSceneManager.MarkSceneDirty(sub);
             EditorSceneManager.SaveScene(sub);
             AssetDatabase.SaveAssets();

@@ -21,9 +21,8 @@ namespace CrowdPunch.Systems.Combat
             var history = em.GetBuffer<BarricadeHitHistory>(target);
             foreach (var hit in history)
                 if (hit.Source == source && hit.LaunchSequence == sequence) return false;
-            direction.y = 0;
-            float along = math.dot(math.normalizesafe(direction), track.Direction);
-            int step = math.abs(along) <= .00001f ? 0 : along > 0 ? 1 : -1;
+            var path = em.HasBuffer<TrackPathPoint>(target) ? em.GetBuffer<TrackPathPoint>(target, true) : default;
+            int step = TrackPathGeometry.SignedStep(track, path, state.Distance, direction);
             int next = math.clamp(state.TargetStep + step, 0, track.RequiredNetHits);
             bool changes = next != state.TargetStep;
             if (changes || track.ConsumeNonMovingHits != 0)

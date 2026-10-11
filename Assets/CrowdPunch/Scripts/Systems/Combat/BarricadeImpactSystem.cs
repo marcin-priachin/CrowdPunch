@@ -161,7 +161,9 @@ namespace CrowdPunch.Systems.Combat
             if (!em.HasComponent<TrackObject>(entity)) return float3.zero;
             var track = em.GetComponentData<TrackObject>(entity);
             var motion = em.GetComponentData<TrackObjectState>(entity);
-            return track.Direction * (TrackObjectMotion.Next(track, ref motion, dt) - motion.Distance);
+            var path = em.HasBuffer<TrackPathPoint>(entity) ? em.GetBuffer<TrackPathPoint>(entity, true) : default;
+            float next = TrackObjectMotion.Next(track, path, ref motion, dt);
+            return TrackPathGeometry.Position(track, path, next) - TrackPathGeometry.Position(track, path, motion.Distance);
         }
     }
 }

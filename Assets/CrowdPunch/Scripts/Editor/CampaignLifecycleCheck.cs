@@ -223,7 +223,7 @@ namespace CrowdPunch.Editor
                 Require(tracks.CalculateEntityCount()==1,"Track missing.");
                 var target=tracks.GetSingletonEntity(); var track=em.GetComponentData<TrackObject>(target);
                 var motion=em.GetComponentData<TrackObjectState>(target);
-                Require(track.RequiredNetHits==(level==53?6:5) && motion.Locked==0,"Track was not baked ready to play.");
+                Require(track.RequiredNetHits==5*(Array.IndexOf(GauntletProgressionBuilder.CampaignTrackLevels,level+1)+1) && motion.Locked==0,"Track was not baked ready to play.");
                 CrowdPunch.Systems.Physics.TrackObjectMotion.Retarget(track,ref motion,track.RequiredNetHits);
                 em.SetComponentData(target,motion);
                 Record("INJECT track destination; actual physics slide/arrival must complete the encounter.");

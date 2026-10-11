@@ -18,11 +18,13 @@ namespace CrowdPunch.Systems.Physics
         public void OnUpdate(ref SystemState state)
         {
             float dt = SystemAPI.Time.DeltaTime;
-            foreach (var (track, motion, transform, velocity) in
-                SystemAPI.Query<RefRO<TrackObject>, RefRW<TrackObjectState>, RefRO<LocalTransform>, RefRW<PhysicsVelocity>>())
+            var paths = SystemAPI.GetBufferLookup<TrackPathPoint>(true);
+            foreach (var (track, motion, transform, velocity, entity) in
+                SystemAPI.Query<RefRO<TrackObject>, RefRW<TrackObjectState>, RefRO<LocalTransform>, RefRW<PhysicsVelocity>>().WithEntityAccess())
             {
-                motion.ValueRW.NextDistance = TrackObjectMotion.Next(track.ValueRO, ref motion.ValueRW, dt);
-                float3 next = track.ValueRO.Start + track.ValueRO.Direction * motion.ValueRO.NextDistance;
+                paths.TryGetBuffer(entity, out var path);
+                motion.ValueRW.NextDistance = TrackObjectMotion.Next(track.ValueRO, path, ref motion.ValueRW, dt);
+                float3 next = TrackPathGeometry.Position(track.ValueRO, path, motion.ValueRO.NextDistance);
                 velocity.ValueRW = new PhysicsVelocity { Linear = (next - transform.ValueRO.Position) / math.max(.0001f, dt) };
             }
         }

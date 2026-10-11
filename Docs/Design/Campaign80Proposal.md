@@ -71,7 +71,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | 16 | Push the Block / knock into place | 32 x 38 open court, longitudinal rail, ample end access; side support | Hold 8B; 5 net forward hits | None | Breather: direction determines forward or backward progress | 75-105s |
 | 17 | Moving Window / destroy rotating-cover target | 36 x 32 broad ring with two outside rock shelves; north/south support | Hold 10B+2X; 3 hits; 90-degree opening, continuous 25 degrees/s | None | Send Exploders through the opening; outside blasts cannot bypass cover | 90-120s |
 | 18 | Crowd Reaction / clear waves | 100 x 100 court with three widely separated rock clusters and long diagonal lanes; north, west, east, split north banks | 48B+4X > 64B+4R+2D > 80B+6X+2D > 96B+4R+4X+4D | None | Large crowd encounter: explosive chains and committed charges through dense groups | 3.5-4.5min |
-| 19 | Push from Behind / knock into place | 30 x 42 off-centre rail, broad outer return lane; west/east support | Hold 8B+2X; 5 net forward hits | None | Pre-boss breather: place explosions on the useful side of the block | 60-90s |
+| 19 | Push from Behind / knock into place | 34 x 40 left-turn court; two 10m legs; clear corners and endpoints; outer side support | Hold 8B+2X; 10 net forward hits | None | Pre-boss breather: place explosions on the useful side of the block | 60-90s |
 | 20 | Chicken Run / defeat boss | Preserve Gauntlet_20 open arena and solid perimeter | Hold 6B; existing single/paired shot stages | None | Return punchable shots while respecting dangerous rebounds | 2-3min |
 
 ## Chapter 3: Pressure and Space
@@ -83,7 +83,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | 23 | Borrowed Fist / clear waves | 36 x 36 wide court with unobstructed diagonal; far-bank support | 10B+1E > 14B+2R+1E | None | Elite introduction: read and disrupt an enemy-owned body shot | 90-120s |
 | 24 | Hold the Line / protect point through finite waves | 32 x 96 lane, broad open middle, zone at south end; north spawns | 12B > 16B > 20B; batch 4/4s; first breach fails | None | Defense introduction; hit approaching bodies away from the zone | 90-120s |
 | 25 | Hot Ground / clear waves | 34 x 34 rounded rectangle, off-centre hot island; north/east banks | 10B > 14B+2R | G1 centre-left | Introduce permanent ground danger with a wide safe bypass | 75-105s |
-| 26 | Safe Side / knock into place | 34 x 40 rail on east half, wide west approach; north/south side rectangles | Hold 10B+2X; 5 net forward hits | G1 west outer pocket | Use a hazard as an optional crowd opportunity without blocking the rail | 90-120s |
+| 26 | Safe Side / knock into place | 34 x 42 right-turn stair court; three 10m legs; clear corners and endpoints; outer side support | Hold 10B+2X; 15 net forward hits | G1 lower outer pocket | Use a hazard as an optional crowd opportunity without blocking the rail | 90-120s |
 | 27 | Wait for the Warning / clear waves | 36 x 38 two broad lanes around short island; north then side banks | 10B+1D > 14B+2R+2D | P1 west lane | Introduce periodic warning/active cycle; keep an always-safe route | 75-105s |
 | 28 | Crowd Channels / clear waves | 100 x 100 court, two staggered long islands with broad end gaps; north, west, east, split side banks | 56B+3A > 72B+4R+1E > 88B+4D+4X > 104B+4A+2E; armor safeguard | G1 outer pocket and P2 side crossings; continuous safe routes | Large crowd encounter: line up armor and elite threats through the crowd | 3.5-4.5min |
 | 29 | Window of Safety / destroy rotating-cover target | 38 x 36 ring court, asymmetric outer rocks; south/east support | Hold 10B; 3 hits; 100-degree opening, continuous 20 degrees/s | None | Pre-boss breather: a familiar target with generous shot windows | 60-90s |
@@ -94,14 +94,14 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | Level | Name / one main objective | Layout and spawn directions | Composition and waves | Static hazards | Teaching purpose / pacing | Target |
 |---|---|---|---|---|---|---|
 | 31 | Purple Warning / clear waves | 34 x 34 open clipped court; far bank | 6B+1W > 12B+2W; Wizard safeguards | None | Gentle Wizard introduction; move out of zones, launch into casters | 75-105s |
-| 32 | Quiet Delivery / knock into place | 34 x 38 diagonal rail, open end pockets; east/west support | Hold 10B; 5 net forward hits | None | Familiar precision breather before next introduction | 60-90s |
+| 32 | Quiet Delivery / knock into place | 42 x 42 left-turn stair court; four 10m legs; clear corners and endpoints; outer side support | Hold 10B; 20 net forward hits | None | Familiar precision breather before next introduction | 60-90s |
 | 33 | Leave a Trail / clear waves | 36 x 36 open rounded diamond; far-bank waves | 6B+1T > 12B+2T | None | Trail introduction; redirect its path, avoid lingering sections | 75-105s |
 | 34 | Break the Detour / break barricade and reach exit | 32 x 44 dogleg with two broad bends; lateral support | Hold 12B+2X; 4 hits | P1 optional inner shortcut | Remix gate and ground timing without new enemy rules | 90-120s |
 | 35 | Moving Perimeter / destroy rotating-cover target | 40 x 38 open ring, three outer pockets; alternating safe support regions | Hold 12B+1T; 4 hits; 100-degree opening, continuous 25 degrees/s | None | Aim while a moving Trail changes safe positioning | 90-120s |
 | 36 | Distant Defense / protect point through finite waves | 32 x 96 lane with two widely offset rock islands; north spawns | 16B+2R > 20B+1D > 20B+2R+1W; batch 4/3s | None | First mixed defense; Wizard behavior follows defense targeting rules | 90-120s |
 | 37 | Blast Shelter / destroy shell and core target | 36 x 34 side-notched court, two rear rocks, open central target | Hold 12B plus specialized pair of 2X; 3 shell explosions | G1 far outer corner | Recovery encounter: known explosion objective and ample safe ground | 75-105s |
 | 38 | The Crowd Moves / clear waves | 100 x 100 court with four shallow perimeter bays and open diagonal lanes; west, east, north, split side banks | 64B+4R+2W > 80B+4D+2T > 96B+4A+2E > 112B+4X+2W+2T; armor/Wizard safeguards | None | Large crowd encounter: redirect living hazards through groups and separate specialist threats | 3.5-4.5min |
-| 39 | Last Alignment / knock into place | 34 x 42 rail along clear centre, twin side bays; lateral support | Hold 10B; 5 net forward hits | None | Pre-boss breather: place body shots into an environmental target | 60-90s |
+| 39 | Last Alignment / knock into place | 42 x 52 right-turn stair court; five 10m legs; clear corners and endpoints; outer side support | Hold 10B; 25 net forward hits | None | Pre-boss breather: place body shots into an environmental target | 60-90s |
 | 40 | Falling Giants / defeat Dino with pillars | Preserve Gauntlet_22 arena and all three pillar positions | Hold 8B general support plus 2B per unconsumed pillar | None | Bait pursuit and topple pillars with player-owned bodies; 3 successful hits | 2-3min |
 
 ## Chapter 5: Better Angles
@@ -113,9 +113,9 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | 43 | Turn the Shot / clear waves | 38 x 36 court with three widely spaced islands; west/east banks | 16B+2R+1E > 18B+2D+1E | None | Fight Elite shot setups from useful angles | 90-120s |
 | 44 | Stop and Go / destroy rotating-cover target | 40 x 36 unequal outer bays around enclosure; side support | Hold 12B+2R+1X; 4 hits; 85-degree opening, rotate 3s at 30 degrees/s / pause 1s | None | Existing cover pause mode rewards planning a shot | 90-120s |
 | 45 | Armor in Motion / clear waves | 38 x 40 clipped corridor with cross lanes; north/east/west banks | 14B+2A > 16B+2D+2A > 18B+2R+1E; armor safeguard | P1 side crossing | Pressure peak through composition and route choice | 90-120s |
-| 46 | Measured Push / knock into place | 36 x 40 wide oblique rail with open rear apron; two side rectangles | Hold 10B+2X; 5 net forward hits | None | Mid-chapter relief; control direction and rebound space | 75-105s |
+| 46 | Measured Push / knock into place | 52 x 52 left-turn stair court; six 10m legs; clear corners and endpoints; outer side support | Hold 10B+2X; 30 net forward hits | None | Mid-chapter relief; control direction and rebound space | 75-105s |
 | 47 | Divided Approach / protect point through finite waves | 32 x 96 lane, long island splitting north approach, merged south half | 20B+2R > 24B+2D > 24B+2X; batch 4/3s | None | Reposition between separated defense approaches | 90-120s |
-| 48 | Firebreak / clear waves | 100 x 100 court with two broad side basins linked through a wide centre; north, west, east, split north, side banks | 64B+6X > 80B+4R+2T > 88B+4A+2E > 104B+4D+2W > 120B+6X+2T; safeguards | G2 in outer pockets | Large crowd encounter: choose chain-reaction angles while moving between open basins | 4-5min |
+| 48 | Firebreak / clear waves | 100 x 100 court with two broad side basins linked through a wide centre; north, west, east, split north, side banks | 64B+6X > 80B+4R+2T > 88B+4A+2E > 104B+4D+2W > 120B+6X+2T; safeguards | G2 in outer pknock into placeockets | Large crowd encounter: choose chain-reaction angles while moving between open basins | 4-5min |
 | 49 | Make Room / clear waves | 34 x 34 open fan with two boundary outcrops; far bank | 14B+1W > 18B+2R; Wizard safeguards | None | Breather before Gatekeeper rematch | 75-105s |
 | 50 | Gatekeeper Returns / defeat boss | Exact Gatekeeper arena geometry; safe interior support | Hold 12B+1R; at most one live non-Baseline; three stages | P2 in side sectors, clear central shooting apron | Harder positioning; 0.65/0.65/0.85s warnings, retain recoveries; 360 health | 3-4min |
 
@@ -126,7 +126,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | 51 | Fresh Fuse / destroy shell and core target | 34 x 36 broad oval with one empty rear bay; side support | Hold 10B plus specialized pair of 2X; 3 shell explosions | None | Low-pressure return to deliberate explosives after boss | 75-105s |
 | 52 | Crossing Paths / clear waves | 38 x 40 S-edged court, two offset islands; west/east waves | 16B+2D+1T > 20B+2R+2T | None | Launch a Trail across a useful lane while dodging charges | 90-120s |
 | 53 | Reverse the Window / destroy rotating-cover target | 40 x 40 unequal octagon, north rock shelf; east/west support | Hold 14B+2X; 4 hits; 90-degree opening, 30 degrees/s, reversal every 5s | None | Existing reversal mode; read motion instead of memorizing a rhythm | 90-120s |
-| 54 | Push Under Pressure / knock into place | 38 x 44 off-axis rail between two broad bays; side support | Hold 14B+2X; 6 net forward hits | P2 away from rail endpoints | Precision objective under alternating spatial pressure | 90-120s |
+| 54 | Push Under Pressure / knock into place | 52 x 62 right-turn stair court; seven 10m legs; clear corners and endpoints; outer side support | Hold 14B+2X; 35 net forward hits | P2 away from rail endpoints | Precision objective under alternating spatial pressure | 90-120s |
 | 55 | Disrupt the Casters / clear waves | 40 x 40 triangular-island court; north/east/west waves | 14B+2W > 18B+2R+2W > 18B+2A+1W; safeguards | None | Chapter peak: approach casters through crowd and armor | 90-120s |
 | 56 | Clean Break / break barricade and reach exit | 32 x 42 broad funnel, one short offset screen; side support | Hold 12B+2X; 4 hits | None | Recovery objective with straightforward shot access | 75-105s |
 | 57 | Long Watch / protect point through finite waves | 32 x 96 three staggered approach islands, broad recovery area before zone | 20B+2R > 24B+2D > 24B+2X; batch 4/3s | None | Familiar defense under mixed approach pressure; first breach fails | 90-120s |
@@ -146,7 +146,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | 66 | Set the Pace / destroy rotating-cover target | 38 x 40 offset ring with broad southern bay; lateral support | Hold 12B+2X; 4 hits; 90-degree opening, 25 degrees/s, successful-hit pause 1s | None | Relief: exploit the existing hit-pause option | 75-105s |
 | 67 | Keep It Moving / clear waves | 42 x 40 staggered islands, continuous outside lane; north/east waves | 20B+2R+1E > 22B+2A+2D; armor safeguard | P2 between islands, bypasses open | Retain good body-shot angles as safe lanes change | 90-120s |
 | 68 | Shifting Front / clear waves | 100 x 100 four-bay court with widely separated islands and a broad central cross; spawn bank changes each wave | 64B+4R > 80B+6X > 88B+4A+2E > 96B+4D+2T > 112B+4R+2W > 128B+4A+6X; safeguards | P3 around outer islands, broad bypasses retained | Large crowd encounter: shift shot angles and use safe ground during sustained waves | 4-5min |
-| 69 | Straighten Up / knock into place | 36 x 40 straight rail with wide clear backing area and two side notches | Hold 10B+2X; 5 net forward hits | None | Pre-boss recovery with deliberate directional hits | 60-90s |
+| 69 | Straighten Up / knock into place | 62 x 62 left-turn stair court; eight 10m legs; clear corners and endpoints; outer side support | Hold 10B+2X; 40 net forward hits | None | Pre-boss recovery with deliberate directional hits | 60-90s |
 | 70 | Rolling Pressure / defeat boss | Exact Rolling Blob arena and obstacle geometry | Hold 8B+2X; existing three stages | P2 in outer pockets, all broad boss lanes retained | Existing physical-reflection mode; 600 health; pause 2.5/1.8/1.2s, same roll speeds | 3-4min |
 
 ## Chapter 8: Crowd Mastery
@@ -163,6 +163,12 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | 78 | Claim the Ground / clear waves | 100 x 100 court, staggered rock crescents forming broad linked combat areas; north, west, east, split north, split sides, far banks | 72B+4R > 88B+6X+2D > 96B+4A+2E > 104B+2W+2T > 120B+4R+4D > 136B+4A+6X+2E; safeguards | P2 outer lanes, safe central routes | Final large crowd encounter: sustained chain reactions using all learned positioning skills | 4-5min |
 | 79 | Room to Breathe / clear waves | 38 x 34 open rounded trapezoid, isolated far rock; far banks | 14B+2X > 18B+2R+1A; armor safeguard | None | Short release before final boss; deliberate clean launches | 60-90s |
 | 80 | Giants Fall Again / defeat Dino with pillars | Exact Dino arena and three pillar positions | Hold 10B+1R+1D general support plus 2B per unconsumed pillar | P2 between outer approaches; pillar setup areas remain safe | Three successful pillars; existing chase intervals 6/4.5/3.5s, 1s warning; toward-boss fall | 3-5min |
+
+2026-10-11 update: TRACK-006 replaces the former equal-length straight/diagonal rails with
+successive 10m additions and left/right route turns. Level 16 retains its 10m introduction;
+later routes are 20-80m with clear corners, adjusted floors/entries and separated spawn banks.
+The implementation preserves the original 2m step, giving 5/10/15/20/25/30/35/40 net forward
+hits. Earlier short-clear timing targets for these longer objectives require fresh playtesting.
 
 ## Rules carried into implementation
 

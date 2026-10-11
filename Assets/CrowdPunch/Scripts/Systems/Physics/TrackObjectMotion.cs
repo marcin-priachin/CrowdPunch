@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using Unity.Entities;
 using Unity.Mathematics;
 
 namespace CrowdPunch.Systems.Physics
@@ -24,5 +25,8 @@ namespace CrowdPunch.Systems.Physics
             float target = track.Length * state.TargetStep / track.RequiredNetHits;
             return math.lerp(state.SlideStart, target, t * t * (3 - 2 * t));
         }
+
+        public static float Next(in TrackObject track, DynamicBuffer<TrackPathPoint> path, ref TrackObjectState state, float dt)
+            => TrackPathGeometry.StopAtCorner(path, state.Distance, Next(track, ref state, dt));
     }
 }

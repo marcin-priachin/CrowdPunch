@@ -58,7 +58,7 @@ The player approaches or is pressured by a crowd, chooses position and launch di
 
 Status: Must
 
-The campaign contains exactly 80 levels in eight chapters of ten. Every tenth level is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce all existing enemies, objectives and hazards by level 40. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
+The campaign contains exactly 80 levels in eight chapters of ten. Every tenth level is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce all existing enemies, objectives and hazards by level 40. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
 
 Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 23 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
 
@@ -484,6 +484,24 @@ objectives or a survivor-clearing requirement. Exact geometry, timing and compos
 The final conversation delegates implementation details for optional damage cadence, safe displacement,
 numerical tolerance and edge-case eligibility. Provisional implementation options are recorded in
 `OpenQuestions.md`; their defaults do not establish additional accepted design requirements.
+
+### TRACK-006 - Progressive Campaign Routes
+
+Status: Must
+
+Each successive campaign level with the knock-into-place objective adds one original
+10m rail length. Levels 16/19/26/32/39/46/54/69 therefore use 10/20/30/40/50/60/70/80m
+routes. The introduction remains straight; later routes contain left or right turns.
+Adjust each arena layout, entry, support spawn banks and hazards to leave clear shooting
+and return space around every segment and corner. Preserve TRACK-001..005's bidirectional
+progress, eligible impacts, physical docking and bounded replenishment.
+
+Implementation tuning uses 2m per eligible hit, five net forward hits per original length,
+and alternating 90-degree turns along mirrored staircase routes. These are delegated
+geometry/step choices for the requested length progression, subject to playtesting.
+At an exact corner, the outgoing leg accepts forward shots and the incoming leg accepts
+reverse shots; hits continuing into the space beyond either leg do not advance it.
+The block follows each rail segment through physics without cutting across a corner.
 
 ## Effects And Combinations
 

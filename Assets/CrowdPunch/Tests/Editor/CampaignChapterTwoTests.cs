@@ -122,16 +122,14 @@ namespace CrowdPunch.Tests
                     if (n==16 || n==19)
                     {
                         var track = wall.GetComponent<TrackObjectAuthoring>();
-                        Assert.That(track.settings.requiredNetHits,Is.EqualTo(5));
+                        CampaignTrackRouteTests.AssertProgressiveTrack(track,n);
                         Assert.That(AssetDatabase.GetAssetPath(track.settings),Does.StartWith(Data));
-                        Assert.That(track.destination.position.z-wall.transform.position.z,Is.EqualTo(10));
-                        Assert.That(track.transform.position.x,Is.EqualTo(n==19?5:0));
                         var socket = track.destination.GetComponentsInChildren<TrackSocketVisualAuthoring>();
                         Assert.That(socket.Length,Is.EqualTo(3));
                         Assert.That(socket.All(v=>v.trackObject==track),Is.True);
                         var markings=UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None)
                             .Where(r=>r.name=="Track rail" || r.name=="Direction arrow").ToArray();
-                        Assert.That(markings.Length,Is.EqualTo(22));
+                        Assert.That(markings.Length,Is.EqualTo(n==16?22:36));
                         Assert.That(markings.All(r=>r.bounds.max.y>-.99f),Is.True,"Track markings must remain above the floor after copying.");
                         Assert.That(crowd.Waves.Single().TotalEnemyCount,Is.EqualTo(n==19?10:8));
                     }
