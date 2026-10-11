@@ -38,6 +38,7 @@ namespace CrowdPunch.Bakers
             });
             AddBuffer<BarricadeHitHistory>(e);
             AddBuffer<BarricadeRebound>(e);
+            AddComponent<BarricadeFeedbackState>(e);
         }
     }
 }

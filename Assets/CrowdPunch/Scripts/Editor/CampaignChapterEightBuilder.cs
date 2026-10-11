@@ -158,6 +158,8 @@ namespace CrowdPunch.Editor
                     CampaignGround(encounter,number,"East outer lane",new Vector2(43,32),true,4); break;
                 case 79: CampaignRock(arena,new Vector2(0,12),new Vector2Int(4,3)); break;
             }
+            int gateIndex = Array.IndexOf(CampaignBarricadeLevels, number);
+            if (gateIndex > 0) AuthorBarricadeRooms(sub, number, gateIndex);
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub); AssetDatabase.SaveAssets();
         }
 

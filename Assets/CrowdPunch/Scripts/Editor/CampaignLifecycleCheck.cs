@@ -23,6 +23,7 @@ namespace CrowdPunch.Editor
         private static int FirstLevel => (Chapter-1)*10;
         private static string Output => $"Temp/CampaignValidation/chapter{Chapter}-lifecycle.txt";
         private static int level=-1,wave=-1,observedWaves,phase;
+        private static Entity observedOwner;
         private static double at,entered;
         private static bool testedDeath,waitingForRetry;
         private static bool testedBreach,waitingForBreachRetry;
@@ -98,7 +99,7 @@ namespace CrowdPunch.Editor
                     Record($"PASS previous chapter milestone unlocks Chapter {Chapter}; Continue loads its first level.");
                     flow.ContinueCampaign(); return;
                 }
-                int next=Chapter*10, expectedWaves=Chapter==1?19:Chapter==2?17:Chapter==3?20:Chapter==4?18:Chapter==5?22:Chapter==8?24:21;
+                int next=Chapter*10, expectedWaves=Chapter==1?19:Chapter==2?17:Chapter==3?21:Chapter==4?20:Chapter==5?25:Chapter==8?30:Chapter==6?25:26;
                 Require(observedWaves==expectedWaves,"Unexpected observed wave count: "+observedWaves);
                 Require(flow.CurrentLevelIndex==next-1 && flow.NextUnfinished==next,"Incorrect chapter milestone.");
                 if(next==80) Require(flow.Screen==CampaignScreen.CampaignComplete && !flow.CanSelect(80) && !flow.Progress.IsUnlocked(flow.Campaign,80),"Final campaign completion gate failed.");
@@ -130,14 +131,36 @@ namespace CrowdPunch.Editor
             // clock before waiting for its SubScene, not after the sequence finishes baking.
             if(level!=flow.CurrentLevelIndex)
             {
-                level=flow.CurrentLevelIndex; wave=-1; entered=now; hazardPhases=0; testedBreach=false;
+                level=flow.CurrentLevelIndex; wave=-1; entered=now; hazardPhases=0; testedBreach=false; observedOwner=Entity.Null;
                 Require(player.CurrentHealth==player.MaxHealth,"Level entry did not restore full health.");
                 Record($"ENTER {level+1:00}: {flow.GetLevelName(level)}; full health.");
             }
             var em=world.EntityManager; em.CompleteAllTrackedJobs();
             using var query=em.CreateEntityQuery(typeof(EnemyWaveSequence));
-            if(query.CalculateEntityCount()!=1) { Require(now-entered<90,"Expected one loaded encounter sequence."); return; }
-            var owner=query.GetSingletonEntity(); var sequence=em.GetComponentData<EnemyWaveSequence>(owner);
+            using var owners=query.ToEntityArray(Allocator.Temp);
+            if(owners.Length==0) { Require(now-entered<90,"Expected loaded encounter sequences."); return; }
+            var owner=owners[0];
+            if(owners.Length>1)
+            {
+                owner=Entity.Null; float first=float.MaxValue;
+                foreach(var candidate in owners)
+                {
+                    if(!em.HasComponent<BarricadeCrowdSequence>(candidate)) continue;
+                    var gate=em.GetComponentData<BarricadeCrowdSequence>(candidate).Barricade;
+                    if(em.GetComponentData<Barricade>(gate).HitsRemaining<=0) continue;
+                    float z=em.GetComponentData<Unity.Transforms.LocalTransform>(gate).Position.z;
+                    if(z<first) {first=z;owner=candidate;}
+                }
+                if(owner==Entity.Null) return;
+                var room=em.GetComponentData<BarricadeRoom>(owner);
+                if(room.Activated==0)
+                {
+                    var point=(room.Minimum+room.Maximum)*.5f;
+                    player.GetComponent<PlayerController>().SetLevelEntryPoint(new Vector3(point.x,.5f,point.y),Quaternion.identity); return;
+                }
+            }
+            if(observedOwner!=owner) {observedOwner=owner;wave=-1;}
+            var sequence=em.GetComponentData<EnemyWaveSequence>(owner);
             Require(sequence.Phase!=EnemyWaveRuntimePhase.Invalid,"Invalid baked wave in level "+(level+1));
             Require(now-entered<160,"Encounter stalled in level "+(level+1));
             using var enemiesQuery=em.CreateEntityQuery(typeof(EnemyWaveOwnership),typeof(EnemyLaunchState));
@@ -145,12 +168,12 @@ namespace CrowdPunch.Editor
             foreach(var e in enemies)
             {
                 var ownership=em.GetComponentData<EnemyWaveOwnership>(e);
-                Require(ownership.Sequence==owner && ownership.RunGeneration==sequence.RunGeneration,"Encounter-owned enemy leaked across transition/retry.");
+                Require(owners.Contains(ownership.Sequence) && ownership.RunGeneration==em.GetComponentData<EnemyWaveSequence>(ownership.Sequence).RunGeneration,"Encounter-owned enemy leaked across transition/retry.");
             }
             if(Chapter>=3)
             {
                 using var hazards=em.CreateEntityQuery(typeof(GroundHazard),typeof(GroundHazardState));
-                int expectedHazards=Chapter==3?(level==27?3:level>=24 && level<=26?1:0):Chapter==4?(level==33 || level==36?1:0):Chapter==5?(level==41 || level==47 || level==49?2:level==44?1:0):Chapter==6?(level==49 || level==53 || level==57 || level==59?2:0):Chapter==8?(level==69 || level==72 || level==73 || level==77 || level==79?2:0):(level==59 || level==61 || level==63 || level==66 || level==69?2:level==64?1:level==67?3:0);
+                int expectedHazards=Chapter==3?(level==27?3:level>=24 && level<=26?1:0):Chapter==4?(level==33?3:level==36?1:0):Chapter==5?(level==41?8:level==47 || level==49?2:level==44?1:0):Chapter==6?(level==49 || level==53 || level==57 || level==59?2:0):Chapter==8?(level==73?14:level==69 || level==72 || level==77 || level==79?2:0):(level==61?12:level==59 || level==63 || level==66 || level==69?2:level==64?1:level==67?3:0);
                 Require(hazards.CalculateEntityCount()==expectedHazards,"Hazard leakage or missing baked patches.");
                 using var patches=hazards.ToComponentDataArray<GroundHazardState>(Allocator.Temp);
                 foreach(var patch in patches) hazardPhases|=1<<(int)patch.Phase;
@@ -198,8 +221,8 @@ namespace CrowdPunch.Editor
             if(level==3 || level==5 || level==6 || level==11 || level==12 || level==16 || level==21 || level==28 || level==33 || level==34 || level==36 || level==41 || level==43 || level==50 || level==52 || level==55 || level==61 || level==63 || level==65 || level==71 || level==73 || level==75)
             {
                 using var walls=em.CreateEntityQuery(typeof(Barricade));
-                Require(walls.CalculateEntityCount()==1,"Objective missing.");
-                var target=walls.GetSingletonEntity(); var wall=em.GetComponentData<Barricade>(target);
+                Require(walls.CalculateEntityCount()>0,"Objective missing.");
+                var target=em.GetComponentData<BarricadeCrowdSequence>(owner).Barricade; var wall=em.GetComponentData<Barricade>(target);
                 if(level==11 || level==36 || level==50 || level==63 || level==75)
                 {
                     var shell=em.GetComponentData<ShellTarget>(target);

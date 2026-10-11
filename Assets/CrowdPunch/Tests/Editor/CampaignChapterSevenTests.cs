@@ -72,7 +72,7 @@ namespace CrowdPunch.Tests
                     Assert.That(crowd.Waves.All(w=>w.Enemies.Sum(e=>e.MinimumCount)==w.TotalEnemyCount && w.Enemies.All(e=>e.Weight==0)),Is.True);
                     CampaignChapterTwoTests.AssertNavigationClearance(UnityEngine.Object.FindFirstObjectByType<NavigationArenaAuthoring>(),n);
                     if(n==61) Assert.That(crowd.Waves[0].ArmoredAmmunitionProfile,Is.Not.Null);
-                    if(n==62) AssertOffsetGate(crowd.barricade);
+                    if(n==62) CampaignBarricadeRoomTests.AssertRooms(n);
                     if(n==63)
                     {
                         Assert.That(crowd.Waves[0].WizardAmmunitionProfile,Is.Not.Null);
@@ -109,10 +109,10 @@ namespace CrowdPunch.Tests
                         Assert.That(track.destination.GetComponentsInChildren<TrackSocketVisualAuthoring>().All(v=>v.trackObject==track),Is.True);
                     }
                     var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);
-                    Assert.That(patches.Length,Is.EqualTo(n==62||n==64||n==67||n==70?2:n==65?1:n==68?3:0));
+                    Assert.That(patches.Length,Is.EqualTo(n==62?12:n==64||n==67||n==70?2:n==65?1:n==68?3:0));
                     foreach(var patch in patches)
                     {
-                        Assert.That(patch.sequence,Is.EqualTo(crowd)); Assert.That(patch.shape,Is.EqualTo(GroundHazardShape.Rectangle));
+                        Assert.That(UnityEngine.Object.FindObjectsByType<EnemyWaveSequenceAuthoring>(FindObjectsSortMode.None).Contains(patch.sequence),Is.True); Assert.That(patch.shape,Is.EqualTo(GroundHazardShape.Rectangle));
                         Assert.That(patch.width,Is.EqualTo(3)); Assert.That(patch.depth,Is.EqualTo(n==64?6:8));
                         Assert.That(patch.operation,Is.EqualTo(n==64?GroundHazardOperation.AlwaysActive:GroundHazardOperation.Periodic));
                         Assert.That(patch.inactiveDuration,Is.EqualTo(4)); Assert.That(patch.warningDuration,Is.EqualTo(1.5f)); Assert.That(patch.activeDuration,Is.EqualTo(2.5f));
@@ -138,25 +138,6 @@ namespace CrowdPunch.Tests
                 }
             }
             finally { Restore(setup); }
-        }
-
-        private static void AssertOffsetGate(BarricadeAuthoring gate)
-        {
-            Assert.That(gate.size.x,Is.EqualTo(2)); Assert.That(gate.settings.requiredHits,Is.EqualTo(4));
-            Assert.That(gate.transform.position.x,Is.EqualTo(8));
-            Assert.That(gate.exit.position.x,Is.EqualTo(8)); Assert.That(gate.exit.position.z,Is.GreaterThan(gate.transform.position.z));
-            var sides=UnityEngine.Object.FindObjectsByType<SolidObstacleAuthoring>(FindObjectsSortMode.None).Where(o=>o.name.StartsWith("Gate terrain")).OrderBy(o=>o.transform.position.x).ToArray();
-            Assert.That(sides.Length,Is.EqualTo(2));
-            Assert.That(sides[0].transform.position.x+sides[0].Size.x*.5f,Is.EqualTo(7));
-            Assert.That(sides[1].transform.position.x-sides[1].Size.x*.5f,Is.EqualTo(9));
-            Assert.That(sides[0].transform.position.x-sides[0].Size.x*.5f,Is.LessThanOrEqualTo(-18));
-            Assert.That(sides[1].transform.position.x+sides[1].Size.x*.5f,Is.GreaterThanOrEqualTo(18));
-            foreach(var side in sides)
-            {
-                float front=side.transform.position.z-side.Size.y*.5f;
-                Assert.That(front,Is.GreaterThan(gate.transform.position.z-gate.size.z*.5f));
-                Assert.That(front,Is.LessThan(gate.transform.position.z+gate.size.z*.5f));
-            }
         }
 
         [Test] public void Roll006_RematchPreservesOriginalArenaGeometryAndLegacyTuning()

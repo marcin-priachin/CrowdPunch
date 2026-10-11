@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-10-10
+Last inspected: 2026-10-11
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -17,6 +17,7 @@ Level 8 has a 100 x 100m floor and four finite waves of 40/60/76/94 enemies (270
 Shared ordinary profiles, original 23 gauntlets and legacy tuning are preserved.
 The 2026-10-11 TRACK-006 update supersedes the straight-rail lengths/hit counts in the
 chapter descriptions below; see Progressive campaign track routes for the current routes.
+BARRICADE-007 likewise supersedes their single-gate layouts; see Progressive barricade rooms.
 
 Chapter 2 adds Exploder and Dasher combinations, a shell/core target in level 12, a barricade
 in 13, bidirectional tracks in 16/19, rotating cover in 17 and the Chicken boss in 20.
@@ -1545,6 +1546,53 @@ Block rotation remains fixed, preserving the existing box-collision and navigati
 semantics. Retry resets arc distance/target to zero against the immutable baked route. Shared
 navigation ownership, hybrid bridges and system ordering are unchanged. See
 [progressive track verification](../Verification/ProgressiveTracks.md).
+
+## Progressive barricade rooms (2026-10-11)
+
+BARRICADE-007 extends campaign levels 22/34/42/56/62/74 to 2/3/4/5/6/7 room-and-gate
+segments. Level 13 retains one original gate. Each repeated segment keeps its original
+40/44/44/42/44/46m length, width, rocks, hazards and bounded Baseline/Exploder support.
+A continuous convex floor and enclosing perimeter span each complete chain; side terrain
+seals every 2m gate behind its exposed front. Level 62 keeps x=8 northeast openings.
+There is one final exit and every gate must break before reaching it can complete the level.
+
+`CampaignBarricadeRoomBuilder` upgrades saved scenes in place and is also used by chapter
+recipes. Each room owns one `EnemyWaveSequenceAuthoring` pointing to its gate and a separate
+wave asset with translated spawn rectangles. The campaign now has 176 wave assets; scene
+IDs and all 81 build-scene entries are stable. Only the first owner retains the shared
+GroundHazardPolicyAuthoring; hazard copies reference their own room sequence. Campaign-owned
+navigation settings extend bounded path capacity for the longer halls. Odd spacing-grid
+width aligns cells with integer-x gate centres so normal enemy regions stay connected
+through the 2m openings. Shared enemy settings and navigation budgets are unchanged.
+
+`BarricadeRoomAuthoring`/`BarricadeRoomBaker` add pure ECS `BarricadeRoom` bounds, predecessor
+entity and activation byte to the crowd owner. `BarricadeRoomActivationSystem` runs after
+PlayerBridgeSystem and before EnemyWaveSpawnSystem, activating on player entry only after
+the preceding gate breaks. EnemyWaveSpawnSystem skips dormant owners entirely, so their
+spawn clocks start on entry. Existing wave ownership, bounded slot reuse and safe room-local
+respawn placement remain in their original systems. Breaking a gate disables only its
+members' replenishment; survivors remain hostile inside their original spawn room.
+
+BARRICADE-008 uses `EnemyWaveOwnership.Sequence` to read that owner's `BarricadeRoom`.
+`BarricadeRoomMovement` derives an inset movement rectangle from the activation bounds.
+EnemyChaseSystem uses it for reserve distribution and surround/contact targets, drops
+off-room pursuit commitments, and excludes off-room enemies from pressure-slot and
+closest-exploder selection. Invalid cached global wander targets are reassigned locally.
+EnemyNavigationSystem and GroundHazardNavigationSystem resolve blocked destinations
+inside the same rectangle. Their bounded A* requests reject detours into another room
+when starting inside; displaced bodies may route back in. EnemyMovementSystem brakes
+normal steering at its edge and removes outward active velocity without writing positions.
+Launched/recovering physics is unchanged, as is global movement for owners without rooms.
+See [spawn-room movement verification](../Verification/BarricadeRoomMovement.md) for
+the behavioral tests, baked-world observations and crowd profiling.
+
+GauntletCompletionSystem aggregates all barricade conditions rather than taking whichever
+wall is visited last. Intermediate gates complete their local destruction condition; only
+the final one requires the final exit. BarricadePresentationSystem stores reported hit
+sequence per gate in BarricadeFeedbackState, preventing repeated feedback when several gates
+are present. GameRestartSystem resets these feedback states and room activation alongside
+all gates, spawn queues and hit histories. MonoBehaviours gain no enemy queries. See
+[room-chain verification](../Verification/BarricadeRooms.md).
 
 ## Protected Point And Gauntlet_18 (PROTECT-001..004)
 

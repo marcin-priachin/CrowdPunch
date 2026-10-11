@@ -51,6 +51,8 @@ namespace CrowdPunch.Systems.AI
                 boundGrid = grid.Data; gridEntity = entity; queue.Clear();
             }
             double now = SystemAPI.Time.ElapsedTime;
+            var owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true);
+            var rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true);
             foreach (var (intent, nav, agent, transform, launch, path, movement, enemy) in
                 SystemAPI.Query<RefRO<NavigationIntent>, RefRW<NavigationPathState>, RefRO<NavigationAgent>, RefRO<LocalTransform>,
                     RefRO<EnemyLaunchState>, DynamicBuffer<NavigationWaypoint>, RefRW<DesiredMovement>>()
@@ -63,6 +65,14 @@ namespace CrowdPunch.Systems.AI
                 if (SystemAPI.HasComponent<DasherState>(enemy) && SystemAPI.GetComponent<DasherState>(enemy).Phase != DasherPhase.Positioning)
                 { if (n.Initialized != 0) { n.Reset(); path.Clear(); } continue; }
                 var goal = intent.ValueRO;
+                float2 goalMinimum = g.Minimum, goalMaximum = g.Maximum;
+                bool hasRoom = BarricadeRoomMovement.TryGetRoom(enemy, owners, rooms, out var room);
+                if (hasRoom)
+                {
+                    var bounds = BarricadeRoomMovement.Bounds(room);
+                    goalMinimum = bounds.Center.xz - bounds.Extents.xz;
+                    goalMaximum = bounds.Center.xz + bounds.Extents.xz;
+                }
                 if (goal.Mode != NavigationMode.Travel)
                 {
                     if (n.Initialized != 0) { n.Reset(); path.Clear(); }
@@ -108,7 +118,7 @@ namespace CrowdPunch.Systems.AI
                     n.Reset(); n.Initialized = 1; n.RequestedGoal = goal.Destination.xz; n.Kind = goal.Kind;
                     n.ProgressPosition = position; n.LastPosition = position; n.ProgressAt = now; n.RequestOffset = Stagger(enemy, settings.Stagger);
                     n.NextRequestAt = now + Stagger(enemy, settings.Stagger);
-                    Resolve(ref g, position, goal, cls, enemy, now, settings, ref n, ref diagnostics);
+                    Resolve(ref g, position, goal, cls, enemy, now, settings, goalMinimum, goalMaximum, ref n, ref diagnostics);
                 }
                 float threshold = goal.Kind == NavigationGoalKind.ExactSetup
                     ? math.min(settings.DestinationThreshold, math.max(.05f, goal.ArrivalDistance * .5f)) : settings.DestinationThreshold;
@@ -120,11 +130,11 @@ namespace CrowdPunch.Systems.AI
                 {
                     n.Version++; n.Pending = 0; n.RequestedGoal = goal.Destination.xz; n.Kind = goal.Kind;
                     // Keep an already safe route while the replacement is queued.
-                    Resolve(ref g, position, goal, cls, enemy, now, settings, ref n, ref diagnostics);
+                    Resolve(ref g, position, goal, cls, enemy, now, settings, goalMinimum, goalMaximum, ref n, ref diagnostics);
                     n.NextDirectAt = 0; diagnostics.Replans++;
                 }
                 if (n.TravelState == NavigationTravelState.Failed && now >= n.NextRequestAt)
-                    Resolve(ref g, position, goal, cls, enemy, now, settings, ref n, ref diagnostics);
+                    Resolve(ref g, position, goal, cls, enemy, now, settings, goalMinimum, goalMaximum, ref n, ref diagnostics);
                 float arrival = math.max(.05f, goal.ArrivalDistance);
                 if (n.TravelState == NavigationTravelState.Failed && now < n.NextRequestAt)
                 { movement.ValueRW = default; diagnostics.Waiting++; continue; }
@@ -165,14 +175,18 @@ namespace CrowdPunch.Systems.AI
                 }
                 if ((!hasRoute || n.PathVersion != n.Version) && n.TravelState != NavigationTravelState.Direct && n.Pending == 0 && now >= n.NextRequestAt)
                 {
-                    if (!NavigationGeometry.ResolveGoal(ref g, position, n.RequestedGoal, cls, enemy.Index, n.Kind, out var validGoal))
+                    if (!NavigationGeometry.ResolveGoal(ref g, position, n.RequestedGoal, cls, enemy.Index, n.Kind,
+                        goalMinimum, goalMaximum, out var validGoal))
                     { Fail(now, settings, ref n, ref diagnostics, false); movement.ValueRW = default; continue; }
                     n.ResolvedGoal = validGoal;
                     int start = NavigationGeometry.Anchor(ref g, position, cls), end = NavigationGeometry.Anchor(ref g, validGoal, cls);
                     if (start >= 0 && end >= 0 && queue.Count < settings.MaxRequests)
                     {
                         n.Pending = 1;
-                        queue.Enqueue(new NavigationSearchRequest { Enemy = enemy, Version = n.Version, Start = start, Goal = end, Clearance = cls, Destination = validGoal });
+                        // A displaced body may route back in; an inside body cannot take a detour through another room.
+                        queue.Enqueue(new NavigationSearchRequest { Enemy = enemy, Version = n.Version, Start = start, Goal = end, Clearance = cls,
+                            Destination = validGoal, TerritoryMinimum = goalMinimum, TerritoryMaximum = goalMaximum,
+                            RestrictTerritory = (byte)(hasRoom && math.all(position >= goalMinimum) && math.all(position <= goalMaximum) ? 1 : 0) });
                     }
                     n.NextRequestAt = now + settings.RepathCooldown + Stagger(enemy, settings.Stagger);
                 }
@@ -238,9 +252,10 @@ namespace CrowdPunch.Systems.AI
             SystemAPI.SetSingleton(diagnostics);
         }
         private static void Resolve(ref NavigationGridBlob g, float2 position, NavigationIntent intent, int cls, Entity enemy, double now,
-            NavigationRuntimeSettings settings, ref NavigationPathState n, ref NavigationDiagnostics diagnostics)
+            NavigationRuntimeSettings settings, float2 minimum, float2 maximum, ref NavigationPathState n, ref NavigationDiagnostics diagnostics)
         {
-            if (NavigationGeometry.ResolveGoal(ref g, position, intent.Destination.xz, cls, enemy.Index, intent.Kind, out var resolved))
+            if (NavigationGeometry.ResolveGoal(ref g, position, intent.Destination.xz, cls, enemy.Index, intent.Kind,
+                minimum, maximum, out var resolved))
             { n.ResolvedGoal = resolved; n.TravelState = NavigationTravelState.Pending; }
             else { n.ResolvedGoal = position; Fail(now, settings, ref n, ref diagnostics, false); }
         }

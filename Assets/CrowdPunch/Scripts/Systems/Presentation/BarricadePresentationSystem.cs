@@ -11,18 +11,14 @@ namespace CrowdPunch.Systems.Presentation
     [UpdateInGroup(typeof(GamePresentationGroup))]
     public partial struct BarricadePresentationSystem : ISystem
     {
-        private uint reportedHit;
-        private Entity reportedWall;
-
         public void OnUpdate(ref SystemState state)
         {
             double now = SystemAPI.Time.ElapsedTime;
-            foreach (var (wall, entity) in SystemAPI.Query<RefRO<Barricade>>().WithEntityAccess())
+            foreach (var (wall, feedback, entity) in SystemAPI.Query<RefRO<Barricade>, RefRW<BarricadeFeedbackState>>().WithEntityAccess())
             {
-                if (reportedWall != entity) { reportedWall = entity; reportedHit = 0; }
-                if (wall.ValueRO.HitSequence == reportedHit) continue;
-                reportedHit = wall.ValueRO.HitSequence;
-                if (reportedHit != 0 && PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
+                if (wall.ValueRO.HitSequence == feedback.ValueRO.ReportedHit) continue;
+                feedback.ValueRW.ReportedHit = wall.ValueRO.HitSequence;
+                if (feedback.ValueRO.ReportedHit != 0 && PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
                     bridge.ReceiveImpact(new CombatFeedbackMessage { Kind = CombatImpactKind.Environment,
                         Position = wall.ValueRO.LastHitPosition, Direction = math.up(),
                         Intensity = wall.ValueRO.HitsRemaining == 0 ? 1

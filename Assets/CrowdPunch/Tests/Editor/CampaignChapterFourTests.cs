@@ -84,20 +84,7 @@ namespace CrowdPunch.Tests
                         Assert.That(marks.Length,Is.EqualTo(18*(Array.IndexOf(CrowdPunch.Editor.GauntletProgressionBuilder.CampaignTrackLevels,n)+1)));
                         Assert.That(marks.All(r=>r.bounds.max.y>-.99f),Is.True);
                     }
-                    if(n==34)
-                    {
-                        var gate=crowd.barricade;
-                        Assert.That(gate.size.x,Is.EqualTo(2)); Assert.That(gate.settings.requiredHits,Is.EqualTo(4));
-                        var sides=UnityEngine.Object.FindObjectsByType<SolidObstacleAuthoring>(FindObjectsSortMode.None).Where(o=>o.name.StartsWith("Gate terrain")).ToArray();
-                        Assert.That(sides.Length,Is.EqualTo(2));
-                        foreach(var side in sides)
-                        {
-                            Assert.That(Mathf.Abs(side.transform.position.x)-side.Size.x*.5f,Is.EqualTo(1));
-                            float front=side.transform.position.z-side.Size.y*.5f;
-                            Assert.That(front,Is.GreaterThan(gate.transform.position.z-gate.size.z*.5f));
-                            Assert.That(front,Is.LessThan(gate.transform.position.z+gate.size.z*.5f));
-                        }
-                    }
+                    if(n==34) CampaignBarricadeRoomTests.AssertRooms(n);
                     if(n==35)
                     {
                         Assert.That(crowd.barricade.settings.requiredHits,Is.EqualTo(4));
@@ -121,10 +108,10 @@ namespace CrowdPunch.Tests
                     }
                     if(n==37) Assert.That(crowd.barricade.GetComponent<ShellTargetAuthoring>().settings.requiredExplosions,Is.EqualTo(3));
                     var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);
-                    Assert.That(patches.Length,Is.EqualTo(n==34||n==37?1:0));
+                    Assert.That(patches.Length,Is.EqualTo(n==34?3:n==37?1:0));
                     foreach(var patch in patches)
                     {
-                        Assert.That(patch.sequence,Is.EqualTo(crowd));
+                        Assert.That(UnityEngine.Object.FindObjectsByType<EnemyWaveSequenceAuthoring>(FindObjectsSortMode.None).Contains(patch.sequence),Is.True);
                         var half=patch.shape==GroundHazardShape.Circle?Vector2.one*patch.radius:new Vector2(patch.width,patch.depth)*.5f;
                         foreach(var range in crowd.Waves.SelectMany(w=>w.SpawnRectangles))
                         {

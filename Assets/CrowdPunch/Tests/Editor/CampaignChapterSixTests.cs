@@ -100,20 +100,7 @@ namespace CrowdPunch.Tests
                         Assert.That(crowd.Waves.All(w=>w.WizardAmmunitionProfile!=null && w.WaitForPersistentHazards),Is.True);
                         Assert.That(crowd.Waves[2].ArmoredAmmunitionProfile,Is.Not.Null);
                     }
-                    if(n==56)
-                    {
-                        var gate=crowd.barricade;
-                        Assert.That(gate.size.x,Is.EqualTo(2)); Assert.That(gate.settings.requiredHits,Is.EqualTo(4));
-                        var sides=UnityEngine.Object.FindObjectsByType<SolidObstacleAuthoring>(FindObjectsSortMode.None).Where(o=>o.name.StartsWith("Gate terrain")).ToArray();
-                        Assert.That(sides.Length,Is.EqualTo(2));
-                        foreach(var side in sides)
-                        {
-                            Assert.That(Mathf.Abs(side.transform.position.x)-side.Size.x*.5f,Is.EqualTo(1));
-                            float front=side.transform.position.z-side.Size.y*.5f;
-                            Assert.That(front,Is.GreaterThan(gate.transform.position.z-gate.size.z*.5f));
-                            Assert.That(front,Is.LessThan(gate.transform.position.z+gate.size.z*.5f));
-                        }
-                    }
+                    if(n==56) CampaignBarricadeRoomTests.AssertRooms(n);
                     if(n==57)
                     {
                         var point=crowd.GetComponent<ProtectedPointAuthoring>();

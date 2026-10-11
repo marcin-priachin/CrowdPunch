@@ -54,6 +54,8 @@ namespace CrowdPunch.Systems.Initialization
                 cast.ValueRW = new WizardCastState { Remaining = settings.ValueRO.Cooldown, RandomState = math.max(1u, cast.ValueRO.RandomState) };
             foreach (var history in SystemAPI.Query<DynamicBuffer<WizardIncomingImpactHistory>>()) history.Clear();
             ResetWaveSequences();
+            foreach (var room in SystemAPI.Query<RefRW<BarricadeRoom>>()) room.ValueRW.Activated = 0;
+            foreach (var feedback in SystemAPI.Query<RefRW<BarricadeFeedbackState>>()) feedback.ValueRW = default;
             foreach (var objective in SystemAPI.Query<RefRW<ProtectedPoint>>()) objective.ValueRW.Breaches = 0;
             foreach (var attackers in SystemAPI.Query<DynamicBuffer<ProtectedPointAttacker>>()) attackers.Clear();
             BossEncounterReset.Reset(EntityManager);

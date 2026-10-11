@@ -76,7 +76,9 @@ namespace CrowdPunch.Systems.AI
                 wizards = SystemAPI.GetComponentLookup<WizardCastState>(true),
                 wizardSettings = SystemAPI.GetComponentLookup<WizardSettings>(true),
                 reservations = SystemAPI.GetComponentLookup<ElitePunchReservation>(true),
-                terrainRoutes = SystemAPI.GetComponentLookup<NavigationPathState>(true)
+                terrainRoutes = SystemAPI.GetComponentLookup<NavigationPathState>(true),
+                owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true),
+                rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true)
             }.Schedule(state.Dependency);
             state.Dependency.Complete();
             for (int i = 0; i < storage.Slots.Length; i++)
@@ -133,6 +135,8 @@ namespace CrowdPunch.Systems.AI
             [ReadOnly] public ComponentLookup<WizardSettings> wizardSettings;
             [ReadOnly] public ComponentLookup<ElitePunchReservation> reservations;
             [ReadOnly] public ComponentLookup<NavigationPathState> terrainRoutes;
+            [ReadOnly] public ComponentLookup<EnemyWaveOwnership> owners;
+            [ReadOnly] public ComponentLookup<BarricadeRoom> rooms;
             public NativeQueue<NavigationSearchRequest> requests;
             public NavigationRuntimeSettings settings;
             public GroundHazardPolicy policy;
@@ -144,6 +148,14 @@ namespace CrowdPunch.Systems.AI
             {
                 ref var g = ref Grid.Value;
                 ref var r = ref route; var goal = intent; float2 position = pose.Position.xz;
+                bool hasRoom = BarricadeRoomMovement.TryGetRoom(entity, owners, rooms, out var room);
+                float2 minimum = g.Minimum, maximum = g.Maximum;
+                if (hasRoom)
+                {
+                    var bounds = BarricadeRoomMovement.Bounds(room);
+                    minimum = bounds.Center.xz - bounds.Extents.xz;
+                    maximum = bounds.Center.xz + bounds.Extents.xz;
+                }
                 if (launch.Phase != EnemyLaunchPhase.Active || goal.Mode == NavigationMode.Committed ||
                     dashers.HasComponent(entity) && dashers[entity].Phase != DasherPhase.Positioning ||
                     wizards.HasComponent(entity) && wizards[entity].StopsMovement(wizardSettings[entity]) ||
@@ -175,7 +187,7 @@ namespace CrowdPunch.Systems.AI
                 if (!GroundHazardGeometry.Clear(patches, position, position, radius))
                 {
                     r.Version++; r.Pending = 0; r.Failed = 0; path.Clear();
-                    movement = Escape(ref g, patches, position, radius, math.max(1.5f, goal.Speed));
+                    movement = Escape(ref g, patches, position, radius, math.max(1.5f, goal.Speed), minimum, maximum);
                     return;
                 }
                 if (goal.Mode != NavigationMode.Travel)
@@ -229,10 +241,12 @@ namespace CrowdPunch.Systems.AI
                     r.Goal = destination; r.Failed = 0;
                     int start = NavigationGeometry.Anchor(ref g, position, cls);
                     if (start >= 0 && GroundHazardGeometry.Clear(patches, position, NavigationGeometry.Center(ref g, start), radius) &&
-                        ResolveGoal(ref g, patches, position, destination, cls, out float2 resolved, out int end))
+                        ResolveGoal(ref g, patches, position, destination, cls, minimum, maximum, out float2 resolved, out int end))
                     {
                         r.Pending = 1;
-                        requests.Enqueue(new NavigationSearchRequest { Enemy = entity, Version = r.Version, Start = start, Goal = end, Clearance = cls, Destination = resolved });
+                        requests.Enqueue(new NavigationSearchRequest { Enemy = entity, Version = r.Version, Start = start, Goal = end, Clearance = cls,
+                            Destination = resolved, TerritoryMinimum = minimum, TerritoryMaximum = maximum,
+                            RestrictTerritory = (byte)(hasRoom && math.all(position >= minimum) && math.all(position <= maximum) ? 1 : 0) });
                     }
                     else { r.Failed = 2; r.RetryAt = now + settings.FailureDelay; }
                 }
@@ -262,10 +276,11 @@ namespace CrowdPunch.Systems.AI
             => NavigationGeometry.Segment(ref g, a, b, radius) && GroundHazardGeometry.Clear(hazards, a, b, radius);
 
         private static bool ResolveGoal(ref NavigationGridBlob g, NativeArray<GroundHazard> hazards, float2 position, float2 requested,
-            int cls, out float2 goal, out int end)
+            int cls, float2 minimum, float2 maximum, out float2 goal, out int end)
         {
             goal = requested; end = NavigationGeometry.Anchor(ref g, requested, cls);
-            if (end >= 0 && Segment(ref g, hazards, requested, NavigationGeometry.Center(ref g, end), g.Radii[cls])) return true;
+            if (math.all(requested >= minimum) && math.all(requested <= maximum)
+                && end >= 0 && Segment(ref g, hazards, requested, NavigationGeometry.Center(ref g, end), g.Radii[cls])) return true;
             int start = NavigationGeometry.Anchor(ref g, position, cls), region = NavigationGeometry.Region(ref g, start, cls);
             float best = float.MaxValue;
             int2 center = math.clamp((int2)math.floor((requested - g.Minimum) / g.CellSize), int2.zero, g.Size - 1);
@@ -275,6 +290,7 @@ namespace CrowdPunch.Systems.AI
                 int cell = c.y * g.Size.x + c.x;
                 if (NavigationGeometry.Region(ref g, cell, cls) != region || region == 0) continue;
                 float2 candidate = NavigationGeometry.Center(ref g, cell);
+                if (math.any(candidate < minimum) || math.any(candidate > maximum)) continue;
                 if (!GroundHazardGeometry.Clear(hazards, candidate, candidate, g.Radii[cls])) continue;
                 float score = math.distancesq(candidate, requested) + .001f * math.distancesq(candidate, position);
                 if (score < best) { best = score; goal = candidate; end = cell; }
@@ -282,6 +298,11 @@ namespace CrowdPunch.Systems.AI
             return best < float.MaxValue;
         }
         public static DesiredMovement Escape(ref NavigationGridBlob g, NativeArray<GroundHazard> hazards, float2 position, float radius, float speed)
+        {
+            return Escape(ref g, hazards, position, radius, speed, g.Minimum, g.Maximum);
+        }
+        public static DesiredMovement Escape(ref NavigationGridBlob g, NativeArray<GroundHazard> hazards, float2 position,
+            float radius, float speed, float2 minimum, float2 maximum)
         {
             float best = float.MaxValue; float2 selected = default;
             for (int i = 0; i < 32; i++)
@@ -293,6 +314,7 @@ namespace CrowdPunch.Systems.AI
                         distance = math.max(distance,GroundHazardGeometry.ExitDistance(h,position,direction,radius) + .1f);
                 if (distance >= best) continue;
                 float2 target = position + direction * distance;
+                if (math.any(target < minimum) || math.any(target > maximum)) continue;
                 if (!NavigationGeometry.Segment(ref g, position, target, radius) || !GroundHazardGeometry.Clear(hazards, target, target, radius)) continue;
                 bool clear = true;
                 foreach (var h in hazards)

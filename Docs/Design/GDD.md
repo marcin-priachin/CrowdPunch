@@ -58,7 +58,7 @@ The player approaches or is pressured by a crowd, chooses position and launch di
 
 Status: Must
 
-The campaign contains exactly 80 levels in eight chapters of ten. Every tenth level is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce all existing enemies, objectives and hazards by level 40. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
+The campaign contains exactly 80 levels in eight chapters of ten. Every tenth level is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce all existing enemies, objectives and hazards by level 40. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes, BARRICADE-007's room chains and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
 
 Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 23 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
 
@@ -324,6 +324,41 @@ Continuously replenish a configurable bounded crowd of Baseline melee enemies wi
 Status: Must
 
 Chapter 1's introductory campaign barricades retain their wide targets. From campaign level 13 onward, break-and-exit barricades must be 2 metres wide. Match the visible plate and damage-stage visuals to the collider. Solid terrain must seal the approach on both sides, connecting to the arena perimeter so the exit can only be reached through the gate opening after destruction. This campaign rule does not resize legacy gauntlets or other objective types.
+
+### BARRICADE-007 - Progressive Campaign Room Chains
+
+Status: Must
+
+Every successive break-and-exit campaign level after level 13 adds one room-length segment
+separated by another barricade. Levels 13/22/34/42/56/62/74 use 1/2/3/4/5/6/7 gates:
+room -> barricade -> exit; room -> barricade -> room -> barricade -> exit; and so on.
+Repeat each level's original room length, retain its width and encounter theme, and adjust
+the enclosing layout and bounds to fit. Every gate follows BARRICADE-006's 2m width and
+sealed side terrain, with an exposed front so terrain cannot shield damaging impacts.
+
+Breaking an intermediate gate opens the next room without completing the level. Every
+gate must be broken and the player must reach the sole exit beyond the final gate;
+surviving enemies remain hostile and need not be cleared. Preserve the per-gate hit rules,
+physical response, aiming, feedback and bounded replenishment in BARRICADE-002..005.
+The original single-gate legacy introduction and campaign levels 4/6/13 remain unchanged.
+
+Implementation defaults give each room the original bounded crowd, local spawn banks and
+hazard pattern. A room starts its initial spawn delay only after the preceding gate is
+broken and the player enters; activation persists on backtracking. Each broken gate stops
+only its own room's supply. Retry resets the full level, including every gate and dormant
+room. These staging/layout choices implement the requested room chain without adding a
+second objective, survivor-clearing requirement or HUD counter.
+
+### BARRICADE-008 - Spawn Room Movement
+
+Status: Must
+
+In progressive barricade levels, enemies' normal distribution, pursuit and navigation
+stay within the segment where they spawned, including after its barricade breaks.
+Enemies do not pursue the player into another room or take another room's attack slots.
+Survivors remain hostile when the player returns. Replenishment retains the same room.
+Physical launches and collision displacement may cross an opened gate; after recovery,
+normal movement returns the body to its original segment without teleporting it.
 
 ## Rotating Cover Objective
 

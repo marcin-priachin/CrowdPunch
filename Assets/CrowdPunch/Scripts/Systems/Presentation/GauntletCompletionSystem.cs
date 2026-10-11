@@ -55,13 +55,16 @@ namespace CrowdPunch.Systems.Presentation
                 isComplete = boss.ValueRO.Phase == DinoPhase.Defeated;
 
             // BARRICADE-001: surviving enemies are irrelevant; reaching the exposed exit is required.
+            bool hasBarricade = false, allBarricadesComplete = true;
             foreach (var wall in SystemAPI.Query<RefRO<Barricade>>())
             {
+                hasBarricade = true;
                 var player = SystemAPI.HasSingleton<PlayerSnapshot>() ? SystemAPI.GetSingleton<PlayerSnapshot>() : default;
-                isComplete = wall.ValueRO.HitsRemaining == 0 && (wall.ValueRO.CompleteOnDestruction != 0 || player.IsAvailable
+                allBarricadesComplete &= wall.ValueRO.HitsRemaining == 0 && (wall.ValueRO.CompleteOnDestruction != 0 || player.IsAvailable
                     && Unity.Mathematics.math.distancesq(player.Position.xz, wall.ValueRO.ExitPosition.xz)
                         <= wall.ValueRO.ExitRadius * wall.ValueRO.ExitRadius);
             }
+            if (hasBarricade) isComplete = allBarricadesComplete;
 
             if (isComplete && !completionReported)
             {

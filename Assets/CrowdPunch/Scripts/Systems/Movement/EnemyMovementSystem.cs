@@ -37,6 +37,8 @@ namespace CrowdPunch.Systems.Movement
             new EnemyMovementJob
             {
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
+                Owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true),
+                Rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true),
                 PillarMembers = SystemAPI.GetComponentLookup<PillarCrowdMember>(true),
                 Pillars = SystemAPI.GetComponentLookup<FallingPillar>(true),
                 PillarSettings = SystemAPI.GetComponentLookup<PillarTuning>(true),
@@ -54,6 +56,8 @@ namespace CrowdPunch.Systems.Movement
         private partial struct EnemyMovementJob : IJobEntity
         {
             [Unity.Collections.ReadOnly] public ComponentLookup<EnemyArmor> Armors;
+            [Unity.Collections.ReadOnly] public ComponentLookup<EnemyWaveOwnership> Owners;
+            [Unity.Collections.ReadOnly] public ComponentLookup<BarricadeRoom> Rooms;
             [Unity.Collections.ReadOnly] public ComponentLookup<PillarCrowdMember> PillarMembers;
             [Unity.Collections.ReadOnly] public ComponentLookup<FallingPillar> Pillars;
             [Unity.Collections.ReadOnly] public ComponentLookup<PillarTuning> PillarSettings;
@@ -111,12 +115,21 @@ namespace CrowdPunch.Systems.Movement
                     acceleration = movementSettings.Acceleration;
                 }
 
+                bool hasRoom = BarricadeRoomMovement.TryGetRoom(entity, Owners, Rooms, out var room);
+                ArenaBounds roomBounds = hasRoom ? BarricadeRoomMovement.Bounds(room) : default;
+                if (hasRoom) targetVelocity = BarricadeRoomMovement.LimitTargetVelocity(transform.Position, targetVelocity,
+                    roomBounds, movementSettings.BrakingAcceleration);
                 physicsVelocity.Linear.xz = MoveTowards(
                     currentVelocity,
                     targetVelocity,
                     math.max(0f, acceleration) * DeltaTime);
 
-                if (IsWandering(desiredMovement, movementSettings))
+                if (hasRoom)
+                {
+                    physicsVelocity.Linear.xz = BarricadeRoomMovement.RemoveOutwardVelocity(
+                        transform.Position, physicsVelocity.Linear.xz, roomBounds);
+                }
+                else if (IsWandering(desiredMovement, movementSettings))
                 {
                     physicsVelocity.Linear.xz = RemoveOutwardBoundaryVelocity(transform.Position, physicsVelocity.Linear.xz);
                 }

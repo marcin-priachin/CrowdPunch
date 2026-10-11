@@ -172,25 +172,42 @@ namespace CrowdPunch.Utilities
         public static bool ResolveGoal(ref NavigationGridBlob g, float2 position, float2 requested, int clearance, int seed,
             NavigationGoalKind kind, out float2 goal)
         {
+            return ResolveGoal(ref g, position, requested, clearance, seed, kind, g.Minimum, g.Maximum, out goal);
+        }
+        public static bool ResolveGoal(ref NavigationGridBlob g, float2 position, float2 requested, int clearance, int seed,
+            NavigationGoalKind kind, float2 minimum, float2 maximum, out float2 goal)
+        {
             goal = requested; int start = Anchor(ref g, position, clearance); int region = Region(ref g, start, clearance);
             if (region == 0) return false;
             int target = Anchor(ref g, requested, clearance);
-            if (Region(ref g, target, clearance) == region) return true;
+            if (Inside(requested, minimum, maximum) && Region(ref g, target, clearance) == region) return true;
             if (kind == NavigationGoalKind.ExactSetup) return false;
             // Stable per-entity ring orientation distributes invalid slots around obstacles.
             float angle = (seed % 1000) * 2.3999631f;
             for (int ring = 1; ring <= 8; ring++) for (int i = 0; i < 12; i++)
                 {
                     float a = angle + i * (math.PI * 2 / 12); float2 candidate = requested + new float2(math.cos(a), math.sin(a)) * ring * g.CellSize;
+                    if (!Inside(candidate, minimum, maximum)) continue;
                     int n = Anchor(ref g, candidate, clearance);
                     if (Region(ref g, n, clearance) == region) { goal = candidate; return true; }
                 }
             if (kind != NavigationGoalKind.Coverage) return false;
-            int count = g.Size.x * g.Size.y;
-            // Coverage alone may relocate arena-wide; no common nearest fallback cell.
+            int2 first = math.clamp((int2)math.floor((minimum - g.Minimum) / g.CellSize), int2.zero, g.Size - 1);
+            int2 last = math.clamp((int2)math.floor((maximum - g.Minimum) / g.CellSize), first, g.Size - 1);
+            int2 size = last - first + 1;
+            int count = size.x * size.y;
+            // Coverage relocates within the supplied territory; ordinary arenas pass their whole grid.
             for (int i = 0; i < 64; i++)
-            { int n = (int)(math.hash(new int2(seed, i)) % (uint)count); if (Region(ref g, n, clearance) == region) { goal = Center(ref g, n); return true; } }
+            {
+                int sample = (int)(math.hash(new int2(seed, i)) % (uint)count);
+                int n = (first.y + sample / size.x) * g.Size.x + first.x + sample % size.x;
+                float2 candidate = Center(ref g, n);
+                if (Inside(candidate, minimum, maximum) && Region(ref g, n, clearance) == region)
+                { goal = candidate; return true; }
+            }
             return false;
         }
+        private static bool Inside(float2 position, float2 minimum, float2 maximum)
+            => math.all(position >= minimum) && math.all(position <= maximum);
     }
 }

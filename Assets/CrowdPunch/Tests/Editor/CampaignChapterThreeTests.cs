@@ -68,20 +68,7 @@ namespace CrowdPunch.Tests
                     Assert.That(crowd.Waves.All(w=>AssetDatabase.GetAssetPath(w).StartsWith(Data)),Is.True);
                     CampaignChapterTwoTests.AssertNavigationClearance(UnityEngine.Object.FindFirstObjectByType<NavigationArenaAuthoring>(),n);
                     if(n==21) Assert.That(crowd.Waves.All(w=>w.ArmoredAmmunitionProfile!=null),Is.True);
-                    if(n==22)
-                    {
-                        Assert.That(crowd.barricade.size.x,Is.EqualTo(2));
-                        var gate=crowd.barricade;
-                        var barriers=UnityEngine.Object.FindObjectsByType<SolidObstacleAuthoring>(FindObjectsSortMode.None).Where(o=>o.name.StartsWith("Gate terrain")).ToArray();
-                        Assert.That(barriers.Length,Is.EqualTo(2));
-                        foreach(var rock in barriers)
-                        {
-                            Assert.That(Mathf.Abs(rock.transform.position.x)-rock.Size.x*.5f,Is.EqualTo(1));
-                            float front=rock.transform.position.z-rock.Size.y*.5f;
-                            Assert.That(front,Is.GreaterThan(gate.transform.position.z-gate.size.z*.5f));
-                            Assert.That(front,Is.LessThan(gate.transform.position.z+gate.size.z*.5f));
-                        }
-                    }
+                    if(n==22) CampaignBarricadeRoomTests.AssertRooms(n);
                     if(n==24)
                     {
                         var point=crowd.GetComponent<ProtectedPointAuthoring>();

@@ -66,6 +66,8 @@ namespace CrowdPunch.Systems.AI
             Entity closestExplosive = Entity.Null;
             float closestExplosiveDistanceSq = float.MaxValue;
             var explosives = SystemAPI.GetComponentLookup<ExplosiveEnemyState>(true);
+            var owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true);
+            var rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true);
             if (defending)
                 foreach (var attacker in SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true))
                     pressureCandidates.Add(new PressureCandidate { Entity = attacker.Enemy, DistanceSq = attacker.DistanceSq });
@@ -86,7 +88,9 @@ namespace CrowdPunch.Systems.AI
                         Archetype = archetype.ValueRO.Value
                     });
 
-                    if (playerSnapshot.IsAvailable && archetype.ValueRO.Value == EnemyArchetypeKind.Explosive
+                    bool playerInRoom = !BarricadeRoomMovement.TryGetRoom(entity, owners, rooms, out var room)
+                        || BarricadeRoomMovement.Contains(room, playerSnapshot.Position);
+                    if (playerInRoom && playerSnapshot.IsAvailable && archetype.ValueRO.Value == EnemyArchetypeKind.Explosive
                         && explosives.HasComponent(entity) && explosives[entity].HasExploded == 0)
                     {
                         bool eligible = !defending;
@@ -101,7 +105,7 @@ namespace CrowdPunch.Systems.AI
                         }
                     }
 
-                    if (!defending && playerSnapshot.IsAvailable && IsOrdinaryMelee(archetype.ValueRO.Value))
+                    if (!defending && playerInRoom && playerSnapshot.IsAvailable && IsOrdinaryMelee(archetype.ValueRO.Value))
                     {
                         float3 toPlayer = transform.ValueRO.Position - playerSnapshot.Position;
                         toPlayer.y = 0f;
@@ -122,6 +126,8 @@ namespace CrowdPunch.Systems.AI
             JobHandle chaseJob = new EnemyChaseJob
             {
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
+                Owners = owners,
+                Rooms = rooms,
                 ClosestExplosive = closestExplosive,
                 Defending = defending,
                 Objective = objective,
@@ -201,6 +207,8 @@ namespace CrowdPunch.Systems.AI
             public Entity ClosestExplosive;
             public ProtectedPoint Objective;
             [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
+            [ReadOnly] public ComponentLookup<EnemyWaveOwnership> Owners;
+            [ReadOnly] public ComponentLookup<BarricadeRoom> Rooms;
             public double Now;
             public PlayerSnapshot PlayerSnapshot;
             public ArenaBounds ArenaBounds;
@@ -241,6 +249,9 @@ namespace CrowdPunch.Systems.AI
 
                 float3 toPlayer = PlayerSnapshot.Position - transform.Position;
                 toPlayer.y = 0f;
+                bool hasRoom = BarricadeRoomMovement.TryGetRoom(entity, Owners, Rooms, out var room);
+                ArenaBounds movementBounds = hasRoom ? BarricadeRoomMovement.Bounds(room) : ArenaBounds;
+                bool playerInRoom = !hasRoom || BarricadeRoomMovement.Contains(room, PlayerSnapshot.Position);
 
                 float distanceToPlayer = math.length(toPlayer);
                 float3 separation = GetSeparation(
@@ -261,17 +272,19 @@ namespace CrowdPunch.Systems.AI
                     return;
                 }
 
-                if (archetype.Value == EnemyArchetypeKind.Armored)
+                if (playerInRoom && archetype.Value == EnemyArchetypeKind.Armored)
                 {
                     EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
                     float speed = movementSettings.MoveSpeed * movementSettings.ChargeSpeedMultiplier;
                     desiredMovement.Direction = math.normalizesafe(math.normalizesafe(toPlayer) + separation);
                     desiredMovement.Speed = speed;
-                    navigation = NavigationIntent.Travel(new float3(PlayerSnapshot.Position.x, transform.Position.y,
-                        PlayerSnapshot.Position.z), speed, 0f, separation);
+                    float3 destination = new float3(PlayerSnapshot.Position.x, transform.Position.y, PlayerSnapshot.Position.z);
+                    if (hasRoom) destination.xz = math.clamp(destination.xz, movementBounds.Center.xz - movementBounds.Extents.xz,
+                        movementBounds.Center.xz + movementBounds.Extents.xz);
+                    navigation = NavigationIntent.Travel(destination, speed, 0f, separation);
                     return;
                 }
-                bool explosiveInContactRange = archetype.Value == EnemyArchetypeKind.Explosive
+                bool explosiveInContactRange = playerInRoom && archetype.Value == EnemyArchetypeKind.Explosive
                     && distanceToPlayer <= math.max(0f, contactSettings.AttemptDistance);
                 if (IsPressureEnemy(entity) || explosiveInContactRange || Defending && committed)
                 {
@@ -295,7 +308,9 @@ namespace CrowdPunch.Systems.AI
                             PlayerSnapshot.Position,
                             transform.Position.y,
                             movementSettings,
-                            ArenaBounds);
+                            movementBounds);
+                    if (hasRoom) target.xz = math.clamp(target.xz, movementBounds.Center.xz - movementBounds.Extents.xz,
+                        movementBounds.Center.xz + movementBounds.Extents.xz);
                     float3 toTarget = target - transform.Position;
                     toTarget.y = 0f;
 
@@ -338,6 +353,8 @@ namespace CrowdPunch.Systems.AI
                     entity,
                     transform.Position,
                     movementSettings,
+                    movementBounds,
+                    hasRoom,
                     ref wanderDestination,
                     out float distributionDistance,
                     out float arrivalDistance);
@@ -520,19 +537,24 @@ namespace CrowdPunch.Systems.AI
                 Entity entity,
                 float3 position,
                 EnemyMovementSettings movementSettings,
+                ArenaBounds movementBounds,
+                bool hasRoom,
                 ref WanderDestination wanderDestination,
                 out float distance,
                 out float arrivalDistance)
             {
                 arrivalDistance = math.max(0.75f, movementSettings.WanderSpeed * 0.35f);
 
-                if (wanderDestination.IsAssigned == 0)
+                float2 minimum = movementBounds.Center.xz - movementBounds.Extents.xz;
+                float2 maximum = movementBounds.Center.xz + movementBounds.Extents.xz;
+                if (wanderDestination.IsAssigned == 0 || hasRoom
+                    && (math.any(wanderDestination.Position.xz < minimum) || math.any(wanderDestination.Position.xz > maximum)))
                 {
                     wanderDestination.Position = GetArenaDistributionTarget(
                         entity.Index,
                         position.y,
                         movementSettings,
-                        ArenaBounds);
+                        movementBounds);
                     wanderDestination.IsAssigned = 1;
                 }
 

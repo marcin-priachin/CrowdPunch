@@ -6,7 +6,10 @@ namespace CrowdPunch.Utilities
 {
     public enum NavigationSearchResult : byte { Running, Found, Unreachable, ExpansionLimit, PathLimit }
     public struct NavigationSearchRequest
-    { public Entity Enemy; public uint Version; public int Start, Goal, Clearance; public float2 Destination; }
+    {
+        public Entity Enemy; public uint Version; public int Start, Goal, Clearance; public float2 Destination;
+        public byte RestrictTerritory; public float2 TerritoryMinimum, TerritoryMaximum;
+    }
     public struct NavigationSearchSlot
     { public NavigationSearchRequest Request; public uint Stamp; public int HeapCount, Expanded, End; public byte Active; public NavigationSearchResult Result; }
     public struct NavigationSearchNode { public uint Stamp; public float Cost, Score; public int Parent, HeapIndex; public byte Closed; }
@@ -56,6 +59,11 @@ namespace CrowdPunch.Utilities
             for (int d = 0; d < 8; d++) if ((edges & (1 << d)) != 0)
                 {
                     int next = NavigationGeometry.Neighbor(ref g, cell, d); var node = GetNode(slot, next);
+                    if (s.Request.RestrictTerritory != 0)
+                    {
+                        float2 centre = NavigationGeometry.Center(ref g, next);
+                        if (math.any(centre < s.Request.TerritoryMinimum) || math.any(centre > s.Request.TerritoryMaximum)) continue;
+                    }
                     if (!hazardEdges.IsCreated && !GroundHazardGeometry.Clear(hazards, NavigationGeometry.Center(ref g, cell),
                         NavigationGeometry.Center(ref g, next), g.Radii[s.Request.Clearance])) continue;
                     float cost = current.Cost + (d < 4 ? 1f : 1.41421356f);

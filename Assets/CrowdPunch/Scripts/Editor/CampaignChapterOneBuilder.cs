@@ -253,6 +253,7 @@ namespace CrowdPunch.Editor
                 ((Transform)marker.FindProperty("playerEntryPoint").objectReferenceValue).position = start + new Vector3(0,-.2f,-6);
                 hint = "Launch bodies or blast the block along the turning arrows into the blue socket. Change your shooting side at each corner; opposite hits push it back.";
             }
+            if (Array.IndexOf(CampaignBarricadeLevels, number) > 0) hint = BarricadeRoomHint;
             marker.FindProperty("openingHint").stringValue=hint ?? ChapterOneHints[number-1]; marker.ApplyModifiedPropertiesWithoutUndo();
             EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
         }

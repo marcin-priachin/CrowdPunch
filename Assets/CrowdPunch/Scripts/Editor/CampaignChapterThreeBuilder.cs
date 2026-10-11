@@ -142,6 +142,8 @@ namespace CrowdPunch.Editor
             }
             int trackIndex = Array.IndexOf(CampaignTrackLevels, number);
             if (trackIndex > 0) AuthorProgressiveTrackRoute(sub, number, trackIndex + 1);
+            int gateIndex = Array.IndexOf(CampaignBarricadeLevels, number);
+            if (gateIndex > 0) AuthorBarricadeRooms(sub, number, gateIndex);
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub); AssetDatabase.SaveAssets();
         }
 
