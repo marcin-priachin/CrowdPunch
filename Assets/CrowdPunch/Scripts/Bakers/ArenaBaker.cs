@@ -16,6 +16,8 @@ namespace CrowdPunch.Bakers
             UnityEngine.Vector3 position = authoring.transform.position;
             float3 origin = new float3(position.x, position.y, position.z);
 
+            AddComponent(entity, new ArenaGroundPlane { SurfaceHeight = authoring.GroundSurfaceHeight });
+
             AddComponent(entity, new ArenaBounds
             {
                 Center = origin + authoring.SpacingCenterOffset,

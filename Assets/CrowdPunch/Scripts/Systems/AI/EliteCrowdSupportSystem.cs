@@ -110,6 +110,8 @@ namespace CrowdPunch.Systems.AI
                     normalEnemies,
                     out bool isStaged);
                 if (!isStaged)
+                    ClearProjectileReentry(elite, projectile, projectilePosition, stagingPosition);
+                if (!isStaged)
                     stagingPosition = GetProjectileApproachDestination(projectile, elite.Entity,
                         projectilePosition, elite.Position, stagingPosition);
 
@@ -473,6 +475,34 @@ namespace CrowdPunch.Systems.AI
                 || !NavigationGeometry.TryEscape(ref geometry, position.xz, radius, clearance, out float2 entry)) return false;
             destination = new float3(entry.x, position.y, entry.y);
             return true;
+        }
+
+        private void ClearProjectileReentry(SupportElite elite, Entity projectile, float3 position, float3 entry)
+        {
+            if (!SystemAPI.HasSingleton<NavigationGrid>() || !SystemAPI.HasSingleton<NavigationRuntimeSettings>()
+                || SystemAPI.GetSingleton<NavigationRuntimeSettings>().Enabled == 0) return;
+            NavigationGrid grid = SystemAPI.GetSingleton<NavigationGrid>();
+            if (!grid.Data.IsCreated) return;
+            ref NavigationGridBlob geometry = ref grid.Data.Value;
+            float projectileRadius = EntityManager.GetComponentData<NavigationAgent>(projectile).Radius;
+            int projectileClass = NavigationGeometry.ClearanceClass(ref geometry, projectileRadius);
+            if (projectileClass < 0 || NavigationGeometry.Anchor(ref geometry, position.xz, projectileClass) >= 0
+                || math.distancesq(position.xz, entry.xz) < .0001f) return;
+            float eliteRadius = EntityManager.GetComponentData<NavigationAgent>(elite.Entity).Radius;
+            float clearance = projectileRadius + eliteRadius + .1f;
+            if (DistanceSqToSegment(elite.Position, position, entry) >= clearance * clearance) return;
+
+            // ENEMY-009 / COMBAT-017: a waiting owner must not physically seal its
+            // projectile's ingress. Yield away from it before resuming the staging hold.
+            float3 away = ElitePunchSystem.HorizontalDirection(position, elite.Position);
+            float3 destination = elite.Position + away * (2f * clearance);
+            int eliteClass = NavigationGeometry.ClearanceClass(ref geometry, eliteRadius);
+            if (eliteClass < 0 || NavigationGeometry.Anchor(ref geometry, destination.xz, eliteClass) < 0
+                || !NavigationGeometry.Segment(ref geometry, elite.Position.xz, destination.xz, geometry.Radii[eliteClass])) return;
+            float speed = math.max(0f, EntityManager.GetComponentData<EnemyMovementSettings>(elite.Entity).MoveSpeed);
+            EntityManager.SetComponentData(elite.Entity, new DesiredMovement { Direction = away, Speed = speed });
+            EntityManager.SetComponentData(elite.Entity, NavigationIntent.Travel(destination, speed, .1f,
+                float3.zero, NavigationGoalKind.ExactSetup));
         }
 
         private float3 GetProjectileApproachDestination(Entity projectile, Entity elite,

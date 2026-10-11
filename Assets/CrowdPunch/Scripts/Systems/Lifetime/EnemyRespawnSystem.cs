@@ -213,6 +213,9 @@ namespace CrowdPunch.Systems.Lifetime
                 for (int attempt = 0; attempt < 32; attempt++)
                 {
                     respawnPosition = GetRespawnPosition(ref random, spawnBounds, playerSnapshot);
+                    if (SystemAPI.HasSingleton<ArenaGroundPlane>() && SystemAPI.HasSingleton<PhysicsWorldSingleton>()
+                        && !EnemyGroundSpawnClearance.IsClear(SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld,
+                            respawnPosition, radius, SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight)) continue;
                     if (NavigationGeometry.SpawnAllowed(grid, respawnPosition.xz, radius) &&
                         GroundHazardGeometry.Clear(groundHazards.AsArray(), respawnPosition.xz, respawnPosition.xz, radius)) { foundPosition = true; break; }
                 }

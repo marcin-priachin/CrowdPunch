@@ -295,6 +295,9 @@ namespace CrowdPunch.Systems.Initialization
         {
             MathematicsRandom random = new MathematicsRandom(sequence.RandomState == 0 ? 1u : sequence.RandomState);
             using var groundHazards = GroundHazardSpawnClearance.Capture(entityManager);
+            using var groundPlaneQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<ArenaGroundPlane>());
+            bool hasGroundPlane = groundPlaneQuery.CalculateEntityCount() == 1;
+            float surfaceHeight = hasGroundPlane ? groundPlaneQuery.GetSingleton<ArenaGroundPlane>().SurfaceHeight : 0f;
             NativeList<float4> accepted = new NativeList<float4>(Allocator.Temp);
             int wizardMinimum = 0;
             for (int i = 0; i < wave.ProfileCount; i++)
@@ -335,6 +338,8 @@ namespace CrowdPunch.Systems.Initialization
                 for (int attempt = 0; attempt < math.max(1, sequence.PlacementAttemptsPerEnemy); attempt++)
                 {
                     position = SelectPosition(ref random, wave, ranges);
+                    if (hasGroundPlane && !EnemyGroundSpawnClearance.IsClear(physicsWorld.CollisionWorld,
+                            position, selectedProfile.NavigationRadius, surfaceHeight)) continue;
                     if (!GroundHazardGeometry.Clear(groundHazards.AsArray(), position.xz, position.xz, selectedProfile.NavigationRadius)) continue;
                     if (!NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, selectedProfile.NavigationRadius))
                     { rejectedNavigation++; continue; }

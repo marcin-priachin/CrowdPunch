@@ -493,7 +493,15 @@ Each random enemy owns `RandomEnemySpawnRegion`; each authored enemy instead own
 
 ### Pre-Physics Simulation
 
-`EnemyGroundConstraint` owns each enemy's cached floor height, landed lock, and player-punch snap request (COMBAT-018). `EnemyGroundConstraintSystem` runs last before physics, finds a horizontal static floor beneath an uninitialized enemy using the enemy collider filter, and accounts for the baked collider's bottom offset. It ignores dynamic bodies so crowds cannot become stacked ground planes. Initial falling remains physical until the collider bottom reaches the floor; a valid player punch requests immediate grounding before simulation. `EnemyGroundReconciliationSystem` runs first after physics and projects grounded Y position and velocity back onto that plane, preserving solver-produced XZ momentum. This is an explicit vertical constraint, not normal movement integration. Pooling requests are excluded, and restart/edge respawn clear the cached state. Floor lookup is cached after success; this slice assumes the existing flat, static arenas and does not implement traversable slopes or changing floor heights.
+`EnemyGroundConstraint` owns each enemy's cached floor height, landed lock, and player-punch snap request (COMBAT-018). `ArenaAuthoring.GroundSurfaceHeight` bakes the flat, world-space floor surface into `ArenaGroundPlane`, defaulting to the existing arenas' -1 surface height. An explicit override supports other flat floor heights. `EnemyGroundConstraintSystem` runs last before physics and accounts for the baked collider's bottom offset relative to that plane. Legacy worlds without the authored singleton retain the static-floor ray lookup, excluding dynamic bodies. Initial falling remains physical until the collider bottom reaches the floor; a valid player punch requests immediate grounding before simulation. `EnemyGroundReconciliationSystem` runs first after physics and projects grounded Y position and velocity back onto that plane, preserving solver-produced XZ momentum. This is an explicit vertical constraint, not normal movement integration. Pooling requests are excluded, and restart/edge respawn clear the cached state. Wave placement and ordinary replenishment additionally use `EnemyGroundSpawnClearance` to reject static geometry at floor level, independently of spawn height, so elevated borders cannot become landing platforms. The floor remains cached after initialization; traversable slopes and changing floor heights are not implemented.
+
+Campaign_65 verification on 2026-10-11 captured two Active enemies with cached height 2 at (-16.88,16.38849) and
+(16.12379,16.88). The actual floor surface is -1, giving ordinary bodies transform height 0 and Elites -0.5 after
+collider offsets. Ground/landing/navigation/hazard regressions passed 41 cases in the Editor. A ten-second physics
+observation of the 21-enemy wave, including two forced replenishments, recorded no grounded bodies on raised planes;
+both captured border columns failed floor-level placement clearance. Initial airborne falling remained unlocked.
+Player health was temporarily protected and restored. Evidence is in `Temp/border-height-diagnosis.txt`,
+`Temp/border-height-regressions.txt` and `Temp/border-height-replay.txt`.
 
 `GamePrePhysicsGroup` runs as a direct child of `FixedStepSimulationSystemGroup` before `PhysicsSystemGroup`:
 
@@ -691,6 +699,18 @@ inflated static obstacles; it does not teleport enemies or change physical arena
 Projectile staging also uses the existing body-side approach calculation around the waiting elite, using their combined
 navigation-agent radii. Terrain clearance checks the waypoint and tries the opposite side when needed, preventing a
 staging destination from driving the projectile directly into its stationary owner.
+
+If an unanchored projectile's ingress segment is blocked by its waiting elite, `EliteCrowdSupportSystem` requests a
+short elite yield away from that projectile (ENEMY-009, COMBAT-017). The yield requires a valid destination anchor and
+full class-inflated terrain clearance; it writes movement intent only. The projectile remains unstaged and setup time
+stays paused. Once ingress is clear, ordinary projectile staging and elite setup resume. This handles boundary pins
+where projectile-only side detours cannot fit between the owner's collider and the arena edge.
+The 2026-10-11 Campaign_43 recurrence captured elite (-15.01012,-13.75446) and projectile (-15.61143,-14.85344).
+The projectile's nearest ingress point (-14.5,-13.5) crossed the elite, while the elite already had a valid anchor.
+The navigation/hazard/elite cases passed 58/58 in the Editor. A 15-second physics replay using captured crowd positions
+showed the original projectile returning inside and three subsequent direct elite launches after recovery. Player health
+was restored during observation; evidence is in `Temp/elite-recurrence-diagnosis.txt`,
+`Temp/elite-recurrence-regressions.txt` and `Temp/elite-recurrence-replay.txt`.
 
 Elite setup also requests navigation reentry before its staging hold when physics has pushed the elite outside its
 clearance-class anchor (ENEMY-009, COMBAT-017). The existing swept-body escape validation and slow navigation movement

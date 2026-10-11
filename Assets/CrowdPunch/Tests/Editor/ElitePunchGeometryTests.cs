@@ -13,6 +13,51 @@ namespace CrowdPunch.Tests
 {
     public sealed class ElitePunchGeometryTests
     {
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Enemy009_Combat017_WaitingEliteClearsPinnedProjectileIngress(bool blockedYield)
+        {
+            using var world = new World("Captured elite projectile boundary pin");
+            Entity elite = CreateEliteAttempt(world, out Entity target);
+            var em = world.EntityManager;
+            float3 elitePosition = new float3(-15.01012f,-.5f,-13.75446f);
+            float3 projectilePosition = new float3(-15.61143f,0,-14.85344f);
+            em.SetComponentData(elite, LocalTransform.FromPosition(elitePosition));
+            em.SetComponentData(elite, new EnemyMovementSettings { MoveSpeed = 30 });
+            em.SetComponentData(target, LocalTransform.FromPosition(projectilePosition));
+            em.AddComponentData(elite, new NavigationAgent { Radius = .75f });
+            em.AddComponentData(target, new NavigationAgent { Radius = .5f });
+            em.AddComponentData(target, new EnemyMovementSettings { MoveSpeed = 8 });
+            em.AddComponent<DesiredMovement>(target); em.AddComponent<NavigationIntent>(target);
+            em.AddComponent<EnemyContactAttemptState>(target); em.AddComponent<EnemyContactDamageSettings>(target);
+            var settings = em.GetComponentData<ElitePunchSettings>(elite); settings.CrowdCorridorRadius = 1.5f;
+            em.SetComponentData(elite, settings);
+            using var obstacles = new NativeArray<NavigationRectangle>(blockedYield
+                ? new[] { new NavigationRectangle { Minimum = new float2(-13.7f,-12.3f), Maximum = new float2(-12,-10) } }
+                : new NavigationRectangle[0], Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-16,-15), new float2(16,15), 1,
+                new float3(.62f,.97f,1.62f), obstacles, Allocator.Persistent);
+            var arena = em.CreateEntity(typeof(NavigationGrid),typeof(NavigationRuntimeSettings));
+            em.SetComponentData(arena, new NavigationGrid { Data = blob });
+            em.SetComponentData(arena, new NavigationRuntimeSettings { Enabled = 1 });
+            Assert.GreaterOrEqual(NavigationGeometry.Anchor(ref blob.Value, elitePosition.xz, 1), 0);
+            Assert.AreEqual(-1, NavigationGeometry.Anchor(ref blob.Value, projectilePosition.xz, 0));
+
+            world.GetOrCreateSystemManaged<EliteCrowdSupportSystem>().Update();
+
+            var movement = em.GetComponentData<DesiredMovement>(elite);
+            Assert.AreEqual(!blockedYield, movement.Speed > 0);
+            Assert.AreEqual(0, em.GetComponentData<ElitePunchReservation>(target).IsStaged);
+            Assert.AreEqual(elitePosition, em.GetComponentData<LocalTransform>(elite).Position);
+            if (blockedYield) return;
+            var destination = em.GetComponentData<NavigationIntent>(elite).Destination;
+            Assert.True(NavigationGeometry.Segment(ref blob.Value, elitePosition.xz, destination.xz, .97f));
+            Assert.Greater(math.dot(movement.Direction, elitePosition - projectilePosition), 0);
+            Assert.True(NavigationGeometry.TryEscape(ref blob.Value, projectilePosition.xz, .5f, 0, out float2 entry));
+            Assert.Greater(EliteCrowdSupportSystem.DistanceSqToSegment(destination, projectilePosition,
+                new float3(entry.x,0,entry.y)), math.square(1.35f));
+        }
+
         [TestCase(ElitePunchPhase.Repositioning)]
         [TestCase(ElitePunchPhase.WindUp)]
         public void Enemy009_Combat017_EliteOutsideNavigationMarginReentersBeforeStagingHold(ElitePunchPhase phase)

@@ -19,6 +19,13 @@ namespace CrowdPunch.Authoring
         [Tooltip("Enemies outside this volume are defeated or pooled. A zero size uses the spacing bounds for backward compatibility.")]
         [SerializeField] private Vector3 defeatSize;
 
+        [Header("Enemy Ground Plane")]
+        [SerializeField] private bool overrideGroundSurfaceHeight;
+        [Tooltip("World-space floor surface height. Border and obstacle tops are never enemy ground.")]
+        [SerializeField] private float groundSurfaceHeight = -1f;
+
+        public float GroundSurfaceHeight => overrideGroundSurfaceHeight ? groundSurfaceHeight : -1f;
+
         public float3 SpacingCenterOffset => ToFloat3(spacingCenterOffset);
         public float3 SpacingSize => ToFloat3(Vector3.Max(Vector3.zero, spacingSize));
         public float3 DefeatCenterOffset => ToFloat3(defeatCenterOffset);

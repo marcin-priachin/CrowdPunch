@@ -32,26 +32,39 @@ namespace CrowdPunch.Systems.Physics
             {
                 if (ground.ValueRO.HasGround == 0 && collider.ValueRO.IsValid)
                 {
-                    hits.Clear();
-                    float3 position = transform.ValueRO.Position;
-                    var ray = new RaycastInput
+                    if (SystemAPI.HasSingleton<ArenaGroundPlane>())
                     {
-                        Start = position,
-                        End = position - new float3(0f, 1000f, 0f),
-                        Filter = collider.ValueRO.Value.Value.GetCollisionFilter()
-                    };
-                    world.CastRay(ray, ref hits);
-                    float fraction = float.MaxValue;
-                    foreach (RaycastHit hit in hits)
-                    {
-                        // Other enemies must never become the floor of a stack.
-                        if (hit.RigidBodyIndex < world.NumDynamicBodies || hit.SurfaceNormal.y < 0.99f
-                            || hit.Fraction >= fraction) continue;
-                        fraction = hit.Fraction;
+                        // COMBAT-018: collider tops at spawn are not necessarily the arena floor.
+                        float3 position = transform.ValueRO.Position;
                         Aabb bounds = collider.ValueRO.Value.Value.CalculateAabb(
                             new RigidTransform(transform.ValueRO.Rotation, position), transform.ValueRO.Scale);
-                        ground.ValueRW.Height = hit.Position.y + position.y - bounds.Min.y;
+                        ground.ValueRW.Height = SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight
+                            + position.y - bounds.Min.y;
                         ground.ValueRW.HasGround = 1;
+                    }
+                    else
+                    {
+                        hits.Clear();
+                        float3 position = transform.ValueRO.Position;
+                        var ray = new RaycastInput
+                        {
+                            Start = position,
+                            End = position - new float3(0f, 1000f, 0f),
+                            Filter = collider.ValueRO.Value.Value.GetCollisionFilter()
+                        };
+                        world.CastRay(ray, ref hits);
+                        float fraction = float.MaxValue;
+                        foreach (RaycastHit hit in hits)
+                        {
+                            // Other enemies must never become the floor of a stack.
+                            if (hit.RigidBodyIndex < world.NumDynamicBodies || hit.SurfaceNormal.y < 0.99f
+                                || hit.Fraction >= fraction) continue;
+                            fraction = hit.Fraction;
+                            Aabb bounds = collider.ValueRO.Value.Value.CalculateAabb(
+                                new RigidTransform(transform.ValueRO.Rotation, position), transform.ValueRO.Scale);
+                            ground.ValueRW.Height = hit.Position.y + position.y - bounds.Min.y;
+                            ground.ValueRW.HasGround = 1;
+                        }
                     }
                 }
                 EnemyGroundProjection.Apply(ref ground.ValueRW, ref transform.ValueRW, ref velocity.ValueRW);
