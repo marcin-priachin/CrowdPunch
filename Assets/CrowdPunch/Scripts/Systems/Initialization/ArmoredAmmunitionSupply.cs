@@ -44,8 +44,10 @@ namespace CrowdPunch.Systems.Initialization
             PhysicsWorldSingleton physics, NavigationGrid navigation, PlayerSnapshot player,
             NativeList<float4> occupied, bool wizard = false)
         {
-            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<EnemyWaveOwnership>(),
-                ComponentType.ReadOnly<EnemyLaunchState>(), ComponentType.ReadOnly<Health>(), ComponentType.ReadOnly<EnemyTier>());
+            using var query = em.CreateEntityQuery(new EntityQueryDesc {
+                All = new[] { ComponentType.ReadOnly<EnemyWaveOwnership>(), ComponentType.ReadOnly<EnemyLaunchState>(),
+                    ComponentType.ReadOnly<Health>(), ComponentType.ReadOnly<EnemyTier>() },
+                Options = EntityQueryOptions.IncludeDisabledEntities });
             using var enemies = query.ToEntityArray(Allocator.Temp);
             if (!NeedsAmmunition(em, enemies, sequenceEntity, sequence.RunGeneration, wizard, sequence.CurrentWaveIndex)) return;
             var profile = wizard ? wave.WizardAmmunitionProfile : wave.AmmunitionProfile;

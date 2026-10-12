@@ -20,9 +20,11 @@ namespace CrowdPunch.Systems.Initialization
             var grid=SystemAPI.HasSingleton<NavigationGrid>()?SystemAPI.GetSingleton<NavigationGrid>():default;
             using var occupied=new NativeList<float4>(Allocator.Temp);
             using var commands=new EntityCommandBuffer(Allocator.Temp);
-            foreach(var (pose,clearance) in SystemAPI.Query<RefRO<LocalTransform>,RefRO<EnemySpawnClearance>>().WithAll<Enemy>())
+            foreach(var (pose,clearance) in SystemAPI.Query<RefRO<LocalTransform>,RefRO<EnemySpawnClearance>>().WithAll<Enemy>()
+                .WithOptions(EntityQueryOptions.IncludeDisabledEntities))
                 occupied.Add(new float4(pose.ValueRO.Position,clearance.ValueRO.Value));
-            using var membersQuery=em.CreateEntityQuery(typeof(PillarCrowdMember));
+            using var membersQuery=em.CreateEntityQuery(new EntityQueryDesc {
+                All=new[] { ComponentType.ReadOnly<PillarCrowdMember>() }, Options=EntityQueryOptions.IncludeDisabledEntities });
             using var members=membersQuery.ToComponentDataArray<PillarCrowdMember>(Allocator.Temp);
             foreach(var (owner,sequence,waves,profiles,sequenceEntity) in SystemAPI.Query<RefRO<BossCrowdSequence>,RefRW<EnemyWaveSequence>,
                 DynamicBuffer<EnemyWaveDefinition>,DynamicBuffer<EnemyWaveProfile>>().WithEntityAccess())

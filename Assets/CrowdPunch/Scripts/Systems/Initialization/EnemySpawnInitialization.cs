@@ -83,7 +83,19 @@ namespace CrowdPunch.Systems.Initialization
             commandBuffer.AddComponent<ElitePunchReservation>(enemy);
 
             AddArchetypeComponents(commandBuffer, enemy, profile, ref random);
+            QueueWarning(commandBuffer, enemy, position, profile.NavigationRadius);
             return enemy;
+        }
+
+        internal static void QueueWarning(EntityCommandBuffer commands, Entity enemy, float3 position, float radius)
+        {
+            commands.AddComponent(enemy, new EnemySpawnWarning
+            {
+                Position = position,
+                Radius = math.max(.75f, radius),
+                SecondsRemaining = EnemySpawnWarning.Duration
+            });
+            commands.SetEnabled(enemy, false);
         }
 
         private static EnemyArchetypeSeparationDistances CreateArchetypeSeparationDistances(

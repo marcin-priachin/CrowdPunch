@@ -94,7 +94,8 @@ namespace CrowdPunch.Systems.Initialization
                 collider.ValueRW.Value = wall.ValueRO.IntactCollider;
                 history.Clear();
             }
-            EntityQuery oldWaveEnemies = SystemAPI.QueryBuilder().WithAll<EnemyWaveOwnership>().Build();
+            EntityQuery oldWaveEnemies = SystemAPI.QueryBuilder().WithAll<EnemyWaveOwnership>()
+                .WithOptions(EntityQueryOptions.IncludeDisabledEntities).Build();
             using (NativeArray<Entity> waveEnemyRoots = oldWaveEnemies.ToEntityArray(Allocator.Temp))
             {
                 foreach (Entity waveEnemyRoot in waveEnemyRoots)
@@ -111,6 +112,18 @@ namespace CrowdPunch.Systems.Initialization
             Random random = Random.CreateFromIndex(1);
             NavigationGrid navigationGrid = SystemAPI.HasSingleton<NavigationGrid>() ? SystemAPI.GetSingleton<NavigationGrid>() : default;
             using var groundHazards = GroundHazardSpawnClearance.Capture(EntityManager);
+
+            // Legacy enemies are reset in place; pending reservations must join that reset.
+            using (var pending = SystemAPI.QueryBuilder().WithAll<EnemySpawnWarning>()
+                       .WithOptions(EntityQueryOptions.IncludeDisabledEntities).Build().ToEntityArray(Allocator.Temp))
+            {
+                foreach (var enemy in pending)
+                {
+                    EntityManager.SetEnabled(enemy, true);
+                    EntityManager.RemoveComponent<EnemySpawnWarning>(enemy);
+                }
+            }
+            using var spawnCommands = new EntityCommandBuffer(Allocator.Temp);
 
             foreach ((RefRW<LocalTransform> transform,
                          RefRW<Health> health,
@@ -199,7 +212,15 @@ namespace CrowdPunch.Systems.Initialization
 
                 ResetArchetypeState(enemy);
                 ResetTransientState(enemy);
+                if (SystemAPI.HasComponent<AuthoredEnemyInitialPosition>(enemy) || SystemAPI.HasComponent<RandomEnemySpawnRegion>(enemy))
+                {
+                    if (EntityManager.HasComponent<PhysicsWorldIndex>(enemy))
+                        spawnCommands.SetSharedComponent(enemy, new PhysicsWorldIndex());
+                    EnemySpawnInitialization.QueueWarning(spawnCommands, enemy, transform.ValueRO.Position,
+                        SystemAPI.HasComponent<NavigationAgent>(enemy) ? SystemAPI.GetComponent<NavigationAgent>(enemy).Radius : .5f);
+                }
             }
+            spawnCommands.Playback(EntityManager);
             // Reset may run later than the request while the new SubScene's MatchState loads.
             World.GetExistingSystemManaged<GamePrePhysicsGroup>()?.RequestPhysicsRebuild();
         }

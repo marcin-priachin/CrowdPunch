@@ -235,6 +235,7 @@ namespace CrowdPunch.Systems.Lifetime
                 SystemAPI.SetComponentEnabled<RespawnRequest>(enemy, false);
                 if (state.EntityManager.HasComponent<PhysicsWorldIndex>(enemy))
                     commands.SetSharedComponent(enemy, new PhysicsWorldIndex());
+                Initialization.EnemySpawnInitialization.QueueWarning(commands, enemy, respawnPosition, radius);
             }
             commands.Playback(state.EntityManager);
         }

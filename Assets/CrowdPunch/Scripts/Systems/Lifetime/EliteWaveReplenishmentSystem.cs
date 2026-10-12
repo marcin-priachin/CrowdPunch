@@ -20,7 +20,8 @@ namespace CrowdPunch.Systems.Lifetime
             NativeList<EnemyWaveOwnership> livingEliteWaves = new NativeList<EnemyWaveOwnership>(Allocator.Temp);
             foreach ((RefRO<EnemyWaveOwnership> ownership, RefRO<EnemyTier> tier,
                          RefRO<EnemyLaunchState> launchState) in
-                     SystemAPI.Query<RefRO<EnemyWaveOwnership>, RefRO<EnemyTier>, RefRO<EnemyLaunchState>>())
+                     SystemAPI.Query<RefRO<EnemyWaveOwnership>, RefRO<EnemyTier>, RefRO<EnemyLaunchState>>()
+                         .WithOptions(EntityQueryOptions.IncludeDisabledEntities))
             {
                 if (tier.ValueRO.Value == EnemyCombatTier.Elite
                     // Pooling resets launch phase to Active; counted defeat remains authoritative.
@@ -31,7 +32,7 @@ namespace CrowdPunch.Systems.Lifetime
 
             foreach ((RefRO<EnemyWaveOwnership> ownership, RefRW<EnemyRespawnSettings> respawnSettings) in
                      SystemAPI.Query<RefRO<EnemyWaveOwnership>, RefRW<EnemyRespawnSettings>>()
-                         .WithAll<EliteWaveReplenishment>())
+                         .WithAll<EliteWaveReplenishment>().WithOptions(EntityQueryOptions.IncludeDisabledEntities))
             {
                 respawnSettings.ValueRW.Enabled = !SystemAPI.HasComponent<ProtectedPoint>(ownership.ValueRO.Sequence)
                     && Contains(livingEliteWaves, ownership.ValueRO) ? (byte)1 : (byte)0;

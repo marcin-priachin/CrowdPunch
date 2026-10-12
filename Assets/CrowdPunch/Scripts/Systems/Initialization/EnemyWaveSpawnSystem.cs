@@ -31,7 +31,8 @@ namespace CrowdPunch.Systems.Initialization
             NativeList<float4> occupiedEnemies = new NativeList<float4>(Allocator.Temp);
             EntityCommandBuffer commands = new EntityCommandBuffer(Allocator.Temp);
             foreach ((RefRO<Unity.Transforms.LocalTransform> transform, RefRO<EnemySpawnClearance> clearance) in
-                     SystemAPI.Query<RefRO<Unity.Transforms.LocalTransform>, RefRO<EnemySpawnClearance>>().WithAll<Enemy>())
+                     SystemAPI.Query<RefRO<Unity.Transforms.LocalTransform>, RefRO<EnemySpawnClearance>>().WithAll<Enemy>()
+                         .WithOptions(EntityQueryOptions.IncludeDisabledEntities))
                 occupiedEnemies.Add(new float4(transform.ValueRO.Position, clearance.ValueRO.Value));
 
             foreach ((RefRW<EnemyWaveSequence> sequenceReference,
@@ -89,8 +90,10 @@ namespace CrowdPunch.Systems.Initialization
                     }
                     if (wave.WizardAmmunitionSafeguard != 0)
                     {
-                        using var supplyQuery = state.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<EnemyWaveOwnership>(),
-                            ComponentType.ReadOnly<EnemyLaunchState>(), ComponentType.ReadOnly<Health>(), ComponentType.ReadOnly<EnemyTier>());
+                        using var supplyQuery = state.EntityManager.CreateEntityQuery(new EntityQueryDesc {
+                            All = new[] { ComponentType.ReadOnly<EnemyWaveOwnership>(), ComponentType.ReadOnly<EnemyLaunchState>(),
+                                ComponentType.ReadOnly<Health>(), ComponentType.ReadOnly<EnemyTier>() },
+                            Options = EntityQueryOptions.IncludeDisabledEntities });
                         using var supplyEnemies = supplyQuery.ToEntityArray(Allocator.Temp);
                         bool needed = ArmoredAmmunitionSupply.NeedsAmmunition(state.EntityManager, supplyEnemies, sequenceEntity,
                             sequence.RunGeneration, true, sequence.CurrentWaveIndex);
@@ -307,7 +310,9 @@ namespace CrowdPunch.Systems.Initialization
             int wizards = 0;
             if (wave.MaximumWizardsAlive > 0)
             {
-                using var q = entityManager.CreateEntityQuery(ComponentType.ReadOnly<WizardSettings>(), ComponentType.ReadOnly<EnemyWaveOwnership>(), ComponentType.ReadOnly<EnemyLaunchState>());
+                using var q = entityManager.CreateEntityQuery(new EntityQueryDesc {
+                    All = new[] { ComponentType.ReadOnly<WizardSettings>(), ComponentType.ReadOnly<EnemyWaveOwnership>(), ComponentType.ReadOnly<EnemyLaunchState>() },
+                    Options = EntityQueryOptions.IncludeDisabledEntities });
                 using var roots = q.ToEntityArray(Allocator.Temp);
                 foreach (var root in roots)
                 {

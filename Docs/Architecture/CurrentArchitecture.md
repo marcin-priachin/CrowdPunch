@@ -6,6 +6,26 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Enemy Spawn Warnings (INFO-006)
+
+`EnemySpawnInitialization` reserves the fully initialized prefab at its chosen location,
+adds `EnemySpawnWarning` and disables the root plus its linked children. Wave counters
+include the reservation immediately, while Disabled excludes it from AI, combat, physics
+and enemy rendering. Spawn-space, Wizard-cap, ammunition-supply and pillar-slot queries
+explicitly include disabled reservations. Pooled returns and legacy restart use the same
+warning path; wave restart destroys pending roots as well as active enemies.
+
+`EnemySpawnWarningSystem` runs after the player bridge and ground-hazard cycle, before
+wave spawning. After one second of simulation time it enables the reserved enemy at the
+advertised position. Player overlap, blocked ground or warning/active ground hazards hold
+the warning until safe; invalid sequence ownership destroys the reservation. The existing
+physics-world index is restored for pooled returns before activation.
+
+`EnemySpawnWarningPresentationSystem` batches all amber pulsing ground rings into one
+dynamic mesh and one draw using the existing Resources/WizardZone material. No enemy
+GameObjects, HUD elements or per-enemy materials are added. Duration (1s), minimum marker
+radius (.75m) and ring width (.12m) are prototype tuning.
+
 ## Campaign Chapters 1-8 (2026-10-10)
 
 This section supersedes the historical fixed-run/build-registration descriptions below.

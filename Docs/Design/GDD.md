@@ -944,6 +944,15 @@ Status: Must
 
 Trajectory UI predicts the attack's initial direction only. It should not draw a complete future ricochet path or pretend to predict chaotic downstream collisions.
 
+### INFO-006 - Enemy Spawn Warning
+
+Status: Must
+
+Before an enemy spawns or respawns, show a visible indication at its intended world-space
+spawn location. The enemy appears at the indicated location after the warning. Keep this
+feedback in the arena without adding HUD elements. Warning duration and appearance are
+prototype tuning.
+
 ## Progression And Weapons
 
 ### PROGRESSION-001 — Mechanics Before Modifiers
