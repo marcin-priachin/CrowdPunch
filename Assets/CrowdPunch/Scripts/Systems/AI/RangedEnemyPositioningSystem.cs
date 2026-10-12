@@ -53,6 +53,8 @@ namespace CrowdPunch.Systems.AI
                 Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
                 Attackers = attackers,
                 Attacks = SystemAPI.GetComponentLookup<RangedAttackState>(true),
+                Owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true),
+                Rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true),
                 Grid = grid,
                 ActiveEnemies = activeEnemies.AsDeferredJobArray()
             }.ScheduleParallel(state.Dependency);
@@ -69,6 +71,8 @@ namespace CrowdPunch.Systems.AI
             public bool Defending;
             [ReadOnly] public NativeArray<ProtectedPointAttacker> Attackers;
             [ReadOnly] public ComponentLookup<RangedAttackState> Attacks;
+            [ReadOnly] public ComponentLookup<EnemyWaveOwnership> Owners;
+            [ReadOnly] public ComponentLookup<BarricadeRoom> Rooms;
             public NavigationGrid Grid;
             [ReadOnly] public NativeArray<EnemySeparationNeighbor> ActiveEnemies;
 
@@ -84,6 +88,14 @@ namespace CrowdPunch.Systems.AI
                 in EnemyLaunchState launchState,
                 in LocalTransform transform)
             {
+                bool hasRoom = BarricadeRoomMovement.TryGetRoom(entity, Owners, Rooms, out var room);
+                if (hasRoom && launchState.Phase == EnemyLaunchPhase.Active && Player.IsAvailable
+                    && !BarricadeRoomMovement.Contains(room, Player.Position))
+                {
+                    // Keep the chase system's local coverage/reentry intent when the player leaves.
+                    positioning.Mode = RangedPositioningMode.Approach;
+                    return;
+                }
                 if (Defending && launchState.Phase == EnemyLaunchPhase.Active && Player.IsAvailable)
                 {
                     if (ProtectedPointAttacker.Contains(Attackers, entity)
@@ -138,6 +150,12 @@ namespace CrowdPunch.Systems.AI
                     : math.max(speed, speed <= 0f ? movementSettings.WanderSpeed : 0f);
                 float3 destination = NavigationGeometry.DistanceBandDestination(Grid, transform.Position, Player.Position, minimum, maximum, agent.Radius);
                 destination.y = transform.Position.y;
+                if (hasRoom)
+                {
+                    var bounds = BarricadeRoomMovement.Bounds(room);
+                    destination.xz = math.clamp(destination.xz, bounds.Center.xz - bounds.Extents.xz,
+                        bounds.Center.xz + bounds.Extents.xz);
+                }
                 navigation = NavigationIntent.Travel(destination, movement.Speed, .35f, separation, NavigationGoalKind.DistanceBand);
                 if (positioning.Mode == RangedPositioningMode.Hold) navigation.Mode = NavigationMode.Hold;
             }

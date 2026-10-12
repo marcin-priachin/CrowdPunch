@@ -190,5 +190,55 @@ namespace CrowdPunch.Tests
             }
             finally { storage.Dispose(); }
         }
+
+        [Test] public void Barricade009_RangedSurvivorKeepsLocalCoverageAndCancelsOffRoomShot()
+        {
+            var e=Enemy(float3.zero,owner,EnemyArchetypeKind.Ranged);
+            em.AddComponentData(e,new RangedEnemySettings { PreferredMinimumDistance=5, PreferredMaximumDistance=8, ApproachSpeed=4, EngagementRange=100 });
+            em.AddComponent<RangedPositioningState>(e); em.AddComponentData(e,new NavigationAgent { Radius=.5f });
+            em.AddComponentData(e,new RangedAttackState { Phase=RangedAttackPhase.WindUp, SecondsRemaining=.01f });
+            Chase(); var coverage=em.GetComponentData<NavigationIntent>(e);
+            world.GetOrCreateSystem<RangedEnemyPositioningSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            Assert.That(em.GetComponentData<NavigationIntent>(e).Destination,Is.EqualTo(coverage.Destination));
+            Assert.That(em.GetComponentData<NavigationIntent>(e).Kind,Is.EqualTo(NavigationGoalKind.Coverage));
+            world.GetOrCreateSystem<CrowdPunch.Systems.Combat.RangedEnemyAttackSystem>().Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<RangedAttackState>(e).Phase,Is.EqualTo(RangedAttackPhase.Cooldown));
+            Assert.That(em.GetComponentData<RangedAttackState>(e).ProjectilesSpawned,Is.Zero);
+        }
+
+        [Test] public void Barricade009_RangedDistanceBandDestinationStaysInsideRoom()
+        {
+            var e=Enemy(new float3(0,0,8),owner,EnemyArchetypeKind.Ranged);
+            em.AddComponentData(e,new RangedEnemySettings { PreferredMinimumDistance=5, PreferredMaximumDistance=8, ApproachSpeed=4,RetreatSpeed=4 });
+            em.AddComponent<RangedPositioningState>(e); em.AddComponentData(e,new NavigationAgent { Radius=.5f });
+            em.SetComponentData(player,new PlayerSnapshot { IsAvailable=true, Position=new float3(0,0,5) });
+            Chase(); world.GetOrCreateSystem<RangedEnemyPositioningSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            var target=em.GetComponentData<NavigationIntent>(e).Destination; Inside(target,Room); Assert.That(target.z,Is.LessThanOrEqualTo(9.25f));
+        }
+
+        [TestCase(DasherPhase.Positioning)] [TestCase(DasherPhase.Preparing)] [TestCase(DasherPhase.Dashing)]
+        public void Barricade009_DasherDoesNotCommitToOffRoomPlayer(DasherPhase phase)
+        {
+            var e=Enemy(new float3(0,0,5),owner,EnemyArchetypeKind.Dasher);
+            em.AddComponentData(e,new DasherSettings { PreparationMinimumDistance=1,PreparationMaximumDistance=100 });
+            em.AddComponentData(e,new DasherState { Phase=phase,SecondsRemaining=.01f });
+            em.AddComponentData(e,new NavigationAgent { Radius=.5f }); Chase();
+            world.GetOrCreateSystem<DasherDecisionSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            Assert.That(em.GetComponentData<DasherState>(e).Phase,Is.EqualTo(DasherPhase.Positioning));
+            Assert.That(em.GetComponentData<NavigationIntent>(e).Kind,Is.EqualTo(NavigationGoalKind.Coverage));
+            Inside(em.GetComponentData<NavigationIntent>(e).Destination,Room);
+        }
+
+        [TestCase(EnemyLaunchPhase.Active)] [TestCase(EnemyLaunchPhase.Launched)]
+        public void Barricade009_DashStopsBeforeRoomEdgeButLaunchedDasherKeepsPhysics(EnemyLaunchPhase phase)
+        {
+            var e=Enemy(new float3(0,0,9.2f),owner,EnemyArchetypeKind.Dasher);
+            em.AddComponentData(e,new DasherSettings { MaximumDistance=100,DashSpeed=24,RecoveryDuration=1 });
+            em.AddComponentData(e,new DasherState { Phase=DasherPhase.Dashing,LockedDirection=math.forward(),PreviousPosition=new float3(0,0,9.2f) });
+            em.SetComponentData(e,new EnemyLaunchState { Phase=phase }); em.SetComponentData(e,new PhysicsVelocity { Linear=new float3(0,0,24) });
+            world.GetOrCreateSystem<DasherMovementSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            Assert.That(em.GetComponentData<PhysicsVelocity>(e).Linear.z,Is.EqualTo(phase==EnemyLaunchPhase.Active?0:24));
+            Assert.That(em.GetComponentData<DasherState>(e).Phase,Is.EqualTo(phase==EnemyLaunchPhase.Active?DasherPhase.Recovering:DasherPhase.Dashing));
+        }
     }
 }

@@ -18,10 +18,13 @@ namespace CrowdPunch.Systems.Movement
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            var owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true);
+            var rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true);
+            float deltaTime = SystemAPI.Time.DeltaTime;
             foreach ((RefRW<DasherState> dash, RefRO<DasherSettings> settings, RefRO<EnemyLaunchState> launch,
-                         RefRW<LocalTransform> transform, RefRW<PhysicsVelocity> velocity) in
+                         RefRW<LocalTransform> transform, RefRW<PhysicsVelocity> velocity, Entity entity) in
                      SystemAPI.Query<RefRW<DasherState>, RefRO<DasherSettings>, RefRO<EnemyLaunchState>, RefRW<LocalTransform>, RefRW<PhysicsVelocity>>()
-                         .WithAll<Enemy>().WithNone<RespawnRequest>())
+                         .WithAll<Enemy>().WithNone<RespawnRequest>().WithEntityAccess())
             {
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Active) continue;
                 if ((dash.ValueRO.Phase == DasherPhase.Preparing || dash.ValueRO.Phase == DasherPhase.Dashing)
@@ -39,13 +42,22 @@ namespace CrowdPunch.Systems.Movement
                     dash.ValueRW.DashDistanceTravelled += math.distance(
                         transform.ValueRO.Position.xz,
                         dash.ValueRO.PreviousPosition.xz);
-                    if (dash.ValueRO.DashDistanceTravelled >= math.max(0f, settings.ValueRO.MaximumDistance))
+                    float2 dashVelocity = dash.ValueRO.LockedDirection.xz * math.max(0f, settings.ValueRO.DashSpeed);
+                    bool leavingRoom = false;
+                    if (BarricadeRoomMovement.TryGetRoom(entity, owners, rooms, out var room))
+                    {
+                        var bounds = BarricadeRoomMovement.Bounds(room);
+                        float2 next = transform.ValueRO.Position.xz + dashVelocity * deltaTime;
+                        leavingRoom = math.any(next < bounds.Center.xz - bounds.Extents.xz)
+                            || math.any(next > bounds.Center.xz + bounds.Extents.xz);
+                    }
+                    if (leavingRoom || dash.ValueRO.DashDistanceTravelled >= math.max(0f, settings.ValueRO.MaximumDistance))
                     {
                         dash.ValueRW.Phase = DasherPhase.Recovering;
                         dash.ValueRW.SecondsRemaining = math.max(0f, settings.ValueRO.RecoveryDuration);
                         velocity.ValueRW.Linear.xz = float2.zero;
                     }
-                    else velocity.ValueRW.Linear.xz = dash.ValueRO.LockedDirection.xz * math.max(0f, settings.ValueRO.DashSpeed);
+                    else velocity.ValueRW.Linear.xz = dashVelocity;
                 }
             }
         }

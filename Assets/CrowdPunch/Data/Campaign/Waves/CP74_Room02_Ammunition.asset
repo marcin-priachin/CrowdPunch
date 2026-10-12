@@ -12,22 +12,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP74_Room02_Ammunition
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 18
+  totalEnemyCount: 9
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 16
+    MinimumCount: 7
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
+    MinimumCount: 1
     Weight: 0
   - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
-    MinimumCount: 2
+    MinimumCount: 1
     Weight: 0
   eliteEnemies: []
   spawnRectangles:
-  - Center: {x: -14, y: 2, z: 48}
-    Width: 3
-    Depth: 16
-  - Center: {x: 14, y: 2, z: 48}
-    Width: 3
-    Depth: 16
+  - Center: {x: -15, y: 2, z: 33.78}
+    Width: 2
+    Depth: 8
+  - Center: {x: 15, y: 2, z: 33.78}
+    Width: 2
+    Depth: 8
   replenishWhileBossLives: 1
   bossReplenishDelay: 4
   delayBeforeWave: 3

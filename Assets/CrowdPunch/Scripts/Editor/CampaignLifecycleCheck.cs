@@ -173,7 +173,7 @@ namespace CrowdPunch.Editor
             if(Chapter>=3)
             {
                 using var hazards=em.CreateEntityQuery(typeof(GroundHazard),typeof(GroundHazardState));
-                int expectedHazards=Chapter==3?(level==27?3:level>=24 && level<=26?1:0):Chapter==4?(level==33?3:level==36?1:0):Chapter==5?(level==41?8:level==47 || level==49?2:level==44?1:0):Chapter==6?(level==49 || level==53 || level==57 || level==59?2:0):Chapter==8?(level==73?14:level==69 || level==72 || level==77 || level==79?2:0):(level==61?12:level==59 || level==63 || level==66 || level==69?2:level==64?1:level==67?3:0);
+                int expectedHazards=Chapter==3?(level==27?3:level>=24 && level<=26?1:0):Chapter==4?(level==33||level==36?1:0):Chapter==5?(level==41?3:level==47 || level==49?2:level==44?1:0):Chapter==6?(level==49 || level==53 || level==57 || level==59?2:0):Chapter==8?(level==73?5:level==69 || level==72 || level==77 || level==79?2:0):(level==61?4:level==59 || level==63 || level==66 || level==69?2:level==64?1:level==67?3:0);
                 Require(hazards.CalculateEntityCount()==expectedHazards,"Hazard leakage or missing baked patches.");
                 using var patches=hazards.ToComponentDataArray<GroundHazardState>(Allocator.Temp);
                 foreach(var patch in patches) hazardPhases|=1<<(int)patch.Phase;

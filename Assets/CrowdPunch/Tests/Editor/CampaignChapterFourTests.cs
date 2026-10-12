@@ -70,7 +70,7 @@ namespace CrowdPunch.Tests
                     var sub=UnityEngine.Object.FindFirstObjectByType<Unity.Scenes.SubScene>();
                     Assert.That(AssetDatabase.GetAssetPath(sub.SceneAsset),Is.EqualTo($"{Scenes}Campaign_{n:00}/Campaign_{n:00} Sub Scene.unity"));
                     EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(sub.SceneAsset));
-                    var crowd=UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>();
+                    var crowd=CampaignBarricadeRoomTests.FirstCrowd();
                     Assert.That(crowd.Waves.All(w=>AssetDatabase.GetAssetPath(w).StartsWith(Data)),Is.True);
                     CampaignChapterTwoTests.AssertNavigationClearance(UnityEngine.Object.FindFirstObjectByType<NavigationArenaAuthoring>(),n);
                     if(n==31) Assert.That(crowd.Waves.All(w=>w.WizardAmmunitionProfile!=null && w.WaitForPersistentHazards),Is.True);
@@ -108,7 +108,7 @@ namespace CrowdPunch.Tests
                     }
                     if(n==37) Assert.That(crowd.barricade.GetComponent<ShellTargetAuthoring>().settings.requiredExplosions,Is.EqualTo(3));
                     var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);
-                    Assert.That(patches.Length,Is.EqualTo(n==34?3:n==37?1:0));
+                    Assert.That(patches.Length,Is.EqualTo(n==34||n==37?1:0));
                     foreach(var patch in patches)
                     {
                         Assert.That(UnityEngine.Object.FindObjectsByType<EnemyWaveSequenceAuthoring>(FindObjectsSortMode.None).Contains(patch.sequence),Is.True);

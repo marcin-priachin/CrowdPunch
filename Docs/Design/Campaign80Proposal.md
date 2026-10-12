@@ -79,7 +79,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | Level | Name / one main objective | Layout and spawn directions | Composition and waves | Static hazards | Teaching purpose / pacing | Target |
 |---|---|---|---|---|---|---|
 | 21 | Peel the Armor / clear waves | 32 x 34 broad shooting court, one rear rock shelf; north banks | 8B+1A > 12B+2A; armor ammunition safeguard | None | Gentle post-boss armor introduction; body hits before direct launch | 75-105s |
-| 22 | Heavy Traffic / break barricade and reach exit | 2 chained rooms, each 30 x 40m; 30 x 80m total; sealed 2m gates | Hold 12B+2X per entered room; 2 gates x 3 hits | None | Familiar objective and relief before a new enemy | Fresh pacing playtest |
+| 22 | Heavy Traffic / break barricade and reach exit | 2 distinct ascending sectors, 30 x 80m total; final original paired islands; sealed 2m gates | Hold 8 > 14; final 9B+1R+2X+1D+1A; 2 gates x 3 hits | None | Open first approach builds into the mixed final crowd | Fresh pacing playtest |
 | 23 | Borrowed Fist / clear waves | 36 x 36 wide court with unobstructed diagonal; far-bank support | 10B+1E > 14B+2R+1E | None | Elite introduction: read and disrupt an enemy-owned body shot | 90-120s |
 | 24 | Hold the Line / protect point through finite waves | 32 x 96 lane, broad open middle, zone at south end; north spawns | 12B > 16B > 20B; batch 4/4s; first breach fails | None | Defense introduction; hit approaching bodies away from the zone | 90-120s |
 | 25 | Hot Ground / clear waves | 34 x 34 rounded rectangle, off-centre hot island; north/east banks | 10B > 14B+2R | G1 centre-left | Introduce permanent ground danger with a wide safe bypass | 75-105s |
@@ -96,7 +96,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | 31 | Purple Warning / clear waves | 34 x 34 open clipped court; far bank | 6B+1W > 12B+2W; Wizard safeguards | None | Gentle Wizard introduction; move out of zones, launch into casters | 75-105s |
 | 32 | Quiet Delivery / knock into place | 42 x 42 left-turn stair court; four 10m legs; clear corners and endpoints; outer side support | Hold 10B; 20 net forward hits | None | Familiar precision breather before next introduction | 60-90s |
 | 33 | Leave a Trail / clear waves | 36 x 36 open rounded diamond; far-bank waves | 6B+1T > 12B+2T | None | Trail introduction; redirect its path, avoid lingering sections | 75-105s |
-| 34 | Break the Detour / break barricade and reach exit | 3 chained rooms, each 32 x 44m; 32 x 132m total; sealed 2m gates | Hold 12B+2X per entered room; 3 gates x 4 hits | P1 optional inner shortcut in each room | Remix gate and ground timing without new enemy rules | Fresh pacing playtest |
+| 34 | Break the Detour / break barricade and reach exit | 3 distinct ascending sectors, 32 x 132m total; final original detour; sealed 2m gates | Hold 8 > 11 > 14; final 9B+1R+2X+1D+1A; 3 gates x 4 hits | Final original P1 only | Build pressure before the final warning shortcut | Fresh pacing playtest |
 | 35 | Moving Perimeter / destroy rotating-cover target | 40 x 38 open ring, three outer pockets; alternating safe support regions | Hold 12B+1T; 4 hits; 100-degree opening, continuous 25 degrees/s | None | Aim while a moving Trail changes safe positioning | 90-120s |
 | 36 | Distant Defense / protect point through finite waves | 32 x 96 lane with two widely offset rock islands; north spawns | 16B+2R > 20B+1D > 20B+2R+1W; batch 4/3s | None | First mixed defense; Wizard behavior follows defense targeting rules | 90-120s |
 | 37 | Blast Shelter / destroy shell and core target | 36 x 34 side-notched court, two rear rocks, open central target | Hold 12B plus specialized pair of 2X; 3 shell explosions | G1 far outer corner | Recovery encounter: known explosion objective and ample safe ground | 75-105s |
@@ -109,7 +109,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | Level | Name / one main objective | Layout and spawn directions | Composition and waves | Static hazards | Teaching purpose / pacing | Target |
 |---|---|---|---|---|---|---|
 | 41 | Back to Bodies / clear waves | 34 x 32 open pentagon, one side rock crescent; far banks | 12B+2R > 16B+2X | None | Post-boss recovery with familiar chains | 75-105s |
-| 42 | Outer Route / break barricade and reach exit | 4 chained rooms, each 34 x 44m; 34 x 176m total; sealed 2m gates | Hold 14B+2X per entered room; 4 gates x 4 hits | G2 on unused inner pockets in each room | Choose long safe alignment or a pressured shorter shot | Fresh pacing playtest |
+| 42 | Outer Route / break barricade and reach exit | 4 distinct ascending sectors, 34 x 176m total; final original central island; sealed 2m gates | Hold 8 > 10 > 13 > 16; final 11B+1R+2X+1D+1A; 4 gates x 4 hits | One reduced periodic fore-sector patch; final original G2 | Grow into the final pressured outer route | Fresh pacing playtest |
 | 43 | Turn the Shot / clear waves | 38 x 36 court with three widely spaced islands; west/east banks | 16B+2R+1E > 18B+2D+1E | None | Fight Elite shot setups from useful angles | 90-120s |
 | 44 | Stop and Go / destroy rotating-cover target | 40 x 36 unequal outer bays around enclosure; side support | Hold 12B+2R+1X; 4 hits; 85-degree opening, rotate 3s at 30 degrees/s / pause 1s | None | Existing cover pause mode rewards planning a shot | 90-120s |
 | 45 | Armor in Motion / clear waves | 38 x 40 clipped corridor with cross lanes; north/east/west banks | 14B+2A > 16B+2D+2A > 18B+2R+1E; armor safeguard | P1 side crossing | Pressure peak through composition and route choice | 90-120s |
@@ -128,7 +128,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | 53 | Reverse the Window / destroy rotating-cover target | 40 x 40 unequal octagon, north rock shelf; east/west support | Hold 14B+2X; 4 hits; 90-degree opening, 30 degrees/s, reversal every 5s | None | Existing reversal mode; read motion instead of memorizing a rhythm | 90-120s |
 | 54 | Push Under Pressure / knock into place | 52 x 62 right-turn stair court; seven 10m legs; clear corners and endpoints; outer side support | Hold 14B+2X; 35 net forward hits | P2 away from rail endpoints | Precision objective under alternating spatial pressure | 90-120s |
 | 55 | Disrupt the Casters / clear waves | 40 x 40 triangular-island court; north/east/west waves | 14B+2W > 18B+2R+2W > 18B+2A+1W; safeguards | None | Chapter peak: approach casters through crowd and armor | 90-120s |
-| 56 | Clean Break / break barricade and reach exit | 5 chained rooms, each 32 x 42m; 32 x 210m total; sealed 2m gates | Hold 12B+2X per entered room; 5 gates x 4 hits | None | Recovery objective with straightforward shot access | Fresh pacing playtest |
+| 56 | Clean Break / break barricade and reach exit | 5 distinct ascending sectors, 32 x 210m total; final original offset island; sealed 2m gates | Hold 8 > 9 > 11 > 12 > 14; final 9B+1R+2X+1D+1A; 5 gates x 4 hits | None | Straightforward shots build into mixed final pressure | Fresh pacing playtest |
 | 57 | Long Watch / protect point through finite waves | 32 x 96 three staggered approach islands, broad recovery area before zone | 20B+2R > 24B+2D > 24B+2X; batch 4/3s | None | Familiar defense under mixed approach pressure; first breach fails | 90-120s |
 | 58 | Moving Batteries / clear waves | 100 x 100 court, three offset islands and wide cross-court shooting lanes; north, west, east, split sides, north banks | 72B+4R+1E > 88B+6X+2D > 96B+4A+2E > 112B+4R+2W > 128B+6X+4D; safeguards | P2 optional outer crossings | Large crowd encounter: disrupt elite setups and exploit explosive groups | 4-5min |
 | 59 | Open Air / clear waves | 36 x 32 wide shallow court with boundary alcoves; far banks | 12B+2X > 16B+2R | None | Deliberate relief after endurance and before boss | 60-90s |
@@ -139,7 +139,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | Level | Name / one main objective | Layout and spawn directions | Composition and waves | Static hazards | Teaching purpose / pacing | Target |
 |---|---|---|---|---|---|---|
 | 61 | Stable Footing / clear waves | 36 x 34 open stepped rectangle; north banks | 12B+1A > 16B+2R; armor safeguard | None | Post-boss relief using familiar body-shot targets | 75-105s |
-| 62 | Side Door / break barricade and reach exit | 6 chained rooms, each 36 x 44m; 36 x 264m total; sealed 2m gates; northeast openings | Hold 14B+2X per entered room; 6 gates x 4 hits | P2 on optional central route in each room | Read a safe approach without forcing hazard crossings | Fresh pacing playtest |
+| 62 | Side Door / break barricade and reach exit | 6 distinct ascending sectors, 36 x 264m total; final original side approach; northeast 2m gates | Hold 8 > 9 > 11 > 12 > 14 > 16; final 11B+1R+2X+1D+1A; 6 gates x 4 hits | Two reduced periodic fore-sector patches; final original P2 | Read broader earlier routes before the final side gate | Fresh pacing playtest |
 | 63 | Draw a Line / clear waves | 42 x 38 three broad lanes around low rock islands; west/east waves | 16B+2T+1W > 20B+2D+2T; Wizard safeguards | None | Layer living hazards while preserving retreat space | 90-120s |
 | 64 | Shell Island / destroy shell and core target | 38 x 38 central target, wide safe ring, four shallow boundary notches | Hold 14B plus specialized pair of 2X; 4 shell explosions | G2 in opposite outer pockets | Keep Exploders alive until they can reach the shell | 90-120s |
 | 65 | Three Approaches / clear waves | 42 x 42 three-sided court with wide linking bays; north/west/east waves | 18B+2A+1E > 20B+2R+2W > 22B+2D+2T; safeguards | P1 far side lane | Peak through changing composition and usable lanes | 90-120s |
@@ -156,7 +156,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | 71 | Find Your Feet / clear waves | 36 x 36 open tapered octagon; one far island; north then west bank | 14B+2R > 18B+2X | None | Post-boss reset before final combinations | 75-105s |
 | 72 | Thread the Crowd / destroy rotating-cover target | 42 x 40 asymmetric ring with clear south apron; side support | Hold 14B+1W+1T; 4 hits; 100-degree opening, 30 degrees/s, reversals every 6s | None | Time a body shot while relocating around living hazards | 90-120s |
 | 73 | Committed Lines / clear waves | 44 x 40 slanted two-island court; east/west/north waves | 18B+2D+1E > 20B+2A+2R > 22B+2X+2T; armor safeguard | P2 across optional side routes | Peak in launch direction, enemy commitment and escape planning | 90-120s |
-| 74 | Open the Last Gate / break barricade and reach exit | 7 chained rooms, each 38 x 46m; 38 x 322m total; sealed 2m gates | Hold 16B+2X per entered room; 7 gates x 4 hits | G2 in inner bend pockets in each room | Find the angle; use explosions without losing needed ammunition | Fresh pacing playtest |
+| 74 | Open the Last Gate / break barricade and reach exit | 7 distinct ascending sectors, 38 x 322m total; final original two bends; sealed 2m gates | Hold 8 > 9 > 11 > 13 > 14 > 16 > 18; final 13B+1R+2X+1D+1A; 7 gates x 4 hits | Three reduced periodic fore-sector patches; final original G2 | Escalate crowd and angle pressure toward the last gate | Fresh pacing playtest |
 | 75 | Guard the Approach / protect point through finite waves | 32 x 96 alternating island pairs, three broad north approaches | 20B+2R > 24B+2A > 24B+2D+1W; batch 4/3s; armor safeguard | None | Defense peak with physical crowd control; no hazard-dependent victory | 90-120s |
 | 76 | A Clear Purpose / destroy shell and core target | 36 x 38 open target court, low boundary rock fans; side support | Hold 10B plus specialized pair of 2X; 3 shell explosions | None | Breather using a familiar readable target | 75-105s |
 | 77 | Final Stand / protect point through finite waves | 32 x 96 broad zigzag approaches, two long islands with generous end gaps | 24B+2A > 26B+2X > 26B+2R+2W; batch 4/3s; armor safeguard | None | Final short defense; use the approaching crowd to prevent breaches | 90-120s |
@@ -172,10 +172,19 @@ hits. Earlier short-clear timing targets for these longer objectives require fre
 
 2026-10-11 update: BARRICADE-007 adds one original room-length segment and gate at each
 successive break-and-exit level: 13/22/34/42/56/62/74 have 1/2/3/4/5/6/7 gates. Each room
-reuses its original bounded support and hazards; its crowd activates after the preceding
+originally reused its bounded support and hazards; its crowd activates after the preceding
 gate breaks and the player enters. All gates must break before the final exit completes
 the level. Level 13's existing single room remains intact. Short-clear timing targets for
 the extended chains require fresh human playtesting.
+
+2026-10-12 update: BARRICADE-009 gives levels 22/34/42/56/62/74 distinct, increasingly
+difficult sectors. The final layout, hazards and gate difficulty remain unchanged;
+its crowd may change (user choice 1). Earlier populations rise from eight to each
+original final cap, while side-pocket/island obstructions grow and periodic patches
+remain smaller and less numerous than the final hazards. Baselines and Exploders
+are joined by Ranged, Dashers and Armored enemies as sectors progress; the final
+mix has all five types. Baselines remain bounded, renewable ammunition. BARRICADE-008
+room confinement also applies to specialist movement and newly started attacks.
 
 ## Rules carried into implementation
 

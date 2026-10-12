@@ -342,8 +342,8 @@ surviving enemies remain hostile and need not be cleared. Preserve the per-gate 
 physical response, aiming, feedback and bounded replenishment in BARRICADE-002..005.
 The original single-gate legacy introduction and campaign levels 4/6/13 remain unchanged.
 
-Implementation defaults give each room the original bounded crowd, local spawn banks and
-hazard pattern. A room starts its initial spawn delay only after the preceding gate is
+The original repeated-layout defaults are superseded by BARRICADE-009's ascending sector
+layouts and crowd mixes. A room starts its initial spawn delay only after the preceding gate is
 broken and the player enters; activation persists on backtracking. Each broken gate stops
 only its own room's supply. Retry resets the full level, including every gate and dormant
 room. These staging/layout choices implement the requested room chain without adding a
@@ -359,6 +359,26 @@ Enemies do not pursue the player into another room or take another room's attack
 Survivors remain hostile when the player returns. Replenishment retains the same room.
 Physical launches and collision displacement may cross an opened gate; after recovery,
 normal movement returns the body to its original segment without teleporting it.
+
+### BARRICADE-009 - Distinct Ascending Sectors
+
+Status: Must
+
+The multi-sector campaign barricade levels must use different layouts with increasing
+difficulty toward the final sector. Keep the final sector's current layout, terrain,
+static hazards and gate difficulty; its enemy composition may change. Earlier sectors
+must be easier, with broader clear routes, fewer/smaller obstacles, less hazardous ground
+and lighter enemy pressure. Add enemy variety using existing profiles, retaining ample
+replenishing Baselines for launching into gates and armor. The final sector has the
+strongest crowd mix. Preserve campaign enemy introduction order, BARRICADE-008's spawn-room
+movement, staged activation, bounded replenishment, all gate impact rules, retry and exit.
+
+Implementation defaults use Baseline/Exploder crowds first, then Ranged, Dasher and Armored
+specialists as pressure increases. Final populations retain their existing 14/14/16/14/16/18
+limits in levels 22/34/42/56/62/74. Each earlier sector has a smaller increasing population;
+final gates retain three hits in level 22 and four in later levels. Earlier hazard patches
+are smaller periodic warnings, while the final patches remain unchanged. No extra enemy
+health bars, survivor-clearing requirement or secondary objective is added.
 
 ## Rotating Cover Objective
 

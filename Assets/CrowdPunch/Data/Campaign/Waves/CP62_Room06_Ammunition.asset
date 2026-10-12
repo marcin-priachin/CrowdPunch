@@ -15,10 +15,19 @@ MonoBehaviour:
   totalEnemyCount: 16
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 14
+    MinimumCount: 11
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
+    MinimumCount: 1
     Weight: 0
   - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
     MinimumCount: 2
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
+    MinimumCount: 1
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 95d24fce27ef5144ca7ae5b439bbe692, type: 2}
+    MinimumCount: 1
     Weight: 0
   eliteEnemies: []
   spawnRectangles:

@@ -1551,7 +1551,8 @@ navigation ownership, hybrid bridges and system ordering are unchanged. See
 
 BARRICADE-007 extends campaign levels 22/34/42/56/62/74 to 2/3/4/5/6/7 room-and-gate
 segments. Level 13 retains one original gate. Each repeated segment keeps its original
-40/44/44/42/44/46m length, width, rocks, hazards and bounded Baseline/Exploder support.
+40/44/44/42/44/46m length and width. BARRICADE-009 now varies earlier sectors while
+preserving each final sector's original rocks, hazards and gate difficulty.
 A continuous convex floor and enclosing perimeter span each complete chain; side terrain
 seals every 2m gate behind its exposed front. Level 62 keeps x=8 northeast openings.
 There is one final exit and every gate must break before reaching it can complete the level.
@@ -1585,6 +1586,22 @@ normal steering at its edge and removes outward active velocity without writing 
 Launched/recovering physics is unchanged, as is global movement for owners without rooms.
 See [spawn-room movement verification](../Verification/BarricadeRoomMovement.md) for
 the behavioral tests, baked-world observations and crowd profiling.
+
+`CampaignBarricadeSectorBuilder` edits the six saved chains in place and is called by the
+room/chapter recipes. Earlier sectors use ascending small side-pocket/offset-island
+footprints, rising bounded populations and reduced periodic hazards. Final geometry,
+hazards, spawn banks and gate tuning are retained; final mixes add one Ranged, Dasher and
+Armored to two Exploders plus replenishing Baselines within the original population cap.
+Reapplying room authoring to an existing chain updates its variants instead of cloning
+the easier first sector over the final template. Waves retain their asset GUIDs and
+room-local ownership. The ordinary armor safeguard is disabled for these replenishing
+encounters because existing bounded Baseline slots already provide renewable ammunition.
+Ranged positioning preserves local coverage when the player leaves and clamps in-room
+distance-band targets. Ranged attacks cancel off-room wind-up. Dasher decisions preserve
+coverage/reentry outside their room and voluntary dash velocity stops before the inset
+room boundary. These guards do not restrict launched-body physics or other encounter types.
+See [sector verification](../Verification/BarricadeSectors.md) for exact populations,
+final-layout preservation checks, live progression and profiling.
 
 GauntletCompletionSystem aggregates all barricade conditions rather than taking whichever
 wall is visited last. Intermediate gates complete their local destruction condition; only

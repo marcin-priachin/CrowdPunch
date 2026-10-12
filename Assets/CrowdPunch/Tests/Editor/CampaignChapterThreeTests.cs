@@ -64,7 +64,7 @@ namespace CrowdPunch.Tests
                     var sub=UnityEngine.Object.FindFirstObjectByType<Unity.Scenes.SubScene>();
                     Assert.That(AssetDatabase.GetAssetPath(sub.SceneAsset),Is.EqualTo($"{Scenes}Campaign_{n:00}/Campaign_{n:00} Sub Scene.unity"));
                     EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(sub.SceneAsset));
-                    var crowd=UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>();
+                    var crowd=CampaignBarricadeRoomTests.FirstCrowd();
                     Assert.That(crowd.Waves.All(w=>AssetDatabase.GetAssetPath(w).StartsWith(Data)),Is.True);
                     CampaignChapterTwoTests.AssertNavigationClearance(UnityEngine.Object.FindFirstObjectByType<NavigationArenaAuthoring>(),n);
                     if(n==21) Assert.That(crowd.Waves.All(w=>w.ArmoredAmmunitionProfile!=null),Is.True);

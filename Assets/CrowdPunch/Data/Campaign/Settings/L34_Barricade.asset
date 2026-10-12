@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8cb8a4fb29125c44b8e687936822aed3, type: 3}
   m_Name: L34_Barricade
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.BarricadeSettings
-  requiredHits: 4
-  eligibleLaunchSources: 15
+  requiredHits: 3
+  eligibleLaunchSources: 255
   reboundMultiplier: 0.85
   replenishDelay: 4
   flashDuration: 0.18

@@ -42,6 +42,13 @@ namespace CrowdPunch.Editor
         private static void AuthorBarricadeRooms(Scene scene,int number,int index)
         {
             int count=index+1,width=BarricadeRoomWidths[index],length=BarricadeRoomLengths[index];
+            // Saved sector variants keep their final room as the original reference layout.
+            // Reapplying must not clone the now-easier first room over that final room.
+            if (scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<BarricadeRoomAuthoring>()).Count()==count)
+            {
+                AuthorBarricadeSectorDifficulty(scene,number,index);
+                return;
+            }
             var arena=UnityEngine.Object.FindFirstObjectByType<ArenaAuthoring>();
             foreach(var root in scene.GetRootGameObjects().Where(g=>g.name.StartsWith("Room barricade ")||g.name.StartsWith("Room crowd ")||g.name.StartsWith("Room hazard ")).ToArray())
                 UnityEngine.Object.DestroyImmediate(root);
@@ -128,6 +135,7 @@ namespace CrowdPunch.Editor
                 activation.maximum=new Vector2(width*.5f-1,gates[room].transform.position.z+.7f);
             }
             EditorSceneManager.MarkSceneDirty(scene);
+            AuthorBarricadeSectorDifficulty(scene,number,index);
         }
     }
 }

@@ -56,7 +56,7 @@ namespace CrowdPunch.Tests
 
         [Test] public void Loop002_ChapterFiveHasSafeNavigationExactWavesAndWiredObjectives()
         {
-            int[][] populations={new[]{14,18},new[]{16},new[]{19,21},new[]{15},new[]{16,20,21},new[]{12},new[]{22,26,26},new[]{70,86,94,110,128},new[]{15,20},new[]{13}};
+            int[][] populations={new[]{14,18},new[]{8},new[]{19,21},new[]{15},new[]{16,20,21},new[]{12},new[]{22,26,26},new[]{70,86,94,110,128},new[]{15,20},new[]{13}};
             var setup=EditorSceneManager.GetSceneManagerSetup();
             try
             {
@@ -67,7 +67,7 @@ namespace CrowdPunch.Tests
                     var sub=UnityEngine.Object.FindFirstObjectByType<Unity.Scenes.SubScene>();
                     Assert.That(AssetDatabase.GetAssetPath(sub.SceneAsset),Is.EqualTo($"{Scenes}Campaign_{n:00}/Campaign_{n:00} Sub Scene.unity"));
                     EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(sub.SceneAsset));
-                    var crowd=UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>();
+                    var crowd=CampaignBarricadeRoomTests.FirstCrowd();
                     Assert.That(crowd.Waves.All(w=>AssetDatabase.GetAssetPath(w).StartsWith(Data)),Is.True);
                     Assert.That(crowd.Waves.Select(w=>w.TotalEnemyCount+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(populations[n-41]),$"Level {n}");
                     Assert.That(crowd.Waves.All(w=>w.Enemies.Sum(e=>e.MinimumCount)==w.TotalEnemyCount && w.Enemies.All(e=>e.Weight==0)),Is.True);
@@ -106,13 +106,21 @@ namespace CrowdPunch.Tests
                     }
                     if(n==49) Assert.That(crowd.Waves[0].WizardAmmunitionProfile!=null && crowd.Waves[0].WaitForPersistentHazards,Is.True);
                     var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);
-                    Assert.That(patches.Length,Is.EqualTo(n==42?8:n==48||n==50?2:n==45?1:0));
+                    Assert.That(patches.Length,Is.EqualTo(n==42?3:n==48||n==50?2:n==45?1:0));
                     foreach(var patch in patches)
                     {
                         Assert.That(UnityEngine.Object.FindObjectsByType<EnemyWaveSequenceAuthoring>(FindObjectsSortMode.None).Contains(patch.sequence),Is.True); Assert.That(patch.shape,Is.EqualTo(GroundHazardShape.Rectangle));
-                        Assert.That(patch.width,Is.EqualTo(3)); Assert.That(patch.depth,Is.EqualTo(n==42||n==48?6:8));
-                        Assert.That(patch.operation,Is.EqualTo(n==42||n==48?GroundHazardOperation.AlwaysActive:GroundHazardOperation.Periodic));
-                        foreach(var range in crowd.Waves.SelectMany(w=>w.SpawnRectangles))
+                        if(n==42 && patch.sequence.barricade.exit==null)
+                        {
+                            Assert.That(patch.width,Is.GreaterThan(0).And.LessThan(3)); Assert.That(patch.depth,Is.GreaterThan(0).And.LessThan(6));
+                            Assert.That(patch.operation,Is.EqualTo(GroundHazardOperation.Periodic));
+                        }
+                        else
+                        {
+                            Assert.That(patch.width,Is.EqualTo(3)); Assert.That(patch.depth,Is.EqualTo(n==42||n==48?6:8));
+                            Assert.That(patch.operation,Is.EqualTo(n==42||n==48?GroundHazardOperation.AlwaysActive:GroundHazardOperation.Periodic));
+                        }
+                        foreach(var range in patch.sequence.Waves.SelectMany(w=>w.SpawnRectangles))
                         {
                             var d=new Vector2(Mathf.Abs(range.Center.x-patch.transform.position.x),Mathf.Abs(range.Center.z-patch.transform.position.z));
                             Assert.That(d.x>range.Width*.5f+patch.width*.5f+.5f || d.y>range.Depth*.5f+patch.depth*.5f+.5f,Is.True,$"Level {n} spawn bank overlaps hazard.");

@@ -1,5 +1,6 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
+using CrowdPunch.Systems.AI;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -31,6 +32,8 @@ namespace CrowdPunch.Systems.Combat
             var attackers = defending ? SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true).AsNativeArray() : default;
             float deltaTime = SystemAPI.Time.DeltaTime;
             EntityCommandBuffer commandBuffer = new EntityCommandBuffer(Allocator.Temp);
+            var owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true);
+            var rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true);
 
             foreach ((RefRW<RangedAttackState> attack,
                          RefRO<RangedEnemySettings> settings,
@@ -45,7 +48,9 @@ namespace CrowdPunch.Systems.Combat
                          .WithEntityAccess())
             {
                 bool active = launchState.ValueRO.Phase == EnemyLaunchPhase.Active && !respawnEnabled.ValueRO;
-                if (!active || !player.IsAvailable)
+                bool playerInRoom = !BarricadeRoomMovement.TryGetRoom(shooter, owners, rooms, out var room)
+                    || BarricadeRoomMovement.Contains(room, player.Position);
+                if (!active || !player.IsAvailable || !playerInRoom)
                 {
                     CancelWindUp(ref attack.ValueRW);
                     attack.ValueRW.IsAttackEligible = 0;

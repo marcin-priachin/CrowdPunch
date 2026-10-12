@@ -56,7 +56,7 @@ namespace CrowdPunch.Tests
 
         [Test] public void Loop002_ChapterSixWiresSafeLayoutsExactWavesAndObjectiveSettings()
         {
-            int[][] populations={new[]{12},new[]{19,24},new[]{16},new[]{16},new[]{16,22,21},new[]{14},new[]{22,26,26},new[]{77,96,102,118,138},new[]{14,18},new[]{10}};
+            int[][] populations={new[]{12},new[]{19,24},new[]{16},new[]{16},new[]{16,22,21},new[]{8},new[]{22,26,26},new[]{77,96,102,118,138},new[]{14,18},new[]{10}};
             var setup=EditorSceneManager.GetSceneManagerSetup();
             try
             {
@@ -67,7 +67,7 @@ namespace CrowdPunch.Tests
                     var sub=UnityEngine.Object.FindFirstObjectByType<Unity.Scenes.SubScene>();
                     Assert.That(AssetDatabase.GetAssetPath(sub.SceneAsset),Is.EqualTo($"{Scenes}Campaign_{n:00}/Campaign_{n:00} Sub Scene.unity"));
                     EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(sub.SceneAsset));
-                    var crowd=UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>();
+                    var crowd=CampaignBarricadeRoomTests.FirstCrowd();
                     Assert.That(crowd.Waves.All(w=>AssetDatabase.GetAssetPath(w).StartsWith(Data)),Is.True);
                     Assert.That(crowd.Waves.Select(w=>w.TotalEnemyCount+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(populations[n-51]),$"Level {n}");
                     Assert.That(crowd.Waves.All(w=>w.Enemies.Sum(e=>e.MinimumCount)==w.TotalEnemyCount && w.Enemies.All(e=>e.Weight==0)),Is.True);

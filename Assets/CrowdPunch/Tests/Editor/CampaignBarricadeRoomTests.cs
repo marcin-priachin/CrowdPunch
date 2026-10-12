@@ -16,6 +16,9 @@ namespace CrowdPunch.Tests
     public sealed class CampaignBarricadeRoomTests
     {
         private static readonly int[] Levels={13,22,34,42,56,62,74},Lengths={42,40,44,44,42,44,46},Widths={30,30,32,34,32,36,38};
+        private static readonly int[][] Populations={new[]{12},new[]{8,14},new[]{8,11,14},new[]{8,10,13,16},new[]{8,9,11,12,14},new[]{8,9,11,12,14,16},new[]{8,9,11,13,14,16,18}};
+        internal static EnemyWaveSequenceAuthoring FirstCrowd() => UnityEngine.Object.FindObjectsByType<EnemyWaveSequenceAuthoring>(FindObjectsSortMode.None)
+            .OrderBy(c=>c.barricade==null?0:c.barricade.transform.position.z).First();
         internal static void AssertRooms(int level)
         {
             int index=Array.IndexOf(Levels,level),count=index+1;var gates=UnityEngine.Object.FindObjectsByType<BarricadeAuthoring>(FindObjectsSortMode.None).OrderBy(g=>g.transform.position.z).ToArray();
@@ -53,7 +56,7 @@ namespace CrowdPunch.Tests
                     Assert.That(floor.sharedMesh.bounds.size.z,Is.EqualTo(Lengths[index]*count));
                     var gates=UnityEngine.Object.FindObjectsByType<BarricadeAuthoring>(FindObjectsSortMode.None).OrderBy(g=>g.transform.position.z).ToArray();
                     var crowds=UnityEngine.Object.FindObjectsByType<EnemyWaveSequenceAuthoring>(FindObjectsSortMode.None).OrderBy(c=>c.barricade.transform.position.z).ToArray();Assert.That(crowds.Length,Is.EqualTo(count));
-                    var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);Assert.That(patches.Length,Is.EqualTo((level==34?1:level==42||level==62||level==74?2:0)*count));
+                    var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);Assert.That(patches.Length,Is.EqualTo(new[]{0,0,1,3,0,4,5}[index]));
                     Assert.That(UnityEngine.Object.FindObjectsByType<GroundHazardPolicyAuthoring>(FindObjectsSortMode.None).Length,Is.EqualTo(patches.Length>0?1:0));
                     var obstacles=arena.GetComponentsInChildren<SolidObstacleAuthoring>();var rectangles=new NativeArray<NavigationRectangle>(obstacles.Length,Allocator.Temp);
                     for(int i=0;i<obstacles.Length;i++){var center=((float3)obstacles[i].transform.position).xz;var half=(float2)obstacles[i].Size*.5f;rectangles[i]=new NavigationRectangle{Minimum=center-half,Maximum=center+half};}
@@ -65,7 +68,7 @@ namespace CrowdPunch.Tests
                         for(int room=0;room<count;room++)
                         {
                             Assert.That(crowds[room].barricade,Is.EqualTo(gates[room]));Assert.That(crowds[room].Waves.Count,Is.EqualTo(1));
-                            Assert.That(crowds[room].Waves[0].TotalEnemyCount,Is.EqualTo(new[]{12,14,14,16,14,16,18}[index]));
+                            Assert.That(crowds[room].Waves[0].TotalEnemyCount,Is.EqualTo(Populations[index][room]));
                             var activation=crowds[room].GetComponent<BarricadeRoomAuthoring>();
                             if(count>1){Assert.That(activation,Is.Not.Null);Assert.That(activation.previousGate,Is.EqualTo(room==0?null:gates[room-1]));}
                             foreach(var bank in crowds[room].Waves[0].SpawnRectangles)

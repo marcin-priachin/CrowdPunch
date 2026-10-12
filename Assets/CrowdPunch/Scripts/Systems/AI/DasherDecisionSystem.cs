@@ -37,6 +37,8 @@ namespace CrowdPunch.Systems.AI
                 : new NativeArray<ProtectedPointAttacker>(0, Allocator.TempJob);
             state.Dependency = new DecisionJob { Player = player, Grid = grid, Enemies = enemies.AsDeferredJobArray(), DeltaTime = SystemAPI.Time.DeltaTime,
                 Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
+                Owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true),
+                Rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true),
                 Attackers = attackers }
                 .ScheduleParallel(state.Dependency);
             state.Dependency = enemies.Dispose(state.Dependency);
@@ -49,6 +51,8 @@ namespace CrowdPunch.Systems.AI
             public PlayerSnapshot Player;
             public bool Defending;
             [ReadOnly] public NativeArray<ProtectedPointAttacker> Attackers;
+            [ReadOnly] public ComponentLookup<EnemyWaveOwnership> Owners;
+            [ReadOnly] public ComponentLookup<BarricadeRoom> Rooms;
             public NavigationGrid Grid;
             [ReadOnly] public NativeArray<EnemySeparationNeighbor> Enemies;
             public float DeltaTime;
@@ -58,6 +62,13 @@ namespace CrowdPunch.Systems.AI
                 in EnemyArchetypeSeparationDistances archetypeSeparationDistances,
                 in EnemyLaunchState launch, in LocalTransform transform)
             {
+                bool hasRoom = BarricadeRoomMovement.TryGetRoom(entity, Owners, Rooms, out var room);
+                if (hasRoom && launch.Phase == EnemyLaunchPhase.Active && Player.IsAvailable
+                    && (!BarricadeRoomMovement.Contains(room, Player.Position) || !BarricadeRoomMovement.Contains(room, transform.Position)))
+                {
+                    state.Phase = DasherPhase.Positioning; state.SecondsRemaining = 0; state.HasLockedRotation = 0;
+                    return; // Preserve local coverage/reentry instead of resuming a cross-room charge.
+                }
                 if (Defending && state.Phase == DasherPhase.Positioning && launch.Phase == EnemyLaunchPhase.Active
                     && Player.IsAvailable && !ProtectedPointAttacker.Contains(Attackers, entity)) return;
                 navigation = default;
@@ -101,6 +112,12 @@ namespace CrowdPunch.Systems.AI
                     else if (movement.Speed <= 0f) movement.Speed = movementSettings.WanderSpeed;
                     float3 destination = NavigationGeometry.DistanceBandDestination(Grid, transform.Position, Player.Position, preferredMin, preferredMax, agent.Radius);
                     destination.y = transform.Position.y;
+                    if (hasRoom)
+                    {
+                        var bounds = BarricadeRoomMovement.Bounds(room);
+                        destination.xz = math.clamp(destination.xz, bounds.Center.xz - bounds.Extents.xz,
+                            bounds.Center.xz + bounds.Extents.xz);
+                    }
                     navigation = NavigationIntent.Travel(destination, movement.Speed, .35f, separation, NavigationGoalKind.DistanceBand);
                     if (math.lengthsq(primaryDirection) == 0) navigation.Mode = NavigationMode.Hold;
                     return;
