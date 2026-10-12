@@ -92,6 +92,8 @@ Status: Must
 
 Launch into a main menu with Continue, chapter/level selection and New Campaign. Confirm before clearing progress. Save completed levels and sequential unlocks locally; boss completion unlocks the next chapter. Continue resumes the next unfinished level. Previously unlocked levels remain replayable. Preserve keyboard/mouse and controller usability. Save format and stable identifiers are implementation choices. No cloud synchronization, economy or additional meta-progression is required.
 
+Game settings may optionally start the game with all available levels unlocked. This option defaults to off, does not mark levels complete or alter saved unlock progress, and preserves Continue's next-unfinished-level behavior. Unavailable content remains unselectable.
+
 ### LOOP-008 - Large Crowd Level And Difficulty Rhythm
 
 Status: Must

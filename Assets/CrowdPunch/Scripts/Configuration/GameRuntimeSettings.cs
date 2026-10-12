@@ -7,6 +7,9 @@ namespace CrowdPunch.Configuration
     public sealed class GameRuntimeSettings : ScriptableObject
     {
         [SerializeField] private bool startRunning = true;
+        [Header("Campaign")]
+        [Tooltip("Allow selection of all available campaign levels from startup without marking them complete or changing saved progress.")]
+        [SerializeField] private bool startWithAllLevelsUnlocked;
         [Header("Crowd Pressure (Provisional)")]
         [Tooltip("Maximum number of closest baseline or explosive enemies that actively approach the player. Other ordinary melee enemies remain distributed across the arena.")]
         [SerializeField, Min(0)] private int maximumApproachingEnemies = 8;
@@ -32,6 +35,7 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float recoveryDuration = 0.6f;
 
         public bool StartRunning => startRunning;
+        public bool StartWithAllLevelsUnlocked => startWithAllLevelsUnlocked;
         public int MaximumApproachingEnemies => maximumApproachingEnemies;
         public float MinimumPropagationImpulse => minimumPropagationImpulse;
         public float PropagationAimCorrectionRadius => propagationAimCorrectionRadius;

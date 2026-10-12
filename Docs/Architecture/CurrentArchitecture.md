@@ -215,6 +215,12 @@ Chapters 1-7 completion offer Continue into the next implemented chapter.
 Chapter 8 ends on CampaignComplete; index 80 is the completed-save sentinel and cannot load a scene.
 Existing stable-ID saves need no migration.
 
+For LOOP-007, Bootstrap's `GauntletSequence` references the shared `GameRuntimeSettings` asset
+and passes `StartWithAllLevelsUnlocked` into `CampaignProgress` at startup. This optional,
+default-off session policy bypasses sequential unlock checks for chapter and level selection;
+completion records, Continue, and save format remain unchanged. New Campaign retains the
+session policy after resetting completion. `CanSelect` still rejects unavailable catalog entries.
+
 `PauseMenu` routes campaign presentation to the narrow uGUI `CampaignMenu`, retaining its
 existing input asset and EventSystem. Main/selection/confirmation/pause/failure/milestone pages
 use controller-selectable buttons. Player movement/punch/look inputs are suspended while menu

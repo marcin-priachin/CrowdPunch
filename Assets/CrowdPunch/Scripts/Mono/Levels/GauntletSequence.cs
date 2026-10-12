@@ -19,6 +19,7 @@ namespace CrowdPunch.Mono.Levels
         public const string EditorLegacyKey = "CrowdPunch.LevelLauncher.Legacy";
 #endif
         [SerializeField] private CampaignCatalog campaign;
+        [SerializeField] private GameRuntimeSettings gameSettings;
         [SerializeField] private string[] levelSceneNames;
         [SerializeField] private string[] levelDisplayNames;
         [SerializeField] private bool loadFirstLevelOnStart = true;
@@ -73,7 +74,8 @@ namespace CrowdPunch.Mono.Levels
 #endif
             if (HasCampaign)
                 Progress = new CampaignProgress(Path.Combine(Application.persistentDataPath,
-                    EditorPreview ? "campaign-editor-preview.json" : "campaign-v1.json"));
+                    EditorPreview ? "campaign-editor-preview.json" : "campaign-v1.json"),
+                    gameSettings != null && gameSettings.StartWithAllLevelsUnlocked);
         }
 
         private void Start()

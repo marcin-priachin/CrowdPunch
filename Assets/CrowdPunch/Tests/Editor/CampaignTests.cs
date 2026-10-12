@@ -75,6 +75,30 @@ namespace CrowdPunch.Tests
             Assert.That(progress.NextUnfinished(catalog),Is.Zero);
             Assert.That(progress.IsUnlocked(catalog,10),Is.False);
         }
+        [Test] public void Loop007_AllLevelsUnlockedPreservesCompletionAndSavedProgress()
+        {
+            var progress = new CampaignProgress(path, startWithAllLevelsUnlocked: true);
+            for (int i = 0; i < catalog.Count; i++)
+            {
+                Assert.That(progress.IsUnlocked(catalog, i), Is.True);
+                Assert.That(progress.IsComplete(catalog.Get(i).id), Is.False);
+            }
+            Assert.That(progress.IsUnlocked(catalog, -1), Is.False);
+            Assert.That(progress.IsUnlocked(catalog, catalog.Count), Is.False);
+            Assert.That(progress.NextUnfinished(catalog), Is.Zero);
+            Assert.That(File.Exists(path), Is.False);
+
+            Assert.That(progress.Complete(catalog.Get(catalog.Count - 1).id), Is.True);
+            var reloaded = new CampaignProgress(path);
+            Assert.That(reloaded.IsComplete(catalog.Get(catalog.Count - 1).id), Is.True);
+            Assert.That(reloaded.IsUnlocked(catalog, 1), Is.False);
+            Assert.That(reloaded.NextUnfinished(catalog), Is.Zero);
+
+            Assert.That(progress.Reset(), Is.True);
+            Assert.That(progress.IsUnlocked(catalog, catalog.Count - 1), Is.True);
+            Assert.That(progress.IsComplete(catalog.Get(catalog.Count - 1).id), Is.False);
+            Assert.That(new CampaignProgress(path).IsUnlocked(catalog, 1), Is.False);
+        }
         [Test] public void Loop007_AllEightyCompletedReturnsEndSentinel()
         {
             var progress=new CampaignProgress(path);

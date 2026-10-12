@@ -17,9 +17,15 @@ namespace CrowdPunch.Mono.Levels
         }
 
         private readonly string path;
+        private readonly bool allLevelsUnlocked;
         private Save data = new();
         public string Error { get; private set; }
-        public CampaignProgress(string savePath) { path = savePath; Load(); }
+        public CampaignProgress(string savePath, bool startWithAllLevelsUnlocked = false)
+        {
+            path = savePath;
+            allLevelsUnlocked = startWithAllLevelsUnlocked;
+            Load();
+        }
         public bool IsComplete(string id) => data.completed.Contains(id);
         public int NextUnfinished(CampaignCatalog catalog)
         {
@@ -28,7 +34,7 @@ namespace CrowdPunch.Mono.Levels
             return catalog.Count;
         }
         public bool IsUnlocked(CampaignCatalog catalog, int index)
-            => index >= 0 && index < catalog.Count && index <= NextUnfinished(catalog);
+            => index >= 0 && index < catalog.Count && (allLevelsUnlocked || index <= NextUnfinished(catalog));
         public bool Complete(string id)
         {
             // A successful replay does not mutate progress or rotate the recovery backup.
