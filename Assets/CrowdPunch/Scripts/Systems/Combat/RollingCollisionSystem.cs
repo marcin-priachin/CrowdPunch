@@ -57,6 +57,7 @@ namespace CrowdPunch.Systems.Combat
 
         internal static void HitCrowd(EntityManager em,Entity boss,Entity enemy,in RollingBoss b,in RollingTuning t,double now)
         {
+            if (SnakeHitRules.Protected(em, enemy)) return;
             var launch=em.GetComponentData<EnemyLaunchState>(enemy);
             var velocity=em.GetComponentData<PhysicsVelocity>(enemy);
             float3 away=em.GetComponentData<LocalTransform>(enemy).Position-em.GetComponentData<LocalTransform>(boss).Position;

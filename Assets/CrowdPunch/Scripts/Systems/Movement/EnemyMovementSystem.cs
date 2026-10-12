@@ -61,6 +61,7 @@ namespace CrowdPunch.Systems.Movement
 
         [BurstCompile]
         [WithAll(typeof(Enemy))]
+        [WithNone(typeof(SnakeSegment))]
         [WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
         private partial struct EnemyMovementJob : IJobEntity
         {

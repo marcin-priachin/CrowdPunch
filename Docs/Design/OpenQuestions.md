@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-10
+Last updated: 2026-10-12
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -65,6 +65,21 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-12 - Snake And Legacy Gauntlet_24
+
+Decision: Adopt the final attached summary from Design Yeti Tail Enemy, conversation
+6accfed5-75b4-83ed-8ac1-0798c630da8e. SNAKE-001..007 define a continuously pursuing
+Yeti head, path-following physical orb tail, any-owner launch-based cuts, simultaneous
+severing, spatial original-snake clearance and projectile-only detached lifetime.
+Defaults are ProtectedWhileTailRemains and LaunchAndSever; both alternatives remain
+configurable. Gauntlet_24 is a finite mixed legacy wave outside campaign/player builds.
+Numerical tuning and minor implementation choices are delegated. OQ-001 performance
+targets and balance/readability still need human validation.
+
+Excluded by the selected behavior: damage-only destruction of attached orbs, fixed-time
+clearance, tail regrowth, melee orb recovery, automatic head defeat on tail removal,
+protected-head recoil/stagger and dedicated new UI.
 
 ### 2026-10-10 - OQ-020: No Elites In Protected-Zone Levels
 

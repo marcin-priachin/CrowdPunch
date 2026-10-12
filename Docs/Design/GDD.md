@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-11
+Last updated: 2026-10-12
 
 ## How To Read This Document
 
@@ -60,7 +60,7 @@ Status: Must
 
 The campaign contains exactly 80 levels in eight chapters of ten. Every tenth level is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce all existing enemies, objectives and hazards by level 40. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes, BARRICADE-007's room chains and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
 
-Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 23 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
+Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 24 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
 
 ### LOOP-003 — Run Duration
 
@@ -1374,6 +1374,52 @@ finite-wave enemy is defeated; hazards never delay completion. Enemy counts and 
 are delegated. Introduced periodic patches remain visible while inactive, with distinct
 inactive/warning/active appearances, a full-footprint pulsing warning and a brighter
 active state. Colors and effects are delegated; no additional HUD is required.
+
+## Snake Enemy (Agreed 2026-10-12)
+
+### SNAKE-001 - Pursuing Head And Physical Tail
+
+Status: Must
+
+A Yeti head continuously pursues the player outside ordinary crowd-pressure allocation. Attached spherical orbs follow its recent path with a sinusoidal sideways wave. Reduce the wave near blocking geometry and keep attached bodies in navigable space. Attached orbs collide with enemies but ordinary contact causes neither damage nor launches. Both head and attached orbs damage the player on contact through existing player protection.
+
+### SNAKE-002 - Launch-Based Cutting
+
+Status: Must
+
+Punches (including ordinary dash punches) and qualifying launched-body impacts from any owner launch and detach struck orbs regardless of health. Ordinary damage alone cannot destroy attached orbs. Preserve the head-side prefix; immediately destroy the unhit disconnected suffix. Resolve simultaneous punch/explosion hits as a batch so every directly hit orb launches, independent of processing order. Tail loss is permanent until reset/respawn.
+
+### SNAKE-003 - Detached Projectile Lifecycle
+
+Status: Must
+
+Detached orbs retain ordinary physical chains, launch ownership and launched-body player damage. Ignore their original head and attached prefix until spatially clear of that snake, then permit return collisions for the remainder of the launch. Clearance must be spatial, not a fixed timeout or arena-wide exclusion. Destroy detached orbs when launch ends; they never recover as melee enemies.
+
+### SNAKE-004 - Configurable Head Vulnerability
+
+Status: Must
+
+Default ProtectedWhileTailRemains: any attached orb protects the head from damage, launch, push and stagger; direct punches still consume cooldown. With no attached orbs, the living head follows ordinary launch/damage/recovery and resumes pursuit. Also expose AlwaysVulnerable: ordinary vulnerability throughout, with remaining tail destroyed when the head launches or is defeated. Tail removal does not automatically defeat the head.
+
+### SNAKE-005 - Configurable Explosions
+
+Status: Must
+
+Default LaunchAndSever: explosions launch all affected attached orbs and resolve severing together. Also expose IgnoreAttachedOrbs. Head vulnerability remains independently governed by SNAKE-004. Reuse existing explosion ownership and impulse conventions.
+
+### SNAKE-006 - Assets, Aiming And Settings
+
+Status: Must
+
+Use Models/UltimateMonsters/Blob/Yeti.fbx for the head. Attached orbs receive ordinary aim assistance and initial trajectory previews; protected heads are not preview sources. Tail silhouette, visible loss and existing combat feedback communicate the mechanic without dedicated UI. Expose both behavior modes with their stated defaults plus initial segment count, orb size, spacing, wave amplitude, wave frequency (with units), pursuit speed, contact damage and head health. Numeric tuning and minor presentation choices are delegated provisional values.
+
+### SNAKE-007 - Legacy Gauntlet_24
+
+Status: Must
+
+Introduce the enemy in legacy Gauntlet_24 through Level Play, outside campaign progression and player builds. Use one small finite wave of snakes and Baselines with configurable counts. Complete on head/Baseline defeat; tail entities and detached projectiles never count as independent objectives. Retry restores full tails, heads, health and Baselines and clears projectiles/exclusion state. Bounds and cleanup must not leave invisible bodies blocking completion. Campaign placement is outside this slice.
+
+Source: agreed summary in Design Yeti Tail Enemy, conversation 6accfed5-75b4-83ed-8ac1-0798c630da8e. No consequential open question remains within this scope.
 
 ## Explicit Non-Goals For The Current Baseline
 

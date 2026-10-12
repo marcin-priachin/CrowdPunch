@@ -6,6 +6,51 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Snake Enemy And Legacy Gauntlet_24 (SNAKE-001..007)
+
+`SnakeAuthoring`/`SnakeBaker` put `SnakeTuning`, `SnakeHead`, `SnakeTailLink` and
+`SnakePathPoint` on a normal-tier Yeti prefab. Its dedicated Baseline spawn profile
+uses the existing wave pipeline. Only the head has `EnemyWaveOwnership`; each orb
+stores head/generation and encounter identity in `SnakeSegment` for cleanup, without
+joining defeat counts. No enemy entity queries or state enter player MonoBehaviours.
+
+`SnakeTailSpawnSystem` creates tails through an ECB after head warning activation.
+It restores tail tuning on a new lifetime and seeds the longest clear rear path.
+Head health has one source: `SnakeEnemySpawnSettings.maxHealth`, applied by ordinary
+spawn/reset systems. Tail construction and exposure preserve that health, including
+values below one. `SnakeSettings` contains no competing head-health override.
+The chase job excludes orbs and gives heads continuous navigation-owned pursuit
+outside pressure allocation. `SnakeTailMovementSystem` samples bounded recent path
+history by arc distance, adds a sinusoid, reduces sideways wave against swept static
+clearance, and drives attached physics velocity with an intentional path motor.
+Attached enemies remain physical bodies; movement never teleports their XZ positions.
+Protected heads use zero inverse mass while retaining velocity-owned pursuit, so
+solver contact cannot push them; exposure restores their stored dynamic mass.
+
+Punch and impact sever systems examine complete launch batches before destroying
+disconnected suffixes with ECBs. Pre-physics severing follows punches and precedes
+damage/impulses; post-physics severing follows collision/explosion/Wizard/pillar
+resolution and precedes recovery. Shared hit rules block protected-head damage,
+launch, recoil and previews, while player punch detection still confirms cooldown.
+Attached-orb damage is ignored until detachment. Both agreed mode alternatives
+are baked from `Data/Settings/SnakeSettings.asset`.
+
+`SnakeContactSystem` disables only original-snake contacts for attached or uncleared
+detached orbs. `SnakeCollisionClearanceSystem` tests the original head and remaining
+prefix using spatial body radii plus 0.15m clearance; once clear it never rearms during
+that launch. Aim assistance excludes an orb's original snake until clear, avoiding
+self-collision locks during departure. Other snakes/crowds remain valid targets.
+Ordinary solver propagation, ownership, feedback and launched-player danger remain
+shared. Recovery defeats detached orbs at launch end; `SnakeOrbCleanupSystem`
+destroys them and stale/ownerless attached pieces. Restart destroys every orb before
+resetting heads and wave generations, ensuring full-tail reconstruction.
+
+The Editor builder creates animated Blob/Yeti assets, spherical orb physics/rendering,
+a 36x38m clipped court with two navigation obstacles and a single finite 12 Baseline +
+2 Snake wave. Counts remain editable in `CP24_01_Snakes_And_Ammunition.asset`.
+Bootstrap's legacy array includes `24 Cut The Tail`; no campaign catalog or player
+build scene list changes. Rebuilding this encounter is explicit and restores open scenes.
+
 ## Enemy Spawn Warnings (INFO-006)
 
 `EnemySpawnInitialization` reserves the fully initialized prefab at its chosen location,

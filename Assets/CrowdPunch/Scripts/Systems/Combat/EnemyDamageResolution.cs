@@ -20,6 +20,7 @@ namespace CrowdPunch.Systems.Combat
                 em.SetComponentData(target, damage); em.SetComponentEnabled<DamageRequest>(target, false); return;
             }
             float amount = health.Current <= 0 ? 0 : math.max(0, em.GetComponentData<DamageRequest>(target).Amount);
+            if (SnakeHitRules.Protected(em, target) || SnakeHitRules.Attached(em, target)) amount = 0;
             if (em.HasComponent<EnemyArmor>(target))
             {
                 var armor = em.GetComponentData<EnemyArmor>(target);

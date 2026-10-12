@@ -10,7 +10,8 @@ namespace CrowdPunch.Systems.Combat
     internal static class ArmorHitResolution
     {
         public static bool IsProtected(EntityManager em, Entity target) =>
-            em.HasComponent<EnemyArmor>(target) && em.GetComponentData<EnemyArmor>(target).Stages > 0;
+            SnakeHitRules.Protected(em, target)
+            || em.HasComponent<EnemyArmor>(target) && em.GetComponentData<EnemyArmor>(target).Stages > 0;
 
         public static ArmorHitOutcome Resolve(ref EnemyArmor armor, in EnemyArmorSettings settings,
             DynamicBuffer<ArmorHitHistory> history, Entity source, uint launchSequence,
@@ -32,6 +33,7 @@ namespace CrowdPunch.Systems.Combat
         public static ArmorHitOutcome Resolve(EntityManager em, Entity target, Entity source,
             uint sequence, double now, float damage)
         {
+            if (SnakeHitRules.Protected(em, target)) return ArmorHitOutcome.Blocked;
             if (!em.HasComponent<EnemyArmor>(target)) return ArmorHitOutcome.Ordinary;
             var armor = em.GetComponentData<EnemyArmor>(target);
             var outcome = Resolve(ref armor, em.GetComponentData<EnemyArmorSettings>(target),

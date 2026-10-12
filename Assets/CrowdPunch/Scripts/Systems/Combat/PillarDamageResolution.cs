@@ -18,6 +18,7 @@ namespace CrowdPunch.Systems.Combat
         }
         internal static void HitEnemy(EntityManager em,Entity pillar,Entity target,in PillarTuning t,float3 direction,double now)
         {
+            if (SnakeHitRules.Protected(em, target)) return;
             var launch=em.GetComponentData<EnemyLaunchState>(target);
             if(launch.Phase==EnemyLaunchPhase.Defeated) return;
             EnemyDamageResolution.ApplyPending(em,target,now);

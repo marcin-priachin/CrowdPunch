@@ -59,7 +59,7 @@ namespace CrowdPunch.Systems.Physics
                         continue;
                     }
 
-                    if (health.ValueRO.Current <= 0f)
+                    if (health.ValueRO.Current <= 0f || SystemAPI.HasComponent<SnakeSegment>(enemy))
                     {
                         launchState.ValueRW.Phase = EnemyLaunchPhase.Defeated;
                         launchState.ValueRW.RecoverySecondsRemaining = 0f;

@@ -66,6 +66,7 @@ namespace CrowdPunch.Systems.Combat
                 {
                     Entity target = targets[i];
                     if (target == source || state.EntityManager.HasComponent<BossPart>(target)) continue;
+                    if (SnakeHitRules.Protected(state.EntityManager, target)) continue;
                     float combinedRadius = math.max(0f, sourceRadius.ValueRO.ContactRadius)
                         + math.max(0f, radii[target].ContactRadius);
                     if (DistanceSqToSegment(transforms[target].Position, start, end) > combinedRadius * combinedRadius) continue;

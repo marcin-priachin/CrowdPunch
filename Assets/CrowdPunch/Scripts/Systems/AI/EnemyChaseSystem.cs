@@ -106,7 +106,8 @@ namespace CrowdPunch.Systems.AI
                         }
                     }
 
-                    if (!defending && playerInRoom && playerSnapshot.IsAvailable && IsOrdinaryMelee(archetype.ValueRO.Value))
+                    if (!SystemAPI.HasComponent<SnakeHead>(entity) && !SystemAPI.HasComponent<SnakeSegment>(entity)
+                        && !defending && playerInRoom && playerSnapshot.IsAvailable && IsOrdinaryMelee(archetype.ValueRO.Value))
                     {
                         float3 toPlayer = transform.ValueRO.Position - playerSnapshot.Position;
                         toPlayer.y = 0f;
@@ -132,6 +133,7 @@ namespace CrowdPunch.Systems.AI
 
             JobHandle chaseJob = new EnemyChaseJob
             {
+                Snakes = SystemAPI.GetComponentLookup<SnakeHead>(true),
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
                 Owners = owners,
                 Rooms = rooms,
@@ -207,9 +209,10 @@ namespace CrowdPunch.Systems.AI
 
         [BurstCompile]
         [WithAll(typeof(Enemy))]
-        [WithNone(typeof(RespawnRequest))]
+        [WithNone(typeof(RespawnRequest), typeof(SnakeSegment))]
         private partial struct EnemyChaseJob : IJobEntity
         {
+            [ReadOnly] public ComponentLookup<SnakeHead> Snakes;
             public bool Defending;
             public Entity ClosestExplosive;
             public ProtectedPoint Objective;
@@ -279,7 +282,7 @@ namespace CrowdPunch.Systems.AI
                     return;
                 }
 
-                if (playerInRoom && archetype.Value == EnemyArchetypeKind.Armored)
+                if (playerInRoom && (archetype.Value == EnemyArchetypeKind.Armored || Snakes.HasComponent(entity)))
                 {
                     EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
                     float speed = movementSettings.MoveSpeed * movementSettings.ChargeSpeedMultiplier;

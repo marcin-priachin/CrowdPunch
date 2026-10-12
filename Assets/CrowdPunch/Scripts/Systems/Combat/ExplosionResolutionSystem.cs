@@ -147,6 +147,11 @@ namespace CrowdPunch.Systems.Combat
                     continue;
                 }
 
+                if (SnakeHitRules.Attached(EntityManager, target))
+                {
+                    var segment = SystemAPI.GetComponent<SnakeSegment>(target);
+                    if (SystemAPI.GetComponent<SnakeTuning>(segment.Head).ExplosionResponse == SnakeExplosionResponse.IgnoreAttachedOrbs) continue;
+                }
                 float3 armorDirection = math.normalizesafe(new float3(transform.ValueRO.Position.x - center.x, 0,
                     transform.ValueRO.Position.z - center.z), new float3(0, 0, 1));
                 uint sourceSequence = SystemAPI.HasComponent<EnemyLaunchState>(explosive)

@@ -32,6 +32,9 @@ namespace CrowdPunch.Systems.Initialization
             }
 
             lastRestartSequence = restartSequence;
+            using (var oldOrbs = SystemAPI.QueryBuilder().WithAll<SnakeSegment>().Build().ToEntityArray(Allocator.Temp))
+                foreach (var orb in oldOrbs)
+                    if (EntityManager.Exists(orb)) EntityManager.DestroyEntity(orb);
             // Fired shots are independent of their shooter and are not owned by a SubScene.
             EntityQuery oldProjectiles = SystemAPI.QueryBuilder().WithAll<RangedProjectile>().Build();
             using (NativeArray<Entity> projectileRoots = oldProjectiles.ToEntityArray(Allocator.Temp))

@@ -131,6 +131,7 @@ namespace CrowdPunch.Systems.Combat
 
         private static void HitEnemy(EntityManager em, Entity target, float3 position, WizardZone zone, double now)
         {
+            if (SnakeHitRules.Protected(em, target)) return;
             var launch = em.GetComponentData<EnemyLaunchState>(target);
             var s = zone.Settings;
             bool dashing = em.HasComponent<DasherState>(target) && launch.Phase == EnemyLaunchPhase.Active &&
