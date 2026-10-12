@@ -15,6 +15,7 @@ namespace CrowdPunch.Components
         public float DamageMultiplierPerExcessImpulse;
         public float MaximumCollisionDamageMultiplier;
         public float PlayerOwnedLaunchDamageReduction;
+        public float MaximumPlayerImpactDamage;
         public float UsefulMomentumSpeed;
         public float LowMomentumPeriod;
         public float RecoveryDuration;

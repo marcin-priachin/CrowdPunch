@@ -17,7 +17,8 @@ namespace CrowdPunch.Tests
             MinimumDamageImpulse = 2f,
             BaseCollisionDamageMultiplier = 0.25f,
             DamageMultiplierPerExcessImpulse = 0.05f,
-            MaximumCollisionDamageMultiplier = 0.75f
+            MaximumCollisionDamageMultiplier = 0.75f,
+            MaximumPlayerImpactDamage = 25f
         };
 
         [TestCase(EnemyLaunchOwner.Player, EnemyLaunchCause.PlayerPunch, 7.5f)]
@@ -54,8 +55,48 @@ namespace CrowdPunch.Tests
                 Is.EqualTo(expected).Within(0.0001f));
         }
 
+        [TestCase(EnemyLaunchOwner.Player)]
+        [TestCase(EnemyLaunchOwner.Enemy)]
+        [TestCase(EnemyLaunchOwner.Boss)]
+        [TestCase(EnemyLaunchOwner.Environment)]
+        [TestCase(EnemyLaunchOwner.None)]
+        public void Combat015_PlayerImpactCapLimitsEveryOwnerWithoutChangingEnemyDamage(EnemyLaunchOwner owner)
+        {
+            var settings = Settings;
+            settings.BaseCollisionDamageMultiplier = 0.5f;
+            settings.DamageMultiplierPerExcessImpulse = 0.2f;
+            settings.MaximumCollisionDamageMultiplier = 3f;
+            var launch = new EnemyLaunchState { Owner = owner, LaunchDamage = 20f };
+            Assert.That(EnemyCollisionDamage.Calculate(20f, 16f, settings), Is.EqualTo(60f));
+            Assert.That(LaunchedEnemyPlayerImpactSystem.CalculatePlayerDamage(launch, 16f, settings), Is.EqualTo(25f));
+            Assert.That(LaunchedEnemyPlayerImpactSystem.CalculatePlayerDamage(launch, 1.99f, settings), Is.Zero);
+        }
+
         [Test]
-        public void Combat015_SimultaneousImpactsSelectStrongestAfterReductionAndRepunchResetsEligibility()
+        public void Combat015_PlayerOwnedReductionAppliesBeforePlayerImpactCap()
+        {
+            var settings = Settings;
+            settings.BaseCollisionDamageMultiplier = settings.MaximumCollisionDamageMultiplier = 3f;
+            settings.PlayerOwnedLaunchDamageReduction = 0.8f;
+            var launch = new EnemyLaunchState { Owner = EnemyLaunchOwner.Player, LaunchDamage = 20f };
+            Assert.That(LaunchedEnemyPlayerImpactSystem.CalculatePlayerDamage(launch, 16f, settings),
+                Is.EqualTo(12f).Within(0.0001f));
+        }
+
+        [TestCase(-1f, 0f)]
+        [TestCase(0f, 0f)]
+        [TestCase(10f, 10f)]
+        [TestCase(25f, 15f)]
+        public void Combat015_PlayerImpactCapIsConfigurableAndNeverIncreasesDamage(float cap, float expected)
+        {
+            var settings = Settings;
+            settings.MaximumPlayerImpactDamage = cap;
+            var launch = new EnemyLaunchState { Owner = EnemyLaunchOwner.Enemy, LaunchDamage = 20f };
+            Assert.That(LaunchedEnemyPlayerImpactSystem.CalculatePlayerDamage(launch, 12f, settings), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void Combat015_SimultaneousImpactsApplyCapAndRepunchResetsEligibility()
         {
             using var world = new World("COMBAT-015 player-owned damage reduction");
             var em = world.EntityManager;
@@ -63,6 +104,7 @@ namespace CrowdPunch.Tests
             em.SetComponentData(player, new PlayerSnapshot { IsAvailable = true, Radius = 1f });
             var settings = Settings;
             settings.PlayerOwnedLaunchDamageReduction = 0.5f;
+            settings.MaximumPlayerImpactDamage = 8f;
             em.SetComponentData(em.CreateEntity(typeof(EnemyLaunchSettings)), settings);
             var playerBody = Body(EnemyLaunchOwner.Player, 20f);
             var bossBody = Body(EnemyLaunchOwner.Boss, 12f);
@@ -77,7 +119,7 @@ namespace CrowdPunch.Tests
             {
                 var system = world.GetOrCreateSystemManaged<LaunchedEnemyPlayerImpactSystem>();
                 system.Update();
-                Assert.That(received, Is.EqualTo(9f).Within(0.0001f));
+                Assert.That(received, Is.EqualTo(8f).Within(0.0001f));
                 Assert.That(hits, Is.EqualTo(1));
                 Assert.That(em.GetComponentData<EnemyLaunchState>(playerBody).PlayerImpactLaunchSequence, Is.EqualTo(1));
                 Assert.That(em.GetComponentData<EnemyLaunchState>(bossBody).PlayerImpactLaunchSequence, Is.EqualTo(1));

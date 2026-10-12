@@ -105,9 +105,9 @@ namespace CrowdPunch.Systems.Combat
             in EnemyLaunchSettings settings)
         {
             float damage = EnemyCollisionDamage.Calculate(launchState.LaunchDamage, estimatedImpulse, settings);
-            return launchState.Owner == EnemyLaunchOwner.Player
-                ? damage * (1f - math.saturate(settings.PlayerOwnedLaunchDamageReduction))
-                : damage;
+            if (launchState.Owner == EnemyLaunchOwner.Player)
+                damage *= 1f - math.saturate(settings.PlayerOwnedLaunchDamageReduction);
+            return math.min(damage, math.max(0f, settings.MaximumPlayerImpactDamage));
         }
 
         public static bool CanDamagePlayer(in EnemyLaunchState launchState)
