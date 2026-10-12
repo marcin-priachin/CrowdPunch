@@ -45,7 +45,7 @@ namespace CrowdPunch.Tests
             Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{68,86,92,102,118,138}));
             Assert.That(waves.Select(w=>w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(new[]{0,0,2,0,0,0}));
             Assert.That(waves.Sum(w=>w.TotalEnemyCount+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(606));
-            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.AllAtOnce && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
+            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.Batched && w.BatchSize==8 && w.BatchInterval==2 && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
             Assert.That(waves[2].ArmoredAmmunitionProfile,Is.Not.Null); Assert.That(waves[5].ArmoredAmmunitionProfile,Is.Not.Null);
             Assert.That(waves[4].WizardAmmunitionProfile,Is.Not.Null); Assert.That(waves[4].WaitForPersistentHazards,Is.True);
             Assert.That(waves.Where((w,i)=>i!=4).All(w=>!w.WaitForPersistentHazards),Is.True);

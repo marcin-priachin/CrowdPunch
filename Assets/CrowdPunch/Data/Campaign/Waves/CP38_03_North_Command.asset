@@ -25,16 +25,16 @@ MonoBehaviour:
     Count: 2
   spawnRectangles:
   - Center: {x: 0, y: 2, z: 30}
-    Width: 40
-    Depth: 16
+    Width: 64
+    Depth: 24
   replenishWhileBossLives: 1
   bossReplenishDelay: 4
   delayBeforeWave: 3
   activationMode: 2
   duration: 0
-  spawnMode: 0
-  batchSize: 1
-  batchInterval: 3
+  spawnMode: 1
+  batchSize: 8
+  batchInterval: 2
   armoredAmmunitionProfile: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

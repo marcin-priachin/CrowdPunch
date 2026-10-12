@@ -25,6 +25,9 @@ namespace CrowdPunch.Systems.Initialization
         public void OnUpdate(ref SystemState state)
         {
             using var commands = new EntityCommandBuffer(Allocator.Temp);
+            // Activation tests physical occupants. Append each activation immediately so
+            // legacy authored reservations that overlap cannot mutually wait forever.
+            using var spacing = EnemySpawnSpacing.Capture(state.EntityManager, false);
             using var hazards = GroundHazardSpawnClearance.Capture(state.EntityManager);
             var player = SystemAPI.HasSingleton<PlayerSnapshot>() ? SystemAPI.GetSingleton<PlayerSnapshot>() : default;
             foreach (var (warning, enemy) in SystemAPI.Query<RefRW<EnemySpawnWarning>>()
@@ -53,8 +56,14 @@ namespace CrowdPunch.Systems.Initialization
                 if (SystemAPI.HasSingleton<ArenaGroundPlane>() && SystemAPI.HasSingleton<PhysicsWorldSingleton>()
                     && !EnemyGroundSpawnClearance.IsClear(SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld,
                         w.Position, radius, SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight)) continue;
+                if (SystemAPI.HasComponent<EnemyMovementSettings>(enemy)
+                    && !EnemySpawnSpacing.IsClear(w.Position,
+                        EnemySpawnSpacing.Minimum(SystemAPI.GetComponent<EnemyMovementSettings>(enemy)), spacing, enemy)) continue;
                 commands.SetEnabled(enemy, true);
                 commands.RemoveComponent<EnemySpawnWarning>(enemy);
+                spacing.Add(new EnemySpawnSpacing.Occupant { Entity = enemy, Position = w.Position,
+                    MinimumDistance = SystemAPI.HasComponent<EnemyMovementSettings>(enemy)
+                        ? EnemySpawnSpacing.Minimum(SystemAPI.GetComponent<EnemyMovementSettings>(enemy)) : 0f });
             }
             commands.Playback(state.EntityManager);
         }

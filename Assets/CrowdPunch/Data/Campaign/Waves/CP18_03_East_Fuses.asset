@@ -26,16 +26,16 @@ MonoBehaviour:
   eliteEnemies: []
   spawnRectangles:
   - Center: {x: 27, y: 2, z: 0}
-    Width: 16
-    Depth: 36
+    Width: 24
+    Depth: 64
   replenishWhileBossLives: 1
   bossReplenishDelay: 4
   delayBeforeWave: 3
   activationMode: 2
   duration: 0
-  spawnMode: 0
-  batchSize: 1
-  batchInterval: 3
+  spawnMode: 1
+  batchSize: 8
+  batchInterval: 2
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

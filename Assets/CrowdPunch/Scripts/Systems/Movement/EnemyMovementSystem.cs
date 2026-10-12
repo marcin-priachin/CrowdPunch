@@ -1,4 +1,6 @@
 using CrowdPunch.Components;
+using CrowdPunch.Utilities;
+using Unity.Collections;
 using CrowdPunch.Systems.AI;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
@@ -34,7 +36,12 @@ namespace CrowdPunch.Systems.Movement
         {
             ArenaBounds arenaBounds = SystemAPI.GetSingleton<ArenaBounds>();
 
-            new EnemyMovementJob
+            var warnings = new NativeList<float4>(Allocator.TempJob);
+            foreach (var (warning, movement) in SystemAPI.Query<RefRO<EnemySpawnWarning>, RefRO<EnemyMovementSettings>>()
+                         .WithOptions(EntityQueryOptions.IncludeDisabledEntities))
+                warnings.Add(new float4(warning.ValueRO.Position, EnemySpawnSpacing.Minimum(movement.ValueRO)));
+
+            state.Dependency = new EnemyMovementJob
             {
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
                 Owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true),
@@ -44,10 +51,12 @@ namespace CrowdPunch.Systems.Movement
                 PillarSettings = SystemAPI.GetComponentLookup<PillarTuning>(true),
                 DinoBosses = SystemAPI.GetComponentLookup<DinoBoss>(true),
                 DinoSettings = SystemAPI.GetComponentLookup<DinoTuning>(true),
+                Warnings = warnings.AsDeferredJobArray(),
                 Now = SystemAPI.Time.ElapsedTime,
                 ArenaBounds = arenaBounds,
                 DeltaTime = SystemAPI.Time.DeltaTime
-            }.ScheduleParallel();
+            }.ScheduleParallel(state.Dependency);
+            state.Dependency = warnings.Dispose(state.Dependency);
         }
 
         [BurstCompile]
@@ -63,6 +72,7 @@ namespace CrowdPunch.Systems.Movement
             [Unity.Collections.ReadOnly] public ComponentLookup<PillarTuning> PillarSettings;
             [Unity.Collections.ReadOnly] public ComponentLookup<DinoBoss> DinoBosses;
             [Unity.Collections.ReadOnly] public ComponentLookup<DinoTuning> DinoSettings;
+            [ReadOnly] public NativeArray<float4> Warnings;
             public double Now;
             public ArenaBounds ArenaBounds;
             public float DeltaTime;
@@ -113,6 +123,18 @@ namespace CrowdPunch.Systems.Movement
                     float3 direction = math.normalizesafe(desiredMovement.Direction);
                     targetVelocity = direction.xz * desiredMovement.Speed;
                     acceleration = movementSettings.Acceleration;
+                }
+
+                // Slow the motor before a reserved spawn circle. Launched/recovering bodies
+                // returned above still obey physics, and activation waits for them to clear.
+                for (int i = 0; i < Warnings.Length; i++)
+                {
+                    float2 limited = EnemySpawnSpacing.LimitApproachVelocity(transform.Position.xz, targetVelocity,
+                        Warnings[i].xz, math.max(EnemySpawnSpacing.Minimum(movementSettings), Warnings[i].w),
+                        movementSettings.BrakingAcceleration);
+                    if (math.distancesq(limited, targetVelocity) > .000001f)
+                        acceleration = movementSettings.BrakingAcceleration;
+                    targetVelocity = limited;
                 }
 
                 bool hasRoom = BarricadeRoomMovement.TryGetRoom(entity, Owners, Rooms, out var room);

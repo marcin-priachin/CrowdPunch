@@ -2,6 +2,7 @@ using CrowdPunch.Components;
 using CrowdPunch.Utilities;
 using Unity.Collections;
 using Unity.Mathematics;
+using Unity.Entities;
 using Unity.Physics;
 namespace CrowdPunch.Systems.Initialization
 {
@@ -19,7 +20,8 @@ namespace CrowdPunch.Systems.Initialization
 
         internal static bool TryFind(in PillarTuning pillar,in DinoTuning boss,int slot,float clearance,float navigationRadius,
             PhysicsWorldSingleton physics,PlayerSnapshot player,NavigationGrid grid,NativeList<float4> occupied,
-            ref Random random,out float3 position)
+            ref Random random,out float3 position, NativeList<EnemySpawnSpacing.Occupant> spacing = default,
+            float minimumDistance = 0f, Entity ignore = default)
         {
             using var accepted=new NativeList<float4>(Allocator.Temp);
             float3 anchor=Anchor(pillar,boss,slot,pillar.InitialPosition.y+3);
@@ -31,7 +33,8 @@ namespace CrowdPunch.Systems.Initialization
                 float angle=baseAngle+(attempt==0?0:random.NextFloat(-math.PI,math.PI)/math.max(1,boss.EnemiesPerPillar));
                 float r=radius+(attempt==0?0:random.NextFloat(-.4f,.4f));
                 position=pillar.InitialPosition+new float3(math.cos(angle)*r,3,math.sin(angle)*r);
-                if(NavigationGeometry.SpawnAllowed(grid,position.xz,navigationRadius)
+                if((!spacing.IsCreated || EnemySpawnSpacing.IsClear(position,minimumDistance,spacing,ignore))
+                    && NavigationGeometry.SpawnAllowed(grid,position.xz,navigationRadius)
                     && EnemyWaveSpawnSystem.IsSafe(physics,player,position,clearance,0,occupied,accepted)) return true;
             }
             return false; // Retry later instead of overlapping the player, boss, crowd or solid geometry.

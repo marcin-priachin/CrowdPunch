@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using CrowdPunch.Utilities;
 using CrowdPunch.Systems.Groups;
 using Unity.Collections;
 using Unity.Entities;
@@ -18,6 +19,7 @@ namespace CrowdPunch.Systems.Initialization
             var physics=SystemAPI.GetSingleton<PhysicsWorldSingleton>();
             var player=SystemAPI.HasSingleton<PlayerSnapshot>()?SystemAPI.GetSingleton<PlayerSnapshot>():default;
             var grid=SystemAPI.HasSingleton<NavigationGrid>()?SystemAPI.GetSingleton<NavigationGrid>():default;
+            using var spacing = EnemySpawnSpacing.Capture(em);
             using var occupied=new NativeList<float4>(Allocator.Temp);
             using var commands=new EntityCommandBuffer(Allocator.Temp);
             foreach(var (pose,clearance) in SystemAPI.Query<RefRO<LocalTransform>,RefRO<EnemySpawnClearance>>().WithAll<Enemy>()
@@ -44,7 +46,7 @@ namespace CrowdPunch.Systems.Initialization
                     {
                         bool exists=false; foreach(var member in members) if(member.Pillar==entity && member.Slot==slot) { exists=true; break; }
                         if(exists || !PillarCrowdPlacement.TryFind(pt.ValueRO,tuning,slot,profile.SpawnClearance,profile.NavigationRadius,
-                            physics,player,grid,occupied,ref random,out var position)) continue;
+                            physics,player,grid,occupied,ref random,out var position,spacing,EnemySpawnSpacing.Minimum(profile.MovementSettings))) continue;
                         var enemy=EnemySpawnInitialization.Create(commands,em,profile,position,ref random);
                         if(enemy==Entity.Null) continue;
                         commands.AddComponent(enemy,new PillarCrowdMember { Pillar=entity,Slot=slot });
@@ -53,6 +55,8 @@ namespace CrowdPunch.Systems.Initialization
                         commands.AddComponent(enemy,new EnemyWaveOwnership { Sequence=sequenceEntity,RunGeneration=sequence.ValueRO.RunGeneration,WaveIndex=0 });
                         sequence.ValueRW.AmmunitionSpawnedCount++; sequence.ValueRW.UndefeatedCount++;
                         occupied.Add(new float4(position,profile.SpawnClearance));
+                        spacing.Add(new EnemySpawnSpacing.Occupant { Position = position,
+                            MinimumDistance = EnemySpawnSpacing.Minimum(profile.MovementSettings) });
                     }
                 }
                 sequence.ValueRW.RandomState=random.state;

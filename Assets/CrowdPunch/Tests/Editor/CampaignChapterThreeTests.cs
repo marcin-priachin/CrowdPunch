@@ -45,7 +45,7 @@ namespace CrowdPunch.Tests
             Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{59,76,96,108}));
             Assert.That(waves.Select(w=>w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(new[]{0,1,0,2}));
             Assert.That(waves.Sum(w=>w.TotalEnemyCount+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(342));
-            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.AllAtOnce && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
+            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.Batched && w.BatchSize==8 && w.BatchInterval==2 && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
             Assert.That(waves[0].ArmoredAmmunitionProfile,Is.Not.Null);
             Assert.That(waves[3].ArmoredAmmunitionProfile,Is.Not.Null);
             var floor=AssetDatabase.LoadAssetAtPath<Mesh>(Data+"Layouts/Campaign_28_Floor.asset");

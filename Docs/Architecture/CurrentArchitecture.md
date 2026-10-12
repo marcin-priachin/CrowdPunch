@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-10-11
+Last inspected: 2026-10-12
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -25,6 +25,54 @@ physics-world index is restored for pooled returns before activation.
 dynamic mesh and one draw using the existing Resources/WizardZone material. No enemy
 GameObjects, HUD elements or per-enemy materials are added. Duration (1s), minimum marker
 radius (.75m) and ring width (.12m) are prototype tuning.
+
+## Campaign spawn spacing (2026-10-12, LOOP-002/008, INFO-006)
+
+All campaign wave assets use Batched spawning. Ordinary waves reserve up to four
+positions every 1.5 seconds; level 1 uses three per second; the eight large arenas use
+up to eight every two seconds. Existing defense batches (four every three seconds,
+or four every four seconds in level 24) remain unchanged. Composition, defeat-based
+activation, pre-wave delays and objective/boss tuning remain authored as before.
+
+Campaign banks expand along their existing sides within arena/room bounds, away from
+hazards and at least 3.5m from track routes. `CampaignSpawnLayoutBuilder` provides the
+Editor menu `Crowd Punch/Campaign/Apply Spawn Spacing`; rerun it after rebuilding campaign
+content with the original chapter, track or barricade builders. It edits campaign wave
+assets only and restores the open scene setup. Navigation and physical-ground checks
+remain authoritative for sampled positions in irregular floors or banks containing rocks.
+
+`EnemySpawnSpacing` captures planar positions and `EnemyMovementSettings.SeparationDistanceMin`.
+Wave batches, ammunition supply, pillar supply and pooled returns reject a candidate
+closer than the larger minimum of the two profiles, in addition to collider clearance.
+Per-archetype randomized preferences still control movement steering; spawn spacing uses
+the common profile minimum. Successful reservations enter shared occupancy immediately,
+including across sequences before ECB playback. Failed candidates remain queued for retry.
+
+Both chase and ranged positioning include disabled warning positions as separation
+neighbors without admitting them as AI/attack targets. The enemy movement motor limits
+approach velocity using the reserved minimum distance and braking acceleration. This
+changes motor intent rather than teleporting enemies or overwriting launched momentum.
+Committed Dasher motion and launched bodies retain their physical behavior; if they enter
+a warning, activation waits for the space to clear. Warning activation checks current
+occupants and same-update activations, keeping the advertised location fixed; pending
+legacy authored warnings do not mutually block one another.
+
+Verification on 2026-10-12: Unity compilation and all five spawn-spacing checks passed,
+including navigation/room-bank inspection across all 80 scenes. The broader campaign run
+passed 37/43 checks; six stopped at the pre-existing four-versus-three barricade-hit
+assertion in `CampaignBarricadeRoomTests.AssertRooms` (unchanged scenes/settings). Track
+route, composition/safeguard, boss-geometry and legacy-build checks passed. In a live
+Campaign 78 Editor preview, the first wave reached 76/76 spawned and zero pending warnings
+by 25.18s of simulation, with no runtime errors. The unattended player died during the
+smoke check; restoring health/temporary invincibility resumed the same wave without an
+asset change or campaign completion. This is a spawning smoke check, not a pacing playtest.
+
+A warmed Editor spot check with 148 active enemies and eight reservations measured
+0.0356ms per motor update (schedule plus completion), 0.6972ms per occupancy capture,
+and 0.0271ms per full placement scan. These are local synthetic timings without collision
+simulation, not OQ-001 hardware/FPS acceptance. `dotnet build Assembly-CSharp.csproj
+--no-restore` failed during project-reference resolution without reporting C# errors;
+Unity compilation was used as the authoritative code check.
 
 ## Campaign Chapters 1-8 (2026-10-10)
 

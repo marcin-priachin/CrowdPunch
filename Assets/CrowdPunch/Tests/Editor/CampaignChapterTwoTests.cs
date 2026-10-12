@@ -52,7 +52,7 @@ namespace CrowdPunch.Tests
                 .Where(w=>w.name.StartsWith("CP18_")).OrderBy(w=>w.name).ToArray();
             Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{52,70,88,108}));
             Assert.That(waves.Sum(w=>w.TotalEnemyCount),Is.EqualTo(318));
-            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.AllAtOnce && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
+            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.Batched && w.BatchSize==8 && w.BatchInterval==2 && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
             Assert.That(waves.All(w=>w.Enemies.All(e=>e.Settings!=null && e.Weight==0)
                 && w.Enemies.Sum(e=>e.MinimumCount)==w.TotalEnemyCount),Is.True);
             var floor = AssetDatabase.LoadAssetAtPath<Mesh>(Data+"Layouts/Campaign_18_Floor.asset");

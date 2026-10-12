@@ -13,6 +13,7 @@ namespace CrowdPunch.Systems.AI
     [BurstCompile]
     [UpdateInGroup(typeof(GamePrePhysicsGroup))]
     [UpdateAfter(typeof(EnemyChaseSystem))]
+    [UpdateAfter(typeof(Initialization.EnemyWaveSpawnSystem))]
     public partial struct RangedEnemyPositioningSystem : ISystem
     {
         [BurstCompile]
@@ -44,6 +45,12 @@ namespace CrowdPunch.Systems.AI
                     });
                 }
             }
+
+            // INFO-006: reservations repel movement without joining AI/attack eligibility.
+            foreach (var (warning, archetype) in SystemAPI.Query<RefRO<EnemySpawnWarning>, RefRO<EnemyArchetype>>()
+                         .WithOptions(EntityQueryOptions.IncludeDisabledEntities))
+                activeEnemies.Add(new EnemySeparationNeighbor { Position = warning.ValueRO.Position,
+                    Archetype = archetype.ValueRO.Value });
 
             var attackers = SystemAPI.HasSingleton<ProtectedPoint>() ? SystemAPI.GetSingletonBuffer<ProtectedPointAttacker>(true).ToNativeArray(Allocator.TempJob)
                 : new NativeArray<ProtectedPointAttacker>(0, Allocator.TempJob);

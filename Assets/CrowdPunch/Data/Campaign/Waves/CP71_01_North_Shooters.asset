@@ -22,17 +22,17 @@ MonoBehaviour:
     Weight: 0
   eliteEnemies: []
   spawnRectangles:
-  - Center: {x: -6, y: 2, z: 11}
-    Width: 14
-    Depth: 4
+  - Center: {x: -0.25, y: 2, z: 8.125}
+    Width: 28
+    Depth: 12.25
   replenishWhileBossLives: 1
   bossReplenishDelay: 4
   delayBeforeWave: 3
   activationMode: 2
   duration: 0
-  spawnMode: 0
-  batchSize: 1
-  batchInterval: 3
+  spawnMode: 1
+  batchSize: 4
+  batchInterval: 1.5
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

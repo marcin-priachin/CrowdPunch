@@ -30,6 +30,7 @@ namespace CrowdPunch.Systems.Initialization
             int rejectedNavigation = 0;
             NativeList<float4> occupiedEnemies = new NativeList<float4>(Allocator.Temp);
             EntityCommandBuffer commands = new EntityCommandBuffer(Allocator.Temp);
+            using var spacing = EnemySpawnSpacing.Capture(state.EntityManager);
             foreach ((RefRO<Unity.Transforms.LocalTransform> transform, RefRO<EnemySpawnClearance> clearance) in
                      SystemAPI.Query<RefRO<Unity.Transforms.LocalTransform>, RefRO<EnemySpawnClearance>>().WithAll<Enemy>()
                          .WithOptions(EntityQueryOptions.IncludeDisabledEntities))
@@ -86,7 +87,7 @@ namespace CrowdPunch.Systems.Initialization
                     {
                         sequence.NextAmmunitionCheckAt = now + .25d;
                         ArmoredAmmunitionSupply.TrySpawn(state.EntityManager, commands, sequenceEntity, ref sequence,
-                            wave, ranges, physicsWorld, navigationGrid, player, occupiedEnemies);
+                            wave, ranges, physicsWorld, navigationGrid, player, occupiedEnemies, spacing);
                     }
                     if (wave.WizardAmmunitionSafeguard != 0)
                     {
@@ -102,7 +103,7 @@ namespace CrowdPunch.Systems.Initialization
                         else if (now >= sequence.WizardSupplyAt)
                         {
                             ArmoredAmmunitionSupply.TrySpawn(state.EntityManager, commands, sequenceEntity, ref sequence,
-                                wave, ranges, physicsWorld, navigationGrid, player, occupiedEnemies, true);
+                                wave, ranges, physicsWorld, navigationGrid, player, occupiedEnemies, spacing, true);
                             sequence.WizardSupplyAt = now + math.max(.001f, wave.WizardAmmunitionDelay);
                         }
                     }
@@ -158,7 +159,7 @@ namespace CrowdPunch.Systems.Initialization
                     ? remaining
                     : math.min(remaining, math.max(1, wave.BatchSize));
                 int spawned = SpawnBatch(commands, state.EntityManager, navigationGrid, physicsWorld, player, sequenceEntity, wave, profiles, eliteProfiles, ranges,
-                    occupiedEnemies, ref sequence, requested, ref rejectedNavigation);
+                    occupiedEnemies, spacing, ref sequence, requested, ref rejectedNavigation);
 
                 if (sequence.SpawnedCount >= wave.TotalEnemyCount + wave.TotalEliteCount)
                 {
@@ -296,6 +297,7 @@ namespace CrowdPunch.Systems.Initialization
             Entity sequenceEntity, EnemyWaveDefinition wave, DynamicBuffer<EnemyWaveProfile> profiles,
             DynamicBuffer<EnemyWaveEliteProfile> eliteProfiles,
             DynamicBuffer<EnemyWaveSpawnRange> ranges, NativeList<float4> occupiedEnemies,
+            NativeList<EnemySpawnSpacing.Occupant> spacing,
             ref EnemyWaveSequence sequence, int requested, ref int rejectedNavigation)
         {
             MathematicsRandom random = new MathematicsRandom(sequence.RandomState == 0 ? 1u : sequence.RandomState);
@@ -350,7 +352,8 @@ namespace CrowdPunch.Systems.Initialization
                     if (!GroundHazardGeometry.Clear(groundHazards.AsArray(), position.xz, position.xz, selectedProfile.NavigationRadius)) continue;
                     if (!NavigationGeometry.SpawnAllowed(navigationGrid, position.xz, selectedProfile.NavigationRadius))
                     { rejectedNavigation++; continue; }
-                    if (IsSafe(physicsWorld, player, position, selectedProfile.SpawnClearance,
+                    if (EnemySpawnSpacing.IsClear(position, EnemySpawnSpacing.Minimum(selectedProfile.MovementSettings), spacing)
+                        && IsSafe(physicsWorld, player, position, selectedProfile.SpawnClearance,
                             sequence.MinimumPlayerDistance, occupiedEnemies, accepted))
                     {
                         found = true;
@@ -386,7 +389,9 @@ namespace CrowdPunch.Systems.Initialization
                 // PROTECT-001: defense populations are finite, including waves with elites.
                 if (!spawningElite && wave.TotalEliteCount > 0 && !entityManager.HasComponent<ProtectedPoint>(sequenceEntity))
                     commands.AddComponent<EliteWaveReplenishment>(enemy);
-                accepted.Add(new float4(position, selectedProfile.SpawnClearance));
+                occupiedEnemies.Add(new float4(position, selectedProfile.SpawnClearance));
+                spacing.Add(new EnemySpawnSpacing.Occupant { Position = position,
+                    MinimumDistance = EnemySpawnSpacing.Minimum(selectedProfile.MovementSettings) });
                 spawned++;
                 if (selectedProfile.Archetype == EnemyArchetypeKind.Wizard) wizards++;
                 sequence.SpawnedCount++;

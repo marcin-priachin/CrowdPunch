@@ -36,6 +36,7 @@ namespace CrowdPunch.Systems.Lifetime
         public void OnUpdate(ref SystemState state)
         {
             double elapsedTime = SystemAPI.Time.ElapsedTime;
+            using var spacing = EnemySpawnSpacing.Capture(state.EntityManager);
             using var groundHazards = GroundHazardSpawnClearance.Capture(state.EntityManager);
             using var commands = new EntityCommandBuffer(Allocator.Temp);
             ArenaBounds arenaBounds = SystemAPI.GetSingleton<ArenaBounds>();
@@ -216,7 +217,8 @@ namespace CrowdPunch.Systems.Lifetime
                     if (SystemAPI.HasSingleton<ArenaGroundPlane>() && SystemAPI.HasSingleton<PhysicsWorldSingleton>()
                         && !EnemyGroundSpawnClearance.IsClear(SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld,
                             respawnPosition, radius, SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight)) continue;
-                    if (NavigationGeometry.SpawnAllowed(grid, respawnPosition.xz, radius) &&
+                    if (EnemySpawnSpacing.IsClear(respawnPosition, EnemySpawnSpacing.Minimum(SystemAPI.GetComponent<EnemyMovementSettings>(enemy)), spacing, enemy)
+                        && NavigationGeometry.SpawnAllowed(grid, respawnPosition.xz, radius) &&
                         GroundHazardGeometry.Clear(groundHazards.AsArray(), respawnPosition.xz, respawnPosition.xz, radius)) { foundPosition = true; break; }
                 }
                 if (!foundPosition) { respawnRequest.ValueRW.RespawnAt = elapsedTime + 1; continue; }
@@ -225,8 +227,11 @@ namespace CrowdPunch.Systems.Lifetime
                     || !BossCrowdPlacement.TryFind(state.EntityManager,enemy,SystemAPI.GetSingleton<PhysicsWorldSingleton>(),
                         playerSnapshot,grid,ref random,out respawnPosition)))
                 { respawnRequest.ValueRW.RespawnAt=elapsedTime+1; continue; }
-                if (!GroundHazardGeometry.Clear(groundHazards.AsArray(), respawnPosition.xz, respawnPosition.xz, radius))
+                if (!EnemySpawnSpacing.IsClear(respawnPosition, EnemySpawnSpacing.Minimum(SystemAPI.GetComponent<EnemyMovementSettings>(enemy)), spacing, enemy)
+                    || !GroundHazardGeometry.Clear(groundHazards.AsArray(), respawnPosition.xz, respawnPosition.xz, radius))
                 { respawnRequest.ValueRW.RespawnAt = elapsedTime + 1; continue; }
+                spacing.Add(new EnemySpawnSpacing.Occupant { Entity = enemy, Position = respawnPosition,
+                    MinimumDistance = EnemySpawnSpacing.Minimum(SystemAPI.GetComponent<EnemyMovementSettings>(enemy)) });
                 transform.ValueRW.Position = respawnPosition;
                 SystemAPI.SetComponent(enemy, new EnemyGroundConstraint());
                 physicsVelocity.ValueRW = default;

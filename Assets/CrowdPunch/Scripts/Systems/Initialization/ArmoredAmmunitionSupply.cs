@@ -42,7 +42,7 @@ namespace CrowdPunch.Systems.Initialization
         internal static void TrySpawn(EntityManager em, EntityCommandBuffer commands, Entity sequenceEntity,
             ref EnemyWaveSequence sequence, EnemyWaveDefinition wave, DynamicBuffer<EnemyWaveSpawnRange> ranges,
             PhysicsWorldSingleton physics, NavigationGrid navigation, PlayerSnapshot player,
-            NativeList<float4> occupied, bool wizard = false)
+            NativeList<float4> occupied, NativeList<EnemySpawnSpacing.Occupant> spacing, bool wizard = false)
         {
             using var query = em.CreateEntityQuery(new EntityQueryDesc {
                 All = new[] { ComponentType.ReadOnly<EnemyWaveOwnership>(), ComponentType.ReadOnly<EnemyLaunchState>(),
@@ -56,7 +56,8 @@ namespace CrowdPunch.Systems.Initialization
             for (int attempt = 0; attempt < math.max(1, sequence.PlacementAttemptsPerEnemy); attempt++)
             {
                 float3 position = EnemyWaveSpawnSystem.SelectPosition(ref random, wave, ranges);
-                if (!NavigationGeometry.SpawnAllowed(navigation, position.xz, profile.NavigationRadius)
+                if (!EnemySpawnSpacing.IsClear(position, EnemySpawnSpacing.Minimum(profile.MovementSettings), spacing)
+                    || !NavigationGeometry.SpawnAllowed(navigation, position.xz, profile.NavigationRadius)
                     || !EnemyWaveSpawnSystem.IsSafe(physics, player, position, profile.SpawnClearance,
                         sequence.MinimumPlayerDistance, occupied, accepted)) continue;
                 Entity enemy = EnemySpawnInitialization.Create(commands, em, profile, position, ref random);
@@ -76,6 +77,8 @@ namespace CrowdPunch.Systems.Initialization
                 sequence.AmmunitionSpawnedCount++;
                 sequence.UndefeatedCount++;
                 occupied.Add(new float4(position, profile.SpawnClearance));
+                spacing.Add(new EnemySpawnSpacing.Occupant { Position = position,
+                    MinimumDistance = EnemySpawnSpacing.Minimum(profile.MovementSettings) });
                 break;
             }
             sequence.RandomState = random.state;

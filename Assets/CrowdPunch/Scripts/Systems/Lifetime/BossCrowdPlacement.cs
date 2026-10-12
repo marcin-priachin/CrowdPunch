@@ -22,6 +22,8 @@ namespace CrowdPunch.Systems.Lifetime
             var ranges=em.GetBuffer<EnemyWaveSpawnRange>(owner.Sequence);
             var clearance=em.GetComponentData<EnemySpawnClearance>(body).Value;
             var radius=em.GetComponentData<NavigationAgent>(body).Radius;
+            using var spacing = Utilities.EnemySpawnSpacing.Capture(em);
+            float minimum = Utilities.EnemySpawnSpacing.Minimum(em.GetComponentData<EnemyMovementSettings>(body));
             var occupied=new NativeList<float4>(Allocator.Temp);
             var accepted=new NativeList<float4>(Allocator.Temp);
             using(var query=new EntityQueryBuilder(Allocator.Temp).WithAll<EnemySpawnClearance,LocalTransform>()
@@ -39,14 +41,15 @@ namespace CrowdPunch.Systems.Lifetime
                     var tuning=em.GetComponentData<DinoTuning>(pillar.Boss);
                     if(PillarCrowdPlacement.Needed(pillar,em.GetComponentData<DinoBoss>(pillar.Boss),tuning))
                         found=PillarCrowdPlacement.TryFind(em.GetComponentData<PillarTuning>(member.Pillar),tuning,member.Slot,clearance,radius,
-                            world,player,grid,occupied,ref random,out position);
+                            world,player,grid,occupied,ref random,out position,spacing,minimum,body);
                 }
                 occupied.Dispose(); accepted.Dispose(); return found;
             }
             for(int i=0;i<sequence.PlacementAttemptsPerEnemy;i++)
             {
                 position=EnemyWaveSpawnSystem.SelectPosition(ref random,waves[owner.WaveIndex],ranges);
-                if(NavigationGeometry.SpawnAllowed(grid,position.xz,radius)
+                if(Utilities.EnemySpawnSpacing.IsClear(position,minimum,spacing,body)
+                    && NavigationGeometry.SpawnAllowed(grid,position.xz,radius)
                     && EnemyWaveSpawnSystem.IsSafe(world,player,position,clearance,sequence.MinimumPlayerDistance,occupied,accepted))
                 { found=true; break; }
             }

@@ -15,6 +15,7 @@ namespace CrowdPunch.Systems.AI
     [BurstCompile]
     [UpdateInGroup(typeof(GamePrePhysicsGroup))]
     [UpdateAfter(typeof(InputBridge.PlayerBridgeSystem))]
+    [UpdateAfter(typeof(Initialization.EnemyWaveSpawnSystem))]
     public partial struct EnemyChaseSystem : ISystem
     {
         public static float3 GetArenaRelativeSurroundTargetForTests(
@@ -122,6 +123,12 @@ namespace CrowdPunch.Systems.AI
                     }
                 }
             }
+
+            // INFO-006: reservations repel movement without joining AI/attack eligibility.
+            foreach (var (warning, archetype) in SystemAPI.Query<RefRO<EnemySpawnWarning>, RefRO<EnemyArchetype>>()
+                         .WithOptions(EntityQueryOptions.IncludeDisabledEntities))
+                activeEnemies.Add(new EnemySeparationNeighbor { Position = warning.ValueRO.Position,
+                    Archetype = archetype.ValueRO.Value });
 
             JobHandle chaseJob = new EnemyChaseJob
             {
