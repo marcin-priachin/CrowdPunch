@@ -63,6 +63,7 @@ namespace CrowdPunch.Systems.Presentation
                     EnemyArchetypeKind.Explosive => new float3(1f, 0.3f, 0.035f),
                     EnemyArchetypeKind.Elite => new float3(0.62f, 0.13f, 0.85f),
                     EnemyArchetypeKind.Armored => new float3(0.55f, 0.60f, 0.66f),
+                    EnemyArchetypeKind.Dragon => new float3(1,0,0),
                     _ => new float3(0.32f, 0.52f, 0.46f)
                 };
                 Entity snake = SnakeHeads.HasComponent(enemy) ? enemy

@@ -16,11 +16,11 @@ MonoBehaviour:
   immunity: 0
   avoidance: 0
   warningDuration: 0.9
-  activeDuration: 1.5
-  cooldownDuration: 2.5
-  initialDelay: 2
-  initialVariation: 0.8
-  engagementRange: 16
+  activeDuration: 6
+  cooldownDuration: 0.5
+  initialDelay: 0.5
+  initialVariation: 0.3
+  engagementRange: 30
   preferredMinimum: 6
   preferredMaximum: 9
   approachSpeed: 3
@@ -28,15 +28,15 @@ MonoBehaviour:
   turnDegreesPerSecond: 65
   hitInterval: 0.4
   normal:
-    Length: 8
-    AngleDegrees: 50
+    Length: 12
+    AngleDegrees: 60
     PlayerDamage: 6
     EnemyDamage: 8
     PlayerPush: 1.5
     EnemyPush: 1.2
   launched:
-    Length: 10
-    AngleDegrees: 65
+    Length: 12
+    AngleDegrees: 60
     PlayerDamage: 6
     EnemyDamage: 16
     PlayerPush: 1.5
