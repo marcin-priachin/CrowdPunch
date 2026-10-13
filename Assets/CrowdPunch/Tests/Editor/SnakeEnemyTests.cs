@@ -1,15 +1,18 @@
 using CrowdPunch.Components;
+using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Initialization;
 using CrowdPunch.Systems.Lifetime;
 using CrowdPunch.Systems.Movement;
 using CrowdPunch.Systems.Physics;
+using CrowdPunch.Systems.Presentation;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Rendering;
 using Unity.Transforms;
 
 namespace CrowdPunch.Tests
@@ -26,7 +29,7 @@ namespace CrowdPunch.Tests
             world.SetTime(new TimeData(1, .2f));
             head = Body(float3.zero);
             em.AddComponentData(head, new SnakeTuning { SegmentCount = 6, OrbRadius = .6f,
-                Spacing = 1.5f, HeadVulnerability = SnakeHeadVulnerability.ProtectedWhileTailRemains });
+                Spacing = 1.5f, ProtectedColor = new float4(.3f,.8f,.95f,1), VulnerableColor = new float4(1,.65f,.08f,1) });
             em.AddComponentData(head, new SnakeHead { AttachedCount = 6, Generation = 1, Initialized = 1,
                 DynamicMass = new PhysicsMass { InverseMass = 1 } });
             em.AddComponentData(head, new PhysicsMass { InverseMass = 1 });
@@ -73,25 +76,29 @@ namespace CrowdPunch.Tests
             AffectRecovering = 1, ApplyDamage = 1, Cause = EnemyLaunchCause.PlayerPunch };
 
         [TestCase(EnemyLaunchOwner.Player), TestCase(EnemyLaunchOwner.Enemy), TestCase(EnemyLaunchOwner.Boss)]
-        public void Snake002_MiddleCutPreservesPrefixAndLaunchOwner(EnemyLaunchOwner owner)
+        public void Snake002_TipLaunchPreservesEveryPredecessorAndOwner(EnemyLaunchOwner owner)
         {
-            Launch(orbs[2], owner); Sever();
-            Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(2));
-            Assert.That(em.Exists(orbs[0]) && em.Exists(orbs[1]) && em.Exists(orbs[2]), Is.True);
-            Assert.That(em.GetComponentData<SnakeSegment>(orbs[2]).Detached, Is.EqualTo(1));
-            Assert.That(em.GetComponentData<EnemyLaunchState>(orbs[2]).Owner, Is.EqualTo(owner));
-            Assert.That(em.Exists(orbs[3]) || em.Exists(orbs[4]) || em.Exists(orbs[5]), Is.False);
+            Launch(orbs[5], owner); Sever();
+            Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(5));
+            foreach (var orb in orbs) Assert.That(em.Exists(orb), Is.True);
+            Assert.That(em.GetComponentData<SnakeSegment>(orbs[5]).Detached, Is.EqualTo(1));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(orbs[5]).Owner, Is.EqualTo(owner));
+            Assert.That(SnakeHitRules.Protected(em, orbs[4]), Is.False);
+            for (int i=0;i<4;i++) Assert.That(SnakeHitRules.Protected(em,orbs[i]), Is.True);
             Assert.That(em.GetComponentData<EnemyLaunchState>(head).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
         }
         [TestCase(false), TestCase(true)]
-        public void Snake002_SimultaneousCutsKeepEveryHitRegardlessOfOrder(bool reverse)
+        public void Snake002_OneWidePunchLaunchesOnlyCurrentTipInEitherQueryOrder(bool reverse)
         {
-            Launch(orbs[reverse ? 4 : 1]); Launch(orbs[reverse ? 1 : 4]); Sever();
-            Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(1));
-            Assert.That(em.Exists(orbs[1]) && em.Exists(orbs[4]), Is.True);
-            Assert.That(em.GetComponentData<SnakeSegment>(orbs[1]).Detached, Is.EqualTo(1));
-            Assert.That(em.GetComponentData<SnakeSegment>(orbs[4]).Detached, Is.EqualTo(1));
-            Assert.That(em.Exists(orbs[2]) || em.Exists(orbs[3]) || em.Exists(orbs[5]), Is.False);
+            for (int j=0;j<6;j++)
+            {
+                int i=reverse?5-j:j;
+                Assert.That(PunchResolution.TryApply(em,orbs[i],Punch), Is.EqualTo(i==5));
+            }
+            Sever();
+            Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(5));
+            for(int i=0;i<5;i++) Assert.That(em.GetComponentData<EnemyLaunchState>(orbs[i]).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+            Assert.That(em.GetComponentData<SnakeSegment>(orbs[5]).Detached, Is.EqualTo(1));
         }
         [Test] public void Snake002_OrdinaryDamageCannotDestroyAttachedOrb()
         {
@@ -115,7 +122,8 @@ namespace CrowdPunch.Tests
         }
         [Test] public void Snake004_LastCutExposesLivingHeadAndNeverRegrows()
         {
-            Launch(orbs[0]); Sever(); Sever();
+            for(int i=5;i>=0;i--) { Launch(orbs[i]); Sever(); }
+            Sever();
             Assert.That(SnakeHitRules.Protected(em, head), Is.False);
             Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.Zero);
             Assert.That(PunchResolution.TryApply(em, head, Punch), Is.True);
@@ -143,7 +151,7 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<Health>(head).Max, Is.EqualTo(maximum));
             Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(6));
             Assert.That(PunchResolution.TryApply(em, head, Punch), Is.False);
-            Launch(em.GetBuffer<SnakeTailLink>(head)[0].Orb); Sever();
+            for(int i=5;i>=0;i--) { Launch(em.GetBuffer<SnakeTailLink>(head)[i].Orb); Sever(); }
             Assert.That(em.GetComponentData<Health>(head).Current, Is.EqualTo(maximum));
             for (int i = 0; i < punches; i++)
             {
@@ -157,49 +165,53 @@ namespace CrowdPunch.Tests
             world.GetOrCreateSystem<EnemyRecoverySystem>().Update(world.Unmanaged);
             Assert.That(em.GetComponentData<EnemyLaunchState>(head).Phase, Is.EqualTo(EnemyLaunchPhase.Defeated));
         }
-        [Test] public void Snake004_AlwaysVulnerableHeadLaunchRemovesTail()
+        [Test] public void Snake004_HeadRemainsProtectedUntilEveryOrbHasLaunched()
         {
-            var t = em.GetComponentData<SnakeTuning>(head); t.HeadVulnerability = SnakeHeadVulnerability.AlwaysVulnerable; em.SetComponentData(head, t);
-            Assert.That(PunchResolution.TryApply(em, head, Punch), Is.True); Sever();
-            foreach (var orb in orbs) Assert.That(em.Exists(orb), Is.False);
+            for(int i=5;i>=0;i--)
+            {
+                Assert.That(PunchResolution.TryApply(em,head,Punch), Is.False);
+                Assert.That(PunchResolution.TryApply(em,orbs[i],Punch), Is.True); Sever();
+                Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(i));
+            }
+            Assert.That(PunchResolution.TryApply(em,head,Punch), Is.True);
         }
         [TestCase(SnakeExplosionResponse.LaunchAndSever), TestCase(SnakeExplosionResponse.IgnoreAttachedOrbs)]
         public void Snake005_ExplosionModeAndProtectedHead(SnakeExplosionResponse mode)
         {
             var t = em.GetComponentData<SnakeTuning>(head); t.ExplosionResponse = mode; em.SetComponentData(head, t);
-            var source = Body(new float3(0,0,4.5f));
-            em.AddComponentData(source, new ExplosiveEnemySettings { Radius = 2, Damage = 20, NormalEnemyKnockbackForce = 15 });
+            var source = Body(new float3(1,0,4.5f));
+            em.AddComponentData(source, new ExplosiveEnemySettings { Radius = 20, Damage = 20, NormalEnemyKnockbackForce = 15 });
             em.AddComponent<ExplosiveEnemyState>(source); em.AddComponent<ExplosiveDetonationRequest>(source);
             world.GetOrCreateSystemManaged<ExplosionResolutionSystem>().Update(); Sever();
             if (mode == SnakeExplosionResponse.LaunchAndSever)
             {
-                Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(1));
-                for (int i=1; i<=3; i++) Assert.That(em.GetComponentData<SnakeSegment>(orbs[i]).Detached, Is.EqualTo(1));
-                Assert.That(em.Exists(orbs[4]), Is.False);
+                Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(5));
+                Assert.That(em.GetComponentData<SnakeSegment>(orbs[5]).Detached, Is.EqualTo(1));
+                for(int i=0;i<5;i++) Assert.That(em.GetComponentData<EnemyLaunchState>(orbs[i]).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
             }
             else Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(6));
             Assert.That(em.GetComponentData<EnemyLaunchState>(head).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
         }
         [Test] public void Snake003_ClearanceIsSpatialAndPermanent()
         {
-            Launch(orbs[1]); Sever();
-            em.SetComponentData(orbs[1], LocalTransform.FromPosition(new float3(0,0,1.5f)));
+            Launch(orbs[5]); Sever();
+            em.SetComponentData(orbs[5], LocalTransform.FromPosition(new float3(0,0,1.5f)));
             world.GetOrCreateSystem<SnakeCollisionClearanceSystem>().Update(world.Unmanaged);
-            Assert.That(em.GetComponentData<SnakeSegment>(orbs[1]).Cleared, Is.Zero);
-            em.SetComponentData(orbs[1], LocalTransform.FromPosition(new float3(10,0,0)));
+            Assert.That(em.GetComponentData<SnakeSegment>(orbs[5]).Cleared, Is.Zero);
+            em.SetComponentData(orbs[5], LocalTransform.FromPosition(new float3(10,0,0)));
             world.GetOrCreateSystem<SnakeCollisionClearanceSystem>().Update(world.Unmanaged);
-            Assert.That(em.GetComponentData<SnakeSegment>(orbs[1]).Cleared, Is.EqualTo(1));
-            em.SetComponentData(orbs[1], LocalTransform.FromPosition(float3.zero));
+            Assert.That(em.GetComponentData<SnakeSegment>(orbs[5]).Cleared, Is.EqualTo(1));
+            em.SetComponentData(orbs[5], LocalTransform.FromPosition(float3.zero));
             world.GetOrCreateSystem<SnakeCollisionClearanceSystem>().Update(world.Unmanaged);
-            Assert.That(em.GetComponentData<SnakeSegment>(orbs[1]).Cleared, Is.EqualTo(1));
+            Assert.That(em.GetComponentData<SnakeSegment>(orbs[5]).Cleared, Is.EqualTo(1));
         }
         [Test] public void Snake003_DetachedOrbDiesAtLaunchEndInsteadOfRecovering()
         {
-            Launch(orbs[2]); Sever();
+            Launch(orbs[5]); Sever();
             world.GetOrCreateSystem<EnemyRecoverySystem>().Update(world.Unmanaged);
-            Assert.That(em.GetComponentData<EnemyLaunchState>(orbs[2]).Phase, Is.EqualTo(EnemyLaunchPhase.Defeated));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(orbs[5]).Phase, Is.EqualTo(EnemyLaunchPhase.Defeated));
             world.GetOrCreateSystem<SnakeOrbCleanupSystem>().Update(world.Unmanaged);
-            Assert.That(em.Exists(orbs[2]), Is.False);
+            Assert.That(em.Exists(orbs[5]), Is.False);
         }
         [Test] public void Snake001_PathSamplesFollowCornerInsteadOfCurrentFacing()
         {
@@ -210,14 +222,85 @@ namespace CrowdPunch.Tests
             float3 tangent; var p = SnakeTailMovementSystem.Sample(path, new float3(3,0,3), 4, out tangent);
             Assert.That(math.distance(p, new float3(0,0,2)), Is.LessThan(.001f));
         }
+        [Test] public void Snake006_AimEligibilityFollowsTipThenHead()
+        {
+            var source=Body(new float3(-2,0,9));
+            for(int tip=5;tip>=0;tip--)
+            {
+                Assert.That(PunchAimAssist.IsValidTarget(em,source,head), Is.False);
+                for(int i=0;i<=tip;i++)
+                    Assert.That(PunchAimAssist.IsValidTarget(em,source,orbs[i]), Is.EqualTo(i==tip));
+                Launch(orbs[tip]); Sever();
+            }
+            Assert.That(PunchAimAssist.IsValidTarget(em,source,head), Is.True);
+        }
+        [Test] public void Snake006_OnlyCurrentAttachedTipPublishesDirectionPreview()
+        {
+            PlayerBridgeRegistry.TryGetBridge(out var previous);
+            var root=new UnityEngine.GameObject("Snake preview regression");
+            var bridge=root.AddComponent<PlayerEcsBridge>();
+            try
+            {
+                PlayerBridgeRegistry.Register(bridge);
+                bridge.PublishPunchPreview(new UnityEngine.Vector3(0,0,-1),UnityEngine.Vector3.forward,2,12,2,0,10,180);
+                var presentation=world.GetOrCreateSystem<PresentationBridgeSystem>();
+                presentation.Update(world.Unmanaged);
+                Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.EqualTo(1));
+                Assert.That(math.distance(bridge.TrajectoryPreviewSegments[0].Start,
+                    em.GetComponentData<LocalTransform>(orbs[5]).Position), Is.LessThan(.001f));
+                Launch(orbs[5]); Sever();
+                em.SetComponentData(orbs[5],LocalTransform.FromPosition(new float3(50,0,50)));
+                presentation.Update(world.Unmanaged);
+                Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.EqualTo(1));
+                Assert.That(math.distance(bridge.TrajectoryPreviewSegments[0].Start,
+                    em.GetComponentData<LocalTransform>(orbs[4]).Position), Is.LessThan(.001f));
+            }
+            finally
+            {
+                PlayerBridgeRegistry.Unregister(bridge);
+                if(previous!=null)PlayerBridgeRegistry.Register(previous);
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+        [Test] public void Snake006_OnlyTipUsesVulnerableColorThenHeadInheritsIt()
+        {
+            var entities=new Entity[7]; entities[0]=head;
+            for(int i=0;i<6;i++)entities[i+1]=orbs[i];
+            var visuals=new Entity[7];
+            for(int i=0;i<7;i++)
+            {
+                em.AddComponent<EnemyArchetype>(entities[i]);
+                visuals[i]=em.CreateEntity(typeof(EnemyVisualOwner),typeof(URPMaterialPropertyBaseColor));
+                em.SetComponentData(visuals[i],new EnemyVisualOwner {Value=entities[i]});
+            }
+            var presentation=world.GetOrCreateSystem<EnemyReadabilitySystem>();
+            var tuning=em.GetComponentData<SnakeTuning>(head);
+            for(int tip=5;tip>=-1;tip--)
+            {
+                presentation.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+                for(int i=0;i<7;i++)
+                {
+                    bool vulnerable=tip<0 ? i==0 : i==tip+1;
+                    var expected=vulnerable?tuning.VulnerableColor:tuning.ProtectedColor;
+                    Assert.That(math.distance(em.GetComponentData<URPMaterialPropertyBaseColor>(visuals[i]).Value,expected), Is.LessThan(.001f));
+                }
+                if(tip>=0) { Launch(orbs[tip]); Sever(); }
+            }
+        }
+        [Test] public void Snake002_MissingTipCannotStrandTheEncounter()
+        {
+            em.DestroyEntity(orbs[5]); Sever();
+            Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(5));
+            Assert.That(SnakeHitRules.Protected(em,orbs[4]), Is.False);
+        }
         [Test] public void Snake007_RetryGenerationClearsDetachedOrbs()
         {
             var sequence = em.CreateEntity(typeof(EnemyWaveSequence));
             em.SetComponentData(sequence, new EnemyWaveSequence { RunGeneration = 2 });
-            var s = em.GetComponentData<SnakeSegment>(orbs[2]); s.Encounter = new EnemyWaveOwnership { Sequence = sequence, RunGeneration = 1 };
-            em.SetComponentData(orbs[2], s); Launch(orbs[2]); Sever();
+            var s = em.GetComponentData<SnakeSegment>(orbs[5]); s.Encounter = new EnemyWaveOwnership { Sequence = sequence, RunGeneration = 1 };
+            em.SetComponentData(orbs[5], s); Launch(orbs[5]); Sever();
             world.GetOrCreateSystem<SnakeOrbCleanupSystem>().Update(world.Unmanaged);
-            Assert.That(em.Exists(orbs[2]), Is.False);
+            Assert.That(em.Exists(orbs[5]), Is.False);
         }
     }
 }

@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-12
+Last updated: 2026-10-13
 
 ## How To Read This Document
 
@@ -1375,7 +1375,7 @@ are delegated. Introduced periodic patches remain visible while inactive, with d
 inactive/warning/active appearances, a full-footprint pulsing warning and a brighter
 active state. Colors and effects are delegated; no additional HUD is required.
 
-## Snake Enemy (Agreed 2026-10-12)
+## Snake Enemy (Agreed 2026-10-12, Revised 2026-10-13)
 
 ### SNAKE-001 - Pursuing Head And Physical Tail
 
@@ -1383,11 +1383,11 @@ Status: Must
 
 A Yeti head continuously pursues the player outside ordinary crowd-pressure allocation. Attached spherical orbs follow its recent path with a sinusoidal sideways wave. Reduce the wave near blocking geometry and keep attached bodies in navigable space. Attached orbs collide with enemies but ordinary contact causes neither damage nor launches. Both head and attached orbs damage the player on contact through existing player protection.
 
-### SNAKE-002 - Launch-Based Cutting
+### SNAKE-002 - Tail-Tip Launch Progression
 
 Status: Must
 
-Punches (including ordinary dash punches) and qualifying launched-body impacts from any owner launch and detach struck orbs regardless of health. Ordinary damage alone cannot destroy attached orbs. Preserve the head-side prefix; immediately destroy the unhit disconnected suffix. Resolve simultaneous punch/explosion hits as a batch so every directly hit orb launches, independent of processing order. Tail loss is permanent until reset/respawn.
+Only the last attached tail segment is vulnerable. Punches (including ordinary dash punches) and qualifying launched-body impacts from any owner can launch and detach that orb regardless of health. The head and every preceding attached orb remain protected. Preserve all predecessors; when the tip launches, the immediately preceding orb becomes vulnerable. Ordinary damage alone cannot destroy attached orbs. One simultaneous punch/explosion hit batch affects only the tip exposed at its start; it cannot peel multiple segments by processing order. Tail loss is permanent until reset/respawn. This supersedes the original middle-cut/disconnected-suffix behavior.
 
 ### SNAKE-003 - Detached Projectile Lifecycle
 
@@ -1395,23 +1395,23 @@ Status: Must
 
 Detached orbs retain ordinary physical chains, launch ownership and launched-body player damage. Ignore their original head and attached prefix until spatially clear of that snake, then permit return collisions for the remainder of the launch. Clearance must be spatial, not a fixed timeout or arena-wide exclusion. Destroy detached orbs when launch ends; they never recover as melee enemies.
 
-### SNAKE-004 - Configurable Head Vulnerability
+### SNAKE-004 - Head Protection Until Tail Exhaustion
 
 Status: Must
 
-Default ProtectedWhileTailRemains: any attached orb protects the head from damage, launch, push and stagger; direct punches still consume cooldown. With no attached orbs, the living head follows ordinary launch/damage/recovery and resumes pursuit. Also expose AlwaysVulnerable: ordinary vulnerability throughout, with remaining tail destroyed when the head launches or is defeated. Tail removal does not automatically defeat the head.
+Any attached orb protects the head from damage, launch, push and stagger; direct punches still consume cooldown. The head becomes vulnerable only after no attached orbs remain, then follows ordinary launch/damage/recovery and resumes pursuit. Tail removal does not automatically defeat it. The former AlwaysVulnerable option is superseded by the 2026-10-13 decision. Head defeat/bounds cleanup removes any remaining tail.
 
 ### SNAKE-005 - Configurable Explosions
 
 Status: Must
 
-Default LaunchAndSever: explosions launch all affected attached orbs and resolve severing together. Also expose IgnoreAttachedOrbs. Head vulnerability remains independently governed by SNAKE-004. Reuse existing explosion ownership and impulse conventions.
+Default LaunchAndSever: explosions can launch only the currently exposed tip in range. Also expose IgnoreAttachedOrbs. Protected inner orbs/head ignore the blast, so one explosion cannot remove the entire tail. Head eligibility follows SNAKE-004. Reuse existing explosion ownership and impulse conventions.
 
 ### SNAKE-006 - Assets, Aiming And Settings
 
 Status: Must
 
-Use Models/UltimateMonsters/Blob/Yeti.fbx for the head. Attached orbs receive ordinary aim assistance and initial trajectory previews; protected heads are not preview sources. Tail silhouette, visible loss and existing combat feedback communicate the mechanic without dedicated UI. Expose both behavior modes with their stated defaults plus initial segment count, orb size, spacing, wave amplitude, wave frequency (with units), pursuit speed, contact damage and head health. Numeric tuning and minor presentation choices are delegated provisional values.
+Use Models/UltimateMonsters/Blob/Yeti.fbx for the head. Within an attached snake, only the currently vulnerable tip receives ordinary aim assistance, can be targeted by aim assistance and shows the initial punch-direction preview when approached. When the tail is empty, eligibility transfers to the head. Give the vulnerable part a distinct color that moves with eligibility. Detached orbs retain their ordinary independent projectile/repunch rules. Tail silhouette, visible loss, color and existing combat feedback communicate the mechanic without dedicated UI. Expose both explosion modes, initial segment count, orb size, spacing, wave amplitude/frequency (with units), pursuit speed, contact damage, head health and protected/vulnerable colors. Numeric tuning and colors remain provisional; head health uses the spawn profile's Max Health.
 
 ### SNAKE-007 - Legacy Gauntlet_24
 

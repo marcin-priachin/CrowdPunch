@@ -1,7 +1,7 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-10-12
+Last inspected: 2026-10-13
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
@@ -27,13 +27,23 @@ Attached enemies remain physical bodies; movement never teleports their XZ posit
 Protected heads use zero inverse mass while retaining velocity-owned pursuit, so
 solver contact cannot push them; exposure restores their stored dynamic mass.
 
-Punch and impact sever systems examine complete launch batches before destroying
-disconnected suffixes with ECBs. Pre-physics severing follows punches and precedes
+SNAKE-002 now exposes only the last attached orb. `SnakeHitRules` uses its stable
+index and head attached count/generation as the shared gate for punches, explosions,
+collision propagation, aim locks and previews. Head protection is unconditional while
+any tail remains; the previous AlwaysVulnerable option was removed. A complete hit batch
+can launch only the tip exposed at its start. Punch and impact sever systems detach
+that orb without deleting any predecessor, then decrement attached count to expose
+the next tip. Missing/defeated terminal pieces are skipped to avoid a stranded weak point.
+Pre-physics severing follows punches and precedes
 damage/impulses; post-physics severing follows collision/explosion/Wizard/pillar
 resolution and precedes recovery. Shared hit rules block protected-head damage,
 launch, recoil and previews, while player punch detection still confirms cooldown.
-Attached-orb damage is ignored until detachment. Both agreed mode alternatives
-are baked from `Data/Settings/SnakeSettings.asset`.
+Attached-orb damage is ignored until detachment. Both explosion mode alternatives
+are baked from `Data/Settings/SnakeSettings.asset` and obey tip-only eligibility.
+`EnemyReadabilitySystem` applies that asset's gold vulnerable color only to the current
+tip, then to the head after tail exhaustion; other parts and detached orbs use cyan.
+Renderer-owned material components handle both orb MeshRenderers and Yeti skinning
+without allocating materials or adding enemy GameObjects/HUD indicators.
 
 `SnakeContactSystem` disables only original-snake contacts for attached or uncleared
 detached orbs. `SnakeCollisionClearanceSystem` tests the original head and remaining

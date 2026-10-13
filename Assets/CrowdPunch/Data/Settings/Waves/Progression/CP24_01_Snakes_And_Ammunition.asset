@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP24_01_Snakes_And_Ammunition
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 2
+  totalEnemyCount: 1
   enemies:
   - Settings: {fileID: 11400000, guid: 70cfe8c4f0768b44dba38bfd006d389e, type: 2}
-    MinimumCount: 2
+    MinimumCount: 1
     Weight: 0
   eliteEnemies: []
   spawnRectangles:

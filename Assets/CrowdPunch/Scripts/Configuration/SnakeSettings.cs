@@ -6,7 +6,6 @@ namespace CrowdPunch.Configuration
     [CreateAssetMenu(menuName = "Crowd Punch/Snake Settings")]
     public sealed class SnakeSettings : ScriptableObject
     {
-        public SnakeHeadVulnerability headVulnerability = SnakeHeadVulnerability.ProtectedWhileTailRemains;
         public SnakeExplosionResponse explosionResponse = SnakeExplosionResponse.LaunchAndSever;
         [Range(0, 32)] public int initialTailSegmentCount = 6;
         [Min(.1f), Tooltip("Sphere radius in metres.")] public float orbRadius = .6f;
@@ -15,5 +14,7 @@ namespace CrowdPunch.Configuration
         [Min(0), Tooltip("Oscillation cycles per second.")] public float waveFrequencyHz = .7f;
         [Min(0)] public float pursuitSpeed = 3.1f;
         [Range(0, 1), Tooltip("Fraction of maximum player health, using shared contact protection.")] public float contactDamagePercent = .08f;
+        public Color protectedColor = new Color(.3f, .8f, .95f, 1);
+        public Color vulnerableColor = new Color(1, .65f, .08f, 1);
     }
 }

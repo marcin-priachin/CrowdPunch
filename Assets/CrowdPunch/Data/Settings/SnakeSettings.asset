@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edc494423845dd44c82b6e68b3b4d09d, type: 3}
   m_Name: SnakeSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.SnakeSettings
-  headVulnerability: 0
   explosionResponse: 0
   initialTailSegmentCount: 6
   orbRadius: 0.6
@@ -21,3 +20,5 @@ MonoBehaviour:
   waveFrequencyHz: 0.7
   pursuitSpeed: 3.1
   contactDamagePercent: 0.08
+  protectedColor: {r: 0.3, g: 0.8, b: 0.95, a: 1}
+  vulnerableColor: {r: 1, g: 0.65, b: 0.08, a: 1}

@@ -1,16 +1,18 @@
-# Snake Enemy Validation - 2026-10-12
+# Snake Enemy Validation - 2026-10-13
 
 Implementation: SNAKE-001..007; PLAYER-003/004/005/009; COMBAT-001/003/004/010/011/012/014/015; LOOP-002.
 
 Playable through **Window > Crowd Punch > Level Play > Legacy > 24 Cut The Tail**.
-The finite wave is twelve Baselines and two Yeti snakes. Only the fourteen enemy roots
+The original finite-wave recipe was twelve Baselines and two Yeti snakes. The wave
+asset remains authoritative for user-tuned composition. Only head/Baseline roots
 belong to encounter defeat accounting; orb entities do not. Gauntlet_24 is absent from
 EditorBuildSettings and campaign catalog assets were not edited.
 
 ## Settings
 
-`Assets/CrowdPunch/Data/Settings/SnakeSettings.asset` holds both agreed behavior modes
-with ProtectedWhileTailRemains and LaunchAndSever selected. Provisional initial tuning:
+`Assets/CrowdPunch/Data/Settings/SnakeSettings.asset` holds explosion behavior, tail tuning
+and cyan/gold protected/vulnerable colors. LaunchAndSever remains selected. Head protection
+now lasts until the tail is empty; AlwaysVulnerable was removed. Provisional initial tuning:
 six orbs, 0.6m radius, 1.5m spacing, 0.5m wave amplitude, 0.7 cycles/second, 3.1m/s pursuit,
 8% player-health contact damage. The original head-health default was 90; tune it through
 `SnakeEnemySpawnSettings.asset > Max Health`. Orb radius is baked into runtime
@@ -25,7 +27,38 @@ Head health now comes solely from its spawn profile; constructing or severing a 
 does not reset it. Zero health still defers defeat until the launched body stops,
 following COMBAT-011; another punch is unnecessary to defeat it and extends that launch.
 
-## Performed verification
+## Tip-only revision (13 October)
+
+Only the last attached orb accepts launches or participates in aim assistance and direction
+previews. Gold identifies the current tip, then the head once no attached orbs remain;
+protected parts and detached projectiles are cyan. Punches/explosions resolve the current
+tip before the predecessor becomes eligible, preserving every unhit predecessor.
+
+All 21 current SnakeEnemyTests cases passed: tip-only punches in either iteration order,
+any-owner tip launches, single-tip explosions and the Ignore mode, progressive head
+exposure, aim eligibility, real presentation-bridge direction previews, renderer color
+handover, missing-tip cleanup, low-health preservation and the existing lifecycle checks.
+All 57 targeted armor/player-impact/homing regressions passed. Unity compilation passed.
+
+Controlled real-physics Play Mode validation passed: a Boss-owned body striking a
+protected middle orb left the tail intact; its subsequent tip impact detached only
+that orb and preserved ownership. The detached orb cleared its original snake, then
+a return shot launched the now-exposed predecessor without exposing the head early.
+Retry restored full tails, profile health and current authored wave counts; injected
+root defeat exercised final completion. The harness uses a temporary independent
+projectile so it also works with the user's current two-snake, zero-Baseline composition.
+Game-view inspection confirmed gold tip/cyan protected parts. These are controlled
+integration checks with injected trajectories, not a human balance/controller playtest.
+
+The current 64-head/384-orb/200-unrelated-enemy microbenchmark measured 0.246825 ms tail
+motor, 0.347757 ms tip-resolution scan and 0.046522 ms for 64 clearance checks per completed
+update, with zero calling-thread managed allocations. These include 20 warmups and 120
+samples per system, exclude physics/rendering and do not establish whole-frame performance.
+
+The command-line build attempt failed on missing generated package-reference DLLs under
+Temp/Bin/Debug (CS0006); Unity's Editor compilation and executed tests remain authoritative.
+
+## Original verification (12 October; hit rules superseded above)
 
 - Unity 6000.3.10f1 compiled the feature without C# errors. Existing deprecated aspect
   warnings remain outside this slice.

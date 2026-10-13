@@ -37,7 +37,6 @@ namespace CrowdPunch.Systems.Combat
             EnemyCollisionJob job = new EnemyCollisionJob
             {
                 SnakeHeads = SystemAPI.GetComponentLookup<SnakeHead>(true),
-                SnakeTunings = SystemAPI.GetComponentLookup<SnakeTuning>(true),
                 SnakeSegments = SystemAPI.GetComponentLookup<SnakeSegment>(true),
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(),
                 Barricades = SystemAPI.GetComponentLookup<Barricade>(true),
@@ -76,7 +75,6 @@ namespace CrowdPunch.Systems.Combat
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
             [ReadOnly] public ComponentLookup<SnakeHead> SnakeHeads;
-            [ReadOnly] public ComponentLookup<SnakeTuning> SnakeTunings;
             [ReadOnly] public ComponentLookup<SnakeSegment> SnakeSegments;
             public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<Barricade> Barricades;
@@ -168,7 +166,7 @@ namespace CrowdPunch.Systems.Combat
                 Entity target,
                 EnemyLaunchPhase targetPhase)
             {
-                if (SnakeHeads.HasComponent(target) && SnakeHitRules.Protected(SnakeHeads[target], SnakeTunings[target])) return;
+                if (SnakeHitRules.Protected(target, SnakeHeads, SnakeSegments)) return;
                 if (DasherSettingsLookup.HasComponent(source)) return;
                 if (DasherStateLookup.HasComponent(target)
                     && DasherStateLookup[target].Phase == DasherPhase.Dashing) return;
@@ -278,7 +276,7 @@ namespace CrowdPunch.Systems.Combat
                             || SnakeSegments.HasComponent(candidate) && SnakeSegments[candidate].Head == segment.Head
                                 && SnakeSegments[candidate].Detached == 0)) continue;
                     }
-                    if (SnakeHeads.HasComponent(candidate) && SnakeHitRules.Protected(SnakeHeads[candidate], SnakeTunings[candidate])) continue;
+                    if (SnakeHitRules.Protected(candidate, SnakeHeads, SnakeSegments)) continue;
                     bool wall = Barricades.HasComponent(candidate) && Barricades[candidate].HitsRemaining > 0;
                     if (candidate == source || candidate == launchedTarget
                         || IsUnavailable(candidate)

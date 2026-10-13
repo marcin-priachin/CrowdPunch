@@ -130,6 +130,7 @@ namespace CrowdPunch.Systems.Combat
             {
                 RaycastHit hit = hits[i];
                 if (em.HasComponent<RotatingCover>(hit.Entity) || em.HasComponent<CoverEnclosure>(hit.Entity)) continue;
+                if (SnakeHitRules.Protected(em, hit.Entity)) continue;
                 if (hit.Entity == source || hit.Fraction >= closestFraction) continue;
                 closest = hit.Entity;
                 closestFraction = hit.Fraction;

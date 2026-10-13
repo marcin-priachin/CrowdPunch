@@ -21,9 +21,10 @@ namespace CrowdPunch.Editor
         private static int step;
         private static double since;
         private static bool running;
-        private static Entity head, target, returnedTarget, sequence, oldSequence;
+        private static Entity head, target, returnedTarget, sequence, oldSequence, projectileSource;
         private static uint generation;
         private static float initialMaxHealth;
+        private static int initialOwnedCount;
         static SnakeEncounterPlayCheck() => EditorApplication.update += Tick;
         public static void Start()
         {
@@ -66,9 +67,9 @@ namespace CrowdPunch.Editor
                         var health = em.GetComponentData<Health>(h);
                         Require(health.Current == initialMaxHealth && health.Max == initialMaxHealth, "Retry did not restore profile head health");
                     }
-                    Record("PASS retry restores two full six-orb tails, health, twelve baselines and a new encounter identity");
+                    Record("PASS retry restores full tails, profile health, authored composition and a new encounter identity");
                     using var enemies = em.CreateEntityQuery(typeof(EnemyWaveOwnership)).ToEntityArray(Allocator.Temp);
-                    Require(enemies.Length == 14, "Tail entities entered encounter counting");
+                    Require(enemies.Length == initialOwnedCount, "Tail entities changed encounter counting");
                     foreach (var enemy in enemies)
                     {
                         em.SetComponentData(enemy, new Health());
@@ -79,7 +80,8 @@ namespace CrowdPunch.Editor
                 }
                 generation = wave.RunGeneration;
                 oldSequence = sequence;
-                Record("PASS actual baked scene: two Yeti heads, twelve attached orbs, twelve baselines, head-owned wave count");
+                using(var owned=em.CreateEntityQuery(typeof(EnemyWaveOwnership))) initialOwnedCount=owned.CalculateEntityCount();
+                Record("PASS actual baked scene: two Yeti heads, twelve attached orbs, head-owned wave count");
                 head = heads[0]; var tuning = em.GetComponentData<SnakeTuning>(head);
                 initialMaxHealth = em.GetComponentData<Health>(head).Max;
                 tuning.WaveAmplitude = tuning.PursuitSpeed = 0; em.SetComponentData(head, tuning);
@@ -93,10 +95,13 @@ namespace CrowdPunch.Editor
                     var p = em.GetComponentData<LocalTransform>(links[i].Orb); p.Position = new float3(-10+(i+1)*1.5f,-.4f,-6);
                     em.SetComponentData(links[i].Orb,p); em.SetComponentData(links[i].Orb,new PhysicsVelocity());
                 }
-                target = links[2].Orb; returnedTarget = links[0].Orb;
-                using var baseline = em.CreateEntityQuery(new EntityQueryDesc { All=new[]{ComponentType.ReadOnly<EnemyWaveOwnership>()},
-                    None=new[]{ComponentType.ReadOnly<SnakeHead>()} }).ToEntityArray(Allocator.Temp);
-                var source = baseline[0];
+                target = links[5].Orb; returnedTarget = links[4].Orb;
+                // Use a test projectile independently of the user's authored Baseline count.
+                var source=em.Instantiate(head); projectileSource=source;
+                em.SetComponentData(source,em.GetComponentData<SnakeHead>(head).DynamicMass);
+                em.RemoveComponent<SnakeHead>(source); em.RemoveComponent<SnakeTuning>(source);
+                em.RemoveComponent<SnakeTailLink>(source); em.RemoveComponent<SnakePathPoint>(source);
+                em.RemoveComponent<EnemyWaveOwnership>(source);
                 // Isolate this trajectory from incidental crowd contacts; retry reconstructs all bodies.
                 using (var bodies = em.CreateEntityQuery(typeof(Enemy)).ToEntityArray(Allocator.Temp))
                 using (var commands = new EntityCommandBuffer(Allocator.Temp))
@@ -116,15 +121,29 @@ namespace CrowdPunch.Editor
                 em.SetComponentData(source,new PhysicsVelocity { Linear=new float3(0,0,-20) });
                 em.SetComponentData(source,new EnemyLaunchState { Phase=EnemyLaunchPhase.Launched, Owner=EnemyLaunchOwner.Boss,
                     LaunchDamage=20, LaunchSequence=1 });
-                Next(1); return;
+                // First strike a protected middle part, then strike the exposed tip.
+                Next(6); return;
+            }
+            if (step == 6)
+            {
+                if (EditorApplication.timeSinceStartup - since < .4) return;
+                Require(em.GetComponentData<SnakeHead>(head).AttachedCount == 6, "Middle impact changed tail length");
+                var middle=em.GetBuffer<SnakeTailLink>(head)[2].Orb;
+                Require(em.GetComponentData<EnemyLaunchState>(middle).Phase == EnemyLaunchPhase.Active, "Middle impact launched protected segment");
+                Record("PASS real body impact cannot launch a protected middle segment");
+                var source=projectileSource;
+                em.SetComponentData(source,LocalTransform.FromPosition(new float3(-1,0,-3)));
+                em.SetComponentData(source,new PhysicsVelocity {Linear=new float3(0,0,-20)});
+                var l=em.GetComponentData<EnemyLaunchState>(source); l.Phase=EnemyLaunchPhase.Launched; l.HomingTarget=Entity.Null;
+                em.SetComponentData(source,l); Next(1); return;
             }
             if (step == 1)
             {
                 Require(EditorApplication.timeSinceStartup - since < 8, "Real launched-body collision did not cut the tail");
                 if (!em.Exists(target) || em.GetComponentData<SnakeSegment>(target).Detached == 0) return;
-                Require(em.GetComponentData<SnakeHead>(head).AttachedCount == 2, "Physical middle cut did not preserve prefix");
+                Require(em.GetComponentData<SnakeHead>(head).AttachedCount == 5, "Tip launch removed more than one segment");
                 Require(em.GetComponentData<EnemyLaunchState>(target).Owner == EnemyLaunchOwner.Boss, "Collision lost launch owner");
-                Record("PASS real solver impact launches middle orb, removes suffix and preserves Boss ownership"); Next(2); return;
+                Record("PASS real solver impact launches only exposed tip and preserves Boss ownership"); Next(2); return;
             }
             if (step == 2)
             {
@@ -132,16 +151,18 @@ namespace CrowdPunch.Editor
                 Require(em.Exists(target), "Orb expired before leaving original snake");
                 if (em.GetComponentData<SnakeSegment>(target).Cleared == 0) return;
                 Record("PASS launched orb physically clears original snake and re-enables collisions");
-                var p=em.GetComponentData<LocalTransform>(target);p.Position=new float3(-8.5f,-.4f,-3);em.SetComponentData(target,p);
+                var p=em.GetComponentData<LocalTransform>(target);p.Position=new float3(-2.5f,-.4f,-3);em.SetComponentData(target,p);
                 var launch=em.GetComponentData<EnemyLaunchState>(target); launch.HomingTarget=returnedTarget; em.SetComponentData(target,launch);
                 em.SetComponentData(target,new PhysicsVelocity { Linear=new float3(0,0,-20) }); Next(3); return;
             }
             if (step == 3)
             {
                 Require(EditorApplication.timeSinceStartup - since < 8, "Cleared orb could not collide with original tail on return");
-                if (em.GetComponentData<SnakeHead>(head).AttachedCount != 0) return;
+                if (em.GetComponentData<SnakeHead>(head).AttachedCount != 4) return;
                 Require(em.GetComponentData<EnemyLaunchState>(head).Phase == EnemyLaunchPhase.Active, "Tail loss defeated the head");
-                Record("PASS return shot cuts original remaining tail; exposed head stays alive");
+                Require(CrowdPunch.Systems.Combat.SnakeHitRules.Protected(em,head), "Head exposed before tail was empty");
+                Record("PASS return shot launches predecessor while head and inner segments remain protected");
+                if(em.Exists(projectileSource))em.DestroyEntity(projectileSource);
                 flow.RestartCurrentLevel(); Next(4); return;
             }
             if (step == 5)

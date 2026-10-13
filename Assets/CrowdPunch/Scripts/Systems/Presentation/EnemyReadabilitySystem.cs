@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Collections;
@@ -16,8 +17,11 @@ namespace CrowdPunch.Systems.Presentation
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            new ReadabilityJob
+            state.Dependency = new ReadabilityJob
             {
+                SnakeHeads = SystemAPI.GetComponentLookup<SnakeHead>(true),
+                SnakeSegments = SystemAPI.GetComponentLookup<SnakeSegment>(true),
+                SnakeTunings = SystemAPI.GetComponentLookup<SnakeTuning>(true),
                 Wizards = SystemAPI.GetComponentLookup<WizardCastState>(true),
                 Archetypes = SystemAPI.GetComponentLookup<EnemyArchetype>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
@@ -25,12 +29,15 @@ namespace CrowdPunch.Systems.Presentation
                 Ranged = SystemAPI.GetComponentLookup<RangedAttackState>(true),
                 Elites = SystemAPI.GetComponentLookup<ElitePunchState>(true),
                 Time = (float)SystemAPI.Time.ElapsedTime
-            }.ScheduleParallel();
+            }.ScheduleParallel(state.Dependency);
         }
 
         [BurstCompile]
         private partial struct ReadabilityJob : IJobEntity
         {
+            [ReadOnly] public ComponentLookup<SnakeHead> SnakeHeads;
+            [ReadOnly] public ComponentLookup<SnakeSegment> SnakeSegments;
+            [ReadOnly] public ComponentLookup<SnakeTuning> SnakeTunings;
             [ReadOnly] public ComponentLookup<WizardCastState> Wizards;
             [ReadOnly] public ComponentLookup<EnemyArchetype> Archetypes;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
@@ -55,6 +62,16 @@ namespace CrowdPunch.Systems.Presentation
                     EnemyArchetypeKind.Armored => new float3(0.55f, 0.60f, 0.66f),
                     _ => new float3(0.32f, 0.52f, 0.46f)
                 };
+                Entity snake = SnakeHeads.HasComponent(enemy) ? enemy
+                    : SnakeSegments.HasComponent(enemy) ? SnakeSegments[enemy].Head : Entity.Null;
+                bool isSnake = SnakeTunings.HasComponent(snake);
+                if (isSnake)
+                {
+                    var tuning = SnakeTunings[snake];
+                    bool vulnerable = SnakeHeads.HasComponent(enemy) ? !SnakeHitRules.Protected(SnakeHeads[enemy])
+                        : SnakeHeads.HasComponent(snake) && SnakeHitRules.IsTip(SnakeSegments[enemy], SnakeHeads[snake]);
+                    body = vulnerable ? tuning.VulnerableColor.xyz : tuning.ProtectedColor.xyz;
+                }
                 EnemyLaunchPhase phase = Launches[enemy].Phase;
                 bool preparing = kind == EnemyArchetypeKind.Baseline && Contacts.HasComponent(enemy)
                     && Contacts[enemy].IsWindingUp != 0
@@ -62,9 +79,9 @@ namespace CrowdPunch.Systems.Presentation
                     || Elites.HasComponent(enemy) && Elites[enemy].Phase == ElitePunchPhase.WindUp;
                 if (phase == EnemyLaunchPhase.Recovering || phase == EnemyLaunchPhase.Defeated)
                     body *= 0.45f;
-                else if (preparing)
+                else if (!isSnake && preparing)
                     body = math.lerp(body, new float3(1f, 0.82f, 0.2f), 0.55f + 0.3f * math.sin(Time * 12f));
-                else if (kind == EnemyArchetypeKind.Baseline && Contacts.HasComponent(enemy)
+                else if (!isSnake && kind == EnemyArchetypeKind.Baseline && Contacts.HasComponent(enemy)
                     && Contacts[enemy].IsAttempting != 0)
                     body = new float3(1f, 0.3f, 0.12f);
 

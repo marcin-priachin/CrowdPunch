@@ -27,7 +27,7 @@ namespace CrowdPunch.Systems.Movement
                 var t = tuning.ValueRO;
                 var mass = head.ValueRO.DynamicMass;
                 mass.InverseInertia.x = 0; mass.InverseInertia.z = 0;
-                if (SnakeHitRules.Protected(head.ValueRO, t)) { mass.InverseMass = 0; mass.InverseInertia = float3.zero; }
+                if (SnakeHitRules.Protected(head.ValueRO)) { mass.InverseMass = 0; mass.InverseInertia = float3.zero; }
                 SystemAPI.SetComponent(entity, mass);
                 if (SystemAPI.GetComponent<EnemyLaunchState>(entity).Phase != EnemyLaunchPhase.Active) continue;
                 if (path.Length == 0 || math.distancesq(path[path.Length - 1].Position, pose.ValueRO.Position) > .0025f)

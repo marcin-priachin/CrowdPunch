@@ -4,7 +4,6 @@ using Unity.Physics;
 
 namespace CrowdPunch.Components
 {
-    public enum SnakeHeadVulnerability : byte { ProtectedWhileTailRemains, AlwaysVulnerable }
     public enum SnakeExplosionResponse : byte { LaunchAndSever, IgnoreAttachedOrbs }
 
     public struct SnakeTuning : IComponentData
@@ -12,7 +11,7 @@ namespace CrowdPunch.Components
         public Entity OrbPrefab;
         public int SegmentCount;
         public float OrbRadius, Spacing, WaveAmplitude, WaveFrequencyHz, PursuitSpeed, ContactDamagePercent;
-        public SnakeHeadVulnerability HeadVulnerability;
+        public float4 ProtectedColor, VulnerableColor;
         public SnakeExplosionResponse ExplosionResponse;
     }
     public struct SnakeHead : IComponentData

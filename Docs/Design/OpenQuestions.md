@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-12
+Last updated: 2026-10-13
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -65,6 +65,16 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-13 - Snake Tip-Only Vulnerability
+
+Decision: The implementation-chat correction exposes only the last attached orb,
+then its predecessor after launch, then the head once no tail remains. Only the
+exposed attached part receives punches/launched-body impacts, aim assistance and
+direction previews, and it has a distinct color. SNAKE-002/004/005/006 supersede
+middle cuts, suffix destruction, multi-orb batch launches and AlwaysVulnerable.
+Existing explosion options obey the same single exposed-part gate. Detached orbs
+retain COMBAT-014's ordinary independent projectile/repunch behavior.
 
 ### 2026-10-12 - Snake And Legacy Gauntlet_24
 

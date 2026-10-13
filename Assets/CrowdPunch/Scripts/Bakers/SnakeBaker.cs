@@ -22,7 +22,8 @@ namespace CrowdPunch.Bakers
                 OrbRadius = math.max(.1f, s.orbRadius), Spacing = math.max(.2f, s.segmentSpacing),
                 WaveAmplitude = math.max(0, s.waveAmplitude), WaveFrequencyHz = math.max(0, s.waveFrequencyHz),
                 PursuitSpeed = math.max(0, s.pursuitSpeed), ContactDamagePercent = math.saturate(s.contactDamagePercent),
-                HeadVulnerability = s.headVulnerability,
+                ProtectedColor = new float4(s.protectedColor.r, s.protectedColor.g, s.protectedColor.b, s.protectedColor.a),
+                VulnerableColor = new float4(s.vulnerableColor.r, s.vulnerableColor.g, s.vulnerableColor.b, s.vulnerableColor.a),
                 ExplosionResponse = s.explosionResponse });
         }
     }

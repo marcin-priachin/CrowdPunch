@@ -40,6 +40,7 @@ namespace CrowdPunch.Systems.Physics
             {
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Launched) continue;
                 Entity target = launch.ValueRO.HomingTarget;
+                if (Combat.SnakeHitRules.Protected(state.EntityManager, target)) continue;
                 bool livingBoss = SystemAPI.HasComponent<BossEncounter>(target)
                     && SystemAPI.GetComponent<BossEncounter>(target).Cycle != BossCycle.Defeated;
                 livingBoss |= SystemAPI.HasComponent<ChickenBoss>(target)
