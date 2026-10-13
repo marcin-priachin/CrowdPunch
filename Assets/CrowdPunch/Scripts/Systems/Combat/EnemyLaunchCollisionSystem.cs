@@ -37,7 +37,7 @@ namespace CrowdPunch.Systems.Combat
             EnemyCollisionJob job = new EnemyCollisionJob
             {
                 SnakeHeads = SystemAPI.GetComponentLookup<SnakeHead>(true),
-                SnakeSegments = SystemAPI.GetComponentLookup<SnakeSegment>(true),
+                SnakeSegments = SystemAPI.GetComponentLookup<SnakeSegment>(),
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(),
                 Barricades = SystemAPI.GetComponentLookup<Barricade>(true),
                 ArmorSettings = SystemAPI.GetComponentLookup<EnemyArmorSettings>(true),
@@ -75,7 +75,7 @@ namespace CrowdPunch.Systems.Combat
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
             [ReadOnly] public ComponentLookup<SnakeHead> SnakeHeads;
-            [ReadOnly] public ComponentLookup<SnakeSegment> SnakeSegments;
+            public ComponentLookup<SnakeSegment> SnakeSegments;
             public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<Barricade> Barricades;
             [ReadOnly] public ComponentLookup<EnemyArmorSettings> ArmorSettings;
@@ -107,6 +107,9 @@ namespace CrowdPunch.Systems.Combat
             {
                 Entity entityA = collisionEvent.EntityA;
                 Entity entityB = collisionEvent.EntityB;
+
+                RecordSnakeBounce(collisionEvent, entityA, entityB);
+                RecordSnakeBounce(collisionEvent, entityB, entityA);
 
                 bool enemyA = EnemyLookup.HasComponent(entityA);
                 bool enemyB = EnemyLookup.HasComponent(entityB);
@@ -158,6 +161,23 @@ namespace CrowdPunch.Systems.Combat
             private bool IsUnavailable(Entity entity)
             {
                 return RespawnLookup.HasComponent(entity) && RespawnLookup.IsComponentEnabled(entity);
+            }
+
+            private void RecordSnakeBounce(CollisionEvent collision, Entity source, Entity other)
+            {
+                if (!SnakeSegments.HasComponent(source) || !FeedbackLookup.HasComponent(source)
+                    || !LaunchStateLookup.HasComponent(source)
+                    || LaunchStateLookup[source].Phase != EnemyLaunchPhase.Launched) return;
+                var segment = SnakeSegments[source];
+                if (segment.Detached == 0 || segment.BouncedOutsideOwner != 0 || other == segment.Head
+                    || SnakeSegments.HasComponent(other) && SnakeSegments[other].Head == segment.Head
+                        && SnakeSegments[other].Generation == segment.Generation) return;
+                float3 incoming = FeedbackLookup[source].IncomingVelocity;
+                if (FeedbackLookup.HasComponent(other)) incoming -= FeedbackLookup[other].IncomingVelocity;
+                if (math.abs(math.dot(incoming.xz, collision.Normal.xz)) <= .1f) return;
+                var details = collision.CalculateDetails(ref World);
+                SnakeProjectileCollision.RecordExternalBounce(ref segment, incoming, collision.Normal, details.EstimatedImpulse);
+                SnakeSegments[source] = segment;
             }
 
             private void ResolveImpact(
@@ -272,9 +292,9 @@ namespace CrowdPunch.Systems.Combat
                     if (SnakeSegments.HasComponent(launchedTarget))
                     {
                         var segment = SnakeSegments[launchedTarget];
-                        if (segment.Cleared == 0 && (candidate == segment.Head
+                        if (segment.BouncedOutsideOwner == 0 && (candidate == segment.Head
                             || SnakeSegments.HasComponent(candidate) && SnakeSegments[candidate].Head == segment.Head
-                                && SnakeSegments[candidate].Detached == 0)) continue;
+                                && SnakeSegments[candidate].Generation == segment.Generation)) continue;
                     }
                     if (SnakeHitRules.Protected(candidate, SnakeHeads, SnakeSegments)) continue;
                     bool wall = Barricades.HasComponent(candidate) && Barricades[candidate].HitsRemaining > 0;

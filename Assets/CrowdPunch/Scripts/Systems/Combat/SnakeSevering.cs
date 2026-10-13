@@ -40,7 +40,7 @@ namespace CrowdPunch.Systems.Combat
                     var segment = em.GetComponentData<SnakeSegment>(orb);
                     if (!SnakeHitRules.IsTip(segment, head)
                         || em.GetComponentData<EnemyLaunchState>(orb).Phase != EnemyLaunchPhase.Launched) break;
-                    segment.Detached = 1; segment.Cleared = 0;
+                    segment.Detached = 1; segment.BouncedOutsideOwner = 0;
                     em.SetComponentData(orb, segment);
                     links[index] = default; head.AttachedCount--;
                     break;

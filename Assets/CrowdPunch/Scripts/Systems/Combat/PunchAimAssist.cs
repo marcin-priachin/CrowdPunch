@@ -63,13 +63,7 @@ namespace CrowdPunch.Systems.Combat
 
         public static bool IsValidTarget(EntityManager manager, Entity source, Entity target)
         {
-            if (manager.HasComponent<SnakeSegment>(source))
-            {
-                var segment = manager.GetComponentData<SnakeSegment>(source);
-                if (segment.Cleared == 0 && (target == segment.Head
-                    || manager.HasComponent<SnakeSegment>(target) && manager.GetComponentData<SnakeSegment>(target).Head == segment.Head
-                        && manager.GetComponentData<SnakeSegment>(target).Detached == 0)) return false;
-            }
+            if (SnakeProjectileCollision.IgnoresOwner(manager,source,target)) return false;
             if (target != Entity.Null && manager.HasComponent<DinoBoss>(target)) return false;
             if (target != Entity.Null && manager.HasComponent<FallingPillar>(target))
                 return manager.GetComponentData<FallingPillar>(target).Phase == PillarPhase.Upright;

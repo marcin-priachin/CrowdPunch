@@ -75,7 +75,8 @@ namespace CrowdPunch.Systems.Presentation
 
                 float3 enemyPosition = transform.ValueRO.Position;
                 float3 toEnemy = enemyPosition - origin;
-                if (!PunchResolution.Contains(enemyPosition, volume))
+                if (!PunchResolution.Contains(enemyPosition, volume)
+                    || !SnakePunchOcclusion.CanReach(state.EntityManager, enemy, volume.Origin))
                 {
                     continue;
                 }

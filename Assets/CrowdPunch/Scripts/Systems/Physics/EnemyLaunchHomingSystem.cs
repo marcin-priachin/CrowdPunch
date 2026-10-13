@@ -32,14 +32,16 @@ namespace CrowdPunch.Systems.Physics
             ComponentLookup<EnemyLaunchState> launchStates = SystemAPI.GetComponentLookup<EnemyLaunchState>(true);
             ComponentLookup<Health> health = SystemAPI.GetComponentLookup<Health>(true);
             ComponentLookup<RespawnRequest> respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true);
+            var segments = SystemAPI.GetComponentLookup<SnakeSegment>(true);
 
             foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launch,
-                         RefRW<PhysicsVelocity> velocity) in
+                         RefRW<PhysicsVelocity> velocity, Entity source) in
                      SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRW<PhysicsVelocity>>()
-                         .WithAll<Enemy>())
+                         .WithAll<Enemy>().WithEntityAccess())
             {
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Launched) continue;
                 Entity target = launch.ValueRO.HomingTarget;
+                if (segments.HasComponent(source) && SnakeContactSystem.Excludes(segments[source], target, segments)) continue;
                 if (Combat.SnakeHitRules.Protected(state.EntityManager, target)) continue;
                 bool livingBoss = SystemAPI.HasComponent<BossEncounter>(target)
                     && SystemAPI.GetComponent<BossEncounter>(target).Cycle != BossCycle.Defeated;

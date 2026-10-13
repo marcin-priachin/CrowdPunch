@@ -33,6 +33,7 @@ namespace CrowdPunch.Systems.Physics
                     var velocity = SystemAPI.GetComponent<PhysicsVelocity>(contact.Source);
                     velocity.Linear.xz = math.reflect(contact.IncomingVelocity, contact.Normal).xz * wall.ValueRO.ReboundMultiplier;
                     SystemAPI.SetComponent(contact.Source, velocity);
+                    SnakeProjectileCollision.RecordRebound(state.EntityManager,contact.Source,contact.IncomingVelocity,contact.Normal);
                     launch.HomingTarget = Entity.Null;
                     launch.BelowUsefulMomentumSeconds = 0;
                     SystemAPI.SetComponent(contact.Source, launch);

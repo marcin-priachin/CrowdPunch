@@ -28,6 +28,7 @@ namespace CrowdPunch.Systems.Physics
                     var velocity = SystemAPI.GetComponent<PhysicsVelocity>(contact.Source);
                     velocity.Linear.xz = ReflectedVelocity(contact, cover.ValueRO.ReflectionMultiplier);
                     SystemAPI.SetComponent(contact.Source, velocity);
+                    SnakeProjectileCollision.RecordRebound(state.EntityManager,contact.Source,contact.IncomingVelocity,contact.Normal);
                     // Keep sequence, ownership, damage deduplication and recovery timers intact.
                     launch.HomingTarget = Entity.Null;
                     SystemAPI.SetComponent(contact.Source, launch);

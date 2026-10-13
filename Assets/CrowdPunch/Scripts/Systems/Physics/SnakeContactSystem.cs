@@ -21,10 +21,14 @@ namespace CrowdPunch.Systems.Physics
         }
         internal static bool Excludes(in SnakeSegment s, Entity other, ComponentLookup<SnakeSegment> segments)
         {
-            if (s.Detached != 0 && s.Cleared != 0) return false;
-            if (other == s.Head) return true;
-            return segments.HasComponent(other) && segments[other].Head == s.Head
-                && segments[other].Generation == s.Generation && segments[other].Detached == 0;
+            if (other == s.Head) return s.Detached == 0 || s.BouncedOutsideOwner == 0;
+            return segments.HasComponent(other) && Excludes(s, segments[other]);
+        }
+        internal static bool Excludes(in SnakeSegment s, in SnakeSegment other)
+        {
+            if (other.Head != s.Head || other.Generation != s.Generation) return false;
+            // An attached counterpart must not re-disable a returning, bounced projectile.
+            return s.Detached != 0 ? s.BouncedOutsideOwner == 0 : other.Detached == 0;
         }
         [BurstCompile]
         private struct Contacts : IContactsJob

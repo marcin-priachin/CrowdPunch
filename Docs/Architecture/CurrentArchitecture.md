@@ -45,11 +45,23 @@ tip, then to the head after tail exhaustion; other parts and detached orbs use c
 Renderer-owned material components handle both orb MeshRenderers and Yeti skinning
 without allocating materials or adding enemy GameObjects/HUD indicators.
 
-`SnakeContactSystem` disables only original-snake contacts for attached or uncleared
-detached orbs. `SnakeCollisionClearanceSystem` tests the original head and remaining
-prefix using spatial body radii plus 0.15m clearance; once clear it never rearms during
-that launch. Aim assistance excludes an orb's original snake until clear, avoiding
-self-collision locks during departure. Other snakes/crowds remain valid targets.
+`SnakeContactSystem` disables original-snake contacts for attached or unbounced
+detached orbs, including detached siblings of the same head/generation. A bounced orb
+can contact attached pieces without their reciprocal filter re-disabling it; an
+unbounced detached counterpart still keeps its own exemption. The existing
+`EnemyLaunchCollisionSystem` collision-event job writes `BouncedOutsideOwner` after a
+meaningful external impulse with horizontal relative closing speed. Floor support,
+departure distance and own-snake contacts cannot enable it. No spatial-clearance scan
+remains. Aim selection, propagation correction and homing respect the same original
+owner exemption until the first external bounce. Other snakes/crowds remain valid targets.
+Swept `BarricadeReboundSystem` and `CoverReflectionSystem` also record external rebounds
+through `SnakeProjectileCollision`, covering fast contacts without solver events.
+Barricade/cover sweep selection skips owner parts while the exemption remains active.
+`SnakePunchOcclusion` tests the current owner's collider at mid-height in the horizontal
+punch footprint (contact-radius fallback for colliderless fixtures), transforming by
+current head position/rotation/scale. Player punch resolution, live aim-source eligibility
+and presentation previews share this check, including detached repunches. Moving around
+the head restores eligibility without stale collision-world positions.
 Ordinary solver propagation, ownership, feedback and launched-player danger remain
 shared. Recovery defeats detached orbs at launch end; `SnakeOrbCleanupSystem`
 destroys them and stale/ownerless attached pieces. Restart destroys every orb before

@@ -27,7 +27,44 @@ Head health now comes solely from its spawn profile; constructing or severing a 
 does not reset it. Zero health still defers defeat until the launched body stops,
 following COMBAT-011; another punch is unnecessary to defeat it and extends that launch.
 
-## Tip-only revision (13 October)
+## External bounce and head obstruction (13 October; current verification)
+
+Detached orbs ignore their original head and every sibling, including detached siblings,
+until a meaningful external collision/rebound. Distance and floor support do not enable
+owner collisions. Solver events and swept barricade/rotating-cover rebounds both enable
+return collisions. Owner targeting/homing obey the same exemption. Player punches cannot
+pass through the owner head's current collider; blocked parts lose their aim lock and
+direction preview. Side/tail approaches restore eligibility, including detached repunches.
+
+Unity compilation passed. All 27 SnakeEnemyTests cases and 101 targeted shared regressions
+passed (20 armor, 35 player impact, 2 homing, 12 barricade, 10 rotating cover, 22 track).
+The new cases cover sibling exclusion, distance/floor non-rearming, both swept rebound
+systems, head-blocked punches/repunches, aim-lock/arrow clearing and current head pose/scale.
+
+Controlled real-physics Play Mode checks passed using the user's current one-snake,
+zero-Baseline wave: protected middle impact, Boss-owned tip launch, an unbounced return
+passing through the original tip without severing, actual external obstacle collision
+enabling owner collisions, and a return shot launching the next tip. Retry restored six
+orbs, profile health and authored counts; root defeat completed the level without tail
+objectives. Temporary injected bodies/trajectories were discarded on leaving Play Mode.
+
+The expanded baked-arena collision probe used 64 heads + 384 orbs + 200 unrelated bodies,
+including 64 launched tips, with 20 warmups and 120 samples. Reset poses/launch state before
+each sample produced up to 47 externally armed orbs. Physics build/simulation including
+contact filtering averaged 1.142838 ms/completed step; the collision-event interpretation
+system including bounce arming averaged 0.405208 ms/completed update. These exclude reset
+writes, rendering and full gameplay; they do not establish target-hardware frame rate.
+The independent tail/sever probe averaged 0.116608 / 0.226542 ms respectively, with zero
+calling-thread managed allocation. The old spatial-clearance scan was removed.
+
+Raw reports: `Temp/SnakeValidation/live-check.txt`, `collision-performance.txt` and
+`performance.txt`. Repeat collision profiling with `SnakeCrowdPerformanceCapture.CaptureCollisions`
+while paused in Gauntlet_24, then exit Play Mode to discard its stress fixtures.
+The .NET check again failed with CS0006 missing generated package DLLs in Temp/Bin/Debug;
+Unity's compilation and executed tests are authoritative. No manual controller playtest
+or player build was performed.
+
+## Tip-only revision (13 October; preceding verification)
 
 Only the last attached orb accepts launches or participates in aim assistance and direction
 previews. Gold identifies the current tip, then the head once no attached orbs remain;

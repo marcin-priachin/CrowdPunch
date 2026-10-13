@@ -60,6 +60,7 @@ namespace CrowdPunch.Systems.Combat
             float3 position = manager.GetComponentData<LocalTransform>(target).Position;
             if (!IsEligible(launch, health, punch) || !Contains(position, punch)) return false;
             if (ArmorHitResolution.IsProtected(manager, target)) return false;
+            if (punch.Cause == EnemyLaunchCause.PlayerPunch && !SnakePunchOcclusion.CanReach(manager, target, punch.Origin)) return false;
             if (punch.Cause == EnemyLaunchCause.PlayerPunch && manager.HasComponent<EnemyGroundConstraint>(target))
             {
                 EnemyGroundConstraint ground = manager.GetComponentData<EnemyGroundConstraint>(target);

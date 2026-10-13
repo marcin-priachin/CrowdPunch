@@ -23,6 +23,7 @@ namespace CrowdPunch.Tests
         private EntityManager em;
         private Entity head;
         private Entity[] orbs;
+        private BlobAssetReference<Unity.Physics.Collider> headCollider;
         [SetUp] public void Setup()
         {
             world = new World("SNAKE-001..007"); em = world.EntityManager;
@@ -33,6 +34,11 @@ namespace CrowdPunch.Tests
             em.AddComponentData(head, new SnakeHead { AttachedCount = 6, Generation = 1, Initialized = 1,
                 DynamicMass = new PhysicsMass { InverseMass = 1 } });
             em.AddComponentData(head, new PhysicsMass { InverseMass = 1 });
+            headCollider = Unity.Physics.CapsuleCollider.Create(new CapsuleGeometry
+            {
+                Vertex0 = new float3(0,-.25f,0), Vertex1 = new float3(0,.25f,0), Radius = .75f
+            }, CollisionFilter.Default, Unity.Physics.Material.Default);
+            em.AddComponentData(head, new PhysicsCollider { Value = headCollider });
             em.AddBuffer<SnakeTailLink>(head); em.AddBuffer<SnakePathPoint>(head);
             orbs = new Entity[6];
             for (int i = 0; i < orbs.Length; i++)
@@ -45,7 +51,7 @@ namespace CrowdPunch.Tests
             em.SetComponentData(settings, new EnemyLaunchSettings { UsefulMomentumSpeed = 1, LowMomentumPeriod = .1f, RecoveryDuration = .5f });
             em.CreateEntity(typeof(PlayerSnapshot));
         }
-        [TearDown] public void TearDown() => world.Dispose();
+        [TearDown] public void TearDown() { world.Dispose(); headCollider.Dispose(); }
         private Entity Body(float3 position)
         {
             var e = em.CreateEntity(typeof(Enemy), typeof(EnemyLaunchState), typeof(EnemyTier), typeof(Health),
@@ -74,6 +80,7 @@ namespace CrowdPunch.Tests
         private PunchSpecification Punch => new PunchSpecification { Origin = new float3(0,0,-1), Direction = new float3(0,0,1),
             Range = 12, Radius = 2, Strength = 20, Damage = 20, AffectActive = 1, AffectLaunched = 1,
             AffectRecovering = 1, ApplyDamage = 1, Cause = EnemyLaunchCause.PlayerPunch };
+        private PunchSpecification TailPunch { get { var punch = Punch; punch.Origin.z = 1; return punch; } }
 
         [TestCase(EnemyLaunchOwner.Player), TestCase(EnemyLaunchOwner.Enemy), TestCase(EnemyLaunchOwner.Boss)]
         public void Snake002_TipLaunchPreservesEveryPredecessorAndOwner(EnemyLaunchOwner owner)
@@ -93,7 +100,7 @@ namespace CrowdPunch.Tests
             for (int j=0;j<6;j++)
             {
                 int i=reverse?5-j:j;
-                Assert.That(PunchResolution.TryApply(em,orbs[i],Punch), Is.EqualTo(i==5));
+                Assert.That(PunchResolution.TryApply(em,orbs[i],TailPunch), Is.EqualTo(i==5));
             }
             Sever();
             Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(5));
@@ -170,7 +177,7 @@ namespace CrowdPunch.Tests
             for(int i=5;i>=0;i--)
             {
                 Assert.That(PunchResolution.TryApply(em,head,Punch), Is.False);
-                Assert.That(PunchResolution.TryApply(em,orbs[i],Punch), Is.True); Sever();
+                Assert.That(PunchResolution.TryApply(em,orbs[i],TailPunch), Is.True); Sever();
                 Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(i));
             }
             Assert.That(PunchResolution.TryApply(em,head,Punch), Is.True);
@@ -192,18 +199,86 @@ namespace CrowdPunch.Tests
             else Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(6));
             Assert.That(em.GetComponentData<EnemyLaunchState>(head).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
         }
-        [Test] public void Snake003_ClearanceIsSpatialAndPermanent()
+        [Test] public void Snake003_ReturnRequiresExternalBounceNotDepartureDistanceOrFloorContact()
         {
             Launch(orbs[5]); Sever();
-            em.SetComponentData(orbs[5], LocalTransform.FromPosition(new float3(0,0,1.5f)));
-            world.GetOrCreateSystem<SnakeCollisionClearanceSystem>().Update(world.Unmanaged);
-            Assert.That(em.GetComponentData<SnakeSegment>(orbs[5]).Cleared, Is.Zero);
-            em.SetComponentData(orbs[5], LocalTransform.FromPosition(new float3(10,0,0)));
-            world.GetOrCreateSystem<SnakeCollisionClearanceSystem>().Update(world.Unmanaged);
-            Assert.That(em.GetComponentData<SnakeSegment>(orbs[5]).Cleared, Is.EqualTo(1));
-            em.SetComponentData(orbs[5], LocalTransform.FromPosition(float3.zero));
-            world.GetOrCreateSystem<SnakeCollisionClearanceSystem>().Update(world.Unmanaged);
-            Assert.That(em.GetComponentData<SnakeSegment>(orbs[5]).Cleared, Is.EqualTo(1));
+            em.SetComponentData(orbs[5], LocalTransform.FromPosition(new float3(100,0,0)));
+            var segment = em.GetComponentData<SnakeSegment>(orbs[5]);
+            Assert.That(PunchAimAssist.IsValidTarget(em,orbs[5],orbs[4]), Is.False);
+            SnakeProjectileCollision.RecordExternalBounce(ref segment,new float3(20,-1,0),math.up(),10);
+            Assert.That(segment.BouncedOutsideOwner, Is.Zero, "Floor support is not a rebound");
+            SnakeProjectileCollision.RecordExternalBounce(ref segment,new float3(20,0,0),new float3(1,0,0),0);
+            Assert.That(segment.BouncedOutsideOwner, Is.Zero, "An unresolved contact is not a rebound");
+            SnakeProjectileCollision.RecordExternalBounce(ref segment,new float3(20,0,0),new float3(1,0,0),10);
+            em.SetComponentData(orbs[5],segment);
+            Assert.That(PunchAimAssist.IsValidTarget(em,orbs[5],orbs[4]), Is.True);
+            SnakeProjectileCollision.RecordExternalBounce(ref segment,float3.zero,math.up(),0);
+            Assert.That(segment.BouncedOutsideOwner, Is.EqualTo(1));
+        }
+        [Test] public void Snake003_OwnerFilterIncludesDetachedSiblingsButAllowsOtherSnakesAndReturn()
+        {
+            Launch(orbs[5]); Sever(); Launch(orbs[4]); Sever();
+            var projectile = em.GetComponentData<SnakeSegment>(orbs[5]);
+            var attached = em.GetComponentData<SnakeSegment>(orbs[3]);
+            var sibling = em.GetComponentData<SnakeSegment>(orbs[4]);
+            Assert.That(SnakeContactSystem.Excludes(projectile,attached), Is.True);
+            Assert.That(SnakeContactSystem.Excludes(projectile,sibling), Is.True);
+            var anotherSnake = attached; anotherSnake.Head = Body(new float3(10,0,0));
+            Assert.That(SnakeContactSystem.Excludes(projectile,anotherSnake), Is.False);
+            var newGeneration = attached; newGeneration.Generation++;
+            Assert.That(SnakeContactSystem.Excludes(projectile,newGeneration), Is.False);
+            projectile.BouncedOutsideOwner = 1;
+            Assert.That(SnakeContactSystem.Excludes(projectile,attached), Is.False);
+            Assert.That(SnakeContactSystem.Excludes(attached,projectile), Is.False);
+            Assert.That(SnakeContactSystem.Excludes(projectile,sibling), Is.False);
+            Assert.That(SnakeContactSystem.Excludes(sibling,projectile), Is.True, "Unbounced sibling still needs its exemption");
+        }
+        [TestCase(false), TestCase(true)]
+        public void Snake003_SweptWallOrCoverReboundArmsReturnWithoutSolverEvent(bool cover)
+        {
+            Launch(orbs[5]); Sever();
+            em.AddComponentData(orbs[5],new PhysicsMass {InverseMass=1});
+            var wall = em.CreateEntity();
+            var launch = em.GetComponentData<EnemyLaunchState>(orbs[5]);
+            if (cover)
+            {
+                em.AddComponentData(wall,new RotatingCover {ReflectionMultiplier=1});
+                em.AddBuffer<CoverReflection>(wall).Add(new CoverReflection {Source=orbs[5],LaunchSequence=launch.LaunchSequence,
+                    ContactCenter=new float3(0,0,9),Normal=new float3(0,0,1),IncomingVelocity=new float3(0,0,-20),PlayerPosition=new float3(0,0,12)});
+                world.GetOrCreateSystem<CoverReflectionSystem>().Update(world.Unmanaged);
+            }
+            else
+            {
+                em.AddComponentData(wall,new Barricade {HitsRemaining=2,ReboundMultiplier=1});
+                em.AddBuffer<BarricadeRebound>(wall).Add(new BarricadeRebound {Source=orbs[5],LaunchSequence=launch.LaunchSequence,
+                    ContactCenter=new float3(0,0,9),Normal=new float3(0,0,1),IncomingVelocity=new float3(0,0,-20)});
+                world.GetOrCreateSystem<BarricadeReboundSystem>().Update(world.Unmanaged);
+            }
+            Assert.That(em.GetComponentData<SnakeSegment>(orbs[5]).BouncedOutsideOwner, Is.EqualTo(1));
+            Assert.That(PunchAimAssist.IsValidTarget(em,orbs[5],orbs[4]), Is.True);
+            Assert.That(em.GetComponentData<PhysicsVelocity>(orbs[5]).Linear.z, Is.EqualTo(20));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(orbs[5]).Owner, Is.EqualTo(launch.Owner));
+        }
+        [Test] public void Snake006_OcclusionUsesCurrentHeadPositionAndScale()
+        {
+            em.SetComponentData(head,LocalTransform.FromPosition(new float3(1,0,4)));
+            Assert.That(SnakePunchOcclusion.CanReach(em,orbs[5],Punch.Origin), Is.True);
+            var pose = em.GetComponentData<LocalTransform>(head); pose.Scale=2; em.SetComponentData(head,pose);
+            Assert.That(SnakePunchOcclusion.CanReach(em,orbs[5],Punch.Origin), Is.False);
+            pose.Position.x=4; em.SetComponentData(head,pose);
+            Assert.That(SnakePunchOcclusion.CanReach(em,orbs[5],Punch.Origin), Is.True);
+        }
+        [Test] public void Snake006_HeadBlocksPlayerPunchButSideAndTailApproachesCanLaunchTip()
+        {
+            Assert.That(PunchResolution.TryApply(em,orbs[5],Punch), Is.False);
+            Assert.That(em.IsComponentEnabled<ExternalImpulse>(orbs[5]), Is.False);
+            Assert.That(em.IsComponentEnabled<DamageRequest>(orbs[5]), Is.False);
+            var side = Punch; side.Origin = new float3(2,0,8); side.Direction = math.normalizesafe(new float3(-2,0,1));
+            Assert.That(SnakePunchOcclusion.CanReach(em,orbs[5],side.Origin), Is.True);
+            Assert.That(PunchResolution.TryApply(em,orbs[5],side), Is.True);
+            Assert.That(SnakePunchOcclusion.CanReach(em,orbs[5],new float3(0,0,10)), Is.True);
+            Launch(orbs[5]); Sever();
+            Assert.That(PunchResolution.TryApply(em,orbs[5],Punch), Is.False, "Detached repunch also cannot pass through the head");
         }
         [Test] public void Snake003_DetachedOrbDiesAtLaunchEndInsteadOfRecovering()
         {
@@ -242,7 +317,7 @@ namespace CrowdPunch.Tests
             try
             {
                 PlayerBridgeRegistry.Register(bridge);
-                bridge.PublishPunchPreview(new UnityEngine.Vector3(0,0,-1),UnityEngine.Vector3.forward,2,12,2,0,10,180);
+                bridge.PublishPunchPreview(new UnityEngine.Vector3(0,0,1),UnityEngine.Vector3.forward,2,12,2,0,10,180);
                 var presentation=world.GetOrCreateSystem<PresentationBridgeSystem>();
                 presentation.Update(world.Unmanaged);
                 Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.EqualTo(1));
@@ -257,6 +332,39 @@ namespace CrowdPunch.Tests
             }
             finally
             {
+                PlayerBridgeRegistry.Unregister(bridge);
+                if(previous!=null)PlayerBridgeRegistry.Register(previous);
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+        [Test] public void Snake006_BlockedTipClearsAimLockAndHidesArrowThenReappearsFromTailSide()
+        {
+            PlayerBridgeRegistry.TryGetBridge(out var previous);
+            var root = new UnityEngine.GameObject("Snake head occlusion regression");
+            var bridge = root.AddComponent<PlayerEcsBridge>();
+            var aimTarget = Body(new float3(0,0,11));
+            em.AddComponentData(orbs[5],new PunchAimAssistTarget { Target=aimTarget,IsAiming=1 });
+            // An empty world is sufficient here: the existing lock is valid if the source is reachable.
+            var physics = em.CreateEntity(typeof(PhysicsWorldSingleton));
+            em.SetComponentData(physics,new PhysicsWorldSingleton { PhysicsWorld = new PhysicsWorld(0,0,0) });
+            var aim = world.GetOrCreateSystem<PunchAimAssistSystem>();
+            var presentation = world.GetOrCreateSystem<PresentationBridgeSystem>();
+            try
+            {
+                PlayerBridgeRegistry.Register(bridge);
+                bridge.PublishPunchPreview(new UnityEngine.Vector3(0,0,-1),UnityEngine.Vector3.forward,2,10,2,0,10,180);
+                aim.Update(world.Unmanaged); presentation.Update(world.Unmanaged);
+                Assert.That(em.GetComponentData<PunchAimAssistTarget>(orbs[5]).IsAiming, Is.Zero);
+                Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.Zero);
+                bridge.PublishPunchPreview(new UnityEngine.Vector3(0,0,1),UnityEngine.Vector3.forward,2,9,2,0,10,180);
+                aim.Update(world.Unmanaged); presentation.Update(world.Unmanaged);
+                Assert.That(em.GetComponentData<PunchAimAssistTarget>(orbs[5]).IsAiming, Is.EqualTo(1));
+                Assert.That(em.GetComponentData<PunchAimAssistTarget>(orbs[5]).Target, Is.EqualTo(aimTarget));
+                Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.EqualTo(1));
+            }
+            finally
+            {
+                var physicsWorld = em.GetComponentData<PhysicsWorldSingleton>(physics).PhysicsWorld; physicsWorld.Dispose();
                 PlayerBridgeRegistry.Unregister(bridge);
                 if(previous!=null)PlayerBridgeRegistry.Register(previous);
                 UnityEngine.Object.DestroyImmediate(root);

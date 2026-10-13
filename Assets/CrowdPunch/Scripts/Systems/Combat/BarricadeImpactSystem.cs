@@ -106,6 +106,7 @@ namespace CrowdPunch.Systems.Combat
                 foreach (var hit in hits)
                 {
                     if (hit.Entity == source || math.abs(hit.SurfaceNormal.y) > .7f || hit.Fraction >= fraction) continue;
+                    if (SnakeProjectileCollision.IgnoresOwner(em,source,hit.Entity)) continue;
                     if (em.HasComponent<Barricade>(hit.Entity) && em.GetComponentData<Barricade>(hit.Entity).HitsRemaining <= 0) continue;
                     float3 relativeIncoming = incoming - TrackDisplacement(em, hit.Entity, SystemAPI.Time.DeltaTime)
                         / math.max(.0001f, SystemAPI.Time.DeltaTime);

@@ -61,7 +61,8 @@ namespace CrowdPunch.Systems.Combat
                 bool isInPunchVolume = hasPreview
                     && !ArmorHitResolution.IsProtected(state.EntityManager, source)
                     && PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, volume)
-                    && PunchResolution.Contains(transform.ValueRO.Position, volume);
+                    && PunchResolution.Contains(transform.ValueRO.Position, volume)
+                    && SnakePunchOcclusion.CanReach(state.EntityManager, source, volume.Origin);
                 if (!isInPunchVolume)
                 {
                     aimTarget.ValueRW = default;

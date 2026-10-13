@@ -26,7 +26,7 @@ namespace CrowdPunch.Components
         public Entity Head;
         public uint Generation;
         public int Index;
-        public byte Detached, Cleared;
+        public byte Detached, BouncedOutsideOwner;
         public float Radius;
         public EnemyWaveOwnership Encounter;
     }

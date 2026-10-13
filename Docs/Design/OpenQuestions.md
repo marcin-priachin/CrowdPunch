@@ -66,6 +66,13 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-13 - Snake External Bounce And Head Obstruction
+
+Decision: A detached orb ignores its original head and every sibling until a meaningful
+external solid collision. Travel distance and resting floor contact do not rearm it.
+The player's punch, aim lock and launch arrow share an owner-head obstruction gate,
+including detached repunches. SNAKE-003/006 supersede spatial-clearance rearming.
+
 ### 2026-10-13 - Snake Tip-Only Vulnerability
 
 Decision: The implementation-chat correction exposes only the last attached orb,
