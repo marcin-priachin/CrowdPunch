@@ -26,6 +26,11 @@ clearance, and drives attached physics velocity with an intentional path motor.
 Attached enemies remain physical bodies; movement never teleports their XZ positions.
 Protected heads use zero inverse mass while retaining velocity-owned pursuit, so
 solver contact cannot push them; exposure restores their stored dynamic mass.
+After the ordinary acceleration motor, `SnakeHeadMovement.LimitStep` sweeps the
+active head's actual next horizontal step against navigation clearance. Residual
+turning momentum is stopped before entering blocked space; navigation can then steer
+from a valid position. Physical-radius corner/bounds escape remains permitted. The
+guard writes velocity only and skips launched/recovering heads.
 
 SNAKE-002 now exposes only the last attached orb. `SnakeHitRules` uses its stable
 index and head attached count/generation as the shared gate for punches, explosions,

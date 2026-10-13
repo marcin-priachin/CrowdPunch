@@ -27,7 +27,44 @@ Head health now comes solely from its spawn profile; constructing or severing a 
 does not reset it. Zero health still defers defeat until the launched body stops,
 following COMBAT-011; another punch is unnecessary to defeat it and extends that launch.
 
-## External bounce and head obstruction (13 October; current verification)
+## Speed adjustment obstacle fix (13 October; current verification)
+
+At the user's 6 m/s pursuit setting, the acceleration motor could retain sideways
+velocity after navigation changed direction. The protected kinematic head entered
+solid geometry, where the solver could not push it out and navigation could not
+find a physical escape. Controlled baked-arena routes reproduced this: the head
+stopped at (4.659569, -3.504058) beside the second routing obstacle and remained
+intersecting it for 845 of 900 simulated steps.
+
+The active-head motor now checks its actual next horizontal step against navigation
+clearance before physics, stopping residual momentum before penetration. It retains
+physical-radius escape from conservative corner margins and outside-grid recovery.
+No transform teleporting, launched/recovering momentum change or settings change was
+introduced; the authored pursuit speed remains 6 m/s.
+
+Unity compilation and all 32 snake + 42 navigation/ground-hazard navigation tests passed.
+New regressions cover 3.1/6/12 m/s obstacle/bounds steps, round-corner/bounds escape,
+the real head motor preserving height/position and unaffected launched-head momentum.
+Eight baked-arena start/goal approaches, each advanced through 900 actual Unity Physics
+steps at .02 seconds, now produced zero head penetrations at 6 m/s; every case approached
+within .18 m of its target. The same eight approaches at 3.1 and 12 m/s also produced
+zero penetrations. These extra speeds check obstacle safety; they do not establish
+contact timing, turn-radius balance or manual controller feel at arbitrary speeds.
+Injected trajectories/positions were discarded on exiting Play Mode.
+
+The baked-grid crowd probe included 65 heads, 390 orbs and 200 unrelated bodies.
+With each head given 6 m/s horizontal velocity before every sample, the combined
+tail motor/head guard averaged .073172 ms per completed frozen update across
+20 warmups + 120 samples, with zero calling-thread managed allocation. Reset writes,
+rendering and whole-frame performance are excluded. Raw report:
+`Temp/SnakeValidation/head-guard-performance.txt`.
+
+Raw controlled results and a repeatable paused-Editor eval body are in
+`Temp/SnakeValidation/speed-results.json` and `speed-probe.cs` (Gauntlet_24, one active
+snake). No player build was performed. The generated command-line build remains
+limited by missing package-reference DLLs; Unity compilation/tests are authoritative.
+
+## External bounce and head obstruction (13 October; preceding verification)
 
 Detached orbs ignore their original head and every sibling, including detached siblings,
 until a meaningful external collision/rebound. Distance and floor support do not enable

@@ -30,6 +30,13 @@ namespace CrowdPunch.Systems.Movement
                 if (SnakeHitRules.Protected(head.ValueRO)) { mass.InverseMass = 0; mass.InverseInertia = float3.zero; }
                 SystemAPI.SetComponent(entity, mass);
                 if (SystemAPI.GetComponent<EnemyLaunchState>(entity).Phase != EnemyLaunchPhase.Active) continue;
+                if (grid.Data.IsCreated && SystemAPI.HasComponent<NavigationAgent>(entity))
+                {
+                    var headVelocity = SystemAPI.GetComponent<PhysicsVelocity>(entity);
+                    headVelocity.Linear.xz = SnakeHeadMovement.LimitStep(ref grid.Data.Value, pose.ValueRO.Position.xz,
+                        headVelocity.Linear.xz, SystemAPI.GetComponent<NavigationAgent>(entity).Radius, dt);
+                    SystemAPI.SetComponent(entity, headVelocity);
+                }
                 if (path.Length == 0 || math.distancesq(path[path.Length - 1].Position, pose.ValueRO.Position) > .0025f)
                     path.Add(new SnakePathPoint { Position = pose.ValueRO.Position });
                 // Bound history by travelled distance; keep the oldest corner needed by the last orb.

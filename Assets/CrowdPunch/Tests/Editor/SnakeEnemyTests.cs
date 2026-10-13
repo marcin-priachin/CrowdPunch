@@ -6,6 +6,7 @@ using CrowdPunch.Systems.Lifetime;
 using CrowdPunch.Systems.Movement;
 using CrowdPunch.Systems.Physics;
 using CrowdPunch.Systems.Presentation;
+using CrowdPunch.Utilities;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Core;
@@ -296,6 +297,51 @@ namespace CrowdPunch.Tests
             path.Add(new SnakePathPoint { Position = new float3(3,0,3) });
             float3 tangent; var p = SnakeTailMovementSystem.Sample(path, new float3(3,0,3), 4, out tangent);
             Assert.That(math.distance(p, new float3(0,0,2)), Is.LessThan(.001f));
+        }
+        [TestCase(3.1f), TestCase(6f), TestCase(12f)]
+        public void Snake001_HeadMotorStopsResidualMomentumBeforeObstacleOrArenaBoundary(float speed)
+        {
+            using var obstacles = new NativeArray<NavigationRectangle>(new[] {
+                new NavigationRectangle {Minimum=new float2(2,-5.5f),Maximum=new float2(4,-.5f)} },Allocator.Temp);
+            using var grid = NavigationGridConstruction.Build(new float2(-10),new float2(10),1,
+                new float3(.62f,.97f,1.62f),obstacles,Allocator.Persistent);
+            Assert.That(math.lengthsq(SnakeHeadMovement.LimitStep(ref grid.Value,new float2(4.99f,-3),
+                new float2(-speed,0),.75f,.02f)), Is.Zero);
+            Assert.That(math.lengthsq(SnakeHeadMovement.LimitStep(ref grid.Value,new float2(9.02f,0),
+                new float2(speed,0),.75f,.02f)), Is.Zero);
+            Assert.That(SnakeHeadMovement.LimitStep(ref grid.Value,new float2(6,-3),
+                new float2(0,speed),.75f,.02f).y, Is.EqualTo(speed));
+        }
+        [Test] public void Snake001_HeadStepGuardPreservesRoundCornerAndBoundsEscape()
+        {
+            using var obstacles = new NativeArray<NavigationRectangle>(new[] {
+                new NavigationRectangle {Minimum=new float2(2,-5.5f),Maximum=new float2(4,-.5f)} },Allocator.Temp);
+            using var grid = NavigationGridConstruction.Build(new float2(-10),new float2(10),1,
+                new float3(.62f,.97f,1.62f),obstacles,Allocator.Persistent);
+            var escape=new float2(0,1.5f);
+            Assert.That(SnakeHeadMovement.LimitStep(ref grid.Value,new float2(4.8f,.25f),escape,.75f,.02f), Is.EqualTo(escape));
+            Assert.That(SnakeHeadMovement.LimitStep(ref grid.Value,new float2(-11,0),new float2(1.5f,0),.75f,.02f).x, Is.EqualTo(1.5f));
+            Assert.That(math.lengthsq(SnakeHeadMovement.LimitStep(ref grid.Value,new float2(-11,0),new float2(-1.5f,0),.75f,.02f)), Is.Zero);
+        }
+        [Test] public void Snake001_ActiveHeadGuardDoesNotTeleportOrChangeLaunchedMomentum()
+        {
+            using var obstacles = new NativeArray<NavigationRectangle>(new[] {
+                new NavigationRectangle {Minimum=new float2(2,-5.5f),Maximum=new float2(4,-.5f)} },Allocator.Temp);
+            using var grid = NavigationGridConstruction.Build(new float2(-10),new float2(10),1,
+                new float3(.62f,.97f,1.62f),obstacles,Allocator.Persistent);
+            em.AddComponentData(em.CreateEntity(),new NavigationGrid {Data=grid});
+            em.AddComponentData(head,new NavigationAgent {Radius=.75f});
+            var pose=LocalTransform.FromPosition(new float3(4.99f,0,-3));
+            var velocity=new PhysicsVelocity {Linear=new float3(-6,2,0)};
+            em.SetComponentData(head,pose);em.SetComponentData(head,velocity);
+            var motor=world.GetOrCreateSystem<SnakeTailMovementSystem>();
+            motor.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<PhysicsVelocity>(head).Linear.x, Is.Zero);
+            Assert.That(em.GetComponentData<PhysicsVelocity>(head).Linear.y, Is.EqualTo(2));
+            Assert.That(em.GetComponentData<LocalTransform>(head).Position, Is.EqualTo(pose.Position));
+            var exposed=em.GetComponentData<SnakeHead>(head);exposed.AttachedCount=0;em.SetComponentData(head,exposed);
+            Launch(head);em.SetComponentData(head,velocity);motor.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<PhysicsVelocity>(head).Linear, Is.EqualTo(velocity.Linear));
         }
         [Test] public void Snake006_AimEligibilityFollowsTipThenHead()
         {
