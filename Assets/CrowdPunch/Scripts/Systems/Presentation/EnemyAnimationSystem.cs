@@ -27,6 +27,8 @@ namespace CrowdPunch.Systems.Presentation
                 Respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true),
                 Velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true),
                 Dashers = SystemAPI.GetComponentLookup<DasherState>(true),
+                Ninjas = SystemAPI.GetComponentLookup<NinjaState>(true),
+                NinjaTuning = SystemAPI.GetComponentLookup<NinjaTuning>(true),
                 RangedAttacks = SystemAPI.GetComponentLookup<RangedAttackState>(true),
                 ElitePunches = SystemAPI.GetComponentLookup<ElitePunchState>(true),
                 Health = SystemAPI.GetComponentLookup<Health>(true),
@@ -46,6 +48,8 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<RespawnRequest> Respawns;
             [ReadOnly] public ComponentLookup<PhysicsVelocity> Velocities;
             [ReadOnly] public ComponentLookup<DasherState> Dashers;
+            [ReadOnly] public ComponentLookup<NinjaState> Ninjas;
+            [ReadOnly] public ComponentLookup<NinjaTuning> NinjaTuning;
             [ReadOnly] public ComponentLookup<RangedAttackState> RangedAttacks;
             [ReadOnly] public ComponentLookup<ElitePunchState> ElitePunches;
             [ReadOnly] public ComponentLookup<Health> Health;
@@ -70,6 +74,26 @@ namespace CrowdPunch.Systems.Presentation
                     playback.Initialized = 1;
                 }
                 EnemyLaunchState launch = Launches[owner];
+                if (animation.Profile == (byte)EnemyAnimationProfile.Ninja)
+                {
+                    if (launch.Phase == EnemyLaunchPhase.Active && Ninjas.HasComponent(owner) && NinjaTuning.HasComponent(owner))
+                    {
+                        var ninja = Ninjas[owner];
+                        int motion = ninja.Phase == NinjaPhase.Preparing ? 2
+                            : ninja.Phase == NinjaPhase.ArrivalWarning || ninja.Phase == NinjaPhase.Dashing ? 3 : -1;
+                        if (motion >= 0)
+                        {
+                            float progress = ninja.Phase == NinjaPhase.Preparing
+                                ? math.saturate(1 - ninja.SecondsRemaining / math.max(.001f, NinjaTuning[owner].PreparationDuration)) : .35f;
+                            float pose = progress * (samples.FrameCount - 1);
+                            int from = (int)pose;
+                            ApplyFrame(ref skin, ref samples, motion, from, math.min(from + 1, samples.FrameCount - 1), math.frac(pose));
+                            return;
+                        }
+                    }
+                    AnimateBaseline(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Wizard)
                 {
                     bool casting = launch.Phase == EnemyLaunchPhase.Active && Wizards.HasComponent(owner) && Wizards[owner].IsCasting;

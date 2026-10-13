@@ -13,7 +13,7 @@ namespace CrowdPunch.Components
     /// <summary>Optional authored ranges selected according to the nearby enemy's archetype.</summary>
     public struct EnemyArchetypeSeparationSettings
     {
-        public byte OverrideMask;
+        public ushort OverrideMask;
         public float BaselineMin;
         public float BaselineMax;
         public float BaselineWeight;
@@ -29,12 +29,15 @@ namespace CrowdPunch.Components
         public float ArmoredMin, ArmoredMax, ArmoredWeight;
         public float WizardMin, WizardMax, WizardWeight;
         public float TrailMin, TrailMax, TrailWeight;
+        public float NinjaMin, NinjaMax, NinjaWeight;
 
         public void Set(EnemyArchetypeKind archetype, float minimum, float maximum, float weight)
         {
-            OverrideMask |= (byte)(1 << (int)archetype);
+            OverrideMask |= (ushort)(1 << (int)archetype);
             switch (archetype)
             {
+                case EnemyArchetypeKind.Ninja:
+                    NinjaMin = minimum; NinjaMax = maximum; NinjaWeight = weight; break;
                 case EnemyArchetypeKind.Trail:
                     TrailMin = minimum; TrailMax = maximum; TrailWeight = weight; break;
                 case EnemyArchetypeKind.Wizard:
@@ -65,7 +68,7 @@ namespace CrowdPunch.Components
     /// <summary>Per-enemy archetype distances randomized from the spawn profile's enabled ranges.</summary>
     public struct EnemyArchetypeSeparationDistances : IComponentData
     {
-        public byte OverrideMask;
+        public ushort OverrideMask;
         public float Baseline;
         public float BaselineWeight;
         public float Ranged;
@@ -77,6 +80,7 @@ namespace CrowdPunch.Components
         public float Armored, ArmoredWeight;
         public float Wizard, WizardWeight;
         public float Trail, TrailWeight;
+        public float Ninja, NinjaWeight;
 
         public float GetDistance(EnemyArchetypeKind archetype, float fallback)
         {
@@ -94,6 +98,7 @@ namespace CrowdPunch.Components
                 EnemyArchetypeKind.Armored => Armored,
                 EnemyArchetypeKind.Wizard => Wizard,
                 EnemyArchetypeKind.Trail => Trail,
+                EnemyArchetypeKind.Ninja => Ninja,
                 EnemyArchetypeKind.Elite => Baseline,
                 _ => Baseline
             };
@@ -115,6 +120,7 @@ namespace CrowdPunch.Components
                 EnemyArchetypeKind.Armored => ArmoredWeight,
                 EnemyArchetypeKind.Wizard => WizardWeight,
                 EnemyArchetypeKind.Trail => TrailWeight,
+                EnemyArchetypeKind.Ninja => NinjaWeight,
                 EnemyArchetypeKind.Elite => BaselineWeight,
                 _ => BaselineWeight
             };

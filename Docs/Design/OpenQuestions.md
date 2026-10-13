@@ -83,6 +83,17 @@ middle cuts, suffix destruction, multi-orb batch launches and AlwaysVulnerable.
 Existing explosion options obey the same single exposed-part gate. Detached orbs
 retain COMBAT-014's ordinary independent projectile/repunch behavior.
 
+### 2026-10-13 - Ninja And Legacy Gauntlet_25
+
+Decision: Accept the supplied Ninja design (NINJA-001..006): distance-band assassin,
+0.75s preparation, validated rear teleport, 0.2s locked arrival warning, 48m/s committed
+dash up to 5m, and 1.6s vulnerable recovery. Both/Periodic/Proximity scheduling,
+two concurrent ambushes, Baseline launch combat/health, finite sequential 1/3-Ninja
+waves, Ninja.fbx presentation and compact smoke are agreed. Audio is explicitly deferred.
+All unspecified search, retry, approach, geometry, count and presentation details are
+delegated. No feature-scope design question remains. Campaign content/saves and the
+previous 24 legacy levels are preserved.
+
 ### 2026-10-12 - Snake And Legacy Gauntlet_24
 
 Decision: Adopt the final attached summary from Design Yeti Tail Enemy, conversation

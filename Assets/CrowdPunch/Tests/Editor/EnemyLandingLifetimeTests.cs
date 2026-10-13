@@ -20,7 +20,8 @@ namespace CrowdPunch.Tests
             var enemy = em.CreateEntity(typeof(Enemy), typeof(RespawnRequest), typeof(DeathRequest),
                 typeof(EnemyLaunchState), typeof(EnemyLandingAnimation), typeof(LocalTransform),
                 typeof(Health), typeof(HealthBar), typeof(EnemyDamageState), typeof(EnemyRespawnSettings), typeof(EnemyLifetime),
-                typeof(PhysicsVelocity), typeof(KnockbackRecovery), typeof(DesiredMovement), typeof(EnemyGroundConstraint));
+                typeof(PhysicsVelocity), typeof(KnockbackRecovery), typeof(DesiredMovement), typeof(EnemyGroundConstraint),
+                typeof(EnemyMovementSettings));
             em.SetComponentData(enemy, LocalTransform.FromPosition(new float3(2f, 1f, 3f)));
             em.SetComponentData(enemy, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated, LaunchSequence = 1 });
             em.SetComponentData(enemy, new EnemyLandingAnimation { Duration = 1.4f });

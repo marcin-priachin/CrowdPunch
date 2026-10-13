@@ -15,7 +15,8 @@ namespace CrowdPunch.Configuration
         Elite,
         Armored = 5,
         Wizard = 6,
-        Trail = 7
+        Trail = 7,
+        Ninja = 8
     }
 
     [Serializable]

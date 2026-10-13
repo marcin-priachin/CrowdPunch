@@ -116,6 +116,9 @@ namespace CrowdPunch.Systems.Initialization
                 WizardWeight = math.max(0f, settings.WizardWeight),
                 Trail = NextDistance(settings.TrailMin, settings.TrailMax, ref random),
                 TrailWeight = math.max(0f, settings.TrailWeight),
+                Ninja = (settings.OverrideMask & (1 << (int)EnemyArchetypeKind.Ninja)) != 0
+                    ? NextDistance(settings.NinjaMin, settings.NinjaMax, ref random) : 0,
+                NinjaWeight = math.max(0f, settings.NinjaWeight),
                 Armored = NextDistance(settings.ArmoredMin, settings.ArmoredMax, ref random),
                 ArmoredWeight = math.max(0f, settings.ArmoredWeight),
                 DasherWeight = math.max(0f, settings.DasherWeight)

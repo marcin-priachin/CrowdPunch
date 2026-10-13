@@ -172791,6 +172791,7 @@ GameObject:
   - component: {fileID: 1430478228}
   - component: {fileID: 1430478227}
   - component: {fileID: 1430478230}
+  - component: {fileID: 1430478231}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -172954,6 +172955,19 @@ MonoBehaviour:
   lineLength: 5
   lineWidth: 0.18
   verticalOffset: 0.15
+--- !u!114 &1430478231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1430478222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58b6e8f849aaf2a47a2f3175a8c8d14b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.NinjaSmokePresentation
+  smokeMaterial: {fileID: 2100000, guid: 8f295b1cf6e1d714b935704a04519241, type: 2}
 --- !u!43 &1487223146
 Mesh:
   m_ObjectHideFlags: 0
@@ -190550,6 +190564,7 @@ MonoBehaviour:
   - Gauntlet_22
   - Gauntlet_23
   - Gauntlet_24
+  - Gauntlet_25
   levelDisplayNames:
   - 01 First Line
   - 02 Side Step
@@ -190575,6 +190590,7 @@ MonoBehaviour:
   - 22 Dino Pillars
   - 23 Hot Footing
   - 24 Cut The Tail
+  - 25 Behind You
   loadFirstLevelOnStart: 1
 --- !u!114 &1935685717
 MonoBehaviour:

@@ -52,6 +52,8 @@ namespace CrowdPunch.Mono.Player
         public event Action<ulong, uint, Vector3, float, int> TrailReceived;
         public event Action DasherTelegraphsBegan, DasherTelegraphsEnded;
         public event Action<ulong, Vector3, Vector3, float> DasherTelegraphReceived;
+        public event Action<Vector3, Vector3> NinjaTeleportReceived;
+        public void ReceiveNinjaTeleport(Vector3 departure, Vector3 arrival) => NinjaTeleportReceived?.Invoke(departure, arrival);
         public void ReceiveImpact(CombatFeedbackMessage message) => ImpactReceived?.Invoke(message);
         public void BeginTrails() => TrailsBegan?.Invoke();
         public void EndTrails() => TrailsEnded?.Invoke();

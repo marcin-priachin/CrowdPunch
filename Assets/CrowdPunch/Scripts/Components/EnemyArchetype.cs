@@ -11,7 +11,8 @@ namespace CrowdPunch.Components
         Elite,
         Armored = 5,
         Wizard = 6,
-        Trail = 7
+        Trail = 7,
+        Ninja = 8
     }
 
     /// <summary>Explicit spawn selection used without relying on prefab or presentation names.</summary>

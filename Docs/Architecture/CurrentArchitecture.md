@@ -6,6 +6,88 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Ninja Enemy And Legacy Gauntlet_25 (NINJA-001..006)
+
+`NinjaAuthoring`/`NinjaBaker` add independent `NinjaTuning`, `NinjaState` and
+`NinjaPresentation` to `Prefabs/EnemyNinja.prefab`. The normal-tier Ninja archetype
+uses the existing spawn profiles, warnings, health, lifetime and wave ownership.
+Its spawn profile copies Baseline health; attack/movement tuning lives in
+`Data/Settings/NinjaSettings.asset`. Retreat speed is baked from the referenced
+player movement settings (currently 12m/s); approach speed defaults to 4m/s.
+Archetype separation masks now use ushort to accommodate Ninja's ninth enum value;
+existing override bits and random streams remain unchanged without a Ninja override.
+
+`NinjaDecisionSystem` follows chase and precedes navigation/movement. It writes
+distance-band intent, tracks initial/periodic/minimum cooldowns and proximity entry,
+and serially reserves at most two ambush slots. Recovery releases the reservation.
+Slot retry defaults to .15-.35s; failed destination retry is .35-.65s. Readiness is
+retained across these retries. A new enemy lifetime resets all Ninja scheduling;
+shared launch phases suppress attacks and reactivation receives a fresh cooldown.
+
+`NinjaTeleportSystem` runs after the normal movement motor. Only a pending teleport
+captures crowd/spawn reservations and warning/active patches. It tries the direct
+rear point, then alternating 10-degree offsets up to +/-60 degrees. Navigation
+physical-radius anchors/region IDs and room ownership reject disconnected sections; continuous
+geometry, capsule-height static sweeps and occupancy reject unsafe destinations or
+blocked attack paths. No navigation topology fails closed. The single validated
+teleport writes position, clears cached navigation, locks the attack direction,
+and enters stationary arrival warning. The .45m-radius, 2m-tall capsule fits the
+2m rear offset beside the player's 1.5m radius; configurable larger victims/bodies
+increase the offset only enough to prevent overlap.
+
+`NinjaMovementSystem` writes intentional dash velocity, caps the final step at the
+remaining distance, and sweeps solids to stop before obstruction. In the physics
+simulation, `NinjaDashContactSystem` disables ordinary unlaunched enemy body pairs
+only during a committed step. Launched-body pairs remain enabled, and a launched
+Ninja immediately regains all ordinary solver contacts. No collider cloning or
+Dasher combat components are involved. `NinjaInterruptSystem` follows punch/damage
+resolution. Post-physics `NinjaCollisionSystem` follows shared launch propagation
+and cancels incoming-body interruptions before `NinjaPlayerImpactSystem` evaluates
+the swept player hit; shared recovery follows these systems. Final truncated dash
+steps retain their sweep until combat consumes it. Shared player health accepts
+damage and knockback through the existing bridge/invulnerability path.
+
+The existing skin-matrix animation job selects sampled Ninja Run/Idle, Duck
+preparation, a held Punch arrival/dash pose and shared flight/Death playback.
+Body colors strengthen preparation/arrival readability. `NinjaSmokeBridgeSystem`
+publishes only departure/arrival positions through `PlayerEcsBridge` to a bounded
+eight-effect `NinjaSmokePresentation` pool on the player. It contains no entities
+or enemy queries. No directional indicators, HUD or audio were added.
+
+`GauntletProgressionBuilder.BuildNinja` authors only the 42m-square Gauntlet_25,
+two interior cover obstacles, navigation, Ninja assets and legacy registration in
+Bootstrap. Two sequential finite waves contain 1 Ninja + 6 Baselines, then 3 Ninjas
++ 12 Baselines. Campaign assets and the Bootstrap-plus-80 player build list are
+unchanged. Select Legacy > 25 Behind You in the Level Play Editor window.
+Navigation covers the full court. Continuous positions beside its walls connect
+to an inward raster cell at the actual Ninja radius, avoiding false cancellations
+from the grid's coarser clearance classes without relaxing obstacle sweeps.
+
+`NinjaEnemyTests` covers authored defaults, all scheduling modes, concurrency,
+initial/cooldown/lifetime behavior, teleport topology/occupancy/hazard rejection,
+full-warning retries, locked arrival, static swept obstruction, player hit and
+invulnerability, ordinary punch launches, and legacy/build isolation.
+`NinjaEncounterPlayCheck` runs controlled real-solver/lifecycle checks with injected
+launches and wave defeat; it is not a balance playtest.
+
+Verification on 2026-10-13: all 21 Ninja checks passed, along with the related enemy
+regression checks after correcting an older landing-lifetime fixture to include
+the movement component required by respawn. The actual baked encounter passed both
+finite waves, natural preparation/arrival/dash/recovery, two-slot arbitration,
+Ninja-to-Baseline solver propagation, an incoming launched Baseline interrupting a
+committed dash with Boss ownership intact, completion, and additive restart at
+full Baseline health (currently 5). Output is in `Temp/NinjaValidation`.
+The final capsule queries also reject thin obstacles between endpoint spheres,
+and a real wall-adjacent target at z=20.5 teleported safely to z=18.5.
+Warmed synthetic decision updates with three Ninjas measured .0106ms with 200
+ordinary enemies and .0223ms with 1,000. Actual baked-capsule physics including the
+selective body-pair filter measured .4807/.6806ms per completed step at 200/1,000
+Baselines, with .0230/.0746ms Ninja collision interpretation. These local checks
+exclude rendering/full gameplay and do not resolve OQ-001 hardware/FPS targets.
+Unity compilation is authoritative. An initial command-line build passed with
+existing warnings; a later regenerated-project build stopped in
+`_GetProjectReferenceTargetFrameworkProperties` without reporting a C# error.
+
 ## Snake Enemy And Legacy Gauntlet_24 (SNAKE-001..007)
 
 `SnakeAuthoring`/`SnakeBaker` put `SnakeTuning`, `SnakeHead`, `SnakeTailLink` and

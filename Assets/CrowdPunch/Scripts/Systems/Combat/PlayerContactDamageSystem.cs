@@ -54,7 +54,8 @@ namespace CrowdPunch.Systems.Combat
                     || archetype.ValueRO.Value == EnemyArchetypeKind.Explosive
                     || archetype.ValueRO.Value == EnemyArchetypeKind.Dasher
                     || archetype.ValueRO.Value == EnemyArchetypeKind.Wizard
-                    || archetype.ValueRO.Value == EnemyArchetypeKind.Trail)
+                    || archetype.ValueRO.Value == EnemyArchetypeKind.Trail
+                    || archetype.ValueRO.Value == EnemyArchetypeKind.Ninja)
                 {
                     continue;
                 }

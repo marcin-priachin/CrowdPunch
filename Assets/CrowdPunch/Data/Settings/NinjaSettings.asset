@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e634ae3fa0e79a040b553d60f525c303, type: 3}
+  m_Name: NinjaSettings
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.NinjaSettings
+  triggerMode: 3
+  initialDelay: 3
+  minimumCooldown: 6
+  periodicInterval: 10
+  periodicVariation: 2
+  proximityDistance: 6
+  engagementDistance: 20
+  maximumConcurrentAmbushes: 2
+  slotRetry: {x: 0.15, y: 0.35}
+  destinationRetry: {x: 0.35, y: 0.65}
+  playerMovement: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000021, type: 2}
+  preferredMinimumDistance: 12
+  preferredMaximumDistance: 18
+  retreatSpeed: 6
+  approachSpeed: 4
+  matchPlayerRetreatSpeed: 1
+  preparationDuration: 0.75
+  teleportDistance: 2
+  arrivalWarningDuration: 0.2
+  rearArcDegrees: 60
+  rearSearchSteps: 6
+  dashSpeed: 48
+  maximumDashDistance: 5
+  recoveryDuration: 1.6
+  playerDamage: 20
+  playerKnockback: 18
+  playerInvulnerability: 0.5

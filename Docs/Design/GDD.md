@@ -60,7 +60,7 @@ Status: Must
 
 The campaign contains exactly 80 levels in eight chapters of ten. Every tenth level is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce all existing enemies, objectives and hazards by level 40. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes, BARRICADE-007's room chains and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
 
-Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 24 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
+Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 25 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
 
 ### LOOP-003 — Run Duration
 
@@ -1431,3 +1431,76 @@ Source: agreed summary in Design Yeti Tail Enemy, conversation 6accfed5-75b4-83e
 - Open-world or large open-level traversal.
 - Branching route selection between gauntlets.
 - Additional maps, bosses, enemy types, or weapons before the MVP loop is proven.
+
+## Ninja Enemy
+
+### NINJA-001 - Distance Management And Ambush Sequence
+
+Status: Must
+
+The Ninja is a normal-tier assassin with Baseline health and no ordinary contact attack.
+Maintain a 12-18m preferred distance, retreat at the player's normal movement speed, and
+approach at configurable speed. Stop for a recognizable 0.75s preparation, then teleport
+approximately 2m behind the player's position/facing sampled at the end of preparation.
+Hold a locked attack pose for 0.2s, dash at 48m/s for at most 5m without tracking or steering,
+then stop for 1.6s recovery before resuming positioning. A player already dashing is eligible.
+Engagement range is checked only when preparation begins; leaving it does not cancel commitment.
+No preparation line of sight is required.
+
+### NINJA-002 - Safe Teleportation And Retry
+
+Status: Must
+
+Prefer directly behind the player; search a limited configurable rear arc if blocked.
+Reject obstacle/boundary intersections, occupied space, active or warning ground hazards,
+blocked destination-to-player dash paths, and disconnected arena sections. Sample the
+destination only after preparation completes. An invalid destination returns to positioning
+and retries after a short randomized delay without consuming the full attack cooldown.
+Every retry repeats the complete preparation warning. Validation/search details are delegated.
+
+### NINJA-003 - Intentional Dash And Player Risk
+
+Status: Must
+
+Lock the dash direction at teleportation toward the player's position at that moment.
+Stationary arrival warning and committed dash never update that direction. Intentional dash
+contact deals 20 player damage and knockback strength 18 at most once per dash. Shared 0.5s
+player invulnerability rejects both damage and knockback from subsequent hits. Player contact
+does not end the dash. Pass through ordinary unlaunched enemies without affecting them.
+Solid static geometry ends the dash immediately into recovery, without bounce or slide.
+Outside intentional dashes, use only the existing launched-body danger to the player.
+
+### NINJA-004 - Scheduling And Concurrent Ambushes
+
+Status: Must
+
+Expose Periodic, Proximity, and Both trigger modes, defaulting to Both. Initial attack delay
+is 3s; the shared minimum cooldown is 6s. Periodic scheduling uses 10s with +/-2s variation.
+Proximity triggers on entering 6m, and maximum engagement distance is 20m. At most two Ninjas
+may simultaneously prepare, teleport, warn on arrival, or dash. Recovery releases the slot.
+Extra Ninjas continue positioning and retry after short random delays without losing readiness.
+Interruptions start a fresh cooldown and scheduling must respect launch, recovery, pooling,
+defeat and restart. Retry ranges and initialization/cooldown staggering are delegated.
+
+### NINJA-005 - Ordinary Launch Combat And Presentation
+
+Status: Must
+
+Punches and launched-body impacts interrupt either warning or the dash. A launched Ninja uses
+Baseline projectile damage, knockback, chain propagation, ownership, recovery and defeat rules,
+with no enhanced Dasher impacts. Use Models/UltimateMonsters/Big/Ninja.fbx and suitable embedded
+animations, a recognizable preparation, an arrival attack pose, and compact departure/arrival
+smoke that preserves the character's short reaction window. Add no directional dash line,
+screen-space warning or dedicated HUD. Audio is deferred; a later audio pass may add distinct
+preparation and arrival sounds.
+
+### NINJA-006 - Legacy Gauntlet_25 And Tuning
+
+Status: Must
+
+Append only legacy Gauntlet_25. Wave 1 contains one Ninja plus Baselines; clearing it activates
+wave 2 with three Ninjas plus Baselines. Clear the second finite wave to complete. No replenishment.
+Keep it available through Level Play Editor and outside campaign/player builds. Preserve existing
+campaign progression and legacy content. Baseline counts, spawn positions, enclosed layout and
+minor timing are delegated. Expose dedicated Ninja movement, scheduling, teleport and attack
+settings with the defaults above; rear search arc, approach speed and retry intervals are delegated.

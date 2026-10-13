@@ -23,6 +23,7 @@ namespace CrowdPunch.Systems.Presentation
                 SnakeSegments = SystemAPI.GetComponentLookup<SnakeSegment>(true),
                 SnakeTunings = SystemAPI.GetComponentLookup<SnakeTuning>(true),
                 Wizards = SystemAPI.GetComponentLookup<WizardCastState>(true),
+                Ninjas = SystemAPI.GetComponentLookup<NinjaState>(true),
                 Archetypes = SystemAPI.GetComponentLookup<EnemyArchetype>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
@@ -39,6 +40,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<SnakeSegment> SnakeSegments;
             [ReadOnly] public ComponentLookup<SnakeTuning> SnakeTunings;
             [ReadOnly] public ComponentLookup<WizardCastState> Wizards;
+            [ReadOnly] public ComponentLookup<NinjaState> Ninjas;
             [ReadOnly] public ComponentLookup<EnemyArchetype> Archetypes;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
@@ -56,6 +58,7 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     EnemyArchetypeKind.Wizard => new float3(.65f, .15f, 1f),
                     EnemyArchetypeKind.Trail => new float3(.12f, .85f, .5f),
+                    EnemyArchetypeKind.Ninja => new float3(.48f, .38f, .7f),
                     EnemyArchetypeKind.Ranged => new float3(0.06f, 0.55f, 1f),
                     EnemyArchetypeKind.Explosive => new float3(1f, 0.3f, 0.035f),
                     EnemyArchetypeKind.Elite => new float3(0.62f, 0.13f, 0.85f),
@@ -76,7 +79,8 @@ namespace CrowdPunch.Systems.Presentation
                 bool preparing = kind == EnemyArchetypeKind.Baseline && Contacts.HasComponent(enemy)
                     && Contacts[enemy].IsWindingUp != 0
                     || Ranged.HasComponent(enemy) && Ranged[enemy].Phase == RangedAttackPhase.WindUp
-                    || Elites.HasComponent(enemy) && Elites[enemy].Phase == ElitePunchPhase.WindUp;
+                    || Elites.HasComponent(enemy) && Elites[enemy].Phase == ElitePunchPhase.WindUp
+                    || Ninjas.HasComponent(enemy) && Ninjas[enemy].Phase == NinjaPhase.Preparing;
                 if (phase == EnemyLaunchPhase.Recovering || phase == EnemyLaunchPhase.Defeated)
                     body *= 0.45f;
                 else if (!isSnake && preparing)
@@ -87,6 +91,9 @@ namespace CrowdPunch.Systems.Presentation
 
                 if (phase == EnemyLaunchPhase.Active && Wizards.HasComponent(enemy) && Wizards[enemy].IsCasting)
                     body *= (Wizards[enemy].Phase == WizardCastPhase.Active ? 1.7f : 1.2f) + .2f * math.sin(Time * 10);
+                if (phase == EnemyLaunchPhase.Active && Ninjas.HasComponent(enemy)
+                    && (Ninjas[enemy].Phase == NinjaPhase.ArrivalWarning || Ninjas[enemy].Phase == NinjaPhase.Dashing))
+                    body = new float3(1, .45f, .18f);
                 color.Value = new float4(body, 1f);
             }
         }

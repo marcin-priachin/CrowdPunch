@@ -12,7 +12,8 @@ namespace CrowdPunch.Components
         Elite,
         Baseline,
         Armored,
-        Wizard
+        Wizard,
+        Ninja
     }
 
     public struct EnemyAnimation : IComponentData
