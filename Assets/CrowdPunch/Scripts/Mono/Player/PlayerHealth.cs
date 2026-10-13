@@ -52,6 +52,7 @@ namespace CrowdPunch.Mono.Player
                 ecsBridge.EnemyContactHitReceived += TryApplyEnemyContactHit;
                 ecsBridge.WizardHitReceived += ApplyWizardHit;
                 ecsBridge.TrailDamageReceived += ApplyTrailDamage;
+                ecsBridge.DragonFlameReceived += ApplyWizardHit;
                 ecsBridge.GroundHazardDamageReceived += ApplyTrailDamage;
             }
         }
@@ -63,6 +64,7 @@ namespace CrowdPunch.Mono.Player
                 ecsBridge.EnemyContactHitReceived -= TryApplyEnemyContactHit;
                 ecsBridge.WizardHitReceived -= ApplyWizardHit;
                 ecsBridge.TrailDamageReceived -= ApplyTrailDamage;
+                ecsBridge.DragonFlameReceived -= ApplyWizardHit;
                 ecsBridge.GroundHazardDamageReceived -= ApplyTrailDamage;
             }
         }

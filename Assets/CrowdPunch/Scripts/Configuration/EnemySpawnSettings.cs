@@ -16,7 +16,8 @@ namespace CrowdPunch.Configuration
         Armored = 5,
         Wizard = 6,
         Trail = 7,
-        Ninja = 8
+        Ninja = 8,
+        Dragon = 9
     }
 
     [Serializable]

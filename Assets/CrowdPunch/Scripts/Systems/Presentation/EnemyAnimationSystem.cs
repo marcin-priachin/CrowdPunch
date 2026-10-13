@@ -18,6 +18,7 @@ namespace CrowdPunch.Systems.Presentation
         {
             new PlaybackJob
             {
+                Dragons = SystemAPI.GetComponentLookup<DragonFlameState>(true),
                 Wizards = SystemAPI.GetComponentLookup<WizardCastState>(true),
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
                 Movement = SystemAPI.GetComponentLookup<DesiredMovement>(true),
@@ -39,6 +40,7 @@ namespace CrowdPunch.Systems.Presentation
         [BurstCompile]
         private partial struct PlaybackJob : IJobEntity
         {
+            [ReadOnly] public ComponentLookup<DragonFlameState> Dragons;
             [ReadOnly] public ComponentLookup<WizardCastState> Wizards;
             [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movement;
@@ -74,6 +76,20 @@ namespace CrowdPunch.Systems.Presentation
                     playback.Initialized = 1;
                 }
                 EnemyLaunchState launch = Launches[owner];
+                if (animation.Profile == (byte)EnemyAnimationProfile.Dragon)
+                {
+                    if ((launch.Phase == EnemyLaunchPhase.Active || launch.Phase == EnemyLaunchPhase.Launched) && Dragons.HasComponent(owner))
+                    {
+                        var flame = Dragons[owner];
+                        int motion = flame.Motion;
+                        float dragonFrame = flame.AnimationPhase * (motion == 2 ? samples.FrameCount - 1 : samples.FrameCount);
+                        int from = (int)dragonFrame;
+                        ApplyFrame(ref skin, ref samples, motion, from,
+                            motion == 2 ? math.min(from + 1, samples.FrameCount - 1) : (from + 1) % samples.FrameCount, math.frac(dragonFrame));
+                    }
+                    else AnimateDasher(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Ninja)
                 {
                     if (launch.Phase == EnemyLaunchPhase.Active && Ninjas.HasComponent(owner) && NinjaTuning.HasComponent(owner))

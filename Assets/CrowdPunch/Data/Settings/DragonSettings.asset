@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d40cc4511378caa48b68cef177d034cc, type: 3}
+  m_Name: DragonSettings
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.DragonSettings
+  enemyMode: 0
+  immunity: 0
+  avoidance: 0
+  warningDuration: 0.9
+  activeDuration: 1.5
+  cooldownDuration: 2.5
+  initialDelay: 2
+  initialVariation: 0.8
+  engagementRange: 16
+  preferredMinimum: 6
+  preferredMaximum: 9
+  approachSpeed: 3
+  retreatSpeed: 4
+  turnDegreesPerSecond: 65
+  hitInterval: 0.4
+  normal:
+    Length: 8
+    AngleDegrees: 50
+    PlayerDamage: 6
+    EnemyDamage: 8
+    PlayerPush: 1.5
+    EnemyPush: 1.2
+  launched:
+    Length: 10
+    AngleDegrees: 65
+    PlayerDamage: 6
+    EnemyDamage: 16
+    PlayerPush: 1.5
+    EnemyPush: 1.8
+  groundY: -1
+  idleDuration: 1.5000001
+  moveDuration: 0.8333334
+  mouthOffset: {x: 0.00031279112, y: 0.20475084, z: 0.3203194}

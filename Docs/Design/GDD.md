@@ -60,7 +60,7 @@ Status: Must
 
 The campaign contains exactly 80 levels in eight chapters of ten. Every tenth level is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce all existing enemies, objectives and hazards by level 40. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes, BARRICADE-007's room chains and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
 
-Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 25 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
+Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 26 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
 
 ### LOOP-003 — Run Duration
 
@@ -1504,3 +1504,91 @@ Keep it available through Level Play Editor and outside campaign/player builds. 
 campaign progression and legacy content. Baseline counts, spawn positions, enclosed layout and
 minor timing are delegated. Expose dedicated Ninja movement, scheduling, teleport and attack
 settings with the defaults above; rear search arc, approach speed and retry intervals are delegated.
+
+
+## Flame Dragon Enemy (Agreed 2026-10-13)
+
+### DRAGON-001 - Positioning, Facing And Flame Lifecycle
+
+Status: Must
+
+Use Baseline health and ordinary launch, collision-chain, recovery, deferred-defeat,
+spawning, pooling, aim-assistance and trajectory rules (COMBAT-010..018). No contact
+attack or individual health bar. Approach/retreat to an authored preferred distance
+band, retaining separation and obstacle navigation throughout warning, active flame
+and cooldown. Turn toward the player at an authored maximum angular rate. Flame
+follows actual position/facing, including ordinary velocity-facing collision redirects.
+Repeat harmless warning, active burst, cooldown. Engagement range gates starting a
+warning only; leaving range never cancels a committed warning/burst. Any launch owner
+immediately replaces bursts with continuous flame, including zero-health deferred
+flight. Recovering, Defeated and pooled dragons emit nothing. Surviving recovery starts
+a full cooldown before a fresh warning, never resuming an interrupted burst.
+
+### DRAGON-002 - Attached Cone And Solid Cover
+
+Status: Must
+
+Use a widening mouth-attached cone. Membership overlaps victim disks on XZ and ignores
+height. Solid obstacles/walls block damage, push, warning and active visuals; enemy
+bodies provide no shielding. Harmless ground warning and mouth wind-up follow the
+moving dragon; active visuals show the same cover-blocked footprint. No persistent
+trail, lingering burn, independent flame aim assistance or new HUD.
+
+### DRAGON-003 - Victim Eligibility And Independent Hit Clocks
+
+Status: Must
+
+All active flames can damage the player regardless of source launch ownership, dash
+or ordinary hit invulnerability. Enemy modes are Player-owned launches only (default,
+including propagated launches), any launched ownership, or both bursts and launches.
+Immediate first-contact damage repeats on one shared-interval clock per source/victim
+lifetime. Exit/reentry and normal-to-launched transitions do not reset that clock;
+independent dragons have independent clocks. Normal/launched flames have separate
+length, angle, player/enemy damage and player/enemy push tuning.
+
+### DRAGON-004 - Push, Protection And Attribution
+
+Status: Must
+
+Apply damage plus a small outward horizontal push to the player and eligible walking
+enemies, including elites; this never launches or starts propagation. Already-launched
+enemy victims receive damage with unchanged velocity, launch ownership, sequence and
+collision history. Preserve COMBAT-011 deferred defeat. Intact armor and its shared
+protection window block damage and push without stage loss. Flame never requests
+Exploder detonation, including on flame kills; dragon-body collision remains ordinary.
+Bosses and puzzle objects receive no damage/activation. Flame kill credit follows the
+emitter's current launch ownership and chain depth, without changing victim ownership;
+normal/other-owned flame receives no Player credit.
+
+### DRAGON-005 - Configurable Immunity And Avoidance
+
+Status: Must
+
+Dragon immunity modes are own flame only (default) or all dragon flame. Enemy avoidance
+modes are avoid eligible damaging active cones (default) or none. Harmless warnings
+require no avoidance. Launched enemies and committed dashes retain their existing
+movement. Route around solid cover with the existing navigation/physics pipeline.
+
+### DRAGON-006 - Assets, Settings And Reset
+
+Status: Must
+
+Use Models/UltimateMonsters/Flying/Dragon_Evolved.fbx and suitable supplied animations.
+Expose a dedicated Dragon settings asset with every mode above, warning/active/cooldown
+seconds, engagement range, preferred distance band, approach/retreat speeds, explicit
+angular rate, independent normal/launched lengths/angles/player-enemy damage/push, and
+shared tick interval. Push units must be explicit. Initial numerical tuning, attack
+staggering, suitable clips, mouth attachment, colors/effects, cover geometry, occlusion
+algorithm and performance strategy are delegated. Retry, reuse, pooling and scene exit
+must clear stale effects and victim clocks through ordinary encounter lifecycle.
+
+### DRAGON-007 - Legacy Gauntlet_26
+
+Status: Must
+
+Add Flame Dragon introduction outside campaign progression and player builds, accessible
+through existing Level Play. Exactly two finite sequential waves: 6 Baselines + 1 Dragon,
+then 12 Baselines + 2 Dragons. Use a compact arena with solid cover, clear flanking routes
+and safe spawn placement. Advance/complete through ordinary enemy clearance; no lingering
+flame gate or new ammunition replenishment policy. Layout and timing are delegated.
+Preserve prior legacy encounters, campaign content, tuning and saves (LOOP-002/006).

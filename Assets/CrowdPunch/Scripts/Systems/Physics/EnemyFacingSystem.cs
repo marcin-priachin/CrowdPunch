@@ -26,6 +26,7 @@ namespace CrowdPunch.Systems.Physics
             state.Dependency = new FacePlayerJob
             {
                 Wizards = SystemAPI.GetComponentLookup<WizardSettings>(true),
+                Dragons = SystemAPI.GetComponentLookup<DragonTuning>(true),
                 Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
                 Movements = SystemAPI.GetComponentLookup<DesiredMovement>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime,
@@ -41,6 +42,7 @@ namespace CrowdPunch.Systems.Physics
         private partial struct FacePlayerJob : IJobEntity
         {
             [ReadOnly] public ComponentLookup<WizardSettings> Wizards;
+            [ReadOnly] public ComponentLookup<DragonTuning> Dragons;
             public bool Defending;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movements;
             public float DeltaTime;
@@ -67,9 +69,19 @@ namespace CrowdPunch.Systems.Physics
                     toward = Movements[entity].Direction;
                 if (math.lengthsq(toward) <= 0.0001f) return;
                 // Keep the physics capsule upright; animation supplies launched visual pitch.
+                var originalRotation = transform.Rotation;
                 var facing = quaternion.LookRotationSafe(toward, math.up());
                 transform.Rotation = !launched && Wizards.HasComponent(entity)
                     ? math.slerp(transform.Rotation, facing, 1 - math.exp(-math.max(0, Wizards[entity].TurnSpeed) * DeltaTime)) : facing;
+                if (!launched && Dragons.HasComponent(entity))
+                {
+                    float current = math.atan2(math.forward(originalRotation).x, math.forward(originalRotation).z);
+                    float target = math.atan2(toward.x, toward.z);
+                    float delta = math.atan2(math.sin(target - current), math.cos(target - current));
+                    float step = math.radians(Dragons[entity].TurnDegreesPerSecond) * DeltaTime;
+                    // Use the original yaw: ordinary facing above is instantaneous for other archetypes.
+                    transform.Rotation = quaternion.RotateY(current + math.clamp(delta, -step, step));
+                }
                 velocity.Angular.y = 0f;
             }
         }

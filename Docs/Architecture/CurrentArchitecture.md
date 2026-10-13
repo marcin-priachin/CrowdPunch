@@ -6,6 +6,72 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Flame Dragon And Legacy Gauntlet_26 (DRAGON-001..007)
+
+`DragonAuthoring`/`DragonBaker` bake dedicated `DragonSettings` into `DragonTuning`,
+`DragonFlameState`, source-owned `DragonFlameClock` records and sampled `DragonMouthFrame`
+positions. Dragon is appended as archetype 9; existing enum identities remain stable.
+The prefab owns these specialized components, while shared spawn-profile creation
+supplies ordinary Baseline health, enemy tier, launchability, physics and wave ownership.
+The Dragon profile disables ordinary contact damage/push. Health presentation omits
+Dragon bars. No UnityEngine references enter runtime ECS components.
+
+Before physics, `DragonPositioningSystem` overrides Baseline intent with a reachable
+distance-band destination while retaining local separation. Existing navigation and
+`EnemyMovementSystem` own final steering/velocity. `DragonFlameCycleSystem` runs after
+impulse writes, advances committed warning/burst/cooldown and synchronizes the mouth
+samples/animation phase; launches interrupt the normal cycle without resetting hit
+clocks. Generation changes reset records; surviving recovery starts a full cooldown.
+`DragonFlameAvoidanceSystem` runs before navigation after other tactical intent writers,
+using active eligible cones and lateral separation; launched/committed movement is skipped.
+
+After recovery and shared facing, `DragonFlameDamageSystem` resolves current-position
+XZ victim disks against the mouth sector and Unity Physics solid-cover rays. It builds
+one 4m spatial index of enemy candidates per step; source clocks are source/victim
+lifetime keyed and retained through reentry/state transitions. Ray collectors ignore
+enemy bodies, triggers and floor faces. Ground projection is explicitly authored
+(`groundY = -1` in this encounter), independent of arena-volume center or flight altitude.
+Intact armor/protection, bosses and protected Snake parts are filtered through existing
+rules. Damage uses `EnemyDamageResolution` with emitter attribution. Normal bursts
+ignore historical launch credit retained by the body's recovery state. Small horizontal
+push directly adds velocity only for victims outside Launched; it never creates an
+ExternalImpulse, launch propagation or Exploder detonation request. `DragonPlayerHitSystem`
+publishes dedicated damage/push through `PlayerEcsBridge.DragonFlameReceived`, handled by
+Mono-owned player health without ordinary invulnerability gates.
+
+`DragonFlamePresentationSystem` draws a pooled aggregate vertex-color mesh for moving
+warnings, mouth wind-up and active flames, clipping radial boundaries with the same
+solid-cover query. `EnemyAnimationSystem` samples supplied Flying_Idle/Fast_Flying/
+Headbutt/Death poses using the same fixed-step phase as the head attachment. Headbutt
+is a delegated warning pose; no authored breath animation is supplied. Prefab builder
+calibrates and samples the supplied Head bone. Presentation does not modify physics.
+Pooling and `GameRestartSystem` clear flame state/clocks; effects have no entities or
+persistent hazards to keep an encounter alive.
+
+`BuildDragon` authors Gauntlet_26 (Flame Front), exact finite waves 6+1 / 12+2,
+a 34x36m enclosed arena, two 2x4m solid covers and broad side routes. It registers
+index 25 in Bootstrap's legacy sequence for Level Play. Campaign catalog/scenes,
+player build scene list and prior encounters remain unchanged. Tuning is in
+`Data/Settings/DragonSettings.asset`; model/prefab/controller/sampled animation assets
+are generated through the established ECS skinning workflow.
+
+Verification (2026-10-13): 38 Dragon regression cases pass for lifecycle/range commitment,
+approach/retreat/hold intent, angular rates, height/radius membership, cover/body shielding, all settings modes,
+independent source clocks and state transitions, armor protection, Exploder/elite/boss
+rules, deferred defeat and kill attribution; eight existing facing cases also pass. The controlled baked-world check passes
+ordinary punch/Dragon-body solver propagation, warning-to-burst progression, surviving
+recovery/full cooldown, zero-health flight, exact finite waves, retry clocks and final
+completion/unload. A direct live bridge check confirms player damage during ordinary
+invulnerability. A 250-enemy/10-active-Dragon run advanced solver and animation for
+three seconds without gameplay errors. Completed CPU update means over 120 iterations:
+positioning 0.0068ms, cycle/head samples 0.0037ms, avoidance 0.0748ms, damage with due
+ticks/spatial indexing 0.3396ms; zero calling-thread managed bytes in each loop.
+Measurements freeze physics and advance synthetic tick clocks, excluding GPU/FPS,
+so they do not settle OQ-001. Human balance/readability playtesting remains necessary.
+Unity compilation and serial `dotnet build Assembly-CSharp.csproj --no-restore -m:1`
+pass; existing package/deprecated-aspect warnings remain. The parallel MSBuild attempt
+failed silently at project-reference evaluation; serial execution resolves it.
+
 ## Ninja Enemy And Legacy Gauntlet_25 (NINJA-001..006)
 
 `NinjaAuthoring`/`NinjaBaker` add independent `NinjaTuning`, `NinjaState` and

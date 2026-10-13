@@ -66,6 +66,18 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-13 - Flame Dragon And Legacy Gauntlet_26
+
+Decision: Accept Design Dragon Flame Attack, conversation
+6ace55fc-54d4-83eb-a29c-3a554b9dc9f4, and its final supplied handoff.
+DRAGON-001..007 preserve burst-to-continuous-launch flame, limited facing, attached
+XZ cones with cover, independent source/victim ticks, damage/push/armor/credit rules,
+all eligibility/immunity/avoidance alternatives and their stated defaults. The exact
+6+1 then 12+2 finite waves remain legacy-only. Numeric and presentation details are
+delegated. No consequential feature-scope question remains; OQ-001 crowd/hardware
+success targets and campaign placement remain outside this slice.
+
+
 ### 2026-10-13 - Snake External Bounce And Head Obstruction
 
 Decision: A detached orb ignores its original head and every sibling until a meaningful

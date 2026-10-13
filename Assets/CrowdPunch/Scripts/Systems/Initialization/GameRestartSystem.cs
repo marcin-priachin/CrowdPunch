@@ -47,6 +47,9 @@ namespace CrowdPunch.Systems.Initialization
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<TrailSection>().Build());
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<TrailSource>().Build());
             foreach (var hits in SystemAPI.Query<DynamicBuffer<TrailPlayerHit>>()) hits.Clear();
+            foreach (var hits in SystemAPI.Query<DynamicBuffer<DragonPlayerHit>>()) hits.Clear();
+            foreach (var flame in SystemAPI.Query<RefRW<DragonFlameState>>()) flame.ValueRW = default;
+            foreach (var clocks in SystemAPI.Query<DynamicBuffer<DragonFlameClock>>()) clocks.Clear();
             foreach (var hits in SystemAPI.Query<DynamicBuffer<GroundHazardPlayerHit>>()) hits.Clear();
             foreach (var clock in SystemAPI.Query<RefRW<GroundHazardPlayerClock>>()) clock.ValueRW = default;
             foreach (var clock in SystemAPI.Query<RefRW<GroundHazardDamageClock>>()) clock.ValueRW = default;

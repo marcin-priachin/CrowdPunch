@@ -85,6 +85,11 @@ namespace CrowdPunch.Systems.Lifetime
                     lifetime.Generation++;
                     if (lifetime.Generation == 0) lifetime.Generation = 1;
                     SystemAPI.SetComponent(enemy, lifetime);
+                    if (SystemAPI.HasComponent<DragonFlameState>(enemy))
+                    {
+                        SystemAPI.SetComponent(enemy, new DragonFlameState());
+                        SystemAPI.GetBuffer<DragonFlameClock>(enemy).Clear();
+                    }
                     if (SystemAPI.HasComponent<TrailEmitter>(enemy))
                         SystemAPI.SetComponent(enemy, new TrailEmitter { OrbitSign = 1,
                             ReverseRemaining = SystemAPI.GetComponent<TrailSettings>(enemy).ReversalInterval });
