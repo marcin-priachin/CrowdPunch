@@ -10,7 +10,8 @@ namespace CrowdPunch.Mono.Player
         public Animator animator;
         public float groundHeight = 3;
         private static FinalePresentation active;
-        private LineRenderer warning, tether;
+        private LineRenderer warning, tether, vulnerability;
+        private Mono.UI.FinaleBossHealthBar healthBar;
         private readonly LineRenderer[] anchors = new LineRenderer[4];
         private Material material;
         private string animationState;
@@ -19,6 +20,7 @@ namespace CrowdPunch.Mono.Player
         private Mono.Camera.CameraFollow cameraFollow;
         private void OnEnable() {
             active=this; renderers=model.GetComponentsInChildren<Renderer>(); colors=new MaterialPropertyBlock();
+            healthBar=GetComponent<Mono.UI.FinaleBossHealthBar>();
             cameraFollow=FindFirstObjectByType<Mono.Camera.CameraFollow>();
             if(settings!=null) {
                 model.localScale=Vector3.one*settings.modelScale;
@@ -37,10 +39,24 @@ namespace CrowdPunch.Mono.Player
             a.model.SetPositionAndRotation(position-Vector3.up*a.groundHeight,rotation);
             string clip=phase==4?"Death":flash>0?"HitReact":phase==2?(attack==0?"Flying_Idle":"Punch"):"Fast_Flying";
             if(a.animator!=null && clip!=a.animationState) { a.animator.CrossFade(clip,.15f); a.animationState=clip; }
-            Color tint=phase==4?new Color(.3f,.3f,.3f):Color.Lerp(new Color(1,.55f,.4f),Color.white,health);
+            bool vulnerable=phase==2;
+            float pulse=.5f+.5f*Mathf.Sin(Time.time*5);
+            Color tint=phase==4?new Color(.3f,.3f,.3f):vulnerable?new Color(.2f,1f,.9f):Color.Lerp(new Color(1,.55f,.4f),Color.white,health);
             if(flash>0) tint=Color.white*2;
             a.colors.SetColor("_BaseColor",tint);
+            a.colors.SetColor("_Color",tint);
+            a.colors.SetColor("_EmissionColor",vulnerable?new Color(0,.5f,.4f)*(1+pulse):Color.black);
             foreach(var r in a.renderers) r.SetPropertyBlock(a.colors);
+            if(a.healthBar!=null) a.healthBar.Present(health);
+            a.Ensure(ref a.vulnerability,"Boss vulnerable ring");
+            a.vulnerability.enabled=vulnerable;
+            if(vulnerable) {
+                var floor=position; floor.y=-.86f;
+                float radius=a.settings!=null?Mathf.Max(a.settings.colliderSize.x,a.settings.colliderSize.z)*.5f+1:6;
+                Circle(a.vulnerability,floor,radius+pulse*.25f);
+                a.vulnerability.startColor=a.vulnerability.endColor=new Color(.1f,1,.9f);
+                a.vulnerability.startWidth=a.vulnerability.endWidth=.3f+pulse*.15f;
+            }
             a.Ensure(ref a.warning,"Finale ground warning");
             a.warning.enabled=attack!=0 && phase!=4;
             if(a.warning.enabled) {

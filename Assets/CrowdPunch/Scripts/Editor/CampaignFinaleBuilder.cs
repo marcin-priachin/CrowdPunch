@@ -125,6 +125,7 @@ namespace CrowdPunch.Editor
                 var main=EditorSceneManager.OpenScene(CampaignScenes+"Campaign_81.unity",OpenSceneMode.Single);
                 var settings=AssetDatabase.LoadAssetAtPath<FinaleSettings>(FinaleData+"FinaleSettings.asset");
                 var presentation=new GameObject("Finale presentation").AddComponent<FinalePresentation>();
+                presentation.gameObject.AddComponent<CrowdPunch.Mono.UI.FinaleBossHealthBar>();
                 presentation.settings=settings;
                 var model=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(FinaleModel));
                 model.transform.SetParent(presentation.transform,false); model.transform.localScale=Vector3.one*settings.modelScale;

@@ -49,6 +49,7 @@ namespace CrowdPunch.Mono.UI
             {
                 entry = sequence.LevelEntrySequence;
                 hint.text = sequence.OpeningHint;
+                hint.rectTransform.anchoredPosition = new Vector2(0, sequence.CurrentLevelIndex == 80 ? -105 : -48);
                 hintRemaining = 10;
                 observedScreen = sequence.Screen;
                 observedFailure = false;

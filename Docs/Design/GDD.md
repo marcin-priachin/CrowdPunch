@@ -158,6 +158,8 @@ Status: Must
 
 Boss death immediately ends hostile combat, cancels attacks and replenishment including pending allocations, neutralizes survivors/effects, then presents a short victory before campaign completion. No survivor clear is required. Retry restores full player/boss health, flight, anchors, histories, cover clocks, rail state and supply. Scene exit cleans all encounter state. Provide a brief nonblocking opening instruction and in-world active/paused/spent/damaged feedback.
 
+The final boss has a long red health bar centered at the top of the screen, matching the player's thin bar style with no text or background. Clearly distinguish vulnerability with a cyan boss glow and a pulsing ground ring. This HUD exception and its revised appearance were requested on 2026-10-14.
+
 ## Player And Controls
 
 ### PLAYER-001 — Immediate Fundamentals

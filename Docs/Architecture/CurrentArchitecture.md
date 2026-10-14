@@ -24,6 +24,8 @@ Boss death immediately suppresses hostile player damage through `PlayerEcsBridge
 
 Initial boss settings: 6000 health, three stages at 67%/34%, 2.5s fall, 24s downed with 7s initial stun, 2.5s harmless takeoff and 3s victory; attack cadence and warning sizes remain editable. The 6-8 minute/6-8 downing targets require human combat playtesting. See `Docs/Verification/FinalEncounter.md` for actual checks and limitations.
 
+The finale scene also owns `FinaleBossHealthBar`, a noninteractive screen-space uGUI canvas. `FinalePresentation` forwards health fraction through the same ECS presentation endpoint, without UI entity access. It displays a long red bar centered at the top with the player's fill thickness and top margin, without text or background. The cyan boss tint and pulsing body ring indicate vulnerability through grounded attacks and end at takeoff. The opening hint sits below the bar. Pause/failure/completion screens hide the bar, and unloading the finale removes it.
+
 ## Four-Enemy Campaign Integration (LOOP-009)
 
 The existing 80-level campaign now introduces LinkedPair at 41, Dragon at 52, Snake at 61 and Ninja at 71. The exact 2026-10-14 recurrence and counts are in Campaign80Proposal.md. Fifteen finite wave-clear encounters use 48 revised wave assets; earlier introductions recur in every later chapter. Main-scene opening hints explain the introductions and mixed encounters. Existing safe spawn banks, navigation/floor/obstacle assets, objectives, boss support, stable level identifiers, catalog, build registration and saved progress are retained.

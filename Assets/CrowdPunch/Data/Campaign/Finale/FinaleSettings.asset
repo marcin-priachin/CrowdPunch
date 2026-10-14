@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46494217236b68345acaef1d0e1c95a2, type: 3}
   m_Name: FinaleSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.FinaleSettings
-  health: 6000
+  health: 300
   modelScale: 2.5
   flightHeight: 6
   flightOffset: 22
@@ -21,7 +21,7 @@ MonoBehaviour:
   cameraLookHeight: 4
   colliderSize: {x: 10, y: 8, z: 10}
   fallSeconds: 2.5
-  downedSeconds: 24
+  downedSeconds: 10
   stunSeconds: 7
   takeoffSeconds: 2.5
   victorySeconds: 3
