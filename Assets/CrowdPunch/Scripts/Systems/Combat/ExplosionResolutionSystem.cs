@@ -174,6 +174,22 @@ namespace CrowdPunch.Systems.Combat
                 }
 
                 float3 direction = transform.ValueRO.Position - center;
+                if (LinkedPairLaunchResolution.TryGet(EntityManager, target, out var pairEntity, out var pair))
+                {
+                    uint blastLifetime = SystemAPI.GetComponent<EnemyLifetime>(explosive).Generation;
+                    if (pair.LastBlast != explosive || pair.LastBlastSequence != sourceSequence || pair.LastBlastLifetime != blastLifetime) {
+                        pair.LastBlast = explosive; pair.LastBlastSequence = sourceSequence; pair.LastBlastLifetime = blastLifetime;
+                        Entity leader = math.distancesq(SystemAPI.GetComponent<LocalTransform>(pair.A).Position, center)
+                            <= math.distancesq(SystemAPI.GetComponent<LocalTransform>(pair.B).Position, center) ? pair.A : pair.B;
+                        EntityManager.SetComponentData(pairEntity, pair);
+                        var launch = SystemAPI.GetComponent<EnemyLaunchState>(leader);
+                        EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.Explosion, settings.Damage);
+                        float3 away = SystemAPI.GetComponent<LocalTransform>(leader).Position - center; away.y = 0;
+                        LinkedPairLaunchResolution.Begin(EntityManager, leader, launch,
+                            math.normalizesafe(away, new float3(0, 0, 1)) * settings.NormalEnemyKnockbackForce);
+                    }
+                    continue;
+                }
                 direction.y = 0f;
                 direction = math.normalizesafe(direction, new float3(0f, 0f, 1f));
                 bool isElite = SystemAPI.HasComponent<EnemyTier>(target)

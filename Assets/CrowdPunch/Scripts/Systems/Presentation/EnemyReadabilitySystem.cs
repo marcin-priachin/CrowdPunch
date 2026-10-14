@@ -56,6 +56,7 @@ namespace CrowdPunch.Systems.Presentation
                 if (kind == EnemyArchetypeKind.Dasher) return; // Existing streak silhouette owns this role.
                 float3 body = kind switch
                 {
+                    EnemyArchetypeKind.LinkedPair => new float3(.45f, 1f, .85f),
                     EnemyArchetypeKind.Wizard => new float3(.65f, .15f, 1f),
                     EnemyArchetypeKind.Trail => new float3(.12f, .85f, .5f),
                     EnemyArchetypeKind.Ninja => new float3(.48f, .38f, .7f),

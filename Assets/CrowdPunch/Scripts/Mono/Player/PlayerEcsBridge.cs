@@ -308,6 +308,8 @@ namespace CrowdPunch.Mono.Player
         /// <summary>Routes configured enemy damage through the existing player health and invulnerability path.</summary>
         public event Action<float, Vector3> WizardHitReceived;
         public event Action<float> TrailDamageReceived;
+        public event Action<float> LinkedPairDamageReceived;
+        public void ReceiveLinkedPairDamage(float amount) => LinkedPairDamageReceived?.Invoke(amount);
         public event Action<float, Vector3> DragonFlameReceived;
         public void ReceiveDragonFlame(float damage, float3 push) => DragonFlameReceived?.Invoke(damage, push);
         public event Action<float> GroundHazardDamageReceived;

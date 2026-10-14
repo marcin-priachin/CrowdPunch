@@ -52,6 +52,12 @@ namespace CrowdPunch.Configuration
         [Header("Enemy composition")]
         [SerializeField, Min(0), Tooltip("Target normal-enemy population. Fixed elite counts are additional.")]
         private int totalEnemyCount;
+        [SerializeField, Tooltip("Endpoint profile for fixed linked pairs. Both endpoints use this profile's independent health.")]
+        private EnemySpawnSettings linkedPairProfile;
+        [SerializeField, Min(0), Tooltip("Exact number of pairs, additive to the normal population. Each pair contributes TWO enemies to clearance.")]
+        private int linkedPairCount;
+        public EnemySpawnSettings LinkedPairProfile => linkedPairProfile;
+        public int LinkedPairCount => linkedPairCount;
         [SerializeField, Tooltip("Weighted normal-enemy profiles. Elite profiles are invalid here.")]
         private List<WeightedEnemy> enemies = new();
         [SerializeField, Tooltip("Fixed-count elite profiles, spawned in authored list order before normal enemies.")]

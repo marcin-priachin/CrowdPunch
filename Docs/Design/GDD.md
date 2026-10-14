@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-13
+Last updated: 2026-10-14
 
 ## How To Read This Document
 
@@ -60,7 +60,7 @@ Status: Must
 
 The campaign contains exactly 80 levels in eight chapters of ten. Every tenth level is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce all existing enemies, objectives and hazards by level 40. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes, BARRICADE-007's room chains and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
 
-Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 26 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
+Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 27 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
 
 ### LOOP-003 — Run Duration
 
@@ -288,6 +288,50 @@ Enemies may fall from their initial spawn height until they reach the ground. Af
 Status: Must
 
 Enemy spacing and arena-wide distribution use an authored movement volume that is independent from the authored out-of-bounds defeat volume. Leaving the spacing volume does not itself defeat an enemy; leaving the defeat volume requests pooling for respawning enemies or terminal defeat for fixed encounter enemies. The two volumes may use different centers and sizes so launched bodies can travel beyond the ordinary crowd area before being removed.
+
+## Linked Pair Enemy
+
+### LINK-001 - Flexible Paired Attack
+
+Status: Must
+
+Two normal endpoints have independent Baseline health from their spawn profile and a visible flexible tether. They straddle and sweep the player using normal obstacle navigation and crowd physics. The tether shortens freely; tension acts at its maximum length. Intact endpoints have no ordinary walking/recovery contact attack. Actual endpoint defeat breaks the tether and leaves the survivor as an ordinary independent enemy.
+
+### LINK-002 - Shared Launch
+
+Status: Must
+
+A punch (including dash-punch), qualifying incoming launched body, or explosion launches both endpoints together. The struck endpoint leads and its partner trails and swings; both inherit the triggering launch ownership. Re-punching either flying endpoint switches the leader and replaces the pair's launch with player ownership. An explosion selects the endpoint nearest the blast as leader, travelling away from it; each endpoint takes its own eligible splash damage. Bodies keep existing collision-chain and target-specific interactions, aim assistance and initial-direction preview. Do not prescribe side-by-side translation, centre spinning, or a full swing-path preview.
+
+### LINK-003 - Link Contact And Cover
+
+Status: Must
+
+The walking, launched and recovering link damages the player regardless of launch ownership. First contact is immediate, followed by interval ticks. One per-pair, per-victim clock controls all link hits, including bypass of ordinary player hit invulnerability. Endpoint-body damage keeps its own ordinary rules. Fast sweeps must not tunnel through victims. Solid obstacles block link damage; walking endpoints reposition to clear the connection. A flying snag keeps the tether and dissipates momentum; constraints must never pull bodies through solids.
+
+### LINK-004 - Launched Link Enemy Responses
+
+Status: Must
+
+Walking/recovering links pass through enemies without effects. A launched link uses configurable DamageAndLaunch (default) or DamageAndPush on ordinary unlaunched victims. New flights inherit pair ownership and chain data. Already-launched victims receive damage only, preserving velocity and ownership. Intact armor ignores all link effects and never loses armor; preserve armor protection windows and existing protected Snake-part gates. Elites receive damage and push, never launch. Exploders detonate in either mode. Boss and puzzle targets receive no link effect; endpoint bodies keep their existing rules. Simultaneous endpoint hits and pair-on-pair propagation resolve coherently once per pair event.
+
+### LINK-005 - Shared Flight And Recovery
+
+Status: Must
+
+The pair remains flying while either endpoint retains useful momentum, until both settle or the shared flight limit expires. Both recover together; surviving pairs remain connected and resume their attack. Zero-health endpoints remain attached while launch defeat is deferred, and defeat only when flight ends. The recovering link remains dangerous to the player.
+
+### LINK-006 - Configurable Tuning And Presentation
+
+Status: Must
+
+Use dedicated pair settings for maximum length, tension, movement and straddle/sweep positioning, damaging width, player/enemy damage, tick interval, launch/push strength, shared flight limit/settling and recovery. Initial numeric values, visuals, effects and animations are delegated tuning. Use the supplied Mushnub model and its clips. Endpoint health remains in the spawn profile. Only launch/push are agreed alternate behavior modes.
+
+### LINK-007 - Legacy Gauntlet_27
+
+Status: Must
+
+Introduce the pair in legacy Gauntlet_27 through Level Play, outside campaign progression and player builds. Two finite waves contain exactly 1 pair + 6 Baselines, then 2 pairs + 12 Baselines. Ordinary enemy clearance advances/completes the waves, including surviving independent endpoints. No replenishment. Use a compact arena with solid cover and flanking space. Retry restores intact healthy pairs, Baselines and clean clocks/flight state. Bounds, pooling, cleanup and scene exit leave no orphan links or blocked defeat accounting.
 
 ## Barricade Objective
 

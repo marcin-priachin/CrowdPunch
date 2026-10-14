@@ -41,6 +41,7 @@ namespace CrowdPunch.Systems.Combat
                 Radius = punchRequest.Radius, Strength = punchRequest.Strength,
                 Damage = punchRequest.Damage, PositionWeight = punchRequest.PushDirectionPositionWeight,
                 Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1, AffectRecovering = 1,
+                EventTime = SystemAPI.Time.ElapsedTime,
                 AffectLaunched = 1, ApplyDamage = 1
             };
             foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState,

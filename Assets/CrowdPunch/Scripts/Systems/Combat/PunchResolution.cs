@@ -16,6 +16,7 @@ namespace CrowdPunch.Systems.Combat
         public Entity AssistedLaunchTarget;
         public float Range, Radius, Strength, Damage, PositionWeight;
         public EnemyLaunchCause Cause;
+        public double EventTime;
         public byte AffectActive, AffectRecovering, AffectLaunched, ApplyDamage, HasAssistedLaunchDirection;
     }
 
@@ -60,6 +61,15 @@ namespace CrowdPunch.Systems.Combat
             float3 position = manager.GetComponentData<LocalTransform>(target).Position;
             if (!IsEligible(launch, health, punch) || !Contains(position, punch)) return false;
             if (ArmorHitResolution.IsProtected(manager, target)) return false;
+            bool paired = LinkedPairLaunchResolution.TryGet(manager, target, out var pairEntity, out var pair);
+            bool repeatPairPunch = paired && punch.Cause == EnemyLaunchCause.PlayerPunch && pair.LastPunchAt == punch.EventTime;
+            if (repeatPairPunch) {
+                if (punch.ApplyDamage != 0) {
+                    var damage = manager.IsComponentEnabled<DamageRequest>(target) ? manager.GetComponentData<DamageRequest>(target) : default;
+                    damage.Amount += punch.Damage; manager.SetComponentData(target, damage); manager.SetComponentEnabled<DamageRequest>(target, true);
+                }
+                return true;
+            }
             if (punch.Cause == EnemyLaunchCause.PlayerPunch && !SnakePunchOcclusion.CanReach(manager, target, punch.Origin)) return false;
             if (punch.Cause == EnemyLaunchCause.PlayerPunch && manager.HasComponent<EnemyGroundConstraint>(target))
             {
@@ -104,6 +114,10 @@ namespace CrowdPunch.Systems.Combat
                     ? punch.AssistedLaunchTarget
                     : Entity.Null;
                 manager.SetComponentData(target, launch);
+                if (paired) {
+                    pair.LastPunchAt = punch.EventTime; manager.SetComponentData(pairEntity, pair);
+                    LinkedPairLaunchResolution.Begin(manager, target, launch, impulseDirection * math.max(0, punch.Strength));
+                }
             }
             if (punch.ApplyDamage != 0 && punch.Damage > 0f)
             {

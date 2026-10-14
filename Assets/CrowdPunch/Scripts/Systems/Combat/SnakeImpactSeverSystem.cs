@@ -8,6 +8,7 @@ namespace CrowdPunch.Systems.Combat
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
     [UpdateAfter(typeof(ExplosionResolutionSystem)), UpdateAfter(typeof(EnemyLaunchCollisionSystem))]
     [UpdateAfter(typeof(WizardZoneSystem)), UpdateAfter(typeof(PillarFallContactSystem))]
+    [UpdateAfter(typeof(LinkedPairDamageSystem))]
     [UpdateBefore(typeof(Physics.EnemyRecoverySystem))]
     public partial struct SnakeImpactSeverSystem : ISystem
     {

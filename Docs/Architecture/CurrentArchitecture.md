@@ -1,10 +1,30 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-10-13
+Last inspected: 2026-10-14
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
+
+## Linked Pair And Legacy Gauntlet_27 (LINK-001..007)
+
+`LinkedPairAuthoring`/`LinkedPairBaker` bake dedicated `LinkedPairSettings` into endpoint tuning and `LinkedPairEndpoint`. `EnemyLinkedPairPrefabBuilder` uses Mushnub Idle, Walk, HitRecieve and Death clips with the established sampled ECS skinning pipeline. Mint bodies and a visible tether identify the role; no new HUD is added.
+
+Wave assets distinguish `linkedPairCount` from ordinary `totalEnemyCount`. Baking adds two endpoints per pair to the runtime clearance count. `LinkedPairWaveSpawning` reserves two nearby navigation/floor/hazard-valid positions atomically before creating separate enemy roots through `EnemySpawnInitialization`. Each endpoint receives normal wave ownership and independent spawn-profile health. A separate `LinkedPair` record owns endpoint references/lifetimes, sequence generation, leader, flight/recovery state, previous sweep positions and shared `LinkedPairClock` victims. It is not an extra enemy/objective. Pending spawn warnings reserve and activate both endpoints atomically, waiting if either endpoint is obstructed.
+
+`LinkedPairPositioningSystem` runs after crowd intent and before navigation, writing opposite-side player-relative sweep goals with local separation and bringing blocked partners around cover through normal pathfinding. `EnemyMovementSystem` keeps velocity steering ownership. `LinkedPairConstraintSystem` runs after movement and homing; capped velocity-only tension acts at maximum length, blocked flight loses momentum, and proposed endpoint motion is checked against solids. It never projects positions through walls.
+
+`PunchResolution` uses `LinkedPairLaunchResolution` for both flights, with one pair launch per player punch timestamp and independent damage to endpoints in the punch volume. Solver propagation starts the partner inside `EnemyLaunchCollisionSystem` before collision damage, sharing ownership and asymmetric leader/follower momentum. Explosion resolution picks the nearer leader once per blast identity/lifetime and preserves independent endpoint splash. Endpoint bodies keep ordinary chain, aim and target-specific rules.
+
+`LinkedPairDamageSystem` runs after propagation and before explosions/recovery. A spatial hash limits enemy scans; swept capsules with conservative gap inflation detect fast crossings. Cover rays reject blocked spans. One clock buffer gates each victim/lifetime. Only flying links affect enemies. Armor stages/protection windows, protected Snake parts, boss and puzzle targets are gated. A launch-mode contact can detach an exposed Snake tip through the existing sever pass; push mode cannot bypass attached protection. Exploders queue ordinary detonation in both modes. Already-flying victims preserve velocity and ownership, including lethal deferred damage. `LinkedPairPlayerHitSystem` sends accepted damage through the narrow `PlayerEcsBridge.LinkedPairDamageReceived` event to the existing direct health-damage path, bypassing ordinary invulnerability after pair-clock gating.
+
+`LinkedPairLifecycleSystem` owns shared settling, timeout and recovery before ordinary recovery, which skips intact pairs. Zero health stays attached during flight. Actual defeat, missing/pooling partners, changed lifetimes or stale/unloaded sequence generations detach survivors to Baseline and destroy records via ECB. Restart clears records and hit buffers before recreating waves. ECS presentation draws tethers in one mesh; MonoBehaviours never query/store enemies.
+
+`GauntletProgressionBuilder.BuildLinkedPair` creates Swing Together with two solid cover blocks, flanking space and exact 2+6 then 4+12 finite populations. Bootstrap registers legacy entry 27 without changing campaign catalogs/saves or build scenes. Defaults: 7 m span, 0.45 m width, 8 player/10 enemy damage every 0.5 s, 15 m/s launch or 5 m/s added push, 5 s flight cap and 1.25 s recovery. Endpoint health matches the Baseline profile.
+
+Verification on 2026-10-14: 23 linked-pair EditMode cases and 28 progression cases passed. The controlled real-world check passed exact waves, baked endpoint bodies, simultaneous launch, solver body propagation, re-punch leader switch with changing tether angle, shared recovery, retry health/clocks, final completion and unload cleanup. Additional controlled solver checks verified an incoming boss-owned body launches both partners with inherited ownership, and an out-of-bounds endpoint clears the tether and increments defeat accounting. `dotnet build Assembly-CSharp.csproj --no-restore -m:1` completed with zero errors and 344 existing package/deprecation warnings. The broad 658-case run passed 649 before updating the stale 23-level legacy assertion; the other eight failures concerned unchanged campaign barricade required-hit assertions (six) and Dino supply fixtures (two). Their implementation/assets were not changed by this feature.
+
+The completed-update link-damage microbenchmark measured 0.6665 ms with 2 pairs + 200 ordinary enemies and 3.0877 ms with 2 pairs + 1,000 enemies, after 20 warmups over 120 samples. This measures indexing, swept membership and damage on the Editor main thread, excluding full physics/rendering; it is not an FPS claim. Evidence is in `Temp/LinkedPairValidation`. Human balance/controller playtesting remains useful for the delegated tuning.
 
 ## Flame Dragon And Legacy Gauntlet_26 (DRAGON-001..007)
 

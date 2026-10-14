@@ -50,13 +50,13 @@ namespace CrowdPunch.Tests
             {
                 var sequence = Find<GauntletSequence>(scene);
                 var names = new SerializedObject(sequence).FindProperty("levelSceneNames");
-                Assert.That(names.arraySize, Is.EqualTo(23));
+                Assert.That(names.arraySize, Is.EqualTo(27));
                 string[] enabled = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
                 var catalog = AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CrowdPunch.Editor.CampaignBuildRegistration.CatalogPath);
                 Assert.That(enabled.Length, Is.EqualTo(1 + catalog.levels.Count(level => level.Available)));
                 Assert.That(enabled.Skip(1).All(path => path.StartsWith(Root + "Campaign/")), Is.True);
                 Assert.That(enabled[0], Is.EqualTo(Root + "Bootstrap.unity"));
-                for (int i = 0; i < 23; i++)
+                for (int i = 0; i < 27; i++)
                 {
                     string id = $"Gauntlet_{i + 1:00}";
                     Assert.That(names.GetArrayElementAtIndex(i).stringValue, Is.EqualTo(id));

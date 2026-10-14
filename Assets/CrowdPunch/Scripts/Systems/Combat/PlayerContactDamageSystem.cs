@@ -47,6 +47,7 @@ namespace CrowdPunch.Systems.Combat
                          .WithAll<Enemy>()
                          .WithNone<RespawnRequest>().WithEntityAccess())
             {
+                if (LinkedPairLaunchResolution.TryGet(EntityManager, entity, out _, out _)) continue;
                 bool committed = SystemAPI.HasComponent<EnemyContactAttemptState>(entity)
                     && SystemAPI.GetComponent<EnemyContactAttemptState>(entity).IsAttempting != 0;
                 if (defending && !ProtectedPointAttacker.Contains(attackers, entity) && !committed) continue;

@@ -37,6 +37,9 @@ namespace CrowdPunch.Systems.Combat
             EnemyCollisionJob job = new EnemyCollisionJob
             {
                 SnakeHeads = SystemAPI.GetComponentLookup<SnakeHead>(true),
+                PairEndpoints = SystemAPI.GetComponentLookup<LinkedPairEndpoint>(true),
+                Pairs = SystemAPI.GetComponentLookup<LinkedPair>(),
+                PairTuning = SystemAPI.GetComponentLookup<LinkedPairTuning>(true),
                 SnakeSegments = SystemAPI.GetComponentLookup<SnakeSegment>(),
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(),
                 Barricades = SystemAPI.GetComponentLookup<Barricade>(true),
@@ -75,6 +78,9 @@ namespace CrowdPunch.Systems.Combat
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
             [ReadOnly] public ComponentLookup<SnakeHead> SnakeHeads;
+            [ReadOnly] public ComponentLookup<LinkedPairEndpoint> PairEndpoints;
+            public ComponentLookup<LinkedPair> Pairs;
+            [ReadOnly] public ComponentLookup<LinkedPairTuning> PairTuning;
             public ComponentLookup<SnakeSegment> SnakeSegments;
             public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<Barricade> Barricades;
@@ -267,6 +273,22 @@ namespace CrowdPunch.Systems.Combat
                 targetState.LastPropagationImpulse = estimatedImpulse;
                 LaunchStateLookup[target] = targetState;
                 CorrectPropagatedDirection(source, target);
+                if (PairEndpoints.HasComponent(target)) {
+                    Entity record = PairEndpoints[target].Pair;
+                    if (Pairs.HasComponent(record)) {
+                        var pair = Pairs[record]; Entity partner = target == pair.A ? pair.B : pair.A;
+                        if (LaunchStateLookup.HasComponent(partner) && !IsUnavailable(partner)
+                            && LaunchStateLookup[partner].Phase != EnemyLaunchPhase.Defeated) {
+                            var follower = LaunchStateLookup[partner];
+                            EnemyLaunchTransition.Begin(ref follower, targetState.LastCause, targetState.LaunchDamage, targetState.Owner);
+                            follower.FeedbackChainDepth = targetState.FeedbackChainDepth; LaunchStateLookup[partner] = follower;
+                            VelocityLookup[partner] = new PhysicsVelocity { Linear = VelocityLookup[target].Linear * .35f };
+                            pair.Leader = target; pair.Phase = EnemyLaunchPhase.Launched;
+                            pair.FlightRemaining = PairTuning[record].FlightLimit; pair.SettledFor = pair.RecoveryRemaining = 0;
+                            Pairs[record] = pair;
+                        }
+                    }
+                }
             }
 
             private void CorrectPropagatedDirection(Entity source, Entity launchedTarget)

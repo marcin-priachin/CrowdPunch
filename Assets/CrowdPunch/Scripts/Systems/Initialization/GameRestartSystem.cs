@@ -32,6 +32,8 @@ namespace CrowdPunch.Systems.Initialization
             }
 
             lastRestartSequence = restartSequence;
+            EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<LinkedPair>().Build());
+            foreach (var hits in SystemAPI.Query<DynamicBuffer<LinkedPairPlayerHit>>()) hits.Clear();
             using (var oldOrbs = SystemAPI.QueryBuilder().WithAll<SnakeSegment>().Build().ToEntityArray(Allocator.Temp))
                 foreach (var orb in oldOrbs)
                     if (EntityManager.Exists(orb)) EntityManager.DestroyEntity(orb);

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6c777b5641f07b42aba246472b10bfb, type: 3}
+  m_Name: LinkedPairSettings
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.LinkedPairSettings
+  response: 0
+  maximumLength: 14
+  tension: 45
+  radialDamping: 8
+  maximumTensionAcceleration: 100
+  moveSpeed: 8
+  straddleDistance: 6
+  sweepSpeed: 1.6
+  width: 0.45
+  playerDamage: 8
+  enemyDamage: 10
+  tickInterval: 0.5
+  launchSpeed: 15
+  pushSpeed: 5
+  flightLimit: 5
+  settleSpeed: 2
+  settlePeriod: 0.35
+  recoveryDuration: 1.25
+  snagBraking: 12

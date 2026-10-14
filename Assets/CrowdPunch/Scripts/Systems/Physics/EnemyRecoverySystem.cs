@@ -38,6 +38,7 @@ namespace CrowdPunch.Systems.Physics
                          .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
+                if (SystemAPI.HasComponent<LinkedPairEndpoint>(enemy) && Combat.LinkedPairLaunchResolution.TryGet(state.EntityManager, enemy, out _, out _)) continue;
                 if (launchState.ValueRO.Phase == EnemyLaunchPhase.Active
                     || launchState.ValueRO.Phase == EnemyLaunchPhase.Defeated)
                 {

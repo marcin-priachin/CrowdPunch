@@ -13,7 +13,8 @@ namespace CrowdPunch.Components
         Wizard = 6,
         Trail = 7,
         Ninja = 8,
-        Dragon = 9
+        Dragon = 9,
+        LinkedPair = 10
     }
 
     /// <summary>Explicit spawn selection used without relying on prefab or presentation names.</summary>

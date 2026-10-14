@@ -24,6 +24,7 @@ namespace CrowdPunch.Components
         public int NormalMinimumRound;
         public int NormalMinimumSpawnedCount;
         public int WizardMinimumSpawnedCount;
+        public int LinkedPairsSpawned;
         public double NextActionAt;
         public double NextPlacementWarningAt;
         public float MinimumPlayerDistance;
@@ -36,6 +37,8 @@ namespace CrowdPunch.Components
 
     public struct EnemyWaveDefinition : IBufferElementData
     {
+        public EnemySpawnProfile LinkedPairProfile;
+        public int LinkedPairCount;
         public EnemySpawnProfile WizardAmmunitionProfile;
         public byte WizardAmmunitionSafeguard, WaitForPersistentHazards;
         public float WizardAmmunitionDelay;

@@ -160,13 +160,26 @@ namespace CrowdPunch.Bakers
                     && requestedMinimumNormalCount == validMinimumNormalCount
                     && requestedMinimumNormalCount <= totalCount;
                 bool eliteValid = totalEliteCount == requestedEliteCount;
-                bool valid = wizardValid && ammunitionValid && normalValid && eliteValid
-                    && (totalCount + requestedEliteCount == 0 || totalArea > 0f);
+                int pairs = math.max(0, wave.LinkedPairCount);
+                EnemySpawnProfile pairProfile = default;
+                bool pairValid = pairs == 0 || wave.LinkedPairProfile != null
+                    && wave.LinkedPairProfile.Archetype == Configuration.EnemyArchetype.LinkedPair
+                    && wave.LinkedPairProfile.EnemyPrefab != null
+                    && wave.LinkedPairProfile.EnemyPrefab.GetComponent<LinkedPairAuthoring>() != null
+                    && wave.LinkedPairProfile.EnemyPrefab.GetComponent<LinkedPairAuthoring>().settings != null
+                    && EnemySpawnProfileBaking.TryCreate(this, wave.LinkedPairProfile, out pairProfile);
+                if (pairs > 0 && wave.LinkedPairProfile != null) {
+                    DependsOn(wave.LinkedPairProfile); DependsOn(wave.LinkedPairProfile.EnemyPrefab);
+                }
+                bool valid = pairValid && wizardValid && ammunitionValid && normalValid && eliteValid
+                    && (totalCount + requestedEliteCount + pairs * 2 == 0 || totalArea > 0f);
                 if (!valid)
                     Debug.LogError($"Wave '{wave.name}' cannot spawn: ensure it has a positive-area range, valid positive-weight profiles with prefab colliders, and profile minimums no greater than its normal-enemy total.", authoring);
 
                 definitions.Add(new EnemyWaveDefinition
                 {
+                    LinkedPairProfile = pairProfile,
+                    LinkedPairCount = pairs,
                     WizardAmmunitionProfile = wizardAmmunition,
                     WizardAmmunitionSafeguard = wizardSupply ? (byte)1 : (byte)0,
                     WizardAmmunitionDelay = math.max(0, wave.WizardAmmunitionDelay),
@@ -176,7 +189,7 @@ namespace CrowdPunch.Bakers
                     AmmunitionSafeguard = hasAmmunition && ammunitionValid ? (byte)1 : (byte)0,
                     BossReplenishment=(byte)(wave.ReplenishWhileBossLives?1:0),
                     BossReplenishDelay=math.max(0,wave.BossReplenishDelay),
-                    TotalEnemyCount = totalCount,
+                    TotalEnemyCount = totalCount + pairs * 2,
                     TotalMinimumNormalCount = requestedMinimumNormalCount,
                     ProfileStart = profileStart,
                     ProfileCount = profiles.Length - profileStart,

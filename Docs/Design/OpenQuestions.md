@@ -66,6 +66,10 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-14 - Linked Pair And Legacy Gauntlet_27
+
+Accepted the attached Enemy suggestions analysis design dated 2026-10-13 (LINK-001..007). Flexible paired endpoints straddle/sweep the player. Punches, qualifying body propagation and explosions launch both with one leader/shared ownership. Independent health, deferred defeat, shared flight/recovery, dangerous recovery links, cover blocking and survivor independence are settled. Link clocks bypass ordinary player invulnerability. Launch/push modes default to launch; flying victims retain velocity/ownership. Armor, elite, Exploder and boss/puzzle rules follow LINK-004. Gauntlet_27 contains 1 pair + 6 Baselines then 2 pairs + 12 Baselines, legacy-only, finite, without replenishment. Numeric tuning, animations and layout were delegated. The implementation request supplies `Assets/CrowdPunch/Models/UltimateMonsters/Blob/Mushnub.fbx`, resolving the model dependency.
+
 ### 2026-10-13 - Flame Dragon And Legacy Gauntlet_26
 
 Decision: Accept Design Dragon Flame Attack, conversation

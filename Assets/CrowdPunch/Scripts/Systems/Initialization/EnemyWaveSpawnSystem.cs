@@ -193,6 +193,7 @@ namespace CrowdPunch.Systems.Initialization
             DynamicBuffer<EnemyWaveProfile> profiles, DynamicBuffer<EnemyWaveEliteProfile> elites, DynamicBuffer<EnemyWaveSpawnRange> ranges)
         {
             if (!grid.Data.IsCreated) return true;
+            if (wave.LinkedPairCount > 0 && !HasSpace(grid, wave.LinkedPairProfile.NavigationRadius, wave, ranges)) return false;
             for (int i = 0; i < wave.ProfileCount; i++)
             {
                 var profile = profiles[wave.ProfileStart + i];
@@ -254,6 +255,7 @@ namespace CrowdPunch.Systems.Initialization
             sequence.NormalMinimumRound = 0;
             sequence.NormalMinimumSpawnedCount = 0;
             sequence.WizardMinimumSpawnedCount = 0;
+            sequence.LinkedPairsSpawned = 0;
             sequence.RandomState = sequence.InitialSeed == 0 ? 1u : sequence.InitialSeed;
             if (waves.Length == 0)
             {
@@ -282,6 +284,7 @@ namespace CrowdPunch.Systems.Initialization
             sequence.NormalMinimumRound = 0;
             sequence.NormalMinimumSpawnedCount = 0;
             sequence.WizardMinimumSpawnedCount = 0;
+            sequence.LinkedPairsSpawned = 0;
             if (sequence.CurrentWaveIndex >= waves.Length)
             {
                 sequence.Phase = EnemyWaveRuntimePhase.Complete;
@@ -324,7 +327,16 @@ namespace CrowdPunch.Systems.Initialization
                 }
             }
             int spawned = 0;
-            for (int index = 0; index < requested; index++)
+            while (sequence.LinkedPairsSpawned < wave.LinkedPairCount && spawned < requested)
+            {
+                if (!LinkedPairWaveSpawning.TrySpawn(commands, entityManager, wave, ranges, navigationGrid,
+                    physicsWorld, player, occupiedEnemies, spacing, sequenceEntity, ref sequence, ref random)) break;
+                spawned += 2;
+            }
+            if (sequence.LinkedPairsSpawned < wave.LinkedPairCount) {
+                sequence.RandomState = random.state; accepted.Dispose(); return spawned;
+            }
+            for (int index = spawned; index < requested; index++)
             {
                 bool spawningElite = sequence.EliteSpawnedCount < wave.TotalEliteCount;
                 bool selectedMinimum = false;
@@ -337,7 +349,7 @@ namespace CrowdPunch.Systems.Initialization
                 else
                 {
                     selectedProfile = SelectNormalProfile(ref random, wave, profiles, ref sequence,
-                        sequence.SpawnedCount - sequence.EliteSpawnedCount, out selectedMinimum).Profile;
+                        sequence.SpawnedCount - sequence.EliteSpawnedCount - sequence.LinkedPairsSpawned * 2, out selectedMinimum).Profile;
                 }
                 if (!selectedMinimum && selectedProfile.Archetype == EnemyArchetypeKind.Wizard &&
                     wave.MaximumWizardsAlive > 0 && wizards >= wave.MaximumWizardsAlive - math.max(0, wizardMinimum - sequence.WizardMinimumSpawnedCount))
@@ -456,8 +468,9 @@ namespace CrowdPunch.Systems.Initialization
             out bool selectedMinimum)
         {
             SkipCompletedNormalMinimums(wave, profiles, ref sequence);
-            int expectedMinimumCount = wave.TotalEnemyCount > 0
-                ? (int)math.ceil((normalSpawnedCount + 1) * (double)wave.TotalMinimumNormalCount / wave.TotalEnemyCount)
+            int ordinaryCount = wave.TotalEnemyCount - wave.LinkedPairCount * 2;
+            int expectedMinimumCount = ordinaryCount > 0
+                ? (int)math.ceil((normalSpawnedCount + 1) * (double)wave.TotalMinimumNormalCount / ordinaryCount)
                 : 0;
             selectedMinimum = sequence.NormalMinimumProfileCursor < wave.ProfileCount
                 && sequence.NormalMinimumSpawnedCount < expectedMinimumCount;
