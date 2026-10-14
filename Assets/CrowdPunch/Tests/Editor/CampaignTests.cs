@@ -99,18 +99,18 @@ namespace CrowdPunch.Tests
             Assert.That(progress.IsComplete(catalog.Get(catalog.Count - 1).id), Is.False);
             Assert.That(new CampaignProgress(path).IsUnlocked(catalog, 1), Is.False);
         }
-        [Test] public void Loop007_AllEightyCompletedReturnsEndSentinel()
+        [Test] public void Loop007_AllCatalogLevelsCompletedReturnsEndSentinel()
         {
             var progress=new CampaignProgress(path);
             foreach(var level in catalog.levels) progress.Complete(level.id);
-            Assert.That(new CampaignProgress(path).NextUnfinished(catalog),Is.EqualTo(80));
-            Assert.That(progress.IsUnlocked(catalog,80),Is.False);
+            Assert.That(new CampaignProgress(path).NextUnfinished(catalog),Is.EqualTo(catalog.Count));
+            Assert.That(progress.IsUnlocked(catalog,catalog.Count),Is.False);
         }
         [Test] public void Loop008_ChapterOneAssetsAreIsolatedAndLargeCrowdIsAuthored()
         {
-            Assert.That(catalog.Count,Is.EqualTo(80));
-            Assert.That(catalog.levels.Select(l=>l.id).Distinct().Count(),Is.EqualTo(80));
-            Assert.That(catalog.levels.Count(l=>l.Available),Is.EqualTo(80));
+            Assert.That(catalog.Count,Is.EqualTo(81));
+            Assert.That(catalog.levels.Select(l=>l.id).Distinct().Count(),Is.EqualTo(81));
+            Assert.That(catalog.levels.Count(l=>l.Available),Is.EqualTo(81));
             var waves=AssetDatabase.FindAssets("t:EnemyWaveSettings",new[]{"Assets/CrowdPunch/Data/Campaign/Waves"})
                 .Select(g=>AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(AssetDatabase.GUIDToAssetPath(g))).ToArray();
             Assert.That(waves.Length,Is.EqualTo(176));

@@ -13,6 +13,7 @@ namespace CrowdPunch.Authoring
         public ChickenBossAuthoring chickenBoss;
         public RollingBossAuthoring rollingBoss;
         public DinoBossAuthoring dinoBoss;
+        public FinaleBossAuthoring finaleBoss;
         [Tooltip("Optional barricade objective. Its bounded crowd replenishes until the barricade breaks.")]
         public BarricadeAuthoring barricade;
         [SerializeField, Tooltip("Ordered wave assets. Each asset remains independently reusable and editable.")]

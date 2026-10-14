@@ -18,6 +18,10 @@ namespace CrowdPunch.Systems.Physics
             foreach (var (cover, motion, transform) in SystemAPI.Query<RefRO<RotatingCover>, RefRW<RotatingCoverState>, RefRW<LocalTransform>>())
             {
                 if (!SystemAPI.HasComponent<Barricade>(cover.ValueRO.Target)) continue;
+                if (SystemAPI.HasComponent<FinaleAnchor>(cover.ValueRO.Target)) {
+                    var anchor = SystemAPI.GetComponent<FinaleAnchor>(cover.ValueRO.Target);
+                    if (anchor.Spent != 0 || SystemAPI.GetComponent<FinaleBoss>(anchor.Boss).Phase != FinalePhase.Flying) continue;
+                }
                 var target = SystemAPI.GetComponent<Barricade>(cover.ValueRO.Target);
                 if (target.HitsRemaining <= 0) continue;
                 Advance(cover.ValueRO, ref motion.ValueRW, target.HitSequence, SystemAPI.Time.DeltaTime);

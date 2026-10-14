@@ -98,7 +98,9 @@ namespace CrowdPunch.Mono.Levels
         private void Update()
         {
             if (currentLevelIndex < 0 || (HasCampaign && Screen != CampaignScreen.Playing)) return;
-            if (!transitionInProgress && playerHealth != null && playerHealth.CurrentHealth <= 0)
+            bool encounterVictory = PlayerBridgeRegistry.TryGetBridge(out var bridge) && bridge.EncounterVictory;
+            if (encounterVictory) RunFailed = false;
+            if (!encounterVictory && !transitionInProgress && playerHealth != null && playerHealth.CurrentHealth <= 0)
                 RunFailed = true;
             if (!transitionInProgress && observedFailureSequence != GauntletFailureRegistry.Sequence)
             {
@@ -119,7 +121,7 @@ namespace CrowdPunch.Mono.Levels
                 if (!EditorPreview) Progress.Complete(campaign.Get(currentLevelIndex).id);
                 if (replay) Screen = CampaignScreen.ReplayComplete;
                 else if (currentLevelIndex == campaign.Count - 1) Screen = CampaignScreen.CampaignComplete;
-                else if ((currentLevelIndex + 1) % 10 == 0) Screen = CampaignScreen.ChapterComplete;
+                else if (currentLevelIndex + 1 == campaign.ChapterEnd(campaign.ChapterFor(currentLevelIndex))) Screen = CampaignScreen.ChapterComplete;
                 else if (CanSelect(currentLevelIndex + 1)) StartCoroutine(LoadLevel(currentLevelIndex + 1));
                 else Screen = CampaignScreen.ChapterComplete;
                 return;

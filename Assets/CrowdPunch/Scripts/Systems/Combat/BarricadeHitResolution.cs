@@ -31,6 +31,7 @@ namespace CrowdPunch.Systems.Combat
         // BARRICADE-002: impact and blast share source + launch identity; histories are bounded by source lifetimes.
         public static bool TryHit(EntityManager em, Entity target, Entity source, uint sequence, double now, float3 position)
         {
+            if (!FinaleHitResolution.Allows(em, target, source) || em.HasComponent<FinaleBoss>(target)) return false;
             var wall = em.GetComponentData<Barricade>(target);
             if (wall.HitsRemaining <= 0) return false;
             var history = em.GetBuffer<BarricadeHitHistory>(target);
@@ -44,6 +45,7 @@ namespace CrowdPunch.Systems.Combat
             em.SetComponentData(target, wall);
             if (wall.HitsRemaining == 0)
                 em.SetComponentData(target, new PhysicsCollider { Value = wall.BrokenCollider });
+            FinaleHitResolution.CompleteAnchor(em, target);
             return true;
         }
 

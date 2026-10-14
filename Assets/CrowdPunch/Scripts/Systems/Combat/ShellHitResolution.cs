@@ -9,6 +9,7 @@ namespace CrowdPunch.Systems.Combat
     {
         public static void Punch(EntityManager em, Entity target, float damage, double now, float3 point)
         {
+            if (!FinaleHitResolution.Active(em, target)) return;
             var shell = em.GetComponentData<ShellTarget>(target);
             if (shell.CoreHealth <= 0) return;
             bool blocked = shell.ExplosionsRemaining > 0;
@@ -16,8 +17,9 @@ namespace CrowdPunch.Systems.Combat
             Record(em, target, ref shell, now, point, blocked);
         }
 
-        public static void Explosion(EntityManager em, Entity target, float damage, double now, float3 point)
+        public static void Explosion(EntityManager em, Entity target, float damage, double now, float3 point, Entity source = default)
         {
+            if (!FinaleHitResolution.Allows(em, target, source)) return;
             var shell = em.GetComponentData<ShellTarget>(target);
             if (shell.CoreHealth <= 0) return;
             // SHELL-002: one blast resolves exactly one phase, even when it breaks the shell.
@@ -33,6 +35,7 @@ namespace CrowdPunch.Systems.Combat
         public static bool Impact(EntityManager em, Entity target, Entity source, uint sequence,
             float damage, double now, float3 point)
         {
+            if (!FinaleHitResolution.Allows(em, target, source)) return false;
             var shell = em.GetComponentData<ShellTarget>(target);
             if (shell.CoreHealth <= 0 || shell.ExplosionsRemaining > 0 || damage <= 0) return false;
             var history = em.GetBuffer<BarricadeHitHistory>(target);
@@ -60,6 +63,7 @@ namespace CrowdPunch.Systems.Combat
                 em.SetComponentData(target, new PhysicsCollider { Value = solid.BrokenCollider });
             }
             em.SetComponentData(target, solid);
+            FinaleHitResolution.CompleteAnchor(em, target);
         }
     }
 }

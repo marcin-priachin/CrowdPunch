@@ -122,13 +122,16 @@ namespace CrowdPunch.Systems.Combat
             {
                 float3 point = BarricadeHitResolution.ClosestPoint(wall.ValueRO, wallTransform.ValueRO, center);
                 if (wall.ValueRO.HitsRemaining > 0 && math.distancesq(point, center) <= radiusSquared
+                    && FinaleHitResolution.Allows(EntityManager, target, explosive)
                     && BarricadeHitResolution.AllowsExplosion(EntityManager, wall.ValueRO, explosive, center))
                 {
-                    if (SystemAPI.HasComponent<TrackObject>(target))
+                    if (SystemAPI.HasComponent<FinaleBoss>(target))
+                        FinaleHitResolution.Damage(EntityManager, target, explosive, settings.Damage, true, SystemAPI.Time.ElapsedTime);
+                    else if (SystemAPI.HasComponent<TrackObject>(target))
                         TrackObjectHitResolution.TryHit(EntityManager, target, explosive, blastSequence,
                             wallTransform.ValueRO.Position - center, true, SystemAPI.Time.ElapsedTime, point);
                     else if (SystemAPI.HasComponent<ShellTarget>(target))
-                        ShellHitResolution.Explosion(EntityManager, target, settings.Damage, SystemAPI.Time.ElapsedTime, point);
+                        ShellHitResolution.Explosion(EntityManager, target, settings.Damage, SystemAPI.Time.ElapsedTime, point, explosive);
                     else BarricadeHitResolution.TryHit(EntityManager, target, explosive, blastSequence, SystemAPI.Time.ElapsedTime, point);
                 }
             }

@@ -17,7 +17,7 @@ namespace CrowdPunch.Tests
         private const string Data="Assets/CrowdPunch/Data/Campaign/";
         private const string Scenes="Assets/CrowdPunch/Scenes/Campaign/";
 
-        [Test] public void Loop007_ChapterSevenSaveReachesFinalSentinelAndKeepsReplayUnlocked()
+        [Test] public void Loop007_ChapterSevenSaveReachesFinaleAndKeepsReplayUnlocked()
         {
             string path=Path.GetFullPath("Temp/CampaignTests/"+Guid.NewGuid()+".json");
             try
@@ -29,11 +29,11 @@ namespace CrowdPunch.Tests
                 for(int i=70;i<80;i++) { Assert.That(catalog.Get(i).Available,Is.True); progress.Complete(catalog.Get(i).id); }
                 progress=new CampaignProgress(path);
                 Assert.That(progress.NextUnfinished(catalog),Is.EqualTo(80));
-                Assert.That(progress.IsUnlocked(catalog,80),Is.False);
+                Assert.That(progress.IsUnlocked(catalog,80),Is.True);
                 Assert.That(progress.IsUnlocked(catalog,79),Is.True);
                 progress.Complete(catalog.Get(70).id);
                 Assert.That(new CampaignProgress(path).NextUnfinished(catalog),Is.EqualTo(80));
-                Assert.That(EditorBuildSettings.scenes.Count(s=>s.enabled),Is.EqualTo(81));
+                Assert.That(EditorBuildSettings.scenes.Count(s=>s.enabled),Is.EqualTo(82));
             }
             finally { foreach(var suffix in new[]{"",".bak",".tmp"}) if(File.Exists(path+suffix)) File.Delete(path+suffix); }
         }

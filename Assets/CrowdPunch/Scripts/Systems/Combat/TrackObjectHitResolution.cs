@@ -10,6 +10,7 @@ namespace CrowdPunch.Systems.Combat
         public static bool TryHit(EntityManager em, Entity target, Entity source, uint sequence,
             float3 direction, bool explosion, double now, float3 contact)
         {
+            if (!FinaleHitResolution.Allows(em, target, source)) return false;
             var track = em.GetComponentData<TrackObject>(target);
             var state = em.GetComponentData<TrackObjectState>(target);
             if (state.Locked != 0) return false;

@@ -66,6 +66,11 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-14 - Final Encounter
+
+Accepted the attached Design final boss encounter handoff (6acf6df1-12d0-83ed-b97f-ee371f8e6f37). FINALE-001..007 and FinalEncounter.md record the 81st level, one-level ninth chapter, four-anchor lifecycle, ownership, boss cycle, safe rebounds and immediate victory. Numerical tuning, presentation and collision implementation were delegated. This supersedes the former 80-level campaign cap; no feature design questions remain. OQ-001 performance and broader art/camera questions remain open.
+
+
 ### 2026-10-14 - Four Additional Enemies In The Existing Campaign
 
 Decision: The user requested LinkedPair in Chapter 5, Dragon in Chapter 6, Snake in Chapter 7 and Ninja in Chapter 8, with each retained in later chapters, then authorized applying the updated Campaign80Proposal.md. LOOP-009 records the accepted introductions at 41/52/61/71 and the exact recurrence/compositions across 15 finite wave-clear encounters. Introductions isolate each new behavior with Baselines; mixed waves replace Baselines to preserve initial physical-body budgets, including two pair endpoints and six tail segments per Snake. Large revised waves spawn together. Shared enemy settings, existing objectives, legacy encounters, campaign identifiers and saves are preserved. OQ-001 performance targets remain unresolved; this placement decision does not settle them.

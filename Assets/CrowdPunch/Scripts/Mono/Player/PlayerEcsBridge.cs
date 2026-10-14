@@ -297,8 +297,10 @@ namespace CrowdPunch.Mono.Player
         /// <summary>
         /// Receives an ECS enemy contact hit for MonoBehaviour-owned player systems.
         /// </summary>
+        public bool EncounterVictory { get; set; }
         public void ReceiveEnemyContactHit(float damagePercent, float invincibilitySeconds, float3 pushImpulse)
         {
+            if (EncounterVictory) return;
             EnemyContactHitReceived?.Invoke(
                 Mathf.Clamp01(damagePercent),
                 Mathf.Max(0f, invincibilitySeconds),
@@ -309,16 +311,16 @@ namespace CrowdPunch.Mono.Player
         public event Action<float, Vector3> WizardHitReceived;
         public event Action<float> TrailDamageReceived;
         public event Action<float> LinkedPairDamageReceived;
-        public void ReceiveLinkedPairDamage(float amount) => LinkedPairDamageReceived?.Invoke(amount);
+        public void ReceiveLinkedPairDamage(float amount) { if (!EncounterVictory) LinkedPairDamageReceived?.Invoke(amount); }
         public event Action<float, Vector3> DragonFlameReceived;
-        public void ReceiveDragonFlame(float damage, float3 push) => DragonFlameReceived?.Invoke(damage, push);
+        public void ReceiveDragonFlame(float damage, float3 push) { if (!EncounterVictory) DragonFlameReceived?.Invoke(damage, push); }
         public event Action<float> GroundHazardDamageReceived;
-        public void ReceiveGroundHazardDamage(float amount) => GroundHazardDamageReceived?.Invoke(amount);
-        public void ReceiveTrailDamage(float amount) => TrailDamageReceived?.Invoke(amount);
+        public void ReceiveGroundHazardDamage(float amount) { if (!EncounterVictory) GroundHazardDamageReceived?.Invoke(amount); }
+        public void ReceiveTrailDamage(float amount) { if (!EncounterVictory) TrailDamageReceived?.Invoke(amount); }
 
         /// <summary>Delivers damage already gated by an individual ECS zone's target timer.</summary>
-        public void ReceiveWizardHit(float amount, float3 impulse) =>
-            WizardHitReceived?.Invoke(amount, new Vector3(impulse.x, impulse.y, impulse.z));
+        public void ReceiveWizardHit(float amount, float3 impulse)
+            { if (!EncounterVictory) WizardHitReceived?.Invoke(amount, new Vector3(impulse.x, impulse.y, impulse.z)); }
 
         public void ReceiveEnemyHit(float damageAmount, float invincibilitySeconds, float3 pushImpulse)
         {

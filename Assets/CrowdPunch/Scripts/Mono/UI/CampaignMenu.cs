@@ -61,7 +61,7 @@ namespace CrowdPunch.Mono.UI
                 else if (observedScreen == CampaignScreen.MainMenu) Show(Page.Main);
                 else if (observedScreen == CampaignScreen.ReplayComplete)
                 {
-                    chapter = sequence.CurrentLevelIndex / 10;
+                    chapter = sequence.Campaign.ChapterFor(sequence.CurrentLevelIndex);
                     Show(Page.Levels);
                 }
                 else Show(Page.Milestone);
@@ -114,8 +114,8 @@ namespace CrowdPunch.Mono.UI
                     for (int i = 0; i < sequence.Campaign.chapterNames.Length; i++)
                     {
                         int selected = i;
-                        bool unlocked = sequence.EditorPreview || sequence.Progress.IsUnlocked(sequence.Campaign, i * 10);
-                        bool installed = sequence.Campaign.Get(i * 10)?.Available == true;
+                        bool unlocked = sequence.EditorPreview || sequence.Progress.IsUnlocked(sequence.Campaign, sequence.Campaign.ChapterStart(i));
+                        bool installed = sequence.Campaign.Get(sequence.Campaign.ChapterStart(i))?.Available == true;
                         Button($"{i + 1}. {sequence.Campaign.chapterNames[i]}" + (!installed ? " - Not Yet Available" : !unlocked ? " - Locked" : ""),
                             () => { chapter = selected; Show(Page.Levels); }, unlocked && installed);
                     }
@@ -134,7 +134,7 @@ namespace CrowdPunch.Mono.UI
                     group.constraint = UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount;
                     group.constraintCount = 2; group.cellSize = new Vector2(388, 64); group.spacing = new Vector2(12, 10);
                     grid.AddComponent<UnityEngine.UI.LayoutElement>().preferredHeight = 360;
-                    for (int i = chapter * 10; i < Mathf.Min(chapter * 10 + 10, sequence.LevelCount); i++)
+                    for (int i = sequence.Campaign.ChapterStart(chapter); i < sequence.Campaign.ChapterEnd(chapter); i++)
                     {
                         int selected = i;
                         var level = sequence.Campaign.Get(i);
@@ -163,7 +163,7 @@ namespace CrowdPunch.Mono.UI
                     break;
                 case Page.Milestone:
                     bool campaignComplete = sequence.Screen == CampaignScreen.CampaignComplete;
-                    Title(campaignComplete ? "CAMPAIGN COMPLETE" : $"CHAPTER {sequence.CurrentLevelIndex / 10 + 1} COMPLETE");
+                    Title(campaignComplete ? "CAMPAIGN COMPLETE" : $"CHAPTER {sequence.Campaign.ChapterFor(sequence.CurrentLevelIndex) + 1} COMPLETE");
                     bool nextAvailable = sequence.CanSelect(sequence.CurrentLevelIndex + 1);
                     if (!campaignComplete)
                         Button(nextAvailable ? "Continue" : "Next Chapter Not Yet Available",

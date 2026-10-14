@@ -19,6 +19,10 @@ namespace CrowdPunch.Systems.Physics
             foreach (var (track, motion, pose, velocity, wall, entity) in
                 SystemAPI.Query<RefRO<TrackObject>, RefRW<TrackObjectState>, RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<Barricade>>().WithEntityAccess())
             {
+                if (SystemAPI.HasComponent<FinaleAnchor>(entity)) {
+                    var anchor = SystemAPI.GetComponent<FinaleAnchor>(entity);
+                    if (anchor.Spent != 0 || SystemAPI.GetComponent<FinaleBoss>(anchor.Boss).Phase != FinalePhase.Flying) continue;
+                }
                 // Kinematic integration owns the slide. Remove only floating-point drift from its rail.
                 motion.ValueRW.Distance = motion.ValueRO.NextDistance;
                 paths.TryGetBuffer(entity, out var path);
@@ -31,6 +35,7 @@ namespace CrowdPunch.Systems.Physics
                 motion.ValueRW.Locked = 1;
                 // Reuse the objective completion/replenishment flag, but keep the solid collider intact.
                 wall.ValueRW.HitsRemaining = 0;
+                Combat.FinaleHitResolution.CompleteAnchor(state.EntityManager, entity);
             }
         }
     }

@@ -15,7 +15,9 @@ namespace CrowdPunch.Bakers
             DependsOn(a.settings);
             if (a.exit != null) DependsOn(a.exit);
             var e = GetEntity(TransformUsageFlags.Dynamic);
-            var geometry = new BoxGeometry { Size = math.max((float3)a.size, .1f), Orientation = quaternion.identity, BevelRadius = .02f };
+            var finale = GetComponent<FinaleBossAuthoring>();
+            if (finale != null && finale.settings != null) DependsOn(finale.settings);
+            var geometry = new BoxGeometry { Size = math.max((float3)(finale != null && finale.settings != null ? finale.settings.colliderSize : a.size), .1f), Orientation = quaternion.identity, BevelRadius = .02f };
             var material = Material.Default;
             material.CollisionResponse = CollisionResponsePolicy.CollideRaiseCollisionEvents;
             material.Friction = 0;

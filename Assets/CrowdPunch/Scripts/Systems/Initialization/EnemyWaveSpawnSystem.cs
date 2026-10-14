@@ -60,7 +60,11 @@ namespace CrowdPunch.Systems.Initialization
                 if (bossOwned)
                 {
                     var bossEntity=SystemAPI.GetComponent<BossCrowdSequence>(sequenceEntity).Encounter;
-                    bool alive = SystemAPI.HasComponent<BossEncounter>(bossEntity)
+                    if (SystemAPI.HasComponent<FinaleSupply>(sequenceEntity) && SystemAPI.HasComponent<FinaleBoss>(bossEntity)
+                        && SystemAPI.GetComponent<FinaleBoss>(bossEntity).Stage < SystemAPI.GetComponent<FinaleSupply>(sequenceEntity).MinimumStage) continue;
+                    bool alive = SystemAPI.HasComponent<FinaleBoss>(bossEntity)
+                        && SystemAPI.GetComponent<FinaleBoss>(bossEntity).Phase != FinalePhase.Defeated
+                        || SystemAPI.HasComponent<BossEncounter>(bossEntity)
                         && SystemAPI.GetComponent<BossEncounter>(bossEntity).Cycle != BossCycle.Defeated
                         || SystemAPI.HasComponent<ChickenBoss>(bossEntity)
                         && SystemAPI.GetComponent<ChickenBoss>(bossEntity).Phase != ChickenPhase.Defeated
@@ -399,7 +403,8 @@ namespace CrowdPunch.Systems.Initialization
                     WaveIndex = sequence.CurrentWaveIndex
                 });
                 // PROTECT-001: defense populations are finite, including waves with elites.
-                if (!spawningElite && wave.TotalEliteCount > 0 && !entityManager.HasComponent<ProtectedPoint>(sequenceEntity))
+                if (!spawningElite && wave.TotalEliteCount > 0 && !entityManager.HasComponent<ProtectedPoint>(sequenceEntity)
+                    && !entityManager.HasComponent<FinaleSupply>(sequenceEntity))
                     commands.AddComponent<EliteWaveReplenishment>(enemy);
                 occupiedEnemies.Add(new float4(position, selectedProfile.SpawnClearance));
                 spacing.Add(new EnemySpawnSpacing.Occupant { Position = position,

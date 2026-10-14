@@ -20,6 +20,7 @@ namespace CrowdPunch.Mono.Camera
         private CombatCameraFeedback feedback;
         private InputAction lookAction;
         private float orbitAngle;
+        public float EncounterLookHeight { get; set; }
 
         private void Awake()
         {
@@ -68,7 +69,7 @@ namespace CrowdPunch.Mono.Camera
 
             Vector3 orbitOffset = Quaternion.Euler(0f, orbitAngle, 0f)
                 * new Vector3(0f, offset.y, -new Vector2(offset.x, offset.z).magnitude);
-            Vector3 lookTarget = target.position + targetOffset;
+            Vector3 lookTarget = target.position + targetOffset + Vector3.up * EncounterLookHeight;
             Vector3 desiredPosition = lookTarget + orbitOffset;
             float interpolation = 1f - Mathf.Exp(-followSharpness * Time.deltaTime);
 

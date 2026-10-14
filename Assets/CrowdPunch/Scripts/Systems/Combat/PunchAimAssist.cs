@@ -72,7 +72,9 @@ namespace CrowdPunch.Systems.Combat
             if (target != Entity.Null && manager.HasComponent<ChickenBoss>(target))
                 return manager.GetComponentData<ChickenBoss>(target).Phase != ChickenPhase.Defeated;
             if (target != Entity.Null && manager.HasComponent<Barricade>(target))
-                return manager.GetComponentData<Barricade>(target).HitsRemaining > 0;
+                return manager.GetComponentData<Barricade>(target).HitsRemaining > 0
+                    && FinaleHitResolution.Active(manager,target)
+                    && (!manager.HasComponent<FinaleBoss>(target) || manager.GetComponentData<FinaleBoss>(target).Phase==FinalePhase.Downed);
             if (target != Entity.Null && manager.HasComponent<BossEncounter>(target))
                 return manager.GetComponentData<BossEncounter>(target).Cycle != BossCycle.Defeated;
             if (target == Entity.Null || target == source || !manager.Exists(target)

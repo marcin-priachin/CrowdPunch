@@ -14,7 +14,9 @@ namespace CrowdPunch.Systems.Lifetime
             foreach(var (member,respawn,entity) in SystemAPI.Query<RefRO<BossCrowdMember>,RefRW<EnemyRespawnSettings>>().WithEntityAccess())
             {
                 var owner=member.ValueRO.Encounter;
-                bool alive=SystemAPI.HasComponent<BossEncounter>(owner)
+                bool alive=SystemAPI.HasComponent<FinaleBoss>(owner)
+                    && SystemAPI.GetComponent<FinaleBoss>(owner).Phase!=FinalePhase.Defeated
+                    || SystemAPI.HasComponent<BossEncounter>(owner)
                     && SystemAPI.GetComponent<BossEncounter>(owner).Cycle!=BossCycle.Defeated
                     || SystemAPI.HasComponent<ChickenBoss>(owner)
                     && SystemAPI.GetComponent<ChickenBoss>(owner).Phase!=ChickenPhase.Defeated
@@ -30,6 +32,12 @@ namespace CrowdPunch.Systems.Lifetime
                             SystemAPI.GetComponent<DinoBoss>(owner),SystemAPI.GetComponent<DinoTuning>(owner));
                 }
                 respawn.ValueRW.Enabled=(byte)(member.ValueRO.ReplenishDelay>=0 && alive?1:0);
+                // FINALE-006: a Snake slot includes its tail. Wait for old detached projectiles
+                // before replacing the head, so repeated head kills cannot grow physical population.
+                if (alive && SystemAPI.HasComponent<FinaleBoss>(owner) && SystemAPI.HasComponent<SnakeHead>(entity))
+                    foreach (var segment in SystemAPI.Query<RefRO<SnakeSegment>>())
+                        if (segment.ValueRO.Head==entity && segment.ValueRO.Detached!=0)
+                            respawn.ValueRW.Enabled=0;
             }
         }
     }

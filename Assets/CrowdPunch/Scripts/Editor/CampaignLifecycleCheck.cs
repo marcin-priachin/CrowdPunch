@@ -102,7 +102,7 @@ namespace CrowdPunch.Editor
                 int next=Chapter*10, expectedWaves=Chapter==1?19:Chapter==2?17:Chapter==3?21:Chapter==4?20:Chapter==5?25:Chapter==8?30:Chapter==6?25:26;
                 Require(observedWaves==expectedWaves,"Unexpected observed wave count: "+observedWaves);
                 Require(flow.CurrentLevelIndex==next-1 && flow.NextUnfinished==next,"Incorrect chapter milestone.");
-                if(next==80) Require(flow.Screen==CampaignScreen.CampaignComplete && !flow.CanSelect(80) && !flow.Progress.IsUnlocked(flow.Campaign,80),"Final campaign completion gate failed.");
+                if(next==flow.LevelCount) Require(flow.Screen==CampaignScreen.CampaignComplete && !flow.CanSelect(next) && !flow.Progress.IsUnlocked(flow.Campaign,next),"Final campaign completion gate failed.");
                 else Require(flow.Progress.IsUnlocked(flow.Campaign,next) && flow.CanSelect(next)==flow.Campaign.Get(next).Available,"Next chapter availability gate failed.");
                 Require(new CampaignProgress(savePath).NextUnfinished(flow.Campaign)==next,"Chapter progress did not survive reload.");
                 Record($"PASS Chapter {Chapter}, {expectedWaves} observed waves, saved progress and chapter/campaign completion gate.");

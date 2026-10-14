@@ -126,7 +126,15 @@ namespace CrowdPunch.Systems.Combat
                 }
                 if (!em.HasComponent<Barricade>(closest.Entity)) continue;
                 var wall = em.GetComponentData<Barricade>(closest.Entity);
-                if (em.HasComponent<TrackObject>(closest.Entity))
+                if (em.HasComponent<FinaleBoss>(closest.Entity))
+                {
+                    float inverseMass = em.HasComponent<PhysicsMass>(source) ? em.GetComponentData<PhysicsMass>(source).InverseMass : 0;
+                    float impulse = inverseMass > .0001f ? math.max(0, -math.dot(incoming, closest.SurfaceNormal)) / inverseMass : 0;
+                    float damage = SystemAPI.HasSingleton<EnemyLaunchSettings>()
+                        ? EnemyCollisionDamage.Calculate(launch.ValueRO.LaunchDamage, impulse, SystemAPI.GetSingleton<EnemyLaunchSettings>()) : 0;
+                    FinaleHitResolution.Damage(em, closest.Entity, source, damage, false, now);
+                }
+                else if (em.HasComponent<TrackObject>(closest.Entity))
                     TrackObjectHitResolution.TryHit(em, closest.Entity, source, launch.ValueRO.LaunchSequence,
                         incoming, false, now, closest.Position);
                 else if (em.HasComponent<ShellTarget>(closest.Entity))
@@ -160,6 +168,7 @@ namespace CrowdPunch.Systems.Combat
         private static float3 TrackDisplacement(EntityManager em, Entity entity, float dt)
         {
             if (!em.HasComponent<TrackObject>(entity)) return float3.zero;
+            if (!FinaleHitResolution.Active(em, entity)) return float3.zero;
             var track = em.GetComponentData<TrackObject>(entity);
             var motion = em.GetComponentData<TrackObjectState>(entity);
             var path = em.HasBuffer<TrackPathPoint>(entity) ? em.GetBuffer<TrackPathPoint>(entity, true) : default;

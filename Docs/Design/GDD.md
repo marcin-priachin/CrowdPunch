@@ -58,7 +58,7 @@ The player approaches or is pressured by a crowd, chooses position and launch di
 
 Status: Must
 
-The campaign contains exactly 80 levels in eight chapters of ten. Every tenth level is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce the original eight enemy archetypes, objectives and static hazards by level 40; the four additional enemies follow LOOP-009. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes, BARRICADE-007's room chains and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
+The campaign contains 81 levels: the existing eight chapters of ten plus a one-level ninth chapter containing the final encounter (FINALE-001..007). Every tenth level in Chapters 1-8 is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce the original eight enemy archetypes, objectives and static hazards by level 40; the four additional enemies follow LOOP-009. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes, BARRICADE-007's room chains and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
 
 Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 27 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
 
@@ -98,7 +98,7 @@ Game settings may optionally start the game with all available levels unlocked. 
 
 Status: Must
 
-Each chapter contains one 100 x 100 metre level with a larger enemy crowd and wave clearing as its only objective. Target longer than three minutes through sustained combat. The approved placement is levels 8, 18, 28, 38, 48, 58, 68 and 78, followed by shorter breathers before the bosses. Initial targets are 3.5-4.5 minutes in Chapters 1-4 and 4-5 minutes in Chapters 5-8. Counts and cadence are playtest tuning; no survival timer or forced delay is required.
+Each of Chapters 1-8 contains one 100 x 100 metre level with a larger enemy crowd and wave clearing as its only objective. Target longer than three minutes through sustained combat. The approved placement is levels 8, 18, 28, 38, 48, 58, 68 and 78, followed by shorter breathers before the bosses. Initial targets are 3.5-4.5 minutes in Chapters 1-4 and 4-5 minutes in Chapters 5-8. Counts and cadence are playtest tuning; no survival timer or forced delay is required.
 
 Difficulty grows through composition, positioning, geometry, spawn directions, cadence and hazards, with relief between peaks and after bosses. Ordinary enemy health, damage and speed remain consistent. Larger counts in these eight arenas complement this encounter design rather than becoming the sole difficulty mechanism.
 
@@ -111,6 +111,52 @@ Introduce LinkedPair in Chapter 5 at level 41, Dragon in Chapter 6 at 52, Snake 
 Use the existing LINK-001..007, DRAGON-001..007, SNAKE-001..007 and NINJA-001..006 gameplay and shared settings. Count LinkedPair in pairs, with two independently defeated endpoints per pair. Count Snake in heads for clearance; its attached and detached orbs never become separate completion objectives. Mixed-wave composition replaces Baselines to preserve the previous initial physical-body budget, including current six-segment Snake tails. Keep the existing two-concurrent-ambush Ninja cap. Counts and duration targets remain playtest tuning under LOOP-003/008; no new completion waits, forced delays or shared stat escalation are introduced. The approved large waves at 48/58/68/78 spawn together and clear before the next begins.
 
 This campaign integration is additional scope to the original legacy-only enemy implementation slices. Preserve Gauntlet_24..27's recipes, assets, Level Play access and exclusion from campaign progression/player builds. Their original placement instructions do not exclude the four enemy prefabs from campaign encounters authorized here.
+
+## Final Encounter - Level 81
+
+The accepted detailed handoff is [FinalEncounter.md](FinalEncounter.md), from the design conversation dated 2026-10-14. These rules deliberately append to the original 80-level campaign; numerical values remain editable tuning.
+
+### FINALE-001 - Campaign And Arena
+
+Status: Must
+
+Append stable cp-081 in a one-level ninth chapter, unlocked by level 80. Preserve all previous IDs, scenes and saved progress. Final campaign completion requires level 81 victory. Use a 100 x 100 metre arena and the supplied Goleling_Evolved model. Continue, chapter selection, replay and Level Play support the shorter chapter. Target 6-8 minutes and roughly 6-8 downings without enforcing either.
+
+### FINALE-002 - Anchor Lifecycle
+
+Status: Must
+
+Exactly four anchors are simultaneously usable during flight: rotating cover, explosion shell/core, short bidirectional rail, and narrow launched-hit target. Any one completed anchor cancels all pending airborne attacks and tethers the boss to a nearby valid landing. Used anchors remain spent until flight resumes after the fourth use, when the full set resets. Unfinished damage and rail progress persist. All anchors pause during falling, downed and takeoff phases; no queued downing or extended window is permitted. Rail completion requires physical docking.
+
+### FINALE-003 - Boss Cycle And Attacks
+
+Status: Must
+
+The immune flying boss smoothly follows above/ahead and uses telegraphed ground strikes and committed sweeping lanes. Its landing damages and pushes player/enemies, leaving anchors unaffected. Landing begins a fixed vulnerability window with an initial stun, then alternating telegraphed directional slams and radial shockwaves. Grounded boss remains stationary and unlaunchable. Takeoff is harmless and ends vulnerability. Three health-based stages increase airborne attack demands and specialist pressure without changing ordinary enemy stats.
+
+### FINALE-004 - Anchor Ownership
+
+Status: Must
+
+Only player-owned launched bodies, chain descendants and explosions from player-owned launched sources advance anchors. Unlaunched proximity blasts and enemy/boss-owned bodies do not count. Direct punches only damage the exposed shell core. The shell-breaking blast cannot also damage the exposed core; core body impact and explosion remain separate. Reuse applicable per-launch histories and target/rail impact-blast deduplication.
+
+### FINALE-005 - Boss Damage And Rebound
+
+Status: Must
+
+Only the downed vulnerability window accepts player-owned body, chain and associated explosion damage. Direct punches never damage the boss. Each body deals impact damage once per launch; re-punch starts a new eligible launch. Exploders can deal both impact and explosion damage. Ordinary bodies rebound and retain their ordinary launch behavior; outgoing rebounds aimed directly at the player are deflected sideways. Boss health persists across cycles, without per-downing damage caps.
+
+### FINALE-006 - Bounded Supply
+
+Status: Must
+
+Replenish a bounded crowd throughout the fight, including every current enemy type over time. Keep reliable Baselines and Exploders near unfinished anchors and useful ammunition during downings. Account for two endpoints per LinkedPair and physical Snake tail bodies. Finale-owned population, per-type caps, stage recipes, delays and spawn banks are editable; shared ordinary profiles remain unchanged. OQ-001 hardware/FPS targets remain unresolved.
+
+### FINALE-007 - Victory, Retry And Feedback
+
+Status: Must
+
+Boss death immediately ends hostile combat, cancels attacks and replenishment including pending allocations, neutralizes survivors/effects, then presents a short victory before campaign completion. No survivor clear is required. Retry restores full player/boss health, flight, anchors, histories, cover clocks, rail state and supply. Scene exit cleans all encounter state. Provide a brief nonblocking opening instruction and in-world active/paused/spent/damaged feedback.
 
 ## Player And Controls
 

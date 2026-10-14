@@ -12,6 +12,8 @@ namespace CrowdPunch.Bakers
         public override void Bake(EnemyWaveSequenceAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.None);
+            if (authoring.finaleBoss != null)
+                AddComponent(entity, new BossCrowdSequence { Encounter = GetEntity(authoring.finaleBoss, TransformUsageFlags.Dynamic) });
             if (authoring.dinoBoss != null)
             {
                 if (authoring.Waves.Count != 1 || authoring.barricade != null || authoring.bossEncounter != null || authoring.chickenBoss != null || authoring.rollingBoss != null)

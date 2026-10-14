@@ -65,6 +65,8 @@ namespace CrowdPunch.Systems.Presentation
                         <= wall.ValueRO.ExitRadius * wall.ValueRO.ExitRadius);
             }
             if (hasBarricade) isComplete = allBarricadesComplete;
+            foreach (var boss in SystemAPI.Query<RefRO<FinaleBoss>>())
+                isComplete = boss.ValueRO.Phase == FinalePhase.Defeated && boss.ValueRO.Remaining <= 0;
 
             if (isComplete && !completionReported)
             {
