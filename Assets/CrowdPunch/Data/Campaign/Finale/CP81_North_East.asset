@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP81_North_East
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 10
+  totalEnemyCount: 5
   linkedPairProfile: {fileID: 0}
   linkedPairCount: 0
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 8
+    MinimumCount: 4
     Weight: 0
   - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
-    MinimumCount: 2
+    MinimumCount: 1
     Weight: 0
   eliteEnemies: []
   spawnRectangles:

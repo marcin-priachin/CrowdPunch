@@ -33,7 +33,7 @@ namespace CrowdPunch.Editor
             try {
                 var design=new Level {Name="Bring Down the Sky",Outline=Rectangle(100,100),Spacing=new Vector2(96,96),
                     Entry=new Vector2(0,-40),Lanes=Array.Empty<Vector4>(),
-                    Waves=new[]{W("Finale South West Supply",8,new[]{Range(-35,-25,8,18)},x:2,delay:2)} };
+                    Waves=new[]{W("Finale South West Supply",4,new[]{Range(-35,-25,8,18)},x:1,delay:2)} };
                 BuildLevel(80,design,LoadCampaignProfiles(),AssetDatabase.LoadAssetAtPath<Material>(Root+"Materials/Ground.mat"),
                     MaterialAsset("GauntletWalls",Color.gray),MaterialAsset("GauntletLanes",Color.gray),MaterialAsset("GauntletBackdrop",Color.gray),CampaignData);
                 var scene=EditorSceneManager.OpenScene(CampaignSub(81),OpenSceneMode.Single);
@@ -111,6 +111,7 @@ namespace CrowdPunch.Editor
                 }
                 var pair=CreateFinaleSupply(boss,"Linked Pair",new Wave{Name="Linked Pair",LinkedPairs=1,Delay=6,Ranges=new[]{Range(0,28,28,8)}},1,false,Vector3.zero);
                 pair.GetComponent<FinaleSupplyAuthoring>().pairOnly=true;
+                AuthorFinalePhaseSupply(boss);
                 foreach(var p in new[]{new Vector2(-42,0),new Vector2(42,0),new Vector2(0,43),new Vector2(12,-43)})
                     CampaignRock(arena,p,new Vector2Int(5,5));
                 EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();
@@ -162,6 +163,48 @@ namespace CrowdPunch.Editor
             var asset=AssetDatabase.LoadAssetAtPath<T>(path);
             if(asset!=null) return asset;
             asset=ScriptableObject.CreateInstance<T>(); AssetDatabase.CreateAsset(asset,path); return asset;
+        }
+
+        [MenuItem("Crowd Punch/Campaign/Apply Finale Phase Supply")]
+        public static void ApplyFinalePhaseSupply()
+        {
+            if(EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before authoring.");
+            for(int i=0;i<SceneManager.sceneCount;i++) if(SceneManager.GetSceneAt(i).isDirty)
+                throw new InvalidOperationException("Save dirty scenes before authoring.");
+            var setup=EditorSceneManager.GetSceneManagerSetup();
+            try {
+                var scene=EditorSceneManager.OpenScene(CampaignSub(81),OpenSceneMode.Single);
+                var boss=UnityEngine.Object.FindFirstObjectByType<FinaleBossAuthoring>();
+                if(boss==null) throw new InvalidOperationException("Finale boss is missing.");
+                AuthorFinalePhaseSupply(boss);
+                EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();
+            } finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
+        }
+
+        private static void AuthorFinalePhaseSupply(FinaleBossAuthoring boss)
+        {
+            // FINALE-006: incremental fixed slots preserve the former 66-body maximum.
+            var banks=UnityEngine.Object.FindObjectsByType<FinaleSupplyAuthoring>(FindObjectsSortMode.None)
+                .Where(s=>s.localAmmunition && s.minimumStage==1).ToArray();
+            if(banks.Length!=4) throw new InvalidOperationException("Four initial ammunition banks are required.");
+            foreach(var bank in banks) {
+                var wave=bank.GetComponent<EnemyWaveSequenceAuthoring>().Waves[0];
+                var data=new SerializedObject(wave);
+                data.FindProperty("totalEnemyCount").intValue=5;
+                var entries=data.FindProperty("enemies");
+                for(int i=0;i<wave.Enemies.Count;i++) {
+                    int count=wave.Enemies[i].Settings.Archetype==CrowdPunch.Configuration.EnemyArchetype.Baseline?4:1;
+                    entries.GetArrayElementAtIndex(i).FindPropertyRelative("MinimumCount").intValue=count;
+                }
+                data.ApplyModifiedPropertiesWithoutUndo(); EditorUtility.SetDirty(wave);
+                string name=(bank.bank.x<0?"West":"East")+(bank.bank.z<0?" South":" North");
+                for(int stage=2;stage<=3;stage++) {
+                    if(UnityEngine.Object.FindObjectsByType<FinaleSupplyAuthoring>(FindObjectsSortMode.None)
+                        .Any(s=>s.localAmmunition && s.minimumStage==stage && s.bank==bank.bank)) continue;
+                    CreateFinaleSupply(boss,name+" Stage "+stage,new Wave {Name=name+" Stage "+stage,
+                        B=2,X=stage==3?1:0,Delay=2,Ranges=wave.SpawnRectangles.ToArray()},stage,true,bank.bank);
+                }
+            }
         }
         private static EnemyWaveSequenceAuthoring CreateFinaleSupply(FinaleBossAuthoring boss,string name,Wave design,int stage,bool ammunition,Vector3 bank)
         {

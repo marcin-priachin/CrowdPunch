@@ -152,6 +152,8 @@ Status: Must
 
 Replenish a bounded crowd throughout the fight, including every current enemy type over time. Keep reliable Baselines and Exploders near unfinished anchors and useful ammunition during downings. Account for two endpoints per LinkedPair and physical Snake tail bodies. Finale-owned population, per-type caps, stage recipes, delays and spawn banks are editable; shared ordinary profiles remain unchanged. OQ-001 hardware/FPS targets remain unresolved.
 
+Crowd supply increases at each boss health stage, treating the existing full population as the final-stage maximum. Starting tuning reserves 37, 50 and 66 physical bodies respectively. Each anchor bank grows from 4 Baselines/1 Exploder to 6/1, then 8/2; specialist additions remain staged. This phase scaling was requested on 2026-10-14.
+
 ### FINALE-007 - Victory, Retry And Feedback
 
 Status: Must

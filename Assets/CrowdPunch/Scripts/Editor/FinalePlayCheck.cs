@@ -66,7 +66,7 @@ namespace CrowdPunch.Editor
             if(step==0) {
                 Require(flow.EditorPreview && flow.CurrentLevelIndex==80,"Level Play preview did not select 81");
                 Require(anchors.Length==4,"Four baked anchors required");
-                if(enemies.Length<55) return;
+                if(enemies.Length<35) return;
                 Record("PASS level 81 baked, four anchors, all initial supply instantiated: "+enemies.Length+" physical bodies.");
                 frames.Clear(); mask=0; Next(1);
             }
@@ -91,6 +91,9 @@ namespace CrowdPunch.Editor
                 var bodyPose=em.GetComponentData<LocalTransform>(projectile); bodyPose.Position=new float3(p.x,.05f,p.z-7);
                 em.SetComponentData(projectile,bodyPose); em.SetComponentEnabled<RespawnRequest>(projectile,false);
                 Launch(em,projectile,100); em.SetComponentData(projectile,new PhysicsVelocity {Linear=new float3(0,0,30)});
+                // Keep the probe nonlethal even when the saved boss health has been tuned down.
+                var shot=em.GetComponentData<EnemyLaunchState>(projectile);
+                shot.LaunchDamage=math.min(shot.LaunchDamage,t.Health*.01f); em.SetComponentData(projectile,shot);
                 health=b.Health; Record("PASS fall/landing and fixed initial stun; injected physical body shot."); Next(3);
             }
             else if(step==3 && EditorApplication.timeSinceStartup-since>.5) {
@@ -125,16 +128,27 @@ namespace CrowdPunch.Editor
                 Record("PASS fourth-use reset restores all four installations."); player.ApplyDamage(player.MaxHealth*2); Next(7);
             }
             else if(step==7 && flow.RunFailed) {flow.RestartCurrentLevel(); Next(8);}
-            else if(step==8 && !flow.RunFailed && b.Health==t.Health && enemies.Length>=50 && EditorApplication.timeSinceStartup-since>2) {
+            else if(step==8 && !flow.RunFailed && b.Health==t.Health && enemies.Length>=35 && EditorApplication.timeSinceStartup-since>2) {
                 Require(b.Phase==FinalePhase.Flying && b.SpentCount==0 && b.Stage==1,"Retry state wrong");
                 Require(player.CurrentHealth==player.MaxHealth,"Retry health wrong");
                 Record("PASS player-death retry restores full player/boss health, flight, anchors and supply.");
-                b.Health=t.Health*.2f; em.SetComponentData(boss,b); frames.Clear(); Next(9);
+                b.Health=t.Health*.5f; em.SetComponentData(boss,b); frames.Clear(); Next(9);
             }
             else if(step==9) {
                 SampleFrame();
                 if(EditorApplication.timeSinceStartup-since<12) return;
-                Require(b.Stage==3,"Health stages not applied");
+                Require(b.Stage==2,"Second health stage not applied");
+                Require(enemies.Count(e=>!em.HasComponent<SnakeSegment>(e)&&!em.HasComponent<LinkedPairEndpoint>(e))==42
+                    && enemies.Count(e=>em.HasComponent<LinkedPairEndpoint>(e))<=2,"Stage 2 slot cap must be 44 including the recyclable pair");
+                Record("PASS stage 2 replenishing slot population: 44 roots, up to 50 physical bodies.");
+                b.Health=t.Health*.2f; em.SetComponentData(boss,b); frames.Clear(); Next(11);
+            }
+            else if(step==11) {
+                SampleFrame();
+                if(EditorApplication.timeSinceStartup-since<12) return;
+                Require(b.Stage==3,"Third health stage not applied");
+                Require(enemies.Count(e=>!em.HasComponent<SnakeSegment>(e)&&!em.HasComponent<LinkedPairEndpoint>(e))==58
+                    && enemies.Count(e=>em.HasComponent<LinkedPairEndpoint>(e))<=2,"Stage 3 slot cap must remain 60 including the recyclable pair");
                 Record("Stage 3 population: "+enemies.Length+"; editor frame samples "+frames.Count+", mean ms "+frames.Average().ToString("F2")+", p95 ms "+frames.OrderBy(x=>x).ElementAt((int)(frames.Count*.95f)).ToString("F2"));
                 b.Phase=FinalePhase.Downed; em.SetComponentData(boss,b);
                 projectile=enemies.First(e=>!em.HasComponent<SnakeSegment>(e)); Launch(em,projectile,999);

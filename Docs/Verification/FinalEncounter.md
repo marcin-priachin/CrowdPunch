@@ -6,7 +6,7 @@ Date: 2026-10-14. Unity: 6000.3.10f1. Requirements: FINALE-001 through FINALE-00
 
 Use the existing Level Play window to select level 81, **Bring Down the Sky**. It runs through Bootstrap in editor preview without writing normal campaign progress. Normal campaign progression reaches it after level 80; Chapter 9 contains this single level. Existing completion IDs remain unchanged, including saves that had completed all 80 earlier levels.
 
-The saved main scene is `Assets/CrowdPunch/Scenes/Campaign/Campaign_81.unity`, with its ECS SubScene in the adjacent `Campaign_81` directory. The supplied Goleling model, four installations, navigation, obstacles, eight bounded supply sequences, animation controller and warning presentation are wired into these assets. Earlier campaign scenes and shared ordinary enemy profiles were not changed.
+The saved main scene is `Assets/CrowdPunch/Scenes/Campaign/Campaign_81.unity`, with its ECS SubScene in the adjacent `Campaign_81` directory. The supplied Goleling model, four installations, navigation, obstacles, bounded supply sequences, animation controller and warning presentation are wired into these assets. Earlier campaign scenes and shared ordinary enemy profiles were not changed.
 
 ## Implemented rules and checks
 
@@ -16,7 +16,7 @@ The saved main scene is `Assets/CrowdPunch/Scenes/Campaign/Campaign_81.unity`, w
 | FINALE-002/004: anchor lifecycle and ownership | Tests cover immediate cancellation/downing, player versus boss/enemy ownership, paused shell/core punch access, rail motion and physical docking. Live probe verifies spent-anchor retention, fourth-use reset and full retry. Existing cover, shell, rail and barricade regression fixtures pass. |
 | FINALE-003: boss cycle and attacks | Live baked-world probe observes both airborne warnings, falling/landing, fixed initial stun, alternating grounded slam/shockwave, harmless takeoff and resumed flight. |
 | FINALE-005: damage and rebound | Tests cover vulnerability, separate impact/blast identities, duplicate rejection and safe rebound preserving the launch. An injected moving ECS body physically hits the stationary grounded boss, reducing health from 6000 to 5700. |
-| FINALE-006: supply | Initial baked population is 57 physical bodies. Stage-three sample contains 65; configured upper bound is 60 roots plus six Snake segments. Existing normal profiles are reused. Retry restores supply; victory clears reservations and survivors. |
+| FINALE-006: supply | Current authored caps are 37/50/66 physical bodies; the final maximum remains 60 roots plus six Snake segments. Phase population and per-bank ammunition assertions pass. Earlier stage-three sample contains 65. Existing normal profiles are reused. Retry restores supply; victory clears reservations and survivors. |
 | FINALE-007: victory and cleanup | Live probe verifies immediate damage/supply suppression and final campaign completion without clearing anchors. A separate simultaneous lethal player/boss probe reaches CampaignComplete with player health zero and RunFailed false. Scene exit leaves zero finale bosses, anchors or supply components, camera offset zero and hostile damage suppression false. |
 
 ## Automated and Editor results
@@ -49,3 +49,17 @@ The initial feedback update passed Unity compilation and live checks of health u
 Live lifecycle checks of the initial feedback update verified that retry restores one boss HUD at full health and selecting level 1 leaves zero boss HUD components. No encounter simulation or balance changes were made for either feedback update.
 
 The simplified red-bar revision passes Unity compilation. Its running Game-view screenshot was inspected: one red Image, zero text components, no background, centered top placement and the intended thin shape. Setting health to 50% produces a 0.5 fill fraction in the 900-by-14 reference-pixel bar.
+
+## Phase population update (2026-10-14)
+
+The user requested increasing crowd supply across the boss's health stages, with the current size retained as the maximum. The saved tuning uses existing minimum-stage activation and bounded replenishment; it does not change enemy stats or attack cadence.
+
+| Health stage | Each anchor bank | Root slots | Physical-body cap including six Snake segments |
+| --- | --- | --- | --- |
+| 1: above 67% | 4 Baselines, 1 Exploder | 31 | 37 |
+| 2: 67% to 34% | 6 Baselines, 1 Exploder | 44 | 50 |
+| 3: below 34% | 8 Baselines, 2 Exploders | 60 | 66 |
+
+The four initial banks retain their original asset GUIDs with reduced counts. Eight additional bank sequences add slots at stages two and three. Specialist recipes, the LinkedPair, spawn regions, replacement delays and the former 66-body maximum remain intact. `Crowd Punch > Campaign > Apply Finale Phase Supply` applies this authoring change without duplicating stage sequences.
+
+Verification: 69 focused EditMode tests pass, including all phase population caps and each bank's Baseline/Exploder counts. A live baked-world population probe observes 31, 44 and 60 root entities after health-threshold changes, then 31 again after retry. Player damage was disabled for that controlled population check; the cap includes six possible Snake segments, and actual visible population can be smaller during replacement delays. Results are saved in `Temp/FinaleValidation/phase-population.txt`. An attempted full encounter probe ended early because the current saved 300 boss health was exhausted by its injected physical hit; its fixture now scales that injected hit to keep it nonlethal. This update does not claim a newly completed full combat/balance playthrough.

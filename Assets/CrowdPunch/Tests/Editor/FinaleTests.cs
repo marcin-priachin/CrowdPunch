@@ -168,10 +168,24 @@ namespace CrowdPunch.Tests
                 Assert.That(anchors.Count(a=>a.GetComponent<TrackObjectAuthoring>()!=null),Is.EqualTo(1));
                 Assert.That(anchors.Count(a=>a.GetComponent<BarricadeAuthoring>().cover!=null),Is.EqualTo(1));
                 var supplies=UnityEngine.Object.FindObjectsByType<EnemyWaveSequenceAuthoring>(FindObjectsSortMode.None);
-                Assert.That(supplies.Length,Is.EqualTo(8)); Assert.That(supplies.All(a=>a.finaleBoss!=null && a.barricade==null),Is.True);
+                Assert.That(supplies.Length,Is.EqualTo(16)); Assert.That(supplies.All(a=>a.finaleBoss!=null && a.barricade==null),Is.True);
                 Assert.That(supplies.All(a=>a.Waves.Count==1 && a.Waves[0].ReplenishWhileBossLives),Is.True);
-                Assert.That(supplies.Count(a=>a.GetComponent<FinaleSupplyAuthoring>().localAmmunition),Is.EqualTo(4));
-                Assert.That(supplies.Sum(a=>CampaignEnemyRevisionTests.PhysicalPopulation(a.Waves[0])),Is.LessThanOrEqualTo(80));
+                Assert.That(supplies.Count(a=>a.GetComponent<FinaleSupplyAuthoring>().localAmmunition),Is.EqualTo(12));
+                foreach(int stage in new[]{1,2,3}) {
+                    int population=supplies.Where(a=>a.GetComponent<FinaleSupplyAuthoring>().minimumStage<=stage)
+                        .Sum(a=>CampaignEnemyRevisionTests.PhysicalPopulation(a.Waves[0]));
+                    Assert.That(population,Is.EqualTo(new[]{37,50,66}[stage-1]),"FINALE-006 phase "+stage);
+                }
+                foreach(var bank in supplies.Where(a=>a.GetComponent<FinaleSupplyAuthoring>().localAmmunition)
+                    .GroupBy(a=>a.GetComponent<FinaleSupplyAuthoring>().bank)) {
+                    Assert.That(bank.Count(),Is.EqualTo(3));
+                    foreach(int stage in new[]{1,2,3}) {
+                        var profiles=bank.Where(a=>a.GetComponent<FinaleSupplyAuthoring>().minimumStage<=stage)
+                            .SelectMany(a=>a.Waves[0].Enemies).ToArray();
+                        Assert.That(profiles.Where(p=>p.Settings.Archetype==CrowdPunch.Configuration.EnemyArchetype.Baseline).Sum(p=>p.MinimumCount),Is.EqualTo(new[]{4,6,8}[stage-1]));
+                        Assert.That(profiles.Where(p=>p.Settings.Archetype==CrowdPunch.Configuration.EnemyArchetype.Explosive).Sum(p=>p.MinimumCount),Is.EqualTo(stage==3?2:1));
+                    }
+                }
             } finally {
                 if(setup.Any(s=>s.isLoaded && s.isActive)) EditorSceneManager.RestoreSceneManagerSetup(setup);
                 else EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
