@@ -109,13 +109,22 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Loop002_AllCampaignWavesUseFiniteBatches()
+        public void Loop002Loop009_CampaignWavesUseTheirAuthoredFiniteCadence()
         {
             var waves = AssetDatabase.FindAssets("t:EnemyWaveSettings", new[] { "Assets/CrowdPunch/Data/Campaign/Waves" })
                 .Select(g => AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(AssetDatabase.GUIDToAssetPath(g))).ToArray();
             Assert.Greater(waves.Length, 160);
             foreach (var wave in waves)
             {
+                if (wave.LinkedPairCount > 0 || wave.Enemies.Any(e => e.Settings != null &&
+                    (e.Settings.Archetype == CrowdPunch.Configuration.EnemyArchetype.Dragon
+                    || e.Settings.Archetype == CrowdPunch.Configuration.EnemyArchetype.Ninja
+                    || e.Settings.EnemyPrefab.GetComponent<SnakeAuthoring>() != null)))
+                {
+                    Assert.AreEqual(EnemyWaveSpawnMode.AllAtOnce, wave.SpawnMode, wave.name);
+                    Assert.AreEqual(EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated, wave.ActivationMode, wave.name);
+                    continue;
+                }
                 Assert.AreEqual(EnemyWaveSpawnMode.Batched, wave.SpawnMode, wave.name);
                 Assert.Greater(wave.BatchInterval, 0, wave.name);
                 Assert.That(wave.BatchSize, Is.InRange(1, 8), wave.name);

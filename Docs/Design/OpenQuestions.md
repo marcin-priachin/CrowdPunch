@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-13
+Last updated: 2026-10-14
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -65,6 +65,10 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-14 - Four Additional Enemies In The Existing Campaign
+
+Decision: The user requested LinkedPair in Chapter 5, Dragon in Chapter 6, Snake in Chapter 7 and Ninja in Chapter 8, with each retained in later chapters, then authorized applying the updated Campaign80Proposal.md. LOOP-009 records the accepted introductions at 41/52/61/71 and the exact recurrence/compositions across 15 finite wave-clear encounters. Introductions isolate each new behavior with Baselines; mixed waves replace Baselines to preserve initial physical-body budgets, including two pair endpoints and six tail segments per Snake. Large revised waves spawn together. Shared enemy settings, existing objectives, legacy encounters, campaign identifiers and saves are preserved. OQ-001 performance targets remain unresolved; this placement decision does not settle them.
 
 ### 2026-10-14 - Linked Pair And Legacy Gauntlet_27
 

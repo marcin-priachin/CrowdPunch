@@ -16,14 +16,14 @@ namespace CrowdPunch.Editor
     {
         private static readonly string[] ChapterEightHints =
         {
-            "Clear the distant shooters, then choose where the explosives land.",
+            "Watch the Ninja prepare and appear behind you. Move aside or interrupt, then strike during recovery.",
             "The opening reverses every six seconds. Interrupt the Wizard and line up four hits through the cover.",
-            "Dodge committed charges and use the crowd to break armor. Keep the side warnings in view.",
+            "Peak in committed attacks: interrupt Ninja ambushes while handling paired swings, exposed Snake tips and moving flame.",
             "Work around the two bends, land four hits on the narrow gate, then reach the exit.",
             "Stop every wave before it reaches the turquoise zone. Use launched bodies to break armor.",
             "Break the shell with three explosions, then hit the exposed core. More Exploders arrive when both are gone.",
             "Hold the final approach. Interrupt Wizards and stop every enemy before it reaches the zone.",
-            "Clear six large waves. Change shooting angles, disrupt Elites, and keep the central routes clear.",
+            "Final large crowd encounter: combine all four later introductions through varied waves; keep Ninja ambushes capped at two.",
             "Choose clean launches through the explosives and armor. Clear both waves.",
             "Topple each pillar with a launched enemy while the Dino is in its path. Keep the outer ground warnings clear."
         };
@@ -32,15 +32,15 @@ namespace CrowdPunch.Editor
         {
             new Level{Name="Find Your Feet",Outline=new[]{new Vector2(-13,-18),new Vector2(13,-18),new Vector2(18,-10),new Vector2(17,11),new Vector2(12,18),new Vector2(-12,18),new Vector2(-17,11),new Vector2(-18,-10)},
                 Spacing=new Vector2(30,30),Entry=new Vector2(0,-13),Lanes=Array.Empty<Vector4>(),Waves=new[]{
-                W("North Shooters",14,new[]{Range(-6,11,14,4)},r:2),W("West Fuses",18,new[]{Range(-12,0,4,20)},x:2)}},
+                new Wave {Name="North Shooters",B=6,Ninja=1,Ranges=new[]{Range(-6,11,14,4)}},new Wave {Name="West Fuses",B=12,Ninja=2,Ranges=new[]{Range(-12,0,4,20)}}}},
             new Level{Name="Thread the Crowd",Outline=new[]{new Vector2(-16,-20),new Vector2(17,-20),new Vector2(21,-12),new Vector2(21,10),new Vector2(12,20),new Vector2(-15,20),new Vector2(-21,12),new Vector2(-21,-13)},
                 Spacing=new Vector2(36,34),Entry=new Vector2(0,-15),Lanes=Array.Empty<Vector4>(),Waves=new[]{
                 new Wave{Name="Living Ammunition",B=14,Wizard=1,Trail=1,Ranges=new[]{Range(-15,0,4,24),Range(15,0,4,24)}}}},
             new Level{Name="Committed Lines",Outline=new[]{new Vector2(-22,-14),new Vector2(-16,-20),new Vector2(14,-20),new Vector2(22,-10),new Vector2(20,16),new Vector2(14,20),new Vector2(-14,20),new Vector2(-20,10)},
                 Spacing=new Vector2(36,34),Entry=new Vector2(0,-15),Lanes=Array.Empty<Vector4>(),Waves=new[]{
-                W("East Commitments",18,new[]{Range(16,3,4,20)},d:2,e:1),
-                new Wave{Name="West Armor",B=20,A=2,R=2,Ranges=new[]{Range(-15,-1,4,20)}},
-                new Wave{Name="North Trails",B=22,X=2,Trail=2,Ranges=new[]{Range(0,14,20,4)}}}},
+                new Wave {Name="East Commitments",B=15,D=2,E=1,Ninja=1,LinkedPairs=1,Ranges=new[]{Range(16,3,4,20)}},
+                new Wave {Name="West Armor",B=11,R=2,A=2,Dragon=2,Snake=1,Ranges=new[]{Range(-15,-1,4,20)}},
+                new Wave {Name="North Trails",B=11,X=2,Trail=2,Snake=1,Ninja=2,LinkedPairs=1,Ranges=new[]{Range(0,14,20,4)}}}},
             new Level{Name="Open the Last Gate",Outline=new[]{new Vector2(-19,-23),new Vector2(19,-23),new Vector2(19,-8),new Vector2(16,0),new Vector2(19,9),new Vector2(15,23),new Vector2(-15,23),new Vector2(-19,9),new Vector2(-16,0),new Vector2(-19,-8)},
                 Spacing=new Vector2(32,40),Entry=new Vector2(0,-18),Lanes=Array.Empty<Vector4>(),Waves=new[]{
                 W("Last Gate Ammunition",16,new[]{Range(-14,2,3,16),Range(14,2,3,16)},x:2)}},
@@ -55,12 +55,12 @@ namespace CrowdPunch.Editor
                 W("Final Fuses",26,new[]{Range(0,41,24,8)},x:2,delay:5,batch:4),
                 new Wave{Name="Final Casters",B=26,R=2,Wizard=2,Delay=5,Batch=4,Ranges=new[]{Range(0,41,24,8)}}}},
             new Level{Name="Claim the Ground",Outline=Rectangle(100,100),Spacing=new Vector2(96,96),Entry=new Vector2(0,-16),Lanes=Array.Empty<Vector4>(),Waves=new[]{
-                W("North Claim",72,new[]{Range(0,33,58,14)},r:4),
-                W("West Reaction",88,new[]{Range(-36,0,12,44)},x:6,d:2),
-                new Wave{Name="East Battery",B=96,A=4,E=2,Ranges=new[]{Range(36,0,12,44)}},
-                new Wave{Name="Split North Casters",B=104,Wizard=2,Trail=2,Ranges=new[]{Range(-20,33,20,16),Range(20,33,20,16)}},
-                W("Split Side Charges",120,new[]{Range(-36,0,12,40),Range(36,0,12,40)},r:4,d:4),
-                new Wave{Name="Last Claim",B=136,A=4,X=6,E=2,Ranges=new[]{Range(-20,34,26,16),Range(20,34,26,16)}}}},
+                new Wave {Name="North Claim",B=66,R=4,Ninja=2,LinkedPairs=2,Ranges=new[]{Range(0,33,58,14)}},
+                new Wave {Name="West Reaction",B=82,X=6,D=2,Dragon=2,LinkedPairs=2,Ranges=new[]{Range(-36,0,12,44)}},
+                new Wave {Name="East Battery",B=83,E=2,A=4,Snake=1,Ninja=2,LinkedPairs=2,Ranges=new[]{Range(36,0,12,44)}},
+                new Wave {Name="Split North Casters",B=90,Wizard=2,Trail=2,Dragon=3,Snake=1,LinkedPairs=2,Ranges=new[]{Range(-20,33,20,16),Range(20,33,20,16)}},
+                new Wave {Name="Split Side Charges",B=99,R=4,D=4,Snake=2,Ninja=3,LinkedPairs=2,Ranges=new[]{Range(-36,0,12,40),Range(36,0,12,40)}},
+                new Wave {Name="Last Claim",B=111,X=6,E=2,A=4,Dragon=3,Snake=2,Ninja=2,LinkedPairs=3,Ranges=new[]{Range(-20,34,26,16),Range(20,34,26,16)}}}},
             new Level{Name="Room to Breathe",Outline=new[]{new Vector2(-14,-17),new Vector2(14,-17),new Vector2(19,-10),new Vector2(17,11),new Vector2(13,17),new Vector2(-13,17),new Vector2(-17,11),new Vector2(-19,-10)},
                 Spacing=new Vector2(32,28),Entry=new Vector2(0,-12),Lanes=Array.Empty<Vector4>(),Waves=new[]{
                 W("Room for Fuses",14,new[]{Range(-9,7,6,6),Range(9,7,6,6)},x:2),

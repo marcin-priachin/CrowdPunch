@@ -42,10 +42,10 @@ namespace CrowdPunch.Tests
             var waves=AssetDatabase.FindAssets("t:EnemyWaveSettings",new[]{Data+"Waves"})
                 .Select(g=>AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(AssetDatabase.GUIDToAssetPath(g)))
                 .Where(w=>w.name.StartsWith("CP68_")).OrderBy(w=>w.name).ToArray();
-            Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{68,86,92,102,118,138}));
+            Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{64,82,88,94,110,120}));
             Assert.That(waves.Select(w=>w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(new[]{0,0,2,0,0,0}));
-            Assert.That(waves.Sum(w=>w.TotalEnemyCount+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(606));
-            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.Batched && w.BatchSize==8 && w.BatchInterval==2 && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
+            Assert.That(waves.Sum(CampaignEnemyRevisionTests.PhysicalPopulation),Is.EqualTo(606));
+            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.AllAtOnce && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
             Assert.That(waves[2].ArmoredAmmunitionProfile,Is.Not.Null); Assert.That(waves[5].ArmoredAmmunitionProfile,Is.Not.Null);
             Assert.That(waves[4].WizardAmmunitionProfile,Is.Not.Null); Assert.That(waves[4].WaitForPersistentHazards,Is.True);
             Assert.That(waves.Where((w,i)=>i!=4).All(w=>!w.WaitForPersistentHazards),Is.True);
@@ -55,7 +55,7 @@ namespace CrowdPunch.Tests
 
         [Test] public void Loop002_ChapterSevenWiresNavigableLayoutsSafeHazardsAndObjectiveSettings()
         {
-            int[][] populations={new[]{13,18},new[]{8},new[]{19,24},new[]{16},new[]{21,24,26},new[]{14},new[]{23,26},new[]{68,86,94,102,118,138},new[]{12},new[]{10}};
+            int[][] populations={new[]{13,17},new[]{8},new[]{19,24},new[]{16},new[]{21,24,26},new[]{14},new[]{23,26},new[]{68,86,94,102,118,138},new[]{12},new[]{10}};
             var setup=EditorSceneManager.GetSceneManagerSetup();
             try
             {
@@ -68,10 +68,10 @@ namespace CrowdPunch.Tests
                     EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(sub.SceneAsset));
                     var crowd=CampaignBarricadeRoomTests.FirstCrowd();
                     Assert.That(crowd.Waves.All(w=>AssetDatabase.GetAssetPath(w).StartsWith(Data)),Is.True);
-                    Assert.That(crowd.Waves.Select(w=>w.TotalEnemyCount+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(populations[n-61]),$"Level {n}");
+                    Assert.That(crowd.Waves.Select(CampaignEnemyRevisionTests.PhysicalPopulation),Is.EqualTo(populations[n-61]),$"Level {n}");
                     Assert.That(crowd.Waves.All(w=>w.Enemies.Sum(e=>e.MinimumCount)==w.TotalEnemyCount && w.Enemies.All(e=>e.Weight==0)),Is.True);
                     CampaignChapterTwoTests.AssertNavigationClearance(UnityEngine.Object.FindFirstObjectByType<NavigationArenaAuthoring>(),n);
-                    if(n==61) Assert.That(crowd.Waves[0].ArmoredAmmunitionProfile,Is.Not.Null);
+                    if(n==61) Assert.That(crowd.Waves.All(w=>w.ArmoredAmmunitionProfile==null),Is.True);
                     if(n==62) CampaignBarricadeRoomTests.AssertRooms(n);
                     if(n==63)
                     {

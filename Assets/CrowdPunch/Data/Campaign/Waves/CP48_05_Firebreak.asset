@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP48_05_Firebreak
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 128
+  totalEnemyCount: 122
+  linkedPairProfile: {fileID: 11400000, guid: f3bcb5bec215bcc4a959c7f89a788377, type: 2}
+  linkedPairCount: 3
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 120
+    MinimumCount: 114
     Weight: 0
   - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
     MinimumCount: 6
@@ -31,14 +33,14 @@ MonoBehaviour:
   - Center: {x: 30, y: 2, z: -4}
     Width: 24
     Depth: 64
-  replenishWhileBossLives: 1
+  replenishWhileBossLives: 0
   bossReplenishDelay: 4
   delayBeforeWave: 3
   activationMode: 2
   duration: 0
-  spawnMode: 1
-  batchSize: 8
-  batchInterval: 2
+  spawnMode: 0
+  batchSize: 1
+  batchInterval: 3
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

@@ -6,6 +6,16 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Four-Enemy Campaign Integration (LOOP-009)
+
+The existing 80-level campaign now introduces LinkedPair at 41, Dragon at 52, Snake at 61 and Ninja at 71. The exact 2026-10-14 recurrence and counts are in Campaign80Proposal.md. Fifteen finite wave-clear encounters use 48 revised wave assets; earlier introductions recur in every later chapter. Main-scene opening hints explain the introductions and mixed encounters. Existing safe spawn banks, navigation/floor/obstacle assets, objectives, boss support, stable level identifiers, catalog, build registration and saved progress are retained.
+
+The shared editor `Wave` recipe now represents Dragon, Snake, Ninja and a separate LinkedPairs count. `WaveAsset` writes F/S/N as exact ordinary profile guarantees and pairs through `linkedPairProfile`/`linkedPairCount`. The chapter-five-through-eight recipes and hints match the saved content. **Crowd Punch > Campaign > Apply Four Enemy Revision** updates those existing assets in place after checking installed levels, wave wiring, prefab availability and unsaved scenes; it preserves wave GUIDs and authored spawn regions instead of rebuilding whole chapters. The four revised large arenas use simultaneous finite waves, replacing their prior eight-body batches.
+
+No runtime enemy system or Mono/ECS ownership changed. The existing baker adds two endpoints per pair to clearance, while Snake spawns its six tail bodies independently and counts only the head. Baseline substitutions preserve each non-introductory wave's initial physical-body budget, with peak populations 128/138/138/148 at 48/58/68/78. Wizard/armor ammunition safeguards and Wizard-zone completion gates are retained; pair records, detached Snake orbs and Dragon flame add no completion waits. Shared settings retain six-segment tails and two concurrent Ninja ambushes. Legacy Gauntlet_24..27 remain development-only and unchanged.
+
+See [campaign enemy revision verification](../Verification/CampaignEnemyRevision.md) for automated asset checks, compilation, baked-world validation and remaining human playtesting.
+
 ## Linked Pair And Legacy Gauntlet_27 (LINK-001..007)
 
 `LinkedPairAuthoring`/`LinkedPairBaker` bake dedicated `LinkedPairSettings` into endpoint tuning and `LinkedPairEndpoint`. `EnemyLinkedPairPrefabBuilder` uses Mushnub Idle, Walk, HitRecieve and Death clips with the established sampled ECS skinning pipeline. Mint bodies and a visible tether identify the role; no new HUD is added.

@@ -16,14 +16,14 @@ namespace CrowdPunch.Editor
     {
         private static readonly string[] ChapterFiveHints =
         {
-            "Use the open ground to line up bodies. Watch the shooters, then turn the explosives against the crowd.",
+            "Punch either linked enemy to launch both. Keep clear of the tether, even while they recover.",
             "Circle the island and break the narrow gate with four hits. Keep clear of the hot inner pockets.",
-            "Use the islands to change the angle. Launch bodies into the Elites before they line up a shot.",
+            "Reuse paired sweeps to disrupt Elite shot setups; walking and recovering tethers remain dangerous.",
             "The cover pauses between turns. Line up four hits through its opening.",
-            "Break armor with launched bodies. Watch the side crossing before moving into the next lane.",
+            "Combine paired body chains with armor and changing routes; the tether itself cannot strip intact armor.",
             "Strike the block from behind along the diagonal rail. Five forward hits reach the blue socket.",
             "Intercept every wave before it reaches the turquoise zone. No enemy can be allowed through.",
-            "Clear all five waves. Use explosives and Trails against groups, and disrupt Elites and Wizards.",
+            "Large crowd encounter: swing paired projectiles through groups and reposition around dangerous recovery links.",
             "Make room around the Wizard and move out of purple warnings. Clear the shooters in the next wave.",
             "The Gatekeeper warns faster now. Launch bodies through his open guard and watch the side-sector warnings."
         };
@@ -31,17 +31,17 @@ namespace CrowdPunch.Editor
         private static Level[] ChapterFiveDesigns() => new[]
         {
             new Level { Name="Back to Bodies", Outline=new[]{new Vector2(-17,-16),new Vector2(17,-16),new Vector2(17,9),new Vector2(0,16),new Vector2(-17,9)}, Spacing=new Vector2(28,26), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("Distant Shooters",12,new[]{Range(0,7,20,7)},r:2), W("Explosive Return",16,new[]{Range(0,7,20,7)},x:2) } },
+                new Wave {Name="Distant Shooters",B=6,LinkedPairs=1,Ranges=new[]{Range(0,7,20,7)}}, new Wave {Name="Explosive Return",B=12,LinkedPairs=2,Ranges=new[]{Range(0,7,20,7)}} } },
             new Level { Name="Outer Route", Outline=new[]{new Vector2(-17,-22),new Vector2(17,-22),new Vector2(17,-5),new Vector2(13,10),new Vector2(11,22),new Vector2(-11,22),new Vector2(-13,10),new Vector2(-17,-5)}, Spacing=new Vector2(28,38), Entry=new Vector2(0,-17), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Outer Ammunition",14,new[]{Range(-12,-4,3,20),Range(12,-4,3,20)},x:2) } },
             new Level { Name="Turn the Shot", Outline=Clipped(38,36,4), Spacing=new Vector2(32,30), Entry=new Vector2(0,-13), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("West Command",16,new[]{Range(-14,0,4,24)},r:2,e:1), W("East Command",18,new[]{Range(14,0,4,24)},d:2,e:1) } },
+                new Wave {Name="West Command",B=14,R=2,E=1,LinkedPairs=1,Ranges=new[]{Range(-14,0,4,24)}}, new Wave {Name="East Command",B=16,D=2,E=1,LinkedPairs=1,Ranges=new[]{Range(14,0,4,24)}} } },
             new Level { Name="Stop and Go", Outline=Clipped(40,36,4), Spacing=new Vector2(34,30), Entry=new Vector2(0,-13), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Measured Opening",12,new[]{Range(-13,0,4,20),Range(13,0,4,20)},r:2,x:1) } },
             new Level { Name="Armor in Motion", Outline=Clipped(38,40,5), Spacing=new Vector2(32,34), Entry=new Vector2(0,-15), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                new Wave {Name="North Armor",B=14,A=2,Ranges=new[]{Range(0,14,24,4)}},
-                new Wave {Name="East Armor",B=16,D=2,A=2,Ranges=new[]{Range(14,0,4,20)}},
-                W("West Command",18,new[]{Range(-14,0,4,20)},r:2,e:1) } },
+                new Wave {Name="North Armor",B=12,A=2,LinkedPairs=1,Ranges=new[]{Range(0,14,24,4)}},
+                new Wave {Name="East Armor",B=14,D=2,A=2,LinkedPairs=1,Ranges=new[]{Range(14,0,4,20)}},
+                new Wave {Name="West Command",B=16,R=2,E=1,LinkedPairs=1,Ranges=new[]{Range(-14,0,4,20)}} } },
             new Level { Name="Measured Push", Outline=Clipped(36,40,4), Spacing=new Vector2(30,34), Entry=new Vector2(0,-15), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Measured Push",10,new[]{Range(-12,0,4,24),Range(12,0,4,24)},x:2) } },
             new Level { Name="Divided Approach", Outline=Rectangle(32,96), Spacing=new Vector2(30,94), Entry=new Vector2(0,-36), Lanes=Array.Empty<Vector4>(), Waves=new[]{
@@ -49,11 +49,11 @@ namespace CrowdPunch.Editor
                 W("Split Dashers",24,new[]{Range(0,41,24,8)},d:2,delay:5,batch:4),
                 W("Divided Command",24,new[]{Range(0,41,24,8)},x:2,delay:5,batch:4) } },
             new Level { Name="Firebreak", Outline=Rectangle(100,100), Spacing=new Vector2(96,96), Entry=new Vector2(0,-16), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("North Explosives",64,new[]{Range(0,30,48,16)},x:6),
-                new Wave {Name="West Trails",B=80,R=4,Trail=2,Ranges=new[]{Range(-30,0,16,40)}},
-                new Wave {Name="East Armor",B=88,A=4,E=2,Ranges=new[]{Range(30,0,16,40)}},
-                new Wave {Name="Split Casters",B=104,D=4,Wizard=2,Ranges=new[]{Range(-25,30,22,16),Range(25,30,22,16)}},
-                new Wave {Name="Firebreak",B=120,X=6,Trail=2,Ranges=new[]{Range(-30,0,16,40),Range(30,0,16,40)}} } },
+                new Wave {Name="North Explosives",B=60,X=6,LinkedPairs=2,Ranges=new[]{Range(0,30,48,16)}},
+                new Wave {Name="West Trails",B=76,R=4,Trail=2,LinkedPairs=2,Ranges=new[]{Range(-30,0,16,40)}},
+                new Wave {Name="East Armor",B=84,E=2,A=4,LinkedPairs=2,Ranges=new[]{Range(30,0,16,40)}},
+                new Wave {Name="Split Casters",B=98,D=4,Wizard=2,LinkedPairs=3,Ranges=new[]{Range(-25,30,22,16),Range(25,30,22,16)}},
+                new Wave {Name="Firebreak",B=114,X=6,Trail=2,LinkedPairs=3,Ranges=new[]{Range(-30,0,16,40),Range(30,0,16,40)}} } },
             new Level { Name="Make Room", Outline=new[]{new Vector2(-10,-17),new Vector2(10,-17),new Vector2(17,8),new Vector2(14,17),new Vector2(-14,17),new Vector2(-17,8)}, Spacing=new Vector2(28,28), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 new Wave {Name="Make Room",B=14,Wizard=1,Ranges=new[]{Range(0,9,22,8)}},
                 W("Far Shooters",18,new[]{Range(0,9,22,8)},r:2) } }

@@ -12,13 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP68_03_East_Armor
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 92
+  totalEnemyCount: 88
+  linkedPairProfile: {fileID: 11400000, guid: f3bcb5bec215bcc4a959c7f89a788377, type: 2}
+  linkedPairCount: 2
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 88
+    MinimumCount: 82
     Weight: 0
   - Settings: {fileID: 11400000, guid: 95d24fce27ef5144ca7ae5b439bbe692, type: 2}
     MinimumCount: 4
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: a64a5e2d2fd377f4a8d6e1a4f6b6c603, type: 2}
+    MinimumCount: 2
     Weight: 0
   eliteEnemies:
   - Settings: {fileID: 11400000, guid: 4dd009e167a817e4d8e7746bdc822f1f, type: 2}
@@ -27,14 +32,14 @@ MonoBehaviour:
   - Center: {x: 33, y: 2, z: -7}
     Width: 24
     Depth: 64
-  replenishWhileBossLives: 1
+  replenishWhileBossLives: 0
   bossReplenishDelay: 4
   delayBeforeWave: 3
   activationMode: 2
   duration: 0
-  spawnMode: 1
-  batchSize: 8
-  batchInterval: 2
+  spawnMode: 0
+  batchSize: 1
+  batchInterval: 3
   armoredAmmunitionProfile: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

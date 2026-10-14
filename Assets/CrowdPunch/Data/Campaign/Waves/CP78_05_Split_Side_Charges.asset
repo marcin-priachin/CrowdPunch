@@ -12,16 +12,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP78_05_Split_Side_Charges
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 128
+  totalEnemyCount: 112
+  linkedPairProfile: {fileID: 11400000, guid: f3bcb5bec215bcc4a959c7f89a788377, type: 2}
+  linkedPairCount: 2
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 120
+    MinimumCount: 99
     Weight: 0
   - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
     MinimumCount: 4
     Weight: 0
   - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
     MinimumCount: 4
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 70cfe8c4f0768b44dba38bfd006d389e, type: 2}
+    MinimumCount: 2
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 528fbf671369ae34abd3baf9fcec4c90, type: 2}
+    MinimumCount: 3
     Weight: 0
   eliteEnemies: []
   spawnRectangles:
@@ -31,14 +39,14 @@ MonoBehaviour:
   - Center: {x: 35.25, y: 2, z: -5}
     Width: 24
     Depth: 64
-  replenishWhileBossLives: 1
+  replenishWhileBossLives: 0
   bossReplenishDelay: 4
   delayBeforeWave: 3
   activationMode: 2
   duration: 0
-  spawnMode: 1
-  batchSize: 8
-  batchInterval: 2
+  spawnMode: 0
+  batchSize: 1
+  batchInterval: 3
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

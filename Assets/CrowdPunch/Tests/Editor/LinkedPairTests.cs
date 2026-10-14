@@ -171,9 +171,10 @@ namespace CrowdPunch.Tests
         [Test] public void Link006_SlackShortensFreelyAndOnlyExcessLengthAddsTension() {
             var system = world.GetOrCreateSystem<LinkedPairConstraintSystem>(); system.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
             Assert.That(em.GetComponentData<PhysicsVelocity>(a).Linear, Is.EqualTo(float3.zero));
-            em.SetComponentData(b, LocalTransform.FromPosition(new float3(12, 0, 0))); system.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            float stretchedX = tuning.MaximumLength + 2;
+            em.SetComponentData(b, LocalTransform.FromPosition(new float3(stretchedX, 0, 0))); system.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
             Assert.That(em.GetComponentData<PhysicsVelocity>(a).Linear.x, Is.GreaterThan(0)); Assert.That(em.GetComponentData<PhysicsVelocity>(b).Linear.x, Is.LessThan(0));
-            Assert.That(em.GetComponentData<LocalTransform>(a).Position.x, Is.EqualTo(-2)); Assert.That(em.GetComponentData<LocalTransform>(b).Position.x, Is.EqualTo(12));
+            Assert.That(em.GetComponentData<LocalTransform>(a).Position.x, Is.EqualTo(-2)); Assert.That(em.GetComponentData<LocalTransform>(b).Position.x, Is.EqualTo(stretchedX));
         }
         [Test] public void Link006_FlyingSnagRetainsPairAndDissipatesSpeed() {
             Launch(a); Wall(float3.zero); float before = math.length(em.GetComponentData<PhysicsVelocity>(a).Linear);

@@ -16,14 +16,14 @@ namespace CrowdPunch.Editor
     {
         private static readonly string[] ChapterSevenHints =
         {
-            "Break armor with launched bodies, then clear the distant shooters.",
+            "Launch the highlighted tail tip. Strip each segment, then attack the exposed head.",
             "Find the gate on the right. Land four hits, then reach the exit. The warning strips have safe bypasses.",
-            "Interrupt the Wizard and launch Trails across useful lanes. Keep a retreat route clear.",
+            "Revisit paired swings and Dragon cover reads alongside living hazards; preserve retreat space.",
             "Crack the shell with four explosions, then hit the exposed core. Keep Exploders out of the hot pockets.",
-            "Read each new approach. Disrupt the Elite, interrupt Wizards, and leave room to dodge charges.",
+            "Peak through changing mixtures: expose Snake tips while redirecting paired bodies and Dragon flame.",
             "A successful hit pauses the cover for one second. Use that opening to line up the next shot.",
-            "Move around the islands as the ground changes. Break armor and keep clear of committed charges.",
-            "Clear six large waves from changing directions. Keep the central cross clear and use the outer bypasses.",
+            "Keep clear angles to the Snake tip and Dragon as periodic safe lanes change.",
+            "Large crowd encounter: shift angles between linked swings, moving flame and sequential tail removal on safe ground.",
             "Drive the block straight down the rail with five forward hits.",
             "The Blob reflects from walls while rolling. Attack during its pause or wind-up, and watch the outer ground warnings."
         };
@@ -32,34 +32,34 @@ namespace CrowdPunch.Editor
         {
             new Level { Name="Stable Footing", Outline=new[]{new Vector2(-18,-17),new Vector2(18,-17),new Vector2(18,3),new Vector2(15,3),new Vector2(15,17),new Vector2(-15,17),new Vector2(-15,7),new Vector2(-18,7)},
                 Spacing=new Vector2(30,28), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                new Wave{Name="Steady Armor",B=12,A=1,Ranges=new[]{Range(-5,9,14,5)}},W("Far Shooters",16,new[]{Range(4,9,16,5)},r:2)} },
+                new Wave {Name="Steady Armor",B=6,Snake=1,Ranges=new[]{Range(-5,9,14,5)}},new Wave {Name="Far Shooters",B=10,Snake=1,Ranges=new[]{Range(4,9,16,5)}}} },
             new Level { Name="Side Door", Outline=new[]{new Vector2(-18,-22),new Vector2(18,-22),new Vector2(18,22),new Vector2(3,22),new Vector2(-8,16),new Vector2(-18,3)},
                 Spacing=new Vector2(30,38), Entry=new Vector2(0,-17), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Side Door Ammunition",14,new[]{Range(-12,-5,4,18),Range(13,-4,4,20)},x:2)} },
             new Level { Name="Draw a Line", Outline=Clipped(42,38,4), Spacing=new Vector2(36,32), Entry=new Vector2(0,-14), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                new Wave{Name="West Lines",B=16,Trail=2,Wizard=1,Ranges=new[]{Range(-15,1,4,22)}},
-                new Wave{Name="East Charges",B=20,D=2,Trail=2,Ranges=new[]{Range(15,1,4,22)}}} },
+                new Wave {Name="West Lines",B=13,Wizard=1,Trail=2,Dragon=1,LinkedPairs=1,Ranges=new[]{Range(-15,1,4,22)}},
+                new Wave {Name="East Charges",B=17,D=2,Trail=2,Dragon=1,LinkedPairs=1,Ranges=new[]{Range(15,1,4,22)}}} },
             new Level { Name="Shell Island", Outline=new[]{new Vector2(-19,-19),new Vector2(-4,-19),new Vector2(-4,-17),new Vector2(4,-17),new Vector2(4,-19),new Vector2(19,-19),new Vector2(19,-4),new Vector2(17,-4),new Vector2(17,4),new Vector2(19,4),new Vector2(19,19),new Vector2(4,19),new Vector2(4,17),new Vector2(-4,17),new Vector2(-4,19),new Vector2(-19,19),new Vector2(-19,4),new Vector2(-17,4),new Vector2(-17,-4),new Vector2(-19,-4)},
                 Spacing=new Vector2(32,32), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Island Fuses",14,new[]{Range(-11,0,4,16),Range(11,0,4,16)},x:2)} },
             new Level { Name="Three Approaches", Outline=new[]{new Vector2(-21,-14),new Vector2(-14,-21),new Vector2(14,-21),new Vector2(21,-14),new Vector2(21,12),new Vector2(10,21),new Vector2(-10,21),new Vector2(-21,12)},
                 Spacing=new Vector2(36,36), Entry=new Vector2(0,-16), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                new Wave{Name="North Armor",B=18,A=2,E=1,Ranges=new[]{Range(0,14,18,4)}},
-                new Wave{Name="West Casters",B=20,R=2,Wizard=2,Ranges=new[]{Range(-15,0,4,20)}},
-                new Wave{Name="East Trails",B=22,D=2,Trail=2,Ranges=new[]{Range(15,0,4,20)}}} },
+                new Wave {Name="North Armor",B=9,E=1,A=2,Snake=1,LinkedPairs=1,Ranges=new[]{Range(0,14,18,4)}},
+                new Wave {Name="West Casters",B=17,R=2,Wizard=2,Dragon=1,LinkedPairs=1,Ranges=new[]{Range(-15,0,4,20)}},
+                new Wave {Name="East Trails",B=14,D=2,Trail=2,Dragon=1,Snake=1,Ranges=new[]{Range(15,0,4,20)}}} },
             new Level { Name="Set the Pace", Outline=new[]{new Vector2(-19,-20),new Vector2(19,-20),new Vector2(19,10),new Vector2(12,20),new Vector2(-11,20),new Vector2(-19,12)},
                 Spacing=new Vector2(32,34), Entry=new Vector2(0,-15), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Pause Ammunition",12,new[]{Range(-13,-1,4,20),Range(13,0,4,22)},x:2)} },
             new Level { Name="Keep It Moving", Outline=Clipped(42,40,6), Spacing=new Vector2(36,34), Entry=new Vector2(0,-15), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("North Pressure",20,new[]{Range(0,14,24,4)},r:2,e:1),
-                new Wave{Name="East Armor",B=22,A=2,D=2,Ranges=new[]{Range(15,0,4,24)}}} },
+                new Wave {Name="North Pressure",B=19,R=2,E=1,Dragon=1,Ranges=new[]{Range(0,14,24,4)}},
+                new Wave {Name="East Armor",B=14,D=2,A=2,Dragon=1,Snake=1,Ranges=new[]{Range(15,0,4,24)}}} },
             new Level { Name="Shifting Front", Outline=Rectangle(100,100), Spacing=new Vector2(96,96), Entry=new Vector2(0,-16), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("North Front",64,new[]{Range(0,33,52,14)},r:4),
-                W("West Fuses",80,new[]{Range(-33,0,14,44)},x:6),
-                new Wave{Name="East Armor",B=88,A=4,E=2,Ranges=new[]{Range(33,0,14,44)}},
-                new Wave{Name="South Trails",B=96,D=4,Trail=2,Ranges=new[]{Range(0,-34,52,14)}},
-                new Wave{Name="Split Casters",B=112,R=4,Wizard=2,Ranges=new[]{Range(-33,0,14,40),Range(33,0,14,40)}},
-                new Wave{Name="Final Front",B=128,A=4,X=6,Ranges=new[]{Range(0,34,64,16)}}} },
+                new Wave {Name="North Front",B=60,R=4,LinkedPairs=2,Ranges=new[]{Range(0,33,52,14)}},
+                new Wave {Name="West Fuses",B=76,X=6,LinkedPairs=2,Ranges=new[]{Range(-33,0,14,44)}},
+                new Wave {Name="East Armor",B=82,E=2,A=4,Dragon=2,LinkedPairs=2,Ranges=new[]{Range(33,0,14,44)}},
+                new Wave {Name="South Trails",B=86,D=4,Trail=2,Dragon=1,Snake=1,LinkedPairs=1,Ranges=new[]{Range(0,-34,52,14)}},
+                new Wave {Name="Split Casters",B=100,R=4,Wizard=2,Dragon=3,Snake=1,LinkedPairs=1,Ranges=new[]{Range(-33,0,14,40),Range(33,0,14,40)}},
+                new Wave {Name="Final Front",B=105,X=6,A=4,Dragon=3,Snake=2,LinkedPairs=3,Ranges=new[]{Range(0,34,64,16)}}} },
             new Level { Name="Straighten Up", Outline=new[]{new Vector2(-18,-20),new Vector2(18,-20),new Vector2(18,-3),new Vector2(15,-3),new Vector2(15,3),new Vector2(18,3),new Vector2(18,20),new Vector2(-18,20),new Vector2(-18,3),new Vector2(-15,3),new Vector2(-15,-3),new Vector2(-18,-3)},
                 Spacing=new Vector2(30,34), Entry=new Vector2(0,-15), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Straight Ammunition",10,new[]{Range(-11,0,4,22),Range(11,0,4,22)},x:2)} }

@@ -12,15 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP52_01_West_Crossing
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 19
+  totalEnemyCount: 7
+  linkedPairProfile: {fileID: 0}
+  linkedPairCount: 0
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 16
+    MinimumCount: 6
     Weight: 0
-  - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
-    MinimumCount: 2
-    Weight: 0
-  - Settings: {fileID: 11400000, guid: d77e1bce1809e2c4789a96187f4905f6, type: 2}
+  - Settings: {fileID: 11400000, guid: a64a5e2d2fd377f4a8d6e1a4f6b6c603, type: 2}
     MinimumCount: 1
     Weight: 0
   eliteEnemies: []
@@ -28,14 +27,14 @@ MonoBehaviour:
   - Center: {x: -9.25, y: 2, z: 0}
     Width: 12
     Depth: 24
-  replenishWhileBossLives: 1
+  replenishWhileBossLives: 0
   bossReplenishDelay: 4
   delayBeforeWave: 3
   activationMode: 2
   duration: 0
-  spawnMode: 1
-  batchSize: 4
-  batchInterval: 1.5
+  spawnMode: 0
+  batchSize: 1
+  batchInterval: 3
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

@@ -245,7 +245,9 @@ namespace CrowdPunch.Tests
             using var blob = NavigationGridConstruction.Build(new float2(-10), new float2(10), .5f, new float3(.6f, 1, 1.8f), rectangles, Allocator.Persistent);
             em.SetComponentData(em.CreateEntity(typeof(NavigationGrid)), new NavigationGrid { Data = blob });
             em.SetComponentData(em.CreateEntity(typeof(ArenaBounds)), new ArenaBounds { Extents = new float3(10) });
-            var physics = new PhysicsWorld(0, 1, 0);
+            // This is static terrain. A dynamic body's broadphase would instead
+            // require matching MotionData for the offset WorldFromBody below.
+            var physics = new PhysicsWorld(1, 0, 0);
             using var box = Unity.Physics.BoxCollider.Create(new BoxGeometry { Size = new float3(.2f, .02f, .01f), Orientation = quaternion.identity }, CollisionFilter.Default);
             var bodies = physics.Bodies;
             bodies[0] = new RigidBody { Collider = box, Scale = 1,
