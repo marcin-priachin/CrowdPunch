@@ -55,6 +55,7 @@ namespace CrowdPunch.Editor
             importer.SaveAndReimport();
             foreach (string guid in AssetDatabase.FindAssets("t:Material", new[] { "Assets/CrowdPunch/Materials/Enemies" }))
                 Configure(AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid)));
+            EnemySnakePrefabBuilder.ApplyPalette();
             AssetDatabase.SaveAssets();
         }
     }

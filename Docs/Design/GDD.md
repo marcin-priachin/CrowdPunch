@@ -1479,13 +1479,13 @@ are delegated. Introduced periodic patches remain visible while inactive, with d
 inactive/warning/active appearances, a full-footprint pulsing warning and a brighter
 active state. Colors and effects are delegated; no additional HUD is required.
 
-## Snake Enemy (Agreed 2026-10-12, Revised 2026-10-13)
+## Snake Enemy (Agreed 2026-10-12, Revised 2026-10-15)
 
 ### SNAKE-001 - Pursuing Head And Physical Tail
 
 Status: Must
 
-A Yeti head continuously pursues the player outside ordinary crowd-pressure allocation. Attached spherical orbs follow its recent path with a sinusoidal sideways wave. Reduce the wave near blocking geometry and keep attached bodies in navigable space. Attached orbs collide with enemies but ordinary contact causes neither damage nor launches. Both head and attached orbs damage the player on contact through existing player protection.
+A Birb head continuously pursues the player outside ordinary crowd-pressure allocation. Attached spherical orbs follow its recent path with a sinusoidal sideways wave. Reduce the wave near blocking geometry and keep attached bodies in navigable space. Attached orbs collide with enemies but ordinary contact causes neither damage nor launches. Both head and attached orbs damage the player on contact through existing player protection.
 
 ### SNAKE-002 - Tail-Tip Launch Progression
 
@@ -1515,7 +1515,7 @@ Default LaunchAndSever: explosions can launch only the currently exposed tip in 
 
 Status: Must
 
-Use Models/UltimateMonsters/Blob/Yeti.fbx for the head. Within an attached snake, only the currently vulnerable tip receives ordinary aim assistance, can be targeted by aim assistance and shows the initial punch-direction preview when approached. The player cannot punch a tail part through its owner's head; an occluded part must also lose its aim lock and launch arrow until approached from a clear direction. When the tail is empty, eligibility transfers to the head. Give the vulnerable part a distinct color that moves with eligibility. Detached orbs retain their ordinary independent projectile/repunch rules and the same head obstruction. Tail silhouette, visible loss, color and existing combat feedback communicate the mechanic without dedicated UI. Expose both explosion modes, initial segment count, orb size, spacing, wave amplitude/frequency (with units), pursuit speed, contact damage, head health and protected/vulnerable colors. Numeric tuning and colors remain provisional; head health uses the spawn profile's Max Health.
+Use Models/UltimateMonsters/Blob/Birb.fbx for the head. Preserve its atlas face/eye/beak details; recolor its body and the protected tail segments consistently in Birb blue. The vulnerable tip is gold, and the head body changes to the same gold after the last attached segment is removed. Within an attached snake, only the currently vulnerable tip receives ordinary aim assistance, can be targeted by aim assistance and shows the initial punch-direction preview when approached. The player cannot punch a tail part through its owner's head; an occluded part must also lose its aim lock and launch arrow until approached from a clear direction. When the tail is empty, eligibility transfers to the head. Give the vulnerable part a distinct color that moves with eligibility. Detached orbs retain their ordinary independent projectile/repunch rules and the same head obstruction. Tail silhouette, visible loss, color and existing combat feedback communicate the mechanic without dedicated UI. Expose both explosion modes, initial segment count, orb size, spacing, wave amplitude/frequency (with units), pursuit speed, contact damage, head health and protected/vulnerable colors. Numeric tuning and colors remain provisional; head health uses the spawn profile's Max Health.
 
 ### SNAKE-007 - Legacy Gauntlet_24
 

@@ -416,7 +416,8 @@ namespace CrowdPunch.Tests
                 UnityEngine.Object.DestroyImmediate(root);
             }
         }
-        [Test] public void Snake006_OnlyTipUsesVulnerableColorThenHeadInheritsIt()
+        [TestCase(false)] [TestCase(true)]
+        public void Snake006_OnlyTipUsesVulnerableColorThenHeadInheritsIt(bool texturedHead)
         {
             var entities=new Entity[7]; entities[0]=head;
             for(int i=0;i<6;i++)entities[i+1]=orbs[i];
@@ -425,7 +426,8 @@ namespace CrowdPunch.Tests
             {
                 em.AddComponent<EnemyArchetype>(entities[i]);
                 visuals[i]=em.CreateEntity(typeof(EnemyVisualOwner),typeof(URPMaterialPropertyBaseColor));
-                em.SetComponentData(visuals[i],new EnemyVisualOwner {Value=entities[i]});
+                em.SetComponentData(visuals[i],new EnemyVisualOwner {Value=entities[i], UsesAtlas=(byte)(texturedHead && i==0?1:0)});
+                if(texturedHead && i==0) em.AddComponent<SnakeBodyColor>(visuals[i]);
             }
             var presentation=world.GetOrCreateSystem<EnemyReadabilitySystem>();
             var tuning=em.GetComponentData<SnakeTuning>(head);
@@ -436,10 +438,64 @@ namespace CrowdPunch.Tests
                 {
                     bool vulnerable=tip<0 ? i==0 : i==tip+1;
                     var expected=vulnerable?tuning.VulnerableColor:tuning.ProtectedColor;
+                    if(texturedHead && i==0)
+                    {
+                        var skin=em.GetComponentData<SnakeBodyColor>(visuals[i]).Value;
+                        Assert.That(math.distance(skin.xyz*1.15f,expected.xyz),Is.LessThan(.001f));
+                        expected=new float4(1.15f,1.15f,1.15f,1);
+                    }
                     Assert.That(math.distance(em.GetComponentData<URPMaterialPropertyBaseColor>(visuals[i]).Value,expected), Is.LessThan(.001f));
                 }
                 if(tip>=0) { Launch(orbs[tip]); Sever(); }
             }
+        }
+        [Test] public void Snake006_BirbSamplesRemainBakeableAndPrefabStartsInForwardIdle()
+        {
+            var root=UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemySnake.prefab");
+            try
+            {
+                var animator=root.GetComponentInChildren<UnityEngine.Animator>();
+                var renderer=root.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
+                var authoring=renderer.GetComponent<CrowdPunch.Authoring.EnemyAnimationAuthoring>();
+                using var reader=new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
+                Assert.That(reader.ReadInt32(),Is.EqualTo(0x43504133));
+                string currentHash=UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.runtimeAnimatorController)).ToString()
+                    + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(renderer.sharedMesh))
+                    + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.avatar));
+                Assert.That(reader.ReadString(),Is.EqualTo(currentHash),
+                    "Stale samples strip animation and the Snake body-color component from the baked renderer.");
+                int bones=reader.ReadInt32(); reader.ReadInt32();
+                for(int bone=0;bone<bones;bone++)reader.ReadString();
+                for(int motion=0;motion<EnemyAnimationSamples.MotionCount;motion++)reader.ReadSingle();
+                for(int bone=0;bone<bones;bone++)
+                {
+                    var saved=animator.transform.worldToLocalMatrix*renderer.bones[bone].localToWorldMatrix*renderer.sharedMesh.bindposes[bone];
+                    for(int column=0;column<4;column++)for(int row=0;row<3;row++)
+                        Assert.That(reader.ReadSingle(),Is.EqualTo(saved[row,column]).Within(.001f),
+                            "The saved Birb skeleton must face forward in Idle, rather than upwards in the last sampled Death frame.");
+                }
+            }
+            finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
+        }
+        [Test] public void Snake006_BirbUsesMaskedAtlasAndMatchingTailPalette()
+        {
+            var prefab=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>("Assets/CrowdPunch/Prefabs/EnemySnake.prefab");
+            Assert.That(prefab.transform.Find("Birb"),Is.Not.Null);
+            var visual=prefab.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
+            var material=visual.sharedMaterial;
+            Assert.That(UnityEditor.AssetDatabase.GetAssetPath(material.GetTexture("_ColorMap")),Is.EqualTo(CrowdPunch.Editor.EnemyAppearanceMaterials.AtlasPath));
+            Assert.That(material.GetFloat("_SkinColorAmount"),Is.EqualTo(1));
+            var mask=(UnityEngine.Texture2D)material.GetTexture("_SkinMaskTexture");
+            foreach(var uv in visual.sharedMesh.uv)
+            {
+                var pixel=mask.GetPixel(UnityEngine.Mathf.FloorToInt(uv.x*mask.width),UnityEngine.Mathf.FloorToInt(uv.y*mask.height));
+                bool blueBody=uv.x>.0625f && uv.x<.09375f;
+                Assert.That(pixel.r,Is.EqualTo(blueBody?0:1),"Only the blue body swatch should change; face details retain their atlas colors.");
+            }
+            var settings=UnityEditor.AssetDatabase.LoadAssetAtPath<CrowdPunch.Configuration.SnakeSettings>("Assets/CrowdPunch/Data/Settings/SnakeSettings.asset");
+            var tail=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Material>("Assets/CrowdPunch/Materials/Enemies/SnakeOrb.mat");
+            Assert.That(UnityEngine.Vector4.Distance(tail.GetColor("_BaseColor"),settings.protectedColor),Is.LessThan(.00001f));
+            Assert.That(settings.protectedColor,Is.Not.EqualTo(settings.vulnerableColor));
         }
         [Test] public void Snake002_MissingTipCannotStrandTheEncounter()
         {

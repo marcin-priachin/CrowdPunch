@@ -259,7 +259,7 @@ existing warnings; a later regenerated-project build stopped in
 ## Snake Enemy And Legacy Gauntlet_24 (SNAKE-001..007)
 
 `SnakeAuthoring`/`SnakeBaker` put `SnakeTuning`, `SnakeHead`, `SnakeTailLink` and
-`SnakePathPoint` on a normal-tier Yeti prefab. Its dedicated Baseline spawn profile
+`SnakePathPoint` on a normal-tier Birb prefab. Its dedicated Baseline spawn profile
 uses the existing wave pipeline. Only the head has `EnemyWaveOwnership`; each orb
 stores head/generation and encounter identity in `SnakeSegment` for cleanup, without
 joining defeat counts. No enemy entity queries or state enter player MonoBehaviours.
@@ -296,9 +296,23 @@ launch, recoil and previews, while player punch detection still confirms cooldow
 Attached-orb damage is ignored until detachment. Both explosion mode alternatives
 are baked from `Data/Settings/SnakeSettings.asset` and obey tip-only eligibility.
 `EnemyReadabilitySystem` applies that asset's gold vulnerable color only to the current
-tip, then to the head after tail exhaustion; other parts and detached orbs use cyan.
-Renderer-owned material components handle both orb MeshRenderers and Yeti skinning
+tip, then to the head after tail exhaustion; other parts and detached orbs use Birb blue.
+Renderer-owned material components handle both orb MeshRenderers and Birb skinning
 without allocating materials or adding enemy GameObjects/HUD indicators.
+
+The October 15 Birb replacement uses `Models/UltimateMonsters/Blob/Birb.fbx` with
+resampled Idle/Walk/Death animations and its supplied atlas. A generated 32 x 32
+`BirbBodyMask` keeps face/eye/beak pixels and recolors only the blue body swatch.
+The Snake builder imports its saved controller before recording sample dependency
+hashes and restores Idle after sampling, so baking retains playback/color hooks
+and the saved head faces forward rather than inheriting the terminal Death pose.
+The shared skinning graph's existing `_SkinColor` property is DOTS-instanced;
+`SnakeBodyColor` lives only on Snake head render entities and is baked alongside
+`EnemyVisualOwner`. `EnemyReadabilitySystem` writes the protected blue or exposed
+gold skin color while retaining a neutral atlas multiplier. Primitive tail renderers
+use the same linear-space settings colors directly. Rebuild Snake Prefab and Apply
+Monster Atlas both restore the mask and matching tail material. No new health,
+movement, collision, tail-count or damage rules are introduced.
 
 `SnakeContactSystem` disables original-snake contacts for attached or unbounced
 detached orbs, including detached siblings of the same head/generation. A bounced orb

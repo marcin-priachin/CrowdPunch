@@ -454,6 +454,7 @@ namespace CrowdPunch.Tests
         [Test]
         [TestCase(EnemyAnimationProfile.Baseline)]
         [TestCase(EnemyAnimationProfile.Wizard)]
+        [TestCase(EnemyAnimationProfile.Ninja)]
         public void Info004CenteredLaunchAndRecoveryPreserveBodyHeight(EnemyAnimationProfile profile)
         {
             var em = world.EntityManager;
@@ -471,6 +472,72 @@ namespace CrowdPunch.Tests
             Tick(.25f);
             Assert.That(Pose.z, Is.EqualTo(0f).Within(.001f), "The offset disappears when upright.");
             Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [Test]
+        [TestCase("EnemyLinkedPair")]
+        [TestCase("EnemyNinja")]
+        public void Info004CenteredPrefabFlightAndRecoveryClearTheFloor(string prefab)
+        {
+            var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/" + prefab + ".prefab");
+            try
+            {
+                var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                var collider = root.GetComponent<UnityEngine.CapsuleCollider>();
+                float floor = collider.center.y - collider.height * .5f;
+                float minimum = float.MaxValue;
+                foreach (var authoring in root.GetComponentsInChildren<CrowdPunch.Authoring.EnemyAnimationAuthoring>())
+                {
+                    Assert.That(authoring.RotateLaunchAroundOwner, Is.True);
+                    var pivot = animator.transform.InverseTransformPoint(root.transform.position
+                        + root.transform.up * authoring.LaunchPivotHeight);
+                    var renderer = authoring.GetComponent<UnityEngine.SkinnedMeshRenderer>();
+                    using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
+                    reader.ReadInt32(); reader.ReadString();
+                    int bones = reader.ReadInt32(), frames = reader.ReadInt32();
+                    for (int bone = 0; bone < bones; bone++) reader.ReadString();
+                    for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++) reader.ReadSingle();
+                    var renderBounds = renderer.localBounds;
+                    var toOwner = root.transform.worldToLocalMatrix * animator.transform.localToWorldMatrix;
+                    bool boundsValid = true;
+                    long start = reader.BaseStream.Position;
+                    var vertices = renderer.sharedMesh.vertices;
+                    var weights = renderer.sharedMesh.boneWeights;
+                    var matrices = new UnityEngine.Matrix4x4[bones];
+                    foreach (int motion in new[] { 0, EnemyAnimationSamples.FlyingMotion })
+                    {
+                        reader.BaseStream.Position = start + motion * frames * bones * 48L;
+                        for (int frame = 0; frame < frames; frame++)
+                        {
+                            for (int bone = 0; bone < bones; bone++)
+                            {
+                                matrices[bone] = UnityEngine.Matrix4x4.identity;
+                                for (int column = 0; column < 4; column++)
+                                    for (int row = 0; row < 3; row++) matrices[bone][row, column] = reader.ReadSingle();
+                            }
+                            for (int angle = 0; angle < 25; angle++)
+                            {
+                                var rotation = UnityEngine.Quaternion.Euler(-118.65f * angle / 24f, 0, 0);
+                                for (int index = 0; index < vertices.Length; index++)
+                                {
+                                    var w = weights[index]; var v = vertices[index];
+                                    var point = matrices[w.boneIndex0].MultiplyPoint3x4(v) * w.weight0
+                                        + matrices[w.boneIndex1].MultiplyPoint3x4(v) * w.weight1
+                                        + matrices[w.boneIndex2].MultiplyPoint3x4(v) * w.weight2
+                                        + matrices[w.boneIndex3].MultiplyPoint3x4(v) * w.weight3;
+                                    point = pivot + rotation * (point - pivot);
+                                    boundsValid &= renderBounds.Contains(point);
+                                    minimum = UnityEngine.Mathf.Min(minimum,
+                                        toOwner.MultiplyPoint3x4(point).y);
+                                }
+                            }
+                        }
+                    }
+                    Assert.That(boundsValid, Is.True, "Culling bounds must cover the centered turn.");
+                }
+                Assert.That(minimum, Is.GreaterThanOrEqualTo(floor + .01f), "Every launch/recovery pose must clear the physics floor.");
+            }
+            finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
         }
 
         [Test]

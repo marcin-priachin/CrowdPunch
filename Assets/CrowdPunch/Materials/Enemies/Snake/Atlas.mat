@@ -20,7 +20,7 @@ Material:
   stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
-  m_LockedProperties:
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -41,7 +41,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SkinMaskTexture:
-        m_Texture: {fileID: 2800000, guid: 7fa654420cbe02f4090af7728ca0115b, type: 3}
+        m_Texture: {fileID: 2800000, guid: 84050f6623da2404ea9b672f4ab3c162, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -63,14 +63,15 @@ Material:
     - _ComputeMeshIndex: 0
     - _DarkAmount: 0
     - _DirtAmount: 0
+    - _ExploderPulse: 0
     - _EyelinerAmount: 0
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _SkinColorAmount: 0
+    - _SkinColorAmount: 1
     m_Colors:
     - _BaseColor: {r: 1.15, g: 1.15, b: 1.15, a: 1}
     - _DirtColor: {r: 0, g: 0, b: 0, a: 0}
-    - _SkinColor: {r: 0, g: 0, b: 0, a: 0}
+    - _SkinColor: {r: 0.030957665, g: 0.08890587, b: 0.26520643, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &5258847599399056965
@@ -83,7 +84,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Editor::UnityEditor.Rendering.Universal.AssetVersion
   version: 10
 --- !u!114 &6821723553258366239
@@ -96,6 +97,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.ShaderGraph.Editor::UnityEditor.Rendering.BuiltIn.AssetVersion
   version: 0

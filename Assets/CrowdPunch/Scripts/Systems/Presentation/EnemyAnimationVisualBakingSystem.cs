@@ -36,6 +36,8 @@ namespace CrowdPunch.Systems.Presentation
                     {
                         commands.AddComponent<EnemyVisualDeformation>(entity);
                         commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner, UsesAtlas = 1 });
+                        if (SystemAPI.HasComponent<SnakeHead>(animation.ValueRO.Owner))
+                            commands.AddComponent(entity, new SnakeBodyColor { Value = new float4(1f) });
                     }
                     commands.AddComponent(entity, new URPMaterialPropertyBaseColor { Value = new float4(1f) });
                 }

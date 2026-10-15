@@ -1,5 +1,43 @@
 # Snake Enemy Validation - 2026-10-13
 
+## Birb appearance update - 2026-10-15
+
+SNAKE-001/006 now use `Models/UltimateMonsters/Blob/Birb.fbx`. The saved Snake
+prefab, controller and sampled animation data are rebuilt for Birb. Physics,
+health, pursuit speed, six-segment tails and campaign/legacy wiring are retained.
+The obsolete unreferenced Yeti animation samples are removed.
+
+Birb's atlas body swatch and the tail use matching blue, stored in linear space
+in SnakeSettings. The existing gold weak-point color moves from the exposed tip
+to the head after tail exhaustion. A generated body-only mask and DOTS-instanced
+`SnakeBodyColor` retain white face details and the red beak in both states.
+Applying the shared monster atlas or rebuilding Snake restores this material setup.
+
+Verification: all 35 Snake EditMode cases pass, including both primitive/textured
+color progression through all six tips and the exposed head, atlas mask coverage,
+saved Birb prefab/material references and matching tail colors. Unity compilation
+passes. A serial `dotnet build Assembly-CSharp.csproj --no-restore -m:1` passes
+with zero errors and existing package warnings.
+
+Follow-up fixed two issues missed by the initial isolated preview: the builder
+saved the terminal Death skeleton, which pointed the beak upwards, and recorded
+the controller dependency hash before its import completed. That stale hash made
+the animation baker reject playback, also omitting the renderer's color hook.
+The builder now imports the saved controller synchronously before sampling and
+restores forward-facing Idle before saving the prefab. A regression checks the
+saved sample hash and Idle skeleton against the assets used by baking.
+
+A fresh campaign level 61 run confirms one animated Birb head, six orb bodies
+and the renderer-owned SnakeBodyColor component. The beak faces forward in the
+game view. Six sequential injected tip launches, each followed by an ordinary
+game frame, reduce AttachedCount from six to zero. The normal severing and
+presentation updates keep the protected head blue and switch its body to gold
+after the final cut, preserving face/eye/beak details. No presentation or severing
+system was manually updated for this check. The live Unity Console has zero
+errors/warnings. This is controlled integration verification, not a balance playtest.
+
+The following sections record the earlier Yeti implementation and historical tuning.
+
 Implementation: SNAKE-001..007; PLAYER-003/004/005/009; COMBAT-001/003/004/010/011/012/014/015; LOOP-002.
 
 Playable through **Window > Crowd Punch > Level Play > Legacy > 24 Cut The Tail**.

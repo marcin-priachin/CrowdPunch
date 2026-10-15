@@ -12,7 +12,7 @@ namespace CrowdPunch.Editor
 {
     public static class EnemySnakePrefabBuilder
     {
-        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Blob/Yeti.fbx";
+        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Blob/Birb.fbx";
         private const string PrefabPath = "Assets/CrowdPunch/Prefabs/EnemySnake.prefab";
         private const string ControllerPath = "Assets/CrowdPunch/Animation/EnemySnake.controller";
         private const string SettingsPath = "Assets/CrowdPunch/Data/Settings/Enemies/SnakeEnemySpawnSettings.asset";
@@ -28,7 +28,7 @@ namespace CrowdPunch.Editor
             ConfigureAnimationImport();
 
             GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath);
-            if (model == null) throw new InvalidOperationException($"Missing baseline model: {ModelPath}");
+            if (model == null) throw new InvalidOperationException($"Missing Snake model: {ModelPath}");
             AnimationClip idle = FindClip("Idle");
             AnimationClip walk = FindClip("Walk");
             AnimationClip death = FindClip("Death");
@@ -42,7 +42,7 @@ namespace CrowdPunch.Editor
                 root.AddComponent<EnemyAuthoring>();
                 var snake = root.AddComponent<SnakeAuthoring>(); snake.settings = AssetDatabase.LoadAssetAtPath<SnakeSettings>("Assets/CrowdPunch/Data/Settings/SnakeSettings.asset"); snake.orbPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/CrowdPunch/Prefabs/SnakeOrb.prefab");
                 GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
-                visual.name = "Yeti";
+                visual.name = "Birb";
                 visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
                 visual.transform.localScale = Vector3.one;
                 SetLayerRecursively(visual, 7);
@@ -55,7 +55,7 @@ namespace CrowdPunch.Editor
 
                 SkinnedMeshRenderer[] renderers = visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
                 if (renderers.Length == 0)
-                    throw new InvalidOperationException("Yeti.fbx contains no skinned renderers.");
+                    throw new InvalidOperationException("Birb.fbx contains no skinned renderers.");
                 FitVisualToEnemy(root.transform, visual.transform, renderers);
                 for (int index = 0; index < renderers.Length; index++)
                 {
@@ -71,6 +71,9 @@ namespace CrowdPunch.Editor
                     authoring.BlendResponse = 12f;
                     authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samplesPath);
                 }
+                // Sampling ends in Death. Save the forward-facing Idle skeleton so
+                // initial rendering and baking never inherit the terminal pose.
+                idle.SampleAnimation(animator.gameObject, 0f);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -79,9 +82,10 @@ namespace CrowdPunch.Editor
             }
 
             AssignSpawnSettings();
+            ApplyPalette();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Created {PrefabPath} from Yeti.fbx and assigned it to {SettingsPath}.");
+            Debug.Log($"Created {PrefabPath} from Birb.fbx and assigned it to {SettingsPath}.");
         }
 
         private static void ConfigureAnimationImport()
@@ -109,7 +113,7 @@ namespace CrowdPunch.Editor
             if (clip != null) return clip;
             string available = string.Join(", ", AssetDatabase.LoadAllAssetsAtPath(ModelPath)
                 .OfType<AnimationClip>().Select(candidate => candidate.name));
-            throw new InvalidOperationException($"Yeti.fbx has no animation named '{name}'. Available: {available}");
+            throw new InvalidOperationException($"Birb.fbx has no animation named '{name}'. Available: {available}");
         }
 
         private static bool MatchesClipName(string candidate, string requested) =>
@@ -129,6 +133,10 @@ namespace CrowdPunch.Editor
             machine.AddState("Death").motion = death;
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
+            // SaveAssets writes the controller before its dependency hash is
+            // refreshed. Baking validates this hash, so import before sampling.
+            AssetDatabase.ImportAsset(ControllerPath,
+                ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
             return controller;
         }
 
@@ -140,7 +148,7 @@ namespace CrowdPunch.Editor
             for (int index = 0; index < sources.Length; index++)
             {
                 Material source = sources[index];
-                string name = string.IsNullOrWhiteSpace(source?.name) ? $"Yeti_{index}" : source.name;
+                string name = string.IsNullOrWhiteSpace(source?.name) ? $"Birb_{index}" : source.name;
                 string path = $"{MaterialFolder}/{SafeName(name)}.mat";
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null)
@@ -157,12 +165,55 @@ namespace CrowdPunch.Editor
                 if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
                 if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
                 EnemyAppearanceMaterials.Configure(material);
+                ConfigurePaletteMaterial(material);
                 material.enableInstancing = true;
                 EditorUtility.SetDirty(material);
                 results[index] = material;
             }
             AssetDatabase.SaveAssets();
             return results;
+        }
+
+        public static void ApplyPalette()
+        {
+            foreach (string guid in AssetDatabase.FindAssets("t:Material", new[] { MaterialFolder }))
+                ConfigurePaletteMaterial(AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid)));
+            var settings = AssetDatabase.LoadAssetAtPath<SnakeSettings>("Assets/CrowdPunch/Data/Settings/SnakeSettings.asset");
+            var orb = AssetDatabase.LoadAssetAtPath<Material>("Assets/CrowdPunch/Materials/Enemies/SnakeOrb.mat");
+            if (orb != null && settings != null)
+            {
+                orb.SetColor("_BaseColor", settings.protectedColor);
+                orb.SetFloat("_Smoothness", .25f);
+                EditorUtility.SetDirty(orb);
+            }
+        }
+
+        private static void ConfigurePaletteMaterial(Material material)
+        {
+            // Birb's blue body occupies one atlas swatch. Mask only that swatch;
+            // the face, eyes and beak keep their authored colors in both states.
+            const string maskPath = MaterialFolder + "/BirbBodyMask.asset";
+            var mask = AssetDatabase.LoadAssetAtPath<Texture2D>(maskPath);
+            if (mask == null)
+            {
+                mask = new Texture2D(32, 32, TextureFormat.RGBA32, false, true) {
+                    name = "BirbBodyMask", filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp
+                };
+                AssetDatabase.CreateAsset(mask, maskPath);
+            }
+            // The existing skin blend keeps atlas pixels under white and
+            // substitutes _SkinColor under black.
+            mask.SetPixels(Enumerable.Repeat(Color.white, 32 * 32).ToArray());
+            mask.SetPixel(2, 30, Color.black);
+            mask.Apply();
+            EditorUtility.SetDirty(mask);
+            material.SetTexture("_SkinMaskTexture", mask);
+            material.SetFloat("_SkinColorAmount", 1);
+            var settings = AssetDatabase.LoadAssetAtPath<SnakeSettings>("Assets/CrowdPunch/Data/Settings/SnakeSettings.asset");
+            Color body = settings.protectedColor / 1.15f;
+            body.a = 1;
+            material.SetColor("_SkinColor", body);
+            EditorUtility.SetDirty(material);
         }
 
         private static void WriteSamples(string path, Animator animator, SkinnedMeshRenderer renderer,
@@ -235,7 +286,7 @@ namespace CrowdPunch.Editor
             Bounds bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
             float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Yeti renderers have empty bounds.");
+            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Birb renderers have empty bounds.");
             visual.localScale *= 2.5f / largest;
             bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
@@ -259,7 +310,7 @@ namespace CrowdPunch.Editor
         {
             EnemySpawnSettings settings = AssetDatabase.LoadAssetAtPath<EnemySpawnSettings>(SettingsPath);
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
-            if (settings == null || prefab == null) throw new InvalidOperationException("Could not load baseline settings or prefab.");
+            if (settings == null || prefab == null) throw new InvalidOperationException("Could not load Snake settings or prefab.");
             var serialized = new SerializedObject(settings);
             serialized.FindProperty("enemyPrefab").objectReferenceValue = prefab;
             serialized.ApplyModifiedPropertiesWithoutUndo();

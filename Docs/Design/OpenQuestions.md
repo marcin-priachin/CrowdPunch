@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-14
+Last updated: 2026-10-15
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -65,6 +65,15 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-15 - Birb Snake Head And Matching Tail Palette
+
+Decision: Replace the textured Yeti head with `Models/UltimateMonsters/Blob/Birb.fbx`.
+Preserve its atlas face details, match protected head/tail bodies to Birb blue and
+retain gold on the exposed tip. When the final segment detaches, the head body
+changes to that same gold while its face details stay textured. SNAKE-001/006 record
+the model and presentation amendment; all protection, severing and lifecycle rules
+remain unchanged. Exact colors and materials are delegated to this implementation.
 
 ### 2026-10-14 - Final Encounter
 

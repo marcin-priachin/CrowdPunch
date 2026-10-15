@@ -14,7 +14,7 @@ namespace CrowdPunch.Configuration
         [Min(0), Tooltip("Oscillation cycles per second.")] public float waveFrequencyHz = .7f;
         [Min(0)] public float pursuitSpeed = 3.1f;
         [Range(0, 1), Tooltip("Fraction of maximum player health, using shared contact protection.")] public float contactDamagePercent = .08f;
-        public Color protectedColor = new Color(.3f, .8f, .95f, 1);
-        public Color vulnerableColor = new Color(1, .65f, .08f, 1);
+        public Color protectedColor = new Color(53f / 255f, 90f / 255f, 150f / 255f, 1).linear;
+        public Color vulnerableColor = new Color(1, .65f, .08f, 1).linear;
     }
 }

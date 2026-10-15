@@ -75,9 +75,12 @@ namespace CrowdPunch.Editor
                     EnemyAnimationAuthoring authoring = renderer.GetComponent<EnemyAnimationAuthoring>();
                     if (authoring == null) authoring = renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
                     authoring.Profile = EnemyAnimationProfile.Baseline;
+                    authoring.RotateLaunchAroundOwner = true;
+                    authoring.LaunchPivotHeight = .6f;
                     authoring.BlendResponse = 12f;
                     authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samplesPath);
                 }
+                idle.SampleAnimation(animator.gameObject, 0f);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -211,8 +214,12 @@ namespace CrowdPunch.Editor
                             + matrices[poseStart + weight.boneIndex3].MultiplyPoint3x4(source) * weight.weight3;
                         if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
                         else bounds.Encapsulate(position);
-                        if (motion == EnemyAnimationSamples.FlyingMotion)
-                            bounds.Encapsulate(Quaternion.Euler(-90f, 0f, 0f) * position);
+                        if (motion == 0 || motion == EnemyAnimationSamples.FlyingMotion)
+                        {
+                            Vector3 pivot = animator.transform.InverseTransformPoint(animator.transform.parent.position + Vector3.up * .6f);
+                            // Cover the centered launch pitch and the full recovery turn.
+                            bounds.Encapsulate(new Bounds(pivot, Vector3.one * (position - pivot).magnitude * 2f));
+                        }
                     }
                 }
             }
@@ -247,6 +254,7 @@ namespace CrowdPunch.Editor
             bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
             visual.localPosition -= enemy.InverseTransformPoint(bounds.center);
+            visual.localPosition += Vector3.up * .05f;
         }
 
         private static void ConfigurePhysics(GameObject root)

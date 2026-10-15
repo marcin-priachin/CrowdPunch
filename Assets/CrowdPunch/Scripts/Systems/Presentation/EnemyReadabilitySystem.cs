@@ -32,6 +32,27 @@ namespace CrowdPunch.Systems.Presentation
                 Dashers = SystemAPI.GetComponentLookup<DasherState>(true),
                 Time = (float)SystemAPI.Time.ElapsedTime
             }.ScheduleParallel(state.Dependency);
+            state.Dependency = new SnakeBodyColorJob {
+                Heads = SystemAPI.GetComponentLookup<SnakeHead>(true),
+                Tunings = SystemAPI.GetComponentLookup<SnakeTuning>(true)
+            }.ScheduleParallel(state.Dependency);
+        }
+
+        [BurstCompile]
+        private partial struct SnakeBodyColorJob : IJobEntity
+        {
+            [ReadOnly] public ComponentLookup<SnakeHead> Heads;
+            [ReadOnly] public ComponentLookup<SnakeTuning> Tunings;
+
+            private void Execute(in EnemyVisualOwner owner, ref SnakeBodyColor color)
+            {
+                if (!Heads.HasComponent(owner.Value) || !Tunings.HasComponent(owner.Value)) return;
+                var tuning = Tunings[owner.Value];
+                var body = SnakeHitRules.Protected(Heads[owner.Value]) ? tuning.ProtectedColor : tuning.VulnerableColor;
+                // Atlas bodies use the shared 1.15 brightness multiplier. Match
+                // the untextured tail while recoloring only the masked body.
+                color.Value = new float4(body.xyz / 1.15f, 1);
+            }
         }
 
         [BurstCompile]
@@ -80,7 +101,7 @@ namespace CrowdPunch.Systems.Presentation
                     bool vulnerable = SnakeHeads.HasComponent(enemy) ? !SnakeHitRules.Protected(SnakeHeads[enemy])
                         : SnakeHeads.HasComponent(snake) && SnakeHitRules.IsTip(SnakeSegments[enemy], SnakeHeads[snake]);
                     body = vulnerable ? tuning.VulnerableColor.xyz : tuning.ProtectedColor.xyz;
-                    if (owner.UsesAtlas != 0) body = math.lerp(new float3(1.15f), body, .4f);
+                    if (owner.UsesAtlas != 0) body = new float3(1.15f);
                 }
                 EnemyLaunchPhase phase = Launches[enemy].Phase;
                 bool preparing = kind == EnemyArchetypeKind.Baseline && Contacts.HasComponent(enemy)
