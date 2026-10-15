@@ -107,15 +107,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.1080568
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.1080568
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.1080568
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
       propertyPath: m_LocalPosition.x
@@ -156,6 +156,10 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8366358690053156200, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
       propertyPath: m_Layer
@@ -382,6 +386,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 6dd47dd785c96024a9ab1328d52cbc04, type: 3}
   Profile: 2
+  RotateLaunchAroundOwner: 0
+  LaunchPivotHeight: 0
   BlendResponse: 12
 --- !u!1 &5156552875605100256 stripped
 GameObject:
@@ -402,6 +408,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 69af4bf22e01f6c408e5b4b91847f353, type: 3}
   Profile: 2
+  RotateLaunchAroundOwner: 0
+  LaunchPivotHeight: 0
   BlendResponse: 12
 --- !u!4 &7002792746288101324 stripped
 Transform:
