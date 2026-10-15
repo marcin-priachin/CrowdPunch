@@ -61,7 +61,7 @@ namespace CrowdPunch.Editor
                 if (renderers.Length != 1)
                     throw new InvalidOperationException($"Armabee.fbx must contain exactly one skinned renderer; found {renderers.Length}.");
                 SkinnedMeshRenderer renderer = renderers[0];
-                FitVisualToEnemy(root.transform, visual.transform, renderer);
+                FitVisualToEnemy(root.transform, visual.transform, renderer, idle, movement);
                 renderer.quality = SkinQuality.Bone4;
                 renderer.rootBone = animator.transform;
                 renderer.sharedMaterials = BuildMaterials(renderer.sharedMaterials);
@@ -73,6 +73,7 @@ namespace CrowdPunch.Editor
 
                 WriteSamples(animator, renderer, idle, movement, death);
                 authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(SamplesPath);
+                idle.SampleAnimation(animator.gameObject, 0f);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -326,17 +327,43 @@ namespace CrowdPunch.Editor
             EditorUtility.SetDirty(feedback);
         }
 
-        private static void FitVisualToEnemy(Transform enemy, Transform visual, SkinnedMeshRenderer renderer)
+        private static void FitVisualToEnemy(Transform enemy, Transform visual, SkinnedMeshRenderer renderer,
+            AnimationClip idle, AnimationClip movement)
         {
-            Bounds bounds = renderer.bounds;
-            float largestDimension = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            if (largestDimension <= Mathf.Epsilon)
-                throw new InvalidOperationException("Dragon renderer has empty bounds.");
-            const float targetLargestDimension = 2.5f;
-            visual.localScale *= targetLargestDimension / largestDimension;
-            bounds = renderer.bounds;
-            Vector3 centerInEnemy = enemy.InverseTransformPoint(bounds.center);
-            visual.localPosition -= centerInEnemy;
+            var vertices = renderer.sharedMesh.vertices;
+            var weights = renderer.sharedMesh.boneWeights;
+            var bindposes = renderer.sharedMesh.bindposes;
+            var matrices = new Matrix4x4[renderer.bones.Length];
+            Bounds bounds = default;
+            bool hasBounds = false;
+            foreach (var clip in new[] { idle, movement })
+                for (int frame = 0; frame < FrameCount; frame++)
+                {
+                    clip.SampleAnimation(visual.gameObject, clip.length * frame / FrameCount);
+                    var inverse = visual.worldToLocalMatrix;
+                    for (int bone = 0; bone < matrices.Length; bone++)
+                        matrices[bone] = inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
+                    for (int index = 0; index < vertices.Length; index++)
+                    {
+                        var weight = weights[index];
+                        var point = vertices[index];
+                        var position = matrices[weight.boneIndex0].MultiplyPoint3x4(point) * weight.weight0
+                            + matrices[weight.boneIndex1].MultiplyPoint3x4(point) * weight.weight1
+                            + matrices[weight.boneIndex2].MultiplyPoint3x4(point) * weight.weight2
+                            + matrices[weight.boneIndex3].MultiplyPoint3x4(point) * weight.weight3;
+                        if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
+                        else bounds.Encapsulate(position);
+                    }
+                }
+            float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Armabee animation has empty bounds.");
+            float scale = 2.5f / largest;
+            visual.localScale = Vector3.one * scale;
+            // Keep the entire active wing cycle above the owner's origin with a small hover gap.
+            // Centering the imported bind pose placed the animated body below that origin.
+            visual.localPosition = new Vector3(-bounds.center.x * scale, .2f - bounds.min.y * scale,
+                -bounds.center.z * scale);
+            idle.SampleAnimation(visual.gameObject, 0f);
         }
 
         private static void AssignSpawnSettings()

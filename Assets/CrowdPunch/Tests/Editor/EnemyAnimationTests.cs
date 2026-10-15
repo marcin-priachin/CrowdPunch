@@ -412,6 +412,46 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Info004DasherActiveAnimationKeepsHoverClearance()
+        {
+            var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemyDasher.prefab");
+            try
+            {
+                var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                var renderer = root.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
+                var authoring = renderer.GetComponent<CrowdPunch.Authoring.EnemyAnimationAuthoring>();
+                using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
+                reader.ReadInt32(); reader.ReadString();
+                int bones = reader.ReadInt32(), frames = reader.ReadInt32();
+                for (int bone = 0; bone < bones; bone++) reader.ReadString();
+                for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++) reader.ReadSingle();
+                var matrices = new UnityEngine.Matrix4x4[bones];
+                var vertices = renderer.sharedMesh.vertices;
+                var weights = renderer.sharedMesh.boneWeights;
+                for (int pose = 0; pose < frames * 2; pose++)
+                {
+                    for (int bone = 0; bone < bones; bone++)
+                    {
+                        matrices[bone] = UnityEngine.Matrix4x4.identity;
+                        for (int column = 0; column < 4; column++)
+                            for (int row = 0; row < 3; row++) matrices[bone][row, column] = reader.ReadSingle();
+                    }
+                    for (int index = 0; index < vertices.Length; index++)
+                    {
+                        var weight = weights[index]; var point = vertices[index];
+                        var position = matrices[weight.boneIndex0].MultiplyPoint3x4(point) * weight.weight0
+                            + matrices[weight.boneIndex1].MultiplyPoint3x4(point) * weight.weight1
+                            + matrices[weight.boneIndex2].MultiplyPoint3x4(point) * weight.weight2
+                            + matrices[weight.boneIndex3].MultiplyPoint3x4(point) * weight.weight3;
+                        position = root.transform.InverseTransformPoint(animator.transform.TransformPoint(position));
+                        Assert.That(position.y, Is.GreaterThanOrEqualTo(.199f), "Every active flight frame must clear the owner's origin.");
+                    }
+                }
+            }
+            finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        [Test]
         public void Info004DestroyedOwnerDoesNotLeaveAStaleLookup()
         {
             world.EntityManager.DestroyEntity(owner);
