@@ -27,6 +27,7 @@ namespace CrowdPunch.Systems.Presentation
                 Velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
                 Dashers = SystemAPI.GetComponentLookup<DasherState>(true),
+                Exploders = SystemAPI.GetComponentLookup<ExplosiveEnemyState>(true),
                 Time = (float)SystemAPI.Time.ElapsedTime,
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel();
@@ -39,6 +40,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<PhysicsVelocity> Velocities;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
             [ReadOnly] public ComponentLookup<DasherState> Dashers;
+            [ReadOnly] public ComponentLookup<ExplosiveEnemyState> Exploders;
             public float Time, DeltaTime;
             private void Execute(in EnemyVisualOwner owner, ref EnemyVisualDeformation visual,
                 ref LocalToWorld world, ref URPMaterialPropertyBaseColor color)
@@ -76,6 +78,12 @@ namespace CrowdPunch.Systems.Presentation
                     else if (phase == EnemyLaunchPhase.Recovering)
                         squash = .14f * math.exp(-visual.PhaseAge * 7f) * math.cos(visual.PhaseAge * 20f);
                     var localAccent = float3x3.Scale(new float3(1f + squash * .5f, 1f - squash, 1f + squash * .5f));
+                    if (Exploders.HasComponent(owner.Value) && phase != EnemyLaunchPhase.Defeated)
+                    {
+                        // A steady pressure pulse identifies the explosive body; it is not a fuse countdown.
+                        float pulse = .5f + .5f * math.sin(Time * 5.2359878f);
+                        localAccent *= 1f + .065f * pulse * pulse;
+                    }
                     var basis = math.mul(new float3x3(original.c0.xyz, original.c1.xyz, original.c2.xyz), localAccent);
                     original.c0.xyz = basis.c0; original.c1.xyz = basis.c1; original.c2.xyz = basis.c2;
                 }

@@ -373,6 +373,45 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Info004ExploderPrefabAndSamplesPreserveUprightIdle()
+        {
+            var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemyExplosive.prefab");
+            try
+            {
+                var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                foreach (var authoring in root.GetComponentsInChildren<CrowdPunch.Authoring.EnemyAnimationAuthoring>())
+                {
+                    var renderer = authoring.GetComponent<UnityEngine.SkinnedMeshRenderer>();
+                    Assert.That(renderer.name, Does.StartWith("Green_Blob"), "The Exploder uses the smooth blob silhouette.");
+                    Assert.That(renderer.sharedMaterial.GetFloat("_ExploderPulse"), Is.GreaterThan(0));
+                    Assert.That(renderer.localBounds.center.magnitude, Is.LessThan(4f),
+                        "The eye's visibility bounds must stay on the blob, not inherit the FBX scale twice.");
+                    Assert.That(renderer.localBounds.extents.magnitude, Is.LessThan(5f));
+                    Assert.That(authoring.Profile, Is.EqualTo(EnemyAnimationProfile.Explosive));
+                    using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
+                    Assert.That(reader.ReadInt32(), Is.EqualTo(0x43504133));
+                    string currentHash = UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.runtimeAnimatorController)).ToString()
+                        + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(renderer.sharedMesh))
+                        + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.avatar));
+                    Assert.That(reader.ReadString(), Is.EqualTo(currentHash), "Stale samples prevent the animation baker from attaching playback.");
+                    int bones = reader.ReadInt32();
+                    reader.ReadInt32();
+                    for (int bone = 0; bone < bones; bone++) reader.ReadString();
+                    for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++) reader.ReadSingle();
+                    for (int bone = 0; bone < bones; bone++)
+                    {
+                        var idle = animator.transform.worldToLocalMatrix * renderer.bones[bone].localToWorldMatrix * renderer.sharedMesh.bindposes[bone];
+                        for (int column = 0; column < 4; column++)
+                            for (int row = 0; row < 3; row++)
+                                Assert.That(reader.ReadSingle(), Is.EqualTo(idle[row, column]).Within(.001f),
+                                    "The saved skeleton must match upright Idle, not the final sampled Death pose.");
+                    }
+                }
+            }
+            finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        [Test]
         public void Info004DestroyedOwnerDoesNotLeaveAStaleLookup()
         {
             world.EntityManager.DestroyEntity(owner);

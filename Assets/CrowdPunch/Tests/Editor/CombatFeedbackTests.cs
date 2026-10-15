@@ -107,14 +107,16 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<LocalToWorld>(visual).Value, Is.EqualTo(authored));
         }
 
-        [Test]
-        public void Info004AtlasFeedbackPreservesPaletteAndRenderAccentsDoNotAccumulate()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Info004AtlasFeedbackPreservesPaletteAndRenderAccentsDoNotAccumulate(bool exploder)
         {
             using var world = new World("atlas presentation test");
             var em = world.EntityManager;
             var owner = em.CreateEntity(typeof(EnemyImpactFeedback), typeof(EnemyLaunchState),
                 typeof(CrowdPunch.Components.EnemyArchetype), typeof(LocalTransform), typeof(Unity.Physics.PhysicsVelocity));
             em.SetComponentData(owner, new CrowdPunch.Components.EnemyArchetype { Value = EnemyArchetypeKind.Baseline });
+            if (exploder) em.AddComponent<ExplosiveEnemyState>(owner);
             em.SetComponentData(owner, LocalTransform.Identity);
             em.SetComponentData(owner, new Unity.Physics.PhysicsVelocity { Linear = new float3(0, 0, 3) });
             var visual = em.CreateEntity(typeof(EnemyVisualOwner), typeof(EnemyVisualDeformation),
@@ -128,13 +130,14 @@ namespace CrowdPunch.Tests
                 world.SetTime(new Unity.Core.TimeData(i / 60d, 1 / 60f));
                 colors.Update(world.Unmanaged); accents.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
                 var matrix = em.GetComponentData<LocalToWorld>(visual).Value;
-                Assert.That(math.length(matrix.c0.xyz), Is.InRange(.97f, 1.03f));
+                Assert.That(math.length(matrix.c0.xyz), Is.InRange(.97f, exploder ? 1.09f : 1.03f));
                 Assert.That(matrix.c3.y, Is.InRange(0f, .036f));
             }
             Assert.That(em.GetComponentData<URPMaterialPropertyBaseColor>(visual).Value.xyz, Is.EqualTo(new float3(1.15f)));
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
             colors.Update(world.Unmanaged); accents.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
-            Assert.That(em.GetComponentData<LocalToWorld>(visual).Value, Is.EqualTo(float4x4.identity));
+            if (!exploder) Assert.That(em.GetComponentData<LocalToWorld>(visual).Value, Is.EqualTo(float4x4.identity));
+            else Assert.That(math.length(em.GetComponentData<LocalToWorld>(visual).Value.c0.xyz), Is.InRange(1f, 1.066f));
             Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
         }
 

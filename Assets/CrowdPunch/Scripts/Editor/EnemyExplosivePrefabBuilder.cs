@@ -12,7 +12,7 @@ namespace CrowdPunch.Editor
 {
     public static class EnemyExplosivePrefabBuilder
     {
-        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Blob/GreenSpikyBlob.fbx";
+        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Blob/GreenBlob.fbx";
         private const string PrefabPath = "Assets/CrowdPunch/Prefabs/EnemyExplosive.prefab";
         private const string ControllerPath = "Assets/CrowdPunch/Animation/EnemyExplosive.controller";
         private const string SettingsPath = "Assets/CrowdPunch/Data/Settings/Enemies/ExplosiveEnemySpawnSettings.asset";
@@ -40,7 +40,7 @@ namespace CrowdPunch.Editor
                 ConfigurePhysics(root);
                 root.AddComponent<EnemyAuthoring>();
                 GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
-                visual.name = "GreenSpikyBlob";
+                visual.name = "GreenBlob";
                 visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
                 visual.transform.localScale = Vector3.one;
                 SetLayerRecursively(visual, 7);
@@ -53,7 +53,7 @@ namespace CrowdPunch.Editor
 
                 SkinnedMeshRenderer[] renderers = visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
                 if (renderers.Length == 0)
-                    throw new InvalidOperationException("GreenSpikyBlob.fbx contains no skinned renderers.");
+                    throw new InvalidOperationException("GreenBlob.fbx contains no skinned renderers.");
                 FitVisualToEnemy(root.transform, visual.transform, renderers);
                 for (int index = 0; index < renderers.Length; index++)
                 {
@@ -70,6 +70,8 @@ namespace CrowdPunch.Editor
                     authoring.BlendResponse = 12f;
                     authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samplesPath);
                 }
+                // Sampling finishes on Death. Keep the authored skeleton upright for baking.
+                idle.SampleAnimation(animator.gameObject, 0f);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -80,7 +82,7 @@ namespace CrowdPunch.Editor
             AssignSpawnSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Created {PrefabPath} from GreenSpikyBlob.fbx and assigned it to {SettingsPath}.");
+            Debug.Log($"Created {PrefabPath} from GreenBlob.fbx and assigned it to {SettingsPath}.");
         }
 
         [MenuItem("Crowd Punch/Animation/Rebuild Explosive Samples")]
@@ -105,6 +107,8 @@ namespace CrowdPunch.Editor
                         throw new InvalidOperationException("Explosive renderer has no generated sample asset.");
                     WriteSamples(samplesPath, animator, renderer, idle, walk, death);
                 }
+                idle.SampleAnimation(animator.gameObject, 0f);
+                PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
             {
@@ -141,7 +145,7 @@ namespace CrowdPunch.Editor
             if (clip != null) return clip;
             string available = string.Join(", ", AssetDatabase.LoadAllAssetsAtPath(ModelPath)
                 .OfType<AnimationClip>().Select(candidate => candidate.name));
-            throw new InvalidOperationException($"GreenSpikyBlob.fbx has no animation named '{name}'. Available: {available}");
+            throw new InvalidOperationException($"GreenBlob.fbx has no animation named '{name}'. Available: {available}");
         }
 
         private static bool MatchesClipName(string candidate, string requested) =>
@@ -171,7 +175,7 @@ namespace CrowdPunch.Editor
             for (int index = 0; index < sources.Length; index++)
             {
                 Material source = sources[index];
-                string name = string.IsNullOrWhiteSpace(source?.name) ? $"GreenSpikyBlob_{index}" : source.name;
+                string name = string.IsNullOrWhiteSpace(source?.name) ? $"GreenBlob_{index}" : source.name;
                 string path = $"{MaterialFolder}/{SafeName(name)}.mat";
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null)
@@ -188,6 +192,7 @@ namespace CrowdPunch.Editor
                 if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
                 if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
                 EnemyAppearanceMaterials.Configure(material);
+                if (material.HasProperty("_ExploderPulse")) material.SetFloat("_ExploderPulse", 1.6f);
                 material.enableInstancing = true;
                 EditorUtility.SetDirty(material);
                 results[index] = material;
@@ -209,36 +214,38 @@ namespace CrowdPunch.Editor
             Matrix4x4[] bindposes = renderer.sharedMesh.bindposes;
             Bounds bounds = default;
             bool hasBounds = false;
-            var sampledMesh = new Mesh();
-            try
+            Vector3[] vertices = renderer.sharedMesh.vertices;
+            BoneWeight[] weights = renderer.sharedMesh.boneWeights;
+            for (int motion = 0; motion < clips.Length; motion++)
             {
-                for (int motion = 0; motion < clips.Length; motion++)
+                AnimationClip clip = clips[motion];
+                durations[motion] = clip.length;
+                for (int frame = 0; frame < FrameCount; frame++)
                 {
-                    AnimationClip clip = clips[motion];
-                    durations[motion] = clip.length;
-                    for (int frame = 0; frame < FrameCount; frame++)
+                    float normalized = motion == EnemyAnimationSamples.ImpactMotion
+                        ? frame / (float)(FrameCount - 1) : frame / (float)FrameCount;
+                    clip.SampleAnimation(animator.gameObject, normalized * clip.length);
+                    Matrix4x4 inverse = animator.transform.worldToLocalMatrix;
+                    int poseStart = (motion * FrameCount + frame) * renderer.bones.Length;
+                    for (int bone = 0; bone < renderer.bones.Length; bone++)
+                        matrices[poseStart + bone] = inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
+                    // Match GPU root-space skinning. BakeMesh applies the FBX scale again,
+                    // moving the separate eye's culling bounds far above the visible body.
+                    for (int vertex = 0; vertex < vertices.Length; vertex++)
                     {
-                        float normalized = motion == EnemyAnimationSamples.ImpactMotion
-                            ? frame / (float)(FrameCount - 1) : frame / (float)FrameCount;
-                        clip.SampleAnimation(animator.gameObject, normalized * clip.length);
-                        Matrix4x4 inverse = animator.transform.worldToLocalMatrix;
-                        int poseStart = (motion * FrameCount + frame) * renderer.bones.Length;
-                        for (int bone = 0; bone < renderer.bones.Length; bone++)
-                            matrices[poseStart + bone] = inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
-                        renderer.BakeMesh(sampledMesh);
-                        Matrix4x4 toRoot = inverse * renderer.transform.localToWorldMatrix;
-                        foreach (Vector3 vertex in sampledMesh.vertices)
-                        {
-                            Vector3 position = toRoot.MultiplyPoint3x4(vertex);
-                            if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
-                            else bounds.Encapsulate(position);
-                        }
+                        BoneWeight weight = weights[vertex];
+                        Vector3 point = vertices[vertex];
+                        Vector3 position = matrices[poseStart + weight.boneIndex0].MultiplyPoint3x4(point) * weight.weight0
+                            + matrices[poseStart + weight.boneIndex1].MultiplyPoint3x4(point) * weight.weight1
+                            + matrices[poseStart + weight.boneIndex2].MultiplyPoint3x4(point) * weight.weight2
+                            + matrices[poseStart + weight.boneIndex3].MultiplyPoint3x4(point) * weight.weight3;
+                        if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
+                        else bounds.Encapsulate(position);
+                        // Launched blobs can pitch up/down by half a radian.
+                        bounds.Encapsulate(Quaternion.Euler(28.65f, 0, 0) * position);
+                        bounds.Encapsulate(Quaternion.Euler(-28.65f, 0, 0) * position);
                     }
                 }
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(sampledMesh);
             }
 
             string hash = AssetDatabase.GetAssetDependencyHash(ControllerPath).ToString()
@@ -266,7 +273,7 @@ namespace CrowdPunch.Editor
             Bounds bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
             float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("GreenSpikyBlob renderers have empty bounds.");
+            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("GreenBlob renderers have empty bounds.");
             visual.localScale *= 2.5f / largest;
             bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);

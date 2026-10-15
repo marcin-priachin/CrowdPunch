@@ -13,8 +13,12 @@ monster materials. `EnemyAppearanceMaterials` applies point-filtered, uncompress
 and is called by each monster prefab builder, so rebuilding a prefab preserves its appearance.
 The supplied atlas and guide images are unchanged. The Dasher uses Flying/Armabee, with continuous
 wing motion during its committed dash. Its sampled culling bounds use the same bone matrices as
-the GPU vertices, avoiding double application of the imported FBX scale. The Exploder uses GreenSpikyBlob; generated mesh copies
-remap only its green body UV swatch to the atlas's amber swatch, retaining pale spikes and eye detail.
+the GPU vertices, avoiding double application of the imported FBX scale. The Exploder uses the smooth GreenBlob; generated mesh copies
+remap only its green body UV swatch to the atlas's amber swatch, retaining its face details. Its material enables a 1.2-second amber emission pulse in the
+  ECS skinning graph, accompanied by a bounded 6.5% render-only swelling pulse. This steady
+  rhythm identifies its explosive role and does not represent a timed fuse. The body and separate eye
+  use bounds calculated from the exported skin matrices, preventing the imported FBX scale
+  from moving the eye bounds offscreen and making it disappear during movement.
 Their existing physics capsules, movement tuning, attack rules and ECS ownership are unchanged.
 
 `EnemyVisualOwner.UsesAtlas` distinguishes textured skinned renderers from primitive fallback
