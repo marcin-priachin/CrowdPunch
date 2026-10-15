@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using CrowdPunch.Authoring;
 using CrowdPunch.Components;
@@ -60,6 +61,7 @@ namespace CrowdPunch.Editor
                 for (int index = 0; index < renderers.Length; index++)
                 {
                     SkinnedMeshRenderer renderer = renderers[index];
+                    ApplyTorsoPalette(renderer);
                     renderer.quality = SkinQuality.Bone4;
                     renderer.rootBone = animator.transform;
                     renderer.sharedMaterials = BuildMaterials(renderer.sharedMaterials);
@@ -71,6 +73,7 @@ namespace CrowdPunch.Editor
                     authoring.BlendResponse = 12f;
                     authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samplesPath);
                 }
+                idle.SampleAnimation(animator.gameObject, 0f);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -132,6 +135,64 @@ namespace CrowdPunch.Editor
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
             return controller;
+        }
+
+        private static void ApplyTorsoPalette(SkinnedMeshRenderer renderer)
+        {
+            if (renderer.name != "Orc_Skull") return;
+            var source = renderer.sharedMesh;
+            var mesh = UnityEngine.Object.Instantiate(source);
+            mesh.name = "ArmoredBoneTorso";
+            var vertices = new List<Vector3>(source.vertices);
+            var normals = new List<Vector3>(source.normals);
+            var tangents = new List<Vector4>(source.tangents);
+            var uv = new List<Vector2>(source.uv);
+            var weights = new List<BoneWeight>(source.boneWeights);
+            var remapped = new Dictionary<int, int>();
+            float TorsoWeight(int vertex)
+            {
+                var w = weights[vertex];
+                float Weight(int bone, float value)
+                {
+                    string name = renderer.bones[bone].name;
+                    return name == "Body" || name == "Abdomen" || name == "Torso" ? value : 0f;
+                }
+                return Weight(w.boneIndex0, w.weight0) + Weight(w.boneIndex1, w.weight1)
+                    + Weight(w.boneIndex2, w.weight2) + Weight(w.boneIndex3, w.weight3);
+            }
+            for (int submesh = 0; submesh < source.subMeshCount; submesh++)
+            {
+                var triangles = source.GetTriangles(submesh);
+                for (int triangle = 0; triangle < triangles.Length; triangle += 3)
+                {
+                    int a = triangles[triangle], b = triangles[triangle + 1], c = triangles[triangle + 2];
+                    if (TorsoWeight(a) + TorsoWeight(b) + TorsoWeight(c) < 1.35f) continue;
+                    for (int corner = 0; corner < 3; corner++)
+                    {
+                        int original = triangles[triangle + corner];
+                        if (!remapped.TryGetValue(original, out int replacement))
+                        {
+                            replacement = vertices.Count;
+                            remapped.Add(original, replacement);
+                            vertices.Add(vertices[original]); normals.Add(normals[original]);
+                            tangents.Add(tangents[original]); weights.Add(weights[original]);
+                            // Duplicate boundary vertices to keep the atlas colors from blending across swatches.
+                            uv.Add(new Vector2(.3602f, .6096f));
+                        }
+                        triangles[triangle + corner] = replacement;
+                    }
+                }
+                mesh.SetVertices(vertices); mesh.SetNormals(normals); mesh.SetTangents(tangents);
+                mesh.SetUVs(0, uv); mesh.boneWeights = weights.ToArray();
+                mesh.SetTriangles(triangles, submesh, false);
+            }
+            const string path = "Assets/CrowdPunch/Animation/EnemyArmoredTorsoPalette.asset";
+            var saved = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (saved == null) { AssetDatabase.CreateAsset(mesh, path); saved = mesh; }
+            else { EditorUtility.CopySerialized(mesh, saved); UnityEngine.Object.DestroyImmediate(mesh); }
+            EditorUtility.SetDirty(saved);
+            AssetDatabase.SaveAssets();
+            renderer.sharedMesh = saved;
         }
 
         private static Material[] BuildMaterials(Material[] sources)
@@ -237,7 +298,7 @@ namespace CrowdPunch.Editor
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
             float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
             if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Orc_Skull renderers have empty bounds.");
-            visual.localScale *= 2.5f / largest;
+            visual.localScale *= 2.875f / largest;
             bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
             visual.localPosition -= enemy.InverseTransformPoint(bounds.center);
