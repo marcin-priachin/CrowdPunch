@@ -23,6 +23,7 @@ namespace CrowdPunch.Components
         public BlobAssetReference<EnemyAnimationSamples> Samples;
         public byte Profile;
         public float BlendResponse;
+        public float3 LaunchPivot;
     }
 
     public struct EnemyAnimationPlayback : IComponentData

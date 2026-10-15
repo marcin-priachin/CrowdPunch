@@ -452,6 +452,28 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        [TestCase(EnemyAnimationProfile.Baseline)]
+        [TestCase(EnemyAnimationProfile.Wizard)]
+        public void Info004CenteredLaunchAndRecoveryPreserveBodyHeight(EnemyAnimationProfile profile)
+        {
+            var em = world.EntityManager;
+            var animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)profile;
+            animation.LaunchPivot = new float3(0, 2, 0);
+            em.SetComponentData(visual, animation);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(2f).Within(.001f));
+            Assert.That(Pose.z, Is.EqualTo(2f).Within(.001f));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(2f).Within(.001f), "Recovery starts around the same body pivot.");
+            Tick(.25f);
+            Assert.That(Pose.z, Is.EqualTo(0f).Within(.001f), "The offset disappears when upright.");
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [Test]
         public void Info004DestroyedOwnerDoesNotLeaveAStaleLookup()
         {
             world.EntityManager.DestroyEntity(owner);

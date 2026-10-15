@@ -70,9 +70,12 @@ namespace CrowdPunch.Editor
                     EnemyAnimationAuthoring authoring = renderer.GetComponent<EnemyAnimationAuthoring>();
                     if (authoring == null) authoring = renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
                     authoring.Profile = EnemyAnimationProfile.Baseline;
+                    authoring.RotateLaunchAroundOwner = true;
+                    authoring.LaunchPivotHeight = .6f;
                     authoring.BlendResponse = 12f;
                     authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samplesPath);
                 }
+                idle.SampleAnimation(animator.gameObject, 0f);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -207,7 +210,11 @@ namespace CrowdPunch.Editor
                         if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
                         else bounds.Encapsulate(position);
                         if (motion == EnemyAnimationSamples.FlyingMotion)
-                            bounds.Encapsulate(Quaternion.Euler(-90f, 0f, 0f) * position);
+                        {
+                            Vector3 pivot = animator.transform.InverseTransformPoint(animator.transform.parent.position + Vector3.up * .6f);
+                            // Conservatively cover flight pitch and the entire centered recovery turn.
+                            bounds.Encapsulate(new Bounds(pivot, Vector3.one * (position - pivot).magnitude * 2f));
+                        }
                     }
                 }
             }

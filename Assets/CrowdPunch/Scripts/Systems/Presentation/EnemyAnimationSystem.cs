@@ -83,7 +83,7 @@ namespace CrowdPunch.Systems.Presentation
                     AnimateCreatureRecovery(ref playback, ref skin, ref samples, launch,
                         animation.Profile != (byte)EnemyAnimationProfile.Dasher
                         && animation.Profile != (byte)EnemyAnimationProfile.Dragon
-                        && animation.Profile != (byte)EnemyAnimationProfile.Explosive);
+                        && animation.Profile != (byte)EnemyAnimationProfile.Explosive, animation.LaunchPivot);
                     return;
                 }
                 playback.WasRecovering = 0;
@@ -118,7 +118,7 @@ namespace CrowdPunch.Systems.Presentation
                             return;
                         }
                     }
-                    AnimateBaseline(owner, ref playback, ref skin, ref samples, launch);
+                    AnimateBaseline(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot);
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Wizard)
@@ -132,7 +132,7 @@ namespace CrowdPunch.Systems.Presentation
                         int from = (int)danceFrame;
                         ApplyFrame(ref skin, ref samples, 2, from, (from + 1) % samples.FrameCount, math.frac(danceFrame));
                     }
-                    else { playback.WasAttacking = 0; AnimateBaseline(owner, ref playback, ref skin, ref samples, launch); }
+                    else { playback.WasAttacking = 0; AnimateBaseline(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot); }
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Dasher)
@@ -155,7 +155,7 @@ namespace CrowdPunch.Systems.Presentation
                     if (launch.Phase == EnemyLaunchPhase.Launched)
                     {
                         playback.HitActive = 0;
-                        AnimateBaseline(owner, ref playback, ref skin, ref samples, launch);
+                        AnimateBaseline(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot);
                     }
                     else
                     {
@@ -176,7 +176,7 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Baseline)
                 {
-                    AnimateBaseline(owner, ref playback, ref skin, ref samples, launch);
+                    AnimateBaseline(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot);
                     return;
                 }
                 if (launch.Phase == EnemyLaunchPhase.Launched)
@@ -495,11 +495,11 @@ namespace CrowdPunch.Systems.Presentation
             }
 
             private void AnimateBaseline(Entity owner, ref EnemyAnimationPlayback playback,
-                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch, float3 pivot)
             {
                 if (launch.Phase == EnemyLaunchPhase.Launched)
                 {
-                    AnimateCreatureFlight(owner, ref playback, ref skin, ref samples, launch, EnemyAnimationSamples.FlyingMotion, true);
+                    AnimateCreatureFlight(owner, ref playback, ref skin, ref samples, launch, EnemyAnimationSamples.FlyingMotion, true, pivot);
                     return;
                 }
 
@@ -536,7 +536,7 @@ namespace CrowdPunch.Systems.Presentation
 
             private void AnimateCreatureFlight(Entity owner, ref EnemyAnimationPlayback playback,
                 ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples,
-                EnemyLaunchState launch, int motion, bool sideways)
+                EnemyLaunchState launch, int motion, bool sideways, float3 pivot = default)
             {
                 bool entering = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
                 playback.FlightPhase = entering ? 0 : math.frac(playback.FlightPhase
@@ -554,12 +554,12 @@ namespace CrowdPunch.Systems.Presentation
                 float frame = playback.FlightPhase * samples.FrameCount;
                 int from = (int)frame;
                 ApplyRotatedFrame(ref skin, ref samples, motion, from, (from + 1) % samples.FrameCount,
-                    math.frac(frame), quaternion.RotateX(pitch));
+                    math.frac(frame), quaternion.RotateX(pitch), pivot);
             }
 
             private void AnimateCreatureRecovery(ref EnemyAnimationPlayback playback,
                 ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples,
-                EnemyLaunchState launch, bool sideways)
+                EnemyLaunchState launch, bool sideways, float3 pivot)
             {
                 if (playback.WasRecovering == 0)
                 {
@@ -576,7 +576,7 @@ namespace CrowdPunch.Systems.Presentation
                 int from = (int)frame;
                 float rise = math.smoothstep(0, 1, playback.RecoveryAge / math.min(.24f, playback.ImpactDuration));
                 ApplyRotatedFrame(ref skin, ref samples, 0, from, (from + 1) % samples.FrameCount,
-                    math.frac(frame), quaternion.RotateX(sideways ? -math.PI * .5f * (1 - rise) : 0));
+                    math.frac(frame), quaternion.RotateX(sideways ? -math.PI * .5f * (1 - rise) : 0), pivot);
             }
 
             private static void ApplyFrame(ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples,
@@ -587,14 +587,14 @@ namespace CrowdPunch.Systems.Presentation
             }
 
             private static void ApplyRotatedFrame(ref DynamicBuffer<SkinMatrix> skin,
-                ref EnemyAnimationSamples samples, int motion, int from, int to, float blend, quaternion rotation)
+                ref EnemyAnimationSamples samples, int motion, int from, int to, float blend, quaternion rotation, float3 pivot = default)
             {
                 var matrix = new float3x3(rotation);
                 for (int bone = 0; bone < skin.Length; bone++)
                 {
                     float3x4 pose = Sample(ref samples, motion, from, to, bone, blend);
                     skin[bone] = new SkinMatrix { Value = new float3x4(math.mul(matrix, pose.c0),
-                        math.mul(matrix, pose.c1), math.mul(matrix, pose.c2), math.mul(matrix, pose.c3)) };
+                        math.mul(matrix, pose.c1), math.mul(matrix, pose.c2), pivot + math.mul(matrix, pose.c3 - pivot)) };
                 }
             }
 

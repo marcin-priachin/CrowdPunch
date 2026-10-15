@@ -8,6 +8,8 @@ namespace CrowdPunch.Authoring
     {
         public TextAsset Samples;
         public EnemyAnimationProfile Profile;
+        public bool RotateLaunchAroundOwner;
+        [Min(0f)] public float LaunchPivotHeight;
         [Min(0f)] public float BlendResponse = 12f;
     }
 }

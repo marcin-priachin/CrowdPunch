@@ -61,7 +61,10 @@ namespace CrowdPunch.Bakers
                 Owner = dino != null ? GetEntity(dino, TransformUsageFlags.Dynamic) : rolling != null ? GetEntity(rolling, TransformUsageFlags.Dynamic) : chicken != null ? GetEntity(chicken, TransformUsageFlags.Dynamic) : GetEntity(owner, TransformUsageFlags.Dynamic),
                 Samples = blob,
                 Profile = (byte)authoring.Profile,
-                BlendResponse = math.max(0f, authoring.BlendResponse)
+                BlendResponse = math.max(0f, authoring.BlendResponse),
+                LaunchPivot = authoring.RotateLaunchAroundOwner && owner != null
+                    ? (float3)animator.transform.InverseTransformPoint(owner.transform.position
+                        + owner.transform.up * authoring.LaunchPivotHeight) : float3.zero
             });
             AddComponent<EnemyAnimationPlayback>(entity);
             if(rolling!=null) AddComponent(entity,new RollingAnimationPivot { Center=rolling.animationPivot });

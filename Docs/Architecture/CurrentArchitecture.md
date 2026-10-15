@@ -53,6 +53,11 @@ updates measured animation 0.0392 ms, readability 0.0239 ms and impact accents 0
 with zero calling-thread managed allocations in each measured loop. These are Editor CPU system
 measurements, not standalone frame-rate/GPU acceptance results; OQ-001 and final art approval remain open.
 
+Trail and Wizard authoring enable `RotateLaunchAroundOwner`. The animation baker converts the
+owner origin plus the configured launch clearance into model space as `EnemyAnimation.LaunchPivot`; flight and recovery rotate skins
+around that shared body center rather than their feet. Their bounds cover the centered turn.
+This changes presentation only and leaves the physics transform and launch velocity untouched.
+
 ## Final Encounter (FINALE-001..007)
 
 The campaign now has 81 stable IDs and nine chapters. `CampaignCatalog.chapterStarts` describes chapter boundaries; the last chapter contains only `cp-081`, Bring Down the Sky. `CampaignProgress` still stores completion by stable ID, so existing 80-completion saves naturally resume at the new finale. The catalog and build settings append level 81 without modifying prior scenes. This supersedes the historical index-80 end-sentinel and eight-chapter descriptions below. Level Play reads the catalog and needs no special finale path.
