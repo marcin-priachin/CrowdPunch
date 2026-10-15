@@ -50,13 +50,13 @@ namespace CrowdPunch.Tests
             {
                 var sequence = Find<GauntletSequence>(scene);
                 var names = new SerializedObject(sequence).FindProperty("levelSceneNames");
-                Assert.That(names.arraySize, Is.EqualTo(27));
+                Assert.That(names.arraySize, Is.EqualTo(31));
                 string[] enabled = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
                 var catalog = AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CrowdPunch.Editor.CampaignBuildRegistration.CatalogPath);
                 Assert.That(enabled.Length, Is.EqualTo(1 + catalog.levels.Count(level => level.Available)));
                 Assert.That(enabled.Skip(1).All(path => path.StartsWith(Root + "Campaign/")), Is.True);
                 Assert.That(enabled[0], Is.EqualTo(Root + "Bootstrap.unity"));
-                for (int i = 0; i < 27; i++)
+                for (int i = 0; i < 31; i++)
                 {
                     string id = $"Gauntlet_{i + 1:00}";
                     Assert.That(names.GetArrayElementAtIndex(i).stringValue, Is.EqualTo(id));
@@ -90,6 +90,10 @@ namespace CrowdPunch.Tests
         [TestCase(21)]
         [TestCase(22)]
         [TestCase(23)]
+        [TestCase(28)]
+        [TestCase(29)]
+        [TestCase(30)]
+        [TestCase(31)]
         public void Combat017_LevelReferencesBoundsAndSpawnRegionsAreValid(int number)
         {
             string id = $"Gauntlet_{number:00}";
@@ -105,7 +109,7 @@ namespace CrowdPunch.Tests
                 sub = EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(reference.SceneAsset), OpenSceneMode.Additive);
                 var arena = Find<ArenaAuthoring>(sub);
                 var authorings = sub.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<EnemyWaveSequenceAuthoring>()).ToArray();
-                Assert.That(authorings.Length, Is.EqualTo(number == 16 ? 2 : 1));
+                Assert.That(authorings.Length, Is.EqualTo(number == 16 || number == 29 ? 2 : 1));
                 var floor = Find<MeshCollider>(sub);
                 Assert.That(floor.sharedMesh, Is.Not.Null);
                 Assert.That(floor.convex, Is.True,

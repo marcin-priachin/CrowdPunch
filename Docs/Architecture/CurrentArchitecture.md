@@ -2350,3 +2350,25 @@ introduced in wave two. Editable waves contain 12 and 20 finite Baselines, with 
 or persistent-hazard completion gate. Broad side corridors and safe spawn ranges remain.
 Initial tuning is 12 damage every .75s; periodic timing is 3s inactive / 1.5s warning /
 2.5s active, with 0s/2s offsets. See [Ground hazard validation](../Validation/GroundHazards.md).
+
+## Legacy Environment Examples (Gauntlet_28-31)
+
+`EnvironmentExamplesBuilder` creates four development-only art examples after legacy 27:
+Sunlit Village Gate (barricade), Emberworks Foundry (rail), Overgrown Observatory
+(rotating cover), and Frostbound Vault (shell). The sources are legacy 13/16/14/15.
+Each example has its own main scene, ECS SubScene, copied wave assets and project-owned
+URP materials under `Data/EnvironmentExamples`. Bootstrap's legacy array contains the
+new entries; campaign catalogs, save identifiers and player build registration are unchanged.
+
+`EnvironmentExampleScenery` assembles imported KayKit, Quaternius and Kenney models.
+Static non-colliding scenery, paving and two bounded ambient particle systems live in
+each main scene and unload with it. Existing floor/obstacle/objective collision and
+spawning stay in the SubScene. Timber facing uses the existing barricade presentation
+components, and the foundry machine is an ECS child of the existing moving objective.
+The imported FBX root orientations are preserved and source assets are not modified.
+
+The create command refuses to overwrite existing examples. `Refresh Example Scenery
+28-31` replaces their generated scenery roots and reapplies the example layout/facing
+treatment; manual edits inside those generated roots should be made after that command.
+These are OQ-015 experiments, not an accepted change to campaign art direction or to
+BARRICADE-001..005, TRACK-001..005, COVER-001..005 or SHELL-001..006 behavior.
