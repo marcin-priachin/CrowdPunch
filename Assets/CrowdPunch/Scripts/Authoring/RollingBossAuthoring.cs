@@ -6,5 +6,6 @@ namespace CrowdPunch.Authoring
     {
         public RollingBossSettings settings;
         [HideInInspector] public Vector3 animationPivot;
+        [HideInInspector] public float[] animationFloorOffsets;
     }
 }

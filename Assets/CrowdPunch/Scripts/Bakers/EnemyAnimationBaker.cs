@@ -16,9 +16,10 @@ namespace CrowdPunch.Bakers
             var chicken = GetComponentInParent<ChickenBossAuthoring>();
             var rolling = GetComponentInParent<RollingBossAuthoring>();
             var dino = GetComponentInParent<DinoBossAuthoring>();
+            var gatekeeper = GetComponentInParent<BossPartAuthoring>();
             var renderer = GetComponent<SkinnedMeshRenderer>();
             var animator = GetComponentInParent<Animator>();
-            if (owner == null && chicken == null && rolling == null && dino == null || animator == null || authoring.Samples == null)
+            if (owner == null && chicken == null && rolling == null && dino == null && gatekeeper == null || animator == null || authoring.Samples == null)
                 throw new System.InvalidOperationException("Enemy animation needs an enemy owner, Animator and generated samples.");
 
             DependsOn(authoring.Samples);
@@ -58,7 +59,7 @@ namespace CrowdPunch.Bakers
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new EnemyAnimation
             {
-                Owner = dino != null ? GetEntity(dino, TransformUsageFlags.Dynamic) : rolling != null ? GetEntity(rolling, TransformUsageFlags.Dynamic) : chicken != null ? GetEntity(chicken, TransformUsageFlags.Dynamic) : GetEntity(owner, TransformUsageFlags.Dynamic),
+                Owner = gatekeeper != null ? GetEntity(gatekeeper, TransformUsageFlags.Dynamic) : dino != null ? GetEntity(dino, TransformUsageFlags.Dynamic) : rolling != null ? GetEntity(rolling, TransformUsageFlags.Dynamic) : chicken != null ? GetEntity(chicken, TransformUsageFlags.Dynamic) : GetEntity(owner, TransformUsageFlags.Dynamic),
                 Samples = blob,
                 Profile = (byte)authoring.Profile,
                 BlendResponse = math.max(0f, authoring.BlendResponse),
@@ -67,7 +68,29 @@ namespace CrowdPunch.Bakers
                         + owner.transform.up * authoring.LaunchPivotHeight) : float3.zero
             });
             AddComponent<EnemyAnimationPlayback>(entity);
-            if(rolling!=null) AddComponent(entity,new RollingAnimationPivot { Center=rolling.animationPivot });
+            if (chicken != null || dino != null || gatekeeper != null)
+            {
+                if (chicken != null) DependsOn(chicken.settings);
+                if (dino != null) DependsOn(dino.settings);
+                Transform root = gatekeeper != null ? gatekeeper.transform : dino != null ? dino.transform : chicken.transform;
+                float halfHeight = gatekeeper != null ? gatekeeper.height * .5f : dino != null ? dino.settings.bodyHeight * .5f : chicken.settings.bodyHeight * .5f;
+                AddComponent(entity, new BossAnimationAnchor { Floor = animator.transform.InverseTransformPoint(root.position - root.up * halfHeight) });
+            }
+            if(rolling!=null)
+            {
+                var pivot = new RollingAnimationPivot { Center=rolling.animationPivot };
+                if (rolling.animationFloorOffsets != null && rolling.animationFloorOffsets.Length > 1)
+                {
+                    using var floorBuilder = new BlobBuilder(Allocator.Temp);
+                    ref var floorRoot = ref floorBuilder.ConstructRoot<RollingFloorSamples>();
+                    var offsets = floorBuilder.Allocate(ref floorRoot.Offsets, rolling.animationFloorOffsets.Length);
+                    for (int i=0; i<offsets.Length; i++) offsets[i]=rolling.animationFloorOffsets[i];
+                    var floorBlob = floorBuilder.CreateBlobAssetReference<RollingFloorSamples>(Allocator.Persistent);
+                    AddBlobAsset(ref floorBlob, out _);
+                    pivot.Floor = floorBlob;
+                }
+                AddComponent(entity, pivot);
+            }
         }
 
         private static float3 ReadColumn(BinaryReader reader) => new float3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());

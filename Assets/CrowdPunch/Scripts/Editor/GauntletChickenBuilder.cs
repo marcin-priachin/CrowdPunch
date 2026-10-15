@@ -99,7 +99,7 @@ namespace CrowdPunch.Editor
             }
             finally { UnityEngine.Object.DestroyImmediate(root); }
         }
-        private static void AddChickenModel(GameObject root,ChickenBossSettings settings)
+        internal static void AddChickenModel(GameObject root,ChickenBossSettings settings)
         {
             var source=AssetDatabase.LoadAssetAtPath<GameObject>(ChickenModel);
             if(source==null) throw new InvalidOperationException("Missing supplied Chicken.fbx model.");
@@ -127,13 +127,15 @@ namespace CrowdPunch.Editor
             var template=AssetDatabase.LoadAssetAtPath<Material>(Root+"Animation/EnemySkinning.mat");
             var mat=AssetDatabase.LoadAssetAtPath<Material>(ChickenArt+"Chicken.mat");
             if(mat==null) { mat=new Material(template) { enableInstancing=true }; AssetDatabase.CreateAsset(mat,ChickenArt+"Chicken.mat"); }
+            EnemyAppearanceMaterials.Configure(mat);
             renderer.sharedMaterials=renderer.sharedMaterials.Select(_=>mat).ToArray();
             AssetDatabase.SaveAssets();
             WriteBossSamples(animator,renderer,clips,ChickenArt+"ChickenMovement.bytes",ChickenController);
             var animation=renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
             animation.Samples=AssetDatabase.LoadAssetAtPath<TextAsset>(ChickenArt+"ChickenMovement.bytes");
+            BossAppearanceBuilder.GroundModel(visual, settings.bodyHeight);
         }
-        private static void WriteBossSamples(Animator animator,SkinnedMeshRenderer renderer,AnimationClip[] clips,string path,string controllerPath)
+        internal static void WriteBossSamples(Animator animator,SkinnedMeshRenderer renderer,AnimationClip[] clips,string path,string controllerPath)
         {
             const int frames=32;
             animator.Rebind();

@@ -41,7 +41,6 @@ namespace CrowdPunch.Editor
                 var wave=CreateWave();
                 var gold=Material("Hand Gold",new Color(.9f,.62f,.25f));
                 var cuff=Material("Hand Cuffs",new Color(.3f,.14f,.47f));
-                var headMesh=HeadMesh(out Material headMaterial);
                 Scene sub=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive); SceneManager.SetActiveScene(sub);
                 var arena=new GameObject("Boss Arena Bounds").AddComponent<ArenaAuthoring>(); arena.transform.position=new Vector3(0,1,0);
                 var arenaData=new SerializedObject(arena); arenaData.FindProperty("spacingSize").vector3Value=new Vector3(36,16,32);
@@ -57,8 +56,7 @@ namespace CrowdPunch.Editor
                 Vector3 inward=(new Vector3(t.Center.x,0,t.Center.y)-head.transform.position); inward.y=0; inward.Normalize();
                 head.transform.rotation=Quaternion.LookRotation(inward);
                 var hp=head.AddComponent<BossPartAuthoring>(); hp.encounter=encounter; hp.kind=BossPartKind.Head; hp.radius=2; hp.height=4;
-                var visual=new GameObject("Orc Head Visual",typeof(MeshFilter),typeof(MeshRenderer)); visual.transform.SetParent(head.transform,false);
-                visual.GetComponent<MeshFilter>().sharedMesh=headMesh; visual.GetComponent<MeshRenderer>().sharedMaterial=headMaterial;
+                BossAppearanceBuilder.AddGatekeeper(head);
                 encounter.leftHand=Hand("Left Detached Fist",BossPartKind.LeftHand,encounter,head.transform.position-head.transform.right*t.OpenOffset+inward,gold,cuff);
                 encounter.rightHand=Hand("Right Detached Fist",BossPartKind.RightHand,encounter,head.transform.position+head.transform.right*t.OpenOffset+inward,gold,cuff);
                 EditorSceneManager.SaveScene(sub,SubPath); EditorSceneManager.CloseScene(sub,true);
@@ -121,29 +119,6 @@ namespace CrowdPunch.Editor
         {
             string path=Art+name+".mat"; var mat=AssetDatabase.LoadAssetAtPath<Material>(path); if(mat!=null) return mat;
             mat=new Material(Shader.Find("Universal Render Pipeline/Lit")) { name=name,enableInstancing=true }; mat.SetColor("_BaseColor",color); mat.SetFloat("_Smoothness",.3f); AssetDatabase.CreateAsset(mat,path); return mat;
-        }
-        private static Mesh HeadMesh(out Material material)
-        {
-            const string source=Root+"Models/UltimateMonsters/Blob/Orc.fbx";
-            var model=UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(source));
-            try
-            {
-                var skin=model.GetComponentInChildren<SkinnedMeshRenderer>();
-                string matPath=Art+"Orc Head.mat"; material=AssetDatabase.LoadAssetAtPath<Material>(matPath);
-                if(material==null) { material=new Material(skin.sharedMaterial) { enableInstancing=true }; material.color=new Color(.52f,.77f,.43f); AssetDatabase.CreateAsset(material,matPath); }
-                var baked=new Mesh(); skin.BakeMesh(baked);
-                var vertices=baked.vertices;
-                for(int i=0;i<vertices.Length;i++) vertices[i]=skin.transform.TransformPoint(vertices[i]);
-                baked.vertices=vertices; baked.RecalculateBounds();
-                Bounds bounds=baked.bounds; float scale=4.4f/bounds.size.y;
-                for(int i=0;i<vertices.Length;i++) vertices[i]=(vertices[i]-bounds.center)*scale+new Vector3(0,.2f,0);
-                baked.vertices=vertices; baked.RecalculateNormals(); baked.RecalculateBounds(); baked.name="Orc Head Mesh";
-                string path=Art+"Orc Head Mesh.asset";
-                var old=AssetDatabase.LoadAssetAtPath<Mesh>(path);
-                if(old!=null) { EditorUtility.CopySerialized(baked,old); UnityEngine.Object.DestroyImmediate(baked); return old; }
-                AssetDatabase.CreateAsset(baked,path); return baked;
-            }
-            finally { UnityEngine.Object.DestroyImmediate(model); }
         }
     }
 }

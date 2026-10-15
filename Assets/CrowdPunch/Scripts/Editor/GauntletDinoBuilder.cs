@@ -84,7 +84,7 @@ namespace CrowdPunch.Editor
             finally { EditorSceneManager.RestoreSceneManagerSetup(previous); }
         }
 
-        private static void AddDinoModel(GameObject root,DinoBossSettings settings)
+        internal static void AddDinoModel(GameObject root,DinoBossSettings settings)
         {
             var source=AssetDatabase.LoadAssetAtPath<GameObject>(DinoModel);
             if(source==null) throw new InvalidOperationException("Missing supplied Dino.fbx model.");
@@ -125,6 +125,7 @@ namespace CrowdPunch.Editor
                     if(original!=null && original.mainTexture!=null) mat.mainTexture=original.mainTexture;
                     AssetDatabase.CreateAsset(mat,materialPath);
                 }
+                EnemyAppearanceMaterials.Configure(mat);
                 renderer.sharedMaterials=renderer.sharedMaterials.Select(_=>mat).ToArray();
                 AssetDatabase.SaveAssets();
                 string samplePath=DinoArt+(i==0?"DinoMovement.bytes":"DinoSpikesMovement.bytes");
@@ -132,6 +133,7 @@ namespace CrowdPunch.Editor
                 var animation=renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
                 animation.Samples=AssetDatabase.LoadAssetAtPath<TextAsset>(samplePath);
             }
+            BossAppearanceBuilder.GroundModel(visual, settings.bodyHeight);
         }
 
         private static void AddPillar(DinoBossAuthoring boss,Vector3 position)

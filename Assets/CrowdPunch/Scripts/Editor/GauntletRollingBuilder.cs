@@ -84,7 +84,7 @@ namespace CrowdPunch.Editor
             finally { EditorSceneManager.RestoreSceneManagerSetup(previous); }
         }
 
-        private static void AddRollingModel(GameObject root,RollingBossSettings settings)
+        internal static void AddRollingModel(GameObject root,RollingBossSettings settings)
         {
             var source=AssetDatabase.LoadAssetAtPath<GameObject>(RollingModel);
             if(source==null) throw new InvalidOperationException("Missing supplied GreenSpikyBlob.fbx model.");
@@ -100,7 +100,7 @@ namespace CrowdPunch.Editor
             foreach(var renderer in renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
             visual.transform.localPosition-=root.transform.InverseTransformPoint(bounds.center);
             var animator=visual.GetComponent<Animator>(); if(animator==null) animator=visual.AddComponent<Animator>();
-            string[] suffixes={"Idle","Walk","Bite_Front","HitRecieve","Death"};
+            string[] suffixes={"Idle","Idle","Bite_Front","HitRecieve","Death"};
             var clips=suffixes.Select(s=>AssetDatabase.LoadAllAssetsAtPath(RollingModel).OfType<AnimationClip>()
                 .First(c=>!c.name.StartsWith("__preview__") && c.name.EndsWith("|"+s))).ToArray();
             var controller=AssetDatabase.LoadAssetAtPath<AnimatorController>(RollingController);
@@ -127,6 +127,7 @@ namespace CrowdPunch.Editor
                     if(original!=null && original.mainTexture!=null) mat.mainTexture=original.mainTexture;
                     AssetDatabase.CreateAsset(mat,materialPath);
                 }
+                EnemyAppearanceMaterials.Configure(mat);
                 renderer.sharedMaterials=renderer.sharedMaterials.Select(_=>mat).ToArray();
                 AssetDatabase.SaveAssets();
                 string samplePath=RollingArt+(i==0?"RollingBlobMovement.bytes":"RollingBlobSpikesMovement.bytes");
@@ -137,6 +138,7 @@ namespace CrowdPunch.Editor
                 var animation=renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
                 animation.Samples=AssetDatabase.LoadAssetAtPath<TextAsset>(samplePath);
             }
+            BossAppearanceBuilder.FitRollingSphere(visual, root.GetComponent<RollingBossAuthoring>(), settings);
         }
 
         private static void RollingObstacle(string name,Transform arena,Vector3 position,Vector2Int footprint,Material material)

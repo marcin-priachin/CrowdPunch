@@ -147,6 +147,7 @@ namespace CrowdPunch.Editor
                     if(anim.name=="Fast_Flying") controller.layers[0].stateMachine.defaultState=anim;
                 }
                 presentation.animator.runtimeAnimatorController=controller;
+                BossAppearanceBuilder.ConfigureFinale(presentation);
                 var hint=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<CrowdPunch.Mono.Levels.GauntletLevel>());
                 hint.FindProperty("openingHint").stringValue="Overload any cyan anchor: shoot through the cover, blast the shell then break its core, dock the rail, or hit the narrow target. Dodge the landing, then launch the crowd into the grounded giant. Dark anchors reset after all four are used.";
                 hint.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);

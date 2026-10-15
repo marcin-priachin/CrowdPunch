@@ -34,19 +34,24 @@ namespace CrowdPunch.Systems.Presentation
                 bool loop=motion<2;
                 float duration=motion==2?t.WindUp:data.Durations[motion];
                 playback.Phase=loop?math.frac(playback.Phase+Delta/math.max(.01f,duration)):math.saturate(playback.Phase+Delta/math.max(.01f,duration));
-                float frame=playback.Phase*(loop?data.FrameCount:data.FrameCount-1);
-                int a=math.min((int)frame,data.FrameCount-1), next=loop?(a+1)%data.FrameCount:math.min(a+1,data.FrameCount-1);
-                // Rotate only the sampled skin around the body's centre. The physics capsule stays upright.
-                pivot.Angle=b.Phase==RollingPhase.Roll?math.fmod(pivot.Angle+math.radians(t.VisualRollDegreesPerSecond)*Delta,2*math.PI):0;
-                float3x3 spin=new float3x3(quaternion.AxisAngle(new float3(1,0,0),pivot.Angle));
-                for(int bone=0;bone<skin.Length;bone++)
+                // Wind-up compresses into the collider; rolling uses the calm pose, not a walking cycle.
+                float charge=b.Phase==RollingPhase.WindUp?1-math.saturate(b.Remaining/math.max(.01f,t.WindUp)):0;
+                pivot.Angle=b.Phase==RollingPhase.Roll?math.fmod(pivot.Angle+math.radians(t.VisualRollDegreesPerSecond)*Delta,2*math.PI)
+                    :math.atan2(math.sin(pivot.Angle),math.cos(pivot.Angle))*math.exp(-14*Delta);
+                var scale=new float3(1,1-charge*.18f,1-charge*.06f);
+                BossSkinPose.Sample(ref data,ref skin,motion,playback.Phase,loop,pivot.Center,scale,
+                    quaternion.RotateX(pivot.Angle),1);
+                if(pivot.Floor.IsCreated && b.Phase!=RollingPhase.Defeated)
                 {
-                    var from=data.Matrices[(motion*data.FrameCount+a)*data.BoneCount+bone];
-                    var to=data.Matrices[(motion*data.FrameCount+next)*data.BoneCount+bone];
-                    float f=math.frac(frame);
-                    skin[bone]=new SkinMatrix { Value=new float3x4(math.mul(spin,math.lerp(from.c0,to.c0,f)),
-                        math.mul(spin,math.lerp(from.c1,to.c1,f)),math.mul(spin,math.lerp(from.c2,to.c2,f)),
-                        math.mul(spin,math.lerp(from.c3,to.c3,f)-pivot.Center)+pivot.Center) };
+                    // A sampled support curve keeps the asymmetric spikes on the floor throughout the roll.
+                    // This is only a skin translation; the physical capsule and its trajectory are unchanged.
+                    ref var offsets=ref pivot.Floor.Value.Offsets;
+                    float coordinate=math.frac(pivot.Angle/(2*math.PI))*offsets.Length;
+                    // A tiny negative angle can round frac to exactly 1. Wrap that endpoint
+                    // to the first sample, just like the neighbouring sample at the seam.
+                    int index=(int)coordinate%offsets.Length;
+                    float offset=math.lerp(offsets[index],offsets[(index+1)%offsets.Length],math.frac(coordinate));
+                    for(int bone=0;bone<skin.Length;bone++) { var matrix=skin[bone].Value; matrix.c3.y+=offset; skin[bone]=new SkinMatrix { Value=matrix }; }
                 }
             }
         }

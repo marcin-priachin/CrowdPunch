@@ -61,5 +61,11 @@ namespace CrowdPunch.Components
         public double LastSeen;
     }
     public struct RollingVisualOwner : IComponentData { public Entity Value; }
-    public struct RollingAnimationPivot : IComponentData { public float3 Center; public float Angle; }
+    public struct RollingAnimationPivot : IComponentData
+    {
+        public float3 Center;
+        public float Angle;
+        public BlobAssetReference<RollingFloorSamples> Floor;
+    }
+    public struct RollingFloorSamples { public BlobArray<float> Offsets; }
 }

@@ -19,6 +19,7 @@ namespace CrowdPunch.Bakers
             float4 tint=new float4(color.r,color.g,color.b,color.a);
             AddComponent(e,new BossVisualOwner { Value=GetEntity(owner,TransformUsageFlags.Dynamic), Color=tint });
             AddComponent(e,new URPMaterialPropertyBaseColor { Value=tint });
+            if(owner.kind!=BossPartKind.Head) AddComponent<BossHandVisualPose>(e);
         }
     }
 }

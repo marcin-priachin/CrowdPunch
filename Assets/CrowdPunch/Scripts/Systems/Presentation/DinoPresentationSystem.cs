@@ -18,7 +18,8 @@ namespace CrowdPunch.Systems.Presentation
                 var b=SystemAPI.GetComponent<DinoBoss>(owner.ValueRO.Value); var t=SystemAPI.GetComponent<DinoTuning>(owner.ValueRO.Value);
                 float3 tint=b.Phase==DinoPhase.Warning?t.WarningColor*(1+.2f*math.sin(now*14)):
                     b.Phase==DinoPhase.Burst?t.BurstColor:b.Phase==DinoPhase.Stagger?t.StaggerColor:
-                    b.Phase==DinoPhase.Defeated?new float3(.2f):t.ChaseColor;
+                    b.Phase==DinoPhase.Defeated?new float3(.2f):new float3(1.15f);
+                if(b.Phase==DinoPhase.Warning || b.Phase==DinoPhase.Burst) tint=math.lerp(new float3(1.15f),tint,.5f);
                 color.ValueRW.Value=new float4(tint,1);
             }
             foreach(var (owner,color) in SystemAPI.Query<RefRO<PillarVisualOwner>,RefRW<URPMaterialPropertyBaseColor>>())

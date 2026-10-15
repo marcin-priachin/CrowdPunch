@@ -732,10 +732,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1000266590}
+  - {fileID: 964505188}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1000266589
+--- !u!1001 &964505187
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -761,7 +761,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.6916299
+      value: -1.5553935
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
       propertyPath: m_LocalPosition.z
@@ -874,7 +874,7 @@ PrefabInstance:
     - target: {fileID: 9129331855265988740, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
       propertyPath: m_RootBone
       value: 
-      objectReference: {fileID: 1000266590}
+      objectReference: {fileID: 964505188}
     - target: {fileID: 9129331855265988740, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
       propertyPath: m_AABB.m_Center.x
       value: 0.01066184
@@ -889,15 +889,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9129331855265988740, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
       propertyPath: m_AABB.m_Extent.x
-      value: 1.3410841
+      value: 1.9775178
       objectReference: {fileID: 0}
     - target: {fileID: 9129331855265988740, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
       propertyPath: m_AABB.m_Extent.y
-      value: 1.4919788
+      value: 2.1887703
       objectReference: {fileID: 0}
     - target: {fileID: 9129331855265988740, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
       propertyPath: m_AABB.m_Extent.z
-      value: 1.9118749
+      value: 2.776625
       objectReference: {fileID: 0}
     - target: {fileID: 9129331855265988740, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -909,33 +909,33 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1000266594}
+      addedObject: {fileID: 964505192}
     - targetCorrespondingSourceObject: {fileID: 227264865518667226, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1000266593}
+      addedObject: {fileID: 964505191}
   m_SourcePrefab: {fileID: 100100000, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
---- !u!4 &1000266590 stripped
+--- !u!4 &964505188 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
-  m_PrefabInstance: {fileID: 1000266589}
+  m_PrefabInstance: {fileID: 964505187}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1000266591 stripped
+--- !u!1 &964505189 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 227264865518667226, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
-  m_PrefabInstance: {fileID: 1000266589}
+  m_PrefabInstance: {fileID: 964505187}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1000266592 stripped
+--- !u!1 &964505190 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 8b3a1175399398e489df15d97f399f8a, type: 3}
-  m_PrefabInstance: {fileID: 1000266589}
+  m_PrefabInstance: {fileID: 964505187}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1000266593
+--- !u!114 &964505191
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000266591}
+  m_GameObject: {fileID: 964505189}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f66db5618b7ed5f4797260304159f9ff, type: 3}
@@ -943,15 +943,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 0a924585e83dff44fa395e96995c9831, type: 3}
   Profile: 0
+  RotateLaunchAroundOwner: 0
+  LaunchPivotHeight: 0
   BlendResponse: 12
---- !u!95 &1000266594
+--- !u!95 &964505192
 Animator:
   serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000266592}
+  m_GameObject: {fileID: 964505190}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 2c48638e0e973fd4bbb5c0b70514c271, type: 2}

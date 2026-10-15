@@ -9,17 +9,25 @@ namespace CrowdPunch.Mono.Player
         public Transform model;
         public Animator animator;
         public float groundHeight = 3;
+        public float groundedModelOffset;
+        public float groundedHitOffset, groundedPunchOffset, groundedHeadbuttOffset;
+        private float visibleGroundOffset;
         private static FinalePresentation active;
         private LineRenderer warning, tether, vulnerability;
         private Mono.UI.FinaleBossHealthBar healthBar;
         private readonly LineRenderer[] anchors = new LineRenderer[4];
         private Material material;
         private string animationState;
+        private int previousPhase = -1, previousAttack;
+        private float actionUntil, phaseStarted;
+        private string actionClip;
         private Renderer[] renderers;
         private MaterialPropertyBlock colors;
         private Mono.Camera.CameraFollow cameraFollow;
         private void OnEnable() {
             active=this; renderers=model.GetComponentsInChildren<Renderer>(); colors=new MaterialPropertyBlock();
+            previousPhase=-1; previousAttack=0; animationState=null; actionUntil=0;
+            visibleGroundOffset=groundedModelOffset;
             healthBar=GetComponent<Mono.UI.FinaleBossHealthBar>();
             cameraFollow=FindFirstObjectByType<Mono.Camera.CameraFollow>();
             if(settings!=null) {
@@ -32,20 +40,44 @@ namespace CrowdPunch.Mono.Player
         private void OnDestroy() { if(material!=null) Destroy(material); }
 
         public static void Publish(Vector3 position,Quaternion rotation,int phase,int attack,Vector3 center,Vector3 direction,
-            float length,float width,float progress,float flash,float health,Vector3 landing)
+            float length,float width,float progress,float flash,float health,Vector3 landing,float groundedWeight=0)
         {
             if(active==null) return;
             var a=active;
-            a.model.SetPositionAndRotation(position-Vector3.up*a.groundHeight,rotation);
-            string clip=phase==4?"Death":flash>0?"HitReact":phase==2?(attack==0?"Flying_Idle":"Punch"):"Fast_Flying";
-            if(a.animator!=null && clip!=a.animationState) { a.animator.CrossFade(clip,.15f); a.animationState=clip; }
+            if(a.previousPhase!=phase) {
+                a.phaseStarted=Time.time;
+                a.actionUntil=0;
+                if(phase==2) { a.actionClip="HitReact"; a.actionUntil=Time.time+.6f; }
+            }
+            // Commit the strike when the ECS warning resolves, instead of playing it early and freezing at its end.
+            bool released=a.previousPhase==phase && a.previousAttack!=0 && attack==0;
+            if(released && phase!=4) {
+                a.actionClip=a.previousAttack==4?"Headbutt":"Punch";
+                a.actionUntil=Time.time+.65f;
+            }
+            float scale=a.settings!=null?a.settings.modelScale:1;
+            float charge=attack!=0 && phase!=1?Mathf.SmoothStep(0,1,progress):0;
+            float landingSquash=phase==2?.14f*Mathf.Exp(-(Time.time-a.phaseStarted)*5):0;
+            a.model.localScale=new Vector3(1+charge*.035f+landingSquash*.4f,1-charge*.05f-landingSquash,1+charge*.035f+landingSquash*.4f)*scale;
+            string clip=phase==4?"Death":phase==1?"HitReact":Time.time<a.actionUntil?a.actionClip:
+                phase==2 || attack!=0?"Flying_Idle":"Fast_Flying";
+            float offset=clip=="HitReact"?a.groundedHitOffset:clip=="Punch"?a.groundedPunchOffset:
+                clip=="Headbutt"?a.groundedHeadbuttOffset:a.groundedModelOffset;
+            // Lift immediately for low attack poses, then settle back to the idle support height.
+            a.visibleGroundOffset=offset<a.visibleGroundOffset?offset:Mathf.Lerp(a.visibleGroundOffset,offset,1-Mathf.Exp(-24*Time.deltaTime));
+            a.model.SetPositionAndRotation(position-Vector3.up*(a.groundHeight+a.visibleGroundOffset*a.model.localScale.y*groundedWeight),rotation);
+            if(a.animator!=null) {
+                a.animator.speed=Time.time<a.actionUntil && clip!="HitReact"?1.8f:phase==3?1.4f:1;
+                if(clip!=a.animationState || released) { a.animator.CrossFadeInFixedTime(clip,.12f,0,0); a.animationState=clip; }
+            }
+            a.previousPhase=phase; a.previousAttack=attack;
             bool vulnerable=phase==2;
             float pulse=.5f+.5f*Mathf.Sin(Time.time*5);
-            Color tint=phase==4?new Color(.3f,.3f,.3f):vulnerable?new Color(.2f,1f,.9f):Color.Lerp(new Color(1,.55f,.4f),Color.white,health);
+            Color tint=phase==4?new Color(.3f,.3f,.3f):vulnerable?new Color(1,1.18f,1.22f):Color.Lerp(new Color(1.2f,.88f,.78f),Color.white,health);
             if(flash>0) tint=Color.white*2;
             a.colors.SetColor("_BaseColor",tint);
             a.colors.SetColor("_Color",tint);
-            a.colors.SetColor("_EmissionColor",vulnerable?new Color(0,.5f,.4f)*(1+pulse):Color.black);
+            a.colors.SetColor("_EmissionColor",vulnerable?new Color(.02f,.32f,.28f)*(1+pulse*.35f):Color.white*.04f);
             foreach(var r in a.renderers) r.SetPropertyBlock(a.colors);
             if(a.healthBar!=null) a.healthBar.Present(health);
             a.Ensure(ref a.vulnerability,"Boss vulnerable ring");

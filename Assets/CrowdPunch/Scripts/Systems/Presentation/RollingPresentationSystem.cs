@@ -19,7 +19,8 @@ namespace CrowdPunch.Systems.Presentation
                 if(!SystemAPI.HasComponent<RollingBoss>(owner.ValueRO.Value)) continue;
                 var b=SystemAPI.GetComponent<RollingBoss>(owner.ValueRO.Value);
                 var t=SystemAPI.GetComponent<RollingTuning>(owner.ValueRO.Value);
-                float3 tint=b.Phase==RollingPhase.Roll?t.RollColor:b.Phase==RollingPhase.WindUp?t.WindUpColor:t.PauseColor;
+                float3 tint=b.Phase==RollingPhase.Roll?t.RollColor:b.Phase==RollingPhase.WindUp?t.WindUpColor:new float3(1.15f);
+                if(b.Phase==RollingPhase.Roll || b.Phase==RollingPhase.WindUp) tint=math.lerp(new float3(1.15f),tint,.45f);
                 if(b.Phase==RollingPhase.Defeated) tint=new float3(.2f);
                 else if(now<b.InvulnerableUntil) tint=t.ProtectionColor*(1+.25f*math.sin((float)now*t.ProtectionPulse));
                 color.ValueRW.Value=new float4(tint,1);
