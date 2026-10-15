@@ -2372,3 +2372,19 @@ The create command refuses to overwrite existing examples. `Refresh Example Scen
 treatment; manual edits inside those generated roots should be made after that command.
 These are OQ-015 experiments, not an accepted change to campaign art direction or to
 BARRICADE-001..005, TRACK-001..005, COVER-001..005 or SHELL-001..006 behavior.
+
+The environment finish adds a 600 m visual landscape, surrounding settlements/forest/
+industry/fortress silhouettes, service paths and ground dressing to examples 28-31.
+`EnvironmentExampleFinish`, `EnvironmentExampleLandscape`, `EnvironmentExampleGroundDetail`
+and `EnvironmentExampleRendering` extend the editor recipe. The old flat presentation
+backdrop is inactive in these four SubScenes; gameplay floor and physics are unchanged.
+
+`ExampleEnvironmentLighting` owns presentation settings during an example's additive
+scene lifetime. Bootstrap remains the active scene, so this component explicitly applies
+the sky, trilight ambient fill and distance fog, enables camera HDR/post-processing/SMAA,
+and temporarily selects a project-owned URP asset with soft cascaded shadows and
+half-resolution SSAO. It restores the prior camera, atmosphere and quality-pipeline
+settings on unload. Each example has one global Volume at priority 100 with a separate
+ACES/bloom/colour/vignette profile. No depth of field or motion blur is used. All new
+scenery is non-colliding, main-scene presentation; no enemy entity access is introduced.
+Imported assets, the default renderer/pipeline and campaign scene assets are unchanged.

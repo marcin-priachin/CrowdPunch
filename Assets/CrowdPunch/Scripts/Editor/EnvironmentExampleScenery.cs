@@ -56,6 +56,7 @@ namespace CrowdPunch.Editor
                 Model(root,"KayKit","column",new Vector3(side*5,-1,z+4),new Vector3(2.4f,5,2.4f),0,theme,stone);
                 Block(root,"Inset light",new Vector3(side*5,2.3f,z+2.75f),new Vector3(.7f,.65f,.08f),accent);
             }
+            if(System.IO.Directory.Exists(Output+"Atmosphere")) FinishArena(root,floor,theme);
         }
 
         private static void Village(Transform root,float x,float z,int theme)
@@ -79,8 +80,16 @@ namespace CrowdPunch.Editor
         {
             var group = new GameObject("Village building").transform;
             group.SetParent(root,false);
+            Block(group,"Building foundation",new Vector3(0,-4,0),new Vector3(7,4,7),plaster);
             Block(group,"Plaster volume",new Vector3(0,0,0),new Vector3(7,5,7),plaster);
             Model(group,"Medieval Village","Wall_UnevenBrick_Window_Wide_Round",new Vector3(0,0,-3.55f),new Vector3(7,5,.35f),0,theme);
+            Model(group,"Medieval Village","Window_Wide_Round1",new Vector3(0,1.3f,-3.77f),new Vector3(3,2.5f,.25f),0,theme);
+            for(int face=1;face<4;face++)
+            {
+                var rotation=Quaternion.Euler(0,face*90,0);
+                Model(group,"Medieval Village","Wall_UnevenBrick_Window_Wide_Round",rotation*new Vector3(0,0,-3.55f),new Vector3(7,5,.35f),face*90,theme);
+                Model(group,"Medieval Village","Window_Wide_Round1",rotation*new Vector3(0,1.3f,-3.77f),new Vector3(3,2.5f,.25f),face*90,theme);
+            }
             Model(group,"Medieval Village","Roof_RoundTiles_8x8",new Vector3(0,5,0),new Vector3(8.8f,3.4f,8.8f),0,theme);
             group.SetPositionAndRotation(bottom,Quaternion.Euler(0,yaw,0));
         }
