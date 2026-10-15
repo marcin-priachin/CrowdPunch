@@ -29,6 +29,7 @@ namespace CrowdPunch.Systems.Presentation
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
                 Ranged = SystemAPI.GetComponentLookup<RangedAttackState>(true),
                 Elites = SystemAPI.GetComponentLookup<ElitePunchState>(true),
+                Dashers = SystemAPI.GetComponentLookup<DasherState>(true),
                 Time = (float)SystemAPI.Time.ElapsedTime
             }.ScheduleParallel(state.Dependency);
         }
@@ -46,6 +47,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
             [ReadOnly] public ComponentLookup<RangedAttackState> Ranged;
             [ReadOnly] public ComponentLookup<ElitePunchState> Elites;
+            [ReadOnly] public ComponentLookup<DasherState> Dashers;
             public float Time;
 
             private void Execute(in EnemyVisualOwner owner, ref URPMaterialPropertyBaseColor color)
@@ -53,7 +55,7 @@ namespace CrowdPunch.Systems.Presentation
                 Entity enemy = owner.Value;
                 if (!Archetypes.HasComponent(enemy) || !Launches.HasComponent(enemy)) return;
                 EnemyArchetypeKind kind = Archetypes[enemy].Value;
-                if (kind == EnemyArchetypeKind.Dasher) return; // Existing streak silhouette owns this role.
+                if (kind == EnemyArchetypeKind.Dasher && owner.UsesAtlas == 0) return;
                 float3 body = kind switch
                 {
                     EnemyArchetypeKind.LinkedPair => new float3(.45f, 1f, .85f),
@@ -67,6 +69,8 @@ namespace CrowdPunch.Systems.Presentation
                     EnemyArchetypeKind.Dragon => new float3(1,0,0),
                     _ => new float3(0.32f, 0.52f, 0.46f)
                 };
+                // A neutral multiplier preserves eyes, teeth, clothes and skin from the atlas.
+                if (owner.UsesAtlas != 0) body = new float3(1.15f);
                 Entity snake = SnakeHeads.HasComponent(enemy) ? enemy
                     : SnakeSegments.HasComponent(enemy) ? SnakeSegments[enemy].Head : Entity.Null;
                 bool isSnake = SnakeTunings.HasComponent(snake);
@@ -76,6 +80,7 @@ namespace CrowdPunch.Systems.Presentation
                     bool vulnerable = SnakeHeads.HasComponent(enemy) ? !SnakeHitRules.Protected(SnakeHeads[enemy])
                         : SnakeHeads.HasComponent(snake) && SnakeHitRules.IsTip(SnakeSegments[enemy], SnakeHeads[snake]);
                     body = vulnerable ? tuning.VulnerableColor.xyz : tuning.ProtectedColor.xyz;
+                    if (owner.UsesAtlas != 0) body = math.lerp(new float3(1.15f), body, .4f);
                 }
                 EnemyLaunchPhase phase = Launches[enemy].Phase;
                 bool preparing = kind == EnemyArchetypeKind.Baseline && Contacts.HasComponent(enemy)
@@ -84,9 +89,9 @@ namespace CrowdPunch.Systems.Presentation
                     || Elites.HasComponent(enemy) && Elites[enemy].Phase == ElitePunchPhase.WindUp
                     || Ninjas.HasComponent(enemy) && Ninjas[enemy].Phase == NinjaPhase.Preparing;
                 if (phase == EnemyLaunchPhase.Recovering || phase == EnemyLaunchPhase.Defeated)
-                    body *= 0.45f;
+                    body *= phase == EnemyLaunchPhase.Defeated ? .5f : .8f;
                 else if (!isSnake && preparing)
-                    body = math.lerp(body, new float3(1f, 0.82f, 0.2f), 0.55f + 0.3f * math.sin(Time * 12f));
+                    body = math.lerp(body, new float3(1.65f, 1.3f, .75f), 0.35f + 0.15f * math.sin(Time * 12f));
                 else if (!isSnake && kind == EnemyArchetypeKind.Baseline && Contacts.HasComponent(enemy)
                     && Contacts[enemy].IsAttempting != 0)
                     body = new float3(1f, 0.3f, 0.12f);
@@ -96,6 +101,13 @@ namespace CrowdPunch.Systems.Presentation
                 if (phase == EnemyLaunchPhase.Active && Ninjas.HasComponent(enemy)
                     && (Ninjas[enemy].Phase == NinjaPhase.ArrivalWarning || Ninjas[enemy].Phase == NinjaPhase.Dashing))
                     body = new float3(1, .45f, .18f);
+                if (phase == EnemyLaunchPhase.Active && Dashers.HasComponent(enemy))
+                {
+                    var dash = Dashers[enemy];
+                    if (dash.Phase == DasherPhase.Preparing)
+                        body *= new float3(1.35f + .2f * math.sin(Time * 18f), 1.1f, .75f);
+                    else if (dash.Phase == DasherPhase.Dashing) body *= 1.25f;
+                }
                 color.Value = new float4(body, 1f);
             }
         }

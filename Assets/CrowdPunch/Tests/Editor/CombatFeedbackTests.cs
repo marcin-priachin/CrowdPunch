@@ -108,6 +108,57 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Info004AtlasFeedbackPreservesPaletteAndRenderAccentsDoNotAccumulate()
+        {
+            using var world = new World("atlas presentation test");
+            var em = world.EntityManager;
+            var owner = em.CreateEntity(typeof(EnemyImpactFeedback), typeof(EnemyLaunchState),
+                typeof(CrowdPunch.Components.EnemyArchetype), typeof(LocalTransform), typeof(Unity.Physics.PhysicsVelocity));
+            em.SetComponentData(owner, new CrowdPunch.Components.EnemyArchetype { Value = EnemyArchetypeKind.Baseline });
+            em.SetComponentData(owner, LocalTransform.Identity);
+            em.SetComponentData(owner, new Unity.Physics.PhysicsVelocity { Linear = new float3(0, 0, 3) });
+            var visual = em.CreateEntity(typeof(EnemyVisualOwner), typeof(EnemyVisualDeformation),
+                typeof(LocalToWorld), typeof(URPMaterialPropertyBaseColor));
+            em.SetComponentData(visual, new EnemyVisualOwner { Value = owner, UsesAtlas = 1 });
+            em.SetComponentData(visual, new LocalToWorld { Value = float4x4.identity });
+            var colors = world.GetOrCreateSystem<EnemyReadabilitySystem>();
+            var accents = world.GetOrCreateSystem<EnemyImpactVisualSystem>();
+            for (int i = 0; i < 300; i++)
+            {
+                world.SetTime(new Unity.Core.TimeData(i / 60d, 1 / 60f));
+                colors.Update(world.Unmanaged); accents.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+                var matrix = em.GetComponentData<LocalToWorld>(visual).Value;
+                Assert.That(math.length(matrix.c0.xyz), Is.InRange(.97f, 1.03f));
+                Assert.That(matrix.c3.y, Is.InRange(0f, .036f));
+            }
+            Assert.That(em.GetComponentData<URPMaterialPropertyBaseColor>(visual).Value.xyz, Is.EqualTo(new float3(1.15f)));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            colors.Update(world.Unmanaged); accents.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            Assert.That(em.GetComponentData<LocalToWorld>(visual).Value, Is.EqualTo(float4x4.identity));
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [Test]
+        public void Info004ImportedImpactPrefabsAreBoundedAndDoNotDestroyPoolSlots()
+        {
+            var settings = Resources.Load<CombatFeedbackSettings>("CombatFeedbackSettings");
+            foreach (var prefab in new[] { settings.PunchParticles, settings.EnemyParticles,
+                settings.EnvironmentParticles, settings.ExplosionParticles })
+            {
+                Assert.That(prefab, Is.Not.Null);
+                Assert.That(prefab.GetComponentsInChildren<MonoBehaviour>(true), Is.Empty);
+                Assert.That(prefab.GetComponentsInChildren<Light>(true), Is.Empty);
+                foreach (var particle in prefab.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    Assert.That(particle.main.loop, Is.False);
+                    Assert.That(particle.main.playOnAwake, Is.False);
+                    Assert.That(particle.main.stopAction, Is.EqualTo(ParticleSystemStopAction.None));
+                    Assert.That(particle.main.maxParticles, Is.LessThanOrEqualTo(40));
+                }
+            }
+        }
+
+        [Test]
         public void Combat001TrailPoolClearsOnLaunchEndAndReusesCapacity()
         {
             var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();

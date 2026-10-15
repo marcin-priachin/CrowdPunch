@@ -156,6 +156,7 @@ namespace CrowdPunch.Editor
                 if (material.HasProperty("_ColorMap")) material.SetTexture("_ColorMap", texture);
                 if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
                 if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+                EnemyAppearanceMaterials.Configure(material);
                 material.enableInstancing = true;
                 EditorUtility.SetDirty(material);
                 results[index] = material;

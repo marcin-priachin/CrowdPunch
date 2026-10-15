@@ -36,6 +36,7 @@ namespace CrowdPunch.Configuration
         public ParticleSystem PunchParticles, EnemyParticles, PlayerDamageParticles, EnvironmentParticles;
         public ParticleSystem DashStartParticles, DashMovementParticles, DashEndParticles;
         public ParticleSystem DasherTelegraphParticles;
+        public ParticleSystem ExplosionParticles;
         [Min(1)] public int ParticlePoolSizePerEffect = 8;
         [Min(1)] public int MaximumImpactsPerFrame = 8;
         public Vector2 ParticleScale = new Vector2(.7f, 1.45f);

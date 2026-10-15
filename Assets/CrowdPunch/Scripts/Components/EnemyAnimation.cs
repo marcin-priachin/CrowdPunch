@@ -44,6 +44,8 @@ namespace CrowdPunch.Components
         public float PreviousHealth;
         public byte HitActive;
         public byte HealthInitialized;
+        public byte WasRecovering;
+        public float RecoveryAge;
     }
 
     public struct EnemyAnimationSamples

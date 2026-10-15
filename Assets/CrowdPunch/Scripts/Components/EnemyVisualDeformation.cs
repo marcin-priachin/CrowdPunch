@@ -7,5 +7,7 @@ namespace CrowdPunch.Components
     {
         public float4x4 AuthoredWorld, LastOutput;
         public byte Initialized;
+        public EnemyLaunchPhase PreviousPhase;
+        public float PhaseAge;
     }
 }

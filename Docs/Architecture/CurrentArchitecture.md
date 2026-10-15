@@ -1,10 +1,53 @@
 # Crowd Punch â€” Current Architecture
 
 Status: Repository snapshot  
-Last inspected: 2026-10-14
+Last inspected: 2026-10-15
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
+
+## Enemy Appearance Pass (INFO-004, ENEMY-005/007, COMBAT-011/014)
+
+The October 15 appearance pass uses the supplied Ultimate Monsters atlas on all normal/elite
+monster materials. `EnemyAppearanceMaterials` applies point-filtered, uncompressed atlas sampling
+and is called by each monster prefab builder, so rebuilding a prefab preserves its appearance.
+The supplied atlas and guide images are unchanged. The Dasher uses Flying/Armabee, with continuous
+wing motion during its committed dash. Its sampled culling bounds use the same bone matrices as
+the GPU vertices, avoiding double application of the imported FBX scale. The Exploder uses GreenSpikyBlob; generated mesh copies
+remap only its green body UV swatch to the atlas's amber swatch, retaining pale spikes and eye detail.
+Their existing physics capsules, movement tuning, attack rules and ECS ownership are unchanged.
+
+`EnemyVisualOwner.UsesAtlas` distinguishes textured skinned renderers from primitive fallback
+renderers. `EnemyReadabilitySystem` uses a neutral multiplier for atlas bodies, retains transient
+telegraphs and Snake vulnerability feedback, and preserves the palette while launched. Atlas hit
+flashes brighten the texture instead of flattening every surface into one role color. The existing
+DOTS/compute-deformation Shader Graph retains its full-precision indexing and now has a small
+palette-colored shadow fill and reduced smoothness. Unity Toon Shader is installed but is not
+assigned to ECS crowds: its imported shader does not implement this project's custom deformation path.
+
+The existing Burst animation job advances creature flight samples, restarts them on re-punch,
+adds bounded velocity pitch, and blends recovering creatures upright over at most 0.24 seconds.
+Idle recovery does not play the terminal death clip. Dragon attack/launch flame playback keeps its
+specialized ownership. Render-only breathing, moving bounce, contact/Dasher anticipation and a
+short landing spring compose in `EnemyImpactVisualSystem` with impact deformation, using the
+cached authored matrix without accumulating scale. No presentation system writes physics transforms.
+
+`EnemyEffectsBuilder` creates project-owned Cartoon FX copies for punch, body collision,
+ground impact and explosion. Source scripts and lights are removed from these copies; the two used
+CFXR shader importers are explicitly configured for URP. Every particle system is non-looping,
+uses no destructive stop action, and has a capped particle count. Existing impact pools still own
+capacity and bridge consumption. `ExplosionFeedback` prewarms up to its existing pool capacity of
+particle accents and retains a faint expanding radius pulse. Pause/restart clears both. No enemy
+Animator GameObjects or per-enemy particle objects are added.
+
+Validation: 19 animation and 8 combat-feedback checks passed, including re-punch reset, recovery,
+physics isolation, 300 repeated render-accent updates without scale accumulation, and pool-safe
+imported prefab settings. In a live Play session, punch and explosion particles expired and
+reused the same pooled objects. A controlled editor-preview late wave advanced with 133 enemy bodies,
+248 animated meshes and 250 renderers. With physics paused, 20 warmups followed by 120 completed
+updates measured animation 0.0392 ms, readability 0.0239 ms and impact accents 0.0145 ms per update,
+with zero calling-thread managed allocations in each measured loop. These are Editor CPU system
+measurements, not standalone frame-rate/GPU acceptance results; OQ-001 and final art approval remain open.
 
 ## Final Encounter (FINALE-001..007)
 

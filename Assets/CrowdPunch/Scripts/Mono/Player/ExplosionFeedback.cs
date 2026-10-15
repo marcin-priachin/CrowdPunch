@@ -1,8 +1,9 @@
+using CrowdPunch.Configuration;
 using UnityEngine;
 
 namespace CrowdPunch.Mono.Player
 {
-    /// <summary>Reuses a bounded set of the existing grey-box explosion spheres.</summary>
+    /// <summary>Bounded explosion accents with a short radius pulse; consumes bridge events only.</summary>
     [RequireComponent(typeof(PlayerEcsBridge))]
     public sealed class ExplosionFeedback : MonoBehaviour
     {
@@ -11,6 +12,7 @@ namespace CrowdPunch.Mono.Player
         private Material material;
         private Visual[] visuals;
         private Transform poolRoot;
+        private ParticleSystem[] bursts;
 
         private sealed class Visual
         {
@@ -37,6 +39,17 @@ namespace CrowdPunch.Mono.Player
             material.SetColor("_BaseColor", new Color(1f, .35f, .05f, .28f));
             poolRoot = new GameObject("Explosion feedback pool").transform;
             visuals = new Visual[Mathf.Clamp(poolCapacity, 1, 64)];
+            var settings = Resources.Load<CombatFeedbackSettings>("CombatFeedbackSettings");
+            if (settings != null && settings.ExplosionParticles != null)
+            {
+                bursts = new ParticleSystem[visuals.Length];
+                for (int i = 0; i < bursts.Length; i++)
+                {
+                    bursts[i] = Instantiate(settings.ExplosionParticles, poolRoot);
+                    bursts[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                }
+                material.SetColor("_BaseColor", new Color(1f, .55f, .12f, .09f));
+            }
             for (int i = 0; i < visuals.Length; i++)
             {
                 var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -77,6 +90,8 @@ namespace CrowdPunch.Mono.Player
 
         public void Clear()
         {
+            if (bursts != null) foreach (var burst in bursts)
+                if (burst != null) burst.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             if (visuals == null) return;
             foreach (var visual in visuals)
             {
@@ -94,6 +109,18 @@ namespace CrowdPunch.Mono.Player
         private void Show(Vector3 position, float radius, float duration, float sizeMultiplier)
         {
             if (visuals == null || FeedbackTimeController.IsSuspended) return;
+            if (bursts != null)
+            {
+                foreach (var burst in bursts)
+                {
+                    if (burst.IsAlive(true)) continue;
+                    burst.transform.position = position;
+                    // The transparent pulse communicates radius; this compact accent must not hide targets.
+                    burst.transform.localScale = Vector3.one * Mathf.Clamp(radius * .35f, .5f, 1.6f);
+                    burst.Play(true);
+                    break;
+                }
+            }
             foreach (var visual in visuals)
             {
                 if (visual.Remaining > 0f || visual.Object == null) continue;

@@ -35,7 +35,7 @@ namespace CrowdPunch.Systems.Presentation
                     else
                     {
                         commands.AddComponent<EnemyVisualDeformation>(entity);
-                        commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner });
+                        commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner, UsesAtlas = 1 });
                     }
                     commands.AddComponent(entity, new URPMaterialPropertyBaseColor { Value = new float4(1f) });
                 }

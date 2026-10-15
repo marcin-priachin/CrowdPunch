@@ -12,7 +12,7 @@ namespace CrowdPunch.Editor
 {
     public static class EnemyExplosivePrefabBuilder
     {
-        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Blob/GreenBlob.fbx";
+        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Blob/GreenSpikyBlob.fbx";
         private const string PrefabPath = "Assets/CrowdPunch/Prefabs/EnemyExplosive.prefab";
         private const string ControllerPath = "Assets/CrowdPunch/Animation/EnemyExplosive.controller";
         private const string SettingsPath = "Assets/CrowdPunch/Data/Settings/Enemies/ExplosiveEnemySpawnSettings.asset";
@@ -40,7 +40,7 @@ namespace CrowdPunch.Editor
                 ConfigurePhysics(root);
                 root.AddComponent<EnemyAuthoring>();
                 GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
-                visual.name = "GreenBlob";
+                visual.name = "GreenSpikyBlob";
                 visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
                 visual.transform.localScale = Vector3.one;
                 SetLayerRecursively(visual, 7);
@@ -53,11 +53,12 @@ namespace CrowdPunch.Editor
 
                 SkinnedMeshRenderer[] renderers = visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
                 if (renderers.Length == 0)
-                    throw new InvalidOperationException("GreenBlob.fbx contains no skinned renderers.");
+                    throw new InvalidOperationException("GreenSpikyBlob.fbx contains no skinned renderers.");
                 FitVisualToEnemy(root.transform, visual.transform, renderers);
                 for (int index = 0; index < renderers.Length; index++)
                 {
                     SkinnedMeshRenderer renderer = renderers[index];
+                    EnemyAppearanceMaterials.ApplyExploderPalette(renderer, index);
                     renderer.quality = SkinQuality.Bone4;
                     renderer.rootBone = animator.transform;
                     renderer.sharedMaterials = BuildMaterials(renderer.sharedMaterials);
@@ -79,7 +80,7 @@ namespace CrowdPunch.Editor
             AssignSpawnSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Created {PrefabPath} from GreenBlob.fbx and assigned it to {SettingsPath}.");
+            Debug.Log($"Created {PrefabPath} from GreenSpikyBlob.fbx and assigned it to {SettingsPath}.");
         }
 
         [MenuItem("Crowd Punch/Animation/Rebuild Explosive Samples")]
@@ -140,7 +141,7 @@ namespace CrowdPunch.Editor
             if (clip != null) return clip;
             string available = string.Join(", ", AssetDatabase.LoadAllAssetsAtPath(ModelPath)
                 .OfType<AnimationClip>().Select(candidate => candidate.name));
-            throw new InvalidOperationException($"GreenBlob.fbx has no animation named '{name}'. Available: {available}");
+            throw new InvalidOperationException($"GreenSpikyBlob.fbx has no animation named '{name}'. Available: {available}");
         }
 
         private static bool MatchesClipName(string candidate, string requested) =>
@@ -170,7 +171,7 @@ namespace CrowdPunch.Editor
             for (int index = 0; index < sources.Length; index++)
             {
                 Material source = sources[index];
-                string name = string.IsNullOrWhiteSpace(source?.name) ? $"GreenBlob_{index}" : source.name;
+                string name = string.IsNullOrWhiteSpace(source?.name) ? $"GreenSpikyBlob_{index}" : source.name;
                 string path = $"{MaterialFolder}/{SafeName(name)}.mat";
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null)
@@ -186,6 +187,7 @@ namespace CrowdPunch.Editor
                 if (material.HasProperty("_ColorMap")) material.SetTexture("_ColorMap", texture);
                 if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
                 if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+                EnemyAppearanceMaterials.Configure(material);
                 material.enableInstancing = true;
                 EditorUtility.SetDirty(material);
                 results[index] = material;
@@ -264,7 +266,7 @@ namespace CrowdPunch.Editor
             Bounds bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
             float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("GreenBlob renderers have empty bounds.");
+            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("GreenSpikyBlob renderers have empty bounds.");
             visual.localScale *= 2.5f / largest;
             bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);

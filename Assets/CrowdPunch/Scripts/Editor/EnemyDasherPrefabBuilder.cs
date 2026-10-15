@@ -12,7 +12,7 @@ namespace CrowdPunch.Editor
 {
     public static class EnemyDasherPrefabBuilder
     {
-        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Flying/Dragon.fbx";
+        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Flying/Armabee.fbx";
         private const string PrefabPath = "Assets/CrowdPunch/Prefabs/EnemyDasher.prefab";
         private const string ControllerPath = "Assets/CrowdPunch/Animation/EnemyDasher.controller";
         private const string SamplesPath = "Assets/CrowdPunch/Animation/EnemyDasherMovement.bytes";
@@ -46,7 +46,7 @@ namespace CrowdPunch.Editor
                 ConfigurePhysics(root);
                 root.AddComponent<EnemyAuthoring>();
                 GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
-                visual.name = "Dragon";
+                visual.name = "Armabee";
                 visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
                 visual.transform.localScale = Vector3.one;
                 SetLayerRecursively(visual, 7);
@@ -59,7 +59,7 @@ namespace CrowdPunch.Editor
 
                 SkinnedMeshRenderer[] renderers = visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
                 if (renderers.Length != 1)
-                    throw new InvalidOperationException($"Dragon.fbx must contain exactly one skinned renderer; found {renderers.Length}.");
+                    throw new InvalidOperationException($"Armabee.fbx must contain exactly one skinned renderer; found {renderers.Length}.");
                 SkinnedMeshRenderer renderer = renderers[0];
                 FitVisualToEnemy(root.transform, visual.transform, renderer);
                 renderer.quality = SkinQuality.Bone4;
@@ -83,7 +83,7 @@ namespace CrowdPunch.Editor
             AssignSpawnSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Created {PrefabPath} from Dragon.fbx and assigned it to {SettingsPath}.");
+            Debug.Log($"Created {PrefabPath} from Armabee.fbx and assigned it to {SettingsPath}.");
         }
 
         private static void ConfigureAnimationImport()
@@ -115,7 +115,7 @@ namespace CrowdPunch.Editor
             if (clip != null) return clip;
             string available = string.Join(", ", AssetDatabase.LoadAllAssetsAtPath(ModelPath)
                 .OfType<AnimationClip>().Select(candidate => candidate.name));
-            throw new InvalidOperationException($"Dragon.fbx has no animation named '{name}'. Available: {available}");
+            throw new InvalidOperationException($"Armabee.fbx has no animation named '{name}'. Available: {available}");
         }
 
         private static bool MatchesClipName(string candidate, string requested)
@@ -148,7 +148,7 @@ namespace CrowdPunch.Editor
             for (int i = 0; i < sources.Length; i++)
             {
                 Material source = sources[i];
-                string safeName = string.IsNullOrWhiteSpace(source?.name) ? $"Dragon_{i}" : source.name;
+                string safeName = string.IsNullOrWhiteSpace(source?.name) ? $"Armabee_{i}" : source.name;
                 string path = $"{MaterialFolder}/{safeName}.mat";
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null)
@@ -164,6 +164,7 @@ namespace CrowdPunch.Editor
                 if (material.HasProperty("_ColorMap")) material.SetTexture("_ColorMap", texture);
                 if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
                 if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+                EnemyAppearanceMaterials.Configure(material);
                 material.enableInstancing = true;
                 EditorUtility.SetDirty(material);
                 results[i] = material;
@@ -185,40 +186,38 @@ namespace CrowdPunch.Editor
             Matrix4x4[] bindposes = renderer.sharedMesh.bindposes;
             Bounds bounds = default;
             bool hasBounds = false;
-            var sampledMesh = new Mesh();
-            try
+            Vector3[] vertices = renderer.sharedMesh.vertices;
+            BoneWeight[] weights = renderer.sharedMesh.boneWeights;
+            for (int motion = 0; motion < clips.Length; motion++)
             {
-                for (int motion = 0; motion < clips.Length; motion++)
+                AnimationClip clip = clips[motion];
+                durations[motion] = clip.length;
+                for (int frame = 0; frame < FrameCount; frame++)
                 {
-                    AnimationClip clip = clips[motion];
-                    durations[motion] = clip.length;
-                    for (int frame = 0; frame < FrameCount; frame++)
-                    {
-                        float normalized = motion == EnemyAnimationSamples.ImpactMotion
-                            ? frame / (float)(FrameCount - 1)
-                            : frame / (float)FrameCount;
-                        clip.SampleAnimation(animator.gameObject, normalized * clip.length);
-                        Matrix4x4 inverse = animator.transform.worldToLocalMatrix;
-                        int poseStart = (motion * FrameCount + frame) * renderer.bones.Length;
-                        for (int bone = 0; bone < renderer.bones.Length; bone++)
-                            matrices[poseStart + bone] = inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
+                    float normalized = motion == EnemyAnimationSamples.ImpactMotion
+                        ? frame / (float)(FrameCount - 1)
+                        : frame / (float)FrameCount;
+                    clip.SampleAnimation(animator.gameObject, normalized * clip.length);
+                    Matrix4x4 inverse = animator.transform.worldToLocalMatrix;
+                    int poseStart = (motion * FrameCount + frame) * renderer.bones.Length;
+                    for (int bone = 0; bone < renderer.bones.Length; bone++)
+                        matrices[poseStart + bone] = inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
 
-                        renderer.BakeMesh(sampledMesh);
-                        Matrix4x4 toRoot = inverse * renderer.transform.localToWorldMatrix;
-                        foreach (Vector3 vertex in sampledMesh.vertices)
-                        {
-                            Vector3 position = toRoot.MultiplyPoint3x4(vertex);
-                            if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
-                            else bounds.Encapsulate(position);
-                        }
+                    // Bounds must use exactly the root-relative matrices consumed by GPU skinning.
+                    // BakeMesh can include an imported FBX scale a second time.
+                    for (int vertex = 0; vertex < vertices.Length; vertex++)
+                    {
+                        BoneWeight weight = weights[vertex];
+                        Vector3 point = vertices[vertex];
+                        Vector3 position = matrices[poseStart + weight.boneIndex0].MultiplyPoint3x4(point) * weight.weight0
+                            + matrices[poseStart + weight.boneIndex1].MultiplyPoint3x4(point) * weight.weight1
+                            + matrices[poseStart + weight.boneIndex2].MultiplyPoint3x4(point) * weight.weight2
+                            + matrices[poseStart + weight.boneIndex3].MultiplyPoint3x4(point) * weight.weight3;
+                        if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
+                        else bounds.Encapsulate(position);
                     }
                 }
             }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(sampledMesh);
-            }
-
             string hash = AssetDatabase.GetAssetDependencyHash(ControllerPath).ToString()
                 + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(renderer.sharedMesh))
                 + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(animator.avatar));

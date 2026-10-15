@@ -168,7 +168,7 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Enemy005DasherUsesAuthoredIdleMovementFrozenDashAndDeathMotions()
+        public void Enemy005DasherFlapsDuringDashAndLaunchAndPlaysDeath()
         {
             var em = world.EntityManager;
             EnemyAnimation animation = em.GetComponentData<EnemyAnimation>(visual);
@@ -185,13 +185,14 @@ namespace CrowdPunch.Tests
 
             em.SetComponentData(owner, new DasherState { Phase = DasherPhase.Dashing });
             Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)), "Dashing should freeze Fast_Flying on frame zero.");
-            Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)));
+            Assert.That(Pose.x, Is.EqualTo(1f), "Dashing uses Fast_Flying.");
+            float dashFrame = Pose.y;
+            Tick(.07f);
+            Assert.That(Pose.y, Is.Not.EqualTo(dashFrame), "Wings must continue moving during the committed dash.");
 
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
             Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)), "Launching should freeze Fast_Flying on frame zero.");
+            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)), "Launching restarts Fast_Flying.");
 
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
             Tick();
@@ -217,7 +218,7 @@ namespace CrowdPunch.Tests
 
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
             Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)), "Launch should hold the first Walk frame.");
+            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)), "Launch starts on the first Walk frame.");
 
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering });
             em.SetComponentData(owner, new DesiredMovement());
@@ -341,6 +342,34 @@ namespace CrowdPunch.Tests
             Assert.That(Pose, Is.EqualTo(new float3(9f, 0f, 0f)));
             Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Landing, Is.Zero);
             Assert.That(em.GetComponentData<PhysicsVelocity>(owner).Linear, Is.EqualTo(float3.zero));
+        }
+
+        [TestCase(EnemyAnimationProfile.Baseline)]
+        [TestCase(EnemyAnimationProfile.Ranged)]
+        [TestCase(EnemyAnimationProfile.Explosive)]
+        [TestCase(EnemyAnimationProfile.Dasher)]
+        public void Info004CreatureFlightAdvancesAndRepunchRestartsWithoutPhysicsWrites(EnemyAnimationProfile profile)
+        {
+            var em = world.EntityManager;
+            var animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)profile;
+            em.SetComponentData(visual, animation);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 4 });
+            var velocity = new PhysicsVelocity { Linear = new float3(3, 2, 8) };
+            em.SetComponentData(owner, velocity);
+            Tick();
+            var initial = em.GetBuffer<SkinMatrix>(visual)[0].Value;
+            Tick(.13f);
+            Assert.That(em.GetBuffer<SkinMatrix>(visual)[0].Value.c3, Is.Not.EqualTo(initial.c3));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 5 });
+            Tick();
+            Assert.That(em.GetBuffer<SkinMatrix>(visual)[0].Value.c3, Is.EqualTo(initial.c3));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner).Linear, Is.EqualTo(velocity.Linear));
+            Assert.That(em.GetComponentData<LocalTransform>(owner).Position, Is.EqualTo(float3.zero));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
+            Tick(); Tick(.25f);
+            Assert.That(Pose.x, Is.Zero, "Recovering uses Idle, never the terminal Death pose.");
+            Assert.That(em.GetBuffer<SkinMatrix>(visual)[0].Value.c1.z, Is.EqualTo(0).Within(.001f));
         }
 
         [Test]

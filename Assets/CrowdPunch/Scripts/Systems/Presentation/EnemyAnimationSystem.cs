@@ -76,6 +76,17 @@ namespace CrowdPunch.Systems.Presentation
                     playback.Initialized = 1;
                 }
                 EnemyLaunchState launch = Launches[owner];
+                if (animation.Profile != (byte)EnemyAnimationProfile.Standard
+                    && animation.Profile != (byte)EnemyAnimationProfile.Elite
+                    && launch.Phase == EnemyLaunchPhase.Recovering)
+                {
+                    AnimateCreatureRecovery(ref playback, ref skin, ref samples, launch,
+                        animation.Profile != (byte)EnemyAnimationProfile.Dasher
+                        && animation.Profile != (byte)EnemyAnimationProfile.Dragon
+                        && animation.Profile != (byte)EnemyAnimationProfile.Explosive);
+                    return;
+                }
+                playback.WasRecovering = 0;
                 if (animation.Profile == (byte)EnemyAnimationProfile.Dragon)
                 {
                     if ((launch.Phase == EnemyLaunchPhase.Active || launch.Phase == EnemyLaunchPhase.Launched) && Dragons.HasComponent(owner))
@@ -145,14 +156,6 @@ namespace CrowdPunch.Systems.Presentation
                     {
                         playback.HitActive = 0;
                         AnimateBaseline(owner, ref playback, ref skin, ref samples, launch);
-                    }
-                    else if (launch.Phase == EnemyLaunchPhase.Recovering)
-                    {
-                        if (playback.WasLaunched != 0) { playback.ImpactPhase = 0; playback.WasLaunched = 0; }
-                        playback.ImpactPhase = math.saturate(playback.ImpactPhase + DeltaTime / math.max(.01f, samples.Durations[2]));
-                        float recoveryFrame = playback.ImpactPhase * (samples.FrameCount - 1);
-                        int from = (int)recoveryFrame;
-                        ApplyFrame(ref skin, ref samples, 2, from, math.min(from + 1, samples.FrameCount - 1), math.frac(recoveryFrame));
                     }
                     else
                     {
@@ -268,9 +271,16 @@ namespace CrowdPunch.Systems.Presentation
                     && Dashers.HasComponent(owner) && Dashers[owner].Phase == DasherPhase.Dashing;
                 if (launch.Phase == EnemyLaunchPhase.Launched || dashing)
                 {
-                    playback.Landing = 0;
-                    playback.WasLaunched = launch.Phase == EnemyLaunchPhase.Launched ? (byte)1 : (byte)0;
-                    ApplyFrame(ref skin, ref samples, 1, 0, 0, 0f);
+                    if (dashing)
+                    {
+                        playback.Landing = 0;
+                        playback.WasLaunched = 0;
+                        playback.Phase = math.frac(playback.Phase + DeltaTime * 2f / math.max(.01f, samples.Durations[1]));
+                        float wingFrame = playback.Phase * samples.FrameCount;
+                        int wing = (int)wingFrame;
+                        ApplyFrame(ref skin, ref samples, 1, wing, (wing + 1) % samples.FrameCount, math.frac(wingFrame));
+                    }
+                    else AnimateCreatureFlight(owner, ref playback, ref skin, ref samples, launch, 1, false);
                     return;
                 }
 
@@ -310,9 +320,7 @@ namespace CrowdPunch.Systems.Presentation
             {
                 if (launch.Phase == EnemyLaunchPhase.Launched)
                 {
-                    playback.Landing = 0;
-                    playback.WasLaunched = 1;
-                    ApplyFrame(ref skin, ref samples, 1, 0, 0, 0f);
+                    AnimateCreatureFlight(owner, ref playback, ref skin, ref samples, launch, 1, false);
                     return;
                 }
 
@@ -353,11 +361,8 @@ namespace CrowdPunch.Systems.Presentation
                 const int attackMotion = 2;
                 if (launch.Phase == EnemyLaunchPhase.Launched)
                 {
-                    playback.Landing = 0;
-                    playback.WasLaunched = 1;
                     playback.WasAttacking = 0;
-                    ApplyRotatedFrame(ref skin, ref samples, EnemyAnimationSamples.FlyingMotion,
-                        0, 0, 0f, quaternion.RotateX(-math.PI * 0.5f));
+                    AnimateCreatureFlight(owner, ref playback, ref skin, ref samples, launch, EnemyAnimationSamples.FlyingMotion, true);
                     return;
                 }
 
@@ -494,10 +499,7 @@ namespace CrowdPunch.Systems.Presentation
             {
                 if (launch.Phase == EnemyLaunchPhase.Launched)
                 {
-                    playback.Landing = 0;
-                    playback.WasLaunched = 1;
-                    ApplyRotatedFrame(ref skin, ref samples, EnemyAnimationSamples.FlyingMotion,
-                        0, 0, 0f, quaternion.RotateX(-math.PI * 0.5f));
+                    AnimateCreatureFlight(owner, ref playback, ref skin, ref samples, launch, EnemyAnimationSamples.FlyingMotion, true);
                     return;
                 }
 
@@ -530,6 +532,51 @@ namespace CrowdPunch.Systems.Presentation
                 float frame = playback.Phase * samples.FrameCount;
                 int a = (int)frame;
                 ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
+            }
+
+            private void AnimateCreatureFlight(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples,
+                EnemyLaunchState launch, int motion, bool sideways)
+            {
+                bool entering = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
+                playback.FlightPhase = entering ? 0 : math.frac(playback.FlightPhase
+                    + DeltaTime * .85f / math.max(.01f, samples.Durations[motion]));
+                playback.WasLaunched = 1;
+                playback.LaunchSequence = launch.LaunchSequence;
+                playback.Landing = 0;
+                float pitch = sideways ? -math.PI * .5f : 0;
+                if (Velocities.HasComponent(owner))
+                {
+                    float3 velocity = Velocities[owner].Linear;
+                    if (math.lengthsq(velocity) > .01f)
+                        pitch -= math.clamp(math.atan2(velocity.y, math.length(velocity.xz)), -.5f, .5f);
+                }
+                float frame = playback.FlightPhase * samples.FrameCount;
+                int from = (int)frame;
+                ApplyRotatedFrame(ref skin, ref samples, motion, from, (from + 1) % samples.FrameCount,
+                    math.frac(frame), quaternion.RotateX(pitch));
+            }
+
+            private void AnimateCreatureRecovery(ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples,
+                EnemyLaunchState launch, bool sideways)
+            {
+                if (playback.WasRecovering == 0)
+                {
+                    playback.RecoveryAge = 0;
+                    playback.ImpactDuration = math.max(.01f, launch.RecoverySecondsRemaining);
+                }
+                else playback.RecoveryAge += DeltaTime;
+                playback.WasRecovering = 1;
+                playback.WasLaunched = 0;
+                playback.Landing = 0;
+                playback.WasAttacking = 0;
+                playback.Phase = math.frac(playback.Phase + DeltaTime * .45f / math.max(.01f, samples.Durations[0]));
+                float frame = playback.Phase * samples.FrameCount;
+                int from = (int)frame;
+                float rise = math.smoothstep(0, 1, playback.RecoveryAge / math.min(.24f, playback.ImpactDuration));
+                ApplyRotatedFrame(ref skin, ref samples, 0, from, (from + 1) % samples.FrameCount,
+                    math.frac(frame), quaternion.RotateX(sideways ? -math.PI * .5f * (1 - rise) : 0));
             }
 
             private static void ApplyFrame(ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples,
