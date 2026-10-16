@@ -12,10 +12,20 @@ namespace CrowdPunch.Mono.Levels
         public Color ground = new(.047f, .043f, .035f);
         public float ambientMultiplier = 1.08f;
         public Light sun;
+        public bool overrideAtmosphere;
+        public Material skybox;
+        public Color haze = new(.64f, .73f, .73f);
+        public float hazeStart = 70;
+        public float hazeEnd = 290;
 
         private Color previousSky, previousEquator, previousGround;
         private AmbientMode previousMode;
         private Light previousSun;
+        private Material previousSkybox;
+        private bool previousFog;
+        private FogMode previousFogMode;
+        private Color previousFogColor;
+        private float previousFogStart, previousFogEnd;
 
         private void OnEnable()
         {
@@ -24,6 +34,12 @@ namespace CrowdPunch.Mono.Levels
             previousGround = RenderSettings.ambientGroundColor;
             previousMode = RenderSettings.ambientMode;
             previousSun = RenderSettings.sun;
+            previousSkybox = RenderSettings.skybox;
+            previousFog = RenderSettings.fog;
+            previousFogMode = RenderSettings.fogMode;
+            previousFogColor = RenderSettings.fogColor;
+            previousFogStart = RenderSettings.fogStartDistance;
+            previousFogEnd = RenderSettings.fogEndDistance;
             Apply();
         }
 
@@ -34,6 +50,15 @@ namespace CrowdPunch.Mono.Levels
             RenderSettings.ambientEquatorColor = equator * ambientMultiplier;
             RenderSettings.ambientGroundColor = ground * ambientMultiplier;
             if (sun != null) RenderSettings.sun = sun;
+            if (overrideAtmosphere)
+            {
+                RenderSettings.skybox = skybox;
+                RenderSettings.fog = true;
+                RenderSettings.fogMode = FogMode.Linear;
+                RenderSettings.fogColor = haze;
+                RenderSettings.fogStartDistance = hazeStart;
+                RenderSettings.fogEndDistance = hazeEnd;
+            }
             DynamicGI.UpdateEnvironment();
         }
 
@@ -44,6 +69,15 @@ namespace CrowdPunch.Mono.Levels
             RenderSettings.ambientGroundColor = previousGround;
             RenderSettings.ambientMode = previousMode;
             RenderSettings.sun = previousSun;
+            if (overrideAtmosphere)
+            {
+                RenderSettings.skybox = previousSkybox;
+                RenderSettings.fog = previousFog;
+                RenderSettings.fogMode = previousFogMode;
+                RenderSettings.fogColor = previousFogColor;
+                RenderSettings.fogStartDistance = previousFogStart;
+                RenderSettings.fogEndDistance = previousFogEnd;
+            }
             DynamicGI.UpdateEnvironment();
         }
     }

@@ -2439,3 +2439,30 @@ scenes, and wires the camera and presentation volumes. Model sources, particle s
 hazard shaders, gameplay tuning and collisions are preserved. The explicit migration is
 repeatable; it does not silently run on imports. Art Lab remains an optional Editor tool;
 its Current setting now means the authored Full Cel baseline.
+
+## Chapter One Village Environments
+
+Campaign 01-10 now use the sunlit border village setting (VISION-004/005/006).
+`ChapterOneVillageBuilder` dresses the existing saved scenes without rebuilding encounters.
+`ChapterOneVillageAssets` owns model fitting and copied cel materials;
+`ChapterOneVillageLandscape` authors bounds-aware meadow meshes and quiet paving;
+`ChapterOneVillageScenery` composes village houses, orchards, markets, a mill, gardens,
+watchtowers and the Gatekeeper keep. The newly imported Kenney Castle Kit supplies
+the fortified landmarks alongside the existing village, nature, dungeon and prop kits.
+
+Scenery is static, non-colliding main-scene presentation. Collision meshes, original
+transforms, waves, objectives, navigation and boss authoring remain in their original
+SubScenes. Surface materials are chapter-owned; the old flat backdrop renderer is hidden.
+Paving is clipped to the convex floor outline, including the round boss arena, and the
+landscape stays below the playable floor across the entire 100 m wave arena.
+
+`CelLevelLighting` optionally owns a chapter skybox and distance fog in addition to
+its ambient palette and sun. This opt-in defaults off for existing chapters and restores
+the previous sky and fog settings on additive unload. The shared Full Cel Volume remains
+at priority 150; a chapter profile at 160 overrides only white balance (temperature 4).
+No new runtime ECS or material-scanning system is introduced.
+
+The explicit `Crowd Punch > Art Direction > Dress Chapter One - Sunlit Village` command
+replaces the generated scenery root and reapplies these visual settings to stages 01-10.
+Hand edits inside that root should be made after running the recipe. Generated assets
+live in `Assets/CrowdPunch/Data/ChapterOneVillage`; imported models are not edited.
