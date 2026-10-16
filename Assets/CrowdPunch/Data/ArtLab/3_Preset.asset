@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53d3297ca52947f44bd71cacb26bf397, type: 3}
+  m_Name: 3_Preset
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::CrowdPunch.Editor.ArtLab.ArtLabPreset
+  title: Graphic comic
+  description: Hard bands, interior silhouette ink and subtle shadow halftone.
+  shading: 3
+  postProcessing: {fileID: 11400000, guid: d1140f5bba7fc1c4f88b3b0bea607a98, type: 2}
+  sunTint: {r: 1, g: 1, b: 1, a: 1}
+  sunIntensityMultiplier: 1.08
+  ambientMultiplier: 1
+  fogDistanceMultiplier: 1.2

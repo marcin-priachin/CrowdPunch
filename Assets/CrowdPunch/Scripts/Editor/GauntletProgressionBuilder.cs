@@ -331,6 +331,7 @@ namespace CrowdPunch.Editor
             light.intensity=1.2f;
             light.shadows=LightShadows.Soft;
             light.transform.rotation=Quaternion.Euler(50,-30,0);
+            CelPresentationAuthoring.ConfigureScene(main);
             EditorSceneManager.SaveScene(main,scenes+id+".unity");
             EditorSceneManager.CloseScene(main,true);
         }
@@ -393,7 +394,7 @@ namespace CrowdPunch.Editor
             string path=Layouts+name+".mat";
             Material material=AssetDatabase.LoadAssetAtPath<Material>(path);
             if(material!=null) return material;
-            material=new Material(Shader.Find("Universal Render Pipeline/Lit")) { name=name, color=color };
+            material=new Material(Shader.Find("CrowdPunch/Cel/Environment")) { name=name, color=color };
             material.SetFloat("_Smoothness",0.1f);
             AssetDatabase.CreateAsset(material,path);
             return material;

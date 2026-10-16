@@ -192,7 +192,7 @@ namespace CrowdPunch.Editor
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
             {
-                material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "Goleling Atlas", enableInstancing = true };
+                material = new Material(Shader.Find("CrowdPunch/Cel/Environment")) { name = "Goleling Atlas", enableInstancing = true };
                 AssetDatabase.CreateAsset(material, path);
             }
             var atlas = AssetDatabase.LoadAssetAtPath<Texture2D>(EnemyAppearanceMaterials.AtlasPath);

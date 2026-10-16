@@ -5106,7 +5106,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
   m_IsGlobal: 1
   priority: 100
@@ -5123,14 +5123,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 09f4269e3e0a88e4b9fcb50d138a99f4, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.ExampleEnvironmentLighting
   sky: {fileID: 2100000, guid: 1327bc9feda49c24aa48b1550147ffc4, type: 2}
   sun: {fileID: 1411039691}
-  presentationPipeline: {fileID: 11400000, guid: 7e3581c11b1ef4146ab8ded5bd94dd33, type: 2}
+  presentationPipeline: {fileID: 11400000, guid: d229181f97cd38f4caca672c23a38cdc, type: 2}
   ambientSky: {r: 0.8, g: 0.9, b: 1, a: 1}
   ambientEquator: {r: 0.55, g: 0.65, b: 0.68, a: 1}
   ambientGround: {r: 0.25, g: 0.28, b: 0.3, a: 1}
+  ambientMultiplier: 1.08
   haze: {r: 0.64, g: 0.73, b: 0.73, a: 1}
   hazeStart: 55
   hazeEnd: 290
@@ -19334,7 +19335,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d9276c63fd6077409705bfe4dc7f1e2, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.GauntletLevel
   playerEntryPoint: {fileID: 995709212}
   openingHint: "Sunlit Village Gate \u2014 Launch enemies into the barricade, then
@@ -21138,6 +21139,55 @@ Transform:
   m_Children:
   - {fileID: 795028482}
   m_Father: {fileID: 1884978119}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &543749075
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 543749077}
+  - component: {fileID: 543749076}
+  m_Layer: 0
+  m_Name: Full Cel Presentation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &543749076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 543749075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 150
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: cee84e88d221fb8429f91bd4a93b095f, type: 2}
+--- !u!4 &543749077
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 543749075}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &545536362
 GameObject:
@@ -46126,7 +46176,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 45a335734b1572644a6a5d09d87adc65, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.Scenes::Unity.Scenes.SubScene
   _SceneAsset: {fileID: 102900000, guid: 5b3faa00b13ddee4cacdbd33efa9788e, type: 3}
   _HierarchyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
@@ -73948,3 +73998,4 @@ SceneRoots:
   - {fileID: 1233470973}
   - {fileID: 1411039692}
   - {fileID: 1884978119}
+  - {fileID: 543749077}

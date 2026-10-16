@@ -2388,3 +2388,54 @@ settings on unload. Each example has one global Volume at priority 100 with a se
 ACES/bloom/colour/vignette profile. No depth of field or motion blur is used. All new
 scenery is non-colliding, main-scene presentation; no enemy entity access is introduced.
 Imported assets, the default renderer/pipeline and campaign scene assets are unchanged.
+
+## Art Lab (Editor only)
+
+`ArtLabWindow` compares five presets in legacy 28-31 using the existing IMGUI editor
+tool pattern. `ArtLabSession` coordinates temporary main-scene/player material copies,
+a priority-200 Volume, chapter-relative lighting and camera/freeze controls. It applies
+after `ExampleEnvironmentLighting`, whose scene-lifetime ownership remains unchanged.
+Original references/settings are restored when preview ends or the example unloads.
+
+`ArtLabPreview` is the editor-only presentation bridge. `ArtLabMaterialSystem` runs in
+GamePresentationGroup and replaces RenderMeshArray material references through an ECB,
+preserving meshes, material/mesh ranges, deformation data and per-entity colour properties.
+Prefab and disabled entities are included so later spawns inherit the preview. The managed
+SystemBase is intentional for Unity material/array caching; no Unity object references
+are added to ECS components and no MonoBehaviour queries enemies. A throttled scan catches
+streamed arrays; style changes force an immediate refresh. Simulation systems are unchanged.
+
+Generated URP shader variants preserve the installed EnemySkinning/Sidekick vertex and
+surface logic, replacing only forward lighting. All preview bridge/system code is guarded
+by UNITY_EDITOR; presets, window and authoring live in Editor folders. See
+`Docs/Verification/ArtLab.md` for controls and limits.
+
+## Production Full Cel Presentation (2026-10-16)
+
+VISION-006 resolves OQ-015. Game-owned surface materials now reference fixed
+`CrowdPunch/Cel/Environment`, `CrowdPunch/Cel/Enemy`, or `CrowdPunch/Cel/Player`
+shaders. Their generated passes preserve the original URP material properties,
+EnemySkinning compute deformation and Sidekick vertex logic. The shared lighting
+include fixes production shading to Full Cel at compile time; Art Lab globals cannot
+change a production material. No material replacement system is required in builds.
+
+`Data/Presentation/FullCelPost.asset` is the runtime VolumeProfile copied from the selected
+preset: Neutral tonemapping, contrast 5, saturation 4, exposure .25, bloom .06 with
+threshold 1.1 and scatter .65, and vignette .12. Campaign main scenes carry a global
+Volume at priority 150; Bootstrap provides the same profile at priority 0. Chapter
+white balance remains inherited. The camera enables HDR, post-processing and SMAA.
+`CelRendering.asset`/`CelRenderer.asset` promote the example rendering configuration to
+all quality levels, including its contact shading and shadow settings.
+
+`CelLevelLighting` scopes each campaign/legacy main scene's saved ambient palette and sun
+to its additive lifetime. It applies the selected 1.08 ambient multiplier and restores the
+previous environment on unload. Existing polished examples retain `ExampleEnvironmentLighting`
+as their sole atmosphere owner, with the same multiplier and production pipeline reference.
+Neither component queries ECS or changes simulation ownership.
+
+`CelPresentationAuthoring` migrates game-owned material assets in place, creates owned
+copies of referenced imported/package materials, remaps renderers in game prefabs and
+scenes, and wires the camera and presentation volumes. Model sources, particle shaders,
+hazard shaders, gameplay tuning and collisions are preserved. The explicit migration is
+repeatable; it does not silently run on imports. Art Lab remains an optional Editor tool;
+its Current setting now means the authored Full Cel baseline.

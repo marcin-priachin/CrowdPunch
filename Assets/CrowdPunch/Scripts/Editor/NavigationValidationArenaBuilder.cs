@@ -28,7 +28,7 @@ namespace CrowdPunch.Editor
             var settings = AssetDatabase.LoadAssetAtPath<NavigationSettings>(SettingsPath);
             if (settings == null) { settings = ScriptableObject.CreateInstance<NavigationSettings>(); AssetDatabase.CreateAsset(settings, SettingsPath); }
             var material = AssetDatabase.LoadAssetAtPath<Material>(DirectoryPath + "/NavigationBlocks.mat");
-            if (material == null) { material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(.3f, .4f, .45f) }; AssetDatabase.CreateAsset(material, DirectoryPath + "/NavigationBlocks.mat"); }
+            if (material == null) { material = new Material(Shader.Find("CrowdPunch/Cel/Environment")) { color = new Color(.3f, .4f, .45f) }; AssetDatabase.CreateAsset(material, DirectoryPath + "/NavigationBlocks.mat"); }
             try
             {
                 var sub = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive); SceneManager.SetActiveScene(sub);

@@ -92,7 +92,7 @@ namespace CrowdPunch.Editor
             try
             {
                 UnityEngine.Object.DestroyImmediate(root.GetComponent<Collider>());
-                var mat=new Material(Shader.Find("Universal Render Pipeline/Lit")) { enableInstancing=true };
+                var mat=new Material(Shader.Find("CrowdPunch/Cel/Environment")) { enableInstancing=true };
                 mat.color=Color.white; mat.SetFloat("_Smoothness",.7f); AssetDatabase.CreateAsset(mat,ChickenArt+"Projectile.mat");
                 root.GetComponent<MeshRenderer>().sharedMaterial=mat; root.AddComponent<ChickenProjectileAuthoring>();
                 return PrefabUtility.SaveAsPrefabAsset(root,path);

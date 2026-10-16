@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53d3297ca52947f44bd71cacb26bf397, type: 3}
+  m_Name: 4_Preset
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::CrowdPunch.Editor.ArtLab.ArtLabPreset
+  title: Miniature / diorama
+  description: Smooth toy-like highlights, warm lighting and gentle bloom. No depth
+    blur.
+  shading: 4
+  postProcessing: {fileID: 11400000, guid: 2f01bbb311187ad4aa53d67e8af9a908, type: 2}
+  sunTint: {r: 1, g: 0.95, b: 0.85, a: 1}
+  sunIntensityMultiplier: 1
+  ambientMultiplier: 1.1
+  fogDistanceMultiplier: 1

@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-14
+Last updated: 2026-10-16
 
 ## How To Read This Document
 
@@ -45,6 +45,16 @@ Player attacks, enemies, knockback, collisions, and propagated effects must belo
 Status: Must
 
 Large crowds may make the screen chaotic, but the player's own action, launch direction, important threats, and major chain reactions must remain legible.
+
+### VISION-006 — Full Cel Art Direction
+
+Status: Must
+
+Use the approved Art Lab Full cel shading look as the default for environment surfaces,
+player and enemy shading, lighting, and post-processing throughout the campaign and game
+prefabs. Preserve chapter-specific colours, readable effect ownership, existing animation
+and deformation, and the distinct visual cues of hazards and objectives. The default must
+work in player builds without the Editor's Art Lab preview.
 
 ## Core Loop And Run Structure
 

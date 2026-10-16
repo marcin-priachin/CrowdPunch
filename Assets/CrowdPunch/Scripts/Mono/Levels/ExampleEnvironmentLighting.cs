@@ -13,6 +13,7 @@ namespace CrowdPunch.Mono.Levels
         public Color ambientSky = Color.gray;
         public Color ambientEquator = Color.gray;
         public Color ambientGround = Color.gray;
+        public float ambientMultiplier = 1.08f;
         public Color haze = Color.gray;
         public float hazeStart = 45;
         public float hazeEnd = 230;
@@ -58,9 +59,9 @@ namespace CrowdPunch.Mono.Levels
             RenderSettings.skybox = sky;
             RenderSettings.sun = sun;
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = ambientSky;
-            RenderSettings.ambientEquatorColor = ambientEquator;
-            RenderSettings.ambientGroundColor = ambientGround;
+            RenderSettings.ambientSkyColor = ambientSky * ambientMultiplier;
+            RenderSettings.ambientEquatorColor = ambientEquator * ambientMultiplier;
+            RenderSettings.ambientGroundColor = ambientGround * ambientMultiplier;
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogColor = haze;

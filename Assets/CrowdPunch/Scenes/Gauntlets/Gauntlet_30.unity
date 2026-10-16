@@ -3432,6 +3432,55 @@ Transform:
   - {fileID: 1052358822}
   m_Father: {fileID: 1567506177}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &181854450
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 181854452}
+  - component: {fileID: 181854451}
+  m_Layer: 0
+  m_Name: Full Cel Presentation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &181854451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 181854450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 150
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: cee84e88d221fb8429f91bd4a93b095f, type: 2}
+--- !u!4 &181854452
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 181854450}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &183110637
 GameObject:
   m_ObjectHideFlags: 0
@@ -17489,7 +17538,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
   m_IsGlobal: 1
   priority: 100
@@ -17506,14 +17555,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 09f4269e3e0a88e4b9fcb50d138a99f4, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.ExampleEnvironmentLighting
   sky: {fileID: 2100000, guid: 644c3e6887cc84c43ac0f98d4abfeeda, type: 2}
   sun: {fileID: 1750494850}
-  presentationPipeline: {fileID: 11400000, guid: 7e3581c11b1ef4146ab8ded5bd94dd33, type: 2}
+  presentationPipeline: {fileID: 11400000, guid: d229181f97cd38f4caca672c23a38cdc, type: 2}
   ambientSky: {r: 0.8, g: 0.9, b: 1, a: 1}
   ambientEquator: {r: 0.55, g: 0.65, b: 0.68, a: 1}
   ambientGround: {r: 0.25, g: 0.28, b: 0.3, a: 1}
+  ambientMultiplier: 1.08
   haze: {r: 0.35, g: 0.54, b: 0.51, a: 1}
   hazeStart: 38
   hazeEnd: 190
@@ -31335,7 +31385,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 45a335734b1572644a6a5d09d87adc65, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.Scenes::Unity.Scenes.SubScene
   _SceneAsset: {fileID: 102900000, guid: 2d7c72fb04fc40348b378edcefc0675c, type: 3}
   _HierarchyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
@@ -41980,7 +42030,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d9276c63fd6077409705bfe4dc7f1e2, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.GauntletLevel
   playerEntryPoint: {fileID: 291222479}
   openingHint: "Overgrown Observatory \u2014 Launch through the rotating gap to break
@@ -54647,3 +54697,4 @@ SceneRoots:
   - {fileID: 1230687621}
   - {fileID: 1750494851}
   - {fileID: 1567506177}
+  - {fileID: 181854452}

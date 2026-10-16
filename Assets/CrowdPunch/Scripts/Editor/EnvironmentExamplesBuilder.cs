@@ -223,7 +223,7 @@ namespace CrowdPunch.Editor
             string path = Output + $"Materials/{theme}_{name}.mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material != null) return material;
-            material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = name, color = color, enableInstancing = true };
+            material = new Material(Shader.Find("CrowdPunch/Cel/Environment")) { name = name, color = color, enableInstancing = true };
             material.SetFloat("_Smoothness", .12f);
             if (emission > 0) { material.EnableKeyword("_EMISSION"); material.SetColor("_EmissionColor", color * emission); }
             AssetDatabase.CreateAsset(material, path);
@@ -266,7 +266,7 @@ namespace CrowdPunch.Editor
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material != null) { ConfigureFoliage(material,source); return material; }
             material = new Material(source) { name = source.name, enableInstancing = true };
-            material.shader = Shader.Find("Universal Render Pipeline/Lit");
+            material.shader = Shader.Find("CrowdPunch/Cel/Environment");
             if (source.mainTexture != null) material.SetTexture("_BaseMap", source.mainTexture);
             material.SetFloat("_Smoothness", .1f);
             material.SetFloat("_Metallic", 0);

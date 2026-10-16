@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-15
+Last updated: 2026-10-16
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -29,10 +29,6 @@ What is the smallest shippable effect set, and what general transformation/event
 ### OQ-014 — Combination Reference UI
 
 How many discoverable combinations exist before a compact reference becomes more helpful than environmental learning?
-
-### OQ-015 — Art Direction
-
-What visual style best preserves silhouettes, launch direction, effect ownership, and large-crowd performance?
 
 ### OQ-016 — Camera
 
@@ -65,6 +61,18 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-10-16 — OQ-015: Full Cel Art Direction
+
+Decision: Use the Art Lab Full cel shading look for environment and player/enemy shading,
+lighting and post-processing. Apply it as the default throughout campaign scenes and game
+prefabs, including standalone player builds.
+
+Rationale: The user selected this look after comparing the five Art Lab presets. Preserve
+chapter palettes, animation and gameplay readability. Target-hardware performance remains
+part of OQ-001 rather than an unresolved style choice.
+
+GDD rules: VISION-005, VISION-006
 
 ### 2026-10-15 - Birb Snake Head And Matching Tail Palette
 

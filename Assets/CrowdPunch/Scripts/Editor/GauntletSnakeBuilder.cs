@@ -90,7 +90,7 @@ namespace CrowdPunch.Editor
             var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
             if (material == null)
             {
-                material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(.3f,.8f,.95f), enableInstancing = true };
+                material = new Material(Shader.Find("CrowdPunch/Cel/Environment")) { color = new Color(.3f,.8f,.95f), enableInstancing = true };
                 AssetDatabase.CreateAsset(material, materialPath);
             }
             var root = new GameObject("SnakeOrb") { layer = 7 };

@@ -111,7 +111,7 @@ namespace CrowdPunch.Editor
         internal static Dictionary<string, Material> CreateMaterials()
         {
             var result = new Dictionary<string, Material>();
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            var shader = Shader.Find("CrowdPunch/Cel/Environment");
             if (shader == null) throw new InvalidOperationException("URP Lit shader is missing.");
             foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { Kit }))
             foreach (var source in AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GUIDToAssetPath(guid)).OfType<Material>())

@@ -118,7 +118,7 @@ namespace CrowdPunch.Editor
         private static Material Material(string name,Color color)
         {
             string path=Art+name+".mat"; var mat=AssetDatabase.LoadAssetAtPath<Material>(path); if(mat!=null) return mat;
-            mat=new Material(Shader.Find("Universal Render Pipeline/Lit")) { name=name,enableInstancing=true }; mat.SetColor("_BaseColor",color); mat.SetFloat("_Smoothness",.3f); AssetDatabase.CreateAsset(mat,path); return mat;
+            mat=new Material(Shader.Find("CrowdPunch/Cel/Environment")) { name=name,enableInstancing=true }; mat.SetColor("_BaseColor",color); mat.SetFloat("_Smoothness",.3f); AssetDatabase.CreateAsset(mat,path); return mat;
         }
     }
 }
