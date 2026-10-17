@@ -26,12 +26,9 @@ namespace CrowdPunch.Editor
         {
             float x=floor.extents.x,z=floor.extents.z,y=floor.max.y;
             var c=floor.center; c.y=y;
-            var path=Surface("Sandy village paths",new Color(.49f,.43f,.28f));
-            // Roads and framing are entirely outside the authored combat bounds.
+            // Paths are blended in the meadow shader: no overlapping road slabs.
             foreach(int side in new[]{-1,1})
             {
-                Block(root,"Village approach",c+new Vector3(0,-.13f,side*(z+17)),new Vector3(6,.035f,32),path);
-                Block(root,"Side lane",c+new Vector3(side*(x+5),-.13f,0),new Vector3(5,.035f,2*z+24),path);
                 for(float along=-z+3;along<z;along+=8)
                 {
                     Model(root,"Stylized Nature","Bush_Common",c+new Vector3(side*(x+3),-.15f,along),new Vector3(2.5f,1.1f,2.2f),along*17);
@@ -44,13 +41,13 @@ namespace CrowdPunch.Editor
                 }
             }
             // Larger objects are set back for the orbit camera; low shrubs frame the near edge.
-            int houses=stage==8?18:10;
+            int houses=stage==8?24:16;
             for(int i=0;i<houses;i++)
             {
                 float angle=(i*360f/houses+17+stage*11)*Mathf.Deg2Rad;
                 // Leave the north vista open for this stage's hero landmark.
                 if(Mathf.Cos(angle)>.72f) continue;
-                var p=Ring(angle,26+i%3*9,floor,stage);
+                var p=Ring(angle,17+i%3*8,floor,stage);
                 House(root,p,-angle*Mathf.Rad2Deg,i%3);
             }
             var north=c+new Vector3((stage%3-1)*8,-.18f,z+25);
@@ -116,6 +113,7 @@ namespace CrowdPunch.Editor
             }
             Motes(root,c+new Vector3(-x-4,1,0));
             Motes(root,c+new Vector3(x+4,1,0));
+            ChapterOneVillageDetails.Build(root,floor,stage);
             ClearBuildingCanopies(root);
         }
 
@@ -138,7 +136,8 @@ namespace CrowdPunch.Editor
         {
             var group=new GameObject("Terracotta village house").transform; group.SetParent(root,false);
             float height=variant==2?7:5;
-            Block(group,"Stone footing",new Vector3(0,-.4f,0),new Vector3(7,.6f,6),Stone);
+            // The footing must protrude beyond the walls, not share their vertical faces.
+            Block(group,"Stone footing",new Vector3(0,-.55f,0),new Vector3(7.4f,.8f,6.4f),Stone);
             Block(group,"Cream plaster walls",Vector3.zero,new Vector3(7,height,6),Plaster);
             Model(group,"Medieval Village","Roof_Front_Brick8",new Vector3(0,height,-3),new Vector3(7,2.65f,.2f),0,Plaster);
             Model(group,"Medieval Village","Roof_Front_Brick8",new Vector3(0,height,3),new Vector3(7,2.65f,.2f),180,Plaster);

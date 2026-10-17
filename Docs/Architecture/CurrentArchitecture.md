@@ -2445,7 +2445,7 @@ its Current setting now means the authored Full Cel baseline.
 Campaign 01-10 now use the sunlit border village setting (VISION-004/005/006).
 `ChapterOneVillageBuilder` dresses the existing saved scenes without rebuilding encounters.
 `ChapterOneVillageAssets` owns model fitting and copied cel materials;
-`ChapterOneVillageLandscape` authors bounds-aware meadow meshes and quiet paving;
+`ChapterOneVillageLandscape` authors bounds-aware meadow meshes;
 `ChapterOneVillageScenery` composes village houses, orchards, markets, a mill, gardens,
 watchtowers and the Gatekeeper keep. The newly imported Kenney Castle Kit supplies
 the fortified landmarks alongside the existing village, nature, dungeon and prop kits.
@@ -2453,8 +2453,23 @@ the fortified landmarks alongside the existing village, nature, dungeon and prop
 Scenery is static, non-colliding main-scene presentation. Collision meshes, original
 transforms, waves, objectives, navigation and boss authoring remain in their original
 SubScenes. Surface materials are chapter-owned; the old flat backdrop renderer is hidden.
-Paving is clipped to the convex floor outline, including the round boss arena, and the
-landscape stays below the playable floor across the entire 100 m wave arena.
+Paving textures are projected onto the original authored floor, including the round boss
+arena. There is no extra paving layer. The landscape stays below the playable floor
+across the entire 100 m wave arena.
+
+`ChapterOneVillageSurfaces` assigns the imported StylizedTextures maps to chapter-owned
+`CrowdPunch/Cel/Village Surface` materials. World-space projection supports UV-less
+authored floors and imported atlas geometry without altering their meshes. This opaque
+URP shader supports DOTS instancing, shadow casting, depth and depth normals, three-band
+directional lighting, screen-space contact shading and fog. Meadow materials store each
+arena's bounds and blend earth paths and broad colour variation per pixel; no geometry
+colour bands or overlapping path slabs are used. It has no runtime controller or global
+shader state. Existing player/enemy deformation and other chapters' shaders are unchanged.
+
+`ChapterOneVillageDetails` clusters grass, flowers, household props and garden details
+outside combat bounds and approach lanes. Wider house footings avoid coplanar wall faces.
+Chapter ambient fill is reduced to retain visibly shaded faces; the shared Full Cel
+post-processing profile is unchanged.
 
 `CelLevelLighting` optionally owns a chapter skybox and distance fog in addition to
 its ambient palette and sun. This opt-in defaults off for existing chapters and restores

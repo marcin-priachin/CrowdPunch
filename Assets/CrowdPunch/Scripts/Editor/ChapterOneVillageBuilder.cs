@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 using CrowdPunch.Mono.Levels;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -69,10 +67,6 @@ namespace CrowdPunch.Editor
             var renderers = sub.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<MeshRenderer>(true)).ToArray();
             var floor = renderers.Single(r=>r.name=="Continuous Convex Floor" || r.name=="Continuous Round Floor");
             var bounds = floor.bounds;
-            var floorMesh=floor.GetComponent<MeshFilter>().sharedMesh;
-            var outline=ConvexOutline(floorMesh.vertices.Select(v=>floor.transform.TransformPoint(v))
-                .Where(v=>Mathf.Abs(v.y-bounds.max.y)<.01f)
-                .Select(v=>new Vector2(v.x,v.z)).Distinct().ToArray());
             var paving=Surface("Warm courtyard paving",new Color(.52f,.47f,.33f));
             var stone=Surface("Limestone",new Color(.64f,.59f,.43f));
             var foundation=Surface("Foundation",new Color(.32f,.34f,.23f));
@@ -96,7 +90,7 @@ namespace CrowdPunch.Editor
             var scenery=new GameObject(RootName).transform;
             new GameObject($"{number:00} - {Settings[number-1]}").transform.SetParent(scenery,false);
             ChapterOneVillageLandscape.Build(scenery,bounds,number);
-            ChapterOneVillageLandscape.Paving(scenery,bounds,outline,number);
+            // Texture the original collision-aligned floor. No near-coplanar paving overlay.
             ChapterOneVillageScenery.Build(scenery,bounds,number);
             ConfigureLighting(scene,scenery,bounds,number);
             if(scenery.GetComponentsInChildren<Collider>(true).Length!=0)
@@ -105,41 +99,22 @@ namespace CrowdPunch.Editor
             Debug.Log($"Chapter One {number:00}: {Settings[number-1]}, floor {bounds.size}, visual dressing only.");
         }
 
-        private static Vector2[] ConvexOutline(Vector2[] points)
-        {
-            // Round floor meshes also contain centre vertices: angular sorting is insufficient.
-            var sorted=points.OrderBy(p=>p.x).ThenBy(p=>p.y).ToArray();
-            var hull=new List<Vector2>();
-            float Cross(Vector2 a,Vector2 b,Vector2 c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
-            foreach(var point in sorted)
-            {
-                while(hull.Count>=2 && Cross(hull[hull.Count-2],hull[hull.Count-1],point)<=0) hull.RemoveAt(hull.Count-1);
-                hull.Add(point);
-            }
-            int lower=hull.Count;
-            for(int i=sorted.Length-2;i>=0;i--)
-            {
-                while(hull.Count>lower && Cross(hull[hull.Count-2],hull[hull.Count-1],sorted[i])<=0) hull.RemoveAt(hull.Count-1);
-                hull.Add(sorted[i]);
-            }
-            if(hull.Count>1) hull.RemoveAt(hull.Count-1);
-            return hull.ToArray();
-        }
-
         private static void ConfigureLighting(Scene scene,Transform scenery,Bounds floor,int number)
         {
             var lighting=scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<CelLevelLighting>(true)).Single();
             var sun=lighting.sun;
             sun.transform.rotation=Quaternion.Euler(48+(number%3)*3,-38+(number-1)*5,0);
-            sun.color=new Color(1,.96f,.87f); sun.intensity=1.65f;
-            sun.shadows=LightShadows.Soft; sun.shadowStrength=.8f; sun.shadowBias=.04f; sun.shadowNormalBias=.25f;
-            lighting.sky=new Color(.65f,.76f,.87f);
-            lighting.equator=new Color(.46f,.52f,.46f);
-            lighting.ground=new Color(.23f,.25f,.17f);
+            sun.color=new Color(1,.96f,.87f); sun.intensity=1.35f;
+            sun.shadows=LightShadows.Soft; sun.shadowStrength=1; sun.shadowBias=.3f; sun.shadowNormalBias=.35f;
+            var sunData=sun.GetComponent<UniversalAdditionalLightData>();
+            if(sunData!=null) sunData.usePipelineSettings=false;
+            lighting.sky=new Color(.28f,.36f,.48f);
+            lighting.equator=new Color(.17f,.21f,.23f);
+            lighting.ground=new Color(.08f,.09f,.07f);
             lighting.ambientMultiplier=1.08f;
             lighting.overrideAtmosphere=true;
             lighting.haze=new Color(.67f,.76f,.74f);
-            lighting.hazeStart=Mathf.Max(70,floor.extents.magnitude+40);
+            lighting.hazeStart=Mathf.Max(95,floor.extents.magnitude+40);
             lighting.hazeEnd=lighting.hazeStart+210;
             string path=Output+"/VillageSky.mat";
             var sky=AssetDatabase.LoadAssetAtPath<Material>(path);

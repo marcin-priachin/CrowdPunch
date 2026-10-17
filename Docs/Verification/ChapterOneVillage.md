@@ -18,7 +18,7 @@ Their visual settings are:
 | 09 | Watchtower Approach |
 | 10 | Gatekeepers Keep |
 
-Chapter-owned cel materials, quiet courtyard paving, limestone boundaries, terracotta
+Chapter-owned cel materials, textured courtyard paving, limestone boundaries, terracotta
 houses, foliage, paths, fences, props, landmarks and rolling meadow backgrounds are
 saved in the scenes. Decorative scenery has no colliders. Landscape placement adapts
 to each floor, including the 100 m wave arena and circular Gatekeeper arena.
@@ -64,3 +64,41 @@ Bootstrap is left ready to preview Campaign 01 on the next Editor Play session.
 The explicit authoring command is `Crowd Punch > Art Direction > Dress Chapter One -
 Sunlit Village`. It replaces the generated scenery root and reapplies the chapter's
 visual settings; make manual edits inside that root after running the recipe.
+
+## 2026-10-17 ground, shading and density refinement
+
+- Replaced the meadow's three triangle-level colour materials with continuous world-space
+  colour variation, imported grass texture and noisy, feathered grass/earth path edges.
+  The existing landscape mesh silhouette is unchanged.
+- Removed the paving overlay 8 mm above the combat floor and the thin rectangular road
+  slabs. The original ECS floor now receives world-projected paving directly. Its mesh,
+  height and collider remain unchanged.
+- House footings are wider than their walls, eliminating the overlapping vertical faces
+  at their bases. Chapter sun bias is explicitly configured independently of pipeline bias.
+- Added a chapter-owned opaque cel surface shader with three directional bands, cool fill,
+  cast shadows, SSAO contact shading, fog, world-projected texture detail and DOTS support.
+  It includes shadow, depth and depth-normal passes. Player/enemy shaders, shared production
+  post-processing, source model packs, source texture imports and other chapters are unchanged.
+- Lowered Chapter One ambient fill to preserve shaded faces. Increased village houses and
+  background trees, with planted verges, flowers, benches, produce, stored timber, trellises
+  and wider doorsteps outside the authored combat area. Grass and vine colours match the
+  chapter palette. The existing building/canopy exclusion pass remains in use.
+- All ten stages rebuilt successfully. No campaign SubScene has a Git difference.
+- Unity C# compilation succeeded. The command-line `dotnet build Assembly-CSharp.csproj
+  --no-restore --no-dependencies` exited unsuccessfully with zero reported warnings/errors;
+  it is not treated as a successful compilation check.
+- All 83 CelPresentationTests passed after the final material/scenery rebuild, including
+  the 81 campaign scenes and prefab/Bootstrap checks. The new shader reported no compiler
+  messages after exercising both GameObject scenery and baked ECS floor rendering.
+- Inspected final Play Mode stages 01, 06, 08 and 10 from gameplay and/or temporary overview
+  cameras; frame counters advanced (for example 5 to 407 in the final session). Close-up
+  captures from shifted camera positions show clean wall/footing separation and ground
+  contact shading. These are visual checks, not a full combat or performance benchmark.
+- Transition from Campaign 10 to 11 restored fog=false, Default-Skybox and white balance
+  temperature 0. Chapter One retained temperature 4 with the shared Full Cel profile.
+- The existing Sidekick Tool Downloader invalid-window error recurred on Play entry.
+  An inactive-player Animator warning also appeared after an unattended combat death.
+  Neither originates in this environment change. Some inspection requests timed out during
+  Editor loading; subsequent requests and rendering succeeded.
+
+Preview captures for this refinement are in the ignored `Temp/VillagePolish` folder.

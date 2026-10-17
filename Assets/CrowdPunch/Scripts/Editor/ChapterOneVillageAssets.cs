@@ -18,6 +18,7 @@ namespace CrowdPunch.Editor
             Directory.CreateDirectory(Output + "/Materials");
             Directory.CreateDirectory(Output + "/Landscape");
             AssetDatabase.Refresh();
+            ChapterOneVillageSurfaces.Prepare();
             models = AssetDatabase.FindAssets("t:Model", new[] { "Assets/CrowdPunch/Models" })
                 .Select(AssetDatabase.GUIDToAssetPath).Where(p => p.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase)).ToArray();
         }
@@ -26,12 +27,17 @@ namespace CrowdPunch.Editor
         {
             string path = Output + "/Materials/" + name + ".mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (material != null) return material;
+            if (material != null)
+            {
+                ChapterOneVillageSurfaces.Configure(material,name,color);
+                return material;
+            }
             material = new Material(Shader.Find("CrowdPunch/Cel/Environment"))
                 { name = name, color = color, enableInstancing = true };
             material.SetFloat("_Smoothness", .06f);
             material.SetFloat("_Metallic", 0);
             AssetDatabase.CreateAsset(material, path);
+            ChapterOneVillageSurfaces.Configure(material,name,color);
             return material;
         }
 
@@ -47,6 +53,12 @@ namespace CrowdPunch.Editor
             if (source.mainTexture != null) material.SetTexture("_BaseMap", source.mainTexture);
             material.SetFloat("_Smoothness", .06f);
             material.SetFloat("_Metallic", 0);
+            if(kit=="Stylized Nature" && source.name=="Grass")
+            {
+                material.SetTexture("_BaseMap",null);
+                material.color=new Color(.33f,.45f,.15f);
+                material.SetFloat("_Cull",0);
+            }
             // Opaque leaf canopies in this pack have a deliberately solid cel silhouette.
             if (kit == "Stylized Nature" && source.name.StartsWith("Leaves"))
             {
