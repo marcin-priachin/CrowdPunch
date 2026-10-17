@@ -329,7 +329,7 @@ namespace CrowdPunch.Editor
             var light=new GameObject("Arena Light").AddComponent<Light>();
             light.type=LightType.Directional;
             light.intensity=1.2f;
-            light.shadows=LightShadows.Soft;
+            light.shadows=LightShadows.Hard;
             light.transform.rotation=Quaternion.Euler(50,-30,0);
             CelPresentationAuthoring.ConfigureScene(main);
             EditorSceneManager.SaveScene(main,scenes+id+".unity");

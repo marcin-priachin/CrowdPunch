@@ -75,6 +75,7 @@ namespace CrowdPunch.Editor
                 QualitySettings.SetQualityLevel(i,false); QualitySettings.renderPipeline=target;
             }
             QualitySettings.SetQualityLevel(quality,false);
+            CelShadowDetailAuthoring.ConfigureSettings();
             foreach (string path in AssetDatabase.FindAssets("t:Material",new[]{"Assets/CrowdPunch"}).Select(AssetDatabase.GUIDToAssetPath).Distinct())
                 if (path.EndsWith(".mat",StringComparison.OrdinalIgnoreCase)) ConvertMaterial(AssetDatabase.LoadAssetAtPath<Material>(path));
             AssetDatabase.SaveAssets();
@@ -143,7 +144,7 @@ namespace CrowdPunch.Editor
                 renderer.sharedMaterials=materials; EditorUtility.SetDirty(renderer);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(renderer); changed=true;
             }
-            return changed;
+            return changed | CelShadowDetailAuthoring.ConfigureHierarchy(roots);
         }
 
         public static void ConvertScene(string path)

@@ -92,6 +92,7 @@ namespace CrowdPunch.Editor
             ChapterOneVillageLandscape.Build(scenery,bounds,number);
             // Texture the original collision-aligned floor. No near-coplanar paving overlay.
             ChapterOneVillageScenery.Build(scenery,bounds,number);
+            ChapterOneVillageRoofShadows.Apply(scenery);
             ConfigureLighting(scene,scenery,bounds,number);
             if(scenery.GetComponentsInChildren<Collider>(true).Length!=0)
                 throw new InvalidOperationException("Village dressing must remain non-colliding.");
@@ -105,7 +106,7 @@ namespace CrowdPunch.Editor
             var sun=lighting.sun;
             sun.transform.rotation=Quaternion.Euler(48+(number%3)*3,-38+(number-1)*5,0);
             sun.color=new Color(1,.96f,.87f); sun.intensity=1.35f;
-            sun.shadows=LightShadows.Soft; sun.shadowStrength=1; sun.shadowBias=.3f; sun.shadowNormalBias=.35f;
+            sun.shadows=LightShadows.Hard; sun.shadowStrength=1; sun.shadowBias=.3f; sun.shadowNormalBias=.35f;
             var sunData=sun.GetComponent<UniversalAdditionalLightData>();
             if(sunData!=null) sunData.usePipelineSettings=false;
             lighting.sky=new Color(.28f,.36f,.48f);

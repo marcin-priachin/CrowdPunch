@@ -54,6 +54,7 @@ namespace CrowdPunch.Editor
             land.transform.SetParent(root,false); land.isStatic=true;
             land.GetComponent<MeshFilter>().sharedMesh=mesh;
             land.GetComponent<MeshRenderer>().sharedMaterial=ChapterOneVillageSurfaces.Meadow(floor,stage);
+            land.GetComponent<MeshRenderer>().forceMeshLod=0;
             land.GetComponent<MeshRenderer>().shadowCastingMode=ShadowCastingMode.Off;
             var random=new System.Random(1703+stage*991);
             float Next(float min,float max)=>Mathf.Lerp(min,max,(float)random.NextDouble());

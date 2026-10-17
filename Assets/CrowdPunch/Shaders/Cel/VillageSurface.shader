@@ -11,6 +11,8 @@ Shader "CrowdPunch/Cel/Village Surface"
         _Bounds("Arena centre XZ / half size XZ", Vector) = (0,0,20,20)
         _PathColor("Path tint", Color) = (.56,.43,.25,1)
         _Variation("Large colour variation", Range(0,.5)) = .12
+        _PlasterGrain("Plaster wash", Range(0,.2)) = 0
+        [ToggleUI] _ReceiveShadows("Receive cast shadows", Float) = 1
     }
     SubShader
     {
@@ -21,7 +23,7 @@ Shader "CrowdPunch/Cel/Village Surface"
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor, _PathColor;
             float4 _Bounds;
-            float _TextureScale, _TextureStrength, _Meadow, _Variation;
+            float _TextureScale, _TextureStrength, _Meadow, _Variation, _ReceiveShadows, _PlasterGrain;
         CBUFFER_END
         TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
         TEXTURE2D(_DirtMap); SAMPLER(sampler_DirtMap);
@@ -92,6 +94,11 @@ Shader "CrowdPunch/Cel/Village Surface"
                     + SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,p.xy*_TextureScale).rgb*weights.z;
                 half macro=Noise(p.xz*.045);
                 half3 albedo=_BaseColor.rgb*Detail(tex)*(1+(macro-.5)*_Variation*2);
+                [branch] if(_PlasterGrain>0)
+                {
+                    half plaster=Noise(p.xy*.7+p.z*.31)*.75+Noise(p.zy*5+p.x*.47)*.25;
+                    albedo*=1+(plaster-.5)*_PlasterGrain;
+                }
                 if(_Meadow>.5)
                 {
                     float2 q=abs(p.xz-_Bounds.xy);
@@ -114,7 +121,7 @@ Shader "CrowdPunch/Cel/Village Surface"
                 half feather=max(fwidth(ndl)*1.5,.018);
                 half band=.20+.42*smoothstep(.23-feather,.23+feather,ndl)+.38*smoothstep(.68-feather,.68+feather,ndl);
                 AmbientOcclusionFactor ao=GetScreenSpaceAmbientOcclusion(GetNormalizedScreenSpaceUV(input.positionCS));
-                half visibility=lerp(.18,1,sun.shadowAttenuation)*ao.directAmbientOcclusion;
+                half visibility=lerp(.18,1,lerp(1,sun.shadowAttenuation,_ReceiveShadows))*ao.directAmbientOcclusion;
                 half3 fill=half3(.17,.21,.28)+SampleSH(n)*.24;
                 half3 color=albedo*(fill+band*visibility*min(sun.color,half3(1.35,1.35,1.35)))*ao.indirectAmbientOcclusion;
                 return half4(MixFog(color,input.fog),1);

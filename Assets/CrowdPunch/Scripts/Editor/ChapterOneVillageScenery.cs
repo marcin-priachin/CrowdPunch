@@ -138,9 +138,7 @@ namespace CrowdPunch.Editor
             float height=variant==2?7:5;
             // The footing must protrude beyond the walls, not share their vertical faces.
             Block(group,"Stone footing",new Vector3(0,-.55f,0),new Vector3(7.4f,.8f,6.4f),Stone);
-            Block(group,"Cream plaster walls",Vector3.zero,new Vector3(7,height,6),Plaster);
-            Model(group,"Medieval Village","Roof_Front_Brick8",new Vector3(0,height,-3),new Vector3(7,2.65f,.2f),0,Plaster);
-            Model(group,"Medieval Village","Roof_Front_Brick8",new Vector3(0,height,3),new Vector3(7,2.65f,.2f),180,Plaster);
+            ChapterOneVillageHouseBody.Create(group,height,Plaster);
             Model(group,"Medieval Village","Door_2_Round",new Vector3(-1.8f,0,-3.16f),new Vector3(1.4f,2.7f,.2f),0,Timber);
             for(int face=0;face<4;face++)
             {
@@ -180,9 +178,14 @@ namespace CrowdPunch.Editor
 
         private static void Mill(Transform root,Vector3 p)
         {
-            House(root,p,0,2);
-            Tower(root,p+Vector3.forward*4,14,false);
-            var pivot=p+new Vector3(0,14,-4.5f);
+            // The annex stands beside the tower: neither roof nor wall faces intersect.
+            // A recessed low passage joins the buildings behind their main facades.
+            House(root,p+Vector3.right*8,0,2);
+            Tower(root,p,14,false);
+            Block(root,"Mill annex passage",p+new Vector3(4,0,1),new Vector3(1.2f,3,2.8f),Plaster);
+            Block(root,"Mill passage timber roof",p+new Vector3(4,3,1),new Vector3(1.4f,.25f,3.2f),Timber);
+            var pivot=p+new Vector3(0,14,-4.4f);
+            Block(root,"Windmill axle",pivot+new Vector3(0,-.4f,.25f),new Vector3(.8f,.8f,1.3f),Timber);
             for(int i=0;i<4;i++)
             {
                 var rotation=Quaternion.Euler(0,0,i*90+25);

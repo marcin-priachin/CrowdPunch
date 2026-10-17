@@ -2427,6 +2427,25 @@ white balance remains inherited. The camera enables HDR, post-processing and SMA
 `CelRendering.asset`/`CelRenderer.asset` promote the example rendering configuration to
 all quality levels, including its contact shading and shadow settings.
 
+The production pipeline disables soft shadows and uses a single 8192 directional shadow
+map across 110 m, avoiding cascade resolution changes and improving near-object edge density.
+Dash FOV feedback defaults to zero in both `CombatFeedbackSettings` and its Resources asset:
+URP refits the directional shadow projection when FOV changes, making hard edges crawl.
+Dash displacement, camera follow, impact kick and shake retain their existing behavior.
+`ChapterOneVillageRoofShadows` authors a shared two-plane, shadows-only roof mesh for
+the village's tiled gable roofs. The detailed visible tiles no longer cast a serrated
+outline. Terracotta roof materials opt out of receiving cast shadows so the proxy cannot
+self-shadow the tiles; directional cel lighting and contact shading still define their
+form. These proxies have no colliders or LOD switching and are retained by the village recipe.
+`CelShadowDetailAuthoring` applies hard-only quality settings, authors LOD0 overrides on
+MeshRenderer and SkinnedMeshRenderer components in game prefabs/scenes, and flattens any
+LODGroups to their highest-detail renderers with no distance culling. Source model imports
+are preserved. Unity clamps its global mesh LOD threshold to .01, so the explicit renderer
+overrides provide the fixed-detail policy. All six quality tiers retain the production
+pipeline and include LOD0 in builds. No runtime renderer scan or ECS ownership change is used.
+The explicit repair command is `Crowd Punch > Art Direction > Apply Hard Shadows and Full Detail`;
+the Full Cel migration and Chapter One authoring recipes also preserve these settings.
+
 `CelLevelLighting` scopes each campaign/legacy main scene's saved ambient palette and sun
 to its additive lifetime. It applies the selected 1.08 ambient multiplier and restores the
 previous environment on unload. Existing polished examples retain `ExampleEnvironmentLighting`
@@ -2468,6 +2487,11 @@ shader state. Existing player/enemy deformation and other chapters' shaders are 
 
 `ChapterOneVillageDetails` clusters grass, flowers, household props and garden details
 outside combat bounds and approach lanes. Wider house footings avoid coplanar wall faces.
+`ChapterOneVillageHouseBody` authors shared, closed wall/gable shells for the two house
+heights, fitted inside the tiled roof's curved underside. Houses no longer combine a
+box wall with unrelated imported gable pieces. Cream plaster uses a subtle procedural
+wash instead of projecting a decorative wall atlas. Mills place their annex beside
+the tower with a recessed passage and a clear sail plane, avoiding shared wall faces.
 Chapter ambient fill is reduced to retain visibly shaded faces; the shared Full Cel
 post-processing profile is unchanged.
 

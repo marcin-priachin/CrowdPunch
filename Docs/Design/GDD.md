@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-16
+Last updated: 2026-10-17
 
 ## How To Read This Document
 
@@ -55,6 +55,8 @@ player and enemy shading, lighting, and post-processing throughout the campaign 
 prefabs. Preserve chapter-specific colours, readable effect ownership, existing animation
 and deformation, and the distinct visual cues of hazards and objectives. The default must
 work in player builds without the Editor's Art Lab preview.
+Use hard cast shadows that complement the cartoony surfaces. Keep geometry at its
+highest level of detail and disable automatic LOD switching to avoid detail and shadow popping.
 
 ## Core Loop And Run Structure
 

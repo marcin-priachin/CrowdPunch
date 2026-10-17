@@ -66,7 +66,7 @@ namespace CrowdPunch.Editor
                 var md=new SerializedObject(marker); md.FindProperty("playerEntryPoint").objectReferenceValue=entry;
                 md.FindProperty("openingHint").stringValue="Launch bodies at the head. Dodge the hands, then use their recovery."; md.ApplyModifiedPropertiesWithoutUndo();
                 var ss=new GameObject("Boss Arena SubScene").AddComponent<SubScene>(); ss.SceneAsset=AssetDatabase.LoadAssetAtPath<SceneAsset>(SubPath); ss.AutoLoadScene=true;
-                var light=new GameObject("Arena Light").AddComponent<Light>(); light.type=LightType.Directional; light.intensity=1.2f; light.shadows=LightShadows.Soft; light.transform.rotation=Quaternion.Euler(50,-30,0);
+                var light=new GameObject("Arena Light").AddComponent<Light>(); light.type=LightType.Directional; light.intensity=1.2f; light.shadows=LightShadows.Hard; light.transform.rotation=Quaternion.Euler(50,-30,0);
                 EditorSceneManager.SaveScene(main,ScenePath); EditorSceneManager.CloseScene(main,true);
                 Scene bootstrap=EditorSceneManager.OpenScene(Root+"Scenes/Bootstrap.unity",OpenSceneMode.Single);
                 var sequence=UnityEngine.Object.FindFirstObjectByType<GauntletSequence>();

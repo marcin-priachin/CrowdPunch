@@ -68,7 +68,7 @@ namespace CrowdPunch.Editor
             light.transform.rotation=Quaternion.Euler(new[]{48f,52f,55f,42f}[theme],new[]{-38f,-65f,32f,-40f}[theme],0);
             light.color=new[]{new Color(1,.96f,.88f),new Color(1,.86f,.69f),new Color(.96f,1,.93f),new Color(.91f,.95f,1)}[theme];
             light.intensity=new[]{1.9f,2f,1.8f,1.9f}[theme];
-            light.shadows=LightShadows.Soft; light.shadowStrength=.8f; light.shadowBias=.04f; light.shadowNormalBias=.25f;
+            light.shadows=LightShadows.Hard; light.shadowStrength=.8f; light.shadowBias=.04f; light.shadowNormalBias=.25f;
             var fill=root.parent.Find("Soft sky fill").GetComponent<Light>();
             fill.intensity=.25f; fill.color=new Color(.8f,.9f,1);
             string skyPath=Output+$"Atmosphere/{theme}_Sky.mat";

@@ -102,3 +102,29 @@ visual settings; make manual edits inside that root after running the recipe.
   Editor loading; subsequent requests and rendering succeeded.
 
 Preview captures for this refinement are in the ignored `Temp/VillagePolish` folder.
+
+## 2026-10-17 building assembly repair
+
+- VISION-005/006: replaced the mismatched imported gables and box walls with two shared,
+  closed house-shell meshes, retaining the tiled roofs, windows, doors and timber trim.
+  All 134 houses across Campaign 01-10 now use these shells. At 142 samples along both
+  gables, the shell overlaps the tile underside by at least 0.087 m and stays at least
+  0.106 m below the outer roof surface. The geometry check used the actual imported mesh,
+  including the curved eaves, rather than its bounding box.
+- Reassembled mills in Campaign 06/08: the annex stands beside the tower, connected by a
+  recessed low passage. The sail plane clears both buildings; an axle joins it to the tower.
+  The former coplanar tower/house side walls and intersecting house roof are removed.
+- Removed the decorative repeating wall map from chapter-owned Cream plaster. A quiet
+  procedural wash preserves warm plaster variation with existing directional cel lighting,
+  contact shading and hard shadows. Other surface materials skip the extra wash noise.
+- Rebuilt all ten stages. Saved-scene audit: 134 house shells, zero obsolete imported
+  gables, 137 roofs with 137 clean shadow proxies, no scenery colliders and all scenery
+  MeshRenderers fixed to LOD0. Encounter authoring remains in the original SubScenes.
+- Unity C# compilation succeeded. Presentation tests for Campaign 01, 06 and 08 all passed
+  (three cases). Village Surface reported no shader compiler messages after Play rendering.
+- Inspected Campaign 06 from front and rear, including close roof joins, and Campaign 08
+  from the opposite front angle. Captures are in `Temp/VillageBuildings`. Runtime inspection
+  camera/health changes were discarded; Unity was returned to clean Bootstrap Edit Mode.
+- The pre-existing Sidekick Tool Downloader window error recurred at Play entry/exit.
+  One authoring request timed out at the transport layer; the builder continued and completed
+  all ten stages without an authoring error. No new runtime error was identified.

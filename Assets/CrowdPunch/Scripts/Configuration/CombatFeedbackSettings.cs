@@ -57,7 +57,8 @@ namespace CrowdPunch.Configuration
         [Range(0f, 1f)] public float PlayerFlashIntensity = 0.9f;
         public Color PlayerFlashColor = new Color(1f, .48f, .22f);
         [Header("Dash camera")]
-        [Range(0f, 10f)] public float DashFovDelta = 5.5f;
+        [Tooltip("Keep at zero for stable hard shadows: changing FOV resizes URP's directional shadow projection.")]
+        [Range(0f, 10f)] public float DashFovDelta = 0f;
         [Min(.01f)] public float DashFovTransition = 0.075f;
 
         public float Intensity(float speed) => Mathf.InverseLerp(MinimumCollisionSpeed,

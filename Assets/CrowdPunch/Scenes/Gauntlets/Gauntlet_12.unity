@@ -201,7 +201,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
-    m_Type: 2
+    m_Type: 1
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -330,6 +330,11 @@ MonoBehaviour:
   ground: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   ambientMultiplier: 1.08
   sun: {fileID: 949891281}
+  overrideAtmosphere: 0
+  skybox: {fileID: 0}
+  haze: {r: 0.64, g: 0.73, b: 0.73, a: 1}
+  hazeStart: 70
+  hazeEnd: 290
 --- !u!114 &1643318880
 MonoBehaviour:
   m_ObjectHideFlags: 0

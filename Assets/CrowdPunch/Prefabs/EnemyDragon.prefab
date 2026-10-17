@@ -545,6 +545,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 4525026810642841976}
     - target: {fileID: -4871733318207474793, guid: 70784a0fbaf8b1548835da27e9ce0eee, type: 3}
+      propertyPath: m_ForceMeshLod
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -4871733318207474793, guid: 70784a0fbaf8b1548835da27e9ce0eee, type: 3}
       propertyPath: m_AABB.m_Center.x
       value: -0.00000047683716
       objectReference: {fileID: 0}
@@ -1446,4 +1450,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 241dc2d5cd1edec418d7d65904227929, type: 3}
   Profile: 9
+  RotateLaunchAroundOwner: 0
+  LaunchPivotHeight: 0
   BlendResponse: 12

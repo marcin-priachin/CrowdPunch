@@ -186,6 +186,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 7002792746288101324}
     - target: {fileID: -6535908997301630415, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
+      propertyPath: m_ForceMeshLod
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -6535908997301630415, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
       propertyPath: m_AABB.m_Center.x
       value: -0.013115883
       objectReference: {fileID: 0}
@@ -289,6 +293,10 @@ PrefabInstance:
       propertyPath: m_RootBone
       value: 
       objectReference: {fileID: 7002792746288101324}
+    - target: {fileID: 4419542697700072897, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
+      propertyPath: m_ForceMeshLod
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4419542697700072897, guid: b1c7df2a53ee343419a14cf9a428aeb2, type: 3}
       propertyPath: m_AABB.m_Center.x
       value: -0.05429077

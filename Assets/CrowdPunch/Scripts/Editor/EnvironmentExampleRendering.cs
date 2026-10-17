@@ -35,7 +35,7 @@ namespace CrowdPunch.Editor
             list.GetArrayElementAtIndex(index).objectReferenceValue=renderer;
             data.ApplyModifiedPropertiesWithoutUndo();
             data.Update();
-            data.FindProperty("m_SoftShadowsSupported").boolValue=true;
+            data.FindProperty("m_SoftShadowsSupported").boolValue=false;
             data.ApplyModifiedPropertiesWithoutUndo();
             pipeline.shadowDistance=85;
             pipeline.shadowCascadeCount=2;

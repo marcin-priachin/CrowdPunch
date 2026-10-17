@@ -35,17 +35,20 @@ namespace CrowdPunch.Editor
                 case "Limestone": texture="Stylized_Cliff_Rock_005"; scale=.18f; strength=.4f; break;
                 case "Foundation": texture="Stylized_Stone_Wall_001"; scale=.23f; break;
                 case "Dark oak": case "Gate timber": texture="Stylized_Wood_Planks_002"; scale=.3f; strength=.65f; break;
-                case "Cream plaster": texture="Stylized_Wall_001"; scale=.23f; strength=.35f; break;
+                case "Cream plaster": strength=0; break;
                 case "Terracotta roof": texture="Stylized_Roof_Tiles_003"; scale=.3f; strength=.6f; break;
             }
-            if(texture==null) return;
+            if(texture==null && name!="Cream plaster") return;
             material.shader=Shader.Find("CrowdPunch/Cel/Village Surface");
             material.SetColor("_BaseColor",tint);
-            material.SetTexture("_BaseMap",Texture(texture));
+            material.SetTexture("_BaseMap",texture==null?null:Texture(texture));
             material.SetFloat("_TextureScale",scale);
             material.SetFloat("_TextureStrength",strength);
             material.SetFloat("_Variation",name=="Meadow"?.22f:.10f);
+            material.SetFloat("_PlasterGrain",name=="Cream plaster"?.07f:0);
             material.SetFloat("_Meadow",0);
+            // Roof tiles retain their cel-lit form; a clean proxy casts their outline onto walls.
+            material.SetFloat("_ReceiveShadows",name=="Terracotta roof"?0:1);
             material.shaderKeywords=Array.Empty<string>();
             EditorUtility.SetDirty(material);
         }

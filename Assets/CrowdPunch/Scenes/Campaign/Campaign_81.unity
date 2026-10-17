@@ -154,7 +154,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
-    m_Type: 2
+    m_Type: 1
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -431,6 +431,11 @@ MonoBehaviour:
   ground: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   ambientMultiplier: 1.08
   sun: {fileID: 163991959}
+  overrideAtmosphere: 0
+  skybox: {fileID: 0}
+  haze: {r: 0.64, g: 0.73, b: 0.73, a: 1}
+  hazeStart: 70
+  hazeEnd: 290
 --- !u!114 &1664787065
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -645,6 +650,10 @@ PrefabInstance:
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: 4300000, guid: eaeb4be9250f94e4dbd369bde9a6d46a, type: 2}
+    - target: {fileID: 5586720852005522821, guid: 66890d8045406904bb087167671d4f38, type: 3}
+      propertyPath: m_ForceMeshLod
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5586720852005522821, guid: 66890d8045406904bb087167671d4f38, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 

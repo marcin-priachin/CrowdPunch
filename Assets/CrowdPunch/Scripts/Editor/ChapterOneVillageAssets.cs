@@ -94,6 +94,7 @@ namespace CrowdPunch.Editor
             foreach (var animator in root.GetComponentsInChildren<Animator>()) Object.DestroyImmediate(animator);
             foreach (var renderer in renderers)
             {
+                renderer.forceMeshLod=0;
                 renderer.sharedMaterials = renderer.sharedMaterials.Select(m => material != null ? material : Imported(m,kit)).ToArray();
                 renderer.gameObject.isStatic = true;
             }
@@ -109,6 +110,7 @@ namespace CrowdPunch.Editor
             block.transform.localScale = size;
             Object.DestroyImmediate(block.GetComponent<Collider>());
             block.GetComponent<Renderer>().sharedMaterial = material;
+            block.GetComponent<MeshRenderer>().forceMeshLod=0;
             block.isStatic = true;
             return block;
         }

@@ -326,6 +326,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 6903722185793529817}
     - target: {fileID: -6073088336778414266, guid: 19430d8fa9d847344a692418a574fd50, type: 3}
+      propertyPath: m_ForceMeshLod
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -6073088336778414266, guid: 19430d8fa9d847344a692418a574fd50, type: 3}
       propertyPath: m_AABB.m_Center.x
       value: -0.84183514
       objectReference: {fileID: 0}
@@ -634,6 +638,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 6903722185793529817}
     - target: {fileID: 3798214047891171059, guid: 19430d8fa9d847344a692418a574fd50, type: 3}
+      propertyPath: m_ForceMeshLod
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3798214047891171059, guid: 19430d8fa9d847344a692418a574fd50, type: 3}
       propertyPath: m_AABB.m_Center.x
       value: 0.068184614
       objectReference: {fileID: 0}
@@ -846,6 +854,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 4b8a929ceef1d6643b8e29485e8db72c, type: 3}
   Profile: 5
+  RotateLaunchAroundOwner: 0
+  LaunchPivotHeight: 0
   BlendResponse: 12
 --- !u!1 &6090311921469537635 stripped
 GameObject:
@@ -893,6 +903,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 21eda0d16a580a340a943bae4b7ac7d3, type: 3}
   Profile: 5
+  RotateLaunchAroundOwner: 0
+  LaunchPivotHeight: 0
   BlendResponse: 12
 --- !u!4 &6903722185793529817 stripped
 Transform:
