@@ -42,13 +42,23 @@ namespace CrowdPunch.Editor
                     string path=folder+"/"+Hash128.Compute(key)+".mat";
                     var material=AssetDatabase.LoadAssetAtPath<Material>(path);
                     if(material==null) {material=new Material(source);AssetDatabase.CreateAsset(material,path);}
-                    else material.CopyPropertiesFromMaterial(source);
-                    material.name=source.name+" baked receiver";
+                    else
+                    {
+                        // Copy through a fresh native material so a rebake does not retain
+                        // a stale property layout from the previous receiver bindings.
+                        var snapshot=new Material(source);
+                        EditorUtility.CopySerialized(snapshot,material);
+                        Object.DestroyImmediate(snapshot);
+                    }
+                    // Unity may reimport an asset to correct a main-object/file-name
+                    // mismatch while saving. Keep the name stable before binding data.
+                    material.name=Path.GetFileNameWithoutExtension(path);
                     material.SetOverrideTag("CrowdPunchSourceMaterial",sourcePath);
                     material.SetTexture("_BakedShadowMask",mask);
                     material.SetVector("_BakedShadowST",r.lightmapScaleOffset);
                     material.SetFloat("_UseBakedShadowMask",1);
                     EditorUtility.SetDirty(material); materials[i]=material;
+                    AssetDatabase.SaveAssetIfDirty(material);
                 }
                 r.sharedMaterials=materials;
             }

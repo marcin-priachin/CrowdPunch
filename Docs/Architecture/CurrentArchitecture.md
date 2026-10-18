@@ -2487,7 +2487,11 @@ controller; baked-only visibility is scoped by `BakedShadowLighting` as describe
 Existing player/enemy deformation is unchanged.
 
 `ChapterOneVillageDetails` clusters grass, flowers, household props and garden details
-outside combat bounds and approach lanes. Wider house footings avoid coplanar wall faces.
+outside combat bounds and approach lanes. `ChapterOneVillagePlanting` keeps complete
+ground-plant bounds clear of the meadow shader's dirt corridors, including feathered
+and noisy edges. It relocates offending plants to the nearest green verge without
+intersecting buildings, fences or props, and preserves their ground-height offsets.
+This final editor-only pass also applies to future village rebuilds. Wider house footings avoid coplanar wall faces.
 `ChapterOneVillageHouseBody` authors shared, closed wall/gable shells for the two house
 heights, fitted inside the tiled roof's curved underside. Houses no longer combine a
 box wall with unrelated imported gable pieces. Cream plaster uses a subtle procedural

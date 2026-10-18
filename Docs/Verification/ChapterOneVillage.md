@@ -179,3 +179,26 @@ Preview captures for this refinement are in the ignored `Temp/VillagePolish` fol
 Rebuild shadows after dressing or changing fixed geometry/sun direction using
 `Crowd Punch > Art Direction > Bake Chapter One Shadows`. Dressing invalidates the
 baked-only policy and restores realtime fallback until a bake successfully finishes.
+
+## Dirt-path planting clearance (2026-10-18)
+
+- VISION-005/006: moved 1,269 ground-plant groups from the dirt corridors onto green
+  verges across Campaign 01-10. The final dressing pass now checks complete world-space
+  plant bounds, the maximum noisy/feathered path envelope, arena bounds and fixed scenery.
+  House vines and other attached decoration remain part of their building composition.
+- Independent saved-scene audit checked 3,176 tree, bush, flower and grass groups:
+  no overlaps with the protected dirt corridors or arena were found in any stage.
+  Detailed results are in `Temp/Planting/Audit.json` (local verification output).
+- All ten native shadow bakes completed. Intermittent texture-import setting writes
+  were retried and verified; all chapter lightmap textures retain matching mip limits.
+- The first baked-data test run exposed lost receiver properties during material
+  refresh. Refresh now copies a fresh material snapshot into the existing asset,
+  preserves its GUID, uses a matching asset name and saves the binding immediately.
+  All ten receiver sets were refreshed after that fix; the rerun passed all 14
+  BakedShadowTests. Production-presentation cases for stages 1 and 8 also passed.
+- Unity compilation passed. Inspected saved Scene-view captures of stages 1 and 8,
+  including cleared side paths and refreshed shadows. Captures:
+  `Temp/Planting/Chapter1-finished-verge.png` and
+  `Temp/Planting/Chapter8-finished-verge.png`.
+- Left Campaign 01 and its SubScene open in clean Edit Mode. No gameplay transforms,
+  colliders or encounter authoring were intentionally changed by the planting pass.

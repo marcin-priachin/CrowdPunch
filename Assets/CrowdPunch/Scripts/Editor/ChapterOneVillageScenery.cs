@@ -115,6 +115,7 @@ namespace CrowdPunch.Editor
             Motes(root,c+new Vector3(x+4,1,0));
             ChapterOneVillageDetails.Build(root,floor,stage);
             ClearBuildingCanopies(root);
+            ChapterOneVillagePlanting.ClearPaths(root,floor,stage);
         }
 
         private static void ClearBuildingCanopies(Transform root)
