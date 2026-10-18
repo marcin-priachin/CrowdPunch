@@ -306,3 +306,42 @@ baked-only policy and restores realtime fallback until a bake successfully finis
   stage, zero new colliders, static fixed art and no static ancestors on animated cues.
 - Returned to clean Bootstrap in stopped Edit Mode. The pre-existing Sidekick downloader
   window error still appears at Play transitions; no new exit runtime errors were seen.
+
+## Chapter One rotating target (2026-10-18)
+
+- COVER-001..005 / VISION-006: Campaign 07 now uses a village training-machine theme:
+  blue timber shutters with brass rails/rivets and stamped direction chevrons, ivory
+  opening jambs, a four-sided red/ivory bullseye on segmented redwood, brass caps and
+  a stone/brass turntable base. New materials and meshes live in
+  `Data/ChapterOneVillage/RotatingTarget`; no purchased assets or packages were added.
+- `ChapterOneRotatingTargetVisuals` refreshes only Campaign 07's presentation. The
+  chapter recipe invokes it for level 7 only. Existing 36 cover-panel bindings and
+  `CoverGeometry` still own shutter alignment. The 45 target render pieces reuse
+  `VillageGatePiece` recoil, progressive splits, warm impact flashes and tumbling
+  destruction. The existing impact-feedback bridge remains in use.
+- Radius 5 m, height 4 m, thickness 0.45 m, opening 100 degrees, rotation 20 degrees/s,
+  three required hits, source rules, reflection and destruction completion are unchanged.
+  No colliders or simulation systems were added. Moving shutters and breakable pieces
+  are nonstatic without realtime shadows. The independent fixed base is static, and
+  Campaign 07's shadowmasks were rebaked. One importer mip-limit flag was reapplied
+  after the bake, and the saved lighting check passed.
+- Unity compilation passed. Ten existing RotatingCoverTests, five reused timber
+  presentation tests and the Campaign 07 baked-shadow check passed (16 checks).
+  The separate .NET build reported Build FAILED without compiler diagnostics; this
+  does not establish a successful standalone build.
+- Native Play previews advanced frames and instantiated all 36 cover-panel controls
+  plus 45 target pieces. Cover angle advanced from 3.7815 to 1.1694 radians across a
+  wrap. Comparing live panel transforms against `CoverGeometry` gave a maximum position
+  difference of 0.00000291 m and size difference below 0.00000006 m.
+- Controlled accepted hits used the existing hit resolver. First/second hit stages
+  showed 33/45 pieces respectively, with two/one hits remaining. The third hit reduced
+  durability to zero and incremented completion immediately. These are presentation
+  checks, not manual combat playtests. A fresh preview restored three hits and the
+  original cover settings. EditorPreview isolated campaign progress; player placement,
+  temporary invulnerability and temporary cover-angle resets were discarded on exit.
+- Final native capture: `Temp/RotatingTarget/Final-preview.png`. First/second-hit captures
+  show damage staging before the final cosmetic chevron adjustment. The moving-mesh
+  adjustment preserves asset GUIDs and does not invalidate the fixed-geometry shadow bake.
+- Returned to clean Bootstrap in stopped Edit Mode. Console observations included the
+  existing Sidekick window error and an unrelated Unity AI relay connection error;
+  no new rotating-target runtime errors were observed.

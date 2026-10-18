@@ -1792,6 +1792,18 @@ See [Barricade validation](../Validation/Barricade.md) for actual checks and rem
 
 ## Rotating Cover And Gauntlet_14 (COVER-001..005)
 
+Campaign 07 has a chapter-owned village training-machine appearance, rebuilt by
+`ChapterOneRotatingTargetVisuals` and the Chapter One recipe. Three-material shutter
+meshes retain the 36 existing `CoverPanelAuthoring` bindings and use `CoverGeometry`
+for both their saved and runtime pose. Blue planks, brass rails/rivets, direction
+accents and ivory end panels make the rotating opening visible without altering its
+collider or timing. The four-faced bullseye's segmented wood, caps, paint disks and
+damage splits reuse `BarricadeVisual` plus `VillageGatePiece` recoil, fracture and
+debris presentation; no new simulation system is introduced. A separate static
+turntable base marks the existing walking enclosure and participates in the shadow
+bake. Moving shutters and damage pieces remain outside static lightmaps and do not
+cast realtime shadows. Other rotating-cover encounters retain their own visuals.
+
 Gauntlet_14, "Return to Sender", is saved after Gauntlet_13 in Bootstrap and Build Settings.
 Its 34 x 34 m court surrounds a central barricade target and a 5 m radius rotating cover.
 `RotatingTargetSettings.asset` supplies four required hits (covered targets clamp to at least two),
