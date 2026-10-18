@@ -13,6 +13,9 @@ Shader "CrowdPunch/Cel/Village Surface"
         _Variation("Large colour variation", Range(0,.5)) = .12
         _PlasterGrain("Plaster wash", Range(0,.2)) = 0
         [ToggleUI] _ReceiveShadows("Receive cast shadows", Float) = 1
+        [HideInInspector] _BakedShadowMask("Baked receiver visibility",2D)="white" {}
+        [HideInInspector] _BakedShadowST("Baked receiver UV transform",Vector)=(1,1,0,0)
+        [HideInInspector] _UseBakedShadowMask("Explicit baked receiver",Float)=0
     }
     SubShader
     {
@@ -22,15 +25,20 @@ Shader "CrowdPunch/Cel/Village Surface"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor, _PathColor;
+            float4 _BakedShadowST;
             float4 _Bounds;
             float _TextureScale, _TextureStrength, _Meadow, _Variation, _ReceiveShadows, _PlasterGrain;
+            float _UseBakedShadowMask;
         CBUFFER_END
         TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
         TEXTURE2D(_DirtMap); SAMPLER(sampler_DirtMap);
+        TEXTURE2D(_BakedShadowMask); SAMPLER(sampler_BakedShadowMask);
+        float _CrowdPunchBakedShadowsOnly;
         struct Attributes
         {
             float4 positionOS : POSITION;
             float3 normalOS : NORMAL;
+            float2 lightmapUV : TEXCOORD1;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         struct Varyings
@@ -39,6 +47,8 @@ Shader "CrowdPunch/Cel/Village Surface"
             float3 positionWS : TEXCOORD0;
             half3 normalWS : TEXCOORD1;
             half fog : TEXCOORD2;
+            float2 lightmapUV : TEXCOORD3;
+            float2 receiverUV : TEXCOORD4;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -52,6 +62,8 @@ Shader "CrowdPunch/Cel/Village Surface"
             output.positionCS = pos.positionCS;
             output.positionWS = pos.positionWS;
             output.normalWS = TransformObjectToWorldNormal(input.normalOS);
+            output.lightmapUV=input.lightmapUV*unity_LightmapST.xy+unity_LightmapST.zw;
+            output.receiverUV=input.lightmapUV*_BakedShadowST.xy+_BakedShadowST.zw;
             output.fog = ComputeFogFactor(pos.positionCS.z);
             return output;
         }
@@ -81,6 +93,10 @@ Shader "CrowdPunch/Cel/Village Surface"
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
             #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
             #pragma multi_compile_fog
+            #pragma multi_compile _ LIGHTMAP_ON
+            #pragma multi_compile _ LIGHTMAP_SHADOW_MIXING
+            #pragma multi_compile _ SHADOWS_SHADOWMASK
+            #pragma multi_compile _ USE_LEGACY_LIGHTMAPS
             half4 Fragment(Varyings input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
@@ -116,7 +132,12 @@ Shader "CrowdPunch/Cel/Village Surface"
                 #if defined(_MAIN_LIGHT_SHADOWS_SCREEN)
                     shadowCoord=ComputeScreenPos(TransformWorldToHClip(p));
                 #endif
-                Light sun=GetMainLight(shadowCoord);
+                half4 shadowMask=SAMPLE_SHADOWMASK(input.lightmapUV);
+                if(_UseBakedShadowMask>.5)
+                    shadowMask=SAMPLE_TEXTURE2D(_BakedShadowMask,sampler_BakedShadowMask,input.receiverUV);
+                Light sun=GetMainLight(shadowCoord,p,shadowMask);
+                if(_CrowdPunchBakedShadowsOnly>.5)
+                    sun.shadowAttenuation=step(.5,BakedShadow(shadowMask,_MainLightOcclusionProbes,half4(1,0,0,0)));
                 half ndl=saturate(dot(n,sun.direction));
                 half feather=max(fwidth(ndl)*1.5,.018);
                 half band=.20+.42*smoothstep(.23-feather,.23+feather,ndl)+.38*smoothstep(.68-feather,.68+feather,ndl);
@@ -125,6 +146,27 @@ Shader "CrowdPunch/Cel/Village Surface"
                 half3 fill=half3(.17,.21,.28)+SampleSH(n)*.24;
                 half3 color=albedo*(fill+band*visibility*min(sun.color,half3(1.35,1.35,1.35)))*ao.indirectAmbientOcclusion;
                 return half4(MixFog(color,input.fog),1);
+            }
+            ENDHLSL
+        }
+        Pass
+        {
+            Name "Meta"
+            Tags { "LightMode"="Meta" }
+            Cull Off
+            HLSLPROGRAM
+            #pragma vertex VillageMetaVertex
+            #pragma fragment VillageMetaFragment
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
+            struct MetaAttributes { float4 positionOS:POSITION; float2 uv1:TEXCOORD1; float2 uv2:TEXCOORD2; };
+            float4 VillageMetaVertex(MetaAttributes input):SV_POSITION
+            {
+                return UnityMetaVertexPosition(input.positionOS.xyz,input.uv1,input.uv2);
+            }
+            half4 VillageMetaFragment():SV_Target
+            {
+                MetaInput meta=(MetaInput)0; meta.Albedo=_BaseColor.rgb;
+                return MetaFragment(meta);
             }
             ENDHLSL
         }

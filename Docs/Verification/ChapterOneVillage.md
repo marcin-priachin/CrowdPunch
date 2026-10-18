@@ -128,3 +128,54 @@ Preview captures for this refinement are in the ignored `Temp/VillagePolish` fol
 - The pre-existing Sidekick Tool Downloader window error recurred at Play entry/exit.
   One authoring request timed out at the transport layer; the builder continued and completed
   all ten stages without an authoring error. No new runtime error was identified.
+
+## 2026-10-18 baked environment shadows
+
+- VISION-004/006: added native Progressive lightmapper shadowmasks for Chapter One's
+  fixed scenery and arena geometry, with UV2 generated on owned mesh copies. Collision
+  meshes, physical transforms, encounter rules and source model importers are preserved.
+- Fixed render geometry is marked for static batching/GI/visibility. Barricade visuals,
+  rotating cover, boss parts, characters and particles are not permanent baked casters.
+- The meadow is partitioned into sixteen tiles using its original triangles/normals.
+  Inner tiles have denser charts than the distant hills. Baked village visibility uses
+  a hard threshold; directional cel bands and the approved post-processing remain.
+- The Mixed sun supplies live directional cel lighting, while the scene-scoped pipeline
+  clone sets shadow distance to zero. This disables real-time cast shadows, including
+  character shadows. SSAO contact shading is retained. Unload restores the previous
+  pipeline, shadowmask mode and shader flag.
+- Baked maps ignore quality texture mip limits. This repairs the initial Entities Graphics
+  CopyTexture source/destination mip-limit error on the Low quality tier. Static village
+  shader receivers in SubScenes have explicit mask/UV-transform material bindings: the
+  initial custom shader array path displayed an incorrectly shadowed floor despite valid
+  bake data. The saved receiver bindings restored the rock and perimeter shadows.
+- Stage 8 Play Mode: observed advancing frames, shadow distance 0 and UnityStats shadow
+  casters 0. Inspected near and distant cameras after shader compilation completed. The
+  main scenery and ECS floor both display baked shadows. Final verified capture:
+  `Temp/BakedShadows/FinalStage8.png`; earlier diagnostic captures are not
+  final results. Camera/health/debug changes are runtime-only and discarded on Play exit.
+- The stage 8 saved-data test passed after adding receiver assertions. Full chapter
+  bake/test results: all ten stages completed, producing 71 shadowmask atlas PNGs
+  (about 20.2 MB on disk, excluding colour maps and native lighting data).
+- Final checks passed: 14 BakedShadowTests, 83 CelPresentationTests and 8 CampaignTests.
+  The 14 baked-data cases were rerun after adding saved-probe reference assertions and
+  passed again. Unity compilation succeeded after the final code changes.
+- Stage 7 live check: rotating cover angle changed from 3.25795865 to 4.77059269 radians,
+  frames advanced from 1099 to 2436, all 36 cover panels lacked the ECS Static tag,
+  and real-time shadow casters remained zero.
+- Additive streaming initially cleared the global probe set in Play Mode despite valid
+  saved probe data. BakedShadowLighting now scopes an owned probe copy as well as the
+  pipeline. The final Stage 8 run retained 1083 probes through advancing frames, with
+  shadow distance 0 and zero shadow casters. Transition to Campaign 11 restored shader
+  flag 0, the original 110 m pipeline, no baked-only policy and no leaked probe set.
+  Inspection changes were discarded; final Bootstrap is left in clean Edit Mode.
+- Unity compilation succeeded. `dotnet build Assembly-CSharp.csproj --no-restore
+  --no-dependencies` failed with missing package DLL metadata under Temp/Bin/Debug (132
+  errors) and existing System.Net.Http version conflicts. Unity compilation is the source
+  of truth; this command is not reported as passing.
+- The existing Sidekick Tool Downloader invalid-window error recurred at Play entry/exit.
+  Native OpenCL kernel compiler warnings and some transport timeouts occurred during bake
+  setup; these do not constitute successful/failed bake results on their own.
+
+Rebuild shadows after dressing or changing fixed geometry/sun direction using
+`Crowd Punch > Art Direction > Bake Chapter One Shadows`. Dressing invalidates the
+baked-only policy and restores realtime fallback until a bake successfully finishes.

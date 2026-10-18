@@ -2478,12 +2478,13 @@ across the entire 100 m wave arena.
 
 `ChapterOneVillageSurfaces` assigns the imported StylizedTextures maps to chapter-owned
 `CrowdPunch/Cel/Village Surface` materials. World-space projection supports UV-less
-authored floors and imported atlas geometry without altering their meshes. This opaque
+authored floors and imported atlas geometry without relying on their original texture UVs. This opaque
 URP shader supports DOTS instancing, shadow casting, depth and depth normals, three-band
 directional lighting, screen-space contact shading and fog. Meadow materials store each
 arena's bounds and blend earth paths and broad colour variation per pixel; no geometry
-colour bands or overlapping path slabs are used. It has no runtime controller or global
-shader state. Existing player/enemy deformation and other chapters' shaders are unchanged.
+colour bands or overlapping path slabs are used. Base material recipes have no runtime
+controller; baked-only visibility is scoped by `BakedShadowLighting` as described below.
+Existing player/enemy deformation is unchanged.
 
 `ChapterOneVillageDetails` clusters grass, flowers, household props and garden details
 outside combat bounds and approach lanes. Wider house footings avoid coplanar wall faces.
@@ -2505,3 +2506,40 @@ The explicit `Crowd Punch > Art Direction > Dress Chapter One - Sunlit Village` 
 replaces the generated scenery root and reapplies these visual settings to stages 01-10.
 Hand edits inside that root should be made after running the recipe. Generated assets
 live in `Assets/CrowdPunch/Data/ChapterOneVillage`; imported models are not edited.
+
+## Chapter One Baked Shadows (2026-10-18)
+
+`ChapterOneShadowBake` processes each main scene together with its gameplay SubScene using
+Unity's Progressive lightmapper and native shadowmasks. Fixed mesh geometry is marked for
+static batching, GI and static visibility. Meshes are copied into chapter ownership and
+given UV2; imported meshes and collision mesh references are preserved. Changing geometry
+is excluded by its authoring components, including barricade visuals, rotating cover and
+boss parts. These exclusions preserve ECS transform/state ownership (VISION-004/006).
+
+`ChapterOneShadowTerrain` splits the existing meadow triangles into sixteen visual tiles,
+preserving positions and normals. The four inner tiles receive denser lightmap charts;
+distant hills use lower density. No collision terrain or arena geometry is replaced.
+`ChapterOneShadowReceivers` writes baked mask texture/UV-transform material bindings for
+static village-shader receivers in the SubScenes. These survive Entities baking without
+a runtime material scan. Generated lightmaps ignore texture quality mip limits to keep
+Entities Graphics' texture-array copies valid on every quality tier.
+
+The village shader has a Meta pass and samples baked visibility through UV2 while retaining
+world-projected surface detail and directional cel bands. Baked visibility has a hard
+threshold. The shared character/environment cel lighting reads probe/lightmap visibility
+when the level selects baked-only shadows; existing deformation paths are preserved.
+
+`BakedShadowLighting` owns a temporary URP asset clone with shadow distance zero, the
+shadowmask mode and a scoped shader flag for the level's loaded lifetime. Unload restores
+the prior pipeline, mode and flag. The Mixed sun supplies directional cel lighting; all
+cast visibility in these levels comes from the bake. Moving/destructible objects are
+not permanent casters, and no real-time character shadow pass runs. Light probes support
+moving receivers. The component holds an owned copy of the saved probe data and reasserts
+its reference if additive ECS SubScene streaming clears the global probe set. Unload
+restores the preceding probe set. This requires only a reference comparison, with no
+renderer or entity scan. Screen-space contact shading remains part of the production renderer.
+
+Rebake after scenery, sun or fixed-layout changes with `Crowd Punch > Art Direction >
+Bake Chapter One Shadows`. The village dressing command invalidates its old baked-only
+policy and restores realtime fallback until the explicit bake completes. Other chapters
+keep their existing lighting policy. No ECS runtime system or enemy query was added.

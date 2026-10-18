@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-17
+Last updated: 2026-10-18
 
 ## How To Read This Document
 
@@ -57,6 +57,10 @@ and deformation, and the distinct visual cues of hazards and objectives. The def
 work in player builds without the Editor's Art Lab preview.
 Use hard cast shadows that complement the cartoony surfaces. Keep geometry at its
 highest level of detail and disable automatic LOD switching to avoid detail and shadow popping.
+Chapter One's fixed environment uses baked hard shadows and static geometry. Its runtime
+shadow maps are disabled to remove camera-distance popping and crowd shadow-rendering cost.
+Moving characters, rotating cover and destructible objects must not leave baked caster
+shadows behind when their state changes.
 
 ## Core Loop And Run Structure
 

@@ -3,6 +3,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 float _ArtLabEnvironmentStyle;
 float _ArtLabCharacterStyle;
+float _CrowdPunchBakedShadowsOnly;
 
 half4 ArtLabFragment(InputData inputData, SurfaceData surface)
 {
@@ -26,6 +27,8 @@ half4 ArtLabFragment(InputData inputData, SurfaceData surface)
     }
     half4 shadowMask = CalculateShadowMask(inputData);
     Light key = GetMainLight(inputData.shadowCoord, inputData.positionWS, shadowMask);
+    if(_CrowdPunchBakedShadowsOnly>.5)
+        key.shadowAttenuation=BakedShadow(shadowMask,_MainLightOcclusionProbes,half4(1,0,0,0));
     half diffuse = saturate(dot(n,key.direction));
     half feather = style < 1.5 ? .12 : .015;
     half band = .24 + .42*smoothstep(.23-feather,.23+feather,diffuse)

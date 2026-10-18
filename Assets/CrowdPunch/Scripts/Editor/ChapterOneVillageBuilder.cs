@@ -85,6 +85,14 @@ namespace CrowdPunch.Editor
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
 
             var scene=EditorSceneManager.OpenScene($"{Scenes}Campaign_{number:00}.unity");
+            // Replacing scenery invalidates UV charts and baked visibility. Restore realtime
+            // fallback until the explicit shadow-bake command is run again.
+            var baked=scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<BakedShadowLighting>(true)).ToArray();
+            if(baked.Length>0)
+            {
+                foreach(var policy in baked) Object.DestroyImmediate(policy);
+                Lightmapping.Clear();
+            }
             var existing=scene.GetRootGameObjects().FirstOrDefault(r=>r.name==RootName);
             if(existing!=null) Object.DestroyImmediate(existing);
             var scenery=new GameObject(RootName).transform;
