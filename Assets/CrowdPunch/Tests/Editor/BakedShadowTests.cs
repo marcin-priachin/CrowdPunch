@@ -34,7 +34,8 @@ namespace CrowdPunch.Tests
             Assert.That(sun.bakingOutput.mixedLightingMode,Is.EqualTo(MixedLightingMode.Shadowmask));
             Assert.That(sun.bakingOutput.occlusionMaskChannel,Is.InRange(0,3));
             var scenery=roots.Single(r=>r.name=="Chapter One - Sunlit Border Village");
-            foreach(var r in scenery.GetComponentsInChildren<MeshRenderer>(true).Where(r=>r.enabled))
+            // Disabled dressing is intentionally absent from the lightmapper's output.
+            foreach(var r in scenery.GetComponentsInChildren<MeshRenderer>(true).Where(r=>r.enabled && r.gameObject.activeInHierarchy))
             {
                 Assert.That(GameObjectUtility.GetStaticEditorFlags(r.gameObject).HasFlag(StaticEditorFlags.ContributeGI),Is.True,r.name);
                 Assert.That(r.lightmapIndex,Is.InRange(0,LightmapSettings.lightmaps.Length-1),r.name);

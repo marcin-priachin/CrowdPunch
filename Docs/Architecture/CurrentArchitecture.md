@@ -1720,6 +1720,18 @@ The baker owns immutable intact and zero-filter collider blobs, swapping the com
 reference on destruction instead of mutating a shared collider. No enemy health component
 or health-bar presentation is attached to the barricade.
 
+Chapter One gates in Campaign 04 and 06 opt into `VillageGatePiece` presentation.
+`ChapterOneGateVisuals` authors segmented, jagged oak planks, reinforcing rails, bolts,
+damage fractures and bounded splinter/dust meshes under the existing barricade root.
+`VillageGatePieceBaker` adds only presentation data; `BarricadeVisualBaker` retains
+the existing gate link and per-entity colour. `VillageGatePresentationSystem` owns
+their hit recoil, staged fractures, outward chips and ballistic tumbling/fading debris.
+The generic barricade visual loop excludes these pieces, while its shared impact
+feedback still runs. Collision, hit counting, replenishment and exit rules are unchanged.
+The pieces have no colliders, use Full Cel surfaces and remain excluded from static
+lighting bakes. Restart/scene unload recreates or removes them with the SubScene.
+The chapter builder reapplies the same presentation when rebuilding levels 4 and 6.
+
 `BarricadeImpactSystem` runs last in pre-physics, after launch homing and ground constraint.
 Swept AABBs cheaply reject distant bodies; remaining launches cast their actual collider
 through the upcoming fixed-step displacement in the existing collision world. The closest
@@ -2491,7 +2503,13 @@ outside combat bounds and approach lanes. `ChapterOneVillagePlanting` keeps comp
 ground-plant bounds clear of the meadow shader's dirt corridors, including feathered
 and noisy edges. It relocates offending plants to the nearest green verge without
 intersecting buildings, fences or props, and preserves their ground-height offsets.
-This final editor-only pass also applies to future village rebuilds. Wider house footings avoid coplanar wall faces.
+This final editor-only pass also applies to future village rebuilds.
+`ChapterOneVillageGrounding` then samples the rendered meadow triangles under each
+ground-level model's base. It seats floating roots, rock bases and ground props with
+a small overlap, preserving market-table produce and raised-bed planting. The pass
+works with both the original meadow mesh and its baked-shadow tiles, adds no runtime
+components or colliders, and also applies after path-clearance relocations.
+Wider house footings avoid coplanar wall faces.
 `ChapterOneVillageHouseBody` authors shared, closed wall/gable shells for the two house
 heights, fitted inside the tiled roof's curved underside. Houses no longer combine a
 box wall with unrelated imported gable pieces. Cream plaster uses a subtle procedural

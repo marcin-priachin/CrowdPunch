@@ -182,6 +182,7 @@ namespace CrowdPunch.Editor
                 for(int i=-2;i<=2;i++) BarricadePiece(target,"Damage crack",new Vector3(i*3,stage-.9f,-.65f),new Vector3(2,.18f,.08f),crack,stage,Vector3.down);
             }
             var green=MaterialAsset("BarricadeExit",new Color(.2f,.95f,.55f));
+            if(number==4 || number==6) ChapterOneGateVisuals.Build(target);
             Box("Exit landing",exit,new Vector3(0,-.97f,16),new Vector3(5,.06f,3),green,false);
             Box("Exit post left",exit,new Vector3(-2.5f,.5f,17),new Vector3(.3f,3,.3f),green,false);
             Box("Exit post right",exit,new Vector3(2.5f,.5f,17),new Vector3(.3f,3,.3f),green,false);

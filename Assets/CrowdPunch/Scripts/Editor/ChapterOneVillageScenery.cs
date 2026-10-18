@@ -116,6 +116,7 @@ namespace CrowdPunch.Editor
             ChapterOneVillageDetails.Build(root,floor,stage);
             ClearBuildingCanopies(root);
             ChapterOneVillagePlanting.ClearPaths(root,floor,stage);
+            ChapterOneVillageGrounding.Apply(root);
         }
 
         private static void ClearBuildingCanopies(Transform root)

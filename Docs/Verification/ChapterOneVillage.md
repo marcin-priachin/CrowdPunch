@@ -202,3 +202,75 @@ baked-only policy and restores realtime fallback until a bake successfully finis
   `Temp/Planting/Chapter8-finished-verge.png`.
 - Left Campaign 01 and its SubScene open in clean Edit Mode. No gameplay transforms,
   colliders or encounter authoring were intentionally changed by the planting pass.
+
+## Terrain-contact repairs (2026-10-18)
+
+- VISION-006: corrected 1,398 floating scenery placements across Campaign 01-10,
+  including 126 in Campaign 09. Inspected 4,374 ground-level model groups. The original
+  smooth height formula differs from the rendered six-metre terrain triangulation;
+  some offset rocks also inherited the height of a nearby tree.
+- `ChapterOneVillageGrounding` now follows the actual visible meadow triangles,
+  including the split shadow-bake tiles. It compares model base contact points and
+  uses a small overlap to hide seams around roots and rocks. It runs after planting
+  clearance in the chapter recipe. Crates on market tables, raised-bed plants and
+  building-attached decoration retain their intended support and placement.
+- Saved-scene grounding audit found no remaining gaps over 3 cm in its ground-level
+  targets. An independent check used temporary native mesh-collider raycasts against
+  the rendered terrain: 1,571 trees/rocks and 135,181 contact samples across all ten
+  stages, with no failures. Temporary query colliders were destroyed after each stage.
+  Local reports: `Temp/Grounding/Audit.json` and `Temp/Grounding/NativeAudit.json`.
+- Scenery positions were corrected through the Unity Editor. Grounding changes only
+  the vertical positions of scenery; imported models, terrain geometry, collision
+  authoring and encounter layout remain unchanged.
+- All ten shadow rebakes completed. Retried transient texture-import setting writes;
+  final audit found no mismatched lightmap mip limits. Unity compilation passed.
+- The first lighting-test run included intentionally inactive market dressing in
+  stages 3, 5 and 8. The check now follows the lightmapper's active-renderer rule;
+  those existing disabled objects were not reactivated. All 14 BakedShadowTests then
+  passed, along with Campaign 09's production-presentation check.
+- Inspected Campaign 09 roots and rock bases after baking. Final local captures:
+  `Temp/Grounding/Stage9-tree-contact.png` and
+  `Temp/Grounding/Stage9-rock-grounded.png`. The earlier low rock-view capture clipped
+  through the foreground hill and is not the final rock preview.
+- Left Campaign 09 and its SubScene open in clean Edit Mode, with no temporary
+  query colliders remaining. Shader asynchronous compilation was restored.
+
+## Chapter One gate destruction (2026-10-18)
+
+- BARRICADE-004 / VISION-006: Campaign 04 and 06 use segmented oak barricades with
+  jagged joins, contrasting timber, reinforcing rails and iron bolts. Initial widths
+  remain 22 m and 28 m, with the existing four-metre height and shared three-hit rules.
+  The central rotating-cover target in Campaign 07 and other chapters retain their visuals.
+- Accepted hits cause a short localized warm flash/recoil, progressively exposed
+  fractures, outward splinters and brief dust. Final hits burst all boards and hardware
+  into noncolliding, gravity-driven tumbling debris that settles flat and disappears
+  after 1.5 s. The existing collider swap still opens the route immediately.
+- Saved pieces: 288 in Campaign 04, 344 in Campaign 06. Meshes/materials are owned in
+  `Data/ChapterOneVillage/Gates`. No purchased assets or new packages are required.
+  The chapter recipe rebuilds these visuals; the Editor refresh command changes only
+  the two existing gates' visual children. Dynamic pieces remain outside static bakes.
+- Unity compilation passed. Five new presentation checks passed (late-entry hiding,
+  persistent damage stages, front-face chip/dust visibility and complete debris cleanup),
+  along with 12 existing BarricadeTests and the saved baked-lighting checks for 04/06.
+  Total: 19 focused checks passed. The subsequent palette-only edit keeps each plank's
+  three sections the same colour and was refreshed/saved and inspected in Play Mode.
+- Live previews: frames advanced in Campaign 04 and 06. A controlled player-owned
+  launched body travelled through the real physics pipeline and caused the first hit
+  in each level. Further staged captures called the existing hit resolver; they are
+  presentation checks, not claims of manual combat playtesting. Intermediate hits left
+  the intact collider; final hits produced the broken collider. At 1.716 s after the
+  final hit, Campaign 06 had zero visible pieces and still required reaching the exit.
+  Restart restored three hits, sequence zero and all 344 presentation entities.
+- Final palette captures: `Temp/GateVisuals/Final-intact.png`, `Final-damaged.png`
+  and `Final-breaking.png`. Older captures show intermediate presentation tuning.
+  The unattended player died before a later cosmetic capture; that preview was restarted
+  and protected before the final captures. All camera, health and time changes were temporary.
+- Warming 64 updates and measuring 1,000 updates in an isolated Editor world with the
+  344 gate pieces and 5,000 dummy crowd entities measured 0.00985 ms/update idle and
+  0.02708 ms/update during hit animation. This measures only presentation CPU work;
+  it excludes rendering, real crowd simulation and frame-rate acceptance.
+- `dotnet build Assembly-CSharp.csproj --no-restore --no-dependencies` still fails with
+  the existing 132 missing package-DLL metadata errors under Temp/Bin/Debug and four
+  assembly-version warnings. Unity compilation and Editor tests are the authoritative checks.
+- Left Bootstrap in clean Edit Mode; restored asynchronous shader compilation and normal
+  time. No runtime inspection callbacks or saved gameplay/progression changes are intended.

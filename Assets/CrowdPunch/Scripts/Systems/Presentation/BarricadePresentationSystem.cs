@@ -25,7 +25,7 @@ namespace CrowdPunch.Systems.Presentation
                             : SystemAPI.HasComponent<ShellTarget>(entity) && SystemAPI.GetComponent<ShellTarget>(entity).LastHitBlocked != 0 ? .2f : .65f });
             }
             foreach (var (visual, transform, color) in
-                SystemAPI.Query<RefRW<BarricadeVisual>, RefRW<LocalTransform>, RefRW<URPMaterialPropertyBaseColor>>().WithNone<ShellVisual>())
+                SystemAPI.Query<RefRW<BarricadeVisual>, RefRW<LocalTransform>, RefRW<URPMaterialPropertyBaseColor>>().WithNone<ShellVisual,VillageGatePiece>())
             {
                 if (!SystemAPI.HasComponent<Barricade>(visual.ValueRO.Barricade)) continue;
                 var wall = SystemAPI.GetComponent<Barricade>(visual.ValueRO.Barricade);
