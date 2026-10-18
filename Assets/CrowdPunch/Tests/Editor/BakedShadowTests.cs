@@ -21,6 +21,8 @@ namespace CrowdPunch.Tests
 
         [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)]
         [TestCase(6)] [TestCase(7)] [TestCase(8)] [TestCase(9)] [TestCase(10)]
+        [TestCase(11)] [TestCase(12)] [TestCase(13)] [TestCase(14)] [TestCase(15)]
+        [TestCase(16)] [TestCase(17)] [TestCase(18)] [TestCase(19)] [TestCase(20)]
         public void Vision006_SavedChapterHasUsableBakedShadows(int stage)
         {
             var scene=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}.unity");
@@ -33,7 +35,7 @@ namespace CrowdPunch.Tests
             Assert.That(sun.bakingOutput.isBaked,Is.True);
             Assert.That(sun.bakingOutput.mixedLightingMode,Is.EqualTo(MixedLightingMode.Shadowmask));
             Assert.That(sun.bakingOutput.occlusionMaskChannel,Is.InRange(0,3));
-            var scenery=roots.Single(r=>r.name=="Chapter One - Sunlit Border Village");
+            var scenery=roots.Single(r=>r.name==(stage<=10?"Chapter One - Sunlit Border Village":"Chapter Two - Emberworks Foundry"));
             // Disabled dressing is intentionally absent from the lightmapper's output.
             foreach(var r in scenery.GetComponentsInChildren<MeshRenderer>(true).Where(r=>r.enabled && r.gameObject.activeInHierarchy))
             {
@@ -60,16 +62,21 @@ namespace CrowdPunch.Tests
         }
 
         [TestCase(4)] [TestCase(6)] [TestCase(7)] [TestCase(10)]
+        [TestCase(12)] [TestCase(13)] [TestCase(16)] [TestCase(17)] [TestCase(19)] [TestCase(20)]
         public void Vision004_ChangingGameplayGeometryIsExcludedFromStaticBake(int stage)
         {
             var scene=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}/Campaign_{stage:00} Sub Scene.unity");
             int changing=0;
-            foreach(var r in scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<MeshRenderer>(true)))
+            foreach(var r in scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<Renderer>(true)))
             {
                 if(r.GetComponent<BarricadeVisualAuthoring>()==null && r.GetComponent<CoverPanelAuthoring>()==null &&
-                    r.GetComponentInParent<BossPartAuthoring>()==null) continue;
+                    r.GetComponent<VillageExitCueAuthoring>()==null && r.GetComponent<TrackSocketVisualAuthoring>()==null &&
+                    r.GetComponentInParent<BossPartAuthoring>()==null && r.GetComponentInParent<ChickenBossAuthoring>()==null) continue;
                 changing++;
                 Assert.That(GameObjectUtility.GetStaticEditorFlags(r.gameObject).HasFlag(StaticEditorFlags.ContributeGI),Is.False,r.name);
+                if(stage>10)
+                    foreach(var t in r.GetComponentsInParent<Transform>(true))
+                        Assert.That(GameObjectUtility.GetStaticEditorFlags(t.gameObject).HasFlag(StaticEditorFlags.ContributeGI),Is.False,"Dynamic ancestor: "+t.name);
             }
             Assert.That(changing,Is.GreaterThan(0));
         }

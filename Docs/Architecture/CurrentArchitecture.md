@@ -2550,6 +2550,29 @@ replaces the generated scenery root and reapplies these visual settings to stage
 Hand edits inside that root should be made after running the recipe. Generated assets
 live in `Assets/CrowdPunch/Data/ChapterOneVillage`; imported models are not edited.
 
+## Chapter Two foundry presentation (2026-10-18, VISION-004..006)
+
+`ChapterTwoFoundryBuilder` refreshes the presentation of saved Campaign 11-20 scenes.
+`ChapterTwoFoundryAssets`, `ChapterTwoFoundryScenery` and `ChapterTwoFoundryObjectives`
+own materials, exterior compositions and objective bindings respectively. The generated
+`Chapter Two - Emberworks Foundry` root is replaceable; keep hand-authored additions in
+separate roots. It does not run encounter builders or change gameplay authoring.
+
+The existing floor receives world-projected paving. Fixed noncolliding service yards,
+workshops, tanks and chimneys live in the main scene; objective skins remain in the
+gameplay SubScene. Segmented metal gates/targets reuse `VillageGatePiece` presentation;
+shell fragments, cargo fittings, sockets and exit cues use their existing ECS state.
+No runtime MonoBehaviour queries enemies and no new gameplay state is introduced.
+
+`CampaignShadowBake` accepts explicit main-scene paths and an owned output directory,
+processes each main scene with its SubScene, and enables `BakedShadowLighting` only after
+usable shadowmask output. `ChapterOneShadowBake` retains its existing 1-10 API as a
+wrapper. The receiver binder accepts an output folder; Chapter Two UV2 mesh copies,
+receiver materials and settings live in `Data/ChapterTwoFoundry/BakedShadows`. Static
+flags are assigned to fixed renderers, not propagated onto their ancestors; moving
+receivers retain probes and no realtime caster shadows. Existing scene-scoped lighting,
+pipeline and probe restoration remains shared.
+
 ## Chapter One Baked Shadows (2026-10-18)
 
 `ChapterOneShadowBake` processes each main scene together with its gameplay SubScene using

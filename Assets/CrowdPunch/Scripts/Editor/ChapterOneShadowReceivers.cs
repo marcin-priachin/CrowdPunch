@@ -21,9 +21,9 @@ namespace CrowdPunch.Editor
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
         }
 
-        internal static void Bind(Scene scene)
+        internal static void Bind(Scene scene, string outputFolder=null)
         {
-            string folder=ChapterOneVillageAssets.Output+"/BakedShadows/Receivers";
+            string folder=outputFolder ?? ChapterOneVillageAssets.Output+"/BakedShadows/Receivers";
             Directory.CreateDirectory(folder); AssetDatabase.Refresh();
             foreach(var r in scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<MeshRenderer>(true)))
             {

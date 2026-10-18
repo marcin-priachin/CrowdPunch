@@ -28,7 +28,7 @@ namespace CrowdPunch.Tests
             Assert.That(volumes.Any(v=>v.enabled && v.isGlobal && v.weight==1 && v.priority==150 &&
                 AssetDatabase.GetAssetPath(v.sharedProfile)==CelPresentationAuthoring.ProfilePath),Is.True,scene.path);
             var lighting=roots.SelectMany(r=>r.GetComponentsInChildren<CelLevelLighting>(true)).Single();
-            Assert.That(lighting.ambientMultiplier,Is.EqualTo(1.08f)); Assert.That(lighting.sun,Is.Not.Null);
+            Assert.That(lighting.ambientMultiplier,Is.EqualTo(number>=11 && number<=20?1f:1.08f)); Assert.That(lighting.sun,Is.Not.Null);
             CheckRenderers(roots,scene.path);
             var subscenes=roots.SelectMany(r=>r.GetComponentsInChildren<Unity.Scenes.SubScene>(true))
                 .Select(s=>AssetDatabase.GetAssetPath(s.SceneAsset)).ToArray();

@@ -1,0 +1,151 @@
+# Chapter Two - Emberworks Foundry
+
+Visual implementation requested from PLANS.md on 2026-10-18. Requirements:
+VISION-004..006, BARRICADE-001..009, COVER-001..005, SHELL-001..006,
+TRACK-001..006 and the existing CHICKEN encounter rules.
+
+## Saved presentation
+
+Campaign 11-20 uses owned blue-grey paving, quiet earth, kiln brick, muted teal,
+copper and brass. Each stage follows its plan composition: coal delivery, boiler
+repair, furnace gate, pumpworks, pipe junction, freight dock, governor courtyard,
+great foundry yard, switchback loading and smelter ring. Exterior art is noncolliding.
+The original floor is the visible combat surface; no paving overlay was added.
+Source packs, player/enemy/boss models, atlas detail and shared production post
+processing are preserved. No packages, purchases or new gameplay systems were added.
+
+The refresh menu is `Crowd Punch > Art Direction > Dress Chapter Two - Emberworks Foundry`.
+Its generated main-scene root is replaceable; keep manual additions in separate roots.
+The companion `Bake Chapter Two Shadows` menu must follow any fixed-geometry refresh.
+Chapter-owned output is `Assets/CrowdPunch/Data/ChapterTwoFoundry`.
+
+## Evidence collected
+
+- The initially clean working tree was recorded before editing. A native before view
+  is in `Temp/ChapterTwo/Before-11.png`.
+- Compared 7,581 stable serialized gameplay properties across all ten main scenes and
+  SubScenes: no differences after dressing. The raw 8,433-property snapshots include
+  852 transient Unity object-reference child IDs, which were excluded from comparison;
+  stable GlobalObjectIds and asset dependency hashes remain compared. Collider references,
+  gameplay transforms, settings, navigation and wave data are included.
+- Final bake batch completed all ten stages, with two lightmap/shadowmask atlases per
+  stage. Receiver bindings and mip-limit compatibility passed the saved-lighting checks.
+- Final native Play audit advanced 100 frames after enemy streaming in every stage,
+  and 1,000 frames in stage 18. Every changing objective visual had LocalTransform and
+  no ECS Static tag. Active pipeline shadow distance was zero in all ten stages.
+  Stage 18 reached its full initial wave of 52 real enemy bodies. Captures and the
+  frame/entity counts are in `Temp/ChapterTwo/Stage-*.png` and `PlayAudit.txt`.
+- This audit uses the existing EditorPreview path, which isolates campaign saves.
+  Temporary player health protection was discarded when Play ended. It does not
+  establish manual combat or balance acceptance.
+- Initial regression run: 162 passed, 12 failed. Ten failures were the previous
+  universal ambient-multiplier assertion; Chapter 2 intentionally uses 1.0 cool fill.
+  One new exclusion check did not include the Chicken's skinned renderers. One test
+  was interrupted by an unrelated tool request timeout logged as an error. Corrections
+  were applied. The rerun passed 11 cases; one remaining case was interrupted by a
+  Pipeline transport error. Direct invocation of that assertion then passed. The 174
+  original assertion cases have successful coverage across these runs; this is not
+  a single clean 174-case TestRunner result.
+- Final direct saved-scene checks: 21 passed, zero failed (ten saved lighting checks,
+  ten finite/clear-of-arena placement checks and the interrupted cel assertion).
+  Output: `Temp/ChapterTwo/FinalChecks.txt`. Existing Chapter One lighting assertions
+  also passed; no Chapter One scenes or presentation assets were edited.
+
+## Corrections following inspection
+
+The first exterior used four strips around the rectangular floor bounds. This left a
+visible inset around curved arenas. It was replaced by continuous noncolliding earth
+12 cm below the real floor, extending beyond the haze distance. The original floor and
+colliders remain unchanged. Closed pitched roofs, facade footings and drainpipes were
+added to workshop silhouettes instead of retaining distant plain boxes. These fixed
+geometry changes are included in the final bake batch.
+
+Native review then exposed flat imported factory door meshes with zero depth. The
+original fitting divided by that depth; Unity rejected the resulting transforms and
+left a visible facade near the origin. The fitter now preserves a finite scale on
+zero-thickness axes. An oversized four-vertex ground surface also interpolated distant
+fog across the nearby yard. The replacement uses a subdivided flat mesh; this changes
+only the noncolliding exterior, with the real arena floor still above it. Saved-scene
+placement regressions cover finite transforms and local fog interpolation geometry.
+
+## Final verification
+
+Final geometry snapshot: all 7,581 stable gameplay properties still match the baseline.
+Ground contact audit: 135 ground-level imported factory model groups, zero base gaps
+over 3 cm and zero scenery colliders. Intentionally supported fittings and roof-mounted
+models are excluded. Added visible pump-pipe supports and corrected the imported
+governor cog orientation; both affected stages were rebaked successfully.
+The freight gantries in 15 and 19 were aligned with their supports and rebaked;
+the exit cue's former cube half-height offset was removed from its flat arrow mesh.
+
+Controlled native state checks use the existing hit resolvers and track retargeting,
+not simulated manual combat. Stage 12 showed two shell charges after its first hit,
+then zero visible shell pieces and one exposed core without premature completion.
+Stage 13's gate cleared while leaving its exit condition active. Stage 17 rotated
+0.727 radians during the sample, produced 35 visible debris pieces on break and one
+completion event. Tracks in 16 and 19 reached 10/10 m and 20/20 m, locked and emitted
+one completion each. All five stages reset their objective state on retry. Evidence:
+`Temp/ChapterTwo/StateAudit.txt` and `State-*-partial/resolved.png`.
+
+During a bake, Unity Entities temporarily locked its SceneDependencyCache file and
+threw before the bake-completion callback. The lightbaker had finished writing valid
+new masks. Reimporting that SubScene and resuming finalization recovered the batch;
+the final saved-lighting checks and native Play runs above passed afterward.
+
+Chapter 10 -> 11 -> 21 transitions restored the shared pipeline and cleared the
+baked-only shader flag outside the baked chapters. Repeated 21 -> 11 -> 21 across
+all six quality tiers: Chapter 2 shadow distance 0 / baked flag 1 / 147 probes;
+Chapter 3 shadow distance 110 / baked flag 0, with no stale Chapter 2 probe set.
+Original Very Low quality was restored. See `Temp/ChapterTwo/Transitions.txt`.
+
+Stage 18 diagnostic sample: 240 advancing Editor frames with 52 native enemies,
+Very Low quality, i9-14900KF, RTX 4090, 65,317 MB system RAM. Median 16.68 ms,
+95th percentile 16.76 ms, maximum 208.73 ms. Resident lightmap textures: 33,621,786
+bytes; total Unity Editor allocation after repeated bakes: 28,518,453,619 bytes.
+This includes Editor overhead and a frame spike; it is not a standalone benchmark
+or an OQ-001 performance acceptance result. See `Temp/ChapterTwo/Profile.txt`.
+
+The full serial .NET command was stopped after spending an extended period rebuilding
+unrelated Unity package projects. The focused `dotnet build Assembly-CSharp.csproj
+--no-restore --no-dependencies -m:1` finished with 45 missing package-DLL metadata errors
+and four existing assembly-version warnings. It is not a successful .NET build.
+Unity compilation completed with no compiler errors.
+
+## Windows development player
+
+StandaloneWindows64 development build (Bootstrap plus Campaign 11-20) succeeded:
+zero errors, 513 warnings, 530,629,986 bytes, 625.299 seconds. Warnings are in existing
+Sidekick code, obsolete URP render-feature APIs, legacy ECS aspects and package shader
+variants; none name the changed foundry/bake code. The local QA executable is
+`Temp/ChapterTwo/Player/CrowdPunch.exe` and is not a full-campaign release build.
+
+Native packaged-player captures at Ultra quality verified stages 11, 17 and 18:
+shadow distance 0, baked-only shader flag 1, and respectively 147, 168 and 1,083 probes.
+The main scene reports one resident lightmap entry, with SubScene receiver masks
+carried through the existing material bindings. Fixed scenery and arena shadows
+remain visible in `Temp/ChapterTwo/Player-*.png`.
+
+Native keyboard input traversed the large yard from (2.59, -16.71) to the north edge
+(2.59, 49.48), west edge (-49.50, 46.25), south edge (-49.50, -49.48) and east edge
+(49.48, -49.48), in XZ
+coordinates. Camera follow advanced through these views. A right-mouse event queued
+for the next native input update fired DashStarted at frame 329364. The CLI's immediate
+input flush initially missed this one-frame action, so that attempt is not counted.
+The shadow policy and 1,083 probes persisted through the traversal. This samples
+moving viewpoints and a real dash; it is not a frame-by-frame popping analysis.
+
+The player uses EditorPreview through the existing property to prevent progress
+writes. Temporary health protection is discarded on quit. Startup logged a rebuilt
+D3D12 disk cache and blocked telemetry proxy connections; initial QA evaluator calls
+also needed reflection because the Player evaluator omits URP/Entities references.
+These are distinct from build errors and from gameplay assertions.
+
+The local QA build temporarily enabled Pipeline runtime inspection. The project
+setting was restored to disabled, its originally absent settings file was removed,
+and Unity's build-generated preloaded-assets/shader-prefilter changes were restored.
+The empty temporary Pipeline Resources folders were removed. The QA executable
+contains that inspection server and should not be distributed.
+
+OQ-001 still has no agreed hardware/FPS target. Manual combat/balance acceptance,
+exhaustive camera-angle review and target-device performance remain outside this
+presentation verification. Existing gameplay values and campaign progress are preserved.

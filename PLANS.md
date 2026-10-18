@@ -1,6 +1,12 @@
 # Campaign Visual Update Plan
 
-Created: 2026-10-18. Status: planning document; implementation has not started.
+Created: 2026-10-18. Status: Chapter 2 is implemented and verified; Chapters 3-9 remain planned.
+
+Chapter 2 uses the Emberworks Foundry compositions below. Saved Campaign 11-20 scenes,
+owned materials, objective skins and chapter-owned baked-shadow data are implemented.
+Editor, objective-state, quality-tier and Windows player-build verification, along with
+remaining performance/manual-acceptance limits, are recorded in `Docs/Verification/ChapterTwoFoundry.md`.
+The broader cross-chapter checklist remains open until its evidence is recorded.
 
 ## Scope and authority
 

@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 70a037e760ed45d62fb63ebfa20b401e
+  m_Shader: {fileID: 4800000, guid: 8a2bec547a72dfc4c9d356b471899637, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap:
+    CrowdPunchSourceMaterial: Assets/CrowdPunch/Data/ChapterTwoFoundry/Materials/Quiet
+      blue grey paving.mat
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BakedShadowMask:
+        m_Texture: {fileID: 2800000, guid: 435768cf7978a464b81bee9ecb20e052, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: a687f5efe3befd94cbb60a45b48e78f3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DirtMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Meadow: 0
+    - _PlasterGrain: 0
+    - _ReceiveShadows: 1
+    - _TextureScale: 0.19
+    - _TextureStrength: 0.36
+    - _UseBakedShadowMask: 1
+    - _Variation: 0.055
+    m_Colors:
+    - _BakedShadowST: {r: 0.22436911, g: 0.22421412, b: -0.0006323012, a: -0.0006316958}
+    - _BaseColor: {r: 0.46, g: 0.51, b: 0.54, a: 1}
+    - _Bounds: {r: 0, g: 0, b: 20, a: 20}
+    - _PathColor: {r: 0.56, g: 0.42999998, b: 0.24999997, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
