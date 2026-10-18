@@ -186,6 +186,7 @@ namespace CrowdPunch.Editor
             Box("Exit landing",exit,new Vector3(0,-.97f,16),new Vector3(5,.06f,3),green,false);
             Box("Exit post left",exit,new Vector3(-2.5f,.5f,17),new Vector3(.3f,3,.3f),green,false);
             Box("Exit post right",exit,new Vector3(2.5f,.5f,17),new Vector3(.3f,3,.3f),green,false);
+            if(number==4 || number==6) ChapterOneExitVisuals.Build(target);
         }
 
         private static void CampaignGateTerrain(ArenaAuthoring arena,BarricadeAuthoring gate)

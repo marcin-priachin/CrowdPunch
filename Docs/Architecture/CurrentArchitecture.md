@@ -1720,6 +1720,15 @@ The baker owns immutable intact and zero-filter collider blobs, swapping the com
 reference on destruction instead of mutating a shared collider. No enemy health component
 or health-bar presentation is attached to the barricade.
 
+Chapter One exits in Campaign 04 and 06 use static oak waygates, pennants and a
+ground perimeter matching the authored completion radius. `VillageExitCueBaker`
+links the ring/arrows to their gate through pure `VillageExitCue` data.
+`VillageExitPresentationSystem` reads gate durability to reveal forward arrows and
+pulse colour after destruction. It owns only cue transforms and colour; the existing
+completion system still requires the player to reach the authored exit. The fixed
+landmark participates in the chapter shadow bake; animated cues do not cast shadows.
+`ChapterOneExitVisuals` refreshes the two saved exits and is used by the chapter recipe.
+
 Chapter One gates in Campaign 04 and 06 opt into `VillageGatePiece` presentation.
 `ChapterOneGateVisuals` authors segmented, jagged oak planks, reinforcing rails, bolts,
 damage fractures and bounded splinter/dust meshes under the existing barricade root.

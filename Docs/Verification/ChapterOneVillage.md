@@ -274,3 +274,35 @@ baked-only policy and restores realtime fallback until a bake successfully finis
   assembly-version warnings. Unity compilation and Editor tests are the authoritative checks.
 - Left Bootstrap in clean Edit Mode; restored asynchronous shader compilation and normal
   time. No runtime inspection callbacks or saved gameplay/progression changes are intended.
+
+## Chapter One exit landmarks (2026-10-18)
+
+- BARRICADE-001/003 and VISION-006: replaced the old green slab/posts in Campaign 04
+  and 06 with a chunky oak waygate, limestone footings, blue swallowtail pennants and
+  a gold-framed ivory forward emblem. The gold ground perimeter matches the existing
+  two-metre exit radius. No collision geometry, hit settings or objective rules changed.
+- The inner ring stays quiet before destruction. The existing gate state reveals three
+  mint forward chevrons over 0.4 seconds and starts a restrained colour pulse after the
+  gate opens. No lights, particle systems, packages or purchased assets were added.
+- The new art is project-owned in `Data/ChapterOneVillage/Exits`. The chapter recipe
+  and `Refresh Chapter One Exit Landmarks` Editor command both create it. The fixed
+  landmark is static and was rebaked into both stages' shadowmasks. Moving cues live
+  in a separate nonstatic root: native Play inspection caught static-ancestor flattening
+  during the first version, which was corrected before final verification.
+- Unity compilation, three cue-state tests, 12 existing BarricadeTests and both saved
+  baked-shadow checks passed (17 checks). The rebake temporarily failed three lightmap
+  metadata writes; their mip-limit importer settings were reapplied successfully, and
+  both lighting checks then passed. The separate .NET build attempt reported Build FAILED
+  without compiler diagnostics; it does not establish a successful standalone build.
+- In native Play previews for both stages, frames advanced and the four baked cues had
+  LocalTransform. Locked scales were 1/0/0/0; after opening through the existing hit
+  resolver all were 1 and their colours pulsed. The player remained outside the exit
+  and completion stayed zero. Moving the player to Campaign 04's original exit point
+  incremented completion to one. These were controlled presentation checks, not manual
+  combat playtests. EditorPreview isolated campaign progress, and temporary player
+  placement/invulnerability was discarded on leaving Play Mode.
+- Inspected native captures `Temp/ExitVisuals/Level4-ready.png` and
+  `Temp/ExitVisuals/Level6-ready.png`. Final authoring audit confirmed four cues per
+  stage, zero new colliders, static fixed art and no static ancestors on animated cues.
+- Returned to clean Bootstrap in stopped Edit Mode. The pre-existing Sidekick downloader
+  window error still appears at Play transitions; no new exit runtime errors were seen.
