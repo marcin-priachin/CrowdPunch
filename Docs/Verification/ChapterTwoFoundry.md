@@ -374,3 +374,35 @@ package/reference/deprecation warnings. Evidence: `Temp/Shell12/Tests.xml`, `Tes
 `Play.txt`, `GameplayComparison.txt`, `Build.log` and `Views/`, plus
 `Temp/FoundryFix/FinalChecks-12.txt` and `Temp/CameraCutaway/Checks.txt`. Play mode was stopped.
 No standalone Player build or target-hardware performance measurement was added.
+
+## Level 13 painted barrier destruction (2026-10-19)
+
+BARRICADE-004/006 and VISION-005/006: the existing two-metre gate now has thin copper
+enamel plates, split blue-steel returns/crown, teal cleats, brass rivets and an ivory
+strike badge. Two irregular fracture stages and brief amber chips/powder show accepted
+hits. On destruction the plates and fittings tumble separately, then fully clear in
+1.10-1.35 seconds. Pigment moves with the fragments. The recipe is
+`FoundryBarrierVisuals`, exposed as `Crowd Punch > Art Direction > Refresh Level 13
+Barrier Visuals` and reused by the chapter art builder.
+
+The skin uses 99 bounded entities with the existing `VillageGatePresentationSystem`;
+no new runtime system, physics body, collider, package or HUD was added. Painted entity
+tints are supplied in linear color, including the existing level-12 shell. Camera
+cutaway remains disabled on the new barrier materials. Fixed scenery, lighting, exit
+landmarks/cues and all gameplay settings were retained without rebaking shadows.
+
+Unity passed 25 barricade, gate-presentation and shell regression tests, and five saved
+level-13 environment/baked-shadow checks. The serialized comparison matched all 346
+chapter gameplay/collider/physical-transform blocks without differences. The chapter
+cutaway scope audit passed. Shader diagnostics were empty; the C# build passed with
+zero errors and existing package/reference/deprecation warnings.
+
+A native advancing Play review captured matching before/after intact views, both damage
+stages, early/tumbling breakup, clear exit and retry. It exercised the production hit
+resolver with three distinct hit identities, confirmed all visual pieces clear, confirmed
+destruction still requires reaching the exit, and verified retry restores gate durability.
+Captures were visually inspected and fractures were refined to avoid symmetrical markings.
+This controlled review is not a human combat playtest or target-hardware performance test.
+Play mode was stopped. Evidence: `Temp/Barrier13/Tests.xml`, `Tests.txt`, `Play.txt`,
+`GameplayComparison.txt`, `Build.log`, `Views/`, `Temp/FoundryFix/FinalChecks-13.txt` and
+`Temp/CameraCutaway/Checks.txt`.

@@ -1790,6 +1790,18 @@ rebuilding resets that level's recipe while preserving existing barricade tuning
 
 See [Barricade validation](../Validation/Barricade.md) for actual checks and remaining playtests.
 
+Campaign level 13's painted foundry gate is authored by `FoundryBarrierVisuals`, also
+called by the Chapter Two art recipe (BARRICADE-004/006). Its thin copper skins, blue-steel
+returns, teal braces, brass rivets, irregular fracture stages and brief flecks/powder reuse
+`VillageGatePieceAuthoring`/baking and `VillageGatePresentationSystem`. The 99 bounded
+visual entities add no colliders or simulation responsibility. Authored landing heights
+account for the existing gate collider extending below the court. The painted materials
+opt into attached pigment and entity tint, with linear material color supplied by
+`BarricadeVisualBaker`; other materials retain their existing color path. The baker tracks
+material dependencies so palette edits rebake correctly. Gate durability, footprint,
+sealed sides, exit cues and completion remain unchanged. See
+[Chapter Two verification](../Verification/ChapterTwoFoundry.md).
+
 ## Rotating Cover And Gauntlet_14 (COVER-001..005)
 
 Campaign 07 has a chapter-owned village training-machine appearance, rebuilt by

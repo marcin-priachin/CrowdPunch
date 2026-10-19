@@ -14,9 +14,11 @@ namespace CrowdPunch.Bakers
             if (a.barricade == null) return;
             var e = GetEntity(TransformUsageFlags.Dynamic);
             var renderer = GetComponent<MeshRenderer>();
+            DependsOn(renderer.sharedMaterial);
             var color = renderer.sharedMaterial.color;
             // Material colors are converted for the shader; ECS overrides must supply linear RGB.
-            if (GetComponent<ShellFragmentAuthoring>() != null) color = color.linear;
+            if (renderer.sharedMaterial.HasProperty("_UseEntityColor") && renderer.sharedMaterial.GetFloat("_UseEntityColor") > .5f)
+                color = color.linear;
             float4 rgba = new float4(color.r, color.g, color.b, color.a);
             AddComponent(e, new URPMaterialPropertyBaseColor { Value = rgba });
             if (a.shellVisual) AddComponent(e, new ShellVisual { IsCore = a.shellCore ? (byte)1 : (byte)0 });

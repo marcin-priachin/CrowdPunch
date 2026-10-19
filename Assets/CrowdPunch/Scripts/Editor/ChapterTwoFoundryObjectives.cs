@@ -27,6 +27,7 @@ namespace CrowdPunch.Editor
                     else Shell(gate);
                 }
                 else if(gate.GetComponent<TrackObjectAuthoring>()!=null) Track(gate);
+                else if(stage==13 && !gate.completeOnDestruction) FoundryBarrierVisuals.Build(gate);
                 else if(gate.cover!=null || !gate.completeOnDestruction) SegmentedTarget(gate);
                 if(gate.exit!=null && !gate.completeOnDestruction && gate.GetComponent<TrackObjectAuthoring>()==null) Exit(gate);
             }

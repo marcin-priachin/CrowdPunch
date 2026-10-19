@@ -11,6 +11,9 @@ in level 11: pigment materials, drawn roof seams/window glazing and restrained g
 The shared recipe preserves baked visibility and adjusts haze to each arena's size.
 Camera-side decoration uses a scoped shader cutaway to protect the view of the player;
 floors and gameplay obstacles remain visible and scene layouts are preserved.
+The cross-chapter visual requirements below include the user's approved Chapter 2
+shading, placement corrections and camera cutaways. Every later chapter and visual
+refresh must carry them forward; a new setting does not reset these decisions.
 The broader cross-chapter checklist remains open until its evidence is recorded.
 
 ## Scope and authority
@@ -43,11 +46,12 @@ Sources, in priority order:
 
 ## Decisions already made
 
-These are requirements inherited from the user's decisions and Chapter One corrections.
+These are requirements inherited from the user's decisions and Chapter One/Two corrections.
 
 1. **One Full Cel style throughout.** Environment, player, enemies, lighting and
    post-processing use the approved production look in builds, without Art Lab
-   substitution (VISION-006). Distinguish chapters through setting, silhouette,
+   substitution (VISION-006). Backgrounds retain the approved classic hand-painted
+   cartoon treatment established in Chapter 2. Distinguish chapters through setting, silhouette,
    ground treatment, palette and atmosphere rather than unrelated rendering styles.
 2. **Readable action first.** Keep the player, enemy roles, launched bodies, aim
    previews, hazards and objectives legible at the actual game-camera distance
@@ -71,8 +75,131 @@ These are requirements inherited from the user's decisions and Chapter One corre
    silhouettes low enough to see enemies and combat routes.
 7. **Minimum asset spend.** Start with imported assets, owned material variants and
    small generated meshes. No purchase or additional package is assumed by this plan.
+8. **Preserve the camera view without changing layout.** Camera-side decorative
+   objects must reveal the player and combat through the established scoped cutaway.
+   Keep approved object placement, camera framing, collision and gameplay visibility.
 
-## Chapter One failures that must not recur
+## Cross-chapter visual requirements
+
+These requirements apply to Chapters 3-9, subsequent Chapter 2 refreshes and updates
+to any approved background. Chapter One remains a protected regression reference;
+this plan does not authorize redressing it. The chapter themes below change palette,
+architecture and atmosphere within this visual language. Preserve approved layouts
+during shader, material, post-processing, cutaway and objective-effect updates.
+
+### Hand-painted backgrounds, shading and grading
+
+- Keep the classic cartoon-background reference: broad painted colour shapes,
+  restrained gouache-like pigment washes, subtle dry-brush grain, selective drawn
+  construction lines and simplified detail. Simple geometry must read as an
+  illustrated place through coherent materials, lighting and composition.
+- Retain directional cel form, cool coloured shadows, warm or chapter-appropriate
+  highlights and quiet contact shading. Preserve the hard baked-shadow policy,
+  LOD0 and probe integration. Keep combat ground at a readable middle value with
+  low texture contrast; scenery and surface marks must not compete with action.
+- Use imported colour textures selectively, with broad tonal variation and sensible
+  construction scale. Keep drawn seams, glazing/reflections and ink accents attached
+  to the relevant surface. Avoid photoreal PBR shine, strong normal/specular detail,
+  pervasive thick black outlines and full-screen painterly blur as substitutes for
+  the approved material treatment. Preserve player/enemy atlas detail and animation.
+- Pigment must stay stable during camera motion: world projection suits fixed ground
+  and scenery; local/object mapping suits moving or breaking pieces and painted signs.
+  Filter grain and fade subpixel detail toward the skyline. Distant layers use quieter
+  detail, cooler/haze-related colours and reduced contrast while retaining silhouettes.
+- Use chapter-owned materials and scoped post profiles. The approved Chapter 2
+  priority-150 profile copies FullCelPost and retains Neutral tonemapping, HDR, SMAA
+  and vignette .12; its overrides are exposure .18, contrast 3, saturation -5 and
+  bloom .015, with restrained cool-shadow/warm-highlight split toning. These are the
+  starting values for later painted chapters. Tune chapter atmosphere deliberately
+  and record changes; preserve readability and restore the prior profile on unload.
+  Do not reset an approved painted scene to the older shared grading values.
+- Keep haze beyond the readable combat space, including wide arenas and long room
+  chains. Chapter 2 starts it at `max(52 m, arena.bounds.extents.magnitude + 30 m)`
+  and fades over another 103 m. Adapt to the full stage bounds when necessary;
+  haze must not hide opponents, routes, warnings or objectives, or conceal an
+  unfinished backdrop. Exterior ground continues beyond the visible/haze range.
+- Preserve stable contact shading: the current CelRenderer uses full-resolution
+  interleaved-gradient sampling, with compensated radius and restrained intensity.
+  Check stationary repeated renders and moving views when changing this path.
+  Flicker at geometry joins also requires a depth-surface audit.
+- Future material/shader recipes must preserve DOTS, depth/normal, Meta and baked
+  receiver contracts. Keep each explicit receiver's shadowmask and UV transform,
+  stable material GUIDs and source references. Animated entity tint is opt-in;
+  provide linear RGB to the painted shader and track material baking dependencies.
+  Retain the level-12 shell and level-13 barrier skins when refreshing Chapter 2.
+
+The implementation references are
+[ChapterTwoPaintedLook](Assets/CrowdPunch/Scripts/Editor/ChapterTwoPaintedLook.cs),
+[PaintedFoundry.shader](Assets/CrowdPunch/Shaders/Cel/PaintedFoundry.shader) and
+[the approved Chapter Two verification/corrections](Docs/Verification/ChapterTwoFoundry.md).
+Reuse their demonstrated rendering contracts with chapter-owned output; their
+scene numbers, foundry palette and asset paths are not a batch recipe for other chapters.
+
+### Background placement and complete surroundings
+
+- Compose a connected place with functional relationships: joined building frontages,
+  returning wings, service/loading areas, supported infrastructure and deliberate
+  near/middle/distant layers. Each stage retains its own landmark and arrangement.
+  Avoid isolated props distributed around an arena like a display collection.
+- Cover every camera-facing side, including the side behind the player. Inspect full
+  orbits and outward views from the centre, edges and corners, at gameplay and raised
+  camera heights. Close sightlines through building gaps and behind the first row
+  with return walls, recessed backing and further skyline/terrain layers. No side
+  may expose a void, abrupt ground edge, missing building back or empty horizon.
+- Preserve all approved scenery transforms and the immutable gameplay footprint in
+  appearance-only refreshes. New chapter dressing belongs outside combat, spawn,
+  navigation, objective and boss-motion clearances. Decorative scenery stays
+  noncolliding. Low foreground forms and intentional sightlines complement cutaways.
+- Fit imported models uniformly using their actual mesh axes and bounds; handle
+  zero-thickness axes without division by zero. Keep machinery, doors, supports and
+  architectural modules in believable proportion to each other. Build long pipes
+  from constant-diameter runs, correct bends, flange joints and supports; do not
+  stretch a pipe's cross-section to fill a placement envelope.
+- Fit roofs, gables, facades, footings and internal/back faces as complete assemblies.
+  Inspect undersides and side views. Use butt joints, deliberate depth clearance or
+  recessed backing at adjoining bays, piers, windows, drains and loading steps.
+  Shared exposed planes at the same depth are forbidden, including overlapping roofs
+  and paving tops. Resolve competing geometry before changing lighting parameters.
+- Keep the original collision-aligned arena floor as the visible combat surface.
+  Exterior earth must join curved and irregular arena boundaries continuously; four
+  rectangular strips are insufficient when they expose gaps. Keep exterior ground
+  below the real floor with clear depth separation. Subdivide large exterior meshes
+  sufficiently for local fog interpolation; a giant four-vertex plane can fog the
+  nearby yard incorrectly. Chapter 2's exterior separation is 12 cm.
+- Ground final models against rendered triangles or their intended support surface,
+  after horizontal placement and assembly. Apply the 3 cm unsupported-gap audit
+  threshold below, then visually inspect broad/sloped bases. Preserve intentional
+  raised/support-mounted props. Check full swept volumes for moving decoration.
+- Material, cutaway and objective-effect refreshes preserve existing baked lighting
+  when geometry/sun placement is unchanged. Any fixed-geometry correction requires
+  refreshed bake data and receiver validation before completion.
+
+### Camera-side decorative cutaways
+
+- Carry `CameraSceneryCutaway` and the `SceneryCutaway.hlsl` contract into every
+  future environment material/shader used for camera-side decoration. Open a tapered
+  camera-to-player corridor only for fragments between the camera and focus; scenery
+  beyond the player remains complete. Current defaults are a 4.5 m camera radius,
+  3.5 m player radius and 1.2 m feather with stable ordered coverage. Retain these
+  defaults unless verified framing requires documented tuning.
+- Enable the effect through explicit decorative material variants/flags. Exclude
+  floors, exterior ground, collision boundaries, gameplay obstacles, cover, targets,
+  shell/core pieces, track objects, exit cues, hazards, player and enemies. Shared
+  source materials must not accidentally opt gameplay objects into the cutaway.
+- Match clipping in colour, depth-only and depth-normal passes so removed scenery
+  leaves no solid depth or AO silhouette. Keep full geometry in Meta and ShadowCaster
+  passes so the baked environment and shadows remain intact. Do not move, delete or
+  rescale objects, change collision, or shift the camera to produce the cutaway.
+- Feed the focus from CameraFollow's final look target after camera feedback offsets.
+  Scope shader globals to the active following gameplay camera's render. Scene views,
+  previews, secondary cameras and inactive follow cameras see complete scenery.
+  Clear globals after rendering and on disable; verify additive transitions and retry.
+- Keep the existing bounded shader approach: no per-frame scenery scans, enemy ECS
+  queries, physics raycasts, per-object material instances or extra transparency
+  sorting path are needed. Ensure every newly introduced decorative shader supports
+  the same cutaway before accepting its camera-facing placement.
+
+## Chapter One and Two failures that must not recur
 
 | Observed problem | Required treatment in every future chapter |
 | --- | --- |
@@ -330,13 +457,17 @@ cannot be represented correctly. Preserve the Mono/ECS boundary in AGENTS.md.
 
 - Retain the shared production `FullCelPost.asset` baseline: Neutral tonemapping,
   exposure .25, contrast 5, saturation 4, bloom .06 and vignette .12. Preserve HDR,
-  post-processing and SMAA. Do not introduce motion blur or depth of field over combat.
-- Keep the priority-150 production Volume. Chapter atmosphere may use a scoped
+  post-processing and SMAA. This shared asset is the source/fallback; painted scenes
+  keep their approved chapter-owned overrides listed above. Do not introduce motion
+  blur or depth of field over combat.
+- Keep the priority-150 production Volume, using the chapter-owned painted profile
+  where established. Chapter atmosphere may use a scoped
   priority-160 profile for restrained white balance. Change light/sky/ground palette
   deliberately; do not bake chapter colours into player/enemy atlas textures.
 - Use `CelLevelLighting` and the existing baked-lighting lifetime pattern. On additive
   unload, restore sky, fog, ambient palette, pipeline, shadowmask mode, shader flags and
-  the previous probe set. Test both ordinary transitions and retry/replay paths.
+  the previous probe set. Keep camera-cutaway globals scoped/cleared. Test both
+  ordinary transitions and retry/replay paths.
 - Generalize bake input to explicit chapter scene lists. `ChapterOneShadowBake.Begin`
   currently accepts only 1-10 and uses Chapter One paths/assets; do not call it with
   later stage numbers or route future outputs into Chapter One's asset folder.
@@ -367,6 +498,18 @@ Every chapter must satisfy all of the following; screenshots alone are insuffici
 - [ ] Every stage has its own setting composition, complete background and readable ground.
   Inspect entry, objective approach, corners, distant edges and the player's real camera
   travel. Include wide arenas, all room-chain sectors, defense endpoints and boss views.
+- [ ] Compare with the approved painted Chapter 2 reference: stable pigment, selective
+  linework, directional cel bands, restrained grading and quieter distant detail.
+  Check several moving camera angles, stationary repeated renders and objective debris;
+  refreshes must preserve approved profiles, receiver bindings and dedicated skins.
+- [ ] Verify continuous background coverage on every side from centre/edge/corner views
+  at two heights. Audit uniform imported-model scale, pipe diameter/supports, finite
+  transforms and exposed facade/roof/paving depth conflicts. Cutaway views must also
+  reveal finished surroundings rather than gaps hidden by foreground buildings.
+- [ ] Capture paired cutaway-on/off edge views with advancing frames. Confirm the player
+  and combat remain visible, gameplay materials stay excluded, and depth/AO silhouettes
+  disappear with decorative colour. Verify secondary/inactive cameras, post-render global
+  cleanup, additive transitions and retry without moving scenery or changing the layout.
 - [ ] Compare player and every enemy type present against the floor, scenery and shadows.
   Inspect aim previews, returned shots, flames, tethers, tail-tip highlights and warnings
   during motion and effects, not only an empty frozen arena.
