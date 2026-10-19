@@ -12,7 +12,8 @@ models are preserved. Evidence and acceptance limits are recorded in
 Chapter 4 fog refinement, 2026-10-19: use a steady sage painted haze outside the
 full playable envelope. Dense low fog obscures the lower portions of nearby scenery,
 leaving roughly its upper half visible; distant scenery and the environment boundary
-disappear completely into the matching fog. Exterior earth joins that opaque bank.
+disappear completely into the matching fog. Exterior earth uses the same dense
+bank as scenery bases, including obscuring their ground shadows.
 Keep the entire arena, characters, hazards and objectives clear at every
 camera angle, including long room chains and wide courts (VISION-005/006).
 

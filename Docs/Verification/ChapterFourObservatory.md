@@ -49,7 +49,16 @@ The combined XZ envelope of every playable floor stays clear, with an additional
 ruins: fully opaque up to 1.5 m above the lowest floor, feathering to 4.5 m, with
 depth adding opacity. Nearby architecture retains roughly its upper half, rather
 than exposing a completely outlined, uniformly tinted object. Depth fog becomes
-fully opaque at 24 m beyond the arena; exterior earth is fully obscured at 18 m.
+fully opaque at 24 m beyond the arena. Exterior earth uses the same low-bank
+opacity as scenery bases, becoming fully obscured by 6 m beyond the arena.
+The ground and submerged objects therefore meet seamlessly, including their
+baked shadows; there is no separate, weaker ground-fog curve.
+The ground correction was reviewed in native centre, edge and corner views of
+31/34/38, then in 16 warmed level-31 views including four outward-facing views
+at the arena perimeter. The arena remains clear and the ground beneath obscured
+scenery joins the same opaque bank. Unity reports no painted shader errors.
+
+![Ground fog reaches the submerged scenery bases](Images/ChapterFourObservatory/FogGround.png)
 This hides the existing horizon geometry before its boundary or corners can appear.
 The painted sky matches the opaque bank and reserves its upper-sky wash for angles
 above 33 degrees. Fog does not animate or change density with camera distance.

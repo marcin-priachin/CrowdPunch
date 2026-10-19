@@ -15,8 +15,8 @@ half3 ApplyArenaSceneryHaze(half3 color, float3 positionWS, float role)
     float height=positionWS.y-_CrowdPunchSceneryHazeSettings.y;
     half lowBank=1-smoothstep(1.5,_CrowdPunchSceneryHazeSettings.z,height);
     half depthHaze=smoothstep(3,_CrowdPunchSceneryHazeSettings.w,distanceOutside);
-    half haze=role>1.5 ? smoothstep(1,18,distanceOutside)
-        : 1-(1-depthHaze)*(1-lowBank*exterior);
+    // Ground and scenery share the same bank, hiding baked shadows beneath it too.
+    half haze=1-(1-depthHaze)*(1-lowBank*exterior);
     return lerp(color,_CrowdPunchSceneryHazeColor.rgb,haze);
 }
 #endif
