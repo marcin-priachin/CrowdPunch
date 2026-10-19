@@ -1,6 +1,7 @@
 using UnityEngine;
 using static CrowdPunch.Editor.ChapterTwoFoundryAssets;
 using static CrowdPunch.Editor.ChapterTwoFoundryInfrastructure;
+using static CrowdPunch.Editor.ChapterTwoFoundryBlocks;
 
 namespace CrowdPunch.Editor
 {
@@ -23,15 +24,15 @@ namespace CrowdPunch.Editor
                 if(stage==13 && Mathf.Abs(x-court.center.x)<5)continue;
                 float h=6+((stage+i)%3)*1.1f;
                 bool furnace=stage==11 && i==bays/2 || stage==20 || stage==18 && i%3==1;
-                Workshop(root,new Vector3(x,y,back+11),new Vector3(bayWidth+.12f,h,14),furnace);
+                Workshop(root,new Vector3(x,y,back+11),new Vector3(bayWidth-.10f,h,14),furnace,true);
                 if(i%2==0 && stage!=13)LoadingBay(root,new Vector3(x,y,back+5.8f),3+(i%2),stage==12);
             }
 
             // One returning wing makes an L-shaped service yard. Foreground heights stay low.
             int wingSide=stage%2==0?-1:1;
             float wingLength=Mathf.Clamp(court.size.z*.36f,9,30);
-            float wingX=wingSide<0?left-8:right+8;
-            Workshop(root,new Vector3(wingX,y,back-wingLength*.5f+4),new Vector3(12,4.4f,wingLength+8),false);
+            float wingX=wingSide<0?left-8.25f:right+8.25f;
+            Workshop(root,new Vector3(wingX,y,back+3.9f-wingLength*.5f),new Vector3(12,4.4f,wingLength),false);
             Shape(root,"Wing service awning",new Vector3(wingX-wingSide*4,y+3.2f,back-wingLength*.5f),new Vector3(5,.25f,wingLength),Teal);
 
             // A continuous pipe header links the process bays. Curved knees and round flanges
@@ -115,17 +116,8 @@ namespace CrowdPunch.Editor
                     break;
             }
 
-            // The next street reads as adjoining factory sheds with shared party walls.
-            for(int i=0;i<5;i++)
-            {
-                var p=new Vector3(court.center.x+(i-2)*18,y,back+32+(i%2)*2);
-                Workshop(root,p,new Vector3(18.2f,9+(i+stage)%4,16),i%2==0);
-            }
-            foreach(int side in new[]{-1,1})
-            {
-                float x=side<0?left-27:right+27;
-                for(int i=0;i<3;i++)Workshop(root,new Vector3(x,y,Mathf.Lerp(front+8,back+15,i*.5f)),new Vector3(18,7+(stage+i)%4,18),i==1);
-            }
+            Surround(root,court,y,stage);
+            SeparateDrainEnds(root);
         }
 
         private static void BoilerConnections(Transform root,Bounds court,float y)
@@ -139,36 +131,8 @@ namespace CrowdPunch.Editor
 
         private static void Quay(Transform root,Vector3 p,float length)
         {
-            foreach(int side in new[]{-1,1})Shape(root,"Freight siding rail",p+new Vector3(side*1.5f,.23f,0),new Vector3(.12f,.12f,length),Steel);
+            foreach(int side in new[]{-1,1})Shape(root,"Freight siding rail",p+new Vector3(side*1.5f,.28f,0),new Vector3(.12f,.12f,length),Steel);
             for(float z=-length*.5f;z<=length*.5f;z+=2)Shape(root,"Freight siding sleeper",p+new Vector3(0,.2f,z),new Vector3(3.8f,.08f,.3f),Coal);
-        }
-
-        private static void Workshop(Transform root,Vector3 p,Vector3 size,bool furnace)
-        {
-            Shape(root,"Foundry brick workshop",p,size,Brick);
-            Shape(root,"Standing seam roof",p+Vector3.up*size.y,new Vector3(size.x+.4f,.25f,size.z+.4f),Teal);
-            Roof(root,p+Vector3.up*(size.y+.22f),new Vector3(size.x+.4f,1.3f,size.z+.4f));
-            for(int i=-1;i<=1;i++)
-            {
-                Shape(root,"Steel facade pier",p+new Vector3(i*size.x*.43f,0,-size.z*.5f-.12f),new Vector3(.3f,size.y,.3f),Steel);
-                Shape(root,"High clerestory window",p+new Vector3(i*size.x*.27f,size.y*.68f,-size.z*.5f-.08f),new Vector3(size.x*.20f,1,.12f),Ivory);
-                Shape(root,"Clerestory mullion",p+new Vector3(i*size.x*.27f,size.y*.68f,-size.z*.5f-.16f),new Vector3(.1f,1,.08f),Steel);
-            }
-            Model(root,"door-wide-closed",p+new Vector3(0,0,-size.z*.5f-.2f),new Vector3(4,3.8f,.4f),Steel);
-            Shape(root,"Continuous brick footing",p+new Vector3(0,0,-size.z*.5f-.15f),new Vector3(size.x,.35f,.45f),Steel);
-            foreach(int side in new[]{-1,1})Shape(root,"Copper drainpipe",p+new Vector3(side*(size.x*.5f-.35f),0,-size.z*.5f-.2f),new Vector3(.14f,size.y,.14f),Copper,true);
-            if(furnace)
-            {
-                Chimney(root,p+new Vector3(size.x*.28f,0,size.z*.15f),size.y+9,2.5f);
-                Model(root,"hopper-high-round",p+new Vector3(-size.x*.26f,size.y,0),new Vector3(3,4,3),Copper);
-            }
-        }
-
-        private static void Chimney(Transform root,Vector3 p,float height,float width)
-        {
-            Shape(root,"Chimney footing",p,new Vector3(width+.8f,2,width+.8f),Steel);
-            Shape(root,"Smelter chimney",p+Vector3.up*1.8f,new Vector3(width,height-1.8f,width),Brick,true);
-            foreach(float fraction in new[]{.35f,.70f,1f})Shape(root,"Chimney iron band",p+Vector3.up*(height*fraction-.3f),new Vector3(width+.15f,.3f,width+.15f),Steel,true);
         }
 
         private static void Tank(Transform root,Vector3 p,float height,float width)
@@ -187,7 +151,7 @@ namespace CrowdPunch.Editor
                 var bay=p+Vector3.forward*(i-(count-1)*.5f)*3.8f;
                 Shape(root,"Coal bunker slab",bay,new Vector3(5,.35f,3.6f),Steel);
                 Shape(root,"Coal bunker back",bay+new Vector3(-2.3f,.35f,0),new Vector3(.25f,1.4f,3.6f),Brick);
-                foreach(int side in new[]{-1,1})Shape(root,"Coal bunker divider",bay+new Vector3(0,.35f,side*1.7f),new Vector3(4.5f,1.2f,.2f),Brick);
+                foreach(int side in new[]{-1,1})Shape(root,"Coal bunker divider",bay+new Vector3(.0375f,.35f,side*1.7f),new Vector3(4.425f,1.2f,.2f),Brick);
                 for(int j=0;j<3;j++)Shape(root,"Coal pile",bay+new Vector3(j-1,.35f,0),new Vector3(1.7f,.55f+j*.1f,2.7f),Coal,true);
             }
         }

@@ -195,3 +195,62 @@ was verified in the native Unity Editor rather than a rebuilt standalone Player.
 The console retains bake-time meta-write and tool timeout messages; the subsequent
 saved-asset assertions passed. Entering Play also logged an invalid third-party
 Synty Sidekick downloader window. No compilation failure was reported.
+
+## Orbit coverage and depth-surface correction (2026-10-19)
+
+User review identified flicker at building bases/overlaps, an empty side and visible
+empty ground behind the buildings. The chapter recipe now surrounds all four sides
+with factory streets and a second skyline row. The south side includes low delivery
+buildings and service paving. Recessed continuous masonry closes aligned expansion
+joints without placing two facade planes at the same depth.
+
+Paving slabs meet edge to edge. Adjacent structural bays no longer overlap their
+facades or roofs. Window mullions, facade piers, door footings, dock edges, loading
+steps and coal-bunker corners have butt joints or depth clearance. Low-building
+windows also terminate beneath their roof decks. These changes target competing
+depth surfaces rather than adjusting runtime shadow-map distance.
+
+The shared `CelRenderer` contact-shading feature now uses full-resolution
+interleaved-gradient sampling. Intensity and sample count are unchanged; the authored
+radius compensates for the former blue-noise method's internal 1.5 multiplier.
+This affects every scene using that renderer. It increases the pixel work of the AO
+pass; standalone GPU performance acceptance remains outside this verification.
+Inspection of the installed URP source confirmed per-render texture/offset changes
+in its blue-noise path. Five fixed-camera repeated renders were identical both before
+and after the change, so that measurement alone does not prove a flicker reduction.
+
+Before the final bake, all 12,960 backdrop rays passed from centre, edge and corner
+samples at two heights, with zero exposed sightlines. All ten paving-overlap checks
+passed. The first coverage pass found aligned joints in six stages; recessed backing
+closed those openings before the final bake. The native composition review captured
+48 advancing camera views across stages 11, 14 and 18, including full orbits and
+outward-facing edge views. These preliminary views used realtime lighting while the
+scenes awaited their final bake; they verify composition rather than baked lighting.
+
+The serialized comparison against the preceding repository revision matched 346
+gameplay authoring, collider and physical-transform blocks with zero differences.
+Visual child lists are excluded because the dressing recipe regenerates them.
+Evidence is under `Temp/FoundryFix/`: `CoverageBeforeBake.txt`, `OrbitReview.txt`,
+`ContactShading.txt` and `GameplayComparison.txt`.
+
+All ten final shadow bakes completed. The saved-scene run passed 37 checks with no
+failures: ten placement/collision checks, ten lightmap/receiver checks, ten orbit and
+paving checks, six changing-object bake exclusions and one contact-shading setting
+check. A later detailed surface audit identified one exposed drain-end/pier contact
+in stage 11. The recipe now separates coincident drain ends; stage 11 was regenerated,
+rebaked and passed four targeted checks. Other remaining cube-face matches in the
+audit are internal pier/footing backs against the workshop walls or column tops
+covered by roofs, rather than exposed competing faces.
+
+Evidence: `Temp/FoundryFix/FinalChecks.txt`, `FinalChecks-11.txt` and
+`Surfaces-Final.txt` (the surface report precedes the final drain-end correction).
+The subsequent gameplay comparison still matched all 346 blocks. Unity compilation
+passed. The console retains bake-time meta-write messages, but the final saved texture
+and receiver assertions passed; Play entry also logs the existing invalid Synty
+Sidekick downloader window. This slice does not include a new standalone Player build.
+
+The final baked Play review completed another 48 advancing camera views across 11,
+14 and 18. Every recorded view reported realtime shadow distance zero. Representative
+north/south yard views, the pumpworks side view and a large-yard corner were inspected.
+Captures and frame/position evidence are in `Temp/FoundryFix/Baked/`, including
+`OrbitReview.txt`. Play mode was stopped after verification.

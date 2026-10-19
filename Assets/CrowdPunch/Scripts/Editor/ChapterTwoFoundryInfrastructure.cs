@@ -73,7 +73,9 @@ namespace CrowdPunch.Editor
             foreach(int side in new[]{-1,1})
             {
                 float x=side<0?court.min.x-5.5f:court.max.x+5.5f;
-                Shape(root,"Side service paving",new Vector3(x,y,court.center.z),new Vector3(7,.20f,court.size.z+13),Ground);
+                // The rear concourse starts at back + 2. Butt the slabs together;
+                // two paving tops at the same height compete in the depth buffer.
+                Shape(root,"Side service paving",new Vector3(x,y,court.center.z-2.25f),new Vector3(7,.20f,court.size.z+8.5f),Ground);
                 for(float z=court.min.z;z<court.max.z+5;z+=5)
                     Shape(root,"Drainage channel",new Vector3(x+side*2.8f,y+.21f,z),new Vector3(.25f,.05f,4.4f),Coal);
             }
@@ -82,7 +84,7 @@ namespace CrowdPunch.Editor
 
         internal static void LoadingBay(Transform root,Vector3 p,int count,bool machine)
         {
-            Shape(root,"Raised loading dock",p,new Vector3(8,.45f,6),Steel);
+            Shape(root,"Raised loading dock",p,new Vector3(7.8f,.45f,6),Steel);
             foreach(int side in new[]{-1,1})
             {
                 Shape(root,"Dock canopy upright",p+new Vector3(side*3.6f,.45f,2),new Vector3(.18f,3,.18f),Steel);
@@ -92,7 +94,21 @@ namespace CrowdPunch.Editor
             for(int i=0;i<count;i++)
                 Model(root,machine && i==0?"machine-fortified":"box-large",p+new Vector3(-2.5f+(i%3)*2.3f,.45f,(i/3)*2-1),new Vector3(2,2.2f,1.8f),i%2==0?Teal:Steel,(i%2)*90);
             // Grounded steps make the loading platform part of the building's service edge.
-            for(int i=0;i<3;i++)Shape(root,"Dock access step",p+new Vector3(2.6f,0,-3.7f+i*.3f),new Vector3(1.6f,.15f*(i+1),.35f),Steel);
+            for(int i=0;i<3;i++)Shape(root,"Dock access step",p+new Vector3(2.6f,0,-3.75f+i*.3f),new Vector3(1.6f,.15f*(i+1),.3f),Steel);
+        }
+
+        internal static void SeparateDrainEnds(Transform root)
+        {
+            var renderers=root.GetComponentsInChildren<MeshRenderer>();
+            var piers=renderers.Where(r=>r.name=="Steel facade pier").ToArray();
+            foreach(var drain in renderers.Where(r=>r.name=="Drainage channel"))
+            {
+                var a=drain.bounds;
+                bool sharedEnd=piers.Any(p=>Mathf.Abs(a.min.z-p.bounds.min.z)<.001f &&
+                    Mathf.Min(a.max.x,p.bounds.max.x)-Mathf.Max(a.min.x,p.bounds.min.x)>.005f &&
+                    Mathf.Min(a.max.y,p.bounds.max.y)-Mathf.Max(a.min.y,p.bounds.min.y)>.005f);
+                if(sharedEnd)drain.transform.localPosition+=Vector3.back*.07f;
+            }
         }
     }
 }

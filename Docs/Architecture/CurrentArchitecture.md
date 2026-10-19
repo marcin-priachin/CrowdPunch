@@ -2571,6 +2571,16 @@ pipe routes with rounded knees and flange joints. Imported factory models use un
 envelope fitting, preserving their authored aspect ratios; long utility runs are owned
 geometry instead of stretched imported pipes. Neither construction adds combat colliders.
 
+`ChapterTwoFoundryBlocks` builds the workshop bays and closes the surrounding factory
+streets on all four sides, with a lower delivery frontage and a second skyline row.
+This supports the existing orbiting camera, including views from arena edges. Joined
+bays leave expansion joints, roofs clear their deck surfaces, door jamb footings stop
+beside the opening, and service paving meets edge to edge to avoid competing depth
+surfaces. The backdrop remains fixed, noncolliding scene geometry.
+The shared cel renderer uses full-resolution interleaved-gradient contact shading
+instead of per-render blue-noise sampling. Its effective radius, intensity and sample
+count are preserved; this affects contact shading in every scene using `CelRenderer`.
+
 `CampaignShadowBake` accepts explicit main-scene paths and an owned output directory,
 processes each main scene with its SubScene, and enables `BakedShadowLighting` only after
 usable shadowmask output. `ChapterOneShadowBake` retains its existing 1-10 API as a
