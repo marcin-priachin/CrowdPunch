@@ -2613,6 +2613,12 @@ ownership boundary or system ordering changes. Exit/socket bakers declare materi
 dependencies and convert authored colours to linear RGB only when the material opts
 into painted ECS tint.
 
+`ChapterThreeProtectedPointVisuals` skins Campaign 24's existing protected marker
+with turquoise paving, limestone edging and a low cargo-stamp inlay. Its recipe uses
+the authored `ProtectedPointAuthoring` centre/size directly; all added pieces remain
+inside that rectangle and add no colliders, shadows or runtime state. Original zone,
+priority, breach and wave ownership remain unchanged.
+
 The production painted shader provides pigment, all receiver/DOTS passes and scoped
 decorative cutaways. Chapter-owned sky, post profile, UV2 copies, masks and receiver
 materials live under `Data/ChapterThreeQuarry`. The explicit campaign bake pipeline

@@ -293,6 +293,11 @@ motifs or distant scenery. Small lighting variations alone do not satisfy this.
 | 29 | Ruined valve rotunda; rotating opening readable against a quiet aqueduct wall |
 | 30 | Rolling pit; quarry ring and low distant machinery around the unchanged Blob arena |
 
+Level 24's protected area uses turquoise cut-stone paving, a pale limestone boundary,
+chalk corner inlays and a carved cargo stamp. Keep all decoration flush and
+noncolliding; the outer marked edge must match the existing 8 x 4m breach zone
+exactly. Preserve position, enemy priority, waves and failure/retry rules (PROTECT-001..004).
+
 Chapter 3 damage feedback: level 22's barriers and level 29's central core use thin,
 irregular branching fractures that accumulate across the existing damage stages.
 Do not use thick straight horizontal bands or bars to communicate damage. Keep

@@ -54,6 +54,7 @@ namespace CrowdPunch.Editor
             }
             CampaignCargoTrackVisuals.Apply(scene);
             ChapterThreeQuarryHazards.Apply(scene);
+            ChapterThreeProtectedPointVisuals.Apply(scene);
         }
 
         private static void Segmented(BarricadeAuthoring gate)

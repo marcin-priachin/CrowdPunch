@@ -256,3 +256,24 @@ target-hardware benchmark.
 
 Evidence: `Temp/QuarryHazardParticles`. Captures:
 `Images/ChapterThreeQuarry/HazardFlames.png` and `HazardSmoke.png`.
+
+## Level 24 protected supply area (2026-10-19, PROTECT-001..004)
+
+The protected endpoint now uses turquoise cut-stone paving, limestone edging, chalk
+corner inlays and a carved cargo stamp. The original marker mesh/pose remains;
+only its material changes. Twenty-two low, noncolliding pieces form the inlay, all
+contained within the exact existing 8 x 4m zone. They cast no shadows. The standalone
+refresh and chapter objective construction recipe both use
+`ChapterThreeProtectedPointVisuals`; PLANS.md records this treatment.
+
+All 17 protected-point tests passed. Unity compilation and the direct C# build passed
+with zero errors and five existing reference warnings. Four advancing native camera
+views were inspected in Editor preview mode. Injecting an active enemy into the
+authored zone exercised the production breach resolver, caused the original defeat,
+and retry restored zero breaches. This is controlled verification, not a combat
+playtest. Existing authoring/settings, mesh/collider data and transform poses are
+unchanged; the current HEAD's tracked bake/mesh files remain untouched. No lighting
+bake ran. Prior hazard smoke/flame assets remain present and unchanged.
+
+Evidence: `Temp/QuarryProtected24/Preservation.json`, `Native.txt`, `Build.txt` and
+`Views`; preview: `Images/ChapterThreeQuarry/ProtectedPoint24.png`.
