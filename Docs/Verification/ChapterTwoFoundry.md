@@ -341,3 +341,36 @@ and deprecation warnings. Play was stopped after verification.
 Evidence: `Temp/CameraCutaway/Checks.txt`, `Layout.txt`, `CameraScope.txt`, `Orbit.txt`
 and `Views/`; build summary is in `Temp/CameraCutawayBuild.log`. No standalone Player
 build or target-hardware GPU performance test was added in this slice.
+
+## Level 12 painted shell destruction (2026-10-19)
+
+SHELL-006 and VISION-005/006: level 12 now uses teal enamel plates with brass bolts,
+progressive dark fractures, brief amber impact flecks and muted powder. The final shell
+blast throws the plates outward with independent tumble and short cleanup (1.15-1.43
+seconds). The exposed core is blue steel with cream ceramic sockets, brass flanges,
+turquoise lenses and dark machined vents. Pigment stays attached to moving parts.
+The optional ECS tint is enabled only for these owned materials; other chapter materials
+keep their existing shader behavior. The refresh command is `Crowd Punch > Art Direction >
+Refresh Level 12 Shell Visuals`. Chapter rebuilding uses the same visual recipe.
+
+The 134 authored visual entities reuse existing shell hit state and create no colliders,
+runtime physics bodies, enemy queries or extra spawned debris. Five shell-rule tests and
+three presentation tests passed in Unity. Five saved level-12 environment/baked-shadow
+checks passed. The serialized audit matched all 346 existing chapter gameplay, collider
+and physical-transform blocks without differences, excluding the new presentation-only
+authoring/poses. The chapter-wide saved cutaway audit also passed; shell materials remain
+excluded from camera cutaway. Main-scene scenery and baked lighting were not regenerated.
+
+A native advancing Play review captured intact, two damage stages, early/tumbling breakup,
+exposed core, two core damage stages and retry. It verified three blasts expose a fresh
+undamaged core (SHELL-002/003), 68 armor/seam pieces clear after their durations, core death
+resolves, and retry restores three shell hits/full core health. Captures were visually
+inspected; the intact casing was adjusted to cover the core flanges. Completion timing and
+the existing immediate completion transition/menu are unchanged. This was controlled
+state verification through the production hit resolver, not a human combat playtest.
+
+Shader diagnostics were empty and the C# build passed with zero errors and 356 existing
+package/reference/deprecation warnings. Evidence: `Temp/Shell12/Tests.xml`, `Tests.txt`,
+`Play.txt`, `GameplayComparison.txt`, `Build.log` and `Views/`, plus
+`Temp/FoundryFix/FinalChecks-12.txt` and `Temp/CameraCutaway/Checks.txt`. Play mode was stopped.
+No standalone Player build or target-hardware performance measurement was added.

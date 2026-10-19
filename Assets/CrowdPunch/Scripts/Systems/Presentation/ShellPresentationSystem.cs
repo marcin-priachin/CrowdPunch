@@ -16,7 +16,7 @@ namespace CrowdPunch.Systems.Presentation
         public void OnUpdate(ref SystemState state)
         {
             foreach (var (part, visual, transform, color) in SystemAPI.Query<RefRO<ShellVisual>,
-                RefRW<BarricadeVisual>, RefRW<LocalTransform>, RefRW<URPMaterialPropertyBaseColor>>())
+                RefRW<BarricadeVisual>, RefRW<LocalTransform>, RefRW<URPMaterialPropertyBaseColor>>().WithNone<ShellFragmentMotion>())
             {
                 if (!SystemAPI.HasComponent<ShellTarget>(visual.ValueRO.Barricade)) continue;
                 var shell = SystemAPI.GetComponent<ShellTarget>(visual.ValueRO.Barricade);

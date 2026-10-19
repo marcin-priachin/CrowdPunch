@@ -1905,6 +1905,21 @@ progress with health loss. Shell break scatters/shrinks the armor, revealing tur
 Blocked punches flash blue at low impact intensity; successful hits flash gold with the existing
 environment impact particles. There are no new UI bars. The opening hint uses `GauntletLevel`.
 
+Campaign level 12 now opts into `ShellFragmentAuthoring`/`ShellFragmentBaker` and
+`ShellFragmentMotion` for its painted foundry casing (SHELL-006). The bounded 134 visual
+entities include breakaway enamel plates, bolts, progressive fractures, short sparks/powder,
+and an eight-section blue-steel core with ceramic sockets and brass flanges.
+`ShellFragmentPresentationSystem` owns their cached poses, recoil, ballistic tumble and
+short cleanup animation in `GamePresentationGroup`; the legacy `ShellPresentationSystem`
+excludes this optional component and still handles other shells. These pieces have no physics
+or collision responsibility and read existing shell/core damage only. Restart restores poses.
+`FoundryShellVisuals` rebuilds only level 12's visual children and is reused by the chapter art
+recipe. Its materials opt into object-space pigment and ECS tint in `PaintedFoundry.shader`;
+other painted materials retain their existing projection/color behavior. Camera cutaway stays
+disabled on every shell material. The physical root, collider, health and explosion rules are
+unchanged. See the level-12 shell section in
+[Chapter Two verification](../Verification/ChapterTwoFoundry.md).
+
 `GameRestartSystem` resets shell/core health, replacement timers, flash state and break time alongside
 the existing collider/history reset and wave-root cleanup. Scene reload restores authored state.
 `GauntletProgressionBuilder.BuildShell` rebuilds only level 15, preserving existing tuning assets

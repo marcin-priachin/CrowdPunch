@@ -21,6 +21,8 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         _Window("Painted glazing", Float) = 0
         _Contrast("Lighting contrast", Range(0,1)) = .8
         [ToggleUI] _CameraCutaway("Camera-side decoration cutaway", Float) = 0
+        [ToggleUI] _ObjectSpacePaint("Paint follows moving parts", Float) = 0
+        [ToggleUI] _UseEntityColor("Animated entity tint", Float) = 0
         [ToggleUI] _ReceiveShadows("Receive cast shadows", Float) = 1
         [HideInInspector] _BakedShadowMask("Baked receiver visibility",2D)="white" {}
         [HideInInspector] _BakedShadowST("Baked receiver UV transform",Vector)=(1,1,0,0)
@@ -41,7 +43,14 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float _TextureScale, _TextureStrength, _Meadow, _Variation, _ReceiveShadows, _PlasterGrain;
             float _UseBakedShadowMask;
             float _CameraCutaway;
+            float _ObjectSpacePaint;
+            float _UseEntityColor;
         CBUFFER_END
+        #ifdef UNITY_DOTS_INSTANCING_ENABLED
+            UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
+                UNITY_DOTS_INSTANCED_PROP(float4, _BaseColor)
+            UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
+        #endif
         TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
         TEXTURE2D(_DirtMap); SAMPLER(sampler_DirtMap);
         TEXTURE2D(_BakedShadowMask); SAMPLER(sampler_BakedShadowMask);
@@ -64,6 +73,8 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float2 lightmapUV : TEXCOORD3;
             float2 receiverUV : TEXCOORD4;
             float2 uv : TEXCOORD5;
+            float3 paintPosition : TEXCOORD6;
+            half3 paintNormal : TEXCOORD7;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -78,6 +89,8 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             output.positionWS = pos.positionWS;
             output.normalWS = TransformObjectToWorldNormal(input.normalOS);
             output.uv=input.uv;
+            output.paintPosition=input.positionOS.xyz*3;
+            output.paintNormal=input.normalOS;
             output.lightmapUV=input.lightmapUV*unity_LightmapST.xy+unity_LightmapST.zw;
             output.receiverUV=input.lightmapUV*_BakedShadowST.xy+_BakedShadowST.zw;
             output.fog = ComputeFogFactor(pos.positionCS.z);
@@ -118,18 +131,24 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 ClipCameraSideScenery(input.positionWS,input.positionCS.xy,_CameraCutaway);
+                half4 baseColor=_BaseColor;
+                #ifdef UNITY_DOTS_INSTANCING_ENABLED
+                    baseColor=lerp(baseColor,UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4,_BaseColor),_UseEntityColor);
+                #endif
                 half3 n=normalize(input.normalWS);
                 float3 p=input.positionWS;
-                half3 weights=pow(abs(n),4); weights/=max(dot(weights,half3(1,1,1)),.001);
+                float3 painted=lerp(p,input.paintPosition,_ObjectSpacePaint);
+                half3 paintedNormal=normalize(lerp(n,input.paintNormal,_ObjectSpacePaint));
+                half3 weights=pow(abs(paintedNormal),4); weights/=max(dot(weights,half3(1,1,1)),.001);
                 // World projection also works on imported atlas models and UV-less ECS floors.
-                half3 tex=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,p.zy*_TextureScale).rgb*weights.x
-                    + SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,p.xz*_TextureScale).rgb*weights.y
-                    + SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,p.xy*_TextureScale).rgb*weights.z;
+                half3 tex=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,painted.zy*_TextureScale).rgb*weights.x
+                    + SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,painted.xz*_TextureScale).rgb*weights.y
+                    + SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,painted.xy*_TextureScale).rgb*weights.z;
                 // Stable world projection: pigment does not swim with the orbit camera.
-                float2 paintUV=p.zy*weights.x+p.xz*weights.y+p.xy*weights.z;
+                float2 paintUV=painted.zy*weights.x+painted.xz*weights.y+painted.xy*weights.z;
                 half macro=Noise(paintUV*.27);
                 half brush=Noise(paintUV*float2(.65,2.8)+macro*1.4);
-                half3 albedo=lerp(_BaseColor.rgb,_WashColor.rgb,saturate(macro*.8+brush*.4)*_WashStrength);
+                half3 albedo=lerp(baseColor.rgb,_WashColor.rgb,saturate(macro*.8+brush*.4)*_WashStrength);
                 albedo*=Detail(tex)*(1+(brush-.5)*_Variation*2);
                 // Fade subpixel pigment to prevent shimmer at the far skyline.
                 half grainFade=1-saturate(max(length(ddx(paintUV)),length(ddy(paintUV)))*12);
@@ -148,7 +167,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                     float2 uv=input.uv;
                     float edge=min(min(uv.x,1-uv.x),min(uv.y,1-uv.y));
                     float inset=smoothstep(.045,.06,edge+(Noise(uv*9)-.5)*.012);
-                    half3 glass=lerp(_BaseColor.rgb,_WashColor.rgb,smoothstep(.15,.85,uv.y));
+                    half3 glass=lerp(baseColor.rgb,_WashColor.rgb,smoothstep(.15,.85,uv.y));
                     albedo=lerp(_ShadowColor.rgb*.35,glass,inset);
                     // A single painted reflection, with no view-dependent specular.
                     albedo+=pow(saturate(1-abs(uv.x*.7+uv.y-.85)*13),2)*.035*inset;

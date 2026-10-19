@@ -21,7 +21,11 @@ namespace CrowdPunch.Editor
             var gates=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<BarricadeAuthoring>(true)).ToArray();
             foreach(var gate in gates)
             {
-                if(gate.GetComponent<ShellTargetAuthoring>()!=null) Shell(gate);
+                if(gate.GetComponent<ShellTargetAuthoring>()!=null)
+                {
+                    if(stage==12) FoundryShellVisuals.Build(gate);
+                    else Shell(gate);
+                }
                 else if(gate.GetComponent<TrackObjectAuthoring>()!=null) Track(gate);
                 else if(gate.cover!=null || !gate.completeOnDestruction) SegmentedTarget(gate);
                 if(gate.exit!=null && !gate.completeOnDestruction && gate.GetComponent<TrackObjectAuthoring>()==null) Exit(gate);
