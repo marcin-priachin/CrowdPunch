@@ -26,7 +26,7 @@ namespace CrowdPunch.Editor
                 Shape(root,"Extraction terrace",new Vector3(b.min.x-11,y,b.center.z+8),new Vector3(10,Mathf.Max(.4f,sy-y+1.4f),12),Surface("Cliff",true));
                 for(int i=0;i<3;i++)
                     Model(root,"kenney_nature-kit","rock_large"+(char)('A'+(stage+i)%6),
-                        new Vector3(b.max.x+10+i*4,y,b.min.z+4+i*5),new Vector3(4,3,4),Surface("Limestone",true),i*73);
+                        new Vector3(b.max.x+10+i*4,y,b.min.z+4+i*5),new Vector3(4,3,4),Surface("Rock",true),i*73);
             }
             int spans=Mathf.Clamp(Mathf.CeilToInt((court.size.x+12)/9),4,15);
             float az=court.max.z+13;
@@ -120,7 +120,7 @@ namespace CrowdPunch.Editor
             {
                 float angle=i*Mathf.PI*2/12;
                 var p=center+new Vector3(Mathf.Sin(angle)*(court.extents.x+distance+2),0,Mathf.Cos(angle)*(court.extents.z+distance+2));
-                Model(root,"kenney_nature-kit","rock_tall"+(char)('A'+(stage+i)%10),p,new Vector3(11,16+i%3*3,11),Surface("Cliff",true),i*57);
+                Model(root,"kenney_nature-kit","rock_tall"+(char)('A'+(stage+i)%10),p,new Vector3(11,16+i%3*3,11),Surface("Rock",true),i*57);
             }
         }
 

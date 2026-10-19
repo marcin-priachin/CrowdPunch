@@ -40,7 +40,7 @@ namespace CrowdPunch.Editor
             foreach (var r in renderers)
             {
                 if (floors.Contains(r)) r.sharedMaterial = Surface("Court");
-                else if (r.name.StartsWith("Perimeter ") || r.name == "Nature rock") r.sharedMaterials = Enumerable.Repeat(Surface("Cliff"),r.sharedMaterials.Length).ToArray();
+                else if (r.name.StartsWith("Perimeter ") || r.name == "Nature rock") r.sharedMaterials = Enumerable.Repeat(Surface("Rock"),r.sharedMaterials.Length).ToArray();
                 else if (r.name == "Entry Apron" || r.name == "Launch Lane" || r.name == "Presentation Backdrop") r.enabled = false;
                 // Keep hazards, enemies, boss skins and all effect palettes authoritative.
                 r.forceMeshLod = 0;
@@ -67,15 +67,10 @@ namespace CrowdPunch.Editor
         [MenuItem("Crowd Punch/Art Direction/Refresh Chapter Three Painted Appearance")]
         public static void RefreshAppearance()
         {
-            CheckReady(); var setup = EditorSceneManager.GetSceneManagerSetup(); Prepare();
+            RefreshSurfaces();
+            var setup = EditorSceneManager.GetSceneManagerSetup();
             try
             {
-                foreach(string guid in AssetDatabase.FindAssets("t:Material",new[]{Output+"/Materials"}))
-                {
-                    var material=AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));
-                    string name=material.name;
-                    Surface(name.Split(' ')[0],name.Contains("Decorative"),name.Contains("Distant"),name.Contains("Local"));
-                }
                 for (int stage=21; stage<=30; stage++)
                 {
                     var sub = EditorSceneManager.OpenScene(SubPath(stage));
@@ -84,21 +79,63 @@ namespace CrowdPunch.Editor
                     var main = EditorSceneManager.OpenScene(MainPath(stage)); ApplyAtmosphere(main,court);
                     EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 }
-                // Reassert palette values in place. Existing explicit receivers keep mask/ST/GUIDs.
-                foreach(string guid in AssetDatabase.FindAssets("t:Material",new[]{Output}))
-                {
-                    var material=AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));
-                    string source=material.GetTag("CrowdPunchSourceMaterial",false,"");
-                    if(string.IsNullOrEmpty(source)) continue;
-                    var original=AssetDatabase.LoadAssetAtPath<Material>(source); if(original==null)continue;
-                    var mask=material.GetTexture("_BakedShadowMask"); var st=material.GetVector("_BakedShadowST");
-                    material.CopyPropertiesFromMaterial(original); material.SetTexture("_BakedShadowMask",mask);
-                    material.SetVector("_BakedShadowST",st); material.SetFloat("_UseBakedShadowMask",1);
-                    material.SetOverrideTag("CrowdPunchSourceMaterial",source); EditorUtility.SetDirty(material);
-                }
                 AssetDatabase.SaveAssets();
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
+        }
+
+        [MenuItem("Crowd Punch/Art Direction/Refresh Chapter Three Surface Mapping Only")]
+        public static void RefreshSurfaces()
+        {
+            CheckReady(); var setup=EditorSceneManager.GetSceneManagerSetup();Prepare();
+            try
+            {
+                foreach(string guid in AssetDatabase.FindAssets("t:Material",new[]{Output+"/Materials"}))
+                {
+                    var material=AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));string name=material.name;
+                    Surface(name.Split(' ')[0],name.Contains("Decorative"),name.Contains("Distant"),name.Contains("Local"));
+                }
+                foreach(string guid in AssetDatabase.FindAssets("t:Material",new[]{Output+"/BakedShadows/Receivers"}))
+                {
+                    var material=AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));
+                    string path=material.GetTag("CrowdPunchSourceMaterial",false,"");
+                    if(path==AssetDatabase.GetAssetPath(material))throw new InvalidOperationException("Receiver source points to itself: "+path);
+                    var source=AssetDatabase.LoadAssetAtPath<Material>(path);
+                    if(source==null)throw new InvalidOperationException("Missing receiver source: "+path);
+                    CopyReceiverSurface(material,source);
+                }
+                for(int stage=21;stage<=30;stage++)foreach(string path in new[]{MainPath(stage),SubPath(stage)})
+                {
+                    var scene=EditorSceneManager.OpenScene(path);bool sub=path==SubPath(stage),changed=false;
+                    var roots=scene.GetRootGameObjects().Where(g=>sub || g.name==RootName);
+                    foreach(var renderer in roots.SelectMany(g=>g.GetComponentsInChildren<MeshRenderer>(true)))
+                    {
+                        bool rock=sub && (renderer.name.StartsWith("Perimeter ") || renderer.name=="Nature rock");
+                        if(!sub)for(var t=renderer.transform;t!=null;t=t.parent)rock|=t.name.StartsWith("rock_",StringComparison.Ordinal);
+                        if(!rock)continue;
+                        var surface=Surface("Rock",!sub);var materials=renderer.sharedMaterials;
+                        for(int i=0;i<materials.Length;i++)
+                        {
+                            var current=materials[i];
+                            if(current!=null && current.HasProperty("_UseBakedShadowMask") && current.GetFloat("_UseBakedShadowMask")>.5f)
+                                CopyReceiverSurface(current,surface);
+                            else if(current!=surface){materials[i]=surface;changed=true;}
+                        }
+                        renderer.sharedMaterials=materials;
+                    }
+                    if(changed){EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);}
+                }
+                AssetDatabase.SaveAssets();
+            }
+            finally {EditorSceneManager.RestoreSceneManagerSetup(setup);}
+        }
+
+        private static void CopyReceiverSurface(Material receiver,Material source)
+        {
+            var mask=receiver.GetTexture("_BakedShadowMask");var st=receiver.GetVector("_BakedShadowST");
+            receiver.CopyPropertiesFromMaterial(source);receiver.SetTexture("_BakedShadowMask",mask);
+            receiver.SetVector("_BakedShadowST",st);receiver.SetFloat("_UseBakedShadowMask",1);
+            receiver.SetOverrideTag("CrowdPunchSourceMaterial",AssetDatabase.GetAssetPath(source));EditorUtility.SetDirty(receiver);
         }
 
         [MenuItem("Crowd Punch/Art Direction/Bake Chapter Three Shadows")]

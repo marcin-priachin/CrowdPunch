@@ -120,3 +120,40 @@ existing scene-scoped lighting lifetime restores pipeline, probes and atmosphere
   has not been visually playtested. Native visual evidence above is from the Editor.
 
 OQ-001 target hardware/FPS and human combat/readability acceptance remain open.
+
+## Texture fit refinement (2026-10-19, VISION-004..006)
+
+Implemented the agreed mapping, material separation and contrast changes in
+Campaign 21-30 with `RefreshSurfaces`; no scenery rebuild or lighting bake ran.
+Continuous 3D pigment removes normal-dependent coordinate breaks. Cliffs use
+restrained horizontal strata; perimeter and imported small rocks use a separate
+mineral recipe. Court/gravel detail, wash and grain are quieter. The new shader
+path is opt-in: all 903 inspected Chapter One/Two materials retain the legacy path.
+
+Six Chapter Three-owned texture copies import at 2048x2048, BC7 on the current
+Windows target, with 12 mip levels, high-quality compression, repeat wrapping,
+trilinear filtering and anisotropy 4. Original texture imports and global quality
+settings are unchanged. Existing quality tiers disable anisotropy on Very Low/Low,
+permit it on Medium/High and force it on Very High/Ultra; all retain mip limit 0.
+Comparison views at matching cameras in levels 21 and 28 support retaining 2048
+rather than increasing resolution to compensate for mapping and contrast.
+
+Verification for this refinement:
+
+- All 30 Chapter Three Editor tests and saved receiver/shader checks passed.
+- 80 advancing native orbit/edge views across all ten levels passed the existing
+  baked-shadow/profile checks. All six quality tiers passed level-28 entry, retry
+  and restoration after leaving the chapter. Representative views were inspected
+  for texture continuity and distance filtering; this is not a human combat test.
+- Snapshot comparison of all 20 main/SubScene YAML files found only permitted
+  MeshRenderer changes: every transform, collider and other component is unchanged.
+  All 506 baked-lighting/mesh files and metadata match their original SHA256 hashes.
+  All 175 explicit receiver masks, UV transforms and enable flags match HEAD.
+- Unity reports no painted-shader diagnostics or compilation errors. The normal
+  generated-project dotnet build stalled in package project-reference processing;
+  building Assembly-CSharp with `BuildProjectReferences=false` passed with zero
+  errors and 34 existing warnings. A new standalone build was not run for this pass.
+- Evidence: `Temp/ChapterThreeTextureFit/Preservation.json`, `Views`, `Native`,
+  `Quality.txt` and `DotnetBuildDirect.txt`. Matching before/after views are preserved
+  alongside this note as `Images/ChapterThreeQuarry/TextureFitBefore.png` and
+  `TextureFitAfter.png`.

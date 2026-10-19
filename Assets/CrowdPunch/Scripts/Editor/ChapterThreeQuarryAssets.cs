@@ -13,12 +13,14 @@ namespace CrowdPunch.Editor
     {
         internal const string Output = "Assets/CrowdPunch/Data/ChapterThreeQuarry";
         private static readonly Dictionary<string, Material> Surfaces = new();
+        private static readonly Dictionary<string, Texture2D> Textures = new();
 
         internal static void Prepare()
         {
             Directory.CreateDirectory(Output + "/Materials");
             Directory.CreateDirectory(Output + "/Meshes");
-            AssetDatabase.Refresh(); Surfaces.Clear();
+            Directory.CreateDirectory(Output + "/Textures");
+            AssetDatabase.Refresh(); Surfaces.Clear(); Textures.Clear();
         }
 
         internal static Material Surface(string kind, bool decoration = false, bool distant = false, bool moving = false)
@@ -35,10 +37,11 @@ namespace CrowdPunch.Editor
             string texture = null; float detail = .30f, variation = .13f, scale = .18f;
             switch (kind)
             {
-                case "Court": color = new Color(.65f,.65f,.58f); wash = new Color(.58f,.60f,.59f); texture = "Stylized_Stone_Floor_002_basecolor"; detail = .10f; variation = .025f; scale = .14f; break;
-                case "Gravel": color = new Color(.53f,.56f,.45f); wash = new Color(.62f,.58f,.45f); texture = "Vol_16_2_Sand_Base_Color"; detail = .18f; variation = .07f; scale = .12f; break;
-                case "Limestone": color = new Color(.76f,.72f,.59f); wash = new Color(.63f,.60f,.51f); texture = "Vol_23_1_Rocks_Base_Color"; break;
-                case "Cliff": color = new Color(.57f,.60f,.53f); wash = new Color(.66f,.62f,.51f); texture = "Vol_23_1_Rocks_Base_Color"; detail = .28f; scale = .09f; break;
+                case "Court": color = new Color(.65f,.65f,.58f); wash = new Color(.58f,.60f,.59f); texture = "Stylized_Stone_Floor_002_basecolor"; detail = .06f; variation = .015f; scale = .23f; break;
+                case "Gravel": color = new Color(.53f,.56f,.45f); wash = new Color(.62f,.58f,.45f); texture = "Vol_16_2_Sand_Base_Color"; detail = .10f; variation = .025f; scale = .28f; break;
+                case "Limestone": color = new Color(.76f,.72f,.59f); wash = new Color(.63f,.60f,.51f); texture = "Vol_23_1_Rocks_Base_Color"; detail = .10f; variation = .035f; scale = .40f; break;
+                case "Cliff": color = new Color(.57f,.60f,.53f); wash = new Color(.66f,.62f,.51f); texture = "Stylized_Layered_Rock_001_color"; detail = .08f; variation = .035f; scale = .32f; break;
+                case "Rock": color = new Color(.63f,.63f,.56f); wash = new Color(.64f,.61f,.53f); texture = "Stylized_Rocks_003_basecolor"; detail = .10f; variation = .035f; scale = .55f; break;
                 case "Slate": color = new Color(.35f,.44f,.48f); wash = new Color(.48f,.54f,.56f); break;
                 case "Sage": color = new Color(.39f,.51f,.40f); wash = new Color(.55f,.59f,.44f); break;
                 case "Timber": color = new Color(.47f,.38f,.27f); wash = new Color(.57f,.48f,.32f); texture = "Stylized_Wood_Wall_001_basecolor"; detail = .24f; break;
@@ -53,8 +56,11 @@ namespace CrowdPunch.Editor
             material.SetColor("_ShadowColor", new Color(.47f,.54f,.66f));
             material.SetColor("_LightColor", new Color(1,.97f,.86f));
             material.SetFloat("_Contrast", distant ? .48f : .78f);
-            material.SetFloat("_WashStrength", kind == "Court" ? .12f : .26f);
-            material.SetFloat("_GrainStrength", distant ? .02f : .08f);
+            material.SetFloat("_WashStrength", kind == "Court" ? .06f : .10f);
+            material.SetFloat("_GrainStrength", distant ? .01f : .03f);
+            material.SetFloat("_ContinuousPaint",1);
+            material.SetFloat("_StrataStrength",kind=="Cliff" ? (distant?.025f:.10f) : 0);
+            material.SetFloat("_MineralStrength",kind=="Rock" ? .035f : 0);
             material.SetFloat("_Variation", variation); material.SetFloat("_TextureScale", scale);
             material.SetFloat("_TextureStrength", texture == null ? 0 : detail);
             material.SetFloat("_CameraCutaway", decoration ? 1 : 0);
@@ -63,11 +69,29 @@ namespace CrowdPunch.Editor
             material.SetFloat("_ReceiveShadows", 1); material.SetFloat("_Meadow", 0);
             if (texture != null)
             {
-                string source = AssetDatabase.FindAssets(texture + " t:Texture2D").Select(AssetDatabase.GUIDToAssetPath).FirstOrDefault();
-                if (source == null) throw new InvalidOperationException("Missing texture " + texture);
-                material.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(source));
+                material.SetTexture("_BaseMap", TextureFor(texture));
             }
             EditorUtility.SetDirty(material); Surfaces.Add(key, material); return material;
+        }
+
+        private static Texture2D TextureFor(string name)
+        {
+            if(Textures.TryGetValue(name,out var cached))return cached;
+            string path=Output+"/Textures/"+name+".png";
+            var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if(texture==null)
+            {
+                string source=AssetDatabase.FindAssets(name+" t:Texture2D").Select(AssetDatabase.GUIDToAssetPath)
+                    .Where(p=>!p.StartsWith(Output+"/",StringComparison.Ordinal)).OrderBy(p=>p,StringComparer.Ordinal).FirstOrDefault();
+                if(source==null || !AssetDatabase.CopyAsset(source,path))throw new InvalidOperationException("Missing quarry texture "+name);
+            }
+            var importer=(TextureImporter)AssetImporter.GetAtPath(path);
+            // Owned copies keep quality tuning local; mip limits still follow the selected tier.
+            importer.filterMode=FilterMode.Trilinear;importer.anisoLevel=4;importer.mipmapEnabled=true;
+            importer.maxTextureSize=2048;importer.textureCompression=TextureImporterCompression.CompressedHQ;
+            importer.wrapMode=TextureWrapMode.Repeat;importer.sRGBTexture=true;
+            importer.SaveAndReimport();
+            texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);Textures.Add(name,texture);return texture;
         }
 
         internal static GameObject Shape(Transform parent, string name, Vector3 bottom, Vector3 size, Material material, bool cylinder = false)

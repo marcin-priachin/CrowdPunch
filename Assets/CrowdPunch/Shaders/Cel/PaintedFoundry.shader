@@ -22,6 +22,9 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         _SeamStrength("Drawn roof seams", Range(0,1)) = 0
         _Window("Painted glazing", Float) = 0
         _Contrast("Lighting contrast", Range(0,1)) = .8
+        [ToggleUI] _ContinuousPaint("Continuous spatial pigment", Float) = 0
+        _StrataStrength("Quarry layer variation", Range(0,.3)) = 0
+        _MineralStrength("Fine mineral variation", Range(0,.2)) = 0
         [ToggleUI] _CameraCutaway("Camera-side decoration cutaway", Float) = 0
         [ToggleUI] _ObjectSpacePaint("Paint follows moving parts", Float) = 0
         [ToggleUI] _UseEntityColor("Animated entity tint", Float) = 0
@@ -49,6 +52,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float _ObjectSpacePaint;
             float _UseEntityColor;
             float _AtlasColor, _Cull;
+            float _ContinuousPaint, _StrataStrength, _MineralStrength;
             float4 _BaseMap_ST;
         CBUFFER_END
         #ifdef UNITY_DOTS_INSTANCING_ENABLED
@@ -107,6 +111,20 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float2 i=floor(p), f=frac(p); f=f*f*(3-2*f);
             return lerp(lerp(Hash(i),Hash(i+float2(1,0)),f.x),lerp(Hash(i+float2(0,1)),Hash(i+1),f.x),f.y);
         }
+        float SpatialHash(float3 p)
+        {
+            p=frac(p*.1031); p+=dot(p,p.yzx+33.33);
+            return frac((p.x+p.y)*p.z);
+        }
+        float SpatialNoise(float3 p)
+        {
+            float3 i=floor(p),f=frac(p); f=f*f*(3-2*f);
+            float lower=lerp(lerp(SpatialHash(i),SpatialHash(i+float3(1,0,0)),f.x),
+                lerp(SpatialHash(i+float3(0,1,0)),SpatialHash(i+float3(1,1,0)),f.x),f.y);
+            float upper=lerp(lerp(SpatialHash(i+float3(0,0,1)),SpatialHash(i+float3(1,0,1)),f.x),
+                lerp(SpatialHash(i+float3(0,1,1)),SpatialHash(i+1),f.x),f.y);
+            return lerp(lower,upper,f.z);
+        }
         half Detail(half3 sampleColor)
         {
             // Use the painted value structure while keeping a coherent chapter palette.
@@ -153,6 +171,13 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                 float2 paintUV=painted.zy*weights.x+painted.xz*weights.y+painted.xy*weights.z;
                 half macro=Noise(paintUV*.27);
                 half brush=Noise(paintUV*float2(.65,2.8)+macro*1.4);
+                if(_ContinuousPaint>.5)
+                {
+                    // Sample space, not a normal-weighted mixture of coordinates. A face
+                    // normal can change the cel band without tearing the pigment field.
+                    macro=SpatialNoise(painted*.45);
+                    brush=SpatialNoise(painted*float3(.85,1.1,.85)+macro*.3);
+                }
                 half3 albedo=lerp(baseColor.rgb,_WashColor.rgb,saturate(macro*.8+brush*.4)*_WashStrength);
                 albedo*=Detail(tex)*(1+(brush-.5)*_Variation*2);
                 // Imported village trim/flower atlases keep their authored colour and UVs.
@@ -160,7 +185,25 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                     albedo*=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv*_BaseMap_ST.xy+_BaseMap_ST.zw).rgb;
                 // Fade subpixel pigment to prevent shimmer at the far skyline.
                 half grainFade=1-saturate(max(length(ddx(paintUV)),length(ddy(paintUV)))*12);
-                albedo*=1+(Noise(paintUV*19)-.5)*_GrainStrength*grainFade;
+                half grain=Noise(paintUV*19);
+                if(_ContinuousPaint>.5)
+                {
+                    grainFade=1-saturate(max(length(ddx(painted)),length(ddy(painted)))*12);
+                    grain=SpatialNoise(painted*19);
+                    if(_StrataStrength>.001)
+                    {
+                        float warp=SpatialNoise(painted*.14);
+                        float layers=SpatialNoise(float3(painted.x*.12,painted.y*1.45+warp*.15,painted.z*.12));
+                        albedo*=1+(layers-.5)*_StrataStrength;
+                    }
+                    if(_MineralStrength>.001)
+                    {
+                        float mineral=SpatialNoise(painted*2.8);
+                        float mineralFade=1-saturate(max(length(ddx(painted)),length(ddy(painted)))*2.8);
+                        albedo*=1+(mineral-.5)*_MineralStrength*mineralFade;
+                    }
+                }
+                albedo*=1+(grain-.5)*_GrainStrength*grainFade;
                 if(_SeamStrength>.001)
                 {
                     float axis=abs(n.x)>abs(n.z)?p.z:p.x;

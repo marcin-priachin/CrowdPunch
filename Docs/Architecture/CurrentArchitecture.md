@@ -2582,8 +2582,12 @@ live in `Assets/CrowdPunch/Data/ChapterOneVillage`; imported models are not edit
 Saved Campaign 21-30 main scenes own noncolliding quarry/aqueduct scenery through
 `ChapterThreeQuarryBuilder`, `ChapterThreeQuarryAssets` and
 `ChapterThreeQuarryScenery`. The builder refuses to overwrite dressed scenery;
-`RefreshAppearance` updates owned materials/profile and explicit receiver copies
-without replacing transforms or baked UV2 geometry. Original gameplay authoring,
+`RefreshAppearance` updates owned materials/profile and explicit receiver copies;
+`RefreshSurfaces` updates only material recipes and rock bindings, retaining each
+receiver's shadow mask and chart transform. Chapter Three opts into continuous 3D
+pigment, separate cliff/rock recipes and locally imported textures; other chapters
+keep the shader's existing mapping. Neither refresh replaces transforms or baked
+UV2 geometry. Original gameplay authoring,
 physics meshes, encounters and character materials remain unchanged.
 `ChapterThreeQuarryObjectives` adds segmented masonry, cargo fittings and gate-owned
 exit cues through the existing ECS presentation components and systems. No runtime

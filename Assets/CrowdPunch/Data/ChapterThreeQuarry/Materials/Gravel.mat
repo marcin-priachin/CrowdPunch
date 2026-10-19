@@ -28,7 +28,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 94ddededa5cbf2242b63ddd549cfba38, type: 3}
+        m_Texture: {fileID: 2800000, guid: 415614e22b9ddf74bb4075dbe76270fa, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DirtMap:
@@ -39,20 +39,23 @@ Material:
     m_Floats:
     - _AtlasColor: 0
     - _CameraCutaway: 0
+    - _ContinuousPaint: 1
     - _Contrast: 0.78
     - _Cull: 2
-    - _GrainStrength: 0.08
+    - _GrainStrength: 0.03
     - _Meadow: 0
+    - _MineralStrength: 0
     - _ObjectSpacePaint: 0
     - _PlasterGrain: 0
     - _ReceiveShadows: 1
     - _SeamStrength: 0
-    - _TextureScale: 0.12
-    - _TextureStrength: 0.18
+    - _StrataStrength: 0
+    - _TextureScale: 0.28
+    - _TextureStrength: 0.1
     - _UseBakedShadowMask: 0
     - _UseEntityColor: 0
-    - _Variation: 0.07
-    - _WashStrength: 0.26
+    - _Variation: 0.025
+    - _WashStrength: 0.1
     - _Window: 0
     m_Colors:
     - _BakedShadowST: {r: 1, g: 1, b: 0, a: 0}
