@@ -2590,14 +2590,18 @@ flags are assigned to fixed renderers, not propagated onto their ancestors; movi
 receivers retain probes and no realtime caster shadows. Existing scene-scoped lighting,
 pipeline and probe restoration remains shared.
 
-Level 11 has an opt-in painted-background pilot authored by `LevelElevenPaintedLook`.
-The chapter builder invokes it only for stage 11. Its `PaintedFoundry` shader and
-`Data/ChapterTwoFoundry/PaintedLevel11` materials/profile retain the existing UV2
+Chapter Two's approved painted-background treatment is authored by `ChapterTwoPaintedLook`.
+The chapter builder invokes it for stages 11-20. Its `PaintedFoundry` shader and
+`Data/ChapterTwoFoundry/PaintedLook` materials/profile retain the existing UV2
 shadowmask receiver contract, including per-chart ECS floor materials. Painted washes,
 roof seams and glazing are surface shading; no runtime renderer scans or enemy changes
-are involved. The level's priority-150 Volume uses an owned copy of FullCelPost, and
-its sky/fog remains scoped by `CelLevelLighting`. Other levels retain their materials
-and the shared FullCelPost profile.
+are involved. Each level's priority-150 Volume uses the chapter-owned copy of FullCelPost,
+and sky/fog remains scoped by `CelLevelLighting`. Haze begins beyond the arena's diagonal
+extent plus 30 metres (minimum 52 metres), preserving large-yard combat readability.
+Static SubScene materials resolve their original source tags when selecting the painted
+palette, while retaining individual baked mask charts. Other chapters retain their
+materials and the shared FullCelPost profile. Assets moved from the level-11 pilot
+retain their GUIDs; the approved reference level needs no re-authoring or rebake.
 
 ## Chapter One Baked Shadows (2026-10-18)
 

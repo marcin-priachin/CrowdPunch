@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Painted Earth_Near_0_2d579614606c659bd8ede278182cabc8
+  m_Shader: {fileID: 4800000, guid: 7f0048fd1df365d439d6a7ceacf1c557, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BakedShadowMask:
+        m_Texture: {fileID: 2800000, guid: bb8dc228688ef364a83a7f74a9605dab, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 94ddededa5cbf2242b63ddd549cfba38, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DirtMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Contrast: 0.78
+    - _GrainStrength: 0.11
+    - _Meadow: 0
+    - _PlasterGrain: 0
+    - _ReceiveShadows: 1
+    - _SeamStrength: 0
+    - _TextureScale: 0.12
+    - _TextureStrength: 0.25
+    - _UseBakedShadowMask: 1
+    - _Variation: 0.1
+    - _WashStrength: 0.3
+    - _Window: 0
+    m_Colors:
+    - _BakedShadowST: {r: 0.039367676, g: 0.03936774, b: 0.10214114, a: 0.10458255}
+    - _BaseColor: {r: 0.57, g: 0.45, b: 0.32, a: 1}
+    - _Bounds: {r: 0, g: 0, b: 20, a: 20}
+    - _LightColor: {r: 1, g: 0.94, b: 0.83, a: 1}
+    - _PathColor: {r: 0.56, g: 0.42999998, b: 0.24999997, a: 1}
+    - _ShadowColor: {r: 0.43, g: 0.49, b: 0.65, a: 1}
+    - _WashColor: {r: 0.65, g: 0.49, b: 0.34, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

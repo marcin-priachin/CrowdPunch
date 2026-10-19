@@ -45,7 +45,7 @@ namespace CrowdPunch.Editor
                 if(material!=null) r.sharedMaterials=Enumerable.Repeat(material,r.sharedMaterials.Length).ToArray();
             }
             ChapterTwoFoundryObjectives.Build(sub,stage);
-            if(stage==11) LevelElevenPaintedLook.ApplyScene(sub);
+            ChapterTwoPaintedLook.ApplyScene(sub,stage);
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
             var main=EditorSceneManager.OpenScene(MainPath(stage));
             foreach(var old in main.GetRootGameObjects().Where(g=>g.name==RootName)) Object.DestroyImmediate(old);
@@ -57,7 +57,7 @@ namespace CrowdPunch.Editor
             new GameObject(Compositions[stage-11]).transform.SetParent(root,false);
             ChapterTwoFoundryScenery.Build(root,bounds,stage);
             ConfigureLighting(lighting,bounds);
-            if(stage==11) LevelElevenPaintedLook.ApplyScene(main);
+            ChapterTwoPaintedLook.ApplyScene(main,stage);
             if(root.GetComponentsInChildren<Collider>(true).Length!=0) throw new InvalidOperationException("Foundry scenery may not add collisions.");
             EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main); AssetDatabase.SaveAssets();
             Debug.Log($"Chapter Two {stage}: {Compositions[stage-11]} saved. Shadow bake required.");

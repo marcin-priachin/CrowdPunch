@@ -12,26 +12,33 @@ using UnityEngine.SceneManagement;
 
 namespace CrowdPunch.Editor
 {
-    // VISION-005/006: a scene-owned painted pilot, preserving the baked receiver contract.
-    public static class LevelElevenPaintedLook
+    // VISION-005/006: chapter-owned pigment surfaces preserve the baked receiver contract.
+    public static class ChapterTwoPaintedLook
     {
-        public const string Output = "Assets/CrowdPunch/Data/ChapterTwoFoundry/PaintedLevel11";
+        public const string Output = "Assets/CrowdPunch/Data/ChapterTwoFoundry/PaintedLook";
         private const string ShaderName = "CrowdPunch/Cel/Painted Foundry";
         private static readonly Dictionary<string, Material> Prepared = new();
+        private static readonly Dictionary<int, Bounds> Courts = new();
 
-        [MenuItem("Crowd Punch/Art Direction/Apply Painted Look to Level 11")]
+        [MenuItem("Crowd Punch/Art Direction/Apply Painted Look to Chapter Two")]
         public static void Apply()
         {
+            for (int stage = 11; stage <= 20; stage++) ApplyStage(stage);
+        }
+
+        public static void ApplyStage(int stage)
+        {
+            if (stage < 11 || stage > 20) throw new ArgumentOutOfRangeException(nameof(stage));
             if (EditorApplication.isPlayingOrWillChangePlaymode || Lightmapping.isRunning ||
                 Enumerable.Range(0, SceneManager.sceneCount).Any(i => SceneManager.GetSceneAt(i).isDirty))
                 throw new InvalidOperationException("Save open scenes and stop Play/baking before applying the painted look.");
             var setup = EditorSceneManager.GetSceneManagerSetup();
             try
             {
-                foreach (string path in new[] { ChapterTwoFoundryBuilder.SubPath(11), ChapterTwoFoundryBuilder.MainPath(11) })
+                foreach (string path in new[] { ChapterTwoFoundryBuilder.SubPath(stage), ChapterTwoFoundryBuilder.MainPath(stage) })
                 {
                     var scene = EditorSceneManager.OpenScene(path);
-                    ApplyScene(scene);
+                    ApplyScene(scene, stage);
                     EditorSceneManager.MarkSceneDirty(scene);
                     EditorSceneManager.SaveScene(scene);
                 }
@@ -40,14 +47,22 @@ namespace CrowdPunch.Editor
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
         }
 
-        internal static void ApplyScene(Scene scene)
+        internal static void ApplyScene(Scene scene, int stage)
         {
             Prepared.Clear();
             Directory.CreateDirectory(Output + "/Materials");
             AssetDatabase.Refresh();
             if (Shader.Find(ShaderName) == null) throw new InvalidOperationException("Painted Foundry shader is missing.");
-            bool sub = scene.path == ChapterTwoFoundryBuilder.SubPath(11);
+            bool sub = scene.path == ChapterTwoFoundryBuilder.SubPath(stage);
             var roots = scene.GetRootGameObjects();
+            if (sub)
+            {
+                var floors = roots.SelectMany(g => g.GetComponentsInChildren<MeshRenderer>(true))
+                    .Where(r => r.name == "Continuous Convex Floor" || r.name == "Continuous Round Floor").ToArray();
+                var court = floors.First().bounds;
+                foreach (var floor in floors.Skip(1)) court.Encapsulate(floor.bounds);
+                Courts[stage] = court;
+            }
             var renderers = roots.Where(g => sub || g.name == ChapterTwoFoundryBuilder.RootName)
                 .SelectMany(g => g.GetComponentsInChildren<MeshRenderer>(true));
             foreach (var renderer in renderers)
@@ -68,8 +83,8 @@ namespace CrowdPunch.Editor
             var lighting = roots.SelectMany(g => g.GetComponentsInChildren<CelLevelLighting>(true)).Single();
             // Keep the baked sun direction/intensity and probes. Palette is authored in the surfaces.
             lighting.haze = new Color(.57f, .62f, .69f);
-            lighting.hazeStart = 52;
-            lighting.hazeEnd = 155;
+            lighting.hazeStart = Courts.TryGetValue(stage, out var bounds) ? Mathf.Max(52, bounds.extents.magnitude + 30) : 52;
+            lighting.hazeEnd = lighting.hazeStart + 103;
             string skyPath = Output + "/PaintedSky.mat";
             var sky = AssetDatabase.LoadAssetAtPath<Material>(skyPath);
             if (sky == null)
@@ -107,6 +122,12 @@ namespace CrowdPunch.Editor
             if (name == "Foundry earth" || r.name == "Presentation Backdrop") return "Earth";
             if (name == "Ivory industrial paint") return "Ivory";
             if (name == "Quiet blue grey paving") return "Paving";
+            string sourcePath = source.GetTag("CrowdPunchSourceMaterial", false, "");
+            if (!string.IsNullOrEmpty(sourcePath) && sourcePath != AssetDatabase.GetAssetPath(source))
+            {
+                var original = AssetDatabase.LoadAssetAtPath<Material>(sourcePath);
+                if (original != null) return Kind(r, original);
+            }
             return null;
         }
 

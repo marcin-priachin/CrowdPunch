@@ -278,3 +278,35 @@ serialized gameplay comparison matched 346 blocks across Chapter 2 with no diffe
 existing package/reference/deprecation warnings. No standalone build or target-hardware
 GPU performance claim is made for this visual pilot. Existing Synty downloader-window
 errors still occur on Play entry.
+
+## Approved painted style across Chapter Two (2026-10-19)
+
+The user approved level 11 and requested the same treatment for levels 12-20.
+`ChapterTwoPaintedLook` supersedes the pilot recipe and is called by the chapter
+builder for all ten stages. Pilot assets moved to `Data/ChapterTwoFoundry/PaintedLook`
+with GUIDs preserved. Near/skyline materials, the sky and the VolumeProfile are shared;
+explicit baked receivers keep separate materials for each visibility chart. Source
+tags on existing receiver materials resolve the original palette for objective fittings.
+The approved level-11 scene and shader are unchanged. The remaining nine main scenes
+and gameplay SubScenes now reference the painted palette and profile.
+
+Haze starts at the larger of 52 metres or the court's diagonal extent plus 30 metres,
+with a 103-metre fade interval. Stage 18 therefore starts haze near 101 metres, keeping
+its large combat area readable. Existing sun transforms, fixed geometry, lightmaps,
+probes, objective bindings and gameplay colliders were retained without a rebake.
+
+Verification passed all 37 existing chapter checks and an additional saved-scene
+audit of painted scenery/floor shaders, scene profiles, objective palette coverage,
+haze ranges and floor chart preservation for all ten stages. Shader diagnostics were
+empty. The serialized comparison again matched 346 gameplay/collider/physical-transform
+blocks with zero changes. `dotnet build Assembly-CSharp.csproj --no-restore -m:1 -nr:false`
+passed with zero errors and 356 existing reference/package warnings; the default
+parallel invocation exited without diagnostics, so validation used a single build node.
+
+Play verification captured 40 advancing native camera renders: four orbit angles for
+each of levels 12-20 and four additional outward edge views for stage 18. Every recorded
+view used the painted profile and shadow distance zero. Representative views from each
+level, including the large yard and rotating cover, were visually inspected. Evidence:
+`Temp/PaintedChapter/Apply.txt`, `Checks.txt`, `Orbit.txt`, `Build.log` and `Views/`;
+existing scene assertions are in `Temp/FoundryFix/FinalChecks.txt`. Play mode was stopped.
+This rollout does not claim a new standalone build or target-hardware performance test.
