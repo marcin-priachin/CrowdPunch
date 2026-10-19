@@ -70,7 +70,10 @@ namespace CrowdPunch.Editor
             var bounds=renderers[0].bounds;
             foreach(var r in renderers.Skip(1)) bounds.Encapsulate(r.bounds);
             // Some factory facades are true planes. Keep their zero-thickness axis finite.
-            var scale=new Vector3(Fit(size.x,bounds.size.x),Fit(size.y,bounds.size.y),Fit(size.z,bounds.size.z));
+            // Imported machinery keeps its authored proportions. The requested size is an
+            // envelope, never permission to squash a circular pipe or stretch its fittings.
+            float fit=Mathf.Min(Fit(size.x,bounds.size.x),Fit(size.y,bounds.size.y),Fit(size.z,bounds.size.z));
+            var scale=Vector3.one*fit;
             root.transform.localScale=scale; root.transform.localRotation=Quaternion.Euler(0,yaw,0);
             // Bounds are sampled before placement. Anchor the actual model base, not its pivot.
             root.transform.localPosition=bottom-root.transform.localRotation*Vector3.Scale(new Vector3(bounds.center.x,bounds.min.y,bounds.center.z)-parent.position,scale);
@@ -81,7 +84,7 @@ namespace CrowdPunch.Editor
             return root;
         }
 
-        private static float Fit(float desired,float extent)=>extent<.0001f?1:desired/extent;
+        private static float Fit(float desired,float extent)=>extent<.0001f?float.PositiveInfinity:desired/extent;
 
         internal static void GroundPlane(Transform parent,Vector3 center,Vector3 size)
         {

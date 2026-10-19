@@ -2564,6 +2564,13 @@ gameplay SubScene. Segmented metal gates/targets reuse `VillageGatePiece` presen
 shell fragments, cargo fittings, sockets and exit cues use their existing ECS state.
 No runtime MonoBehaviour queries enemies and no new gameplay state is introduced.
 
+The foundry composition uses joined structural bays and returning wings around an
+open handling yard, with connected service paving and loading shelters.
+`ChapterTwoFoundryInfrastructure` builds noncolliding docks, drains and constant-diameter
+pipe routes with rounded knees and flange joints. Imported factory models use uniform
+envelope fitting, preserving their authored aspect ratios; long utility runs are owned
+geometry instead of stretched imported pipes. Neither construction adds combat colliders.
+
 `CampaignShadowBake` accepts explicit main-scene paths and an owned output directory,
 processes each main scene with its SubScene, and enables `BakedShadowLighting` only after
 usable shadowmask output. `ChapterOneShadowBake` retains its existing 1-10 API as a

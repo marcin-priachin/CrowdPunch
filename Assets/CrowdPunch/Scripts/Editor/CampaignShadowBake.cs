@@ -65,7 +65,22 @@ namespace CrowdPunch.Editor
                     EditorSceneManager.MarkAllScenesDirty(); EditorSceneManager.SaveOpenScenes(); AssetDatabase.SaveAssets();
                     Debug.Log($"{scenePaths[Completed]}: baked {LightmapSettings.lightmaps.Length} lightmap/shadowmask atlases.");
                     Completed++; awaitingBake=false;
-                    if(Completed==scenePaths.Length) Finish();
+                    if(Completed==scenePaths.Length)
+                    {
+                        // A late lightmapper import can overwrite an earlier importer's flag.
+                        // Reassert the saved chapter textures after the entire bake batch.
+                        foreach(string main in scenePaths)
+                        {
+                            string folder=Path.GetDirectoryName(main)+"/"+Path.GetFileNameWithoutExtension(main);
+                            foreach(string path in AssetDatabase.FindAssets("t:Texture2D",new[]{folder}).Select(AssetDatabase.GUIDToAssetPath).Where(p=>Path.GetFileName(p).StartsWith("Lightmap-",StringComparison.Ordinal)))
+                            {
+                                var importer=AssetImporter.GetAtPath(path) as TextureImporter;
+                                if(importer==null || importer.ignoreMipmapLimit)continue;
+                                importer.ignoreMipmapLimit=true;importer.SaveAndReimport();
+                            }
+                        }
+                        Finish();
+                    }
                     return;
                 }
                 Prepare(scenePaths[Completed]);

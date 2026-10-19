@@ -24,6 +24,12 @@ namespace CrowdPunch.Tests
                     Assert.That(float.IsNaN(value)||float.IsInfinity(value),Is.False,t.name+": invalid planar-model fit");
             foreach(var r in root.GetComponentsInChildren<MeshRenderer>(true))
                 Assert.That(float.IsNaN(r.bounds.extents.sqrMagnitude)||float.IsInfinity(r.bounds.extents.sqrMagnitude),Is.False,r.name);
+            foreach(var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/CrowdPunch/Models/kenney_factory-kit_3.0/Models/FBX format/"+t.name+".fbx")==null)continue;
+                Assert.That(t.localScale.x,Is.EqualTo(t.localScale.y).Within(.0001f),t.name+": preserve imported machine proportions");
+                Assert.That(t.localScale.x,Is.EqualTo(t.localScale.z).Within(.0001f),t.name+": preserve circular pipe fittings");
+            }
 
             // Vertex fog on one enormous quad incorrectly covers the nearby ground in haze.
             var ground=root.GetComponentsInChildren<MeshFilter>().Single(f=>f.name=="Continuous exterior earth terrace");

@@ -149,3 +149,49 @@ contains that inspection server and should not be distributed.
 OQ-001 still has no agreed hardware/FPS target. Manual combat/balance acceptance,
 exhaustive camera-angle review and target-device performance remain outside this
 presentation verification. Existing gameplay values and campaign progress are preserved.
+
+## Composition revision after user review
+
+The user found the initial stages empty and arranged like collections of props, with
+disproportionately stretched pipes. The initial performance/build/state evidence above
+describes that first pass; verification of the revised scenery is recorded here.
+
+- Replaced the repeated loose perimeter props with joined factory frontages, returning
+  workshop wings, connected service concourses, loading shelters, dock steps, drains,
+  fuel bays and freight sidings. The combat footprint stays open and unchanged.
+- Moved the built setting closer to the yard and joined the middle-distance workshop
+  blocks into adjacent factory streets instead of isolated displays.
+- Replaced the stretched imported pipes with constant-diameter round runs, rounded
+  knees, flange joints and supports, connecting workshop headers and boiler bays.
+- Imported factory machinery now fits uniformly inside its requested envelope.
+  The original long pipe runs along X; stretching Z had distorted its cross section.
+  Saved-scene regression checks now reject nonuniform imported-model scale.
+- Chapter-owned recipes remain repeatable. The original objective bindings and
+  gameplay authoring are preserved.
+
+Revised scenery compilation passed and all ten scenes were regenerated and rebaked.
+Final saved-scene assertions: 21 passed, zero failed, including uniform model scale,
+finite placement, scenery collision exclusion and saved lightmap/receiver bindings.
+The first run caught one late-reset shadowmask mip-limit flag in stage 16; it was
+corrected, and the batch baker now reasserts saved chapter lightmap import settings
+after all bakes finish. The subsequent full assertion run passed.
+
+Ground/support contact audit: 115 imported models, zero failures against ground or
+their loading platform. The final serialized gameplay comparison again matched all
+7,581 stable properties with zero differences. Evidence is in
+`Temp/ChapterTwo/Revision/FinalChecks.txt`, `Revision/PlacementAudit.txt` and
+`Temp/ChapterTwo/RevisionFinal.txt`.
+
+The revised native Editor Play audit completed all ten stages with advancing frames
+and streamed enemies. Objective visuals retained LocalTransform, with no unexpected
+Static tags; realtime shadow distance remained zero throughout. Stage 18 advanced
+1,000 frames and observed 52 enemies. Captures are saved as
+`Temp/ChapterTwo/Revision/Stage-11.png` through `Stage-20.png`; the audit is in
+`Temp/ChapterTwo/Revision/PlayAudit.txt`. Final baked views of 11, 14 and 18 were
+visually inspected for the joined frontage, pipe proportions and open combat space.
+This is scenery and scene-wiring verification, not a new combat acceptance run.
+The Windows build evidence above predates this composition revision; this revision
+was verified in the native Unity Editor rather than a rebuilt standalone Player.
+The console retains bake-time meta-write and tool timeout messages; the subsequent
+saved-asset assertions passed. Entering Play also logged an invalid third-party
+Synty Sidekick downloader window. No compilation failure was reported.
