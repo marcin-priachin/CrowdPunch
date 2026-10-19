@@ -2590,6 +2590,15 @@ flags are assigned to fixed renderers, not propagated onto their ancestors; movi
 receivers retain probes and no realtime caster shadows. Existing scene-scoped lighting,
 pipeline and probe restoration remains shared.
 
+Level 11 has an opt-in painted-background pilot authored by `LevelElevenPaintedLook`.
+The chapter builder invokes it only for stage 11. Its `PaintedFoundry` shader and
+`Data/ChapterTwoFoundry/PaintedLevel11` materials/profile retain the existing UV2
+shadowmask receiver contract, including per-chart ECS floor materials. Painted washes,
+roof seams and glazing are surface shading; no runtime renderer scans or enemy changes
+are involved. The level's priority-150 Volume uses an owned copy of FullCelPost, and
+its sky/fog remains scoped by `CelLevelLighting`. Other levels retain their materials
+and the shared FullCelPost profile.
+
 ## Chapter One Baked Shadows (2026-10-18)
 
 `ChapterOneShadowBake` processes each main scene together with its gameplay SubScene using

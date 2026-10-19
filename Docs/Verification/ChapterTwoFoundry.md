@@ -254,3 +254,27 @@ The final baked Play review completed another 48 advancing camera views across 1
 north/south yard views, the pumpworks side view and a large-yard corner were inspected.
 Captures and frame/position evidence are in `Temp/FoundryFix/Baked/`, including
 `OrbitReview.txt`. Play mode was stopped after verification.
+
+## Level 11 painted-background pilot (2026-10-19)
+
+VISION-005/006: `LevelElevenPaintedLook` assigns scene-owned materials under
+`Data/ChapterTwoFoundry/PaintedLevel11`. `PaintedFoundry.shader` combines imported
+brick, wood, sand, stone and rock color textures with stable world-space pigment
+washes, filtered grain, drawn roof seams and UV-based painted glazing. Near brick,
+roof and window variants break repetition; skyline materials have quieter detail and
+cooler values. No normal/specular effects or full-screen painterly blur are introduced.
+The priority-150 scene Volume owns a copied profile with restrained split toning,
+saturation -5, exposure .18, contrast 3 and bloom .015. The chapter builder reapplies
+the pilot only for stage 11. Existing sun placement, hard shadow charts, probes,
+colliders, transforms and gameplay authoring remain intact.
+
+Unity compiled the shader with zero reported shader messages. The runtime inspection
+confirmed HDR, camera post-processing and baked-only shadow distance zero. Four native
+gameplay-camera orbit views advanced 70 frames each (`Temp/Painted11/Orbit.txt`). Level
+12 restored its original materials and FullCelPost profile on transition. Four existing
+stage-11 geometry, surroundings, baked-shadow and contact-shading checks passed. The
+serialized gameplay comparison matched 346 blocks across Chapter 2 with no differences.
+`dotnet build Assembly-CSharp.csproj --no-restore` passed with zero errors and 498
+existing package/reference/deprecation warnings. No standalone build or target-hardware
+GPU performance claim is made for this visual pilot. Existing Synty downloader-window
+errors still occur on Play entry.

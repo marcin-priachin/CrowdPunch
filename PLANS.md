@@ -6,6 +6,9 @@ Chapter 2 uses the Emberworks Foundry compositions below. Saved Campaign 11-20 s
 owned materials, objective skins and chapter-owned baked-shadow data are implemented.
 Editor, objective-state, quality-tier and Windows player-build verification, along with
 remaining performance/manual-acceptance limits, are recorded in `Docs/Verification/ChapterTwoFoundry.md`.
+Level 11 additionally pilots the user's classic painted-cartoon background references:
+scene-owned pigment materials, drawn roof seams/window glazing and restrained grading.
+The rest of Chapter 2 retains the established foundry treatment pending visual review.
 The broader cross-chapter checklist remains open until its evidence is recorded.
 
 ## Scope and authority
