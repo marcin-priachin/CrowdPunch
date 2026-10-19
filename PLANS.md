@@ -430,6 +430,17 @@ timers or duplicate gameplay state.
 | Bosses and toppling pillars | Retain the existing finished boss appearances; theme the scenery around them. Preserve exposed parts, telegraphs, support ammunition and pillar wind-up/fall silhouettes. | Boss rules and PILLAR-001..006: exact arena/collider layout, three pillar positions and fall paths, attack ownership and timings. |
 | Finale anchors | Carry familiar gate/cover/shell/rail visual grammar into four royal stations; make usable, paused and spent states clear. Keep effects subordinate to boss attacks. | FINALE-001..007: exactly four flight anchors, persistent partial progress, physical docking, ownership restrictions, phase pauses and reset after the fourth use. |
 
+Chapter 3's stage hazards use faceted basalt and irregular geothermal fissures:
+cold slate while inactive, full-footprint pulsing amber during warning, and a
+brighter orange-red heated surface while active. Keep the circle/rectangle boundary
+exact and cell detail at a consistent physical scale. Scope this appearance to the
+six patches in levels 25-28; preserve activation, damage, navigation and all authored
+geometry/timing (GROUND-001..007). Decorative quarry rock remains inert.
+State-driven cartoon particles reinforce this: faint cooling wisps while inactive,
+fuller smoke while warning, and short two-tone flames plus sparse embers while active.
+Keep particle extents inside the footprint and below crowd silhouettes; clear flames
+immediately on safe states, retry and unload. Particles add no light, shadows or damage.
+
 The Chapter One `ChapterOneGateVisuals`, `ChapterOneExitVisuals` and
 `ChapterOneRotatingTargetVisuals` recipes are references, not drop-in batch commands
 for later scenes. Their scene numbers, wide gate dimensions, root names and village

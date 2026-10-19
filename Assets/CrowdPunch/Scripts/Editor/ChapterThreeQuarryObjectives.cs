@@ -53,6 +53,7 @@ namespace CrowdPunch.Editor
                 if(r.name.StartsWith("Gate terrain"))r.sharedMaterial=Surface("Cliff");
             }
             CampaignCargoTrackVisuals.Apply(scene);
+            ChapterThreeQuarryHazards.Apply(scene);
         }
 
         private static void Segmented(BarricadeAuthoring gate)

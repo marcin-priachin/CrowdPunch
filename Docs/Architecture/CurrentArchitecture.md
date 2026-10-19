@@ -2404,6 +2404,24 @@ Restart clears pending hits/clocks and patch epochs. `GroundHazardPresentationSy
 draws matching footprints with a shared procedural mesh/material: slate inactive,
 full-area pulsing amber warning and bright red active. No additional HUD is created.
 
+`GroundHazardAppearanceAuthoring` and its baker optionally add the data-only
+`GroundHazardAppearance` component. The six Chapter Three patches opt into Quarry
+through `ChapterThreeQuarryHazards`; the chapter objective recipe applies it on
+construction too. The ground and particle presentation systems read this component. The ground
+property block selects metre-scaled basalt cells, cold/amber/heated palettes and
+the existing phase pulse in the shared hazard shader. The original circle/rectangle
+clipping and draw transform remain authoritative. Untagged hazards retain the
+original presentation; cycle, damage, navigation and player-bridge systems are unchanged.
+
+`GroundHazardParticlePresentationSystem` batches camera-facing cartoon puffs, two-tone
+flame tongues and embers into one dynamic mesh using the shared vertex-colour effect
+shader. `GroundHazardParticleGeometry` derives bounded emission lanes from the same
+phase/wave clock: two faint cooling wisps while inactive, denser smoke during warning,
+and flames/embers only while active. No particle entities, enemy queries, gameplay
+state or MonoBehaviour bridge are added. Flames clear immediately in safe states;
+all particle geometry clears for unintroduced patches and unload. The owned material draws after the footprint without
+casting shadows. Footprint clipping, damage, navigation and baked lighting are unchanged.
+
 **Crowd Punch > Levels > Build Ground Hazards Gauntlet 23** authors Hot Footing after Dino
 Pillars: a nature-kit 32 x 34m clipped court, two permanent patches and two periodic patches
 introduced in wave two. Editable waves contain 12 and 20 finite Baselines, with no supply

@@ -205,3 +205,54 @@ Three bake/mesh files. All six explicit level-26 rail receiver charts match thei
 renderers. No lighting bake or runtime-system change ran. Evidence is under
 `Temp/TrackCargoStyle`; captures are `Images/ChapterThreeQuarry/FoundryCargo19.png`
 and `QuarryCargo26.png`.
+
+## Quarry stage hazards (2026-10-19, GROUND-001..007)
+
+Six patches in Campaign 25-28 now use a presentation-only Quarry appearance:
+faceted cold basalt while inactive, full-footprint amber warning pulses, and brighter
+orange-red active fissures. Cell detail and the narrow boundary use physical scale
+on both circles and rectangles. The shared shader retains its original default path
+for every hazard without the new appearance component. No decorative rock becomes
+harmful and no additional HUD, collision or geometry is introduced. PLANS.md records
+the chapter treatment.
+
+All 20 ground-hazard and 16 hazard-navigation Editor tests passed. Unity compilation,
+hazard shader diagnostics and direct Assembly-CSharp build passed (zero errors,
+34 existing package/reference/deprecation warnings). Native Editor-preview checks
+captured all six baked patches through naturally advancing frames, including all
+three phases on each periodic strip and appearance/phase initialization after retry.
+The retry probe initially checked before the first simulation initialization; it now
+waits for that initialization and passes. Camera positions were controlled; this is
+not a human combat playtest.
+
+Scene comparison finds exactly six added appearance components. All existing hazard
+settings, transforms, collider/mesh data and other authored components are unchanged.
+All 506 hashed bake/mesh files still match, and no rebake ran. The saved level-19/26
+carts and rail fittings remain present. Evidence: `Temp/QuarryHazards`, including
+`Preservation.json`, `Build.txt`, `Native.txt` and all state captures. Representative
+images: `Images/ChapterThreeQuarry/HotGround.png`, `HazardInactive.png`,
+`HazardWarning.png` and `HazardActive.png`.
+
+### State-driven cartoon particles
+
+Quarry hazards now emit faint cooling smoke while inactive, fuller puffs during
+warning, and short orange/yellow flame tongues with sparse embers while active.
+Particles remain inside the authored footprint and leave the warning floor visible.
+The effect reads the existing phase/wave clock and batches at most 20 lanes per patch
+into one mesh. The owned `GroundHazardParticles` material draws after the floor decal;
+an initial visual pass exposed floor overdraw hiding the particles, which this ordering
+corrects. Other chapter styles retain their existing appearance.
+
+Six particle tests passed: safe/unintroduced states cannot emit fire, circle and
+rotated-rectangle extents remain bounded, retry clocks reproduce the emission lifecycle,
+and counts remain capped. Unity compilation and the direct C# build passed with zero
+errors and 34 existing warnings. Native Editor-preview review captured all six patches
+through natural phases, checked phase-appropriate mesh colours and bounded vertex
+counts, and passed retry. Animated mesh data was checked across advancing frames;
+leaving for level 29 removed the quarry entities and cleared the particle mesh.
+Gameplay authoring and all 506 hashed bake/mesh files remain unchanged. No lighting bake
+ran. This is controlled presentation verification, not a human combat playtest or a
+target-hardware benchmark.
+
+Evidence: `Temp/QuarryHazardParticles`. Captures:
+`Images/ChapterThreeQuarry/HazardFlames.png` and `HazardSmoke.png`.
