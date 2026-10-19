@@ -18,9 +18,17 @@ The shared recipe preserves baked visibility and adjusts haze to each arena's si
 Camera-side decoration uses a scoped shader cutaway to protect the view of the player;
 floors and gameplay obstacles remain visible and scene layouts are preserved.
 The cross-chapter visual requirements below include the user's approved Chapter 2
-shading, placement corrections and camera cutaways. Every later chapter and visual
+shading, placement corrections and camera cutaways, plus the Chapter 3 texture,
+objective and hazard decisions from this chat. Every later chapter and visual
 refresh must carry them forward; a new setting does not reset these decisions.
 The broader cross-chapter checklist remains open until its evidence is recorded.
+
+Carry-forward decision, 2026-10-19: the texture-handling, objective and hazard rules
+below are mandatory for implementations of Chapters 4-9 and subsequent visual
+refreshes. Chapter-specific examples demonstrate the accepted result; their level
+numbers do not restrict the requirements to Chapters 2/3. Adapt materials and motifs
+to each setting while retaining this interaction language. This does not authorize
+retroactive layout changes or replacing approved earlier-chapter skins.
 
 On 2026-10-19 the user separately authorized bringing Chapter One's saved levels into
 this painted language while preserving every object's placement. Campaign 01-10 now
@@ -58,7 +66,7 @@ Sources, in priority order:
 
 ## Decisions already made
 
-These are requirements inherited from the user's decisions and Chapter One/Two corrections.
+These are requirements inherited from the user's decisions and Chapter One/Two/Three corrections.
 
 1. **One Full Cel style throughout.** Environment, player, enemies, lighting and
    post-processing use the approved production look in builds, without Art Lab
@@ -90,6 +98,18 @@ These are requirements inherited from the user's decisions and Chapter One/Two c
 8. **Preserve the camera view without changing layout.** Camera-side decorative
    objects must reveal the player and combat through the established scoped cutaway.
    Keep approved object placement, camera framing, collision and gameplay visibility.
+9. **Fix texture mapping and fit before increasing resolution.** Use continuous
+   pigment, material-specific physical scales and restrained contrast. Audit import
+   quality after correcting projection and fit; carry the texture-handling rules below
+   into every new chapter (VISION-004..006).
+10. **Finish every objective's visible skin.** Use progressive branching fractures,
+    chapter-specific cargo carts/rails and flush protected-area inlays. Retain exact
+    gameplay bounds and state-driven feedback; themed fittings on an otherwise
+    visible placeholder are insufficient.
+11. **Hazards communicate state through surface and particles.** Preserve the exact
+    footprint, full-area warning pulse and brighter active state. Carry forward
+    cooling wisps, warning smoke and active cartoon flames/embers without adding
+    damage, lights, shadows, extra HUD or independent gameplay timers (GROUND-001..007).
 
 ## Cross-chapter visual requirements
 
@@ -147,6 +167,49 @@ The implementation references are
 [the approved Chapter Two verification/corrections](Docs/Verification/ChapterTwoFoundry.md).
 Reuse their demonstrated rendering contracts with chapter-owned output; their
 scene numbers, foundry palette and asset paths are not a batch recipe for other chapters.
+
+### Texture mapping, fit and import quality
+
+- Use continuous 3D noise for pigment, or sample each planar projection separately
+  and blend its sampled values correctly. Do not combine normal-weighted 2D
+  coordinates before sampling noise: this caused visible discontinuities at mesh
+  facets. Intentional cel lighting bands remain; texture seams must not follow them.
+- Give cliffs and small rocks separate recipes. Use broad, restrained strata on
+  cliff faces and finer mineral detail on small rocks; fit masonry, wood and other
+  materials to their construction. Do not stretch one cloudy rock wash across
+  every object or scale. Keep consistent physical detail/texel density across
+  neighbouring meshes, including long strips and circular patches.
+- Reduce oversized cloudy washes, grain and contrast before adding more detail.
+  Floors remain particularly quiet. Use stable world projection on fixed surfaces
+  and attached local/object mapping on carts, moving targets and breaking pieces.
+  Pigment must not swim with the camera or slide across a moving object's skin.
+- Correct projection, material choice, scale and contrast first, then check actual
+  imported dimensions, mip chains, filtering, anisotropy and compression in Unity.
+  Raising resolution alone is not a fix for bad mapping or fit. Keep 2048px as the
+  verified starting cap for these painted textures, not a requirement to give every
+  small prop its own 2K texture. Increase only when matching camera views show a
+  remaining resolution deficit; record the visual and memory tradeoff.
+- Use chapter-owned texture copies when import tuning is needed. Preserve source
+  files, source importers and previously approved chapters. The verified baseline
+  is full mip chains, repeat wrapping for tiling textures, trilinear filtering,
+  anisotropy 4 where the selected tier permits it, and platform-appropriate
+  high-quality compression (currently BC7 on Windows). Retain colour-space intent.
+  Do not globally raise quality settings or remove mips to hide a local problem;
+  preserve Entities Graphics/lightmap mip-limit requirements separately.
+- Keep new shader paths opt-in through owned materials. Appearance refreshes must
+  preserve shader passes, material GUIDs, source references, baked-shadow masks,
+  chart transforms and receiver enable flags. Capture those values before copying
+  material properties, including when source/destination references alias. Repeated
+  refreshes must not lose bindings or make a receiver reference itself as its source.
+- For texture/material-only changes, preserve approved placements, collider/floor
+  geometry, sun and baked assets; use a scoped surface refresh rather than rebuilding
+  scenery or rebaking. Compare with a baseline from the current checkout, including
+  user edits, rather than an obsolete earlier bake snapshot.
+
+References: [Chapter 3 texture refinement](Docs/Verification/ChapterThreeQuarry.md#texture-fit-refinement-2026-10-19-vision-004006),
+[ChapterThreeQuarryAssets](Assets/CrowdPunch/Scripts/Editor/ChapterThreeQuarryAssets.cs)
+and [PaintedFoundry.shader](Assets/CrowdPunch/Shaders/Cel/PaintedFoundry.shader).
+Reuse the demonstrated contracts; choose chapter-appropriate recipes and physical scales.
 
 ### Background placement and complete surroundings
 
@@ -212,7 +275,7 @@ scene numbers, foundry palette and asset paths are not a batch recipe for other 
   sorting path are needed. Ensure every newly introduced decorative shader supports
   the same cutaway before accepting its camera-facing placement.
 
-## Chapter One and Two failures that must not recur
+## Earlier chapter failures that must not recur
 
 | Observed problem | Required treatment in every future chapter |
 | --- | --- |
@@ -229,6 +292,11 @@ scene numbers, foundry palette and asset paths are not a batch recipe for other 
 | Broken gates disappear without satisfying feedback | Preserve segmented construction, readable damage stages, local recoil, brief outward impact accents and noncolliding tumbling debris. Keep effects outside intact solids and clear them fully. |
 | Exit looks like placeholder posts | Use a setting-specific destination landmark with a ground cue at the actual exit/radius. Reveal the open-route cues from objective state, not a separate timer or guessed condition. |
 | Rotating objective lacks identity | Separate a conspicuous target from solid shield panels, emphasize the opening edges and show real motion. Fit visuals to `CoverGeometry`; keep target damage distinct from shield reflection. |
+| Cloudy, stretched textures or pigment breaks at facets | Fix continuous sampling, separate cliff/small-rock recipes, physical scale and contrast before auditing import quality or increasing resolution. |
+| Thick horizontal damage bands look like bars | Use thin, tapered, branching fractures that accumulate with real damage; remove duplicate legacy overlays and inspect every exposed face during recoil. |
+| Themed fittings leave the original orange cart visible | Skin the complete visible cart, cargo, base, rails and docking socket; inspect untagged renderers as well as authoring components. |
+| Protected endpoint remains a flat prototype rectangle | Use chapter-appropriate flush paving/inlay and boundary treatment derived from the exact zone; add no blocking props or collision. |
+| Hazard particles disappear under the floor overlay | Draw the owned particle material after the footprint while respecting scene depth; inspect actual moving smoke/flames, not only particle counts. |
 
 Ground-contact audits should start with Chapter One's maximum 3 cm unsupported-gap
 threshold for ground-level scenery, then inspect wide/sloped bases visually. This is
@@ -423,28 +491,112 @@ Keep a consistent interaction language while changing construction materials by 
 Use current authoring/state as the source of truth; do not implement parallel visual
 timers or duplicate gameplay state.
 
+The requirements in this section apply to every later occurrence of these mechanics,
+including finale anchors where applicable. Apply them to all relevant levels in the
+chapter; updating one introductory example does not complete the chapter.
+
 | Feature | Presentation requirements | Rules to preserve |
 | --- | --- | --- |
-| Breakable gates | Setting-specific segmented construction, reinforcing details, physical damage stages, brief impact effects and fully clearing debris. Frame the real exit with the chapter's landmark language. | BARRICADE-001..009: later gates remain 2 m wide with sealed sides; all room-chain gates and final exit conditions remain authoritative. Never scale the wide Chapter One gate to fit by changing collision. |
+| Breakable gates | Setting-specific segmented construction, reinforcing details, progressive branching fractures, brief impact effects and fully clearing debris. No thick horizontal damage bars. Frame the real exit with the chapter's landmark language. | BARRICADE-001..009: later gates remain 2 m wide with sealed sides; all room-chain gates and final exit conditions remain authoritative. Never scale the wide Chapter One gate to fit by changing collision. |
 | Exit destinations | Ground perimeter matches the authored exit position/radius; open-route arrows read clearly after the relevant gate state changes. Intermediate sector progression and final victory must remain distinguishable. | Do not turn every sector exit into a level-completion marker or let a cue bypass the remaining gates. |
-| Rotating cover | Blue/neutral solid shield family, contrasting hittable target, conspicuous opening jambs, motion accents tied to the actual rotation and persistent physical damage. | COVER-001..005: use `CoverGeometry`; retain gap, thickness, radius, speed, pause/reversal modes, reflection and walking enclosure. Decor cannot bridge the opening. |
+| Rotating cover | Blue/neutral solid shield family, contrasting hittable target, conspicuous opening jambs, motion accents tied to the actual rotation and persistent branching-fracture damage on the core. | COVER-001..005: use `CoverGeometry`; retain gap, thickness, radius, speed, pause/reversal modes, reflection and walking enclosure. Decor cannot bridge the opening. |
 | Explosion shell/core | Reinforced outer shell, unmistakable shell breaks and a visibly different exposed core. Keep shell damage readable from several camera directions. | SHELL-001..006: explosion-only shell, fresh core attack, source/deduplication and paired supply rules. Decorative fireworks must not imply valid hits. |
-| Track block and socket | Chunky movable object, continuous readable rail, clear forward/backward direction, distinct physical docking socket. Use themed machinery, stone cargo or reliquary skins. | TRACK-001..006: retain route lengths, turns, step motion, hit eligibility and physical arrival. Do not hide corners or endpoints with decoration. |
-| Protected point | A recognizable destination, quiet approach framing and the exact existing zone boundary. Keep the threatened endpoint visible along the lane. | PROTECT-001..004: preserve zone, failure boundary, finite waves and enemy targeting. No extra UI or scenery blockers. |
-| Ground hazards | Keep warning/active/inactive states and true shapes readable over every floor palette. Distinguish inert material decoration from harmful regions. | GROUND-001..007 and enemy-created hazard rules: no damage, timing, shape or safe-route changes. |
+| Track block and socket | A completely themed cargo cart/transfer trolley, readable strike faces, low guide rollers/base, matching sleepers/rail hardware, clear directions and a state-driven docking socket. | TRACK-001..006: retain route lengths, turns, step motion, hit eligibility and physical arrival. Do not hide corners or endpoints with decoration. |
+| Protected point | Chapter-specific flush paving/inlay, a recognizable supply/setting motif and the exact existing marked zone boundary. Keep the threatened endpoint visible along the lane. | PROTECT-001..004: preserve zone, failure boundary, finite waves and enemy targeting. No extra UI or scenery blockers. |
+| Ground hazards | Themed substrate with exact readable shapes, distinct safe/warning/active surfaces, full-footprint warning pulses and state-driven cartoon smoke/flames. Distinguish inert decoration from harmful regions. | GROUND-001..007 and enemy-created hazard rules: no damage, timing, shape or safe-route changes. |
 | Bosses and toppling pillars | Retain the existing finished boss appearances; theme the scenery around them. Preserve exposed parts, telegraphs, support ammunition and pillar wind-up/fall silhouettes. | Boss rules and PILLAR-001..006: exact arena/collider layout, three pillar positions and fall paths, attack ownership and timings. |
 | Finale anchors | Carry familiar gate/cover/shell/rail visual grammar into four royal stations; make usable, paused and spent states clear. Keep effects subordinate to boss attacks. | FINALE-001..007: exactly four flight anchors, persistent partial progress, physical docking, ownership restrictions, phase pauses and reset after the fourth use. |
 
-Chapter 3's stage hazards use faceted basalt and irregular geothermal fissures:
+### Objective requirements carried into later chapters
+
+- **Damage stages:** replace thick straight horizontal bands/bars with thin,
+  irregular, tapered branching cracks. Additional damage adds branches/density to
+  the existing fracture network at the existing thresholds. Keep both barrier faces
+  and all exposed core faces readable; use one intended fracture set per stage/face,
+  without leftover prototype bars or duplicate slashes. Keep cracks attached and
+  visible during recoil, clear of strike plates and competing depth surfaces.
+  Preserve segmented construction, hit flashes, recoil, tumbling debris, complete
+  cleanup, hit eligibility/counts and completion rules. This applies to barrier/core
+  damage feedback in later chapters, with their own construction materials.
+- **Carts, rails and sockets:** carry forward the finished level-19/26 transfer-cart
+  treatment. Theme the complete body, load, base, pale/readable strike panels,
+  reinforcements, guide rollers, sleepers, rail fittings and socket. Do not leave
+  the prototype block visible beneath a few themed straps. Every rendered cargo
+  part must follow the existing ECS track root through slides, reversals and turns.
+  Respect the solid's fixed orientation; use compatible transfer rollers/skids rather
+  than changing its motion to suit a wagon model. Preserve route points, rail gauge,
+  original rail geometry/baked receivers, authored hit distances (2m on the established
+  campaign routes), collision and physical arrival. Preserve directional marks and
+  the socket's existing open/locked colour
+  semantics, including the blue destination and locked-state tint where used by hints.
+- **Protected areas:** carry forward level 24's flush, chapter-themed paving/inlay
+  and supply motif. Derive the outer marked edge directly from the authored zone
+  centre/size, not a decorative model's bounds or a guessed 8 x 4m rectangle. Keep
+  all in-zone detail low, noncolliding and within the true boundary; preserve the
+  original zone position/dimensions and the turquoise recognition cue where the
+  opening instruction relies on it. No raised cargo pile, pedestal, scenery blocker,
+  extra HUD or implied smaller/larger failure area. Preserve finite waves, enemy
+  priority, breach eligibility, defeat and retry.
+
+### Hazard surface and particle requirements
+
+Every later chapter's stage hazards must carry this state grammar:
+
+| State | Surface and particles |
+| --- | --- |
+| Not introduced / unloaded | No footprint or particles. |
+| Inactive | Clearly visible cold/quiet surface and faint cooling smoke wisps; no flames or embers. |
+| Warning | Full true-footprint pulsing amber warning with fuller cartoon smoke; no flames or embers. |
+| Active | Brighter orange-red hazardous surface with short two-tone flame tongues, sparse embers and restrained smoke. |
+
+Adapt the substrate and construction to the chapter; basalt/geothermal fissures are
+Chapter 3's material example, not a requirement to turn every later setting into a
+quarry. Changing theme does not drop the smoke/flame states or their readability.
+
+- Use the actual hazard phase and existing wave/cycle clock, including offsets and
+  retry resets. Do not add independent gameplay timers, damage or a second state
+  machine for the effect. Keep exact circle/rectangle clipping, physical detail
+  scale, timings, damage, spawn safety and navigation behavior.
+- Keep smoke puffy/faceted, flames simple and two-tone, and emission low enough to
+  preserve crowd silhouettes and the full warning area. Include billboard width,
+  growth and drift in footprint containment checks. Decorative rock remains inert.
+- Use bounded batched/pooled presentation; retain the demonstrated starting budget
+  of at most 20 particle lanes per patch and two faint inactive lanes. Document and
+  profile any budget change. Do not add per-enemy particle objects or enemy scans,
+  particle collision, realtime lights or caster shadows.
+- Flames/embers stop immediately when the state becomes safe. Unintroduced patches,
+  retry/re-entry and unload must reset or clear stale effects; paused/static frames
+  are not evidence that particle lifecycle works. Verify actual rising/changing
+  geometry in advancing frames.
+- Draw particles after the ground footprint without disabling scene depth or hiding
+  characters. The current owned particle material uses queue 3010 after the floor's
+  transparent queue; preserve the ordering contract if the renderer changes.
+- Scope styles through chapter-owned presentation data/materials. Extend the existing
+  appearance path for later themes as needed; do not globally replace approved
+  earlier-chapter effects or leave new chapter hazards on the old striped fallback.
+  Preserve the Mono/ECS boundary and existing simulation ownership.
+
+Chapter 3's implemented reference uses faceted basalt and irregular geothermal fissures:
 cold slate while inactive, full-footprint pulsing amber during warning, and a
 brighter orange-red heated surface while active. Keep the circle/rectangle boundary
-exact and cell detail at a consistent physical scale. Scope this appearance to the
-six patches in levels 25-28; preserve activation, damage, navigation and all authored
+exact and cell detail at a consistent physical scale. Its Quarry style is scoped to
+the six patches in levels 25-28; later chapters implement their own scoped style
+under the mandatory rules above. Preserve activation, damage, navigation and all authored
 geometry/timing (GROUND-001..007). Decorative quarry rock remains inert.
 State-driven cartoon particles reinforce this: faint cooling wisps while inactive,
 fuller smoke while warning, and short two-tone flames plus sparse embers while active.
 Keep particle extents inside the footprint and below crowd silhouettes; clear flames
 immediately on safe states, retry and unload. Particles add no light, shadows or damage.
+
+Implementation references: [Chapter 3 verification and captures](Docs/Verification/ChapterThreeQuarry.md),
+[ChapterThreeQuarryDamage](Assets/CrowdPunch/Scripts/Editor/ChapterThreeQuarryDamage.cs),
+[CampaignCargoTrackVisuals](Assets/CrowdPunch/Scripts/Editor/CampaignCargoTrackVisuals.cs),
+[ChapterThreeProtectedPointVisuals](Assets/CrowdPunch/Scripts/Editor/ChapterThreeProtectedPointVisuals.cs),
+[GroundHazardPresentationSystem](Assets/CrowdPunch/Scripts/Systems/Presentation/GroundHazardPresentationSystem.cs),
+[GroundHazardParticlePresentationSystem](Assets/CrowdPunch/Scripts/Systems/Presentation/GroundHazardParticlePresentationSystem.cs)
+and [GroundHazardParticleGeometry](Assets/CrowdPunch/Scripts/Utilities/GroundHazardParticleGeometry.cs).
+Reuse their demonstrated responsibilities and state contracts with chapter-owned
+recipes; do not invoke their hardcoded level lists as a later-chapter batch command.
 
 The Chapter One `ChapterOneGateVisuals`, `ChapterOneExitVisuals` and
 `ChapterOneRotatingTargetVisuals` recipes are references, not drop-in batch commands
@@ -459,6 +611,11 @@ cannot be represented correctly. Preserve the Mono/ECS boundary in AGENTS.md.
   immutable gameplay authoring, transforms, floor/collider meshes, settings references,
   navigation, waves, boss geometry and IDs. Note existing user edits. Capture matching
   gameplay-camera views before changing a chapter.
+- [ ] **Map the inherited decisions to the chapter.** Inventory every recurring
+  objective and hazard, including room-chain sectors and finale stations. Apply the
+  texture, branching-damage, cart/rail, protected-area and particle rules above to
+  each applicable stage. Record genuinely inapplicable checks with a concrete reason;
+  a new theme or reused placeholder is not an exception.
 - [ ] **Pilot Chapter 2.** Establish the ground, cel materials, architecture and skyline
   in stage 11. Exercise shell 12, narrow gate/exit 13, track 16 and rotating target 17;
   prove large-arena coverage in 18 and boss readability in 20. Finish the remaining
@@ -477,15 +634,20 @@ cannot be represented correctly. Preserve the Mono/ECS boundary in AGENTS.md.
   visible floor, fit surrounding terrain to its edge, establish background silhouettes,
   assemble landmarks, then add clusters and planting. Do not introduce collision slopes
   or change the current flat-ground simulation to achieve a scenic hill (VISION-004).
+  Resolve projection/fit and contrast before the texture-import audit; keep approved
+  material-only updates separate from geometry dressing and baking.
 - [ ] **Run placement cleanup in the right order.** Assemble buildings; check swept moving
   parts; exclude plants from paths and combat areas; then ground final placements against
   rendered triangles. Recheck occupied bounds after relocation. Inspect roots, rock bases,
   building seams, roof joins and intentional supports from low and gameplay cameras.
 - [ ] **Integrate objectives.** Add chapter-specific skins and state-driven cues, then
   verify visible bounds against physical geometry and actual completion conditions.
-- [ ] **Bake only after geometry settles.** Process the main scene together with its
+- [ ] **Bake only after geometry settles, when a bake is required.** For new or changed
+  fixed geometry, process the main scene together with its
   gameplay SubScene, bind receivers, validate probes/import settings, and save assets.
-  Any later fixed-geometry or sun-direction change invalidates that bake.
+  Any later fixed-geometry or sun-direction change invalidates that bake. Scoped
+  material, objective-skin and effect updates preserve valid existing bakes when
+  fixed geometry/sun are unchanged; do not rebake them as a routine refresh step.
 - [ ] **Complete Chapters 3, 4, 5, 6, 7 and 8 in order.** Use the same workflow but distinct
   composition sheets. Preserve completed chapters as regressions rather than modifying
   shared materials to solve a local palette issue.
@@ -545,6 +707,11 @@ Every chapter must satisfy all of the following; screenshots alone are insuffici
   linework, directional cel bands, restrained grading and quieter distant detail.
   Check several moving camera angles, stationary repeated renders and objective debris;
   refreshes must preserve approved profiles, receiver bindings and dedicated skins.
+- [ ] Verify texture continuity across facets, physical scale on large/small surfaces,
+  separate cliff/rock recipes, quiet floors and attached pigment during motion.
+  Compare matched near, oblique and distant views; read back imported dimensions,
+  full mips, filtering, tier-permitted anisotropy and compression. Check representative
+  low/high quality tiers before deciding a higher resolution is necessary.
 - [ ] Verify continuous background coverage on every side from centre/edge/corner views
   at two heights. Audit uniform imported-model scale, pipe diameter/supports, finite
   transforms and exposed facade/roof/paving depth conflicts. Cutaway views must also
@@ -567,9 +734,21 @@ Every chapter must satisfy all of the following; screenshots alone are insuffici
   blockers match visuals, objective completion still requires the right condition and
   retry restores the initial appearance. Separate controlled state injection from real
   physics/combat evidence in the verification notes.
+- [ ] Inspect branching damage on both barrier faces and every exposed core face at
+  each existing damage stage, during recoil and after cleanup/retry. Inspect the full
+  cart skin, child attachment, forward/reverse motion, every turn and physical docking.
+  Check protected paving against the exact authored boundary and test breach/retry.
+- [ ] Inspect every hazard shape and each phase it actually uses: full natural
+  inactive/warning/active cycles for periodic patches, and active presentation for
+  always-active patches. Check full-area warning pulses, smoke-only safe states,
+  active flames/embers, particle
+  motion/containment and depth ordering. Verify unintroduced patches, retry, unload
+  and transitions to an unthemed chapter leave no stale particles or style flags.
 - [ ] Compare the immutable gameplay baseline with the saved result. Rendering changes
   must not alter collider meshes, objective dimensions/settings, floor heights, wave data,
   spawn safety, navigation, boss routes, chapter boundaries or existing save behavior.
+  For appearance-only refreshes, also compare baked files, receiver mask/chart/enable
+  values and source references; repeat the refresh to catch aliasing and lost bindings.
 - [ ] Run Unity compilation and relevant existing presentation/campaign/objective tests.
   Extend meaningful checks for new state or baking risks; do not add tests that merely
   mirror decoration placement. Run the AGENTS.md .NET check when practical, and report
