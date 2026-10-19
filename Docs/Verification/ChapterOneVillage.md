@@ -2,6 +2,61 @@
 
 Implemented 2026-10-16 for VISION-004, VISION-005 and VISION-006.
 
+## Painted appearance refresh - 2026-10-19
+
+At the user's request, Campaign 01-10 inherit Chapter Two's approved hand-painted
+background language without changing object placement (VISION-005/006). The explicit
+`Crowd Punch > Art Direction > Apply Painted Look to Chapter One` command updates
+saved scenes in place; it does not call the village scenery or encounter builders.
+
+- Chapter-owned materials add broad pigment washes, filtered dry-brush grain, cool
+  cel shadow pigment, warm highlights and restrained roof seams. Imported bark,
+  flowers, furniture and prop atlases retain their original UV colour and culling.
+  Meadow paths and planting footprints retain their existing bounds and masks.
+- The priority-150 chapter profile uses exposure .18, contrast 3, saturation -5,
+  bloom .015 and the approved cool-shadow/warm-highlight split toning. Neutral
+  tonemapping and vignette .12 remain inherited from FullCelPost. Existing village
+  warmth, sky, haze distances, sun and baked-only lighting are unchanged.
+- Main-scene decoration uses explicit cutaway variants through the existing
+  `CameraSceneryCutaway` contract. Meadow, gameplay floors, collision boundaries,
+  obstacles, targets and characters remain fully visible. Moving/destructible
+  objectives retain their original materials and ECS feedback.
+- Original material recipes and imported assets are preserved. Painted variants
+  carry source tags and preserve each explicit shadowmask/UV transform. Future
+  village dressing reapplies this appearance after its intentional geometry rebuild;
+  rebuilding still requires a new shadow bake, as before.
+
+Verification evidence is under `Temp/VillagePaint`:
+
+- `LayoutChecks.txt`: all twenty main/SubScene files compare exactly against the
+  starting revision after excluding only material lists and post-profile bindings.
+  Transforms, hierarchies, meshes, colliders, gameplay authoring, light/probe data
+  and baked-lighting references are unchanged. No geometry rebake was needed.
+- `Checks.txt`: all ten levels pass material, atlas, decorative cutaway exclusion,
+  profile and baked receiver checks; the painted shader has no diagnostics.
+- `Orbit.txt`: forty advancing native edge views, four per level, with eighty paired
+  renders. These existing arena-edge views already have unobstructed combat sightlines.
+- `Probes.txt`: ten deliberately obstructed building views open with the cutaway;
+  244,823-317,587 pixels change. Secondary cameras retain the complete scenery
+  (0-2 pixels difference from the disabled-cutaway reference); globals clear after
+  rendering and runtime shadow distance remains zero. Camera/player test poses are
+  temporary and never saved. Ten ordinary centre views were also captured.
+- Restarting Campaign 10 restores its painted village profile and baked-only policy;
+  transitioning to Campaign 11 restores the foundry profile. Both leave cutaway
+  globals cleared. Native previews use EditorPreview, isolating campaign progress.
+- Unity compilation passed. `dotnet build Assembly-CSharp.csproj --no-restore -m:1`
+  passed with 356 existing package/reference warnings and zero errors. The default
+  parallel build returned failure without diagnostics; the serial build succeeded.
+- `Tests.xml`: Unity Test Runner passed all 22 selected Full Cel regression cases:
+  Chapters One/Two's twenty saved levels, game prefabs and Bootstrap/post-processing.
+  The fixture now accepts the approved chapter-owned profiles and safely handles
+  the runner's unloaded scene placeholders during cleanup. Final suite result: Passed.
+- `Idempotency.txt`: reapplying Campaign 01 preserved all 735 painted asset/scene
+  files byte for byte. `git diff --check` passed.
+
+These are automated visual/presentation checks, not a manual combat playtest or a
+new Windows player build. Target-hardware performance acceptance remains OQ-001.
+
 All ten existing campaign stages retain their encounter names and progression IDs.
 Their visual settings are:
 

@@ -2643,6 +2643,24 @@ dedicated material variants. Ground, paving and every gameplay SubScene material
 remain excluded, preserving visible collision boundaries, objectives and enemies.
 Geometry, camera framing, colliders, baked charts and level layouts are unchanged.
 
+## Chapter One Painted Village Refresh (2026-10-19, VISION-005/006)
+
+`ChapterOnePaintedLook` applies the approved Chapter Two pigment language to Campaign
+01-10 without rebuilding scenery. Chapter-owned `ChapterOneVillage/PaintedLook`
+material variants retain the original village palette, projected meadow/path bounds,
+imported UV colour atlases, culling and explicit shadowmask/UV2 bindings. The shared
+`PaintedFoundry` shader supports opt-in UV colour and material culling; existing foundry
+materials keep their defaults. Floors and fixed SubScene receivers use solid variants;
+main-scene decoration uses the existing scoped `CameraSceneryCutaway` contract. Moving
+and destructible gameplay renderers retain their original materials and ECS feedback.
+
+The priority-150 chapter profile carries the approved restrained painted grading;
+the village's priority-160 warmth, sky, haze, sun and baked-only policy are preserved.
+The explicit `Apply Painted Look to Chapter One` command updates appearance in place.
+Future village dressing also invokes this treatment, retaining it after a deliberate
+scenery rebuild. No transforms, geometry, colliders, gameplay authoring or runtime
+systems are added by the refresh. Verification: `Docs/Verification/ChapterOneVillage.md`.
+
 ## Chapter One Baked Shadows (2026-10-18)
 
 `ChapterOneShadowBake` processes each main scene together with its gameplay SubScene using

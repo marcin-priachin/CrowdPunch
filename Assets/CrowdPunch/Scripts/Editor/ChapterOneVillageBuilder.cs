@@ -82,6 +82,7 @@ namespace CrowdPunch.Editor
             // Keep existing damage bands, cracks, exit cues and all collider/authoring data.
             foreach(var renderer in renderers.Where(r=>r.name=="Solid plate"))
                 renderer.sharedMaterials=Enumerable.Repeat(Surface("Gate timber",new Color(.48f,.29f,.13f)),renderer.sharedMaterials.Length).ToArray();
+            ChapterOnePaintedLook.ApplyScene(sub);
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
 
             var scene=EditorSceneManager.OpenScene($"{Scenes}Campaign_{number:00}.unity");
@@ -102,6 +103,7 @@ namespace CrowdPunch.Editor
             ChapterOneVillageScenery.Build(scenery,bounds,number);
             ChapterOneVillageRoofShadows.Apply(scenery);
             ConfigureLighting(scene,scenery,bounds,number);
+            ChapterOnePaintedLook.ApplyScene(scene);
             if(scenery.GetComponentsInChildren<Collider>(true).Length!=0)
                 throw new InvalidOperationException("Village dressing must remain non-colliding.");
             EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene);

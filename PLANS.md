@@ -16,6 +16,12 @@ shading, placement corrections and camera cutaways. Every later chapter and visu
 refresh must carry them forward; a new setting does not reset these decisions.
 The broader cross-chapter checklist remains open until its evidence is recorded.
 
+On 2026-10-19 the user separately authorized bringing Chapter One's saved levels into
+this painted language while preserving every object's placement. Campaign 01-10 now
+use chapter-owned pigment/atlas materials, restrained grading and decorative camera
+cutaways through `ChapterOnePaintedLook`; the original village composition and baked
+lighting remain the reference. Evidence is in `Docs/Verification/ChapterOneVillage.md`.
+
 ## Scope and authority
 
 Bring Chapters 2-9, Campaign 11-81, up to the finished Chapter One visual standard.
@@ -83,7 +89,8 @@ These are requirements inherited from the user's decisions and Chapter One/Two c
 
 These requirements apply to Chapters 3-9, subsequent Chapter 2 refreshes and updates
 to any approved background. Chapter One remains a protected regression reference;
-this plan does not authorize redressing it. The chapter themes below change palette,
+this plan does not authorize rebuilding or relocating its scenery. The separately
+requested appearance-only refresh above preserves that reference. The chapter themes below change palette,
 architecture and atmosphere within this visual language. Preserve approved layouts
 during shader, material, post-processing, cutaway and objective-effect updates.
 

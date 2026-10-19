@@ -7,6 +7,8 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         _DirtMap("Path texture", 2D) = "white" {}
         _TextureScale("Repeats per metre", Float) = .2
         _TextureStrength("Painted detail", Range(0,1)) = .6
+        [ToggleUI] _AtlasColor("Preserve imported UV colour", Float) = 0
+        [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull", Float) = 2
         _Meadow("Blend meadow and paths", Float) = 0
         _Bounds("Arena centre XZ / half size XZ", Vector) = (0,0,20,20)
         _PathColor("Path tint", Color) = (.56,.43,.25,1)
@@ -31,6 +33,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
     SubShader
     {
         Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" "UniversalMaterialType"="Lit" }
+        Cull [_Cull]
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -45,6 +48,8 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float _CameraCutaway;
             float _ObjectSpacePaint;
             float _UseEntityColor;
+            float _AtlasColor, _Cull;
+            float4 _BaseMap_ST;
         CBUFFER_END
         #ifdef UNITY_DOTS_INSTANCING_ENABLED
             UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
@@ -150,6 +155,9 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                 half brush=Noise(paintUV*float2(.65,2.8)+macro*1.4);
                 half3 albedo=lerp(baseColor.rgb,_WashColor.rgb,saturate(macro*.8+brush*.4)*_WashStrength);
                 albedo*=Detail(tex)*(1+(brush-.5)*_Variation*2);
+                // Imported village trim/flower atlases keep their authored colour and UVs.
+                if(_AtlasColor>.5)
+                    albedo*=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv*_BaseMap_ST.xy+_BaseMap_ST.zw).rgb;
                 // Fade subpixel pigment to prevent shimmer at the far skyline.
                 half grainFade=1-saturate(max(length(ddx(paintUV)),length(ddy(paintUV)))*12);
                 albedo*=1+(Noise(paintUV*19)-.5)*_GrainStrength*grainFade;

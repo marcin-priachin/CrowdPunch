@@ -15,7 +15,12 @@ namespace CrowdPunch.Tests
     {
         private SceneSetup[] setup;
         [OneTimeSetUp] public void SaveSetup() => setup=EditorSceneManager.GetSceneManagerSetup();
-        [OneTimeTearDown] public void RestoreSetup() => EditorSceneManager.RestoreSceneManagerSetup(setup);
+        [OneTimeTearDown] public void RestoreSetup()
+        {
+            // The Test Runner can begin with only unloaded scene placeholders.
+            if (setup.Any(s=>s.isLoaded && s.isActive)) EditorSceneManager.RestoreSceneManagerSetup(setup);
+            else EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+        }
         public static int[] CampaignNumbers => AssetDatabase.LoadAssetAtPath<CrowdPunch.Configuration.CampaignCatalog>(CampaignBuildRegistration.CatalogPath)
             .levels.Where(level=>level.Available).Select(level=>int.Parse(System.IO.Path.GetFileNameWithoutExtension(level.scenePath).Split('_').Last())).ToArray();
 
@@ -25,8 +30,10 @@ namespace CrowdPunch.Tests
             var scene=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{number:00}.unity");
             var roots=scene.GetRootGameObjects();
             var volumes=roots.SelectMany(r=>r.GetComponentsInChildren<Volume>(true));
+            string expectedProfile=number<=10 ? ChapterOnePaintedLook.Output+"/PaintedVillagePost.asset"
+                : number<=20 ? ChapterTwoPaintedLook.Output+"/PaintedFoundryPost.asset" : CelPresentationAuthoring.ProfilePath;
             Assert.That(volumes.Any(v=>v.enabled && v.isGlobal && v.weight==1 && v.priority==150 &&
-                AssetDatabase.GetAssetPath(v.sharedProfile)==CelPresentationAuthoring.ProfilePath),Is.True,scene.path);
+                AssetDatabase.GetAssetPath(v.sharedProfile)==expectedProfile),Is.True,scene.path);
             var lighting=roots.SelectMany(r=>r.GetComponentsInChildren<CelLevelLighting>(true)).Single();
             Assert.That(lighting.ambientMultiplier,Is.EqualTo(number>=11 && number<=20?1f:1.08f)); Assert.That(lighting.sun,Is.Not.Null);
             CheckRenderers(roots,scene.path);
