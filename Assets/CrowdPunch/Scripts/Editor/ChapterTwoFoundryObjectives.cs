@@ -48,6 +48,7 @@ namespace CrowdPunch.Editor
                 if(r.name.Contains("Rail" ) || r.name.Contains("rail")) r.sharedMaterials=Enumerable.Repeat(Steel,r.sharedMaterials.Length).ToArray();
                 if(r.GetComponent<TrackSocketVisualAuthoring>()!=null) {r.sharedMaterial=Brass;Dynamic(r);}
             }
+            CampaignCargoTrackVisuals.Apply(scene);
         }
 
         private static void SegmentedTarget(BarricadeAuthoring gate)

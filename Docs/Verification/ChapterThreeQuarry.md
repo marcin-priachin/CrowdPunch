@@ -177,3 +177,31 @@ only to crack transforms, meshes and renderer visibility: gameplay components,
 colliders, other placements and all 506 baked-lighting/mesh files remain unchanged.
 Evidence: `Temp/ChapterThreeDamage`; saved captures:
 `Images/ChapterThreeQuarry/BarrierFractures.png` and `CoreFractures.png`.
+
+## Cargo carts and rails, levels 19 and 26 (2026-10-19)
+
+`CampaignCargoTrackVisuals.Refresh` replaces the visible orange blocks with a teal
+steel/copper-billet transfer cart in 19 and a slate-iron/limestone trolley in 26.
+Both use pale strike panels, low faceted transfer rollers, reinforcing lips and
+chapter-specific sleepers/rail fittings. Original renderers remain disabled for
+comparison; the new noncolliding cart children follow the existing ECS root. Owned
+materials preserve original rail masks/chart transforms and socket state tinting.
+PLANS.md records the style and TRACK-001..006 constraints.
+
+All 22 TrackObject tests and the all-eight-campaign-route test passed. Advancing
+native checks in Editor preview mode verified a 2m forward hit, reversal to start,
+every authored turn, unchanged orientation and all 38 rendered cart parts retaining
+their offset to the moving root in both levels. Production-resolver hits were
+injected; physical docking then advanced into the next level. This is presentation
+verification, not a human combat playtest. Unity compilation and the direct C# build
+passed (zero errors, five existing reference warnings). The Entities Hierarchy UI
+reported stale SubScene-handle errors during scene changes; native runtime checks
+and compilation completed successfully.
+
+Snapshot comparison preserves every existing mesh, collider, route/settings
+component and transform pose; only presentation children and renderer bindings
+change. Original baked assets remain untouched, including all 506 hashed Chapter
+Three bake/mesh files. All six explicit level-26 rail receiver charts match their
+renderers. No lighting bake or runtime-system change ran. Evidence is under
+`Temp/TrackCargoStyle`; captures are `Images/ChapterThreeQuarry/FoundryCargo19.png`
+and `QuarryCargo26.png`.

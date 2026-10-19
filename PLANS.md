@@ -301,6 +301,12 @@ branch network after the second hit. Preserve hit counts, rotation/cover rules,
 recoil, destruction/cleanup, objective placement, collision and baked shadows
 (BARRICADE-002..004/007..009, COVER-001..005, VISION-004..006).
 
+Track cargo in levels 19 and 26 uses chapter-specific transfer carts: teal steel and
+copper billets in the foundry, slate iron and dressed limestone in the quarry.
+Use pale strike faces, low guide rollers, matching sleepers/rail hardware and a
+state-driven docking socket. Preserve the fixed-orientation solid, every route
+point, turn, rail gauge, collision, 2m hit step and physical docking rule (TRACK-001..006).
+
 | Chapter 4 stage | Proposed visual composition |
 | --- | --- |
 | 31 | Star-reader's garden; broken instrument silhouette and sparse planted borders |

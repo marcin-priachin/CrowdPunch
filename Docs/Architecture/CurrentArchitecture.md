@@ -2616,6 +2616,13 @@ gameplay SubScene. Segmented metal gates/targets reuse `VillageGatePiece` presen
 shell fragments, cargo fittings, sockets and exit cues use their existing ECS state.
 No runtime MonoBehaviour queries enemies and no new gameplay state is introduced.
 
+`CampaignCargoTrackVisuals` owns the level-19 foundry and level-26 quarry transfer
+carts and matching rail fittings. Chapter objective recipes call the same scoped
+builder. Noncolliding cart children inherit the existing track entity's translation;
+chapter-owned painted materials keep pigment attached to the cargo. Original rail
+geometry, receiver charts, routes, collider and settings remain unchanged. Socket
+enamel continues to use `TrackSocketVisual` and its existing locked-state tint.
+
 The foundry composition uses joined structural bays and returning wings around an
 open handling yard, with connected service paving and loading shelters.
 `ChapterTwoFoundryInfrastructure` builds noncolliding docks, drains and constant-diameter

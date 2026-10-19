@@ -52,6 +52,7 @@ namespace CrowdPunch.Editor
                 {r.sharedMaterial=Surface("Ochre",false,false,true);Dynamic(r);}
                 if(r.name.StartsWith("Gate terrain"))r.sharedMaterial=Surface("Cliff");
             }
+            CampaignCargoTrackVisuals.Apply(scene);
         }
 
         private static void Segmented(BarricadeAuthoring gate)
