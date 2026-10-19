@@ -8,6 +8,7 @@ namespace CrowdPunch.Mono.Camera
     /// <summary>
     /// Traditional camera follower for the GameObject player.
     /// </summary>
+    [RequireComponent(typeof(CameraSceneryCutaway))]
     public sealed class CameraFollow : MonoBehaviour
     {
         [SerializeField] private Transform target;
@@ -18,12 +19,14 @@ namespace CrowdPunch.Mono.Camera
         [SerializeField] private float followSharpness = 12f;
 
         private CombatCameraFeedback feedback;
+        private CameraSceneryCutaway sceneryCutaway;
         private InputAction lookAction;
         private float orbitAngle;
         public float EncounterLookHeight { get; set; }
 
         private void Awake()
         {
+            sceneryCutaway = GetComponent<CameraSceneryCutaway>();
             orbitAngle = Mathf.Atan2(offset.x, -offset.z) * Mathf.Rad2Deg;
 
             if (movementSettings == null && target != null
@@ -76,6 +79,7 @@ namespace CrowdPunch.Mono.Camera
             transform.position = Vector3.Lerp(transform.position, desiredPosition, interpolation);
             transform.LookAt(lookTarget);
             feedback?.ApplyOffset();
+            sceneryCutaway?.SetFocus(lookTarget);
         }
     }
 }

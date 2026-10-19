@@ -20,6 +20,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         _SeamStrength("Drawn roof seams", Range(0,1)) = 0
         _Window("Painted glazing", Float) = 0
         _Contrast("Lighting contrast", Range(0,1)) = .8
+        [ToggleUI] _CameraCutaway("Camera-side decoration cutaway", Float) = 0
         [ToggleUI] _ReceiveShadows("Receive cast shadows", Float) = 1
         [HideInInspector] _BakedShadowMask("Baked receiver visibility",2D)="white" {}
         [HideInInspector] _BakedShadowST("Baked receiver UV transform",Vector)=(1,1,0,0)
@@ -39,11 +40,13 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float4 _Bounds;
             float _TextureScale, _TextureStrength, _Meadow, _Variation, _ReceiveShadows, _PlasterGrain;
             float _UseBakedShadowMask;
+            float _CameraCutaway;
         CBUFFER_END
         TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
         TEXTURE2D(_DirtMap); SAMPLER(sampler_DirtMap);
         TEXTURE2D(_BakedShadowMask); SAMPLER(sampler_BakedShadowMask);
         float _CrowdPunchBakedShadowsOnly;
+        #include "SceneryCutaway.hlsl"
         struct Attributes
         {
             float4 positionOS : POSITION;
@@ -114,6 +117,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             {
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                ClipCameraSideScenery(input.positionWS,input.positionCS.xy,_CameraCutaway);
                 half3 n=normalize(input.normalWS);
                 float3 p=input.positionWS;
                 half3 weights=pow(abs(n),4); weights/=max(dot(weights,half3(1,1,1)),.001);
@@ -248,7 +252,12 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             #pragma fragment DepthFragment
             #pragma multi_compile_instancing
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
-            half DepthFragment(Varyings input):SV_Target { return input.positionCS.z; }
+            half DepthFragment(Varyings input):SV_Target
+            {
+                UNITY_SETUP_INSTANCE_ID(input);
+                ClipCameraSideScenery(input.positionWS,input.positionCS.xy,_CameraCutaway);
+                return input.positionCS.z;
+            }
             ENDHLSL
         }
         Pass
@@ -265,6 +274,8 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
             half4 NormalFragment(Varyings input):SV_Target
             {
+                UNITY_SETUP_INSTANCE_ID(input);
+                ClipCameraSideScenery(input.positionWS,input.positionCS.xy,_CameraCutaway);
                 half3 n=normalize(input.normalWS);
                 #if defined(_GBUFFER_NORMALS_OCT)
                     float2 oct=PackNormalOctQuadEncode(n);

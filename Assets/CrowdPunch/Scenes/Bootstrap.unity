@@ -160217,6 +160217,7 @@ GameObject:
   - component: {fileID: 963194226}
   - component: {fileID: 963194229}
   - component: {fileID: 963194230}
+  - component: {fileID: 963194231}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -160312,7 +160313,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Camera.CameraFollow
   target: {fileID: 1430478226}
   movementSettings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000021, type: 2}
-  offset: {x: 0, y: 5, z: -10}
+  offset: {x: 0, y: 6, z: -10}
   targetOffset: {x: 0, y: 1, z: 0}
   horizontalLookSensitivity: 0.15
   followSharpness: 12
@@ -160360,6 +160361,21 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &963194231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 380460c8710297144aa7390b37506ad8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Camera.CameraSceneryCutaway
+  cameraClearance: 4.5
+  playerClearance: 3.5
+  edgeFeather: 1.2
 --- !u!43 &1072236561
 Mesh:
   m_ObjectHideFlags: 0

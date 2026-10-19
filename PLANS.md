@@ -9,6 +9,8 @@ remaining performance/manual-acceptance limits, are recorded in `Docs/Verificati
 All Chapter 2 levels use the approved classic painted-cartoon treatment established
 in level 11: pigment materials, drawn roof seams/window glazing and restrained grading.
 The shared recipe preserves baked visibility and adjusts haze to each arena's size.
+Camera-side decoration uses a scoped shader cutaway to protect the view of the player;
+floors and gameplay obstacles remain visible and scene layouts are preserved.
 The broader cross-chapter checklist remains open until its evidence is recorded.
 
 ## Scope and authority

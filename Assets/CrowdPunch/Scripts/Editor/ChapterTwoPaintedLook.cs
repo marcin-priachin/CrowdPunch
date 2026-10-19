@@ -75,7 +75,8 @@ namespace CrowdPunch.Editor
                 {
                     if (source == null) return source;
                     string kind = Kind(renderer, source);
-                    return kind == null ? source : MaterialFor(source, kind, distant, variant);
+                    bool cutaway = !sub && kind != "Paving" && kind != "Earth";
+                    return kind == null ? source : MaterialFor(source, kind, distant, variant, cutaway);
                 }).ToArray();
                 EditorUtility.SetDirty(renderer);
             }
@@ -131,7 +132,7 @@ namespace CrowdPunch.Editor
             return null;
         }
 
-        private static Material MaterialFor(Material source, string kind, bool distant, int variant)
+        private static Material MaterialFor(Material source, string kind, bool distant, int variant, bool cutaway)
         {
             bool explicitMask = source.HasProperty("_UseBakedShadowMask") && source.GetFloat("_UseBakedShadowMask") > .5f;
             // A separate material per explicit chart is required for ECS receivers.
@@ -139,7 +140,7 @@ namespace CrowdPunch.Editor
             // Stable asset names use chart texture identity and ST.
             if (explicitMask) maskKey = "_" + Hash128.Compute(AssetDatabase.GetAssetPath(source.GetTexture("_BakedShadowMask")) + source.GetVector("_BakedShadowST").ToString("R"));
             if (kind != "Brick" && kind != "Teal" && kind != "Glazing") variant = 0;
-            string path = Output + "/Materials/Painted " + kind + "_" + (distant ? "Skyline" : "Near") + "_" + variant + maskKey + ".mat";
+            string path = Output + "/Materials/Painted " + kind + "_" + (distant ? "Skyline" : "Near") + "_" + variant + (cutaway ? "_Cutaway" : "") + maskKey + ".mat";
             if (Prepared.TryGetValue(path, out var prepared)) return prepared;
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
@@ -183,6 +184,7 @@ namespace CrowdPunch.Editor
             material.SetFloat("_TextureScale", scale);
             material.SetFloat("_TextureStrength", texture == null ? 0 : detail);
             material.SetFloat("_ReceiveShadows", 1);
+            material.SetFloat("_CameraCutaway", cutaway ? 1 : 0);
             material.SetFloat("_Meadow", 0);
             if (texture != null)
             {

@@ -310,3 +310,34 @@ level, including the large yard and rotating cover, were visually inspected. Evi
 `Temp/PaintedChapter/Apply.txt`, `Checks.txt`, `Orbit.txt`, `Build.log` and `Views/`;
 existing scene assertions are in `Temp/FoundryFix/FinalChecks.txt`. Play mode was stopped.
 This rollout does not claim a new standalone build or target-hardware performance test.
+
+## Camera-side scenery cutaway (2026-10-19)
+
+VISION-005: the Bootstrap camera now has `CameraSceneryCutaway`, fed the final look
+target by `CameraFollow`. The painted shader opens a camera-to-player corridor only
+on opted-in decorative materials. Radius tapers from 4.5 metres near the camera to
+3.5 metres at the player, with a 1.2-metre ordered-coverage edge. The cutaway applies
+in ForwardLit, DepthOnly and DepthNormalsOnly, avoiding solid depth/AO silhouettes
+after color disappears. Meta and ShadowCaster retain the complete environment, so
+existing hard baked shadows need no rebake. No material instances, physics raycasts,
+ECS queries or per-frame scenery scans are used. Camera framing is unchanged.
+
+All ten main scenes use cutaway material variants for decoration. Ground and every
+gameplay SubScene material stay excluded, including collision boundaries, rotating
+cover, targets, tracks, exit cues and enemies. Saved-scene assertions checked this
+scope across the chapter. A serialized comparison matched 19,700 transform, mesh
+reference and collider blocks without differences; the existing 346-block gameplay
+comparison also matched. All 37 existing chapter checks passed.
+
+The native Play audit sampled four camera-side arena edges on every stage, recording
+40 advancing poses and 80 paired cutaway-on/off renders. Roofs that previously hid
+the player now reveal the player and arena through the cutaway. Representative
+paired views were inspected. A separate runtime check confirmed globals enabled for
+the gameplay camera, disabled for a secondary camera, and cleared after rendering.
+Inactive follow cameras also render the full scenery. Shader compilation reported no
+diagnostics. The C# build passed with zero errors and 385 existing package/reference
+and deprecation warnings. Play was stopped after verification.
+
+Evidence: `Temp/CameraCutaway/Checks.txt`, `Layout.txt`, `CameraScope.txt`, `Orbit.txt`
+and `Views/`; build summary is in `Temp/CameraCutawayBuild.log`. No standalone Player
+build or target-hardware GPU performance test was added in this slice.

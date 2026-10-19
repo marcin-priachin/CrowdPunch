@@ -2603,6 +2603,19 @@ palette, while retaining individual baked mask charts. Other chapters retain the
 materials and the shared FullCelPost profile. Assets moved from the level-11 pilot
 retain their GUIDs; the approved reference level needs no re-authoring or rebake.
 
+`CameraFollow` supplies its final look target to the required `CameraSceneryCutaway`
+component on the Bootstrap camera. This component publishes camera/focus/clearance
+globals for that camera's render and clears them afterwards; other cameras see the
+complete scenery. It performs no physics casts, renderer scans, material instancing
+or ECS queries. The painted shader uses `SceneryCutaway.hlsl` in its forward, depth
+and normal passes to open a feathered, ordered-coverage corridor between camera and
+player. ShadowCaster and Meta passes retain the full fixed environment.
+
+`ChapterTwoPaintedLook` opts main-scene decoration into this camera cutaway with
+dedicated material variants. Ground, paving and every gameplay SubScene material
+remain excluded, preserving visible collision boundaries, objectives and enemies.
+Geometry, camera framing, colliders, baked charts and level layouts are unchanged.
+
 ## Chapter One Baked Shadows (2026-10-18)
 
 `ChapterOneShadowBake` processes each main scene together with its gameplay SubScene using
