@@ -14,7 +14,7 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 1
+  m_Fog: 0
   m_FogColor: {r: 0.57, g: 0.68, b: 0.63, a: 1}
   m_FogMode: 1
   m_FogDensity: 0.01
@@ -4645,6 +4645,9 @@ MonoBehaviour:
   haze: {r: 0.57, g: 0.68, b: 0.63, a: 1}
   hazeStart: 100.71245
   hazeEnd: 203.71245
+  sceneryOnlyHaze: 1
+  hazeArenaBounds: {x: 0, y: 0, z: 50, w: 50}
+  hazeGroundHeight: -1
 --- !u!114 &305238648
 MonoBehaviour:
   m_ObjectHideFlags: 0

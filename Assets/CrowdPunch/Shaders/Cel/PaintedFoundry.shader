@@ -26,6 +26,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         _StrataStrength("Quarry layer variation", Range(0,.3)) = 0
         _MineralStrength("Fine mineral variation", Range(0,.2)) = 0
         [ToggleUI] _CameraCutaway("Camera-side decoration cutaway", Float) = 0
+        [Enum(None,0,Scenery,1,ExteriorGround,2)] _SceneryHaze("Arena exterior haze", Float) = 0
         [ToggleUI] _ObjectSpacePaint("Paint follows moving parts", Float) = 0
         [ToggleUI] _UseEntityColor("Animated entity tint", Float) = 0
         [ToggleUI] _ReceiveShadows("Receive cast shadows", Float) = 1
@@ -49,6 +50,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float _TextureScale, _TextureStrength, _Meadow, _Variation, _ReceiveShadows, _PlasterGrain;
             float _UseBakedShadowMask;
             float _CameraCutaway;
+            float _SceneryHaze;
             float _ObjectSpacePaint;
             float _UseEntityColor;
             float _AtlasColor, _Cull;
@@ -65,6 +67,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         TEXTURE2D(_BakedShadowMask); SAMPLER(sampler_BakedShadowMask);
         float _CrowdPunchBakedShadowsOnly;
         #include "SceneryCutaway.hlsl"
+        #include "ArenaSceneryHaze.hlsl"
         struct Attributes
         {
             float4 positionOS : POSITION;
@@ -255,7 +258,8 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                 half3 pigment=lerp(_ShadowColor.rgb,_LightColor.rgb,lightAmount);
                 half3 color=albedo*(pigment*1.25+SampleSH(n)*.12);
                 color*=lerp(1,ao.indirectAmbientOcclusion,.28);
-                return half4(MixFog(color,input.fog),1);
+                color=MixFog(color,input.fog);
+                return half4(ApplyArenaSceneryHaze(color,p,_SceneryHaze),1);
             }
             ENDHLSL
         }

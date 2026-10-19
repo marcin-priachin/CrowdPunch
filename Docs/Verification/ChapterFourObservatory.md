@@ -36,8 +36,55 @@ previously approved texture handling.
 Chapter-owned grading retains exposure .18, contrast 3, saturation -5, bloom .015,
 Neutral tonemapping and vignette .12. Sun Euler (50,-32,0), intensity 1.2,
 tint (1,.94,.80); sky/equator/ground (.27,.38,.44), (.17,.25,.24), (.09,.13,.12).
-Haze (.57,.68,.63) starts at `max(52, combinedCourt.extents.magnitude + 30)` and
-extends another 103 m. The existing scene lighting lifetime owns restoration.
+Haze (.57,.68,.63) uses the approved scenery-only refinement below. The existing
+scene lighting lifetime owns restoration.
+
+## Scenery fog refinement (VISION-005/006)
+
+The October 19 follow-up replaces Chapter Four's distance fog with a steady
+arena-boundary fog bank. The user's screenshot correction supersedes the initial
+50% whole-object tint, which left complete silhouettes and the horizon seam visible.
+The combined XZ envelope of every playable floor stays clear, with an additional
+1 m margin. Outside it, a dense low sage bank submerges the lower portions of nearby
+ruins: fully opaque up to 1.5 m above the lowest floor, feathering to 4.5 m, with
+depth adding opacity. Nearby architecture retains roughly its upper half, rather
+than exposing a completely outlined, uniformly tinted object. Depth fog becomes
+fully opaque at 24 m beyond the arena; exterior earth is fully obscured at 18 m.
+This hides the existing horizon geometry before its boundary or corners can appear.
+The painted sky matches the opaque bank and reserves its upper-sky wash for angles
+above 33 degrees. Fog does not animate or change density with camera distance.
+
+Conventional fog is disabled for these scenes, and gameplay material roles remain
+zero. Characters, launched bodies, objectives, warnings and particles retain their
+own presentation. The existing decorative camera cutaway remains active. The fog
+only changes forward colour; depth, normals, Meta, DOTS and baked receivers retain
+their existing contracts. `Refresh Chapter Four Scenery Fog Only` updates owned
+materials and atmosphere without rebuilding scenery or rebaking shadows.
+
+Validation: all 40 existing observatory Editor checks and 10 new saved-scene fog
+checks pass. The new checks cover every floor envelope, scenery material role,
+matching opaque sky and exclusion of gameplay materials across 31-40. All 713
+checked baked-data and gameplay SubScene files retain their pre-fog SHA-256 hashes.
+The direct C# build passes with zero errors and the existing 34 warnings.
+The first fog pass captured 80 advancing game-camera views: four centre orbits
+and four edge positions in each of 31-40. The shader's sky depth is pinned
+to the far plane so it cannot draw over opaque arena geometry. All six quality
+tiers passed load, retry and unload checks, restoring the previous fog state,
+scenery-haze globals, sky, ambient palette and render pipeline. No new runtime or
+shader errors were recorded after the final sky correction. These are Editor
+checks, not a standalone-player or target-hardware performance acceptance.
+
+The screenshot correction was then checked in 120 advancing native views: four
+centre orbits, four edge views and four corner views per level. Forty additional
+paired corner renders toggle the closed garden horizon mesh on/off. Their maximum
+per-channel difference is 1/255, with zero pixels differing by more than 2/255:
+the boundary contributes no visible silhouette or corner. Nearby arch bases fade
+into the bank while their upper masonry remains visible; combat materials remain
+excluded. All 713 recorded baked-data/SubScene hashes remain unchanged.
+
+![Dense bank hides the environment boundary from the arena corner](Images/ChapterFourObservatory/FogCorner.png)
+
+![Clear boss arena and fogged observatory surroundings](Images/ChapterFourObservatory/FogArena.png)
 
 ## Objectives and hazards
 

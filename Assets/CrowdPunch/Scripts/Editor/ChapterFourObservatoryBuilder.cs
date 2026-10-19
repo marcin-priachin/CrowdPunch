@@ -38,6 +38,7 @@ namespace CrowdPunch.Editor
             var floors = renderers.Where(r => r.name == "Continuous Convex Floor" || r.name == "Continuous Round Floor").ToArray();
             var court = floors[0].bounds; foreach (var r in floors.Skip(1)) court.Encapsulate(r.bounds);
             var floorBounds = floors.Select(r=>r.bounds).ToArray();
+            float groundHeight=floorBounds.Min(b=>b.max.y);
             foreach (var r in renderers)
             {
                 if (floors.Contains(r)) r.sharedMaterial = Surface("Court");
@@ -61,7 +62,7 @@ namespace CrowdPunch.Editor
             lighting.sun.color = new Color(1,.94f,.80f); lighting.sun.intensity = 1.20f; lighting.sun.shadows = LightShadows.Hard;
             lighting.sky = new Color(.27f,.38f,.44f); lighting.equator = new Color(.17f,.25f,.24f); lighting.ground = new Color(.09f,.13f,.12f);
             lighting.ambientMultiplier = 1; lighting.overrideAtmosphere = true;
-            ApplyAtmosphere(main,court);
+            ApplyAtmosphere(main,court,groundHeight);
             if (root.GetComponentsInChildren<Collider>(true).Length > 0) throw new InvalidOperationException("Decorative observatory geometry must not collide.");
             EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main); AssetDatabase.SaveAssets();
             Debug.Log($"Chapter Four {stage}: {Compositions[stage-31]} saved; bake required.");
@@ -71,15 +72,34 @@ namespace CrowdPunch.Editor
         public static void RefreshAppearance()
         {
             RefreshSurfaces();
+            RefreshAtmosphere();
+        }
+
+        [MenuItem("Crowd Punch/Art Direction/Refresh Chapter Four Scenery Fog Only")]
+        public static void RefreshAtmosphere()
+        {
+            CheckReady();
             var setup = EditorSceneManager.GetSceneManagerSetup();
             try
             {
+                foreach(string guid in AssetDatabase.FindAssets("t:Material",new[]{Output}))
+                {
+                    var material=AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));
+                    if(!material.HasProperty("_SceneryHaze"))continue;
+                    string source=material.GetTag("CrowdPunchSourceMaterial",false,AssetDatabase.GetAssetPath(material));
+                    string name=System.IO.Path.GetFileNameWithoutExtension(source);
+                    float role=name=="Earth" ? 2 : name.Contains("Decorative") ? 1 : 0;
+                    if(material.GetFloat("_SceneryHaze")==role)continue;
+                    material.SetFloat("_SceneryHaze",role);
+                    EditorUtility.SetDirty(material);
+                }
                 for (int stage=31; stage<=40; stage++)
                 {
                     var sub = EditorSceneManager.OpenScene(SubPath(stage));
                     var floors = sub.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<MeshRenderer>()).Where(r=>r.name.Contains("Continuous") && r.name.Contains("Floor")).ToArray();
                     var court = floors[0].bounds; foreach(var r in floors.Skip(1)) court.Encapsulate(r.bounds);
-                    var main = EditorSceneManager.OpenScene(MainPath(stage)); ApplyAtmosphere(main,court);
+                    float groundHeight=floors.Min(r=>r.bounds.max.y);
+                    var main = EditorSceneManager.OpenScene(MainPath(stage)); ApplyAtmosphere(main,court,groundHeight);
                     EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 }
                 AssetDatabase.SaveAssets();
@@ -144,15 +164,29 @@ namespace CrowdPunch.Editor
         [MenuItem("Crowd Punch/Art Direction/Bake Chapter Four Shadows")]
         public static void Bake() => CampaignShadowBake.Begin(Enumerable.Range(31,10).Select(MainPath).ToArray(),Output+"/BakedShadows");
 
-        private static void ApplyAtmosphere(Scene scene, Bounds court)
+        private static void ApplyAtmosphere(Scene scene, Bounds court, float groundHeight)
         {
             var lighting=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<CelLevelLighting>()).Single();
-            lighting.haze=new Color(.57f,.68f,.63f); lighting.hazeStart=Mathf.Max(52,court.extents.magnitude+30); lighting.hazeEnd=lighting.hazeStart+103;
+            lighting.haze=new Color(.57f,.68f,.63f); lighting.sceneryOnlyHaze=true;
+            lighting.hazeArenaBounds=new Vector4(court.center.x,court.center.z,court.extents.x,court.extents.z);
+            lighting.hazeGroundHeight=groundHeight;
             string skyPath=Output+"/ObservatorySky.mat"; var sky=AssetDatabase.LoadAssetAtPath<Material>(skyPath);
-            if(sky==null){sky=new Material(Shader.Find("Skybox/Procedural"));AssetDatabase.CreateAsset(sky,skyPath);}
-            sky.SetColor("_SkyTint",new Color(.43f,.59f,.63f));sky.SetColor("_GroundColor",lighting.haze);
-            sky.SetFloat("_Exposure",.9f);sky.SetFloat("_AtmosphereThickness",.8f);sky.SetFloat("_SunSize",.015f);
-            EditorUtility.SetDirty(sky); lighting.skybox=sky; lighting.Apply(); EditorUtility.SetDirty(lighting);
+            var skyShader=Shader.Find("CrowdPunch/Cel/Painted Haze Sky");
+            if(skyShader==null)throw new InvalidOperationException("Painted haze sky shader is missing.");
+            if(sky==null){sky=new Material(skyShader);AssetDatabase.CreateAsset(sky,skyPath);}
+            sky.shader=skyShader;sky.SetColor("_Horizon",lighting.haze);sky.SetColor("_Zenith",new Color(.65f,.74f,.72f));
+            EditorUtility.SetDirty(sky); lighting.skybox=sky;
+            var previousBounds=Shader.GetGlobalVector("_CrowdPunchSceneryHazeBounds");
+            var previousColor=Shader.GetGlobalVector("_CrowdPunchSceneryHazeColor");
+            var previousSettings=Shader.GetGlobalVector("_CrowdPunchSceneryHazeSettings");
+            try { lighting.Apply(); }
+            finally
+            {
+                Shader.SetGlobalVector("_CrowdPunchSceneryHazeBounds",previousBounds);
+                Shader.SetGlobalVector("_CrowdPunchSceneryHazeColor",previousColor);
+                Shader.SetGlobalVector("_CrowdPunchSceneryHazeSettings",previousSettings);
+            }
+            EditorUtility.SetDirty(lighting);
             string path=Output+"/ObservatoryPaintedPost.asset"; var profile=AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);
             if(profile==null){AssetDatabase.CopyAsset("Assets/CrowdPunch/Data/Presentation/FullCelPost.asset",path);profile=AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);}
             profile.TryGet<ColorAdjustments>(out var grade);grade.postExposure.Override(.18f);grade.contrast.Override(3);grade.saturation.Override(-5);

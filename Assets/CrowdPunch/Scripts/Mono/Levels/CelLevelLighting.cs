@@ -17,6 +17,14 @@ namespace CrowdPunch.Mono.Levels
         public Color haze = new(.64f, .73f, .73f);
         public float hazeStart = 70;
         public float hazeEnd = 290;
+        [Tooltip("Keep gameplay clear and apply world-space haze only to opted-in scenery materials.")]
+        public bool sceneryOnlyHaze;
+        public Vector4 hazeArenaBounds;
+        public float hazeGroundHeight;
+
+        private static readonly int SceneryHazeBounds = Shader.PropertyToID("_CrowdPunchSceneryHazeBounds");
+        private static readonly int SceneryHazeColor = Shader.PropertyToID("_CrowdPunchSceneryHazeColor");
+        private static readonly int SceneryHazeSettings = Shader.PropertyToID("_CrowdPunchSceneryHazeSettings");
 
         private Color previousSky, previousEquator, previousGround;
         private AmbientMode previousMode;
@@ -26,6 +34,7 @@ namespace CrowdPunch.Mono.Levels
         private FogMode previousFogMode;
         private Color previousFogColor;
         private float previousFogStart, previousFogEnd;
+        private Vector4 previousHazeBounds, previousHazeColor, previousHazeSettings;
 
         private void OnEnable()
         {
@@ -40,6 +49,9 @@ namespace CrowdPunch.Mono.Levels
             previousFogColor = RenderSettings.fogColor;
             previousFogStart = RenderSettings.fogStartDistance;
             previousFogEnd = RenderSettings.fogEndDistance;
+            previousHazeBounds = Shader.GetGlobalVector(SceneryHazeBounds);
+            previousHazeColor = Shader.GetGlobalVector(SceneryHazeColor);
+            previousHazeSettings = Shader.GetGlobalVector(SceneryHazeSettings);
             Apply();
         }
 
@@ -53,12 +65,17 @@ namespace CrowdPunch.Mono.Levels
             if (overrideAtmosphere)
             {
                 RenderSettings.skybox = skybox;
-                RenderSettings.fog = true;
+                RenderSettings.fog = !sceneryOnlyHaze;
                 RenderSettings.fogMode = FogMode.Linear;
                 RenderSettings.fogColor = haze;
                 RenderSettings.fogStartDistance = hazeStart;
                 RenderSettings.fogEndDistance = hazeEnd;
             }
+            // The full combined arena stays clear, independently of camera position.
+            Shader.SetGlobalVector(SceneryHazeBounds, hazeArenaBounds);
+            Shader.SetGlobalColor(SceneryHazeColor, QualitySettings.activeColorSpace == ColorSpace.Linear ? haze.linear : haze);
+            Shader.SetGlobalVector(SceneryHazeSettings, overrideAtmosphere && sceneryOnlyHaze
+                ? new Vector4(1, hazeGroundHeight, 4.5f, 24) : Vector4.zero);
             DynamicGI.UpdateEnvironment();
         }
 
@@ -69,6 +86,9 @@ namespace CrowdPunch.Mono.Levels
             RenderSettings.ambientGroundColor = previousGround;
             RenderSettings.ambientMode = previousMode;
             RenderSettings.sun = previousSun;
+            Shader.SetGlobalVector(SceneryHazeBounds, previousHazeBounds);
+            Shader.SetGlobalVector(SceneryHazeColor, previousHazeColor);
+            Shader.SetGlobalVector(SceneryHazeSettings, previousHazeSettings);
             if (overrideAtmosphere)
             {
                 RenderSettings.skybox = previousSkybox;

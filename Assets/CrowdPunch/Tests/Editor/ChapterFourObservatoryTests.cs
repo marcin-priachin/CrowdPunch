@@ -21,6 +21,38 @@ namespace CrowdPunch.Tests
 
         [TestCase(31)] [TestCase(32)] [TestCase(33)] [TestCase(34)] [TestCase(35)]
         [TestCase(36)] [TestCase(37)] [TestCase(38)] [TestCase(39)] [TestCase(40)]
+        public void Vision005_SceneryHazeProtectsTheEntireArenaAndExcludesGameplayMaterials(int stage)
+        {
+            var main=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}.unity");
+            var lighting=main.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<CelLevelLighting>()).Single();
+            Assert.That(lighting.overrideAtmosphere && lighting.sceneryOnlyHaze,Is.True);
+            Assert.That(lighting.skybox.shader.name,Is.EqualTo("CrowdPunch/Cel/Painted Haze Sky"));
+            Assert.That(((Vector4)lighting.skybox.GetColor("_Horizon")-(Vector4)lighting.haze).sqrMagnitude,Is.LessThan(1e-8f));
+            var root=main.GetRootGameObjects().Single(g=>g.name=="Chapter Four - Overgrown Observatory");
+            foreach(var renderer in root.GetComponentsInChildren<MeshRenderer>())
+            foreach(var material in renderer.sharedMaterials)
+                Assert.That(material.GetFloat("_SceneryHaze"),Is.EqualTo(renderer.name=="Continuous observatory earth" ? 2 : 1),renderer.name);
+            var sub=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}/Campaign_{stage:00} Sub Scene.unity",OpenSceneMode.Additive);
+            var floors=sub.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<MeshRenderer>())
+                .Where(r=>r.name=="Continuous Convex Floor" || r.name=="Continuous Round Floor").ToArray();
+            Assert.That(lighting.hazeGroundHeight,Is.EqualTo(floors.Min(r=>r.bounds.max.y)).Within(.001f),"The fog bank must follow the lowest arena floor.");
+            foreach(var renderer in sub.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<MeshRenderer>(true)))
+            {
+                if(renderer.name=="Continuous Convex Floor" || renderer.name=="Continuous Round Floor")
+                {
+                    var b=renderer.bounds;var envelope=lighting.hazeArenaBounds;
+                    Assert.That(b.min.x,Is.GreaterThanOrEqualTo(envelope.x-envelope.z-.001f));
+                    Assert.That(b.max.x,Is.LessThanOrEqualTo(envelope.x+envelope.z+.001f));
+                    Assert.That(b.min.z,Is.GreaterThanOrEqualTo(envelope.y-envelope.w-.001f));
+                    Assert.That(b.max.z,Is.LessThanOrEqualTo(envelope.y+envelope.w+.001f));
+                }
+                foreach(var material in renderer.sharedMaterials.Where(m=>m!=null && m.HasProperty("_SceneryHaze")))
+                    Assert.That(material.GetFloat("_SceneryHaze"),Is.Zero,"Fog must exclude gameplay: "+renderer.name);
+            }
+        }
+
+        [TestCase(31)] [TestCase(32)] [TestCase(33)] [TestCase(34)] [TestCase(35)]
+        [TestCase(36)] [TestCase(37)] [TestCase(38)] [TestCase(39)] [TestCase(40)]
         public void Vision004_ObservatorySurroundsAreNoncollidingAndGroundRemainsBelowEveryFloor(int stage)
         {
             var main=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}.unity");

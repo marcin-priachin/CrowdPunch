@@ -9,6 +9,13 @@ lighting. Original gameplay authoring, physical transforms, encounters and chara
 models are preserved. Evidence and acceptance limits are recorded in
 `Docs/Verification/ChapterFourObservatory.md`.
 
+Chapter 4 fog refinement, 2026-10-19: use a steady sage painted haze outside the
+full playable envelope. Dense low fog obscures the lower portions of nearby scenery,
+leaving roughly its upper half visible; distant scenery and the environment boundary
+disappear completely into the matching fog. Exterior earth joins that opaque bank.
+Keep the entire arena, characters, hazards and objectives clear at every
+camera angle, including long room chains and wide courts (VISION-005/006).
+
 Chapter 3's Campaign 21-30 scenes now use the Highland Quarry and Aqueduct
 compositions below, chapter-owned painted materials, objective masonry/cargo skins,
 scoped decorative cutaways and saved baked-only lighting. Gameplay authoring,
@@ -158,6 +165,8 @@ during shader, material, post-processing, cutaway and objective-effect updates.
   and fades over another 103 m. Adapt to the full stage bounds when necessary;
   haze must not hide opponents, routes, warnings or objectives, or conceal an
   unfinished backdrop. Exterior ground continues beyond the visible/haze range.
+  Chapter 4 uses the approved arena-boundary scenery haze above in place of
+  camera-distance fog; its composed surroundings and closed horizon remain intact.
 - Preserve stable contact shading: the current CelRenderer uses full-resolution
   interleaved-gradient sampling, with compensated radius and restrained intensity.
   Check stationary repeated renders and moving views when changing this path.

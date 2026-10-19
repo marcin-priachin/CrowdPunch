@@ -27,6 +27,15 @@ The ground presentation system passes that style to the existing footprint shade
 for heated ceramic tiles. The existing bounded particle system now accepts both
 Quarry and Observatory styles, with the same phase, sampling and lifecycle owners.
 No gameplay system, input bridge, hazard clock or Mono/ECS ownership changes.
+`CelLevelLighting` also owns Chapter Four's optional scenery-only haze for the
+scene's lifetime. Serialized combined floor bounds protect the full arena; an
+opt-in Painted Foundry material role submerges nearby decoration in dense low sage
+fog, fading both distant scenery and exterior ground completely into the chapter's
+matching painted sky. Serialized floor height anchors the bank across elevated stages.
+Conventional distance fog is disabled in this mode to keep gameplay clear.
+The bounds/colour/settings shader globals and prior atmosphere are restored on
+unload. Earlier chapters retain their existing distance fog and default material
+role zero. There are no runtime renderer scans, ECS reads or fog volumes.
 See `Docs/Verification/ChapterFourObservatory.md` for evidence and acceptance limits.
 
 ## Boss Appearance Pass (COMBAT-008, BOSS-002/008, CHICKEN-007, ROLL-007, PILLAR-006, FINALE-003/007)

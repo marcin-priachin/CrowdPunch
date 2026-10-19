@@ -64,6 +64,7 @@ namespace CrowdPunch.Editor
             material.SetFloat("_Variation", variation); material.SetFloat("_TextureScale", scale);
             material.SetFloat("_TextureStrength", texture == null ? 0 : detail);
             material.SetFloat("_CameraCutaway", decoration ? 1 : 0);
+            material.SetFloat("_SceneryHaze", kind == "Earth" ? 2 : decoration ? 1 : 0);
             material.SetFloat("_ObjectSpacePaint", moving ? 1 : 0);
             material.SetFloat("_UseEntityColor", moving ? 1 : 0);
             material.SetFloat("_ReceiveShadows", 1); material.SetFloat("_Meadow", 0);

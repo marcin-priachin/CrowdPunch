@@ -8,12 +8,12 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ObservatorySky
-  m_Shader: {fileID: 106, guid: 0000000000000000f000000000000000, type: 0}
+  m_Shader: {fileID: 4800000, guid: 721c4c0132aec1b42836c86ab3419c34, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
+  m_ValidKeywords: []
+  m_InvalidKeywords:
   - _SUNDISK_HIGH_QUALITY
-  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -33,6 +33,8 @@ Material:
     - _SunSizeConvergence: 5
     m_Colors:
     - _GroundColor: {r: 0.57, g: 0.68, b: 0.63, a: 1}
+    - _Horizon: {r: 0.57, g: 0.68, b: 0.63, a: 1}
     - _SkyTint: {r: 0.43, g: 0.59, b: 0.63, a: 1}
+    - _Zenith: {r: 0.65, g: 0.74, b: 0.72, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
