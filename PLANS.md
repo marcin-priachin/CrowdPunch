@@ -1,6 +1,12 @@
 # Campaign Visual Update Plan
 
-Created: 2026-10-18. Status: Chapter 2 is implemented and verified; Chapters 3-9 remain planned.
+Created: 2026-10-18. Status: Chapters 2 and 3 are implemented; Chapters 4-9 remain planned.
+
+Chapter 3's Campaign 21-30 scenes now use the Highland Quarry and Aqueduct
+compositions below, chapter-owned painted materials, objective masonry/cargo skins,
+scoped decorative cutaways and saved baked-only lighting. Gameplay authoring,
+physical transforms, encounters and character models are preserved. Verification
+and remaining acceptance limits are recorded in `Docs/Verification/ChapterThreeQuarry.md`.
 
 Chapter 2 uses the Emberworks Foundry compositions below. Saved Campaign 11-20 scenes,
 owned materials, objective skins and chapter-owned baked-shadow data are implemented.

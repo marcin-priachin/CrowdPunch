@@ -2577,6 +2577,27 @@ replaces the generated scenery root and reapplies these visual settings to stage
 Hand edits inside that root should be made after running the recipe. Generated assets
 live in `Assets/CrowdPunch/Data/ChapterOneVillage`; imported models are not edited.
 
+## Chapter Three quarry presentation (2026-10-19, VISION-004..006)
+
+Saved Campaign 21-30 main scenes own noncolliding quarry/aqueduct scenery through
+`ChapterThreeQuarryBuilder`, `ChapterThreeQuarryAssets` and
+`ChapterThreeQuarryScenery`. The builder refuses to overwrite dressed scenery;
+`RefreshAppearance` updates owned materials/profile and explicit receiver copies
+without replacing transforms or baked UV2 geometry. Original gameplay authoring,
+physics meshes, encounters and character materials remain unchanged.
+`ChapterThreeQuarryObjectives` adds segmented masonry, cargo fittings and gate-owned
+exit cues through the existing ECS presentation components and systems. No runtime
+ownership boundary or system ordering changes. Exit/socket bakers declare material
+dependencies and convert authored colours to linear RGB only when the material opts
+into painted ECS tint.
+
+The production painted shader provides pigment, all receiver/DOTS passes and scoped
+decorative cutaways. Chapter-owned sky, post profile, UV2 copies, masks and receiver
+materials live under `Data/ChapterThreeQuarry`. The explicit campaign bake pipeline
+bakes each main scene with its SubScene; existing `BakedShadowLighting` owns the
+runtime zero-shadow-distance policy, probe lifetime and restoration. See
+[Chapter Three verification](../Verification/ChapterThreeQuarry.md).
+
 ## Chapter Two foundry presentation (2026-10-18, VISION-004..006)
 
 `ChapterTwoFoundryBuilder` refreshes the presentation of saved Campaign 11-20 scenes.
