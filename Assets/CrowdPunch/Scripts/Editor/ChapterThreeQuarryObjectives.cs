@@ -72,6 +72,7 @@ namespace CrowdPunch.Editor
                 if(gate.cover!=null)
                     BoundPiece(gate,"Contrasting valve strike face",new Vector3(0,0,side*(gate.size.z*.5f+.07f)),new Vector3(gate.size.x*.5f,gate.size.y*.42f,.09f),"Impact",0,side+20);
             }
+            ChapterThreeQuarryDamage.Apply(gate);
         }
 
         private static GameObject BoundPiece(BarricadeAuthoring gate,string name,Vector3 center,Vector3 size,string kind,int damage,int seed)

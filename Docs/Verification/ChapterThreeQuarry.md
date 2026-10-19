@@ -157,3 +157,23 @@ Verification for this refinement:
   `Quality.txt` and `DotnetBuildDirect.txt`. Matching before/after views are preserved
   alongside this note as `Images/ChapterThreeQuarry/TextureFitBefore.png` and
   `TextureFitAfter.png`.
+
+## Barrier and core damage fractures (2026-10-19)
+
+Level 22's two barriers and level 29's core now use tapered, branching fracture
+meshes instead of thick horizontal damage bands. The second hit adds branches to
+the first stage. One active fracture mesh per stage/face avoids overlapping legacy
+bars. `ChapterThreeQuarryDamage.Refresh` updates these saved SubScenes without
+rebuilding scenery or baking shadows; the objective construction recipe also calls
+the same treatment. PLANS.md records the accepted presentation direction.
+
+The five gate-presentation and ten rotating-cover Editor tests passed. Native
+injected production-resolver hits verified both damage stages, level-22 destruction,
+debris cleanup and retry, and level-29 automatic progression on destruction and intact
+reset on re-entry. These checks inspect presentation and do not replace a combat
+playtest. Unity compilation passed; the direct Assembly-CSharp build passed with
+zero errors and five existing reference warnings. Snapshot checks allow changes
+only to crack transforms, meshes and renderer visibility: gameplay components,
+colliders, other placements and all 506 baked-lighting/mesh files remain unchanged.
+Evidence: `Temp/ChapterThreeDamage`; saved captures:
+`Images/ChapterThreeQuarry/BarrierFractures.png` and `CoreFractures.png`.

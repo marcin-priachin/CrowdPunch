@@ -293,6 +293,14 @@ motifs or distant scenery. Small lighting variations alone do not satisfy this.
 | 29 | Ruined valve rotunda; rotating opening readable against a quiet aqueduct wall |
 | 30 | Rolling pit; quarry ring and low distant machinery around the unchanged Blob arena |
 
+Chapter 3 damage feedback: level 22's barriers and level 29's central core use thin,
+irregular branching fractures that accumulate across the existing damage stages.
+Do not use thick straight horizontal bands or bars to communicate damage. Keep
+fractures readable on both barrier faces and all four core faces, with a denser
+branch network after the second hit. Preserve hit counts, rotation/cover rules,
+recoil, destruction/cleanup, objective placement, collision and baked shadows
+(BARRICADE-002..004/007..009, COVER-001..005, VISION-004..006).
+
 | Chapter 4 stage | Proposed visual composition |
 | --- | --- |
 | 31 | Star-reader's garden; broken instrument silhouette and sparse planted borders |
