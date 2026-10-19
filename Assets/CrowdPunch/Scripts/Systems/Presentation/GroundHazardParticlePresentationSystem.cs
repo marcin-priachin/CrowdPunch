@@ -21,7 +21,7 @@ namespace CrowdPunch.Systems.Presentation
 
         protected override void OnCreate()
         {
-            mesh=new Mesh{name="Quarry hazard cartoon particles",indexFormat=IndexFormat.UInt32};mesh.MarkDynamic();
+            mesh=new Mesh{name="Ground hazard cartoon particles",indexFormat=IndexFormat.UInt32};mesh.MarkDynamic();
             RequireForUpdate<GroundHazardAppearance>();
         }
 
@@ -33,7 +33,7 @@ namespace CrowdPunch.Systems.Presentation
             right=Vector3.ProjectOnPlane(camera.transform.right,Vector3.up).normalized;
             foreach(var (patch,state,appearance) in SystemAPI.Query<RefRO<GroundHazard>,RefRO<GroundHazardState>,RefRO<GroundHazardAppearance>>())
             {
-                if(appearance.ValueRO.Style!=GroundHazardStyle.Quarry)continue;
+                if(appearance.ValueRO.Style!=GroundHazardStyle.Quarry && appearance.ValueRO.Style!=GroundHazardStyle.Observatory)continue;
                 for(int lane=0;lane<GroundHazardParticleGeometry.Count(patch.ValueRO,state.ValueRO);lane++)
                     if(GroundHazardParticleGeometry.TrySample(patch.ValueRO,state.ValueRO,SystemAPI.Time.ElapsedTime,lane,out var particle))Draw(particle);
             }

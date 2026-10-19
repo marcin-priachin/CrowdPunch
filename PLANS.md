@@ -1,6 +1,13 @@
 # Campaign Visual Update Plan
 
-Created: 2026-10-18. Status: Chapters 2 and 3 are implemented; Chapters 4-9 remain planned.
+Created: 2026-10-18. Status: Chapters 2, 3 and 4 are implemented; Chapters 5-9 remain planned.
+
+Chapter 4's Campaign 31-40 scenes now use the Overgrown Observatory compositions
+below, with chapter-owned painted surfaces, ruin/instrument silhouettes, objective
+skins, heated ceramic hazard presentation, decorative cutaways and saved baked-only
+lighting. Original gameplay authoring, physical transforms, encounters and character
+models are preserved. Evidence and acceptance limits are recorded in
+`Docs/Verification/ChapterFourObservatory.md`.
 
 Chapter 3's Campaign 21-30 scenes now use the Highland Quarry and Aqueduct
 compositions below, chapter-owned painted materials, objective masonry/cargo skins,

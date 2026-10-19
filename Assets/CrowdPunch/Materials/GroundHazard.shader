@@ -5,6 +5,7 @@ Shader "CrowdPunch/GroundHazard"
         _Color ("Color", Color) = (1,.2,.1,.65)
         _Circle ("Circle", Float) = 0
         _Quarry ("Quarry surface", Float) = 0
+        _Observatory ("Observatory heated tiles", Float) = 0
         _Phase ("Hazard phase", Float) = 0
         _FootprintSize ("Footprint half size", Vector) = (1,1,0,0)
     }
@@ -26,7 +27,7 @@ Shader "CrowdPunch/GroundHazard"
             CBUFFER_START(UnityPerMaterial)
             float4 _Color;
             float _Circle;
-            float _Quarry, _Phase;
+            float _Quarry, _Phase, _Observatory;
             float4 _FootprintSize;
             CBUFFER_END
             Varyings Vert(Attributes v) { Varyings o; o.positionCS=TransformObjectToHClip(v.positionOS.xyz); o.uv=v.uv; o.fog=ComputeFogFactor(o.positionCS.z); return o; }
@@ -48,6 +49,13 @@ Shader "CrowdPunch/GroundHazard"
                     if(d<first){second=first;first=d;nearestCell=cell+neighbor;}else second=min(second,d);
                 }
                 float seam=sqrt(second)-sqrt(first);
+                if(_Observatory>.5)
+                {
+                    // Broken geometric ceramic tiles, with the same exact footprint and clock.
+                    float2 tile=abs(frac(p*.8)-.5);
+                    seam=min(.5-tile.x,.5-tile.y);
+                    nearestCell=floor(p*.8);
+                }
                 float aa=max(fwidth(seam),.006);
                 float thickness=_Phase>1.5?.045:.024;
                 float fissure=1-smoothstep(thickness,thickness+aa,seam);
@@ -57,6 +65,7 @@ Shader "CrowdPunch/GroundHazard"
                 float rim=1-smoothstep(.06,.13+fwidth(distanceInside),distanceInside);
                 half3 baseColor=half3(.15,.19,.18)*shade;
                 half3 crackColor=half3(.065,.085,.08);
+                if(_Observatory>.5)baseColor=half3(.21,.29,.25)*shade;
                 half3 rimColor=half3(.32,.36,.32);
                 if(_Phase>.5 && _Phase<1.5)
                 {
@@ -81,7 +90,7 @@ Shader "CrowdPunch/GroundHazard"
                 float2 q=abs(v.uv*2-1);
                 float edge=lerp(max(q.x,q.y),length(q),_Circle);
                 clip(1-edge);
-                if(_Quarry>.5)return QuarrySurface(v,edge);
+                if(_Quarry>.5 || _Observatory>.5)return QuarrySurface(v,edge);
                 float border=smoothstep(.88,.94,edge);
                 float stripe=step(.65,frac((v.uv.x+v.uv.y)*12));
                 return half4(_Color.rgb*(.8+.2*stripe+.25*border),_Color.a);

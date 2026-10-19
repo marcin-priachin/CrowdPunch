@@ -36,9 +36,10 @@ namespace CrowdPunch.Systems.Presentation
                     new Color(.15f,.28f,.32f,.55f);
                 properties.SetColor("_Color", color); properties.SetFloat("_Circle", h.Shape == GroundHazardShape.Circle ? 1 : 0);
                 float2 size = h.Shape == GroundHazardShape.Circle ? new float2(h.Radius) : h.HalfSize;
-                bool quarry = SystemAPI.HasComponent<GroundHazardAppearance>(entity)
-                    && SystemAPI.GetComponent<GroundHazardAppearance>(entity).Style == GroundHazardStyle.Quarry;
+                var style = SystemAPI.HasComponent<GroundHazardAppearance>(entity) ? SystemAPI.GetComponent<GroundHazardAppearance>(entity).Style : GroundHazardStyle.Default;
+                bool quarry = style == GroundHazardStyle.Quarry;
                 properties.SetFloat("_Quarry", quarry ? 1 : 0);
+                properties.SetFloat("_Observatory", style == GroundHazardStyle.Observatory ? 1 : 0);
                 properties.SetFloat("_Phase", (float)s.Phase);
                 properties.SetVector("_FootprintSize", new Vector4(size.x,size.y,0,0));
                 Graphics.DrawMesh(footprint, Matrix4x4.TRS((Vector3)h.Position, Quaternion.Euler(0,math.degrees(h.Angle),0),

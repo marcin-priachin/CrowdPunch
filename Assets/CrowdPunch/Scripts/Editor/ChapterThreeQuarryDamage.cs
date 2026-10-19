@@ -33,7 +33,7 @@ namespace CrowdPunch.Editor
             finally {EditorSceneManager.RestoreSceneManagerSetup(setup);}
         }
 
-        internal static void Apply(BarricadeAuthoring gate)
+        internal static void Apply(BarricadeAuthoring gate,string folder=null)
         {
             var cracks=gate.GetComponentsInChildren<BarricadeVisualAuthoring>(true).Where(v=>v.crackStage>0);
             foreach(var group in cracks.GroupBy(v=>(stage:v.crackStage,face:Face(v.transform.localPosition))))
@@ -51,16 +51,16 @@ namespace CrowdPunch.Editor
                 chosen.transform.localPosition=side ? new Vector3(sign*(gate.size.x*.5f+faceOffset),0,0) : new Vector3(0,0,sign*(gate.size.z*.5f+faceOffset));
                 chosen.transform.localRotation=Quaternion.Euler(0,side?90:0,0);
                 chosen.transform.localScale=new Vector3((side?gate.size.z:gate.size.x)*.78f,gate.size.y*.72f,1);
-                var filter=chosen.GetComponent<MeshFilter>();filter.sharedMesh=Fracture(group.Key.stage);
+                var filter=chosen.GetComponent<MeshFilter>();filter.sharedMesh=Fracture(group.Key.stage,folder);
                 EditorUtility.SetDirty(filter);EditorUtility.SetDirty(chosen.transform);
             }
         }
 
         private static int Face(Vector3 p)=>Mathf.Abs(p.x)>Mathf.Abs(p.z) ? (p.x<0?2:3) : (p.z<0?0:1);
 
-        private static Mesh Fracture(int stage)
+        internal static Mesh Fracture(int stage,string folder=null)
         {
-            string folder=Output+"/Damage";System.IO.Directory.CreateDirectory(folder);AssetDatabase.Refresh();
+            folder ??= Output+"/Damage";System.IO.Directory.CreateDirectory(folder);AssetDatabase.Refresh();
             string path=folder+"/Branching fracture "+stage+".asset";
             var mesh=AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if(mesh!=null)return mesh;

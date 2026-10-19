@@ -6,6 +6,29 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Chapter Four Observatory Presentation (VISION-004..006)
+
+`ChapterFourObservatoryBuilder` edits the saved 31-40 scenes through chapter-owned
+surface, scenery, structure and objective recipes. It preserves gameplay authoring
+and physical transforms and rejects accidental re-dressing; surface/atmosphere
+refreshes preserve approved placement and explicit baked receiver mask/chart/source
+bindings. `CampaignShadowBake` accepts the explicit chapter scene list and writes
+owned UV2 meshes and receivers. Large exterior ground and the wooded horizon use
+reduced chart density; moving objectives and cues remain excluded from fixed casts.
+
+`CampaignCargoTrackVisuals.ApplyObservatory` extends the existing cargo recipe to
+32/39 with owned palettes, retaining its original 19/26 behavior. Gate/core fractures
+reuse the existing generator with an explicit output folder. Level 37's relic skin
+uses existing shell fragment and barricade presentation data; level 36's protected
+point is a noncolliding flush constellation inlay.
+
+`GroundHazardStyle.Observatory` is appended to the presentation-only style enum.
+The ground presentation system passes that style to the existing footprint shader
+for heated ceramic tiles. The existing bounded particle system now accepts both
+Quarry and Observatory styles, with the same phase, sampling and lifecycle owners.
+No gameplay system, input bridge, hazard clock or Mono/ECS ownership changes.
+See `Docs/Verification/ChapterFourObservatory.md` for evidence and acceptance limits.
+
 ## Boss Appearance Pass (COMBAT-008, BOSS-002/008, CHICKEN-007, ROLL-007, PILLAR-006, FINALE-003/007)
 
 `BossAppearanceBuilder` applies appearance updates to the eight campaign boss introductions/rematches, four legacy boss SubScenes and the finale main scene. It replaces only model children and assigns dedicated atlas materials; encounter roots, collider geometry, settings, waves and progression remain authored. The normal boss recipes reproduce the same model treatment. Source FBXs and their importers remain unchanged.
