@@ -3,7 +3,7 @@
 Date: 2026-10-19. Scope: saved Campaign 31-40 scenes, VISION-004..006 and the
 Chapter Four compositions and inherited requirements in `PLANS.md`.
 
-The chapter uses muted jade geometric court paving, ochre ruin masonry, old brass
+The chapter uses muted limestone/sage damaged-brick court paving, ochre ruin masonry, old brass
 instruments, patinated observatory domes, trailing exterior roots and wooded
 surroundings. Joined cloisters have recessed backs, return walls, foundations and
 capping courses. Closed garden escarpments and distant trees back all four sides;
@@ -118,6 +118,29 @@ Paired warmed Editor camera renders of level 33's northeast angled border confir
 the excess triangular ground strip disappears while the arena and rock border
 remain clear (`Temp/HazeReview/Before.png` and `After.png`). These are static
 scene renders, not a combat playtest. The final targeted GPU rerun passed 10/10.
+
+## Damaged brick paving refinement, October 20 (VISION-004..006)
+
+The floor now uses a chapter-owned copy of `Stylized_Bricks_005_basecolor`: painted
+chipped brick faces, worn corners and irregular mortar, interpreted through the
+existing shader's value detail and a quiet limestone/sage tint related to the ruins.
+World projection uses .16 repeats/metre (approximately .78 x .39 m bricks), detail
+strength .55, wash .06 and variation .015. No normal or specular maps are added.
+The source `Court` material and its ten saved baked receivers use the same recipe.
+`Refresh Chapter Four Court Surface Only` refreshes this surface without opening or
+rewriting scenes, preserving each receiver's mask, UV transform and source tag.
+
+Unity compiled successfully and the painted shader has no reported diagnostics.
+The owned texture imports as 2048 x 2048 BC7 with 12 mip levels, sRGB, repeat,
+trilinear filtering and anisotropy 4. Paired warmed static camera views of levels
+33/34/38/40 show the worn brick joints at gameplay scale. All ten receivers retained
+their exact mask/UV/enable bindings, and all 722 recorded scene/SubScene and
+non-material bake-file hashes remain unchanged. These are appearance checks,
+not a combat playthrough or target-hardware performance acceptance.
+Repeating the refresh left all 478 checked chapter materials/brick-texture files
+byte-identical. All ten saved-scene arena-haze/gameplay-material checks passed.
+
+![Damaged brick paving beside the observatory ruins](Images/ChapterFourObservatory/BrickCourt.png)
 
 ## Objectives and hazards
 

@@ -37,7 +37,8 @@ namespace CrowdPunch.Editor
             string texture = null; float detail = .18f, variation = .035f, scale = .3f;
             switch (kind)
             {
-                case "Court": color = new Color(.52f,.58f,.53f); wash = new Color(.50f,.56f,.51f); texture = "Stylized_Stone_Floor_002_basecolor"; detail = .06f; variation = .015f; scale = .23f; break;
+                // Chipped brick value structure stays subordinate to combat and shares the ruins' limestone palette.
+                case "Court": color = new Color(.60f,.59f,.49f); wash = new Color(.54f,.57f,.48f); texture = "Stylized_Bricks_005_basecolor"; detail = .55f; variation = .015f; scale = .16f; break;
                 case "Earth": color = new Color(.30f,.39f,.29f); wash = new Color(.40f,.45f,.30f); texture = "Vol_16_2_Sand_Base_Color"; detail = .10f; variation = .025f; scale = .28f; break;
                 case "Limestone": color = new Color(.67f,.61f,.43f); wash = new Color(.62f,.58f,.42f); texture = "Vol_23_1_Rocks_Base_Color"; detail = .10f; variation = .035f; scale = .40f; break;
                 case "Cliff": color = new Color(.57f,.60f,.53f); wash = new Color(.66f,.62f,.51f); texture = "Stylized_Layered_Rock_001_color"; detail = .08f; variation = .035f; scale = .32f; break;

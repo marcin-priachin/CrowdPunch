@@ -155,6 +155,20 @@ namespace CrowdPunch.Editor
             finally {EditorSceneManager.RestoreSceneManagerSetup(setup);}
         }
 
+        [MenuItem("Crowd Punch/Art Direction/Refresh Chapter Four Court Surface Only")]
+        public static void RefreshCourtSurface()
+        {
+            CheckReady(); Prepare();
+            var source=Surface("Court");
+            foreach(string guid in AssetDatabase.FindAssets("t:Material",new[]{Output+"/BakedShadows/Receivers"}))
+            {
+                var receiver=AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));
+                if(receiver.GetTag("CrowdPunchSourceMaterial",false,"")!=AssetDatabase.GetAssetPath(source))continue;
+                CopyReceiverSurface(receiver,source);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
         private static void CopyReceiverSurface(Material receiver,Material source)
         {
             var mask=receiver.GetTexture("_BakedShadowMask");var st=receiver.GetVector("_BakedShadowST");
