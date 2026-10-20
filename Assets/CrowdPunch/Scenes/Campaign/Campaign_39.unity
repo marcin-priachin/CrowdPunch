@@ -12059,6 +12059,15 @@ MonoBehaviour:
   hazeEnd: 166.4253
   sceneryOnlyHaze: 1
   hazeArenaBounds: {x: 0, y: 0, z: 21, w: 26}
+  hazeArenaEdges:
+  - {x: -21, y: -21, z: -16, w: -26}
+  - {x: -16, y: -26, z: 16, w: -26}
+  - {x: 16, y: -26, z: 21, w: -21}
+  - {x: 21, y: -21, z: 21, w: 21}
+  - {x: 21, y: 21, z: 16, w: 26}
+  - {x: 16, y: 26, z: -16, w: 26}
+  - {x: -16, y: 26, z: -21, w: 21}
+  - {x: -21, y: 21, z: -21, w: -21}
   hazeGroundHeight: -1
 --- !u!114 &1376818494
 MonoBehaviour:
