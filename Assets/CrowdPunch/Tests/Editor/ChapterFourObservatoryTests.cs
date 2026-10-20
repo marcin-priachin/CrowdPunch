@@ -21,6 +21,80 @@ namespace CrowdPunch.Tests
 
         [TestCase(31)] [TestCase(32)] [TestCase(33)] [TestCase(34)] [TestCase(35)]
         [TestCase(36)] [TestCase(37)] [TestCase(38)] [TestCase(39)] [TestCase(40)]
+        public void Vision005_HazeKeepsTheSameOffsetFromActualFloorEdgesOnGpu(int stage)
+        {
+            var main=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}.unity");
+            var lighting=main.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<CelLevelLighting>()).Single();
+            Assert.That(lighting.hazeArenaEdges.Length,Is.InRange(3,CelLevelLighting.MaxHazeEdges));
+            var shader=ShaderUtil.CreateShaderAsset(@"Shader ""Hidden/CrowdPunch/HazeDistanceTest"" { SubShader { Pass {
+                ZTest Always ZWrite Off Cull Off
+                HLSLPROGRAM
+                #pragma vertex vert_img
+                #pragma fragment frag
+                #include ""UnityCG.cginc""
+                #include ""Assets/CrowdPunch/Shaders/Cel/ArenaSceneryHaze.hlsl""
+                float4 _SamplePosition;
+                float4 frag(v2f_img input) : SV_Target {
+                    return float4(ArenaSceneryDistance(_SamplePosition.xz),
+                        ApplyArenaSceneryHaze(0,_SamplePosition.xyz,2).r,0,1);
+                }
+                ENDHLSL
+            } } }");
+            var material=new Material(shader);
+            var target=RenderTexture.GetTemporary(1,1,0,RenderTextureFormat.ARGBFloat,RenderTextureReadWrite.Linear);
+            var pixel=new Texture2D(1,1,TextureFormat.RGBAFloat,false,true);
+            var previousTarget=RenderTexture.active;
+            var previousColor=Shader.GetGlobalVector("_CrowdPunchSceneryHazeColor");
+            var previousBounds=Shader.GetGlobalVector("_CrowdPunchSceneryHazeBounds");
+            var previousSettings=Shader.GetGlobalVector("_CrowdPunchSceneryHazeSettings");
+            var previousEdges=Shader.GetGlobalVectorArray("_CrowdPunchSceneryHazeEdges");
+            int previousCount=Shader.GetGlobalInt("_CrowdPunchSceneryHazeEdgeCount");
+            try
+            {
+                lighting.Apply();
+                Shader.SetGlobalColor("_CrowdPunchSceneryHazeColor",Color.white);
+                Color Sample(Vector2 p)
+                {
+                    material.SetVector("_SamplePosition",new Vector4(p.x,lighting.hazeGroundHeight,p.y,0));
+                    Graphics.Blit(null,target,material);
+                    RenderTexture.active=target;pixel.ReadPixels(new Rect(0,0,1,1),0,0);pixel.Apply();
+                    return pixel.GetPixel(0,0);
+                }
+                int checkedEdges=0;
+                foreach(var edge in lighting.hazeArenaEdges)
+                {
+                    var a=new Vector2(edge.x,edge.y);var b=new Vector2(edge.z,edge.w);
+                    var middle=(a+b)*.5f;var direction=b-a;
+                    var outward=new Vector2(direction.y,-direction.x).normalized;
+                    Assert.That(Sample(middle).r,Is.EqualTo(0).Within(.002f),"Arena border must remain clear.");
+                    // Support edges have no neighbouring room nearer than the sampled edge.
+                    if(lighting.hazeArenaEdges.Any(e=>Vector2.Dot(new Vector2(e.x,e.y)-middle,outward)>.002f))continue;
+                    foreach(float distance in new[]{1f,3f,6f})
+                    {
+                        var sample=Sample(middle+outward*distance);
+                        Assert.That(sample.r,Is.EqualTo(distance).Within(.002f),$"Stage {stage}, edge {edge}");
+                        if(distance==1)Assert.That(sample.g,Is.EqualTo(0).Within(.002f));
+                        if(distance==6)Assert.That(sample.g,Is.EqualTo(1).Within(.002f),"Exterior ground must be opaque by 6m.");
+                    }
+                    checkedEdges++;
+                }
+                Assert.That(checkedEdges,Is.GreaterThanOrEqualTo(3));
+                Assert.That(ShaderUtil.GetShaderMessages(shader).Where(m=>m.severity==UnityEditor.Rendering.ShaderCompilerMessageSeverity.Error),Is.Empty);
+            }
+            finally
+            {
+                Shader.SetGlobalVector("_CrowdPunchSceneryHazeColor",previousColor);
+                Shader.SetGlobalVector("_CrowdPunchSceneryHazeBounds",previousBounds);
+                Shader.SetGlobalVector("_CrowdPunchSceneryHazeSettings",previousSettings);
+                Shader.SetGlobalVectorArray("_CrowdPunchSceneryHazeEdges",previousEdges.Length>0 ? previousEdges : new Vector4[CelLevelLighting.MaxHazeEdges]);
+                Shader.SetGlobalInt("_CrowdPunchSceneryHazeEdgeCount",previousCount);
+                RenderTexture.active=previousTarget;RenderTexture.ReleaseTemporary(target);
+                Object.DestroyImmediate(pixel);Object.DestroyImmediate(material);Object.DestroyImmediate(shader);
+            }
+        }
+
+        [TestCase(31)] [TestCase(32)] [TestCase(33)] [TestCase(34)] [TestCase(35)]
+        [TestCase(36)] [TestCase(37)] [TestCase(38)] [TestCase(39)] [TestCase(40)]
         public void Vision005_SceneryHazeProtectsTheEntireArenaAndExcludesGameplayMaterials(int stage)
         {
             var main=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}.unity");

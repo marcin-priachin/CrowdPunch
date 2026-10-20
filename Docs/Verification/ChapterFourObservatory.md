@@ -44,7 +44,7 @@ scene lighting lifetime owns restoration.
 The October 19 follow-up replaces Chapter Four's distance fog with a steady
 arena-boundary fog bank. The user's screenshot correction supersedes the initial
 50% whole-object tint, which left complete silhouettes and the horizon seam visible.
-The combined XZ envelope of every playable floor stays clear, with an additional
+The union of the actual XZ playable floor outlines stays clear, with an additional
 1 m margin. Outside it, a dense low sage bank submerges the lower portions of nearby
 ruins: fully opaque up to 1.5 m above the lowest floor, feathering to 4.5 m, with
 depth adding opacity. Nearby architecture retains roughly its upper half, rather
@@ -94,6 +94,30 @@ excluded. All 713 recorded baked-data/SubScene hashes remain unchanged.
 ![Dense bank hides the environment boundary from the arena corner](Images/ChapterFourObservatory/FogCorner.png)
 
 ![Clear boss arena and fogged observatory surroundings](Images/ChapterFourObservatory/FogArena.png)
+
+## October 20 boundary-offset correction (VISION-005/006)
+
+Level 33 exposed the rectangular envelope's excess clear ground beside angled
+arena edges. Saved scenes 31-40 now include the world-space convex outline of each
+floor (4-8 edges per saved stage). The fragment shader measures the shortest
+distance outside their union instead of outside their combined bounding box.
+The existing 1 m clear margin and fully opaque ground at 6 m now follow angled
+borders consistently. Material roles, bank height, geometry and baked assets are
+unchanged. Global edge arrays/count are uploaded and restored by the existing
+scene-lighting owner; the atmosphere refresh preserves them too.
+
+All 10 new GPU readback cases passed: the production HLSL reports 0 m at borders
+and 1/3/6 m at outward samples, with ground clear at 1 m and opaque at 6 m.
+The other 40 existing geometry/material/horizon checks passed. Ten existing baked
+probe checks failed because the referenced probe assets resolve to null in this
+checkout; main-scene diffs contain only the new outline arrays and no bake data
+or SubScene files changed. Unity C# compilation and the production painted shader
+compile successfully. Direct dotnet compilation is blocked by missing generated
+Temp/Bin dependency assemblies (CS0006).
+Paired warmed Editor camera renders of level 33's northeast angled border confirm
+the excess triangular ground strip disappears while the arena and rock border
+remain clear (`Temp/HazeReview/Before.png` and `After.png`). These are static
+scene renders, not a combat playtest. The final targeted GPU rerun passed 10/10.
 
 ## Objectives and hazards
 
