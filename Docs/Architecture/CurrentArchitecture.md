@@ -15,6 +15,10 @@ refreshes preserve approved placement and explicit baked receiver mask/chart/sou
 bindings. `CampaignShadowBake` accepts the explicit chapter scene list and writes
 owned UV2 meshes and receivers. Large exterior ground and the wooded horizon use
 reduced chart density; moving objectives and cues remain excluded from fixed casts.
+`ChapterFourObservatoryRoofs` fits a single continuous gallery cap to the actual
+masonry vertices in building-local axes, including return walls and a small overhang.
+Its scoped refresh updates existing roofs and dome materials in 31-40; changes to
+fixed roof geometry require the existing chapter shadow bake.
 
 `CampaignCargoTrackVisuals.ApplyObservatory` extends the existing cargo recipe to
 32/39 with owned palettes, retaining its original 19/26 behavior. Gate/core fractures

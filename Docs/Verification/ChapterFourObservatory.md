@@ -4,7 +4,7 @@ Date: 2026-10-19. Scope: saved Campaign 31-40 scenes, VISION-004..006 and the
 Chapter Four compositions and inherited requirements in `PLANS.md`.
 
 The chapter uses muted limestone/sage damaged-brick court paving, ochre ruin masonry, old brass
-instruments, patinated observatory domes, trailing exterior roots and wooded
+instruments, masonry-coloured observatory domes, trailing exterior roots and wooded
 surroundings. Joined cloisters have recessed backs, return walls, foundations and
 capping courses. Closed garden escarpments and distant trees back all four sides;
 subdivided exterior earth continues 250 m beyond the combined court bounds,
@@ -141,6 +141,34 @@ Repeating the refresh left all 478 checked chapter materials/brick-texture files
 byte-identical. All ten saved-scene arena-haze/gameplay-material checks passed.
 
 ![Damaged brick paving beside the observatory ruins](Images/ChapterFourObservatory/BrickCourt.png)
+
+## Masonry roofs and closed gallery corners, October 20 (VISION-004..006)
+
+The user's gallery screenshot exposed gaps caused by individual 5.68 m roof strips
+on a 5.7 m bay spacing. Those strips also stopped inside the end return walls and
+used the contrasting Sage material. Galleries now have one continuous 32 cm cap
+fitted to the actual arch, back-wall and return-wall vertices in building-local
+axes, extending 12 cm past the full footprint on all sides. Roofs and dome skins
+use the same `Limestone Decorative` material as the masonry. Existing intentionally
+ruined dome geometry is retained.
+
+`ChapterFourObservatoryRoofs.Refresh` updates just these roof objects in scenes
+31-40. The ordinary structure recipe uses the same fitting operation, so future
+dressing retains closed corners. Building placement, masonry modules, roots,
+instruments, camera cutaways, fog and gameplay layout remain authoritative.
+Changed fixed geometry uses the existing chapter shadow-bake pipeline.
+
+All ten rebakes completed successfully. All 70 observatory Editor tests passed,
+including ten new saved-scene cases requiring a single cap per gallery, at least
+10 cm coverage past every masonry vertex, contact with the highest wall, matching
+roof/wall materials and static bake participation. Twelve warmed oblique corner
+renders across 33/38/40 were inspected with haze disabled to expose construction.
+The ten gameplay SubScenes remain byte-identical; a serialized audit also matched
+4,281 gameplay components and non-roof presentation poses against the prior revision.
+Unity C# compilation succeeded and the painted shader reports no diagnostics.
+These are static Editor checks, not a combat playthrough or standalone-player test.
+
+![Continuous masonry roof covers the gallery end corners; haze disabled for inspection](Images/ChapterFourObservatory/RoofCorner.png)
 
 ## Objectives and hazards
 

@@ -14,6 +14,12 @@ ruined buildings, with a muted limestone/sage tint, visible chipped joints and
 restrained painted contrast at gameplay distance. Keep stable world projection,
 consistent physical brick size and the existing floor geometry and bake bindings.
 
+Chapter 4 roof correction, 2026-10-20: roofs share the building masonry colour.
+Gallery caps span the complete wall footprint, including end-wall corners, with
+a small continuous overhang rather than separate strips that leave seams.
+Preserve building placement and the established painted treatment; rebake fixed
+shadows when roof geometry changes.
+
 Chapter 4 fog refinement, 2026-10-19: use a steady sage painted haze outside the
 full playable envelope. Dense low fog obscures the lower portions of nearby scenery,
 leaving roughly its upper half visible; distant scenery and the environment boundary

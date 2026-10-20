@@ -21,6 +21,41 @@ namespace CrowdPunch.Tests
 
         [TestCase(31)] [TestCase(32)] [TestCase(33)] [TestCase(34)] [TestCase(35)]
         [TestCase(36)] [TestCase(37)] [TestCase(38)] [TestCase(39)] [TestCase(40)]
+        public void Vision006_RoofsMatchMasonryAndCoverEveryGalleryCorner(int stage)
+        {
+            var main=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}.unity");
+            var root=main.GetRootGameObjects().Single(g=>g.name=="Chapter Four - Overgrown Observatory");
+            var galleries=root.GetComponentsInChildren<Transform>().Where(t=>t.name=="Root-framed survey cloister").ToArray();
+            Assert.That(galleries,Is.Not.Empty);
+            foreach(var gallery in galleries)
+            {
+                var caps=gallery.Cast<Transform>().Where(t=>t.name=="Gallery capping course").ToArray();
+                Assert.That(caps.Length,Is.EqualTo(1),"One continuous cap must close bay seams.");
+                var roof=caps[0];
+                var roofPoints=roof.GetComponent<MeshFilter>().sharedMesh.vertices.Select(v=>gallery.InverseTransformPoint(roof.TransformPoint(v))).ToArray();
+                var roofBounds=new Bounds(roofPoints[0],Vector3.zero);
+                foreach(var point in roofPoints.Skip(1))roofBounds.Encapsulate(point);
+                var masonry=gallery.Cast<Transform>().Where(t=>t.name.StartsWith("Wall_")||t.name=="Recessed intact gallery back"||t.name=="Cloister return wall").ToArray();
+                float top=float.NegativeInfinity;
+                foreach(var filter in masonry.SelectMany(t=>t.GetComponentsInChildren<MeshFilter>()))
+                foreach(var vertex in filter.sharedMesh.vertices)
+                {
+                    var point=gallery.InverseTransformPoint(filter.transform.TransformPoint(vertex));
+                    Assert.That(point.x,Is.InRange(roofBounds.min.x+.1f,roofBounds.max.x-.1f),"Roof must cover end-wall corners.");
+                    Assert.That(point.z,Is.InRange(roofBounds.min.z+.1f,roofBounds.max.z-.1f),"Roof must cover front/back corners.");
+                    top=Mathf.Max(top,point.y);
+                }
+                Assert.That(roofBounds.min.y,Is.EqualTo(top).Within(.002f),"Roof must meet the highest wall.");
+                var wall=masonry.First(t=>t.name=="Cloister return wall").GetComponent<MeshRenderer>();
+                Assert.That(roof.GetComponent<MeshRenderer>().sharedMaterial,Is.SameAs(wall.sharedMaterial));
+                Assert.That(GameObjectUtility.GetStaticEditorFlags(roof.gameObject).HasFlag(StaticEditorFlags.ContributeGI),Is.True);
+            }
+            foreach(var dome in root.GetComponentsInChildren<MeshRenderer>().Where(r=>r.name=="Patinated closed observatory dome"))
+                Assert.That(dome.sharedMaterial,Is.SameAs(dome.transform.parent.Find("Observatory drum").GetComponent<MeshRenderer>().sharedMaterial));
+        }
+
+        [TestCase(31)] [TestCase(32)] [TestCase(33)] [TestCase(34)] [TestCase(35)]
+        [TestCase(36)] [TestCase(37)] [TestCase(38)] [TestCase(39)] [TestCase(40)]
         public void Vision005_HazeKeepsTheSameOffsetFromActualFloorEdgesOnGpu(int stage)
         {
             var main=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}.unity");

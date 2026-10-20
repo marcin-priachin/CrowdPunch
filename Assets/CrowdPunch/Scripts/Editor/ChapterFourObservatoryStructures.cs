@@ -23,11 +23,11 @@ namespace CrowdPunch.Editor
                 float x=(i-(bays-1)*.5f)*5.7f;
                 Model(t,Ruins,(variant+i)%3==0?"Wall_ArchRound_Overgrown_Broken":"Wall_ArchRound",new Vector3(x,.35f,0),new Vector3(5.65f,6.5f,1.4f),Surface("Limestone",true));
                 Shape(t,"Recessed intact gallery back",new Vector3(x,.35f,1.8f),new Vector3(5.68f,6.7f,.55f),Surface("Slate",true));
-                Shape(t,"Gallery capping course",new Vector3(x,7.05f,.8f),new Vector3(5.68f,.32f,3.1f),Surface("Sage",true));
                 if((i+variant)%2==0)Root(t,new Vector3(x-2.4f,.35f,-.9f),5.8f);
             }
             // Returning wings and rear faces make the cloister a complete building.
             foreach(int side in new[]{-1,1})Shape(t,"Cloister return wall",new Vector3(side*(bays*2.85f+.15f),.35f,.7f),new Vector3(.55f,6.7f,3.4f),Surface("Limestone",true));
+            ChapterFourObservatoryRoofs.FitGallery(t);
         }
 
         internal static void Root(Transform parent,Vector3 p,float height)
@@ -88,7 +88,7 @@ namespace CrowdPunch.Editor
                 if(b==0)Quad(v,indices,P(a,b,4.45f),P(a,b,4.7f),P(a+1,b,4.7f),P(a+1,b,4.45f));
                 if(a==0||a==sectors-1)foreach(int edge in new[]{a,a+1})Quad(v,indices,P(edge,b,4.45f),P(edge,b+1,4.45f),P(edge,b+1,4.7f),P(edge,b,4.7f));
             }
-            var dome=MeshObject(t,"Patinated closed observatory dome",SaveMesh("Observatory dome "+broken,v,indices),Surface("Sage",true));dome.transform.localPosition=Vector3.up*(height+.5f);
+            var dome=MeshObject(t,"Patinated closed observatory dome",SaveMesh("Observatory dome "+broken,v,indices),Surface("Limestone",true));dome.transform.localPosition=Vector3.up*(height+.5f);
             if(!broken)Instrument(t,new Vector3(0,height+5.1f,0),1.4f,false);
             Root(t,new Vector3(-3,0,-3),height*.8f);
         }
