@@ -593,6 +593,13 @@ preserved legacy scene arrays, handles completion/failure/retry, places and heal
 and exposes menu state. `CampaignCatalog` owns authored identity/content availability;
 `CampaignProgress` owns versioned local JSON completion, sequential unlocks, backup recovery
 and atomic replacement. The normal save is `Application.persistentDataPath/campaign-v1.json`.
+`CampaignSavePath` selects that directory for builds and for Editors without a local override
+(LOOP-007). Agent Editors may use ignored `UserSettings/CampaignSaveDirectory.txt`, containing
+`LocalSaves` on one line, to place normal and Editor-preview campaign files in their own
+project-root `LocalSaves/` folder. Absolute directories are also supported. Both the local
+configuration and `LocalSaves/` are ignored by Git. Empty or unreadable configurations fail
+rather than falling back to a personal save. Player builds never read the override. Worktrees
+keep the shared product name and ProjectSettings; window labels remain local Editor tooling.
 Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded;
 Chapters 1-7 completion offer Continue into the next implemented chapter.
 Chapter 8 ends on CampaignComplete; index 80 is the completed-save sentinel and cannot load a scene.

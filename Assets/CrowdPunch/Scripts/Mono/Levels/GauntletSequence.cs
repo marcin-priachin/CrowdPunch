@@ -73,8 +73,7 @@ namespace CrowdPunch.Mono.Levels
             }
 #endif
             if (HasCampaign)
-                Progress = new CampaignProgress(Path.Combine(Application.persistentDataPath,
-                    EditorPreview ? "campaign-editor-preview.json" : "campaign-v1.json"),
+                Progress = new CampaignProgress(CampaignSavePath.Resolve(EditorPreview),
                     gameSettings != null && gameSettings.StartWithAllLevelsUnlocked);
         }
 
