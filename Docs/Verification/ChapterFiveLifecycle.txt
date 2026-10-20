@@ -1,0 +1,92 @@
+Controlled Editor lifecycle probe: isolated temporary save, injected enemy damage and objective/boss completion. Not a human combat or duration playtest.
+PASS main menu; isolated test save installed; normal campaign save untouched.
+ENTER 40: Falling Giants; full health.
+WAVE 40.1: spawned=8; owned roots=10
+CLEAR INJECTED 40.1; editor frame median=16.7ms; includes tool/editor overhead.
+PASS previous chapter milestone unlocks Chapter 5; Continue loads its first level.
+ENTER 41: Back to Bodies; full health.
+PASS player death opens failure; retry requested without progress loss.
+WAVE 41.1: spawned=8; owned roots=0
+CLEAR INJECTED 41.1; editor frame median=16.7ms; includes tool/editor overhead.
+WAVE 41.2: spawned=16; owned roots=8
+CLEAR INJECTED 41.2; editor frame median=16.7ms; includes tool/editor overhead.
+ENTER 42: Outer Route; full health.
+WAVE 42.1: spawned=8; owned roots=4
+CLEAR INJECTED 42.1; editor frame median=16.7ms; includes tool/editor overhead.
+WAVE 42.1: spawned=10; owned roots=16
+CLEAR INJECTED 42.1; editor frame median=16.7ms; includes tool/editor overhead.
+WAVE 42.1: spawned=13; owned roots=28
+CLEAR INJECTED 42.1; editor frame median=16.7ms; includes tool/editor overhead.
+WAVE 42.1: spawned=16; owned roots=42
+CLEAR INJECTED 42.1; editor frame median=16.6ms; includes tool/editor overhead.
+ENTER 43: Turn the Shot; full health.
+WAVE 43.1: spawned=19; owned roots=10
+CLEAR INJECTED 43.1; editor frame median=16.5ms; includes tool/editor overhead.
+WAVE 43.2: spawned=21; owned roots=36
+CLEAR INJECTED 43.2; editor frame median=16.7ms; includes tool/editor overhead.
+ENTER 44: Stop and Go; full health.
+WAVE 44.1: spawned=15; owned roots=12
+CLEAR INJECTED 44.1; editor frame median=16.7ms; includes tool/editor overhead.
+ENTER 45: Armor in Motion; full health.
+WAVE 45.1: spawned=16; owned roots=0
+CLEAR INJECTED 45.1; editor frame median=16.7ms; includes tool/editor overhead.
+WAVE 45.2: spawned=20; owned roots=31
+CLEAR INJECTED 45.2; editor frame median=16.7ms; includes tool/editor overhead.
+WAVE 45.3: spawned=21; owned roots=53
+CLEAR INJECTED 45.3; editor frame median=16.7ms; includes tool/editor overhead.
+ENTER 46: Measured Push; full health.
+WAVE 46.1: spawned=12; owned roots=7
+INJECT track destination; actual physics slide/arrival must complete the encounter.
+CLEAR INJECTED 46.1; editor frame median=16.5ms; includes tool/editor overhead.
+ENTER 47: Divided Approach; full health.
+WAVE 47.1: finite defense, batches of four; enemy defeats injected during advance.
+DEFENSE BATCH 1: cumulative=4
+PASS first active-enemy breach fails defense; retry resets objective and wave schedule.
+WAVE 47.1: finite defense, batches of four; enemy defeats injected during advance.
+DEFENSE BATCH 1: cumulative=4
+DEFENSE BATCH 1: cumulative=8
+DEFENSE BATCH 1: cumulative=12
+DEFENSE BATCH 1: cumulative=16
+DEFENSE BATCH 1: cumulative=20
+DEFENSE BATCH 1: cumulative=22
+WAVE 47.2: finite defense, batches of four; enemy defeats injected during advance.
+DEFENSE BATCH 2: cumulative=4
+DEFENSE BATCH 2: cumulative=8
+DEFENSE BATCH 2: cumulative=12
+DEFENSE BATCH 2: cumulative=16
+DEFENSE BATCH 2: cumulative=20
+DEFENSE BATCH 2: cumulative=24
+DEFENSE BATCH 2: cumulative=26
+WAVE 47.3: finite defense, batches of four; enemy defeats injected during advance.
+DEFENSE BATCH 3: cumulative=4
+DEFENSE BATCH 3: cumulative=8
+DEFENSE BATCH 3: cumulative=12
+DEFENSE BATCH 3: cumulative=16
+DEFENSE BATCH 3: cumulative=20
+DEFENSE BATCH 3: cumulative=24
+DEFENSE BATCH 3: cumulative=26
+ENTER 48: Firebreak; full health.
+WAVE 48.1: spawned=70; owned roots=0
+CLEAR INJECTED 48.1; editor frame median=16.7ms; includes tool/editor overhead.
+WAVE 48.2: spawned=86; owned roots=70
+CLEAR INJECTED 48.2; editor frame median=16.7ms; includes tool/editor overhead.
+WAVE 48.3: spawned=94; owned roots=156
+CLEAR INJECTED 48.3; editor frame median=17.1ms; includes tool/editor overhead.
+WAVE 48.4: spawned=110; owned roots=250
+CLEAR INJECTED 48.4; editor frame median=16.6ms; includes tool/editor overhead.
+WAVE 48.5: spawned=128; owned roots=360
+CLEAR INJECTED 48.5; editor frame median=17.5ms; includes tool/editor overhead.
+ENTER 49: Make Room; full health.
+WAVE 49.1: spawned=15; owned roots=12
+CLEAR INJECTED 49.1; editor frame median=16.7ms; includes tool/editor overhead.
+WAVE 49.2: spawned=20; owned roots=31
+CLEAR INJECTED 49.2; editor frame median=16.7ms; includes tool/editor overhead.
+ENTER 50: Gatekeeper Returns; full health.
+WAVE 50.1: spawned=13; owned roots=12
+CLEAR INJECTED 50.1; editor frame median=16.6ms; includes tool/editor overhead.
+FAIL System.InvalidOperationException: Unexpected observed wave count: 26
+  at CrowdPunch.Editor.CampaignLifecycleCheck.Require (System.Boolean value, System.String message) [0x00009] in C:\Users\pc\.codex\worktrees\unity-agent-a\CrowdPunch\Assets\CrowdPunch\Scripts\Editor\CampaignLifecycleCheck.cs:55 
+  at CrowdPunch.Editor.CampaignLifecycleCheck.Inspect () [0x00301] in C:\Users\pc\.codex\worktrees\unity-agent-a\CrowdPunch\Assets\CrowdPunch\Scripts\Editor\CampaignLifecycleCheck.cs:103 
+  at CrowdPunch.Editor.CampaignLifecycleCheck.Tick () [0x00025] in C:\Users\pc\.codex\worktrees\unity-agent-a\CrowdPunch\Assets\CrowdPunch\Scripts\Editor\CampaignLifecycleCheck.cs:59 
+MANUAL FOLLOW-UP: ChapterComplete at level 50; next unfinished and reloaded isolated-save progress both 50; level 51 selectable. Replaying 41 returned ReplayComplete without advancing or reducing progress. Retry requested.
+MANUAL FOLLOW-UP: replay retry restored full health, retained replay mode and cleared failure.

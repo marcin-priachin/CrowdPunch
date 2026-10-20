@@ -32,13 +32,21 @@ half3 ApplyArenaSceneryHaze(half3 color, float3 positionWS, float role)
     if(role<.5 || _CrowdPunchSceneryHazeSettings.x<.5) return color;
     float distanceOutside=ArenaSceneryDistance(positionWS.xz);
     // Dense low fog buries nearby scenery instead of uniformly tinting its outline.
-    // Everything beyond the bank dissolves completely, including horizon corners.
+    // Standard scenery beyond the bank dissolves completely, including horizon corners.
     float exterior=smoothstep(1,6,distanceOutside);
     float height=positionWS.y-_CrowdPunchSceneryHazeSettings.y;
     half lowBank=1-smoothstep(1.5,_CrowdPunchSceneryHazeSettings.z,height);
     half depthHaze=smoothstep(3,_CrowdPunchSceneryHazeSettings.w,distanceOutside);
     // Ground and scenery share the same bank, hiding baked shadows beneath it too.
     half haze=1-(1-depthHaze)*(1-lowBank*exterior);
+    // Opt-in necropolis scenery keeps a dark land/architecture silhouette behind
+    // the low bank. Earlier scenery roles retain their complete fog dissolve.
+    if(role>2.5)
+    {
+        half silhouette=smoothstep(12,32,distanceOutside);
+        color=lerp(color,_CrowdPunchSceneryHazeColor.rgb*.10,silhouette);
+        haze*=lerp(1,.16,silhouette);
+    }
     return lerp(color,_CrowdPunchSceneryHazeColor.rgb,haze);
 }
 #endif

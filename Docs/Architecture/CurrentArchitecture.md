@@ -6,6 +6,38 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Chapter Five Necropolis Presentation (VISION-004..006)
+
+`ChapterFiveNecropolisBuilder` owns the saved Campaign 41-50 presentation through
+chapter-specific surface, scenery, objective and atmosphere recipes. Memorial
+gardens, connected cemetery walls, mausoleums, bell towers and a closed wooded
+ridge sit outside the complete authored floor envelope. The existing production
+painted shader supplies continuous pigment, decorative cutaways, DOTS and baking
+passes. The chapter uses purple painted light, darker decorative masonry and a
+scoped purple dusk profile. It reuses Chapter Four's floor-outline scenery fog:
+exterior earth and decoration fade into purple banks while combat floors and
+dynamic objective cues remain outside the fog material roles.
+`CelLevelLighting.sceneryHazeDepth` defaults to the existing 24 m fade; Chapter
+Five selects 72 m and opts its exterior ground and decoration into silhouette
+material role 3. Beyond 12-32 m outside the actual floor outline, detail collapses
+into a flat dark purple silhouette with limited fog blending, including the ground
+and distant ridge. Existing roles 1/2 keep their original complete fog dissolve.
+The 4.5 m low fog bank and loaded-scene restoration of all fog globals are unchanged.
+`CampaignShadowBake` writes owned UV2 meshes and explicit ECS receiver bindings;
+large exterior earth and the ridge use reduced chart density. Surface refreshes
+retain material GUIDs and receiver mask/chart/source bindings without rebuilding
+the environment.
+
+Gate/core pieces use existing barricade state and branching fracture meshes.
+`CampaignCargoTrackVisuals.ApplyNecropolis` skins level 46's complete cart and
+rails using owned materials; earlier chapter recipes retain their behavior.
+Level 47's protected endpoint uses flush stone paving and a memorial laurel inlay
+whose marked outside edge matches the authored breach rectangle.
+`GroundHazardStyle.Necropolis` adds staggered scorched paving to the existing
+footprint shader and opts into the existing bounded phase-driven particle system.
+Gameplay, phase clocks, footprint ownership, bridge data and update order are
+unchanged. See `Docs/Verification/ChapterFiveNecropolis.md` for verification scope.
+
 ## Chapter Four Observatory Presentation (VISION-004..006)
 
 `ChapterFourObservatoryBuilder` edits the saved 31-40 scenes through chapter-owned

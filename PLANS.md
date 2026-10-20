@@ -1,6 +1,16 @@
 # Campaign Visual Update Plan
 
-Created: 2026-10-18. Status: Chapters 2, 3 and 4 are implemented; Chapters 5-9 remain planned.
+Created: 2026-10-18. Status: Chapters 2, 3, 4 and 5 are implemented; Chapters 6-9 remain planned.
+
+Chapter 5's Campaign 41-50 scenes use the Twilight Necropolis compositions below:
+weathered slate paving, sage cemetery gardens, ivory memorials, mausoleums and
+bell towers, under dark purple light with darker decorative masonry and purple
+scenery fog following the authored arena edges, as requested on 2026-10-20.
+Distant ground, ridges and objects form dark silhouettes above and behind the
+low fog banks. Chapter-owned painted materials, objective skins, scorched hazard
+paving, decorative cutaways and saved baked-only lighting. Gameplay authoring,
+physical transforms, encounters and character models are preserved. Verification
+scope and acceptance limits are recorded in `Docs/Verification/ChapterFiveNecropolis.md`.
 
 Chapter 4's Campaign 31-40 scenes now use the Overgrown Observatory compositions
 below, with chapter-owned painted surfaces, ruin/instrument silhouettes, objective
@@ -343,7 +353,7 @@ change its architecture family, ground language, skyline and prop vocabulary.
 | 2 / 11-20 | Emberworks Foundry | Quiet blue-grey paving, worn metal inserts and earth margins; copper, brass and muted teal | Furnaces, pipes, tanks and chimneys; warm late-afternoon key with cool fill | `kenney_factory-kit_3.0`, Fantasy Props, village service buildings, imported metal/brick/wood textures |
 | 3 / 21-30 | Highland Quarry and Aqueduct | Pale limestone courts, gravel and cut stone; cream, slate and dusty sage | Quarry faces, broken aqueduct spans and supply terraces; clear highland daylight | Stylized Nature, Kenney nature/castle, modular ruins, cliff/layered-rock/stone textures |
 | 4 / 31-40 | Overgrown Observatory | Damaged brick paving and controlled moss/earth margins; muted limestone/sage, jade, ochre stone and old brass | Broken observatory arches, instruments and root-framed ruins; soft sky colour with a crisp directional key | Ultimate Modular Ruins, KayKit dungeon, Fantasy Props, Stylized Nature and stone/brick/grass/bark textures |
-| 5 / 41-50 | Twilight Necropolis | Mid-value weathered stone with subdued green verges; slate, sage and warm ivory | Mausoleums, memorial silhouettes and quiet lantern housings; readable dusk rather than black night | `kenney_graveyard-kit_5.0`, KayKit dungeon, Kenney castle, nature and stone textures |
+| 5 / 41-50 | Twilight Necropolis | Purple light, dark masonry, slate paving, sage verges and pale objective faces | Mausoleums, memorial silhouettes and quiet lantern housings; purple arena-boundary scenery fog like Chapter 4, with clear combat floors | `kenney_graveyard-kit_5.0`, KayKit dungeon, Kenney castle, nature and stone textures |
 | 6 / 51-60 | Sunscarred Canyon Outpost | Cool grey combat paving within warm sand/layered-rock surroundings; blue-grey, sand and faded blue fabric | Mesa walls, cisterns, ruined outposts and caravans; bright dry daylight | Stylized Nature, modular ruins, village/Fantasy Props, sand/dry-mud/layered-rock textures |
 | 7 / 61-70 | Frostbound Vault | Muted slate-blue combat stone; ice and pale frost mainly at the margins; cold stone, ivory and restrained brass | Frozen buttresses, vault entrances and crystal clusters; cool daylight with retained shaded faces | KayKit dungeon, Kenney castle, modular ruins, rock/ice/crystal textures; simple owned frost-cap meshes if needed |
 | 8 / 71-80 | Ashen Crown Citadel | Mid-grey ash stone and monumental paving; charcoal structures, desaturated red fabric and brass | Fortress walls, broken ceremonial arches and distant volcanic silhouettes; warm rim against cool fill | Kenney castle, KayKit dungeon, factory accents, modular ruins and lava-rock/stone/metal textures |

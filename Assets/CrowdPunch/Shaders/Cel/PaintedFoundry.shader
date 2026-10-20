@@ -26,7 +26,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         _StrataStrength("Quarry layer variation", Range(0,.3)) = 0
         _MineralStrength("Fine mineral variation", Range(0,.2)) = 0
         [ToggleUI] _CameraCutaway("Camera-side decoration cutaway", Float) = 0
-        [Enum(None,0,Scenery,1,ExteriorGround,2)] _SceneryHaze("Arena exterior haze", Float) = 0
+        [Enum(None,0,Scenery,1,ExteriorGround,2,SilhouetteScenery,3)] _SceneryHaze("Arena exterior haze", Float) = 0
         [ToggleUI] _ObjectSpacePaint("Paint follows moving parts", Float) = 0
         [ToggleUI] _UseEntityColor("Animated entity tint", Float) = 0
         [ToggleUI] _ReceiveShadows("Receive cast shadows", Float) = 1

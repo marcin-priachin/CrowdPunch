@@ -24,6 +24,8 @@ namespace CrowdPunch.Mono.Levels
         [Tooltip("Counterclockwise XZ floor edges, each stored as start XY and end ZW.")]
         public Vector4[] hazeArenaEdges = System.Array.Empty<Vector4>();
         public float hazeGroundHeight;
+        [Min(6), Tooltip("Distance outside the floor outline at which scenery fully merges into the sky.")]
+        public float sceneryHazeDepth = 24;
 
         private static readonly int SceneryHazeBounds = Shader.PropertyToID("_CrowdPunchSceneryHazeBounds");
         private static readonly int SceneryHazeColor = Shader.PropertyToID("_CrowdPunchSceneryHazeColor");
@@ -90,7 +92,7 @@ namespace CrowdPunch.Mono.Levels
             Shader.SetGlobalVector(SceneryHazeBounds, hazeArenaBounds);
             Shader.SetGlobalColor(SceneryHazeColor, QualitySettings.activeColorSpace == ColorSpace.Linear ? haze.linear : haze);
             Shader.SetGlobalVector(SceneryHazeSettings, overrideAtmosphere && sceneryOnlyHaze
-                ? new Vector4(1, hazeGroundHeight, 4.5f, 24) : Vector4.zero);
+                ? new Vector4(1, hazeGroundHeight, 4.5f, Mathf.Max(6, sceneryHazeDepth)) : Vector4.zero);
             DynamicGI.UpdateEnvironment();
         }
 

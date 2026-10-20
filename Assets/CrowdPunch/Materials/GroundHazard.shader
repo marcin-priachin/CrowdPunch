@@ -6,6 +6,7 @@ Shader "CrowdPunch/GroundHazard"
         _Circle ("Circle", Float) = 0
         _Quarry ("Quarry surface", Float) = 0
         _Observatory ("Observatory heated tiles", Float) = 0
+        _Necropolis ("Necropolis scorched paving", Float) = 0
         _Phase ("Hazard phase", Float) = 0
         _FootprintSize ("Footprint half size", Vector) = (1,1,0,0)
     }
@@ -27,7 +28,7 @@ Shader "CrowdPunch/GroundHazard"
             CBUFFER_START(UnityPerMaterial)
             float4 _Color;
             float _Circle;
-            float _Quarry, _Phase, _Observatory;
+            float _Quarry, _Phase, _Observatory, _Necropolis;
             float4 _FootprintSize;
             CBUFFER_END
             Varyings Vert(Attributes v) { Varyings o; o.positionCS=TransformObjectToHClip(v.positionOS.xyz); o.uv=v.uv; o.fog=ComputeFogFactor(o.positionCS.z); return o; }
@@ -56,6 +57,15 @@ Shader "CrowdPunch/GroundHazard"
                     seam=min(.5-tile.x,.5-tile.y);
                     nearestCell=floor(p*.8);
                 }
+                if(_Necropolis>.5)
+                {
+                    // Staggered worn paving stays fixed to the actual metre-sized footprint.
+                    float2 paving=p*float2(.65,1.25);
+                    paving.x+=fmod(floor(paving.y),2)*.5;
+                    float2 tile=abs(frac(paving)-.5);
+                    seam=min(.5-tile.x,.5-tile.y);
+                    nearestCell=floor(paving);
+                }
                 float aa=max(fwidth(seam),.006);
                 float thickness=_Phase>1.5?.045:.024;
                 float fissure=1-smoothstep(thickness,thickness+aa,seam);
@@ -66,6 +76,7 @@ Shader "CrowdPunch/GroundHazard"
                 half3 baseColor=half3(.15,.19,.18)*shade;
                 half3 crackColor=half3(.065,.085,.08);
                 if(_Observatory>.5)baseColor=half3(.21,.29,.25)*shade;
+                if(_Necropolis>.5)baseColor=half3(.19,.24,.25)*shade;
                 half3 rimColor=half3(.32,.36,.32);
                 if(_Phase>.5 && _Phase<1.5)
                 {
@@ -90,7 +101,7 @@ Shader "CrowdPunch/GroundHazard"
                 float2 q=abs(v.uv*2-1);
                 float edge=lerp(max(q.x,q.y),length(q),_Circle);
                 clip(1-edge);
-                if(_Quarry>.5 || _Observatory>.5)return QuarrySurface(v,edge);
+                if(_Quarry>.5 || _Observatory>.5 || _Necropolis>.5)return QuarrySurface(v,edge);
                 float border=smoothstep(.88,.94,edge);
                 float stripe=step(.65,frac((v.uv.x+v.uv.y)*12));
                 return half4(_Color.rgb*(.8+.2*stripe+.25*border),_Color.a);

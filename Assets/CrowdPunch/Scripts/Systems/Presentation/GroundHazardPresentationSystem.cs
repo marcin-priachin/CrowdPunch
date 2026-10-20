@@ -40,6 +40,7 @@ namespace CrowdPunch.Systems.Presentation
                 bool quarry = style == GroundHazardStyle.Quarry;
                 properties.SetFloat("_Quarry", quarry ? 1 : 0);
                 properties.SetFloat("_Observatory", style == GroundHazardStyle.Observatory ? 1 : 0);
+                properties.SetFloat("_Necropolis", style == GroundHazardStyle.Necropolis ? 1 : 0);
                 properties.SetFloat("_Phase", (float)s.Phase);
                 properties.SetVector("_FootprintSize", new Vector4(size.x,size.y,0,0));
                 Graphics.DrawMesh(footprint, Matrix4x4.TRS((Vector3)h.Position, Quaternion.Euler(0,math.degrees(h.Angle),0),
