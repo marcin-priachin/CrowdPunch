@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-18
+Last updated: 2026-10-21
 
 ## How To Read This Document
 
@@ -231,13 +231,13 @@ Movement, aiming, weapons, progression, and other non-crowd mechanics must not a
 
 Status: Must
 
-Represent punch cooldown on the player model's `hand_r` bone rather than with a world-space punch-range shape. The hand scales from its authored cooldown multiplier to its ready multiplier as cooldown recovers. A hand-bound particle aura grows in intensity through cooldown and changes to its ready color when recovery completes. A second hand-bound particle effect flashes once at completion. These cues are presentation only and follow the hit-confirmed cooldown rule in PLAYER-009.
+Represent punch cooldown on the player model's `hand_r` bone rather than with a world-space punch-range shape. The hand scales from its authored cooldown multiplier to its ready multiplier as cooldown recovers. A hand-bound particle aura grows in intensity through cooldown and changes to its ready color when recovery completes. A second hand-bound particle effect flashes once at completion. The player holds the configured Ready Frame until an accepted punch input immediately skips to Contact Frame, before hit/miss acknowledgement. The cooldown animation then plays forward from the configured punch contact frame to the end of the clip, wraps to its beginning, and plays forward to the ready frame. Both segments fit within the selected cooldown duration. These cues are presentation only and follow the outcome-specific cooldown rule in PLAYER-009.
 
 ### PLAYER-009 — Punch Cooldown
 
 Status: Must
 
-Punches use a configurable cooldown that begins when the punch hits at least one eligible enemy or an intact barricade. A punch connecting with a protected Armored enemy or intact barricade activates cooldown despite applying no damage, push, stagger, or launch to it. A missed punch does not activate cooldown. Hitting multiple targets with one punch starts cooldown only once. Punch input rejected by cooldown does not alter dash movement.
+Punches use a configurable hit cooldown when the punch hits at least one eligible enemy or an intact barricade, and a separately configurable miss cooldown when it connects with neither. Each cooldown begins when the matching punch result is acknowledged. A punch connecting with a protected Armored enemy or intact barricade activates the hit cooldown despite applying no damage, push, stagger, or launch to it. A zero duration disables that outcome's cooldown. Hitting multiple targets with one punch starts cooldown only once. Punch input rejected by cooldown does not alter dash movement.
 
 ### PLAYER-010 — Supported Input Methods
 

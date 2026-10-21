@@ -17,6 +17,8 @@ namespace CrowdPunch.Configuration
         private float eliteKnockbackMultiplier = 1f;
         [SerializeField, Min(0f)] private float damage = 10f;
         [SerializeField, Min(0f)] private float cooldown = 0.5f;
+        [SerializeField, Min(0f), Tooltip("Cooldown after a punch misses every eligible enemy and intact barricade. Set to 0 for immediate retry.")]
+        private float missCooldown = 0.25f;
         [SerializeField, Range(0f, 1f)] private float directionPositionWeight = 1f;
         [SerializeField, Min(0f), Tooltip("Maximum distance from a punched enemy to another enemy that aim assist can target. Set to 0 to disable aim assist.")]
         private float aimAssistRange = 8f;
@@ -55,6 +57,7 @@ namespace CrowdPunch.Configuration
         public float EliteKnockbackMultiplier => eliteKnockbackMultiplier;
         public float Damage => damage;
         public float Cooldown => cooldown;
+        public float MissCooldown => missCooldown;
         public float DirectionPositionWeight => directionPositionWeight;
         public float AimAssistRange => aimAssistRange;
         public float AimAssistMaximumAngleDegrees => aimAssistMaximumAngleDegrees;

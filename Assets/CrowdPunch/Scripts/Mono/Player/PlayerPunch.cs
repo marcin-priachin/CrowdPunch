@@ -19,15 +19,18 @@ namespace CrowdPunch.Mono.Player
         private PlayerPunchCooldownFeedback cooldownFeedback;
         private InputAction attackAction;
         private float nextPunchTime;
+        private float activeCooldownDuration;
         private bool awaitingPunchResult;
         private uint pendingPunchSequence;
 
         public float PunchRadius => settings == null ? 0f : settings.Radius;
         public event Action PunchStarted;
+        public event Action CooldownStarted;
         public event Action PunchStateReset;
-        public float CooldownProgress => settings == null || settings.Cooldown <= 0f
+        public bool IsCoolingDown => Time.time < nextPunchTime;
+        public float CooldownProgress => activeCooldownDuration <= 0f
             ? 1f
-            : 1f - Mathf.Clamp01((nextPunchTime - Time.time) / settings.Cooldown);
+            : 1f - Mathf.Clamp01((nextPunchTime - Time.time) / activeCooldownDuration);
 
         private void Reset()
         {
@@ -114,7 +117,7 @@ namespace CrowdPunch.Mono.Player
 
         private void UpdateCooldownFeedback()
         {
-            cooldownFeedback?.SetCooldownState(CooldownProgress, Time.time < nextPunchTime);
+            cooldownFeedback?.SetCooldownState(CooldownProgress, IsCoolingDown);
         }
 
         public void RequestPunch()
@@ -131,6 +134,7 @@ namespace CrowdPunch.Mono.Player
         {
             awaitingPunchResult = false;
             nextPunchTime = 0f;
+            activeCooldownDuration = 0f;
             cooldownFeedback?.ShowReady();
             ecsBridge?.ClearPunch();
             PunchStateReset?.Invoke();
@@ -168,10 +172,12 @@ namespace CrowdPunch.Mono.Player
                 return;
 
             awaitingPunchResult = false;
-            // PLAYER-009: only confirmed enemy hits spend the punch cooldown.
-            if (hitEnemy)
-                nextPunchTime = Time.time + settings.Cooldown;
+            // PLAYER-009: the acknowledged outcome selects one independently tuned cooldown.
+            activeCooldownDuration = Mathf.Max(0f, hitEnemy ? settings.Cooldown : settings.MissCooldown);
+            nextPunchTime = Time.time + activeCooldownDuration;
             UpdateCooldownFeedback();
+            if (activeCooldownDuration > 0f)
+                CooldownStarted?.Invoke();
         }
     }
 }
