@@ -1,6 +1,33 @@
 # Campaign Visual Update Plan
 
-Created: 2026-10-18. Status: Chapters 2, 3, 4 and 5 are implemented; Chapters 6-9 remain planned.
+Created: 2026-10-18. Status: Chapters 2, 3, 4, 5 and 6 are implemented; Chapters 7-9 remain planned.
+
+Chapter 6's Campaign 51-60 scenes use the Sunscarred Canyon Outpost compositions
+below: cool grey combat paving, warm sand and layered sandstone, cisterns,
+caravan stores, faded blue awnings, stationary windwheels and signal towers.
+Each stage has its own landmark; the five-sector ascent, protected supply lane,
+large basin and Chicken rematch retain their authored gameplay footprints.
+Chapter-owned painted materials, complete objective skins, phase-driven scorched
+sandstone hazards, decorative cutaways and baked-only lighting carry forward
+the contracts below. Verification and acceptance limits are recorded in
+`Docs/Verification/ChapterSixCanyon.md`.
+
+Chapter 6 floor correction, 2026-10-21: level 52's indented arena uses a
+non-overlapping ear-clipped visible floor with upward cap normals. Preserve
+the authored outline, height and original collider; do not restore the old
+convex-fan render mesh when dressing or rebaking the chapter.
+
+Chapter 6 supply clearance, 2026-10-21: decorative crates and cacti retain
+at least 0.2 m of clearance from buildings, yard walls and other supply props.
+Move crate straps with their chests, retain ground height, and keep the complete
+prop bounds outside the combat envelope. Apply the same rule to saved scenes
+and future dressing, then rebake the affected fixed scenery shadows.
+
+Chapter 6 desert dust, 2026-10-21: low windblown sand puffs animate the outer
+yards in all ten levels. Use flattened, rounded cartoon silhouettes, two-tone
+warm sand colours and gentle fades. Keep complete puffs outside the combat
+floor, cap the chapter ambience at 128 particles per scene, and retain existing
+geometry, physics, hazard cues and baked lighting. This is ambient decoration.
 
 Chapter 5's Campaign 41-50 scenes use the Twilight Necropolis compositions below:
 weathered slate paving, sage cemetery gardens, ivory memorials, mausoleums and

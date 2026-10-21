@@ -1,10 +1,48 @@
 # Crowd Punch â€” Current Architecture
 
-Status: Repository snapshot  
+Status: Repository snapshot
 Last inspected: 2026-10-15
 Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
+
+## Chapter Six Canyon Presentation (VISION-004..006)
+
+`ChapterSixCanyonBuilder` owns Campaign 51-60's Sunscarred Canyon Outpost
+presentation through chapter-owned surfaces, scenery, objectives and atmosphere.
+Cool grey combat stone sits within warm sandstone service yards, cisterns,
+faded blue awnings, stationary windwheels and a continuous layered mesa horizon.
+Each stage has its own landmark; stage 56 retains its five authored sectors.
+Decorative geometry is noncolliding and uses the production painted shader's
+scoped camera cutaway, continuous pigment and baked receiver contracts.
+The dry daylight profile uses distance haze sized from the entire arena bounds.
+`ChapterSixCanyonDust` authors four native ParticleSystems in a separate
+scene root around the combat bounds. A chapter-owned procedural unlit shader
+draws flattened, two-tone sand puffs. World-space tangential/outward drift and
+short lifetimes keep the complete puffs off the combat floor. The effects use
+scaled time, have a combined 128-particle cap, and cast no shadows or collision.
+No custom runtime component or ECS ownership changes are introduced.
+`ChapterSixCanyonPropClearance` separates decorative supply chests and cactus
+assemblies from architecture, yard walls and each other, retaining 0.2 m of
+clearance and excluding the expanded combat bounds. Straps translate with their
+chest. The deterministic Editor-only pass runs during dressing and can refresh
+existing scenery; it adds no runtime components or colliders.
+Level 52 has a chapter-owned ear-clipped visible floor mesh with separated cap/side
+normals. Its indented outline previously overlapped under convex-fan triangulation.
+The renderer uses the corrected mesh while its MeshCollider retains the original
+campaign mesh; footprint, height, navigation and physics authoring are unchanged.
+`CampaignShadowBake` writes chapter-owned UV2 meshes, masks and probes, with
+reduced chart density for the exterior ground and mesa rim. Surface refreshes
+preserve receiver source, mask and chart bindings without rebuilding scenery.
+
+`ChapterSixCisternVisuals` uses the existing shell fragment/state presentation
+for level 51. Barricades and reversing cover reuse branching fracture geometry;
+`CampaignCargoTrackVisuals.ApplyCanyon` owns level 54's complete ore carrier,
+rails and socket. Level 57's flush turquoise supply inlay derives its edge
+from the actual protected zone. `GroundHazardStyle.Canyon` opts into scorched
+sandstone and the existing bounded phase-driven cartoon particle system.
+Footprints, clocks, damage, ECS ownership, bridge data and update order are unchanged.
+See `Docs/Verification/ChapterSixCanyon.md` for verification scope.
 
 ## Chapter Five Necropolis Presentation (VISION-004..006)
 

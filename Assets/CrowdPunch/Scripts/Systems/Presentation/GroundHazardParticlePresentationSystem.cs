@@ -33,7 +33,7 @@ namespace CrowdPunch.Systems.Presentation
             right=Vector3.ProjectOnPlane(camera.transform.right,Vector3.up).normalized;
             foreach(var (patch,state,appearance) in SystemAPI.Query<RefRO<GroundHazard>,RefRO<GroundHazardState>,RefRO<GroundHazardAppearance>>())
             {
-                if(appearance.ValueRO.Style!=GroundHazardStyle.Quarry && appearance.ValueRO.Style!=GroundHazardStyle.Observatory && appearance.ValueRO.Style!=GroundHazardStyle.Necropolis)continue;
+                if(appearance.ValueRO.Style!=GroundHazardStyle.Quarry && appearance.ValueRO.Style!=GroundHazardStyle.Observatory && appearance.ValueRO.Style!=GroundHazardStyle.Necropolis && appearance.ValueRO.Style!=GroundHazardStyle.Canyon)continue;
                 for(int lane=0;lane<GroundHazardParticleGeometry.Count(patch.ValueRO,state.ValueRO);lane++)
                     if(GroundHazardParticleGeometry.TrySample(patch.ValueRO,state.ValueRO,SystemAPI.Time.ElapsedTime,lane,out var particle))Draw(particle);
             }
