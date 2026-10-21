@@ -888,11 +888,22 @@ The mesh regression compares CPU-skinned positions and normals with the original
 within 0.0001, and checks unchanged bone weights, bind poses and topology. It and the six
 ECS playback checks pass. The C# build completes with zero errors and package warnings.
 
-`PlayerModel.prefab` owns a humanoid Animator with `Animation/PlayerMovement.controller` and
-`PlayerMovementAnimation`. Its `MoveX`/`MoveZ` directional blend tree uses fighting idle and
-eight jog directions from the seven imported clips; the left diagonal clips are mirrored for
-the right diagonals. All movement clips loop with root translation and rotation baked into
-the pose, and root motion is disabled. `PlayerController.LocomotionVelocity` publishes only
+`PlayerModel.prefab` owns the supplied `Models/Player/rig.fbx` humanoid skin, its textured
+`PlayerFighter` production cel material, `Animation/PlayerMovement.controller` and
+`PlayerMovementAnimation`. `PlayerAppearanceBuilder` rebuilds this visual prefab while retaining
+its root/component identities. The visual root scales the small source model by 2.35;
+authored upper-chest, head and hand scales emphasize the broad brawler silhouette. The existing
+scene-owned player transform and collision geometry remain unchanged. The single skin uses a
+conservative animation bound and an Always Animate Animator. The supplied normal map is imported
+as linear normal data and used at low strength; matte shading preserves the base texture detail.
+
+The `MoveX`/`MoveZ` directional blend tree uses project-owned copies of Heavy Fighter's Idle,
+WalkForward and WalkBackward clips. Forward/backward playback is 1.35x. The pack has no strafes,
+diagonals, hit reaction or dash, so the existing directional jogs and Hit To Body reaction remain.
+Copies under `Animation/HeavyFighter` retain humanoid retargeting, loop locomotion and strip events;
+horizontal travel is extracted and discarded by disabling Animator root motion. Supplied model,
+texture and animation binaries and animation importers remain unchanged.
+`PlayerController.LocomotionVelocity` publishes only
 commanded movement (including the committed dash displacement), excluding external knockback.
 The presentation component reads it relative to player facing, normalizes by authored move
 speed, clamps to the jog blend radius, and damps the Animator parameters. Disable and player
@@ -905,33 +916,50 @@ No ECS ownership, physics ordering, or open art-direction decision (OQ-015) chan
 
 `PlayerPunchAnimation` drives the always-weighted `Upper Body Punch` override layer using
 `PlayerUpperBody.mask` (torso, head, arms, and fingers; root and legs remain locomotion-owned).
-The non-looping `Cross Punch` clip is sampled through the state's `PunchTime` motion-time
-parameter. Frames 0-22 follow `PlayerPunch.CooldownProgress`, with frame 22 held when ready.
-`PlayerPunch.PunchStarted` fires only for accepted requests and starts playback from frame 22
-through the end at the Inspector's `punchSpeedMultiplier` (default 1). Strike playback takes
-precedence over cooldown posing; after the final frame it returns to the current cooldown
-pose, or directly to frame 22 on a miss/completed cooldown. Another accepted punch restarts
-the strike even if the previous visual has not finished. `PunchStateReset` cancels visual
+The non-looping Heavy Fighter `Punch` clip is sampled through the state's `PunchTime` motion-time
+parameter. Clip-specific ready, contact and rotation-end frames are serialized on
+`PlayerPunchAnimation`; the prefab's 30 fps clip uses frames 4, 8 and 8 (scene overrides are
+preserved). The ready frame is held when available. `PlayerPunch.PunchStarted` fires
+only for accepted requests and immediately skips from Ready Frame to Contact Frame before
+the ECS hit/miss acknowledgement, independently of `snapToContactOnHit`. While awaiting a
+result or when cooldown is zero, post-contact playback uses the Inspector's
+`punchSpeedMultiplier` (prefab 1.35). `PlayerPunch.CooldownStarted` immediately
+switches presentation to the contact pose for either acknowledged outcome. Cooldown posing
+takes precedence over strike playback: `CooldownProgress` plays forward from contact to the
+clip's end, wraps to frame zero, then plays forward to the configured ready frame. Both
+segments share the selected hit/miss duration at one continuous clip playback rate. A zero
+duration permits normal strike/follow-through playback and then returns to ready. Another
+accepted punch restarts the strike even if the previous visual has not finished. `PunchStateReset` cancels visual
 playback on gameplay reset/disable. Animation never delays hits, spends cooldown, or changes
 dash movement (PLAYER-005, PLAYER-009). The shared cooldown property also drives hand feedback.
-`PlayerPunchCooldownFeedback` finds the model's `hand_r` bone, scales it from the authored
+`PlayerPunchCooldownFeedback` falls back from the configured legacy `hand_r` name to the
+humanoid RightHand (`mixamorig:RightHand` on this model), scales it from the authored
 cooldown multiplier to the ready multiplier, and creates two child particle systems at runtime.
 The looping aura increases its emission and size during recovery before changing to the ready
 color; a separate burst flashes once when recovery completes. It restores the animated bone
 scale before each Animator evaluation so the presentation cannot accumulate scale drift.
-`PlayerPunchAnimation` also exposes `readyYaw` and `punchYaw` offsets in degrees (both default
-to zero). Cooldown frames 0-22 interpolate from punch yaw to ready yaw; frame 22 holds ready
-yaw, and strike frames 22-34 interpolate back to punch yaw at the existing playback speed.
-Punch yaw then holds from frame 34 through the rest of the strike clip.
+`PlayerPunchAnimation` also exposes `readyYaw` and `punchYaw` offsets in degrees (current prefab:
+-8 and 5). Cooldown frames interpolate from punch yaw to ready yaw; the ready frame holds ready
+yaw, and strike frames interpolate back to punch yaw until the rotation-end frame.
+Punch yaw then holds through the rest of the strike clip.
+`PlayerAppearanceBuilder` also samples 41 model-relative spine rotations across the punch
+timeline with the locomotion layer held at its idle reference. After Animator evaluation,
+`PlayerPunchAnimation` interpolates that reference before applying the authored yaw. This
+removes inherited walking/strafe hip rotation from the upper body, keeping the torso/head
+oriented as in idle at the same punch/cooldown pose while hips and legs retain locomotion.
+The correction blends away with the existing hit-reaction weight and uses the same
+restore-before-evaluation path as the yaw offset; it does not accumulate between frames.
 After Animator evaluation, `LateUpdate` offsets the humanoid spine around the model's up
 axis, carrying the torso, head, and arms without rotating the root or legs. The previous
 offset is restored before the next animation evaluation and on disable to prevent drift.
 This is presentation only: camera-forward facing and gameplay punch direction stay unchanged
 (PLAYER-002, PLAYER-004, PLAYER-005).
 
+The 2026-10-21 player appearance verification is recorded in `Docs/Verification/PlayerAppearance.md`.
+
 | Concern | Current owner | Boundary/data |
 |---|---|---|
-| Input, player transform, and punch | GameObject | `PlayerController` owns movement and committed dash timing; `PlayerPunch` owns immediate attack input and hit-confirmed cooldown; `PlayerPunchCooldownFeedback` presents recovery on `hand_r`. Punching does not interrupt a dash. |
+| Input, player transform, and punch | GameObject | `PlayerController` owns movement and committed dash timing; `PlayerPunch` owns immediate attack input and acknowledged hit/miss cooldowns; `PlayerPunchCooldownFeedback` presents recovery on `hand_r`. Punching does not interrupt a dash. |
 | Player health and invincibility | GameObject | `PlayerHealth`; `PlayerHitAnimation` plays Hit To Body on accepted damage; invulnerability remains health-owned |
 | Camera | GameObject | `CameraFollow` |
 | Scene bootstrap and UI | GameObject | `GameBootstrap`, UI MonoBehaviours |
@@ -1371,7 +1399,7 @@ The current implementation proves architecture and basic interactions, but sever
 
 - Punch detection uses a line/capsule-like distance test and independently assigns impulse, damage, and launched state. Enemy collision damage is also independently thresholded rather than inferred from propagation.
 - Player movement and dash remain transform-driven MonoBehaviour movement. `PlayerController` submits each intended horizontal displacement through `PlayerEcsBridge`; `PlayerObstacleCollisionSystem` first resolves any shallow overlap, then sphere-casts the configured player radius against baked non-enemy geometry, resolves one wall-slide pass, and returns the corrected position to the controller. Zero-distance contacts permit motion away from their surface so corners cannot trap the player. This keeps SubScene obstacle collision inside the ECS physics world without allowing the MonoBehaviour to query or retain entities.
-- Dash punches start immediately through the ordinary punch pipeline, use the same tuning as standing punches, and do not alter committed dash movement (PLAYER-005). Misses do not start cooldown (PLAYER-009).
+- Dash punches start immediately through the ordinary punch pipeline, use the same tuning as standing punches, and do not alter committed dash movement (PLAYER-005). Matching results select the separate hit/miss cooldown (PLAYER-009).
 - A launched enemy, including a zero-health enemy with deferred defeat, can propagate launched state to and independently damage an active or recovering enemy when Unity Physics reports solver-estimated contact impulse above the respective authored thresholds. Unity Physics supplies the transferred velocity; gameplay may rotate newly propagated horizontal velocity toward the smallest-angle eligible target inside the configured correction radius without changing its magnitude or vertical component. One source launch damages each target at most once but may damage multiple targets. Defeated enemies and launched-versus-launched pairs are ineligible. The final effect grammar remains unresolved.
 - Enemy chasing and contact damage exist as prototype behavior.
 - A player health bar exists. Living damaged normals may display temporary health per INFO-001; body presentation communicates normal launch/recovery state. Elites retain persistent health bars.
@@ -1399,8 +1427,12 @@ with the player-punch cause (PLAYER-003). Elite punches retain their circular cr
 `PunchRequest`, then disables the request. `PresentationBridgeSystem` reads that result through the non-enableable
 `PlayerSnapshot` singleton and sends the request sequence and hit flag through `PlayerEcsBridge.PunchResolved`.
 This result is delivered even when there are no enemies or trajectory preview is disabled. `PlayerPunch` waits for its
-matching result before accepting another request and starts its cooldown only on a hit (PLAYER-009). A miss leaves the
-punch ready; a multi-target hit starts one cooldown. Resetting or disabling the punch clears its pending state, so stale
+matching result before accepting another request and selects the configured hit or miss duration (PLAYER-009).
+The shared settings retain the existing 1.25-second hit cooldown and add `MissCooldown` at 0.25 seconds; zero disables
+the chosen outcome's cooldown. `activeCooldownDuration` normalizes progress for that particular recovery, so hand
+feedback and contact-to-ready animation follow the same clock. One `CooldownStarted` event is raised per nonzero
+acknowledged cooldown; duplicate results cannot restart it. A multi-target hit starts one hit cooldown. Resetting
+clears the cooldown clock; resetting or disabling the punch clears its pending state, so stale
 results cannot apply cooldown to a later request. Enemy detection remains ECS-owned and Burst-compatible.
 
 ## Deliberate Shot Experiment (2026-09-06)
@@ -1702,9 +1734,10 @@ not a resolution of the broader art/camera questions OQ-015/016.
   Dash movement emits at 55 ms intervals; pool capacity and shared materials are unchanged.
 - Chain gain rises to 0.18 per depth, capped at 1.8, retaining the single-impact ceiling
   of 0.7. Strong singles, short chains and exceptional chains remain distinct.
-- PlayerModel's existing punch layer uses strike speed 1.85, follow-through speed 0.85
-  and torso yaw from +50 to -42 degrees. Contact frame, gameplay timing, root facing
-  and all rig scales are unchanged. Dash FOV is baseline plus 5.5 degrees with 75 ms smoothing.
+- This feedback pass set strike speed 1.85 and follow-through speed 0.85. The subsequent
+  2026-10-21 player appearance pass replaces its old +50/-42 torso yaw and clip poses as
+  described in the player presentation section above. Dash FOV remains baseline plus
+  5.5 degrees with 75 ms smoothing.
 
 Configuration lives in CombatFeedbackSettings.asset, the seven Feedback prefabs, and
 PlayerModel's PlayerPunchAnimation. Script defaults match the new central tuning.
