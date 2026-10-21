@@ -6,6 +6,44 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Chapter Seven Vault Presentation (2026-10-21, VISION-004..006)
+
+`ChapterSevenVaultBuilder` dresses the saved Campaign 61-70 scenes without rebuilding
+encounters. `ChapterSevenVaultAssets` owns the painted slate, frost, ivory, brass and
+crystal recipes and copied texture import settings. `ChapterSevenVaultScenery` composes
+noncolliding vault galleries, complete arched entrances, frozen buttresses, imported
+castle towers and two continuous glacial skyline layers outside the combat envelope.
+The original collision-aligned floor remains the visible gameplay surface. Decorative
+materials opt into the existing camera cutaway; floors and objectives remain excluded.
+
+`ChapterSevenVaultObjectives` binds segmented masonry, branching damage and exit cues
+to existing authoring. `ChapterSevenReliquaryVisuals`/`ChapterSevenReliquaryMeshes` skin
+the existing shell/core phases and fragment motion. `CampaignCargoTrackVisuals.ApplyVault`
+supplies a complete crystal transfer carrier, attached cargo, rollers, rail hardware
+and the existing docking-state colours on level 69. Cover panels retain their original
+geometry, gap and pause response. No new gameplay state or bridge is introduced.
+
+`GroundHazardStyle.Vault` is appended to the serialized presentation enum. Its heated
+frost-stone paving uses the original footprint and phase; the existing bounded cartoon
+particle renderer supplies cooling wisps, warning smoke and active flames/embers.
+Damage, clocks, navigation and safe spawning are unchanged (GROUND-001..007).
+
+The chapter owns its sky, post profile and explicit `CampaignShadowBake` output under
+`Data/ChapterSevenVault`. The bake gives exterior earth/skyline appropriately low chart
+density, excludes changing objectives by component responsibility and binds ECS floor
+shadow masks. `BakedShadowLighting` and `CelLevelLighting` retain scene-lifetime pipeline,
+probe and atmosphere restoration. Surface refresh preserves receiver masks, chart
+transforms, source references and material GUIDs. Verification:
+`Docs/Verification/ChapterSevenVault.md`.
+
+`ChapterSevenVaultShadows` gives static box scenery physically proportioned UV2 islands
+and higher local chart density through the explicit chapter bake. Each outside box face
+is divided into at-most-12m patches without internal caps; transforms, outer surfaces
+and gameplay colliders are preserved. The UV recipe shares meshes by physical dimensions.
+Other chapters retain their existing unwrap path and density. `ChapterSevenVaultJoints`
+fits return-wall spans between the real front/rear slabs, removing exposed coplanar
+overlaps in existing scenes and future dressing without relocating landmarks.
+
 ## Chapter Six Canyon Presentation (VISION-004..006)
 
 `ChapterSixCanyonBuilder` owns Campaign 51-60's Sunscarred Canyon Outpost

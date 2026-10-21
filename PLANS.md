@@ -1,6 +1,24 @@
 # Campaign Visual Update Plan
 
-Created: 2026-10-18. Status: Chapters 2, 3, 4, 5 and 6 are implemented; Chapters 7-9 remain planned.
+Created: 2026-10-18. Status: Chapters 2-7 are implemented; Chapters 8-9 remain planned.
+
+Chapter 7's Campaign 61-70 scenes use the Frostbound Vault compositions below:
+quiet slate-blue combat paving within ivory vault galleries, frozen buttresses,
+restrained brass fittings and turquoise ice crystals confined to the margins.
+Continuous frost earth and two closed glacial skyline layers surround every stage.
+The six-sector ascent, shell/core reliquary, hit-pause regulator, long delivery route
+and Blob coliseum preserve their existing gameplay and physical layouts. Chapter-owned
+painted materials, complete objective skins, phase-driven heated frost-stone hazards,
+decorative cutaways and baked-only lighting carry forward the contracts below.
+Verification and acceptance limits are recorded in `Docs/Verification/ChapterSevenVault.md`.
+
+Chapter 7 shadow/joint correction, 2026-10-21: nonuniformly scaled box architecture
+uses metre-proportioned lightmap islands, divided into spans of at most 12 m, with
+local bake density increased for crisp column shadows. Do not restore the stretched
+unit-cube charts that produced staircase edges. Vault return walls fit between the
+front piers and rear slabs; their exposed faces must not overlap at corners.
+Preserve landmark placement, gameplay geometry, painted materials and hard baked-only
+lighting. Rebake the affected fixed scenery after either geometry or chart changes.
 
 Chapter 6's Campaign 51-60 scenes use the Sunscarred Canyon Outpost compositions
 below: cool grey combat paving, warm sand and layered sandstone, cisterns,

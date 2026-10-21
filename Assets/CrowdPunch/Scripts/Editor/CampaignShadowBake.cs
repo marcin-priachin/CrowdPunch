@@ -168,9 +168,14 @@ namespace CrowdPunch.Editor
                         StaticEditorFlags.OccluderStatic|StaticEditorFlags.OccludeeStatic|StaticEditorFlags.ReflectionProbeStatic);
                 renderer.receiveGI=ReceiveGI.Lightmaps;
                 var filter=renderer.GetComponent<MeshFilter>();
-                if(filter!=null && filter.sharedMesh!=null) filter.sharedMesh=LightmapMesh(filter.sharedMesh);
+                bool vaultBox=ChapterSevenVaultShadows.Applies(renderer,Output);
+                if(filter!=null && filter.sharedMesh!=null) filter.sharedMesh=vaultBox
+                    ? ChapterSevenVaultShadows.ForRenderer(renderer,Output) : LightmapMesh(filter.sharedMesh);
                 var serialized=new SerializedObject(renderer);
-                float scale=renderer.name=="Continuous necropolis earth"?.04f:
+                float scale=vaultBox?ChapterSevenVaultShadows.BoxDensityScale:
+                    renderer.name=="Continuous necropolis earth"?.04f:
+                    renderer.name=="Continuous frost earth"?.04f:
+                    renderer.name.StartsWith("Closed glacial skyline ")?.10f:
                     renderer.name=="Continuous canyon earth"?.04f:
                     renderer.name=="Continuous canyon mesa rim"?.10f:
                     renderer.name=="Continuous necropolis ridge"?.10f:

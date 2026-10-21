@@ -1,0 +1,78 @@
+{
+  "success": true,
+  "command": "command eval",
+  "data": {
+    "command": "eval",
+    "parameters": {
+      "code": "return UnityEditor.AssetDatabase.FindAssets(\"t:Texture2D\",new[]{\"Assets/CrowdPunch/Data/ChapterSevenVault/Textures\"}).Select(g=>{var p=UnityEditor.AssetDatabase.GUIDToAssetPath(g);var t=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Texture2D>(p);var i=(UnityEditor.TextureImporter)UnityEditor.AssetImporter.GetAtPath(p);return new {t.name,t.width,t.height,t.mipmapCount,t.format,i.anisoLevel,i.filterMode};}).ToArray();"
+    },
+    "result": {
+      "output": null,
+      "diagnostics": [],
+      "success": true,
+      "result": [
+        {
+          "name": "Stylized_Crystal_001_color",
+          "width": 2048,
+          "height": 2048,
+          "mipmapCount": 12,
+          "format": 25,
+          "anisoLevel": 4,
+          "filterMode": 2
+        },
+        {
+          "name": "Stylized_Ice_001_basecolor",
+          "width": 2048,
+          "height": 2048,
+          "mipmapCount": 12,
+          "format": 25,
+          "anisoLevel": 4,
+          "filterMode": 2
+        },
+        {
+          "name": "Stylized_Rocks_003_basecolor",
+          "width": 2048,
+          "height": 2048,
+          "mipmapCount": 12,
+          "format": 25,
+          "anisoLevel": 4,
+          "filterMode": 2
+        },
+        {
+          "name": "Stylized_Stone_Floor_001_basecolor",
+          "width": 2048,
+          "height": 2048,
+          "mipmapCount": 12,
+          "format": 25,
+          "anisoLevel": 4,
+          "filterMode": 2
+        },
+        {
+          "name": "Stylized_Wood_Wall_001_basecolor",
+          "width": 2048,
+          "height": 2048,
+          "mipmapCount": 12,
+          "format": 25,
+          "anisoLevel": 4,
+          "filterMode": 2
+        },
+        {
+          "name": "Vol_23_1_Rocks_Base_Color",
+          "width": 2048,
+          "height": 2048,
+          "mipmapCount": 12,
+          "format": 25,
+          "anisoLevel": 4,
+          "filterMode": 2
+        }
+      ]
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7803,
+      "projectPath": "C:\\Users\\pc\\.codex\\worktrees\\unity-agent-a\\CrowdPunch"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

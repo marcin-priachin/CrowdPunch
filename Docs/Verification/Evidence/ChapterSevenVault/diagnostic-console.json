@@ -1,0 +1,114 @@
+{
+  "success": true,
+  "command": "command console",
+  "data": {
+    "command": "console",
+    "parameters": {
+      "tail": "8",
+      "level": "error"
+    },
+    "result": {
+      "entries": [
+        {
+          "seq": 664,
+          "timestampUtc": "2026-10-21T15:21:21.3888508Z",
+          "level": "error",
+          "logType": "Error",
+          "message": "type is not a supported int value",
+          "stackTrace": "UnityEditor.SerializedProperty:get_longValue ()\nChapterSevenAudit:Capture () (at Temp/ChapterSevenAudit.cs:31)\nSystem.Reflection.MethodBase:Invoke (object,object[])\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunEphemeral>d__2:MoveNext () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Editor/Commands/Scripts/RunScriptCommand.cs:219)\nSystem.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<Unity.Pipeline.Editor.Commands.Scripts.RunScriptResponse>:Start<Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunEphemeral>d__2> (Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunEphemeral>d__2&)\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand:RunEphemeral (string,string,Newtonsoft.Json.Linq.JArray,string[],string[],bool,bool,int,System.Diagnostics.Stopwatch)\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunScript>d__1:MoveNext () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Editor/Commands/Scripts/RunScriptCommand.cs:77)\nSystem.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<Unity.Pipeline.Editor.Commands.Scripts.RunScriptResponse>:Start<Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunScript>d__1> (Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunScript>d__1&)\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand:RunScript (string,string,Newtonsoft.Json.Linq.JArray,string,string[],string[],bool,int,bool)\nSystem.Reflection.MethodBase:Invoke (object,object[])\nUnity.Pipeline.BasePipelineServer:ExecuteCommandDirect (Unity.Pipeline.Commands.CommandInfo,object[]) (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/BasePipelineServer.cs:2820)\nUnity.Pipeline.BasePipelineServer/<>c__DisplayClass138_0:<ExecuteCommand>b__1 () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/BasePipelineServer.cs:2694)\nUnity.Pipeline.Threading.Dispatcher/WorkItem`1<object>:ExecuteCore () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:284)\nUnity.Pipeline.Threading.Dispatcher/WorkItem:Execute () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:229)\nUnity.Pipeline.Threading.Dispatcher:ProcessWorkQueue (int) (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:195)\nUnity.Pipeline.Threading.Dispatcher:ProcessWorkQueue () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:210)\nUnityEditor.EditorApplication:Internal_CallUpdateFunctions ()\n",
+          "seeded": false
+        },
+        {
+          "seq": 665,
+          "timestampUtc": "2026-10-21T15:21:21.3888508Z",
+          "level": "error",
+          "logType": "Error",
+          "message": "type is not a supported int value",
+          "stackTrace": "UnityEditor.SerializedProperty:get_longValue ()\nChapterSevenAudit:Capture () (at Temp/ChapterSevenAudit.cs:31)\nSystem.Reflection.MethodBase:Invoke (object,object[])\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunEphemeral>d__2:MoveNext () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Editor/Commands/Scripts/RunScriptCommand.cs:219)\nSystem.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<Unity.Pipeline.Editor.Commands.Scripts.RunScriptResponse>:Start<Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunEphemeral>d__2> (Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunEphemeral>d__2&)\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand:RunEphemeral (string,string,Newtonsoft.Json.Linq.JArray,string[],string[],bool,bool,int,System.Diagnostics.Stopwatch)\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunScript>d__1:MoveNext () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Editor/Commands/Scripts/RunScriptCommand.cs:77)\nSystem.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<Unity.Pipeline.Editor.Commands.Scripts.RunScriptResponse>:Start<Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunScript>d__1> (Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunScript>d__1&)\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand:RunScript (string,string,Newtonsoft.Json.Linq.JArray,string,string[],string[],bool,int,bool)\nSystem.Reflection.MethodBase:Invoke (object,object[])\nUnity.Pipeline.BasePipelineServer:ExecuteCommandDirect (Unity.Pipeline.Commands.CommandInfo,object[]) (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/BasePipelineServer.cs:2820)\nUnity.Pipeline.BasePipelineServer/<>c__DisplayClass138_0:<ExecuteCommand>b__1 () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/BasePipelineServer.cs:2694)\nUnity.Pipeline.Threading.Dispatcher/WorkItem`1<object>:ExecuteCore () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:284)\nUnity.Pipeline.Threading.Dispatcher/WorkItem:Execute () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:229)\nUnity.Pipeline.Threading.Dispatcher:ProcessWorkQueue (int) (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:195)\nUnity.Pipeline.Threading.Dispatcher:ProcessWorkQueue () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:210)\nUnityEditor.EditorApplication:Internal_CallUpdateFunctions ()\n",
+          "seeded": false
+        },
+        {
+          "seq": 666,
+          "timestampUtc": "2026-10-21T15:21:21.3898508Z",
+          "level": "error",
+          "logType": "Error",
+          "message": "type is not a supported int value",
+          "stackTrace": "UnityEditor.SerializedProperty:get_longValue ()\nChapterSevenAudit:Capture () (at Temp/ChapterSevenAudit.cs:31)\nSystem.Reflection.MethodBase:Invoke (object,object[])\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunEphemeral>d__2:MoveNext () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Editor/Commands/Scripts/RunScriptCommand.cs:219)\nSystem.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<Unity.Pipeline.Editor.Commands.Scripts.RunScriptResponse>:Start<Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunEphemeral>d__2> (Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunEphemeral>d__2&)\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand:RunEphemeral (string,string,Newtonsoft.Json.Linq.JArray,string[],string[],bool,bool,int,System.Diagnostics.Stopwatch)\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunScript>d__1:MoveNext () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Editor/Commands/Scripts/RunScriptCommand.cs:77)\nSystem.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<Unity.Pipeline.Editor.Commands.Scripts.RunScriptResponse>:Start<Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunScript>d__1> (Unity.Pipeline.Editor.Commands.Scripts.RunScriptCommand/<RunScript>d__1&)\nUnity.Pipeline.Editor.Commands.Scripts.RunScriptCommand:RunScript (string,string,Newtonsoft.Json.Linq.JArray,string,string[],string[],bool,int,bool)\nSystem.Reflection.MethodBase:Invoke (object,object[])\nUnity.Pipeline.BasePipelineServer:ExecuteCommandDirect (Unity.Pipeline.Commands.CommandInfo,object[]) (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/BasePipelineServer.cs:2820)\nUnity.Pipeline.BasePipelineServer/<>c__DisplayClass138_0:<ExecuteCommand>b__1 () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/BasePipelineServer.cs:2694)\nUnity.Pipeline.Threading.Dispatcher/WorkItem`1<object>:ExecuteCore () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:284)\nUnity.Pipeline.Threading.Dispatcher/WorkItem:Execute () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:229)\nUnity.Pipeline.Threading.Dispatcher:ProcessWorkQueue (int) (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:195)\nUnity.Pipeline.Threading.Dispatcher:ProcessWorkQueue () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/Dispatcher.cs:210)\nUnityEditor.EditorApplication:Internal_CallUpdateFunctions ()\n",
+          "seeded": false
+        },
+        {
+          "seq": 700,
+          "timestampUtc": "2026-10-21T15:23:03.8455594Z",
+          "level": "error",
+          "logType": "Error",
+          "message": "Destroy may not be called from edit mode! Use DestroyImmediate instead.\nDestroying an object in edit mode destroys it permanently.",
+          "stackTrace": "UnityEngine.Object:Destroy (UnityEngine.Object)\nCrowdPunch.Systems.Presentation.GroundHazardParticlePresentationSystem:OnDestroy () (at Assets/CrowdPunch/Scripts/Systems/Presentation/GroundHazardParticlePresentationSystem.cs:88)\nUnity.Entities.ComponentSystemBase:OnDestroy_Internal () (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/ComponentSystemBase.cs:305)\nUnity.Entities.World:DestroyAllSystemsAndLogException (bool&) (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/World.cs:1158)\nUnity.Entities.World:Dispose () (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/World.cs:313)\nCrowdPunch.Tests.ChapterSevenVaultTests:Ground007_VaultParticlesUseTheRealPhaseAndClearWhenUnintroduced () (at Assets/CrowdPunch/Tests/Editor/ChapterSevenVaultTests.cs:115)\nSystem.Reflection.MethodBase:Invoke (object,object[])\nNUnit.Framework.Internal.Reflect:InvokeMethod (System.Reflection.MethodInfo,object,object[])\nNUnit.Framework.Internal.MethodWrapper:Invoke (object,object[])\nNUnit.Framework.Internal.Commands.TestMethodCommand:RunNonAsyncTestMethod (NUnit.Framework.Internal.ITestExecutionContext)\nNUnit.Framework.Internal.Commands.TestMethodCommand:RunTestMethod (NUnit.Framework.Internal.ITestExecutionContext)\nNUnit.Framework.Internal.Commands.TestMethodCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext)\nUnityEditor.EditorApplication:Internal_CallUpdateFunctions ()\n",
+          "seeded": false
+        },
+        {
+          "seq": 739,
+          "timestampUtc": "2026-10-21T15:34:36.9428781Z",
+          "level": "error",
+          "logType": "Exception",
+          "message": "InvalidOperationException: GetSingleton<CrowdPunch.Components.ArenaBounds>() requires that exactly one entity exists that match this query, but there are none. Are you missing a call to RequireForUpdate<T>()? You could also use TryGetSingleton<T>()",
+          "stackTrace": "Unity.Entities.EntityQueryImpl.GetSingleton[T] () (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/Iterators/EntityQuery.cs:1454)\nUnity.Entities.EntityQuery.GetSingleton[T] () (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/Iterators/EntityQuery.cs:2763)\nChapterSevenFinalProbe.Tick () (at Temp/ChapterSevenFinalProbe.cs:35)\nUnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at <49fcb209645d4ccfb3e373da32345d37>:0)\n",
+          "seeded": false
+        },
+        {
+          "seq": 740,
+          "timestampUtc": "2026-10-21T15:34:36.9603182Z",
+          "level": "error",
+          "logType": "Exception",
+          "message": "InvalidOperationException: GetSingleton<CrowdPunch.Components.ArenaBounds>() requires that exactly one entity exists that match this query, but there are none. Are you missing a call to RequireForUpdate<T>()? You could also use TryGetSingleton<T>()",
+          "stackTrace": "Unity.Entities.EntityQueryImpl.GetSingleton[T] () (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/Iterators/EntityQuery.cs:1454)\nUnity.Entities.EntityQuery.GetSingleton[T] () (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/Iterators/EntityQuery.cs:2763)\nChapterSevenFinalProbe.Tick () (at Temp/ChapterSevenFinalProbe.cs:35)\nUnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at <49fcb209645d4ccfb3e373da32345d37>:0)\n",
+          "seeded": false
+        },
+        {
+          "seq": 741,
+          "timestampUtc": "2026-10-21T15:34:36.9678368Z",
+          "level": "error",
+          "logType": "Exception",
+          "message": "InvalidOperationException: GetSingleton<CrowdPunch.Components.ArenaBounds>() requires that exactly one entity exists that match this query, but there are none. Are you missing a call to RequireForUpdate<T>()? You could also use TryGetSingleton<T>()",
+          "stackTrace": "Unity.Entities.EntityQueryImpl.GetSingleton[T] () (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/Iterators/EntityQuery.cs:1454)\nUnity.Entities.EntityQuery.GetSingleton[T] () (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/Iterators/EntityQuery.cs:2763)\nChapterSevenFinalProbe.Tick () (at Temp/ChapterSevenFinalProbe.cs:35)\nUnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at <49fcb209645d4ccfb3e373da32345d37>:0)\n",
+          "seeded": false
+        },
+        {
+          "seq": 742,
+          "timestampUtc": "2026-10-21T15:34:36.9773922Z",
+          "level": "error",
+          "logType": "Exception",
+          "message": "InvalidOperationException: GetSingleton<CrowdPunch.Components.ArenaBounds>() requires that exactly one entity exists that match this query, but there are none. Are you missing a call to RequireForUpdate<T>()? You could also use TryGetSingleton<T>()",
+          "stackTrace": "Unity.Entities.EntityQueryImpl.GetSingleton[T] () (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/Iterators/EntityQuery.cs:1454)\nUnity.Entities.EntityQuery.GetSingleton[T] () (at ./Library/PackageCache/com.unity.entities@95352e4aa61e/Unity.Entities/Iterators/EntityQuery.cs:2763)\nChapterSevenFinalProbe.Tick () (at Temp/ChapterSevenFinalProbe.cs:35)\nUnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at <49fcb209645d4ccfb3e373da32345d37>:0)\n",
+          "seeded": false
+        }
+      ],
+      "cursor": 744,
+      "session": "0fabc891376b430d81b48d101cb3b3fa",
+      "returned": 8,
+      "dropped": false,
+      "reset": false,
+      "counts": {
+        "error": 559,
+        "warn": 99,
+        "log": 86
+      },
+      "groundTruth": {
+        "sampledUtc": "2026-10-21T15:37:58.5333874Z",
+        "ageMs": 137,
+        "compilationFailed": false,
+        "compiling": false,
+        "consoleErrors": 4,
+        "consoleWarnings": 6,
+        "consoleLogs": 26,
+        "seeded": true
+      }
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7803,
+      "projectPath": "C:\\Users\\pc\\.codex\\worktrees\\unity-agent-a\\CrowdPunch"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

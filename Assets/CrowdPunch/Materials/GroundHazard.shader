@@ -8,6 +8,7 @@ Shader "CrowdPunch/GroundHazard"
         _Observatory ("Observatory heated tiles", Float) = 0
         _Necropolis ("Necropolis scorched paving", Float) = 0
         _Canyon ("Canyon scorched sandstone", Float) = 0
+        _Vault ("Vault heated frost stone", Float) = 0
         _Phase ("Hazard phase", Float) = 0
         _FootprintSize ("Footprint half size", Vector) = (1,1,0,0)
     }
@@ -29,7 +30,7 @@ Shader "CrowdPunch/GroundHazard"
             CBUFFER_START(UnityPerMaterial)
             float4 _Color;
             float _Circle;
-            float _Quarry, _Phase, _Observatory, _Necropolis, _Canyon;
+            float _Quarry, _Phase, _Observatory, _Necropolis, _Canyon, _Vault;
             float4 _FootprintSize;
             CBUFFER_END
             Varyings Vert(Attributes v) { Varyings o; o.positionCS=TransformObjectToHClip(v.positionOS.xyz); o.uv=v.uv; o.fog=ComputeFogFactor(o.positionCS.z); return o; }
@@ -58,7 +59,7 @@ Shader "CrowdPunch/GroundHazard"
                     seam=min(.5-tile.x,.5-tile.y);
                     nearestCell=floor(p*.8);
                 }
-                if(_Necropolis>.5)
+                if(_Necropolis>.5 || _Vault>.5)
                 {
                     // Staggered worn paving stays fixed to the actual metre-sized footprint.
                     float2 paving=p*float2(.65,1.25);
@@ -79,6 +80,7 @@ Shader "CrowdPunch/GroundHazard"
                 if(_Observatory>.5)baseColor=half3(.21,.29,.25)*shade;
                 if(_Necropolis>.5)baseColor=half3(.19,.24,.25)*shade;
                 if(_Canyon>.5)baseColor=half3(.27,.22,.17)*shade;
+                if(_Vault>.5)baseColor=half3(.25,.33,.41)*shade;
                 half3 rimColor=half3(.32,.36,.32);
                 if(_Phase>.5 && _Phase<1.5)
                 {
@@ -103,7 +105,7 @@ Shader "CrowdPunch/GroundHazard"
                 float2 q=abs(v.uv*2-1);
                 float edge=lerp(max(q.x,q.y),length(q),_Circle);
                 clip(1-edge);
-                if(_Quarry>.5 || _Observatory>.5 || _Necropolis>.5 || _Canyon>.5)return QuarrySurface(v,edge);
+                if(_Quarry>.5 || _Observatory>.5 || _Necropolis>.5 || _Canyon>.5 || _Vault>.5)return QuarrySurface(v,edge);
                 float border=smoothstep(.88,.94,edge);
                 float stripe=step(.65,frac((v.uv.x+v.uv.y)*12));
                 return half4(_Color.rgb*(.8+.2*stripe+.25*border),_Color.a);

@@ -1,0 +1,512 @@
+{
+  "passed": 71,
+  "failed": 1,
+  "skipped": 0,
+  "seconds": 25.4451307,
+  "results": [
+    {
+      "name": "CrowdPunch.Tests.CampaignChapterSevenTests.Loop002_ChapterSevenWiresNavigableLayoutsSafeHazardsAndObjectiveSettings",
+      "status": "Failed",
+      "seconds": 4.2121492,
+      "message": "  Expected: 4\r\n  But was:  3\r\n",
+      "stack": "at CrowdPunch.Tests.CampaignBarricadeRoomTests.AssertRooms (System.Int32 level) [0x000c7] in C:\\Users\\pc\\.codex\\worktrees\\unity-agent-a\\CrowdPunch\\Assets\\CrowdPunch\\Tests\\Editor\\CampaignBarricadeRoomTests.cs:29\r\nat CrowdPunch.Tests.CampaignChapterSevenTests.Loop002_ChapterSevenWiresNavigableLayoutsSafeHazardsAndObjectiveSettings () [0x00246] in C:\\Users\\pc\\.codex\\worktrees\\unity-agent-a\\CrowdPunch\\Assets\\CrowdPunch\\Tests\\Editor\\CampaignChapterSevenTests.cs:75\r\n"
+    },
+    {
+      "name": "CrowdPunch.Tests.CampaignChapterSevenTests.Loop002_NotchedFloorsHaveUpwardFacesAndExactPolygonArea",
+      "status": "Passed",
+      "seconds": 0.0112861,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.CampaignChapterSevenTests.Loop007_ChapterSixSaveContinuesThroughSevenAndUnlocksEight",
+      "status": "Passed",
+      "seconds": 0.5721698,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.CampaignChapterSevenTests.Loop008_ShiftingFrontHasSixLargeWavesAndExistingSafeguards",
+      "status": "Passed",
+      "seconds": 0.078265,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.CampaignChapterSevenTests.Roll006_RematchPreservesOriginalArenaGeometryAndLegacyTuning",
+      "status": "Passed",
+      "seconds": 1.4930167,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Ground007_VaultParticlesUseTheRealPhaseAndClearWhenUnintroduced",
+      "status": "Passed",
+      "seconds": 0.2178365,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Shell005_ReliquaryHasOneBranchingFracturePerStageAndExposedFace",
+      "status": "Passed",
+      "seconds": 0.8429344,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision004_ReturnWallsDoNotOverlapExposedFrontOrRearFaces(61)",
+      "status": "Passed",
+      "seconds": 0.9191311,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision004_ReturnWallsDoNotOverlapExposedFrontOrRearFaces(62)",
+      "status": "Passed",
+      "seconds": 0.9146707,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision004_ReturnWallsDoNotOverlapExposedFrontOrRearFaces(68)",
+      "status": "Passed",
+      "seconds": 0.9675773,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision004_ReturnWallsDoNotOverlapExposedFrontOrRearFaces(70)",
+      "status": "Passed",
+      "seconds": 0.9355393,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_BakedScenesHaveNoDecorativeCollisionAndKeepDynamicCuesVisible(61)",
+      "status": "Passed",
+      "seconds": 0.9476069,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_BakedScenesHaveNoDecorativeCollisionAndKeepDynamicCuesVisible(62)",
+      "status": "Passed",
+      "seconds": 1.0628634,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_BakedScenesHaveNoDecorativeCollisionAndKeepDynamicCuesVisible(63)",
+      "status": "Passed",
+      "seconds": 0.8823692,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_BakedScenesHaveNoDecorativeCollisionAndKeepDynamicCuesVisible(64)",
+      "status": "Passed",
+      "seconds": 0.9738288,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_BakedScenesHaveNoDecorativeCollisionAndKeepDynamicCuesVisible(65)",
+      "status": "Passed",
+      "seconds": 0.9744449,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_BakedScenesHaveNoDecorativeCollisionAndKeepDynamicCuesVisible(66)",
+      "status": "Passed",
+      "seconds": 0.8988354,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_BakedScenesHaveNoDecorativeCollisionAndKeepDynamicCuesVisible(67)",
+      "status": "Passed",
+      "seconds": 0.9443469,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_BakedScenesHaveNoDecorativeCollisionAndKeepDynamicCuesVisible(68)",
+      "status": "Passed",
+      "seconds": 0.9518367,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_BakedScenesHaveNoDecorativeCollisionAndKeepDynamicCuesVisible(69)",
+      "status": "Passed",
+      "seconds": 0.9930171,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_BakedScenesHaveNoDecorativeCollisionAndKeepDynamicCuesVisible(70)",
+      "status": "Passed",
+      "seconds": 0.9411218,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_LongWallShadowChartsHaveUniformPhysicalScale(61)",
+      "status": "Passed",
+      "seconds": 0.8724139,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_LongWallShadowChartsHaveUniformPhysicalScale(62)",
+      "status": "Passed",
+      "seconds": 1.0181959,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_LongWallShadowChartsHaveUniformPhysicalScale(68)",
+      "status": "Passed",
+      "seconds": 0.8929118,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_LongWallShadowChartsHaveUniformPhysicalScale(70)",
+      "status": "Passed",
+      "seconds": 0.8573689,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ChapterSevenVaultTests.Vision006_OwnedTexturesPreserveMipsAndFiltering",
+      "status": "Passed",
+      "seconds": 0.1470821,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.GroundHazardParticleTests.Ground007_OnlyActivePatchesEmitFlameOrEmbers(Inactive,1.0d)",
+      "status": "Passed",
+      "seconds": 0.0015798,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.GroundHazardParticleTests.Ground007_OnlyActivePatchesEmitFlameOrEmbers(Warning,4.8d)",
+      "status": "Passed",
+      "seconds": 0.0002224,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.GroundHazardParticleTests.Ground007_OnlyActivePatchesEmitFlameOrEmbers(Active,6.5d)",
+      "status": "Passed",
+      "seconds": 0.0001041,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.GroundHazardParticleTests.Ground007_ParticleExtentStaysInsideTheExactRotatedFootprint(Circle)",
+      "status": "Passed",
+      "seconds": 0.0357712,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.GroundHazardParticleTests.Ground007_ParticleExtentStaysInsideTheExactRotatedFootprint(Rectangle)",
+      "status": "Passed",
+      "seconds": 0.0174574,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.GroundHazardParticleTests.Ground007_RetryUsesTheNewWaveClockAndHasABoundedBudget",
+      "status": "Passed",
+      "seconds": 0.0006495,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.RotatingCoverTests.Cover002_HitPauseOccursOnceAndAccelerationUsesAccumulatedHits",
+      "status": "Passed",
+      "seconds": 0.0064163,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.RotatingCoverTests.Cover002_RotationModesCrossCycleBoundaries(Continuous,3.5f)",
+      "status": "Passed",
+      "seconds": 0.0020856,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.RotatingCoverTests.Cover002_RotationModesCrossCycleBoundaries(RotateAndPause,2.5f)",
+      "status": "Passed",
+      "seconds": 0.0010021,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.RotatingCoverTests.Cover002_RotationModesCrossCycleBoundaries(ReversePeriodically,0.5f)",
+      "status": "Passed",
+      "seconds": 0.0015729,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.RotatingCoverTests.Cover003_ReflectionAimsAtSampledPlayerAndPreservesLaunch(0.0f)",
+      "status": "Passed",
+      "seconds": 0.0138363,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.RotatingCoverTests.Cover003_ReflectionAimsAtSampledPlayerAndPreservesLaunch(1.0f)",
+      "status": "Passed",
+      "seconds": 0.0016343,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.RotatingCoverTests.Cover003_ReflectionAimsAtSampledPlayerAndPreservesLaunch(1.7f)",
+      "status": "Passed",
+      "seconds": 0.0011778,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.RotatingCoverTests.Cover004_ImpactAndBlastCountOnceAndProgressNeverExpires",
+      "status": "Passed",
+      "seconds": 0.0035933,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.RotatingCoverTests.Cover004_OutsideExplosionsAreRejectedEvenAtTheOpening",
+      "status": "Passed",
+      "seconds": 0.0016503,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.RotatingCoverTests.Cover005_DestructionCompletesImmediatelyWithoutExitOrCleanup",
+      "status": "Passed",
+      "seconds": 0.0029438,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ShellFragmentPresentationTests.Shell006_ArmorBreakKeepsCoreVisibleUntilCoreDeath",
+      "status": "Passed",
+      "seconds": 0.0063048,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ShellFragmentPresentationTests.Shell006_DamageSeamsFollowShellProgressAndBlockedHitsDoNotEmitSparks",
+      "status": "Passed",
+      "seconds": 0.0015957,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ShellFragmentPresentationTests.Shell006_PlatesTumbleThenClearAndRetryRestoresTheirPose",
+      "status": "Passed",
+      "seconds": 0.002377,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ShellTargetTests.Shell001_CoreDeathCompletesWithSurvivorsAndWithoutPlayerAtTarget",
+      "status": "Passed",
+      "seconds": 0.0037327,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ShellTargetTests.Shell002_OnlyExplosionsBreakShellAndBreakingBlastCannotLeak",
+      "status": "Passed",
+      "seconds": 0.0030831,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ShellTargetTests.Shell003_ImpactDeduplicatesButExplosionDealsSeparateDamage",
+      "status": "Passed",
+      "seconds": 0.0024563,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ShellTargetTests.Shell005_BaselinesContinueAfterShellBreakAndStopOnCoreDeath",
+      "status": "Passed",
+      "seconds": 0.0059272,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.ShellTargetTests.Shell005_ReplacementsWaitForZeroAndDelayThenReleaseBothSlotsOnce",
+      "status": "Passed",
+      "seconds": 0.0054059,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track001_CompletionWaitsForPhysicalArrivalAndKeepsSurvivors",
+      "status": "Passed",
+      "seconds": 0.009568,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track002_AlternateContactPolicyConsumesPerpendicularHitsAndLockedObjectRejectsHits",
+      "status": "Passed",
+      "seconds": 0.0070753,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track002_DefaultAcceptsAllLaunchOwnersAndAnyExplosion(Player)",
+      "status": "Passed",
+      "seconds": 0.0014167,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track002_DefaultAcceptsAllLaunchOwnersAndAnyExplosion(Enemy)",
+      "status": "Passed",
+      "seconds": 0.0010036,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track002_DefaultAcceptsAllLaunchOwnersAndAnyExplosion(Boss)",
+      "status": "Passed",
+      "seconds": 0.0009433,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track002_DirectPunchHasNoEffectAndDoesNotConfirmCooldown",
+      "status": "Passed",
+      "seconds": 0.0032974,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track002_ImpactAndBlastDeduplicateButRelaunchAndOtherBodyCount",
+      "status": "Passed",
+      "seconds": 0.0012443,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track002_PlayerFilterAndProvisionalExplosionOptionAreIndependent",
+      "status": "Passed",
+      "seconds": 0.0011989,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track003_CancellingToActualPoseStopsImmediately",
+      "status": "Passed",
+      "seconds": 0.0015084,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track003_RetargetCanReverseBeforeArrivalAndClampsEndpoints",
+      "status": "Passed",
+      "seconds": 0.0013277,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track003_ShallowHitsUseWholeStepPerpendicularAndEndpointHitsDoNotBankProgress",
+      "status": "Passed",
+      "seconds": 0.0014199,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track003_SlideMovesSmoothlyThenStopsExactly",
+      "status": "Passed",
+      "seconds": 0.0021764,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track004_NavigationRebuildsFootprintAndReopensPreviousPosition",
+      "status": "Passed",
+      "seconds": 0.0202581,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track004_PushDetectsSweptCrossingAndBothSideCandidatesClearBlock",
+      "status": "Passed",
+      "seconds": 0.0018835,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track004_PushDisplacesEnemyAndPlayerWithOptionalOncePerSlideDamage(False,True)",
+      "status": "Passed",
+      "seconds": 0.0324,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track004_PushDisplacesEnemyAndPlayerWithOptionalOncePerSlideDamage(True,True)",
+      "status": "Passed",
+      "seconds": 0.005974,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track004_PushDisplacesEnemyAndPlayerWithOptionalOncePerSlideDamage(True,False)",
+      "status": "Passed",
+      "seconds": 0.0038802,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track006_CharacterPushFollowsTheOutgoingLeg",
+      "status": "Passed",
+      "seconds": 0.0044315,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track006_CornerAcceptsNextLegForwardAndPreviousLegBackward(-1)",
+      "status": "Passed",
+      "seconds": 0.0021285,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track006_CornerAcceptsNextLegForwardAndPreviousLegBackward(1)",
+      "status": "Passed",
+      "seconds": 0.0010687,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track006_QueuedHitsVisitCornerBeforePhysicalDocking",
+      "status": "Passed",
+      "seconds": 0.001949,
+      "message": null,
+      "stack": null
+    },
+    {
+      "name": "CrowdPunch.Tests.TrackObjectTests.Track006_ReversalVisitsCornerBeforeReturningAlongOldLeg",
+      "status": "Passed",
+      "seconds": 0.0022972,
+      "message": null,
+      "stack": null
+    }
+  ]
+}

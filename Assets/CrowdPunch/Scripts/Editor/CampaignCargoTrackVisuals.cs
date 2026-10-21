@@ -45,12 +45,14 @@ namespace CrowdPunch.Editor
 
         internal static void ApplyCanyon(Scene scene) => Apply(scene,false,false,true);
 
-        private static void Apply(Scene scene,bool observatory,bool necropolis=false,bool canyon=false)
+        internal static void ApplyVault(Scene scene) => Apply(scene,false,false,false,true);
+
+        private static void Apply(Scene scene,bool observatory,bool necropolis=false,bool canyon=false,bool vault=false)
         {
-            int stage=canyon ? (scene.path.Contains("/Campaign_54/")?54:0) : necropolis ? (scene.path.Contains("/Campaign_46/")?46:0) : observatory ? (scene.path.Contains("/Campaign_32/")?32:scene.path.Contains("/Campaign_39/")?39:0) : scene.path.Contains("/Campaign_19/")?19:scene.path.Contains("/Campaign_26/")?26:0;
+            int stage=vault ? (scene.path.Contains("/Campaign_69/")?69:0) : canyon ? (scene.path.Contains("/Campaign_54/")?54:0) : necropolis ? (scene.path.Contains("/Campaign_46/")?46:0) : observatory ? (scene.path.Contains("/Campaign_32/")?32:scene.path.Contains("/Campaign_39/")?39:0) : scene.path.Contains("/Campaign_19/")?19:scene.path.Contains("/Campaign_26/")?26:0;
             if(stage==0)return;
-            bool quarry=stage==26 || observatory || necropolis || canyon;
-            string chapter="Assets/CrowdPunch/Data/"+(canyon?"ChapterSixCanyon":necropolis?"ChapterFiveNecropolis":observatory?"ChapterFourObservatory":quarry?"ChapterThreeQuarry":"ChapterTwoFoundry");
+            bool quarry=stage==26 || observatory || necropolis || canyon || vault;
+            string chapter="Assets/CrowdPunch/Data/"+(vault?"ChapterSevenVault":canyon?"ChapterSixCanyon":necropolis?"ChapterFiveNecropolis":observatory?"ChapterFourObservatory":quarry?"ChapterThreeQuarry":"ChapterTwoFoundry");
             string folder=chapter+"/TrackCargo";
             System.IO.Directory.CreateDirectory(folder+"/Materials");AssetDatabase.Refresh();
             string Source(string foundry,string stone)=>quarry?chapter+"/Materials/"+stone+".mat":chapter+"/PaintedLook/Materials/Painted "+foundry+"_Near_0.mat";
@@ -69,7 +71,7 @@ namespace CrowdPunch.Editor
             var frame=Finish("Cart frame","Steel","Slate",true);
             var body=Finish("Cart body","Teal",observatory?"Sage Local":"Slate",true);
             var trim=Finish("Cart edging","Brass","Ochre Local",true);
-            var cargo=Finish("Cart cargo","Copper",observatory?"Ochre Local":"Limestone Local",true);
+            var cargo=Finish("Cart cargo","Copper",vault?"Crystal Local":observatory?"Ochre Local":"Limestone Local",true);
             var face=Finish("Cart strike panels","Ivory","Chalk Local",true);
             var rail=Finish("Rail iron","Steel","Slate");
             var sleeper=Finish("Rail sleepers","Coal","Timber Decorative");
@@ -86,7 +88,7 @@ namespace CrowdPunch.Editor
                 Object.DestroyImmediate(old.gameObject);
             var cart=new GameObject(CartRoot).transform;cart.SetParent(track.transform,false);
             Box(cart,"Reinforced transfer deck",new Vector3(0,-1.02f,0),new Vector3(3.48f,.22f,3.04f),frame);
-            var hopper=Box(cart,canyon?"Canyon ore transfer carrier":necropolis?"Ceremonial stone carrier":observatory?"Jade instrument carrier":quarry?"Quarry steel carrier":"Foundry enamel carrier",new Vector3(0,-.14f,0),new Vector3(3.22f,1.52f,2.78f),body);
+            var hopper=Box(cart,vault?"Crystal transfer carrier":canyon?"Canyon ore transfer carrier":necropolis?"Ceremonial stone carrier":observatory?"Jade instrument carrier":quarry?"Quarry steel carrier":"Foundry enamel carrier",new Vector3(0,-.14f,0),new Vector3(3.22f,1.52f,2.78f),body);
             hopper.GetComponent<MeshFilter>().sharedMesh=Hopper(folder);
             foreach(int x in new[]{-1,1})foreach(int z in new[]{-1,1})
             {
@@ -107,11 +109,12 @@ namespace CrowdPunch.Editor
             }
             for(int row=0;row<2;row++)for(int col=0;col<3;col++)
             {
-                var block=Box(cart,observatory?"Ochre survey instrument cases":quarry?"Cut limestone cargo":"Copper ingot cargo",new Vector3((col-1)*1.0f,.92f,(row-.5f)*1.18f),new Vector3(.93f,.59f,1.10f),cargo);
+                var block=Box(cart,vault?"Vault crystal cargo":observatory?"Ochre survey instrument cases":quarry?"Cut limestone cargo":"Copper ingot cargo",new Vector3((col-1)*1.0f,.92f,(row-.5f)*1.18f),new Vector3(.93f,.59f,1.10f),cargo);
+                if(vault)block.GetComponent<MeshFilter>().sharedMesh=ChapterSevenVaultAssets.CrystalMesh();
                 block.transform.localRotation=Quaternion.Euler(0,(col+row)%2==0?3:-3,0);
             }
             foreach(int side in new[]{-1,1})
-                Box(cart,observatory?"Brass telescope housing":quarry?"Upper dressed stone":"Upper copper billet",new Vector3(side*.49f,1.48f,0),new Vector3(.90f,.43f,1.88f),cargo).transform.localRotation=Quaternion.Euler(0,side*4,0);
+                Box(cart,vault?"Braced crystal cargo":observatory?"Brass telescope housing":quarry?"Upper dressed stone":"Upper copper billet",new Vector3(side*.49f,1.48f,0),new Vector3(.90f,.43f,1.88f),cargo).transform.localRotation=Quaternion.Euler(0,side*4,0);
 
             var fittings=new GameObject(RailRoot).transform;SceneManager.MoveGameObjectToScene(fittings.gameObject,scene);
             var rails=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<MeshRenderer>(true)).Where(r=>r.name=="Track rail").OrderBy(r=>r.transform.position.x).ThenBy(r=>r.transform.position.z).ToArray();

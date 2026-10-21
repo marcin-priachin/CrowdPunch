@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: eb016cd2221721380851c39cd81fc467
+  m_Shader: {fileID: 4800000, guid: 7f0048fd1df365d439d6a7ceacf1c557, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap:
+    CrowdPunchSourceMaterial: Assets/CrowdPunch/Data/ChapterSevenVault/Materials/Rock.mat
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BakedShadowMask:
+        m_Texture: {fileID: 2800000, guid: 499e64a05f3bd234999da66ce3d1f9eb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 9140dc3df3dd8a24c89731b380391981, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DirtMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AtlasColor: 0
+    - _CameraCutaway: 0
+    - _ContinuousPaint: 1
+    - _Contrast: 0.78
+    - _Cull: 2
+    - _GrainStrength: 0.03
+    - _Meadow: 0
+    - _MineralStrength: 0.035
+    - _ObjectSpacePaint: 0
+    - _PlasterGrain: 0
+    - _ReceiveShadows: 1
+    - _SceneryHaze: 0
+    - _SeamStrength: 0
+    - _StrataStrength: 0
+    - _TextureScale: 0.55
+    - _TextureStrength: 0.1
+    - _UseBakedShadowMask: 1
+    - _UseEntityColor: 0
+    - _Variation: 0.035
+    - _WashStrength: 0.1
+    - _Window: 0
+    m_Colors:
+    - _BakedShadowST: {r: 0.014745932, g: 0.015086851, b: 0.29169044, a: 0.35418913}
+    - _BaseColor: {r: 0.39, g: 0.47, b: 0.56, a: 1}
+    - _Bounds: {r: 0, g: 0, b: 20, a: 20}
+    - _LightColor: {r: 0.91, g: 0.97, b: 1, a: 1}
+    - _PathColor: {r: 0.56, g: 0.42999998, b: 0.24999997, a: 1}
+    - _ShadowColor: {r: 0.4, g: 0.48, b: 0.62, a: 1}
+    - _WashColor: {r: 0.47, g: 0.56, b: 0.63, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
