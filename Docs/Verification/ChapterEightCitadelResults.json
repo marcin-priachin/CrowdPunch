@@ -1,0 +1,1854 @@
+{
+  "preservation": {
+    "components": 675,
+    "campaignFiles": 2343,
+    "differences": []
+  },
+  "refreshPreservation": {
+    "receivers": 287,
+    "bakedAssets": 538,
+    "differences": []
+  },
+  "originalLevel74GateHits": [
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "testSummaries": {
+    "ChapterEightTests": {
+      "total": 19,
+      "passed": 18,
+      "failed": 1,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "GroundHazardTests": {
+      "total": 42,
+      "passed": 42,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "BakedShadowTests": {
+      "Total": 30,
+      "Passed": 30,
+      "Failed": 0,
+      "Skipped": 0,
+      "Inconclusive": 0
+    },
+    "ShellFragmentTests": {
+      "Total": 3,
+      "Passed": 3,
+      "Failed": 0,
+      "Skipped": 0,
+      "Inconclusive": 0
+    },
+    "GateTests": {
+      "Total": 5,
+      "Passed": 5,
+      "Failed": 0,
+      "Skipped": 0,
+      "Inconclusive": 0
+    },
+    "ExitTests": {
+      "Total": 3,
+      "Passed": 3,
+      "Failed": 0,
+      "Skipped": 0,
+      "Inconclusive": 0
+    },
+    "FinalCitadelTests": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    }
+  },
+  "runtimeSamples": [
+    {
+      "frame": 10431,
+      "time": 150.71257,
+      "level": 70,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 10713,
+      "time": 155.778824,
+      "level": 70,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Vault"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Vault"
+        }
+      ],
+      "particleVertices": 270,
+      "particleSample": "(-16.9561, -0.4849, -17.3732)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 11267,
+      "time": 165.335587,
+      "level": 71,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 11569,
+      "time": 170.355576,
+      "level": 71,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 7,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 4,
+      "time": 0.0588861033,
+      "level": 71,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 7341,
+      "time": 96.45516,
+      "level": 71,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 7643,
+      "time": 101.475418,
+      "level": 71,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 7,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 7647,
+      "time": 101.536781,
+      "level": 72,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 7921,
+      "time": 106.415268,
+      "level": 72,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 7925,
+      "time": 106.476143,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8020,
+      "time": 108.35376,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 243,
+      "particleSample": "(-9.1160, -0.6882, -1.0533)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8040,
+      "time": 108.687218,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-9.0957, -0.6276, -1.0663)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8060,
+      "time": 109.020874,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-9.0876, -0.5669, -1.0733)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8080,
+      "time": 109.3546,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 318,
+      "particleSample": "(-10.7307, -0.8854, 0.7761)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8100,
+      "time": 109.688248,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-10.0929, -0.8456, 2.7016)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8120,
+      "time": 110.024261,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 318,
+      "particleSample": "(-10.1286, -0.7845, 2.6969)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8140,
+      "time": 110.357445,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-10.1689, -0.7239, 2.6947)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8160,
+      "time": 110.691391,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 327,
+      "particleSample": "(-10.2051, -0.6632, 2.6903)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8180,
+      "time": 111.04985,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 108,
+      "particleSample": "(-10.1672, -0.8160, 2.1169)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8200,
+      "time": 111.359406,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 270,
+      "particleSample": "(-9.2936, -0.7547, -0.9746)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8220,
+      "time": 111.6933,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 270,
+      "particleSample": "(-9.2686, -0.5014, -0.9908)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8240,
+      "time": 112.029167,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 270,
+      "particleSample": "(-9.2005, -0.2466, -1.0249)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8260,
+      "time": 112.362305,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 216,
+      "particleSample": "(-9.1485, 0.0061, -1.0508)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8280,
+      "time": 112.697876,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 6,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-9.0991, -0.8668, -1.0582)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8300,
+      "time": 113.031334,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 6,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-9.0440, -0.5182, -1.0858)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8320,
+      "time": 113.366562,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 7,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 318,
+      "particleSample": "(-8.9557, -0.1677, -1.1299)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8340,
+      "time": 113.699532,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 7,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-8.9033, 0.1804, -1.1577)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8360,
+      "time": 114.0329,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 7,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 318,
+      "particleSample": "(-10.1931, -0.6211, 2.8466)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8380,
+      "time": 114.366692,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 8,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-10.2811, -0.2721, 2.8921)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8400,
+      "time": 114.701126,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 8,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-10.3317, 0.0775, 2.9190)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8420,
+      "time": 115.033623,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 8,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 81,
+      "particleSample": "(9.8337, -0.8283, 2.1165)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8440,
+      "time": 115.367889,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 9,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 270,
+      "particleSample": "(-9.1631, -0.8674, -1.0212)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8460,
+      "time": 115.703636,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 9,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 270,
+      "particleSample": "(-9.1575, -0.8064, -1.0269)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8480,
+      "time": 116.033432,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 9,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 270,
+      "particleSample": "(-9.1389, -0.7464, -1.0391)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8500,
+      "time": 116.367119,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 9,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 216,
+      "particleSample": "(-9.1150, -0.6858, -1.0539)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8520,
+      "time": 116.706154,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 9,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-9.0949, -0.6241, -1.0669)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8540,
+      "time": 117.035324,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 10,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-9.0876, -0.5643, -1.0734)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8560,
+      "time": 117.373878,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 10,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 318,
+      "particleSample": "(-10.7273, -0.8819, 0.7746)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8580,
+      "time": 117.702171,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 10,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-10.0941, -0.8430, 2.7013)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8600,
+      "time": 118.036636,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 10,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-10.1300, -0.7822, 2.6968)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8620,
+      "time": 118.368675,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 10,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-10.1703, -0.7218, 2.6946)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8640,
+      "time": 118.703529,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 10,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-10.2063, -0.6610, 2.6901)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8660,
+      "time": 119.043266,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 11,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 108,
+      "particleSample": "(-10.1668, -0.8210, 2.1168)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8662,
+      "time": 119.069679,
+      "level": 73,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 11,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 162,
+      "particleSample": "(-9.7318, -0.8877, -2.9603)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8666,
+      "time": 119.130836,
+      "level": 74,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8820,
+      "time": 122.078262,
+      "level": 74,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 582,
+      "particleSample": "(-9.9127, -0.5823, 272.3220)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 8824,
+      "time": 122.13913,
+      "level": 75,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 9088,
+      "time": 126.836388,
+      "level": 75,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 9092,
+      "time": 126.896637,
+      "level": 76,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 9361,
+      "time": 131.704178,
+      "level": 76,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 9365,
+      "time": 131.765121,
+      "level": 77,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 9637,
+      "time": 136.590515,
+      "level": 77,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 1078,
+      "time": 18.8094959,
+      "level": 78,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 76,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 345,
+      "particleSample": "(-43.1501, -0.7177, -29.0775)",
+      "shadowCasters": 0,
+      "quality": "Ultra",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 10962,
+      "time": 160.251923,
+      "level": 78,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Ultra",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 11263,
+      "time": 165.272659,
+      "level": 78,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 76,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 270,
+      "particleSample": "(-43.2534, -0.2533, -29.6452)",
+      "shadowCasters": 0,
+      "quality": "Ultra",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 592,
+      "time": 10.7204638,
+      "level": 78,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 76,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 341,
+      "particleSample": "(-42.0564, -0.7410, -32.9860)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 9641,
+      "time": 136.651047,
+      "level": 78,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 9875,
+      "time": 140.850571,
+      "level": 78,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 341,
+      "particleSample": "(-42.0700, -0.6286, -32.9933)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 10152,
+      "time": 145.7822,
+      "level": 79,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 4,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 9879,
+      "time": 140.9135,
+      "level": 79,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 10156,
+      "time": 145.84169,
+      "level": 80,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 10427,
+      "time": 150.651077,
+      "level": 80,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 10,
+      "pillars": 3,
+      "hazards": [
+        {
+          "phase": "Warning",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 270,
+      "particleSample": "(-27.7434, -0.7585, -2.7665)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 172,
+      "time": 3.42971826,
+      "level": 80,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 6,
+      "pillars": 3,
+      "hazards": [
+        {
+          "phase": "Inactive",
+          "introduced": 1,
+          "style": "Citadel"
+        },
+        {
+          "phase": "Active",
+          "introduced": 1,
+          "style": "Citadel"
+        }
+      ],
+      "particleVertices": 327,
+      "particleSample": "(-28.6160, -0.8101, 0.8913)",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 0.0,
+      "bakedPolicies": 1,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 10717,
+      "time": 155.84166,
+      "level": 81,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 0,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 0,
+      "quality": "Very Low",
+      "shadowDistance": 110.0,
+      "bakedPolicies": 0,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    },
+    {
+      "frame": 10958,
+      "time": 160.195374,
+      "level": 81,
+      "preview": true,
+      "transition": false,
+      "error": null,
+      "enemyBodies": 20,
+      "pillars": 0,
+      "hazards": [],
+      "particleVertices": 0,
+      "particleSample": "none",
+      "shadowCasters": 44,
+      "quality": "Very Low",
+      "shadowDistance": 110.0,
+      "bakedPolicies": 0,
+      "device": "NVIDIA GeForce RTX 4090",
+      "cpu": "Intel(R) Core(TM) i9-14900KF"
+    }
+  ],
+  "profiles": [
+    {
+      "scope": "Editor Play, stationary entry, first wave, health guard, not a target-device or whole-campaign result",
+      "quality": "Very Low",
+      "cpu": "Intel(R) Core(TM) i9-14900KF",
+      "gpu": "NVIDIA GeForce RTX 4090",
+      "enemyBodies": 76,
+      "renderEntities": 166,
+      "mainSceneRenderers": 239,
+      "samples": 121,
+      "meanDrawCalls": 248.27272,
+      "meanBatches": 194.27272,
+      "mainThreadMedianMs": 16.7143,
+      "mainThreadMaximumMs": 19.2287,
+      "editorAllocatedBytes": 12475297328,
+      "shadowCasters": 0
+    },
+    {
+      "scope": "Editor Play, stationary entry, first wave, health guard, not a target-device or whole-campaign result",
+      "quality": "Ultra",
+      "cpu": "Intel(R) Core(TM) i9-14900KF",
+      "gpu": "NVIDIA GeForce RTX 4090",
+      "enemyBodies": 76,
+      "renderEntities": 164,
+      "mainSceneRenderers": 239,
+      "samples": 121,
+      "meanDrawCalls": 250.165283,
+      "meanBatches": 196.016525,
+      "mainThreadMedianMs": 16.6918,
+      "mainThreadMaximumMs": 20.2119,
+      "editorAllocatedBytes": 12480814762,
+      "shadowCasters": 0
+    }
+  ],
+  "runtimeProgress": [
+    "71 frames=302 quality=Very Low",
+    "72 frames=274 quality=Very Low",
+    "73 frames=737 quality=Very Low",
+    "74 frames=154 quality=Very Low",
+    "75 frames=264 quality=Very Low",
+    "76 frames=269 quality=Very Low",
+    "77 frames=272 quality=Very Low",
+    "78 frames=234 quality=Very Low",
+    "79 frames=273 quality=Very Low",
+    "80 frames=271 quality=Very Low",
+    "70 frames=282 quality=Very Low",
+    "81 frames=241 quality=Very Low",
+    "78 frames=301 quality=Ultra",
+    "71 frames=302 quality=Very Low"
+  ],
+  "representativeBuild": {
+    "status": "completed",
+    "result": "Succeeded",
+    "platform": "StandaloneWindows64",
+    "totalSizeBytes": 892549755,
+    "buildTimeMs": 193077,
+    "totalWarnings": 513,
+    "totalErrors": 0,
+    "outputPath": "C:/Users/pc/.codex/worktrees/unity-agent-a/CrowdPunch/Temp/ChapterEightWork/Build/CitadelReview.exe"
+  },
+  "finalScene": "Bootstrap",
+  "finalPlaying": false,
+  "coverageCorrection": {
+    "level": 74,
+    "groundPadding": 315.118,
+    "hazeEnd": 295.118,
+    "rebakeSucceeded": true,
+    "atlases": 4
+  }
+}

@@ -29,6 +29,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         [Enum(None,0,Scenery,1,ExteriorGround,2,SilhouetteScenery,3)] _SceneryHaze("Arena exterior haze", Float) = 0
         [ToggleUI] _ObjectSpacePaint("Paint follows moving parts", Float) = 0
         [ToggleUI] _UseEntityColor("Animated entity tint", Float) = 0
+        [ToggleUI] _MultiplyEntityColor("Multiply authored pigment by entity tint", Float) = 0
         [ToggleUI] _ReceiveShadows("Receive cast shadows", Float) = 1
         [HideInInspector] _BakedShadowMask("Baked receiver visibility",2D)="white" {}
         [HideInInspector] _BakedShadowST("Baked receiver UV transform",Vector)=(1,1,0,0)
@@ -52,7 +53,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float _CameraCutaway;
             float _SceneryHaze;
             float _ObjectSpacePaint;
-            float _UseEntityColor;
+            float _UseEntityColor, _MultiplyEntityColor;
             float _AtlasColor, _Cull;
             float _ContinuousPaint, _StrataStrength, _MineralStrength;
             float4 _BaseMap_ST;
@@ -159,7 +160,11 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                 ClipCameraSideScenery(input.positionWS,input.positionCS.xy,_CameraCutaway);
                 half4 baseColor=_BaseColor;
                 #ifdef UNITY_DOTS_INSTANCING_ENABLED
-                    baseColor=lerp(baseColor,UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4,_BaseColor),_UseEntityColor);
+                    {
+                    half4 entityColor=UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4,_BaseColor);
+                    // Multiplicative phase tint is opt-in; existing skins retain replacement semantics.
+                    baseColor=lerp(baseColor,lerp(entityColor,baseColor*entityColor,_MultiplyEntityColor),_UseEntityColor);
+                    }
                 #endif
                 half3 n=normalize(input.normalWS);
                 float3 p=input.positionWS;

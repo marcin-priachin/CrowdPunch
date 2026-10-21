@@ -168,11 +168,14 @@ namespace CrowdPunch.Editor
                         StaticEditorFlags.OccluderStatic|StaticEditorFlags.OccludeeStatic|StaticEditorFlags.ReflectionProbeStatic);
                 renderer.receiveGI=ReceiveGI.Lightmaps;
                 var filter=renderer.GetComponent<MeshFilter>();
+                bool citadelBox=ChapterEightCitadelShadows.Applies(renderer,Output);
                 bool vaultBox=ChapterSevenVaultShadows.Applies(renderer,Output);
-                if(filter!=null && filter.sharedMesh!=null) filter.sharedMesh=vaultBox
+                if(filter!=null && filter.sharedMesh!=null) filter.sharedMesh=citadelBox ? ChapterEightCitadelShadows.ForRenderer(renderer,Output) : vaultBox
                     ? ChapterSevenVaultShadows.ForRenderer(renderer,Output) : LightmapMesh(filter.sharedMesh);
                 var serialized=new SerializedObject(renderer);
-                float scale=vaultBox?ChapterSevenVaultShadows.BoxDensityScale:
+                float scale=citadelBox?ChapterEightCitadelShadows.BoxDensityScale:vaultBox?ChapterSevenVaultShadows.BoxDensityScale:
+                    renderer.name=="Continuous citadel ash earth"?.04f:
+                    renderer.name.StartsWith("Closed volcanic skyline ")?.10f:
                     renderer.name=="Continuous necropolis earth"?.04f:
                     renderer.name=="Continuous frost earth"?.04f:
                     renderer.name.StartsWith("Closed glacial skyline ")?.10f:

@@ -40,6 +40,7 @@ namespace CrowdPunch.Systems.Presentation
                 bool quarry = style == GroundHazardStyle.Quarry;
                 properties.SetFloat("_Quarry", quarry ? 1 : 0);
                 properties.SetFloat("_Observatory", style == GroundHazardStyle.Observatory ? 1 : 0);
+                properties.SetFloat("_Citadel", style == GroundHazardStyle.Citadel ? 1 : 0);
                 properties.SetFloat("_Vault", style == GroundHazardStyle.Vault ? 1 : 0);
                 properties.SetFloat("_Canyon", style == GroundHazardStyle.Canyon ? 1 : 0);
                 properties.SetFloat("_Necropolis", style == GroundHazardStyle.Necropolis ? 1 : 0);

@@ -6,6 +6,38 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Chapter Eight Citadel Presentation (2026-10-21, VISION-004..006)
+
+`ChapterEightCitadelBuilder` dresses saved Campaign 71-80 scenes. Chapter-owned
+assets and scenery supply quiet ash paving, charcoal fortress galleries, muted red
+banners, brass seals, complete gatehouses and a continuous volcanic horizon. The
+seven existing level-74 sectors receive distinct roadside landmarks; stages 75/77,
+78, 79 and 80 retain their protected lanes, muster ground, terrace and Dino layout.
+Exterior padding follows the full route haze range, including level 74.
+All decoration remains outside combat and has no colliders. Decorative materials
+use the existing scoped camera cutaway; gameplay floors and objectives do not.
+
+`ChapterEightCitadelObjectives` uses existing barricade, exit-cue, rotating-cover
+and shell-fragment authoring. `ChapterEightReliquaryVisuals` owns level 76's royal
+shell/core skin, fragments and branching damage. `ChapterEightProtectedPointVisuals`
+marks the exact authored zones in levels 75/77 with flush turquoise stone and supply
+inlays. No new gameplay state, ECS bridge, timer or objective rule is introduced.
+Chapter 8 contains no cargo-track objective. The painted shader's opt-in
+`_MultiplyEntityColor` mode lets the owned PillarStone/PillarBrass materials retain
+their pigment under the existing Dino pillar phase flashes. Its default is zero,
+so earlier skins keep their established replacement-tint behavior. No ECS data or
+Dino phase logic changes.
+
+`GroundHazardStyle.Citadel` appends a serialized presentation style for heated ash
+masonry. The existing phase owner and bounded particle geometry retain full-area
+warning, cooling wisps, active flame/ember and unload/reset behavior. Other chapter
+styles retain their material flags. `CampaignShadowBake` selects chapter-owned
+metric box charts and lower-density exterior/skyline charts only for this output.
+Native shadowmasks, probes, receiver bindings and `BakedShadowLighting` use the
+existing lifetime/restore path. Surface refresh preserves material GUIDs, source
+references, shadow masks and chart transforms. Verification is recorded in
+`Docs/Verification/ChapterEightCitadel.md`.
+
 ## Chapter Seven Vault Presentation (2026-10-21, VISION-004..006)
 
 `ChapterSevenVaultBuilder` dresses the saved Campaign 61-70 scenes without rebuilding
