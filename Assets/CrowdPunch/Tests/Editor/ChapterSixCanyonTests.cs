@@ -127,6 +127,43 @@ namespace CrowdPunch.Tests
             }
         }
 
+        [TestCase(51)] [TestCase(52)] [TestCase(53)] [TestCase(54)] [TestCase(55)]
+        [TestCase(56)] [TestCase(57)] [TestCase(58)] [TestCase(59)] [TestCase(60)]
+        public void Vision005_CartoonDustStaysOutsideCombatAndHasBoundedCost(int stage)
+        {
+            var main=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage}.unity");
+            var roots=main.GetRootGameObjects().Where(g=>g.name=="Chapter Six - Cartoon Desert Dust").ToArray();
+            Assert.That(roots.Length,Is.EqualTo(1));
+            Assert.That(roots[0].GetComponentsInChildren<Collider>(),Is.Empty);
+            var systems=roots[0].GetComponentsInChildren<ParticleSystem>();Assert.That(systems.Length,Is.EqualTo(4));
+            var sub=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage}/Campaign_{stage} Sub Scene.unity",OpenSceneMode.Additive);
+            var floors=sub.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<MeshRenderer>())
+                .Where(r=>r.name=="Continuous Convex Floor" || r.name=="Continuous Round Floor").ToArray();
+            var court=floors[0].bounds;foreach(var f in floors.Skip(1))court.Encapsulate(f.bounds);
+            court.Expand(new Vector3(2,0,2));
+            foreach(var system in systems)
+            {
+                Assert.That(system.main.maxParticles,Is.LessThanOrEqualTo(32));
+                Assert.That(system.main.useUnscaledTime,Is.False,"Dust should pause with gameplay.");
+                Assert.That(system.collision.enabled || system.trigger.enabled,Is.False);
+                var renderer=system.GetComponent<ParticleSystemRenderer>();
+                Assert.That(renderer.shadowCastingMode,Is.EqualTo(ShadowCastingMode.Off));
+                Assert.That(GameObjectUtility.GetStaticEditorFlags(system.gameObject).HasFlag(StaticEditorFlags.ContributeGI),Is.False);
+                Assert.That(renderer.sharedMaterial.shader.name,Is.EqualTo("CrowdPunch/Chapter Six Cartoon Dust"));
+                Assert.That(ShaderUtil.ShaderHasError(renderer.sharedMaterial.shader),Is.False);
+                system.Simulate(8,true,true,true);
+                var particles=new ParticleSystem.Particle[system.main.maxParticles];int count=system.GetParticles(particles);
+                Assert.That(count,Is.GreaterThan(0));
+                for(int i=0;i<count;i++)
+                {
+                    var p=particles[i];float radius=p.GetCurrentSize3D(system).magnitude*.5f;
+                    Assert.That(p.position.x+radius<court.min.x || p.position.x-radius>court.max.x ||
+                        p.position.z+radius<court.min.z || p.position.z-radius>court.max.z,Is.True,"Dust obscures the combat floor.");
+                }
+                system.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+        }
+
         [Test] public void Vision004_Level52FloorHasOneUpwardSurfaceInsideItsAuthoredOutline()
         {
             var scene=EditorSceneManager.OpenScene("Assets/CrowdPunch/Scenes/Campaign/Campaign_52/Campaign_52 Sub Scene.unity");

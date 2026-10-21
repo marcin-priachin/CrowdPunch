@@ -16,6 +16,12 @@ Each stage has its own landmark; stage 56 retains its five authored sectors.
 Decorative geometry is noncolliding and uses the production painted shader's
 scoped camera cutaway, continuous pigment and baked receiver contracts.
 The dry daylight profile uses distance haze sized from the entire arena bounds.
+`ChapterSixCanyonDust` authors four native ParticleSystems in a separate
+scene root around the combat bounds. A chapter-owned procedural unlit shader
+draws flattened, two-tone sand puffs. World-space tangential/outward drift and
+short lifetimes keep the complete puffs off the combat floor. The effects use
+scaled time, have a combined 128-particle cap, and cast no shadows or collision.
+No custom runtime component or ECS ownership changes are introduced.
 `ChapterSixCanyonPropClearance` separates decorative supply chests and cactus
 assemblies from architecture, yard walls and each other, retaining 0.2 m of
 clearance and excluding the expanded combat bounds. Straps translate with their

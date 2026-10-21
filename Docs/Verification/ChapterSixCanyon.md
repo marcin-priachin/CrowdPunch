@@ -212,3 +212,42 @@ Close static renders of the corrected store yards in 52 and 56 were inspected:
 Editor renders of saved geometry and lighting, not a combat playtest.
 
 After rebaking, all 33 chapter presentation tests passed again.
+
+
+## Cartoon desert dust, 2026-10-21
+
+Added sparse windblown sand puffs to Campaign 51-60 through
+`ChapterSixCanyonDust`, including both initial dressing and a saved-scene refresh.
+Each scene owns four emission bands around the full combat bounds, including
+long multi-sector routes and the large basin. Three rounded lobes and a broad
+base produce a flattened cartoon silhouette; a procedural unlit shader supplies
+a pale sand highlight, ochre underside and alpha fades without bitmap textures.
+The bands emit 1.4-5 puffs/second each with 4-6 second lifetimes and an absolute
+cap of 32 particles per band (128 per scene). Drift runs along and away from the
+arena edges. Particle extents remain outside the combat floor. Offscreen systems
+pause; effects use scaled time and have no collision, triggers, lights, shadows,
+GI, probes or custom runtime update script. Existing shadow bakes are retained.
+
+Unity compiled successfully, and all ten new dust cases passed. They simulate
+each saved scene's effects and check nonempty output, particle extents outside
+the expanded combat bounds, bounded count, shadow/GI/collision exclusion and
+shader compilation. The full chapter suite returned 42 passed / 1 failed.
+The remaining failure is the existing level-60 supply chest/rock intersection
+at `ChapterSixCanyonTests.cs` in the supply-clearance case. A focused rerun
+reproduced it. Comparing every original serialized record with HEAD found zero
+changes across all ten main scenes; this pass only adds the dust root and its
+particles. No scenery, gameplay, collider or SubScene geometry was edited.
+
+The level-52 preview advanced 308 frames over 6.005 game seconds with 58-63 live
+dust particles. Native gameplay and close yard captures were inspected:
+`Images/ChapterSixCanyon/Canyon52-desert-dust-0.png` through
+`Canyon52-desert-dust-2.png`. The puffs remain in the sandy exterior and leave the
+combat paving clear. This was controlled visual review, not combat acceptance:
+the existing `EnemyAnimationBaker` source-signature mismatch was already present
+in the Console before this work and recurred during preview. No animation assets
+were rebuilt. Camera follow was restored and Play stopped on Bootstrap.
+
+The runtime-project `dotnet build Assembly-CSharp.csproj --no-restore` exited
+unsuccessfully with zero reported compiler warnings or errors; log:
+`Temp/ChapterSixDustDotnet.txt`. This is separate from successful Unity
+compilation and dust verification. No target-device performance claim is made.

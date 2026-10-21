@@ -55,6 +55,7 @@ namespace CrowdPunch.Editor
             var court=bounds[0];foreach(var b in bounds.Skip(1))court.Encapsulate(b);
             ChapterSixCanyonPropClearance.Apply(root,court);
             Atmosphere(main,court);
+            ChapterSixCanyonDust.Apply(main,court,stage);
             if(root.GetComponentsInChildren<Collider>(true).Length!=0)throw new InvalidOperationException("Canyon scenery must not collide.");
             EditorSceneManager.MarkSceneDirty(main);EditorSceneManager.SaveScene(main);AssetDatabase.SaveAssets();
             Debug.Log($"Chapter Six {stage}: {Compositions[stage-51]} saved; bake required.");

@@ -23,6 +23,12 @@ Move crate straps with their chests, retain ground height, and keep the complete
 prop bounds outside the combat envelope. Apply the same rule to saved scenes
 and future dressing, then rebake the affected fixed scenery shadows.
 
+Chapter 6 desert dust, 2026-10-21: low windblown sand puffs animate the outer
+yards in all ten levels. Use flattened, rounded cartoon silhouettes, two-tone
+warm sand colours and gentle fades. Keep complete puffs outside the combat
+floor, cap the chapter ambience at 128 particles per scene, and retain existing
+geometry, physics, hazard cues and baked lighting. This is ambient decoration.
+
 Chapter 5's Campaign 41-50 scenes use the Twilight Necropolis compositions below:
 weathered slate paving, sage cemetery gardens, ivory memorials, mausoleums and
 bell towers, under dark purple light with darker decorative masonry and purple
