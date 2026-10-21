@@ -16,6 +16,14 @@ castle towers and two continuous glacial skyline layers outside the combat envel
 The original collision-aligned floor remains the visible gameplay surface. Decorative
 materials opt into the existing camera cutaway; floors and objectives remain excluded.
 
+`ChapterSevenVaultSnow` authors one native ParticleSystem in each main scene, covering
+the complete court/route and adjacent scenery. Its unlit faceted-flake shader uses
+ice-blue bevels, antialiased edges, fog and near-camera fading. The emitter prewarms,
+uses scaled time and world simulation, and varies falling speed, drift and tumble.
+Area-scaled emission is capped at 100 flakes/second and 1,024 live flakes per scene.
+It adds no runtime script, ECS state, particle collision, light or caster shadow.
+Snow unloads with the level; adding it does not modify baked receivers or geometry.
+
 `ChapterSevenVaultObjectives` binds segmented masonry, branching damage and exit cues
 to existing authoring. `ChapterSevenReliquaryVisuals`/`ChapterSevenReliquaryMeshes` skin
 the existing shell/core phases and fragment motion. `CampaignCargoTrackVisuals.ApplyVault`

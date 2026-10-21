@@ -12,6 +12,13 @@ painted materials, complete objective skins, phase-driven heated frost-stone haz
 decorative cutaways and baked-only lighting carry forward the contracts below.
 Verification and acceptance limits are recorded in `Docs/Verification/ChapterSevenVault.md`.
 
+Chapter 7 snowfall, 2026-10-21: all ten levels have gentle falling cartoon snow.
+Small faceted white flakes have an ice-blue bevel, slow lateral drift and tumble,
+with lifetime and near-camera fades. Native, scene-owned particles use scaled time,
+area-scaled emission and at most 1,024 live flakes per level. Keep the weather sparse
+enough to read crowds, objectives and heated frost-stone hazard phases. No particle
+collision, accumulation, lights or shadows; preserve geometry and the existing bakes.
+
 Chapter 7 shadow/joint correction, 2026-10-21: nonuniformly scaled box architecture
 uses metre-proportioned lightmap islands, divided into spans of at most 12 m, with
 local bake density increased for crisp column shadows. Do not restore the stretched

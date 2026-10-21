@@ -53,6 +53,7 @@ namespace CrowdPunch.Editor
             ChapterSevenVaultScenery.Build(root,bounds,stage);
             var court=bounds[0];foreach(var b in bounds.Skip(1))court.Encapsulate(b);
             Atmosphere(main,court);
+            ChapterSevenVaultSnow.Apply(main,court,stage);
             if(root.GetComponentsInChildren<Collider>(true).Length!=0)throw new InvalidOperationException("Vault scenery must not collide.");
             EditorSceneManager.MarkSceneDirty(main);EditorSceneManager.SaveScene(main);AssetDatabase.SaveAssets();
             Debug.Log($"Chapter Seven {stage}: {Compositions[stage-61]} saved; bake required.");

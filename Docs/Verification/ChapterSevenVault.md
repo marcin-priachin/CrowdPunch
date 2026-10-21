@@ -188,3 +188,45 @@ Evidence: `Evidence/ChapterSevenVault/ShadowEdges/` and
 `Images/ChapterSevenVault/ShadowEdges/`.
 
 ![Corrected column shadow](Images/ChapterSevenVault/ShadowEdges/After-00.png)
+
+## Cartoon snowfall (2026-10-21, VISION-005/006)
+
+Campaign 61-70 now include sparse, gently falling faceted snow with white faces and
+ice-blue bevels. A shared unlit shader antialiases the silhouette, respects scene
+depth/fog and fades flakes near the camera. Native particles drift, sway and tumble,
+fade over their lifetime, and prewarm for an immediate settled snowfall. One system
+per main scene covers the complete court/route and nearby scenery. Emission scales
+with area up to 100 flakes/second; the live budget never exceeds 1,024 per scene.
+No runtime script, ECS query, particle collision, accumulation, lights or shadows
+were added. The existing floor and hazard/objective presentations remain intact.
+`ChapterSevenVaultSnow.Refresh` updates all ten scenes; future dressing includes it.
+
+Verification:
+
+- Unity compilation succeeded; all 31 Chapter Seven presentation tests passed,
+  including ten saved-scene snow budget, scaled-time and no-collision/light cases.
+- Actual game-camera samples in levels 61/62/68/70 advanced 333/298/161/297 frames
+  over about five seconds each. Both samples per level showed changing snow.
+  Observed live counts were 576/940/961/661, within budgets 629/1024/1024/718.
+  Baked-only lighting remained enabled and URP shadow distance remained zero.
+- Using the real `FeedbackTimeController.SetPaused` route, 576 flakes retained
+  identical positions and count over 0.853 seconds at time scale zero. Resume
+  restored time scale one and advancing flake positions. The earlier direct
+  time-scale probe in `live-review.json` was overridden by that controller and is
+  superseded by `pause.json`/`resume.json`.
+- Transition to level 71 left zero Chapter Seven snow systems. The preview run
+  then stopped and restored Bootstrap. The current Console has no compilation or
+  game-runtime errors; the earlier bake-tool timeout remains in diagnostic history.
+- All 2,207 compared existing chapter assets, bake files and SubScene files remained
+  byte-identical. All 9,146 existing main-scene serialized object blocks remained
+  identical; only the snow objects/components and scene-root entries were added.
+  All 2,354 protected campaign/player files also remained unchanged. No rebake.
+- The separate .NET build still reports the existing 132 missing generated package
+  DLL references and four warnings. Unity compilation/tests succeeded independently.
+
+These are controlled Editor checks and a bounded weather budget, not target-device
+performance acceptance or human combat playtesting. Evidence is in
+`Evidence/ChapterSevenVault/Snow/`; representative game-camera captures are below.
+
+![Cartoon snow in the vault court](Images/ChapterSevenVault/Snow/Court.png)
+![Cartoon snow across the large glacial basin](Images/ChapterSevenVault/Snow/Basin.png)

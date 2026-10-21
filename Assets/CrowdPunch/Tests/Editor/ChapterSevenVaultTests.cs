@@ -83,6 +83,31 @@ namespace CrowdPunch.Tests
                 Assert.That(patch.GetComponent<GroundHazardAppearanceAuthoring>().style,Is.EqualTo(GroundHazardStyle.Vault));
         }
 
+        [TestCase(61)] [TestCase(62)] [TestCase(63)] [TestCase(64)] [TestCase(65)]
+        [TestCase(66)] [TestCase(67)] [TestCase(68)] [TestCase(69)] [TestCase(70)]
+        public void Vision005_SnowIsBoundedSceneWeatherThatPausesWithoutGameplayComponents(int stage)
+        {
+            var scene=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage}.unity");
+            var snow=scene.GetRootGameObjects().Single(g=>g.name=="Chapter Seven - Cartoon Snowfall");
+            var particles=snow.GetComponent<ParticleSystem>();var main=particles.main;
+            Assert.That(main.loop && main.prewarm && main.playOnAwake,Is.True);
+            Assert.That(main.useUnscaledTime,Is.False);
+            Assert.That(main.simulationSpace,Is.EqualTo(ParticleSystemSimulationSpace.World));
+            Assert.That(main.maxParticles,Is.InRange(1,1024));
+            Assert.That(particles.emission.rateOverTime.constant,Is.InRange(18,100));
+            Assert.That(particles.velocityOverLifetime.y.constantMax,Is.LessThan(0));
+            Assert.That(particles.collision.enabled || particles.trigger.enabled || particles.lights.enabled,Is.False);
+            Assert.That(snow.GetComponentsInChildren<Collider>(true),Is.Empty);
+            Assert.That(snow.GetComponentsInChildren<MonoBehaviour>(true),Is.Empty);
+            Assert.That((int)GameObjectUtility.GetStaticEditorFlags(snow),Is.Zero);
+            var renderer=snow.GetComponent<ParticleSystemRenderer>();
+            Assert.That(renderer.shadowCastingMode,Is.EqualTo(ShadowCastingMode.Off));
+            Assert.That(renderer.receiveShadows,Is.False);
+            Assert.That(renderer.maxParticleSize,Is.LessThanOrEqualTo(.012f));
+            Assert.That(renderer.sharedMaterial.shader.name,Is.EqualTo("CrowdPunch/Chapter Seven Cartoon Snow"));
+            Assert.That(ShaderUtil.ShaderHasError(renderer.sharedMaterial.shader),Is.False);
+        }
+
         [Test] public void Vision006_OwnedTexturesPreserveMipsAndFiltering()
         {
             foreach(string guid in AssetDatabase.FindAssets("t:Texture2D",new[]{"Assets/CrowdPunch/Data/ChapterSevenVault/Textures"}))
