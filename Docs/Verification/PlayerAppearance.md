@@ -110,3 +110,37 @@ Recovery remains Contact -> clip end -> frame zero -> Ready on the selected outc
 All 10 cooldown tests passed, including both snap-setting values, contact posing before
 acknowledgement and no animation restart for cooldown-rejected input. Unity compilation
 also passed; the .NET build passed with existing warnings.
+
+## Planted idle stance
+
+The reported air-stepping was reproduced with the current Idle clip and controller. Before
+correction, the left foot moved up to 0.0977 model units along Z and 0.0175 vertically;
+the right moved 0.0776 along Z and 0.0142 vertically. At the authored 3.525 world scale,
+this is roughly 27-34 cm horizontal travel and 5-6 cm vertical travel. Root Y offsets
+move this entire animated trajectory without stopping the foot motion. Foot IK alone
+removed vertical movement but left roughly 25 cm of shared horizontal sliding.
+
+`PlayerIdleFootPlanting` now keeps the idle body's RootT/RootQ reference and both foot
+T/Q targets at their initial stance. Unity's locomotion foot IK solves stable boots while
+non-target muscle curves remain authored. Walk/strafe animation data is unchanged and the
+existing blend tree releases the stance when moving. The current Idle name and user-selected
+feet-based height configuration are retained. The menu command updates this saved clip and
+controller only; it does not rebuild the prefab or move any player/scene roots. The full
+appearance builder also calls the same treatment so it survives a later rebuild.
+
+Three `PlayerIdleFootPlantTests` passed: 81 samples of the complete idle loop keep both
+feet within 0.0005 model units of their initial position, soles remain near model floor
+zero, movement still produces strides and replants when idle, and stationary punch/cooldown
+poses preserve the stance. Direct sampling measured the lowest visible sole at 0.0002
+model units throughout the loop (about 0.7 mm at authored scale). An isolated Campaign 01
+preview was paused after level entry and inspected from a close village camera at idle
+phases 0 and 0.5. Both world-space foot positions were unchanged; visual origin Y stayed
+-1, matching the authored floor. Temporary Play-mode camera/placement changes were discarded
+on stopping Play mode. No scene or player prefab file changed.
+
+The existing cooldown test fixture was also corrected to use the current trimmed clip's
+actual duration instead of assuming the old 20-frame clip. All 10 cooldown tests then passed,
+for 13 passing focused tests in this correction. No punch clip was changed.
+Unity compilation passed without reported compiler errors/warnings, and the .NET Editor
+build passed with 0 errors and 357 existing package/reference warnings. This is controlled
+Editor validation and visual review, not human combat playtesting or a device benchmark.

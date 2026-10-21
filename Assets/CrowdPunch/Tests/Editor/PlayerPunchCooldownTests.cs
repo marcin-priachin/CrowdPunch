@@ -130,7 +130,9 @@ namespace CrowdPunch.Tests
             float normalizedFrame = 1f / clip.frameRate / clip.length;
             float ready = 2f * normalizedFrame;
             float contact = 8f * normalizedFrame;
-            Assert.That(clip.length * clip.frameRate, Is.EqualTo(20f).Within(.001f), "Heavy Fighter fixture is 20 frames long");
+            float lastFrame = clip.length * clip.frameRate;
+            float recoveryFrames = lastFrame - 8f + 2f;
+            Assert.That(lastFrame, Is.GreaterThan(8f), "The configured contact frame is inside the current trimmed clip");
             punch.ResetPunchState();
             Assert.That(animator.GetFloat("PunchTime"), Is.EqualTo(ready).Within(.001f), "Wait at Ready Frame before input");
             punch.RequestPunch();
@@ -141,15 +143,16 @@ namespace CrowdPunch.Tests
             animation.ConfirmContactPose();
             Set(punch, "nextPunchTime", Time.time + duration * .5f);
             Call(animation, "Update");
-            Assert.That(animator.GetFloat("PunchTime"), Is.EqualTo(15f * normalizedFrame).Within(.001f),
+            float halfwayFrame = (8f + lastFrame + 2f) * .5f;
+            Assert.That(animator.GetFloat("PunchTime"), Is.EqualTo(halfwayFrame * normalizedFrame).Within(.001f),
                 "Halfway through recovery must still be playing forward after contact");
             punch.RequestPunch();
-            Assert.That(animator.GetFloat("PunchTime"), Is.EqualTo(15f * normalizedFrame).Within(.001f),
+            Assert.That(animator.GetFloat("PunchTime"), Is.EqualTo(halfwayFrame * normalizedFrame).Within(.001f),
                 "Cooldown-rejected input must not jump back to Contact Frame");
-            Set(punch, "nextPunchTime", Time.time + duration / 7f);
+            Set(punch, "nextPunchTime", Time.time + duration * 2f / recoveryFrames);
             Call(animation, "Update");
             Assert.That(animator.GetFloat("PunchTime"), Is.EqualTo(1f).Within(.001f), "Reach the clip's final frame before wrapping");
-            Set(punch, "nextPunchTime", Time.time + duration / 14f);
+            Set(punch, "nextPunchTime", Time.time + duration / recoveryFrames);
             Call(animation, "Update");
             Assert.That(animator.GetFloat("PunchTime"), Is.EqualTo(normalizedFrame).Within(.001f),
                 "After wrapping, play the opening frames toward ready");
