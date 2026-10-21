@@ -447,7 +447,7 @@ namespace CrowdPunch.Editor
             return mesh;
         }
 
-        private static List<int> TriangulateFloorOutline(Vector2[] outline)
+        internal static List<int> TriangulateFloorOutline(Vector2[] outline)
         {
             // LOOP-002: a fan overlaps concave steps/notches. Clip ears so every
             // floor triangle stays inside the authored perimeter, facing upward.

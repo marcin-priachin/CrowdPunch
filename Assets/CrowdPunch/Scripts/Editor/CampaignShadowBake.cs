@@ -171,6 +171,8 @@ namespace CrowdPunch.Editor
                 if(filter!=null && filter.sharedMesh!=null) filter.sharedMesh=LightmapMesh(filter.sharedMesh);
                 var serialized=new SerializedObject(renderer);
                 float scale=renderer.name=="Continuous necropolis earth"?.04f:
+                    renderer.name=="Continuous canyon earth"?.04f:
+                    renderer.name=="Continuous canyon mesa rim"?.10f:
                     renderer.name=="Continuous necropolis ridge"?.10f:
                     renderer.name=="Continuous observatory earth"?.04f:
                     renderer.name=="Continuous wooded garden horizon"?.10f:

@@ -43,12 +43,14 @@ namespace CrowdPunch.Editor
 
         internal static void ApplyNecropolis(Scene scene) => Apply(scene,false,true);
 
-        private static void Apply(Scene scene,bool observatory,bool necropolis=false)
+        internal static void ApplyCanyon(Scene scene) => Apply(scene,false,false,true);
+
+        private static void Apply(Scene scene,bool observatory,bool necropolis=false,bool canyon=false)
         {
-            int stage=necropolis ? (scene.path.Contains("/Campaign_46/")?46:0) : observatory ? (scene.path.Contains("/Campaign_32/")?32:scene.path.Contains("/Campaign_39/")?39:0) : scene.path.Contains("/Campaign_19/")?19:scene.path.Contains("/Campaign_26/")?26:0;
+            int stage=canyon ? (scene.path.Contains("/Campaign_54/")?54:0) : necropolis ? (scene.path.Contains("/Campaign_46/")?46:0) : observatory ? (scene.path.Contains("/Campaign_32/")?32:scene.path.Contains("/Campaign_39/")?39:0) : scene.path.Contains("/Campaign_19/")?19:scene.path.Contains("/Campaign_26/")?26:0;
             if(stage==0)return;
-            bool quarry=stage==26 || observatory || necropolis;
-            string chapter="Assets/CrowdPunch/Data/"+(necropolis?"ChapterFiveNecropolis":observatory?"ChapterFourObservatory":quarry?"ChapterThreeQuarry":"ChapterTwoFoundry");
+            bool quarry=stage==26 || observatory || necropolis || canyon;
+            string chapter="Assets/CrowdPunch/Data/"+(canyon?"ChapterSixCanyon":necropolis?"ChapterFiveNecropolis":observatory?"ChapterFourObservatory":quarry?"ChapterThreeQuarry":"ChapterTwoFoundry");
             string folder=chapter+"/TrackCargo";
             System.IO.Directory.CreateDirectory(folder+"/Materials");AssetDatabase.Refresh();
             string Source(string foundry,string stone)=>quarry?chapter+"/Materials/"+stone+".mat":chapter+"/PaintedLook/Materials/Painted "+foundry+"_Near_0.mat";
@@ -84,7 +86,7 @@ namespace CrowdPunch.Editor
                 Object.DestroyImmediate(old.gameObject);
             var cart=new GameObject(CartRoot).transform;cart.SetParent(track.transform,false);
             Box(cart,"Reinforced transfer deck",new Vector3(0,-1.02f,0),new Vector3(3.48f,.22f,3.04f),frame);
-            var hopper=Box(cart,necropolis?"Ceremonial stone carrier":observatory?"Jade instrument carrier":quarry?"Quarry steel carrier":"Foundry enamel carrier",new Vector3(0,-.14f,0),new Vector3(3.22f,1.52f,2.78f),body);
+            var hopper=Box(cart,canyon?"Canyon ore transfer carrier":necropolis?"Ceremonial stone carrier":observatory?"Jade instrument carrier":quarry?"Quarry steel carrier":"Foundry enamel carrier",new Vector3(0,-.14f,0),new Vector3(3.22f,1.52f,2.78f),body);
             hopper.GetComponent<MeshFilter>().sharedMesh=Hopper(folder);
             foreach(int x in new[]{-1,1})foreach(int z in new[]{-1,1})
             {
