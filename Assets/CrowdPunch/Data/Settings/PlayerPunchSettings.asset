@@ -20,13 +20,13 @@ MonoBehaviour:
   eliteKnockbackMultiplier: 0.1
   damage: 10
   cooldown: 1.25
-  missCooldown: 1.25
+  missCooldown: 0.5
   directionPositionWeight: 0
   aimAssistRange: 1e+11
   aimAssistMaximumAngleDegrees: 12
   cooldownHandBoneName: hand_r
-  cooldownHandScale: 0.65
-  readyHandScale: 1.15
+  cooldownHandScale: 1.2
+  readyHandScale: 1
   cooldownParticleMaterial: {fileID: 2100000, guid: d8aa515267ba45b4da20349355379b65, type: 2}
   cooldownAuraColor: {r: 0.2, g: 0.45, b: 1, a: 0.7}
   readyAuraColor: {r: 1, g: 0.55, b: 0.08, a: 0.9}

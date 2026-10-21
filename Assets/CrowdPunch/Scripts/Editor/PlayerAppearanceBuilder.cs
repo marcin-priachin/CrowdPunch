@@ -27,6 +27,7 @@ namespace CrowdPunch.Editor
             var backward = CopyClip("WalkBackward", true);
             var punch = CopyClip("Punch", false);
             var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>("Assets/CrowdPunch/Animation/PlayerMovement.controller");
+            PlayerIdleFootPlanting.Apply(idle, controller);
             var tree = (BlendTree)controller.layers[0].stateMachine.defaultState.motion;
             var children = tree.children;
             for (int i = 0; i < children.Length; i++)

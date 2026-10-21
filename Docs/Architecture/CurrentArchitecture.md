@@ -912,6 +912,14 @@ so the Bootstrap prefab instance inherits animation support without additional s
 This preserves PLAYER-002 camera-forward facing and PLAYER-005 independent dash/punch timing.
 Jogging during dash is the current presentation fallback because no dash clip is supplied.
 Animation follows movement intent, so pressing against a blocking wall still plays locomotion.
+`PlayerIdleFootPlanting` stabilizes the project-owned Idle clip's body reference and both
+humanoid foot IK targets at the first idle pose, while preserving other animation curves.
+The locomotion state's foot IK solves the legs onto that stance. Height is based on the
+feet with vertical root travel extracted, so the sole plane is model-space zero. Walking
+and strafe clips retain animated goals and blend out of the idle stance through the existing
+directional blend tree. Player roots, colliders and gameplay movement are unaffected. The
+appearance builder reapplies this treatment on rebuild; `Plant Player Idle Feet` applies it
+to the existing saved Idle without rebuilding character geometry or resetting punch tuning.
 No ECS ownership, physics ordering, or open art-direction decision (OQ-015) changes.
 
 `PlayerPunchAnimation` drives the always-weighted `Upper Body Punch` override layer using
