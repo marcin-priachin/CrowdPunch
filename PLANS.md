@@ -1,6 +1,25 @@
 # Campaign Visual Update Plan
 
-Created: 2026-10-18. Status: Chapters 2-7 are implemented; Chapters 8-9 remain planned.
+Created: 2026-10-18. Status: Chapters 2-9 have saved visual implementations;
+chapter verification documents record acceptance and performance limits.
+
+Chapter 9's Campaign 81 uses Crown Above the Clouds: quiet blue-grey ceremonial
+paving, connected ivory galleries, royal-blue roofs and gold fittings above two
+closed cloud-bank layers. The four facing sides have a palace, bell towers, sky gate
+and observatory skyline. Royal masonry targets, blue rotating shield with gold jambs,
+reinforced shell/core and a complete cargo trolley/rail/socket carry the established
+interaction language. Preserve the boss, four anchor positions, landing spaces, supply,
+physics and phase ownership. Owned pigment materials, decorative cutaways, restrained
+grading and baked-only lighting follow the contracts below. Evidence and remaining
+acceptance limits are recorded in `Docs/Verification/ChapterNineCrown.md`.
+
+Chapter 9 marble refinement, 2026-10-21: buildings and arena paving use restrained
+painted marble veining. Keep warm ivory piers distinct from cooler blue-grey wall
+panels, and separate the pale exterior terrace from the mid-value combat paving.
+The floor has quiet 6 m slab joints; veins remain low contrast, continuous across
+mesh facets and filtered at distance. Retain the matte cel treatment, existing
+placement, floor/collider geometry, lighting, shadowmasks and receiver bindings.
+This is a surface-only update; do not rebuild or rebake the saved composition.
 
 Chapter 7's Campaign 61-70 scenes use the Frostbound Vault compositions below:
 quiet slate-blue combat paving within ivory vault galleries, frozen buttresses,

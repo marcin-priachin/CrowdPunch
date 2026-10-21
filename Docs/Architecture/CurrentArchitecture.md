@@ -273,6 +273,22 @@ Boss death immediately suppresses hostile player damage through `PlayerEcsBridge
 
 `FinalePresentationSystem` copies only positions, phase, warning dimensions, health fraction and anchor statuses to `FinalePresentation`; the MonoBehaviour never reads/stores entities. The supplied Goleling FBX plays through a finale-owned Animator controller and copied looping flight clips. A temporary look-height offset on the existing TPP camera frames the flying giant and is restored on scene exit. Cyan/amber/dark floor rings show active/paused/spent anchors; existing target cracks, shell pieces and rail/socket visuals show progress. Main-scene presentation and ECS SubScene are both saved under `Scenes/Campaign/Campaign_81`.
 
+Chapter Nine's `ChapterNineCrownBuilder` dresses those saved scenes with Crown Above
+the Clouds scenery and chapter-owned painted surfaces. Four connected gallery sides
+and cloud layers remain outside the original 100 m court. `ChapterNineCrownObjectives`
+uses existing barricade, shell-fragment, cover-panel and track/socket presentation;
+it adds no encounter state or bridge queries. `ChapterNineCrownShadows` supplies metric
+box charts to the explicit-scene `CampaignShadowBake` path. Fixed scenery uses saved
+shadowmasks/probes and the existing scoped `BakedShadowLighting` lifetime; moving and
+state-dependent anchors retain local pigment, probes and no permanent caster shadows.
+
+The chapter-owned floor and fixed building materials can opt into
+`PaintedMarble.hlsl` through the production painted shader. It adds filtered spatial
+veining and optional metre-scaled paving joints to albedo only. Its default strength
+is zero, so earlier chapters retain their existing surfaces. The marble refresh
+separates ivory piers, cool facades and pale terraces without changing geometry,
+lighting data, receiver bindings or gameplay/presentation ownership.
+
 Initial boss settings: 6000 health, three stages at 67%/34%, 2.5s fall, 24s downed with 7s initial stun, 2.5s harmless takeoff and 3s victory; attack cadence and warning sizes remain editable. The 6-8 minute/6-8 downing targets require human combat playtesting. See `Docs/Verification/FinalEncounter.md` for actual checks and limitations.
 
 The finale scene also owns `FinaleBossHealthBar`, a noninteractive screen-space uGUI canvas. `FinalePresentation` forwards health fraction through the same ECS presentation endpoint, without UI entity access. It displays a long red bar centered at the top with the player's fill thickness and top margin, without text or background. The cyan boss tint and pulsing body ring indicate vulnerability through grounded attacks and end at takeoff. The opening hint sits below the bar. Pause/failure/completion screens hide the bar, and unloading the finale removes it.

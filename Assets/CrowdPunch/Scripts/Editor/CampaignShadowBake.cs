@@ -169,11 +169,13 @@ namespace CrowdPunch.Editor
                 renderer.receiveGI=ReceiveGI.Lightmaps;
                 var filter=renderer.GetComponent<MeshFilter>();
                 bool citadelBox=ChapterEightCitadelShadows.Applies(renderer,Output);
+                bool crownBox=ChapterNineCrownShadows.Applies(renderer,Output);
                 bool vaultBox=ChapterSevenVaultShadows.Applies(renderer,Output);
-                if(filter!=null && filter.sharedMesh!=null) filter.sharedMesh=citadelBox ? ChapterEightCitadelShadows.ForRenderer(renderer,Output) : vaultBox
+                if(filter!=null && filter.sharedMesh!=null) filter.sharedMesh=crownBox ? ChapterNineCrownShadows.ForRenderer(renderer,Output) : citadelBox ? ChapterEightCitadelShadows.ForRenderer(renderer,Output) : vaultBox
                     ? ChapterSevenVaultShadows.ForRenderer(renderer,Output) : LightmapMesh(filter.sharedMesh);
                 var serialized=new SerializedObject(renderer);
-                float scale=citadelBox?ChapterEightCitadelShadows.BoxDensityScale:vaultBox?ChapterSevenVaultShadows.BoxDensityScale:
+                float scale=renderer.name=="Continuous cloud earth"?.025f:renderer.name.Contains("cloud banks")?.07f:
+                    crownBox?ChapterNineCrownShadows.BoxDensityScale:citadelBox?ChapterEightCitadelShadows.BoxDensityScale:vaultBox?ChapterSevenVaultShadows.BoxDensityScale:
                     renderer.name=="Continuous citadel ash earth"?.04f:
                     renderer.name.StartsWith("Closed volcanic skyline ")?.10f:
                     renderer.name=="Continuous necropolis earth"?.04f:

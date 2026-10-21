@@ -25,6 +25,11 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         [ToggleUI] _ContinuousPaint("Continuous spatial pigment", Float) = 0
         _StrataStrength("Quarry layer variation", Range(0,.3)) = 0
         _MineralStrength("Fine mineral variation", Range(0,.2)) = 0
+        _MarbleStrength("Painted marble veins", Range(0,1)) = 0
+        _MarbleScale("Marble detail per metre", Float) = .42
+        _MarbleVeinColor("Marble vein pigment", Color) = (.45,.53,.62,1)
+        _MarbleSlabStrength("Marble paving joints", Range(0,1)) = 0
+        _MarbleSlabSize("Marble slab metres", Float) = 6
         [ToggleUI] _CameraCutaway("Camera-side decoration cutaway", Float) = 0
         [Enum(None,0,Scenery,1,ExteriorGround,2,SilhouetteScenery,3)] _SceneryHaze("Arena exterior haze", Float) = 0
         [ToggleUI] _ObjectSpacePaint("Paint follows moving parts", Float) = 0
@@ -56,6 +61,8 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float _UseEntityColor, _MultiplyEntityColor;
             float _AtlasColor, _Cull;
             float _ContinuousPaint, _StrataStrength, _MineralStrength;
+            float _MarbleStrength, _MarbleScale, _MarbleSlabStrength, _MarbleSlabSize;
+            half4 _MarbleVeinColor;
             float4 _BaseMap_ST;
         CBUFFER_END
         #ifdef UNITY_DOTS_INSTANCING_ENABLED
@@ -134,6 +141,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             // Use the painted value structure while keeping a coherent chapter palette.
             return lerp(1, clamp(.62+dot(sampleColor,half3(.2126,.7152,.0722))*1.4,.65,1.25), _TextureStrength);
         }
+        #include "PaintedMarble.hlsl"
         ENDHLSL
         Pass
         {
@@ -212,6 +220,8 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                     }
                 }
                 albedo*=1+(grain-.5)*_GrainStrength*grainFade;
+                if(_MarbleStrength>.001)
+                    albedo=ApplyPaintedMarble(albedo,painted);
                 if(_SeamStrength>.001)
                 {
                     float axis=abs(n.x)>abs(n.z)?p.z:p.x;
