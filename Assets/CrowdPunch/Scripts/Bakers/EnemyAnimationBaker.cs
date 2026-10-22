@@ -62,6 +62,7 @@ namespace CrowdPunch.Bakers
                 Owner = gatekeeper != null ? GetEntity(gatekeeper, TransformUsageFlags.Dynamic) : dino != null ? GetEntity(dino, TransformUsageFlags.Dynamic) : rolling != null ? GetEntity(rolling, TransformUsageFlags.Dynamic) : chicken != null ? GetEntity(chicken, TransformUsageFlags.Dynamic) : GetEntity(owner, TransformUsageFlags.Dynamic),
                 Samples = blob,
                 Profile = (byte)authoring.Profile,
+                SpawnMotion = authoring.SpawnMotion,
                 BlendResponse = math.max(0f, authoring.BlendResponse),
                 LaunchPivot = authoring.RotateLaunchAroundOwner && owner != null
                     ? (float3)animator.transform.InverseTransformPoint(owner.transform.position

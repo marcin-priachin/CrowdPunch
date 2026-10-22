@@ -6,6 +6,25 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Goblin Baseline Presentation (2026-10-22, ENEMY-012, INFO-004, VISION-006)
+
+`EnemyBaselinePrefabBuilder` retains the shared `EnemyBaseline.prefab` identity and physics
+root while instantiating the user-authored Goblin Trooper variant as its visual source.
+The pack's Humanoid clips are evaluated through its avatar in the Editor into the existing
+11-motion, 32-frame sampled skinning format. `EnemyAnimationProfile.Goblin` selects idle,
+walk/run, contact-timed anticipation/strike, damage, airborne jump, Die and reverse-Die rise.
+Recovery divides the existing recovery clock between fall and rise; no gameplay clock or
+physics transform is owned by animation. The mace is converted from a rigid hand attachment
+to a one-bone skinned mesh so the same sampled ECS path animates its attachment.
+
+Skinned render entities carry `EnemyVisualOwner.AnimationDriven`. Readability writes a
+neutral material multiplier and impact presentation skips procedural deformation/flashes
+for those entities. Other enemy profiles retain their existing feedback. Goblin-owned
+materials retain the supplied textures under `CrowdPunch/Cel/Enemy` and are excluded from
+the Ultimate Monsters atlas refresh. Source prefabs and imported pack materials are preserved.
+The common spawn settings continue referencing the shared baseline prefab, including boss
+ammunition and campaign waves. No runtime Animator or additional Mono-to-ECS bridge is added.
+
 ## Chapter Eight Citadel Presentation (2026-10-21, VISION-004..006)
 
 `ChapterEightCitadelBuilder` dresses saved Campaign 71-80 scenes. Chapter-owned
@@ -557,6 +576,26 @@ a 36x38m clipped court with two navigation obstacles and a single finite 12 Base
 Bootstrap's legacy array includes `24 Cut The Tail`; no campaign catalog or player
 build scene list changes. Rebuilding this encounter is explicit and restores open scenes.
 
+## Animated Ground Spawning (2026-10-22, INFO-006, COMBAT-018)
+
+`EnemySpawnSettings.SpawnFromGround` is optional and defaults off. Profile baking copies
+it into `EnemySpawnProfile`; initialization stores it in the prefab's disabled enableable
+`EnemySpawnAnimation`. `EnemyAnimationAuthoring.SpawnMotion` identifies a sampled motion
+(-1 means unavailable). Post-baking copies that motion's duration to the owner. The Goblin
+builder samples the pack's Spawn clip in slot 7, preserving below-floor motion, configures
+both body and mace and enables the setting on the shared Baseline profile.
+
+After normal warning clearance, `EnemySpawnWarningSystem` grounds opted-in supported
+bodies using the authored arena floor and physics collider bottom, preserving the reserved
+XZ point. It locks `EnemyGroundConstraint`, clears velocity and starts the existing
+Recovering clock for the clip duration, enabling `EnemySpawnAnimation`. Existing movement
+and attack rules suspend activity while normal incoming combat remains available.
+`EnemyAnimationSystem` overrides recovery poses with the shared spawn progress for every
+skinned part. `EnemyRecoverySystem` disables the spawn state on completion or interruption;
+pooling also clears it. Restart and pooled reuse enter the same warning/activation path.
+No new MonoBehaviour, timer system, UI or alternate physics integration is introduced.
+Missing clip/floor/collider or an unchecked option falls back to existing drop spawning.
+
 ## Enemy Spawn Warnings (INFO-006)
 
 `EnemySpawnInitialization` reserves the fully initialized prefab at its chosen location,
@@ -930,12 +969,13 @@ the two surrounding movement directions, and neighboring sample frames into `Ski
 Cycles start at entity-specific phases to avoid synchronized crowds. Matrix blending is a
 sampled locomotion approximation, not a general runtime Animator-controller interpreter.
 
-`EnemyBaseline.prefab` uses `Models/UltimateMonsters/Big/Orc.fbx` through that sampled
-GPU-skinning path. Its `EnemyAnimationProfile.Baseline` loops `Idle` while stationary and
-`Walk` while moving, holds a sideways `Idle` pose while launched, and plays `Death` once when
-defeated. Generated instanced materials live under `Materials/Enemies/Baseline`; mesh-specific
-CPA3 samples, the controller, prefab, materials, and `EnemySpawnSettings` reference can be rebuilt
-through **Crowd Punch > Enemies > Rebuild Baseline Prefab** (ENEMY-012, INFO-004).
+`EnemyBaseline.prefab` uses the Goblin Trooper Variant through the sampled GPU-skinning
+path and `EnemyAnimationProfile.Goblin`; see Goblin Baseline Presentation above for the
+contact, hit and lifecycle mapping. Its textured materials live under
+`Materials/Enemies/GoblinBaseline`. The controller, body/mace CPA3 samples, equipment mesh
+and shared prefab can be rebuilt through **Crowd Punch > Enemies > Rebuild Baseline Prefab**
+(ENEMY-012, INFO-004). The older `Baseline` profile remains available to other creature
+prefabs that use its simpler idle/walk/launch/death mapping.
 All enemy prefab builders enable `Collider.providesContacts`; the baked physics collider must
 raise collision events for `EnemyLaunchCollisionSystem` to propagate launched state (COMBAT-002/003).
 

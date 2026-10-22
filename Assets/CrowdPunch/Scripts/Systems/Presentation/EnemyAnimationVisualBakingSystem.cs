@@ -22,6 +22,12 @@ namespace CrowdPunch.Systems.Presentation
                 bool rolling = SystemAPI.HasComponent<RollingBoss>(animation.ValueRO.Owner);
                 bool dino = SystemAPI.HasComponent<DinoBoss>(animation.ValueRO.Owner);
                 bool gatekeeper = SystemAPI.HasComponent<BossPart>(animation.ValueRO.Owner);
+                if (animation.ValueRO.SpawnMotion >= 0 && animation.ValueRO.SpawnMotion < EnemyAnimationSamples.MotionCount
+                    && SystemAPI.HasComponent<EnemySpawnAnimation>(animation.ValueRO.Owner))
+                    commands.SetComponent(animation.ValueRO.Owner, new EnemySpawnAnimation
+                    {
+                        Duration = animation.ValueRO.Samples.Value.Durations[animation.ValueRO.SpawnMotion]
+                    });
                 if (!chicken && !rolling && !dino && !gatekeeper) commands.AddComponent(animation.ValueRO.Owner, new EnemyLandingAnimation
                 {
                     Duration = animation.ValueRO.Samples.Value.Durations[EnemyAnimationSamples.ImpactMotion]
@@ -37,7 +43,8 @@ namespace CrowdPunch.Systems.Presentation
                     else
                     {
                         commands.AddComponent<EnemyVisualDeformation>(entity);
-                        commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner, UsesAtlas = 1 });
+                        commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner, UsesAtlas = 1,
+                            AnimationDriven = (byte)(animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Goblin ? 1 : 0) });
                         if (SystemAPI.HasComponent<SnakeHead>(animation.ValueRO.Owner))
                             commands.AddComponent(entity, new SnakeBodyColor { Value = new float4(1f) });
                     }

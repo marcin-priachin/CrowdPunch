@@ -45,6 +45,7 @@ namespace CrowdPunch.Systems.Presentation
             private void Execute(in EnemyVisualOwner owner, ref EnemyVisualDeformation visual,
                 ref LocalToWorld world, ref URPMaterialPropertyBaseColor color)
             {
+                if (owner.AnimationDriven != 0) return;
                 if (!Feedback.HasComponent(owner.Value)) return;
                 if (visual.Initialized == 0 || !world.Value.Equals(visual.LastOutput))
                 {

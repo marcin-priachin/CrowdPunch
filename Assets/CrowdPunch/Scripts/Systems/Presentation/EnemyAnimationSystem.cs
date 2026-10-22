@@ -33,6 +33,9 @@ namespace CrowdPunch.Systems.Presentation
                 RangedAttacks = SystemAPI.GetComponentLookup<RangedAttackState>(true),
                 ElitePunches = SystemAPI.GetComponentLookup<ElitePunchState>(true),
                 Health = SystemAPI.GetComponentLookup<Health>(true),
+                Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
+                ContactSettings = SystemAPI.GetComponentLookup<EnemyContactDamageSettings>(true),
+                SpawnAnimations = SystemAPI.GetComponentLookup<EnemySpawnAnimation>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel();
         }
@@ -55,6 +58,9 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<RangedAttackState> RangedAttacks;
             [ReadOnly] public ComponentLookup<ElitePunchState> ElitePunches;
             [ReadOnly] public ComponentLookup<Health> Health;
+            [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
+            [ReadOnly] public ComponentLookup<EnemyContactDamageSettings> ContactSettings;
+            [ReadOnly] public ComponentLookup<EnemySpawnAnimation> SpawnAnimations;
             public float DeltaTime;
 
             private void Execute(in EnemyAnimation animation, ref EnemyAnimationPlayback playback, ref DynamicBuffer<SkinMatrix> skin)
@@ -76,6 +82,27 @@ namespace CrowdPunch.Systems.Presentation
                     playback.Initialized = 1;
                 }
                 EnemyLaunchState launch = Launches[owner];
+                if (animation.SpawnMotion >= 0 && animation.SpawnMotion < EnemyAnimationSamples.MotionCount
+                    && SpawnAnimations.HasComponent(owner) && SpawnAnimations.IsComponentEnabled(owner)
+                    && launch.Phase == EnemyLaunchPhase.Recovering)
+                {
+                    float progress = math.saturate(1f - launch.RecoverySecondsRemaining
+                        / math.max(.001f, SpawnAnimations[owner].Duration));
+                    float spawnFrame = progress * (samples.FrameCount - 1);
+                    int from = (int)spawnFrame;
+                    ApplyFrame(ref skin, ref samples, animation.SpawnMotion, from,
+                        math.min(from + 1, samples.FrameCount - 1), math.frac(spawnFrame));
+                    playback.WasRecovering = 0;
+                    playback.WasLaunched = 0;
+                    playback.Landing = 0;
+                    playback.HitActive = 0;
+                    return;
+                }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Goblin)
+                {
+                    AnimateGoblin(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
                 if (animation.Profile != (byte)EnemyAnimationProfile.Standard
                     && animation.Profile != (byte)EnemyAnimationProfile.Elite
                     && launch.Phase == EnemyLaunchPhase.Recovering)
@@ -492,6 +519,82 @@ namespace CrowdPunch.Systems.Presentation
                 float frame = playback.Phase * samples.FrameCount;
                 int a = (int)frame;
                 ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
+            }
+
+            // Goblin slots: idle, walk, run, anticipation, strike, hit, rise, idle, idle, flight, fall.
+            // All motion comes from authored poses; the physics owner keeps its transform and velocity.
+            private void AnimateGoblin(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                bool hit = false;
+                if (Health.HasComponent(owner))
+                {
+                    float health = Health[owner].Current;
+                    hit = playback.HealthInitialized != 0 && health < playback.PreviousHealth;
+                    playback.HealthInitialized = 1;
+                    playback.PreviousHealth = health;
+                }
+                int motion;
+                float progress = -1f;
+                bool restart = false;
+                if (launch.Phase == EnemyLaunchPhase.Launched)
+                {
+                    motion = EnemyAnimationSamples.FlyingMotion;
+                    restart = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
+                    playback.WasLaunched = 1;
+                    playback.LaunchSequence = launch.LaunchSequence;
+                    playback.HitActive = 0;
+                }
+                else
+                {
+                    playback.WasLaunched = 0;
+                    if (launch.Phase == EnemyLaunchPhase.Defeated) motion = EnemyAnimationSamples.ImpactMotion;
+                    else if (launch.Phase == EnemyLaunchPhase.Recovering)
+                    {
+                        if (playback.WasRecovering == 0)
+                            playback.ImpactDuration = math.max(.01f, launch.RecoverySecondsRemaining);
+                        float recovery = math.saturate(1f - launch.RecoverySecondsRemaining / playback.ImpactDuration);
+                        motion = recovery < .45f ? EnemyAnimationSamples.ImpactMotion : 6;
+                        progress = recovery < .45f ? recovery / .45f : (recovery - .45f) / .55f;
+                    }
+                    else
+                    {
+                        if (hit) { playback.HitActive = 1; playback.HitPhase = 0; }
+                        else if (playback.HitActive != 0)
+                        {
+                            playback.HitPhase += DeltaTime / math.max(.01f, samples.Durations[5]);
+                            if (playback.HitPhase >= 1f) playback.HitActive = 0;
+                        }
+                        var contact = Contacts.HasComponent(owner) ? Contacts[owner] : default;
+                        var tuning = ContactSettings.HasComponent(owner) ? ContactSettings[owner] : default;
+                        if (contact.IsWindingUp != 0)
+                        {
+                            motion = 3;
+                            progress = math.saturate(1f - contact.SecondsRemaining / math.max(.01f, tuning.AttemptWindUpDuration));
+                        }
+                        else if (contact.IsAttempting != 0)
+                        {
+                            motion = 4;
+                            progress = math.saturate(1f - contact.SecondsRemaining / math.max(.01f, tuning.AttemptDuration));
+                        }
+                        else if (playback.HitActive != 0) { motion = 5; progress = playback.HitPhase; }
+                        else motion = Movement[owner].Speed <= .01f ? 0
+                            : Movement[owner].Speed > Settings[owner].MoveSpeed * .65f ? 2 : 1;
+                    }
+                }
+                playback.WasRecovering = (byte)(launch.Phase == EnemyLaunchPhase.Recovering ? 1 : 0);
+                bool oneShot = motion == EnemyAnimationSamples.ImpactMotion;
+                if (motion != playback.GoblinMotion || restart) playback.Phase = 0;
+                else playback.Phase += DeltaTime / math.max(.01f, samples.Durations[motion]);
+                playback.Phase = oneShot ? math.saturate(playback.Phase) : math.frac(playback.Phase);
+                playback.GoblinMotion = (byte)motion;
+                if (progress < 0) progress = oneShot ? math.saturate(playback.Phase) : math.frac(playback.Phase);
+                float frame = progress * (oneShot || motion == 3 || motion == 4 || motion == 5 || motion == 6
+                    ? samples.FrameCount - 1 : samples.FrameCount);
+                int from = math.min((int)frame, samples.FrameCount - 1);
+                int to = motion == 0 || motion == 1 || motion == 2 || motion == EnemyAnimationSamples.FlyingMotion
+                    ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1);
+                ApplyFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
             }
 
             private void AnimateBaseline(Entity owner, ref EnemyAnimationPlayback playback,

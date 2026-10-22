@@ -309,6 +309,8 @@ namespace CrowdPunch.Systems.Initialization
 
         private void ResetTransientState(Entity enemy)
         {
+            if (SystemAPI.HasComponent<EnemySpawnAnimation>(enemy))
+                SystemAPI.SetComponentEnabled<EnemySpawnAnimation>(enemy, false);
             if (SystemAPI.HasComponent<DamageRequest>(enemy))
             {
                 SystemAPI.SetComponent(enemy, new DamageRequest());

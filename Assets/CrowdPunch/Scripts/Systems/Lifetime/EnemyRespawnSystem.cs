@@ -308,6 +308,8 @@ namespace CrowdPunch.Systems.Lifetime
 
         private void DisableTransientState(ref SystemState state, Entity enemy)
         {
+            if (SystemAPI.HasComponent<EnemySpawnAnimation>(enemy))
+                SystemAPI.SetComponentEnabled<EnemySpawnAnimation>(enemy, false);
             if (SystemAPI.HasComponent<DamageRequest>(enemy))
             {
                 SystemAPI.SetComponentEnabled<DamageRequest>(enemy, false);

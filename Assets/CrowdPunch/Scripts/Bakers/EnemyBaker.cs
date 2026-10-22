@@ -17,6 +17,8 @@ namespace CrowdPunch.Bakers
             AddComponent(entity, new EnemyLifetime { Generation = 1 });
             AddComponent<EnemyImpactFeedback>(entity);
             AddComponent<EnemyGroundConstraint>(entity);
+            AddComponent<EnemySpawnAnimation>(entity);
+            SetComponentEnabled<EnemySpawnAnimation>(entity, false);
             AddComponent(entity, new KnockbackResponse { Tier = KnockbackResponseTier.Normal });
             AddComponent<EnemyMovementSettings>(entity);
             AddComponent<EnemySeparationDistance>(entity);

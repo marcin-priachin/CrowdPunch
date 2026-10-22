@@ -8,6 +8,7 @@ namespace CrowdPunch.Components
         public Entity EnemyPrefab;
         public EnemyArchetypeKind Archetype;
         public byte RespawnEnabled;
+        public byte SpawnFromGround;
         public float SpawnClearance;
         public float NavigationRadius;
         public EnemyMovementSettings MovementSettings;

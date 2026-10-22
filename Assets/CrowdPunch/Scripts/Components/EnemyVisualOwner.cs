@@ -8,5 +8,6 @@ namespace CrowdPunch.Components
         public Entity Value;
         // Textured creatures retain their atlas details; primitive fallback meshes use role tints.
         public byte UsesAtlas;
+        public byte AnimationDriven;
     }
 }

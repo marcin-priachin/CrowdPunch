@@ -33,6 +33,13 @@ namespace CrowdPunch.Systems.Initialization
 
             Entity enemy = commandBuffer.Instantiate(profile.EnemyPrefab);
             commandBuffer.SetComponent(enemy, LocalTransform.FromPosition(position));
+            if (entityManager.HasComponent<EnemySpawnAnimation>(profile.EnemyPrefab))
+            {
+                var spawn = entityManager.GetComponentData<EnemySpawnAnimation>(profile.EnemyPrefab);
+                spawn.UseAnimation = profile.SpawnFromGround;
+                commandBuffer.SetComponent(enemy, spawn);
+                commandBuffer.SetComponentEnabled<EnemySpawnAnimation>(enemy, false);
+            }
             commandBuffer.SetComponent(enemy, movementSettings);
             commandBuffer.SetComponent(enemy, new NavigationAgent { Radius = profile.NavigationRadius });
             commandBuffer.SetComponent(enemy, profile.Health);

@@ -50,6 +50,7 @@ namespace CrowdPunch.Bakers
                     _ => EnemyArchetypeKind.Baseline
                 },
                 RespawnEnabled = settings.RespawnEnabled ? (byte)1 : (byte)0,
+                SpawnFromGround = settings.SpawnFromGround ? (byte)1 : (byte)0,
                 MovementSettings = settings.MovementSettings,
                 ArchetypeSeparationSettings = settings.ArchetypeSeparationSettings,
                 ArmorSettings = settings.ArmorSettings,

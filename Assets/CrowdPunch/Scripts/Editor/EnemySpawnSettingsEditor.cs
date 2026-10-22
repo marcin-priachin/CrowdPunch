@@ -10,7 +10,7 @@ namespace CrowdPunch.Editor
     {
         private static readonly string[] SpawnProperties =
         {
-            "enemyPrefab", "archetype", "initialCount", "radius", "respawnEnabled"
+            "enemyPrefab", "archetype", "initialCount", "radius", "respawnEnabled", "spawnFromGround"
         };
 
         private static readonly string[] MovementProperties =

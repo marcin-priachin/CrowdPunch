@@ -65,6 +65,128 @@ namespace CrowdPunch.Tests
 
         private float3 Pose => world.EntityManager.GetBuffer<SkinMatrix>(visual)[0].Value.c3;
 
+        private void UseGoblin()
+        {
+            var em = world.EntityManager;
+            var animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)EnemyAnimationProfile.Goblin;
+            em.SetComponentData(visual, animation);
+            em.AddComponentData(owner, new EnemyContactAttemptState());
+            em.AddComponentData(owner, new EnemyContactDamageSettings { AttemptWindUpDuration = .4f, AttemptDuration = .6f });
+            em.AddComponentData(owner, new Health { Current = 10, Max = 10 });
+        }
+
+        [Test]
+        public void Info006SpawnMotionUsesSharedClockAndPunchImmediatelyInterrupts()
+        {
+            UseGoblin();
+            var em = world.EntityManager;
+            var animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.SpawnMotion = 7;
+            em.SetComponentData(visual, animation);
+            em.AddComponentData(owner, new EnemySpawnAnimation { Duration = 1, UseAnimation = 1 });
+            em.SetComponentEnabled<EnemySpawnAnimation>(owner, true);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = 1 });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(7, 0, 0)));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(7, .5f, 0)));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(EnemyAnimationSamples.FlyingMotion));
+            em.SetComponentEnabled<EnemySpawnAnimation>(owner, false);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            Tick();
+            Assert.That(Pose.x, Is.Zero);
+        }
+
+        [Test]
+        public void Info004GoblinAnticipationAndStrikeFollowContactTiming()
+        {
+            UseGoblin();
+            var em = world.EntityManager;
+            em.SetComponentData(owner, new EnemyContactAttemptState { IsWindingUp = 1, SecondsRemaining = .2f });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(3, .5f, 0)));
+            em.SetComponentData(owner, new EnemyContactAttemptState { IsAttempting = 1, SecondsRemaining = .3f });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(4, .5f, 0)));
+            Assert.That(em.GetComponentData<LocalTransform>(owner).Position, Is.EqualTo(float3.zero));
+        }
+
+        [Test]
+        public void Info004GoblinWalkRunAndDamageUseAuthoredMotions()
+        {
+            UseGoblin();
+            var em = world.EntityManager;
+            Tick();
+            Assert.That(Pose.x, Is.Zero);
+            em.SetComponentData(owner, new DesiredMovement { Speed = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(1));
+            em.SetComponentData(owner, new DesiredMovement { Speed = 4 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(2));
+            em.SetComponentData(owner, new Health { Current = 8, Max = 10 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(5));
+            Tick(1.1f);
+            Assert.That(Pose.x, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Combat011GoblinLaunchRecoveryDefeatAndReuseKeepPhysicsOwnership()
+        {
+            UseGoblin();
+            var em = world.EntityManager;
+            var velocity = new PhysicsVelocity { Linear = new float3(6, 2, 3) };
+            em.SetComponentData(owner, velocity);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(EnemyAnimationSamples.FlyingMotion));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(EnemyAnimationSamples.ImpactMotion));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .3f });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(6));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick(2);
+            Tick(2);
+            Assert.That(Pose, Is.EqualTo(new float3(10, 1, 0)));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner).Linear, Is.EqualTo(velocity.Linear));
+            em.SetComponentData(owner, new RespawnRequest { IsPooled = 1 });
+            em.SetComponentEnabled<RespawnRequest>(owner, true);
+            Tick();
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized, Is.Zero);
+            em.SetComponentEnabled<RespawnRequest>(owner, false);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            Tick();
+            Assert.That(Pose.x, Is.Zero);
+        }
+
+        [Test]
+        public void Info004GoblinBypassesTintAndProceduralDeformation()
+        {
+            UseGoblin();
+            var em = world.EntityManager;
+            em.AddComponentData(owner, new EnemyArchetype { Value = EnemyArchetypeKind.Baseline });
+            em.AddComponentData(owner, new EnemyImpactFeedback { Flash = 1, FlashRemaining = 1, FlashDuration = 1,
+                Intensity = 1, Squash = 1, VisualRemaining = 1, VisualDuration = 1 });
+            em.SetComponentData(owner, new EnemyContactAttemptState { IsWindingUp = 1 });
+            em.AddComponentData(visual, new EnemyVisualOwner { Value = owner, UsesAtlas = 1, AnimationDriven = 1 });
+            em.AddComponentData(visual, new Unity.Rendering.URPMaterialPropertyBaseColor { Value = new float4(2) });
+            em.AddComponentData(visual, new EnemyVisualDeformation());
+            var original = float4x4.TRS(new float3(2, 3, 4), quaternion.identity, new float3(2));
+            em.AddComponentData(visual, new LocalToWorld { Value = original });
+            world.GetOrCreateSystem<EnemyReadabilitySystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<EnemyImpactVisualSystem>().Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+            Assert.That(em.GetComponentData<Unity.Rendering.URPMaterialPropertyBaseColor>(visual).Value, Is.EqualTo(new float4(1)));
+            Assert.That(em.GetComponentData<LocalToWorld>(visual).Value, Is.EqualTo(original));
+        }
+
         [Test]
         public void Info004IdleLoopsAndInterpolates()
         {

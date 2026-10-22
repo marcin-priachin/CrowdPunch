@@ -14,7 +14,8 @@ namespace CrowdPunch.Components
         Armored,
         Wizard,
         Ninja,
-        Dragon
+        Dragon,
+        Goblin
     }
 
     public struct EnemyAnimation : IComponentData
@@ -24,6 +25,7 @@ namespace CrowdPunch.Components
         public byte Profile;
         public float BlendResponse;
         public float3 LaunchPivot;
+        public int SpawnMotion;
     }
 
     public struct EnemyAnimationPlayback : IComponentData
@@ -47,6 +49,7 @@ namespace CrowdPunch.Components
         public byte HealthInitialized;
         public byte WasRecovering;
         public float RecoveryAge;
+        public byte GoblinMotion;
     }
 
     public struct EnemyAnimationSamples

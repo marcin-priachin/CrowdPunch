@@ -1060,6 +1060,15 @@ Enemies in `Active` or `Recovering` face the player's current horizontal positio
 
 Entering `Launched` does not change an enemy's archetype body color. Launch readability comes from movement, the Flying animation, and existing silhouette behavior. Other authored feedback, including damage flashes, attack telegraphs, recovery dimming, and Dasher shape changes, remains phase-specific.
 
+The Baseline uses `Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Variant.prefab`
+and authored clips from the Goblin Trooper Modular Pack animation folder. Its walk/run,
+contact anticipation/strike, damage, flight, landing, recovery and defeat are communicated
+through sampled animation with a stable textured Full Cel appearance. Do not add runtime
+body tint pulses, hit flashes, idle bobbing or procedural squash/shake to this model.
+The mace is visual equipment; contact damage and launch physics retain their existing rules.
+The supplied jump supplies the airborne pose; Die supplies the landing/defeat and reverse
+rise poses because the pack has no dedicated Flying, Falling Flat Impact or get-up clip.
+
 ### INFO-005 — Trajectory Scope
 
 Status: Must
@@ -1074,6 +1083,15 @@ Before an enemy spawns or respawns, show a visible indication at its intended wo
 spawn location. The enemy appears at the indicated location after the warning. Keep this
 feedback in the arena without adding HUD elements. Warning duration and appearance are
 prototype tuning.
+
+An enemy profile may opt into Spawn From Ground when its model has a configured spawn
+animation. After the normal warning and safe-placement checks, place the physics body on
+the arena floor at the reserved XZ coordinates and play the authored emergence once.
+Normal movement and contact attacks wait for that animation; ordinary punch/launch rules
+can interrupt it. Repeat on respawn/restart. Profiles without the option or a supported
+clip keep the existing drop from spawn height. Enable this option for the Goblin Baseline
+using the supplied Spawn clip. Motion below the floor belongs to the visual pose; the
+physics body stays grounded (COMBAT-018).
 
 ## Progression And Weapons
 

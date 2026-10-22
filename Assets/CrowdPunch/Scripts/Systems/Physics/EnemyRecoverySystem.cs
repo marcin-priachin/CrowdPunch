@@ -38,6 +38,10 @@ namespace CrowdPunch.Systems.Physics
                          .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
+                if (SystemAPI.HasComponent<EnemySpawnAnimation>(enemy)
+                    && SystemAPI.IsComponentEnabled<EnemySpawnAnimation>(enemy)
+                    && launchState.ValueRO.Phase != EnemyLaunchPhase.Recovering)
+                    SystemAPI.SetComponentEnabled<EnemySpawnAnimation>(enemy, false);
                 if (SystemAPI.HasComponent<LinkedPairEndpoint>(enemy) && Combat.LinkedPairLaunchResolution.TryGet(state.EntityManager, enemy, out _, out _)) continue;
                 if (launchState.ValueRO.Phase == EnemyLaunchPhase.Active
                     || launchState.ValueRO.Phase == EnemyLaunchPhase.Defeated)
@@ -81,6 +85,8 @@ namespace CrowdPunch.Systems.Physics
                     launchState.ValueRW.LastCause = EnemyLaunchCause.None;
                     launchState.ValueRW.BelowUsefulMomentumSeconds = 0f;
                     launchState.ValueRW.RecoverySecondsRemaining = 0f;
+                    if (SystemAPI.HasComponent<EnemySpawnAnimation>(enemy))
+                        SystemAPI.SetComponentEnabled<EnemySpawnAnimation>(enemy, false);
                 }
             }
         }

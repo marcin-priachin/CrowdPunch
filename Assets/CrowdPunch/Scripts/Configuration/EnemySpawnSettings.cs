@@ -45,6 +45,8 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0)] private int initialCount = 250;
         [SerializeField, Min(0f)] private float radius = 20f;
         [SerializeField] private bool respawnEnabled = true;
+        [SerializeField, Tooltip("Use the prefab's sampled spawn animation at floor height instead of dropping from the spawn point. Requires a configured spawn motion.")]
+        private bool spawnFromGround;
 
         [Header("Common movement (provisional)")]
         [SerializeField, Min(0f)] private float moveSpeed = 4f;
@@ -197,6 +199,7 @@ namespace CrowdPunch.Configuration
         public int InitialCount => initialCount;
         public float Radius => radius;
         public bool RespawnEnabled => respawnEnabled;
+        public bool SpawnFromGround => spawnFromGround;
         public EnemyMovementSettings MovementSettings => new EnemyMovementSettings
         {
             MoveSpeed = moveSpeed, WanderSpeed = wanderSpeed, ChargeDistance = chargeDistance,

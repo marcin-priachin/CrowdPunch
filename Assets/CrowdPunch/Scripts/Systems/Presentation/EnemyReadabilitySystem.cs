@@ -73,6 +73,7 @@ namespace CrowdPunch.Systems.Presentation
 
             private void Execute(in EnemyVisualOwner owner, ref URPMaterialPropertyBaseColor color)
             {
+                if (owner.AnimationDriven != 0) { color.Value = new float4(1f); return; }
                 Entity enemy = owner.Value;
                 if (!Archetypes.HasComponent(enemy) || !Launches.HasComponent(enemy)) return;
                 EnemyArchetypeKind kind = Archetypes[enemy].Value;

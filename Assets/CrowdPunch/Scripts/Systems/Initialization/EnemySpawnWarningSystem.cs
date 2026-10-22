@@ -7,6 +7,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Initialization
 {
@@ -30,8 +31,9 @@ namespace CrowdPunch.Systems.Initialization
             using var spacing = EnemySpawnSpacing.Capture(state.EntityManager, false);
             using var hazards = GroundHazardSpawnClearance.Capture(state.EntityManager);
             var pairManager = state.EntityManager;
-            bool pairHasGround = SystemAPI.HasSingleton<ArenaGroundPlane>() && SystemAPI.HasSingleton<PhysicsWorldSingleton>();
-            float pairFloor = pairHasGround ? SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight : 0;
+            bool hasFloor = SystemAPI.HasSingleton<ArenaGroundPlane>();
+            bool pairHasGround = hasFloor && SystemAPI.HasSingleton<PhysicsWorldSingleton>();
+            float pairFloor = hasFloor ? SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight : 0;
             var pairWorld = pairHasGround ? SystemAPI.GetSingleton<PhysicsWorldSingleton>() : default;
             var player = SystemAPI.HasSingleton<PlayerSnapshot>() ? SystemAPI.GetSingleton<PlayerSnapshot>() : default;
             // LINK-007: reserve and activate a pair atomically, including when one endpoint is obstructed.
@@ -43,8 +45,7 @@ namespace CrowdPunch.Systems.Initialization
                 a.SecondsRemaining -= SystemAPI.Time.DeltaTime; b.SecondsRemaining -= SystemAPI.Time.DeltaTime;
                 SystemAPI.SetComponent(p.A, a); SystemAPI.SetComponent(p.B, b);
                 if (a.SecondsRemaining > 0 || b.SecondsRemaining > 0 || !PairClear(p.A, a) || !PairClear(p.B, b)) continue;
-                commands.SetEnabled(p.A, true); commands.SetEnabled(p.B, true);
-                commands.RemoveComponent<EnemySpawnWarning>(p.A); commands.RemoveComponent<EnemySpawnWarning>(p.B);
+                Activate(p.A, a); Activate(p.B, b);
                 Reserve(p.A, a); Reserve(p.B, b);
             }
             foreach (var (warning, enemy) in SystemAPI.Query<RefRW<EnemySpawnWarning>>()
@@ -78,13 +79,37 @@ namespace CrowdPunch.Systems.Initialization
                 if (SystemAPI.HasComponent<EnemyMovementSettings>(enemy)
                     && !EnemySpawnSpacing.IsClear(w.Position,
                         EnemySpawnSpacing.Minimum(SystemAPI.GetComponent<EnemyMovementSettings>(enemy)), spacing, enemy)) continue;
-                commands.SetEnabled(enemy, true);
-                commands.RemoveComponent<EnemySpawnWarning>(enemy);
+                Activate(enemy, w);
                 spacing.Add(new EnemySpawnSpacing.Occupant { Entity = enemy, Position = w.Position,
                     MinimumDistance = SystemAPI.HasComponent<EnemyMovementSettings>(enemy)
                         ? EnemySpawnSpacing.Minimum(SystemAPI.GetComponent<EnemyMovementSettings>(enemy)) : 0f });
             }
             commands.Playback(state.EntityManager);
+
+            void Activate(Entity enemy, EnemySpawnWarning warning)
+            {
+                commands.SetEnabled(enemy, true);
+                commands.RemoveComponent<EnemySpawnWarning>(enemy);
+                var em = pairManager;
+                if (!hasFloor || !em.HasComponent<EnemySpawnAnimation>(enemy)
+                    || !em.HasComponent<PhysicsCollider>(enemy) || !em.HasComponent<EnemyLaunchState>(enemy)) return;
+                var spawn = em.GetComponentData<EnemySpawnAnimation>(enemy);
+                var collider = em.GetComponentData<PhysicsCollider>(enemy);
+                if (spawn.UseAnimation == 0 || spawn.Duration <= 0f || !collider.IsValid) return;
+                var transform = em.GetComponentData<LocalTransform>(enemy);
+                var bounds = collider.Value.Value.CalculateAabb(new RigidTransform(transform.Rotation, transform.Position), transform.Scale);
+                float height = pairFloor + transform.Position.y - bounds.Min.y;
+                transform.Position = new float3(warning.Position.x, height, warning.Position.z);
+                commands.SetComponent(enemy, transform);
+                commands.SetComponent(enemy, new EnemyGroundConstraint { Height = height, HasGround = 1, IsLocked = 1 });
+                commands.SetComponent(enemy, new PhysicsVelocity());
+                commands.SetComponent(enemy, new DesiredMovement());
+                var launch = em.GetComponentData<EnemyLaunchState>(enemy);
+                launch.Phase = EnemyLaunchPhase.Recovering;
+                launch.RecoverySecondsRemaining = spawn.Duration;
+                commands.SetComponent(enemy, launch);
+                commands.SetComponentEnabled<EnemySpawnAnimation>(enemy, true);
+            }
 
             bool PairClear(Entity enemy, EnemySpawnWarning warning)
             {
