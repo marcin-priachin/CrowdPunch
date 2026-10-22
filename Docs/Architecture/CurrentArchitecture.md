@@ -1042,7 +1042,16 @@ speed, clamps to the jog blend radius, and damps the Animator parameters. Disabl
 reset clear the published velocity. The model discovers its parent controller at runtime,
 so the Bootstrap prefab instance inherits animation support without additional scene wiring.
 This preserves PLAYER-002 camera-forward facing and PLAYER-005 independent dash/punch timing.
-Jogging during dash is the current presentation fallback because no dash clip is supplied.
+`PlayerController.DashDirection` exposes the committed dash direction for presentation.
+`PlayerMovementAnimation` switches the base layer to a four-direction dash blend tree and
+blends diagonal directions. Each non-looping child has a normalized one-second duration;
+the `DashSpeed` playback multiplier is the inverse of the gameplay dash duration, so each
+clip plays once over the full dash rather than looping or scrubbing its motion time.
+The supplied Standing Dodge FBXs in `Animation/Dash` are copied into project-owned non-looping
+humanoid clips with extracted horizontal/root rotation travel; root motion stays disabled.
+Dash end, interruption and presentation disable restore locomotion. The existing upper-body
+punch layer and torso correction remain independent of dash direction and timing (PLAYER-002/005).
+`PlayerDashAnimationBuilder` applies this setup and is also called by the appearance rebuild.
 Animation follows movement intent, so pressing against a blocking wall still plays locomotion.
 `PlayerIdleFootPlanting` stabilizes the project-owned Idle clip's body reference and both
 humanoid foot IK targets at the first idle pose, while preserving other animation curves.

@@ -8,10 +8,25 @@ namespace CrowdPunch.Mono.Player
     {
         private static readonly int MoveX = Animator.StringToHash("MoveX");
         private static readonly int MoveZ = Animator.StringToHash("MoveZ");
+        private static readonly int DashX = Animator.StringToHash("DashX");
+        private static readonly int DashZ = Animator.StringToHash("DashZ");
+        private static readonly int DashSpeed = Animator.StringToHash("DashSpeed");
+        private static readonly int DashState = Animator.StringToHash("Base Layer.Dash");
+        private static readonly int LocomotionState = Animator.StringToHash("Base Layer.Locomotion");
 
         [SerializeField] private PlayerController playerController;
         [SerializeField, Min(0f)] private float blendDamping = 0.08f;
+
+        [Header("Dash Transitions")]
+        [SerializeField, Min(0f)]
+        [Tooltip("Walk/idle to dash blend duration in seconds. Zero switches immediately.")]
+        private float dashBlendInDuration = 0.04f;
+        [SerializeField, Min(0f)]
+        [Tooltip("Dash to walk/idle blend duration in seconds. Zero switches immediately.")]
+        private float dashBlendOutDuration = 0.06f;
+
         private Animator animator;
+        private bool wasDashing;
 
         private void Awake()
         {
@@ -44,6 +59,27 @@ namespace CrowdPunch.Mono.Player
 
             animator.SetFloat(MoveX, movement.x, blendDamping, Time.deltaTime);
             animator.SetFloat(MoveZ, movement.z, blendDamping, Time.deltaTime);
+
+            // PLAYER-002/005: only the base pose follows the committed dash;
+            // the existing upper-body layer keeps punches independent of travel.
+            bool dashing = playerController != null && playerController.isActiveAndEnabled
+                && playerController.IsDashing;
+            if (dashing)
+            {
+                Vector3 direction = transform.InverseTransformDirection(playerController.DashDirection);
+                animator.SetFloat(DashX, direction.x);
+                animator.SetFloat(DashZ, direction.z);
+                // Each blend-tree child is normalized to one second by the asset builder.
+                // One playback then takes exactly the authored gameplay dash duration.
+                animator.SetFloat(DashSpeed, 1f / Mathf.Max(0.001f, playerController.MovementSettings.DashDuration));
+                if (!wasDashing)
+                    animator.CrossFadeInFixedTime(DashState, dashBlendInDuration, 0, 0f);
+            }
+            else if (wasDashing)
+            {
+                animator.CrossFadeInFixedTime(LocomotionState, dashBlendOutDuration, 0, 0f);
+            }
+            wasDashing = dashing;
         }
 
         private void OnDisable()
@@ -55,6 +91,9 @@ namespace CrowdPunch.Mono.Player
 
             animator.SetFloat(MoveX, 0f);
             animator.SetFloat(MoveZ, 0f);
+            if (wasDashing)
+                animator.Play(LocomotionState, 0, 0f);
+            wasDashing = false;
         }
     }
 }
