@@ -1127,6 +1127,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.PlayerMovementAnimation
   playerController: {fileID: 0}
   blendDamping: 0.08
+  dashBlendInDuration: 0.12
+  dashBlendOutDuration: 0.12
 --- !u!114 &8526188379045474934
 MonoBehaviour:
   m_ObjectHideFlags: 0

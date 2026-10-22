@@ -33,6 +33,7 @@ namespace CrowdPunch.Mono.Player
         public event Action DashEnded;
 
         public bool IsDashing => dashActive;
+        public Vector3 DashDirection => dashDirection;
         public PlayerMovementSettings MovementSettings => settings;
         /// <summary>Commanded locomotion velocity, excluding external knockback, for player presentation.</summary>
         public Vector3 LocomotionVelocity { get; private set; }
