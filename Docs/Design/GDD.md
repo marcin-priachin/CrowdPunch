@@ -1056,16 +1056,19 @@ Status: Must
 
 Enemy types and dangerous states must remain distinguishable at crowd scale without requiring the player to inspect individual units.
 
-Enemies in `Active` or `Recovering` face the player's current horizontal position, independently of movement direction. While `Launched`, they use the Flying animation and face their current movement direction, including changes during flight. Launch ends with the Falling Flat Impact animation, including when defeat was deferred until launch ended. Facing does not steer committed dash movement or launched velocity. `Defeated` retains its existing rotation behavior.
+Enemies in `Active` or `Recovering` face the player's current horizontal position, independently of movement direction. During a Baseline contact charge, face actual horizontal movement instead; when stationary, use movement intent or the committed charge direction. This facing does not steer the charge. While `Launched`, they use the Flying animation and face their current movement direction, including changes during flight. Launch ends with the Falling Flat Impact animation, including when defeat was deferred until launch ended. Facing does not steer committed dash movement or launched velocity. `Defeated` retains its existing rotation behavior.
 
 Entering `Launched` does not change an enemy's archetype body color. Launch readability comes from movement, the Flying animation, and existing silhouette behavior. Other authored feedback, including damage flashes, attack telegraphs, recovery dimming, and Dasher shape changes, remains phase-specific.
 
 The Baseline uses `Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Variant.prefab`
 and authored clips from the Goblin Trooper Modular Pack animation folder. Its walk/run,
-contact anticipation/strike, damage, flight, landing, recovery and defeat are communicated
+charge running, damage, flight, landing, recovery and defeat are communicated
 through sampled animation with a stable textured Full Cel appearance. Do not add runtime
 body tint pulses, hit flashes, idle bobbing or procedural squash/shake to this model.
 The mace is visual equipment; contact damage and launch physics retain their existing rules.
+Baseline charge preparation uses idle with no wind-up or attack pose. During the charge,
+loop the supplied Run Forward In Place on the whole body; bypass the directional jog-leg
+layer until the charge ends. Keep the existing charge timing and contact-damage rules.
 The supplied jump supplies the airborne pose; Die supplies the landing/defeat and reverse
 rise poses because the pack has no dedicated Flying, Falling Flat Impact or get-up clip.
 

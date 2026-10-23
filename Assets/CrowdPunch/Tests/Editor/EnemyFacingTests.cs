@@ -79,6 +79,60 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Info004ChargingBaselineFacesResolvedVelocityWithoutSteeringIt()
+        {
+            using var world = new World("Baseline charge facing");
+            var em = world.EntityManager;
+            var player = em.CreateEntity(typeof(PlayerSnapshot));
+            em.SetComponentData(player, new PlayerSnapshot { Position = new float3(10, 0, 0), IsAvailable = true });
+            var enemy = em.CreateEntity(typeof(Enemy), typeof(LocalTransform), typeof(PhysicsVelocity),
+                typeof(EnemyLaunchState), typeof(RespawnRequest), typeof(EnemyContactAttemptState), typeof(DesiredMovement), typeof(EnemyArchetype));
+            em.SetComponentEnabled<RespawnRequest>(enemy, false);
+            em.SetComponentData(enemy, LocalTransform.Identity);
+            em.SetComponentData(enemy, new EnemyArchetype { Value = EnemyArchetypeKind.Baseline });
+            em.SetComponentData(enemy, new EnemyContactAttemptState { IsAttempting = 1, CommittedDirection = math.forward() });
+            em.SetComponentData(enemy, new DesiredMovement { Direction = math.forward(), Speed = 4 });
+            var system = world.GetOrCreateSystem<EnemyFacingSystem>();
+            foreach (var direction in new[] { new float3(-3, 2, 1), new float3(3, 0, -4) })
+            {
+                em.SetComponentData(enemy, new PhysicsVelocity { Linear = direction });
+                system.Update(world.Unmanaged);
+                em.CompleteAllTrackedJobs();
+                Assert.That(math.distance(math.forward(em.GetComponentData<LocalTransform>(enemy).Rotation),
+                    math.normalize(new float3(direction.x, 0, direction.z))), Is.LessThan(.0001f));
+                Assert.That(em.GetComponentData<PhysicsVelocity>(enemy).Linear, Is.EqualTo(direction));
+                Assert.That(em.GetComponentData<EnemyContactAttemptState>(enemy).CommittedDirection, Is.EqualTo(math.forward()));
+                em.SetComponentData(player, new PlayerSnapshot { Position = new float3(-10, 0, 0), IsAvailable = false });
+            }
+            em.SetComponentData(enemy, new EnemyContactAttemptState());
+            em.SetComponentData(player, new PlayerSnapshot { Position = new float3(-10, 0, 0), IsAvailable = true });
+            system.Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+            Assert.That(math.forward(em.GetComponentData<LocalTransform>(enemy).Rotation).x, Is.EqualTo(-1).Within(.0001f));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void Info004StationaryChargeFallsBackToMovementThenCommittedDirection(bool moving)
+        {
+            using var world = new World("Baseline charge initial facing");
+            var em = world.EntityManager;
+            em.AddComponentData(em.CreateEntity(), new PlayerSnapshot { Position = new float3(10, 0, 0), IsAvailable = true });
+            em.AddComponent<ProtectedPoint>(em.CreateEntity());
+            var enemy = em.CreateEntity(typeof(Enemy), typeof(LocalTransform), typeof(PhysicsVelocity),
+                typeof(EnemyLaunchState), typeof(RespawnRequest), typeof(EnemyContactAttemptState), typeof(DesiredMovement), typeof(EnemyArchetype));
+            em.SetComponentEnabled<RespawnRequest>(enemy, false);
+            em.SetComponentData(enemy, LocalTransform.Identity);
+            em.SetComponentData(enemy, new EnemyArchetype { Value = EnemyArchetypeKind.Baseline });
+            em.SetComponentData(enemy, new EnemyContactAttemptState { IsAttempting = 1, CommittedDirection = new float3(0, 0, -1) });
+            em.SetComponentData(enemy, new DesiredMovement { Direction = math.forward(), Speed = moving ? 4 : 0 });
+            world.GetOrCreateSystem<EnemyFacingSystem>().Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+            Assert.That(math.distance(math.forward(em.GetComponentData<LocalTransform>(enemy).Rotation),
+                new float3(0, 0, moving ? 1 : -1)), Is.LessThan(.0001f));
+        }
+
+        [Test]
         public void Enemy005DashingDasherFacesCommittedDashDirection()
         {
             using var world = new World("Dasher committed facing test");

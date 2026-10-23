@@ -75,3 +75,27 @@ a normal punch can interrupt emergence and keep the resulting launch momentum.
   clearance/spacing and activation only, without physics or rendering, and is not an FPS claim.
 - Spawn state is cleared by pooling and legacy restart; configuration and clip duration survive.
   The Editor returned to New Scene outside Play Mode with the background setting restored.
+
+## Charge presentation follow-up (2026-10-23, ENEMY-012, INFO-004)
+
+Baseline charge preparation no longer selects Cut Attack anticipation; its unchanged pause
+uses idle. While IsAttempting is set, the Goblin loops full-body motion 2 (the supplied
+Run Forward In Place), bypassing the directional jog-leg layer. Ranged wind-up/release
+poses retain their existing mapping. Charge duration, direction commitment and damage are
+unchanged. EnemyFacingSystem turns charging Baselines toward actual planar physics velocity,
+falling back to movement intent and then committed direction at rest. Collision redirects
+therefore update facing without modifying velocity. After charging, ordinary facing resumes.
+
+- Unity compilation passed. 62 focused cases from EnemyAnimationTests, EnemyFacingTests and
+  EnemyJogAnimationTests passed, invoked with their setup/teardown in the assigned Editor.
+  Sampling-only tests were excluded because no source clips or sample assets changed.
+  Checks include looping Run, no charge wind-up/strike, unchanged ranged animation,
+  bypassed jog legs, collision-redirected facing, stationary fallback, player unavailability,
+  protected-point behavior and restored player-facing after the charge.
+- A 1,000-body facing-only benchmark (500 charging, 20 warmups, 120 completed samples)
+  averaged 1.229 ms in the Editor. It excludes physics/rendering and is not an FPS result.
+- The separate dotnet no-dependencies check failed with 132 CS0006 missing generated-package
+  DLL references under Temp/Bin/Debug. Unity compilation and the focused checks above passed.
+- Source/documentation whitespace checks passed. The Editor remained outside Play Mode in
+  the original New Scene. No model, prefab, sample, timing, damage or scene assets changed.
+  No new live combat or standalone player playtest was performed for this follow-up.

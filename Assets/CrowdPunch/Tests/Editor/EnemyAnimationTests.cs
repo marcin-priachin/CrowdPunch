@@ -224,16 +224,19 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Info004GoblinAnticipationAndStrikeFollowContactTiming()
+        public void Info004GoblinChargeUsesLoopingRunWithoutWindUpOrStrikePoses()
         {
             UseGoblin();
             var em = world.EntityManager;
             em.SetComponentData(owner, new EnemyContactAttemptState { IsWindingUp = 1, SecondsRemaining = .2f });
             Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(3, .5f, 0)));
+            Assert.That(Pose.x, Is.Zero, "The preparation pause uses idle rather than an attack wind-up.");
             em.SetComponentData(owner, new EnemyContactAttemptState { IsAttempting = 1, SecondsRemaining = .3f });
             Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(4, .5f, 0)));
+            Assert.That(Pose, Is.EqualTo(new float3(2, 0, 0)));
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(2, .5f, 0)));
+            Assert.That(em.GetComponentData<EnemyContactAttemptState>(owner).SecondsRemaining, Is.EqualTo(.3f));
             Assert.That(em.GetComponentData<LocalTransform>(owner).Position, Is.EqualTo(float3.zero));
         }
 

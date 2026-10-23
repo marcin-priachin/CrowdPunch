@@ -12,7 +12,7 @@ This document describes what exists now. It is not a desired future architecture
 root while instantiating the user-authored Goblin Trooper variant as its visual source.
 The pack's Humanoid clips are evaluated through its avatar in the Editor into the existing
 11-motion, 32-frame sampled skinning format. `EnemyAnimationProfile.Goblin` selects idle,
-walk/run, contact-timed anticipation/strike, damage, airborne jump, Die and reverse-Die rise.
+walk/run, charging Run Forward, damage, airborne jump, Die and reverse-Die rise.
 Recovery divides the existing recovery clock between fall and rise; no gameplay clock or
 physics transform is owned by animation. The mace is converted from a rigid hand attachment
 to a one-bone skinned mesh so the same sampled ECS path animates its attachment.
@@ -34,8 +34,12 @@ The normal Goblin pose is evaluated first. While Active, the same animation job 
 jog directions relative to owner facing, smooths movement weight, and composes the masked
 legs below the original pelvis. Upper-body matrices and hand/head equipment stay on their
 original pose, including contact attacks and ranged Cut Attack. A separate jog phase keeps
-the gait continuous when upper actions change. Spawn, launch, recovery and defeat bypass
-the leg layer. No animation layer changes physics or owner transforms (INFO-004, ENEMY-002/012).
+the gait continuous when upper actions change. Spawn, launch, recovery, defeat and Baseline contact charges bypass
+the leg layer. Charges loop the supplied full-body Run Forward motion (slot 2); preparation
+uses idle rather than Cut Attack. Ranged anticipation and projectile-release poses retain
+their existing mapping. `EnemyFacingSystem` faces charging Baselines along planar physics
+velocity, falling back to movement intent and committed direction at rest. It does not
+modify launch/charge velocity, direction commitment or contact timing. No animation layer changes physics or owner transforms (INFO-004, ENEMY-002/012).
 **Crowd Punch > Animation > Apply Goblin Jog Legs** updates existing prefabs in place without
 rebuilding their original samples or model transforms; both prefab builders also configure
 the leg samples for future explicit rebuilds. Render bounds include the leg-motion envelope.
@@ -958,8 +962,10 @@ The chosen level is remembered in local Editor preferences; no scene asset or bu
 ## Ownership Boundary
 
 `EnemyFacingSystem` runs in `GamePostPhysicsGroup` after respawn processing and the Dasher
-rotation lock. Active and Recovering enemies face the available player's horizontal position
-(INFO-004), with yaw angular velocity cleared and position/linear velocity preserved.
+rotation lock. Active and Recovering enemies normally face the available player's horizontal
+position (INFO-004), with yaw angular velocity cleared and position/linear velocity preserved.
+A charging Baseline faces resolved planar velocity, then movement intent/committed direction
+when stationary, including while the player is unavailable; this never steers its charge.
 Active Dashers normally face the player, but a Dasher in its committed `Dashing` phase faces
 its locked dash direction. Launched enemies
 instead face current horizontal physics velocity, including after collisions and homing,

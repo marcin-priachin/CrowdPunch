@@ -152,6 +152,20 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Info004ChargeKeepsFullRunForwardPoseWithoutJogLegOverrides()
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(owner, new DesiredMovement { Direction = math.forward(), Speed = 4 });
+            Tick();
+            em.AddComponentData(owner, new EnemyContactAttemptState { IsAttempting = 1 });
+            Tick();
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.EqualTo(2));
+            for (int bone = 0; bone < 3; bone++)
+                Assert.That(em.GetBuffer<SkinMatrix>(layered)[bone].Value, Is.EqualTo(em.GetBuffer<SkinMatrix>(original)[bone].Value));
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).Movement, Is.EqualTo(float2.zero));
+        }
+
+        [Test]
         public void Info006JogLegsDoNotOverrideGroundEmergence()
         {
             var em = world.EntityManager;

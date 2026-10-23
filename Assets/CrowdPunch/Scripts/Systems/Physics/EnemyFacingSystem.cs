@@ -29,6 +29,8 @@ namespace CrowdPunch.Systems.Physics
                 Dragons = SystemAPI.GetComponentLookup<DragonTuning>(true),
                 Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
                 Movements = SystemAPI.GetComponentLookup<DesiredMovement>(true),
+                Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
+                Archetypes = SystemAPI.GetComponentLookup<EnemyArchetype>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 PlayerPosition = player.Position,
                 PlayerAvailable = player.IsAvailable,
@@ -45,6 +47,8 @@ namespace CrowdPunch.Systems.Physics
             [ReadOnly] public ComponentLookup<DragonTuning> Dragons;
             public bool Defending;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movements;
+            [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
+            [ReadOnly] public ComponentLookup<EnemyArchetype> Archetypes;
             public float DeltaTime;
             public float3 PlayerPosition;
             public bool PlayerAvailable;
@@ -54,7 +58,10 @@ namespace CrowdPunch.Systems.Physics
                 in EnemyLaunchState launch)
             {
                 bool launched = launch.Phase == EnemyLaunchPhase.Launched;
-                if (!launched && (!PlayerAvailable ||
+                bool charging = launch.Phase == EnemyLaunchPhase.Active
+                    && Archetypes.HasComponent(entity) && Archetypes[entity].Value == EnemyArchetypeKind.Baseline
+                    && Contacts.HasComponent(entity) && Contacts[entity].IsAttempting != 0;
+                if (!launched && ((!PlayerAvailable && !charging) ||
                     (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)))
                     return;
                 bool committedDash = Dashers.HasComponent(entity)
@@ -65,7 +72,16 @@ namespace CrowdPunch.Systems.Physics
                         ? Dashers[entity].LockedDirection
                         : PlayerPosition - transform.Position;
                 toward.y = 0f;
-                if (Defending && !launched && !committedDash && Movements.HasComponent(entity) && Movements[entity].Speed > 0)
+                if (charging)
+                {
+                    // Match resolved motion after collisions; never steer the committed charge toward the player.
+                    toward = new float3(velocity.Linear.x, 0f, velocity.Linear.z);
+                    if (math.lengthsq(toward) <= .0001f && Movements.HasComponent(entity) && Movements[entity].Speed > 0)
+                        toward = new float3(Movements[entity].Direction.x, 0f, Movements[entity].Direction.z);
+                    if (math.lengthsq(toward) <= .0001f) toward = Contacts[entity].CommittedDirection;
+                    toward.y = 0f;
+                }
+                if (Defending && !launched && !committedDash && !charging && Movements.HasComponent(entity) && Movements[entity].Speed > 0)
                     toward = Movements[entity].Direction;
                 if (math.lengthsq(toward) <= 0.0001f) return;
                 // Keep the physics capsule upright; animation supplies launched visual pitch.

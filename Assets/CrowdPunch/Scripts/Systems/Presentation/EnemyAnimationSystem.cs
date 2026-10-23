@@ -35,7 +35,6 @@ namespace CrowdPunch.Systems.Presentation
                 ElitePunches = SystemAPI.GetComponentLookup<ElitePunchState>(true),
                 Health = SystemAPI.GetComponentLookup<Health>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
-                ContactSettings = SystemAPI.GetComponentLookup<EnemyContactDamageSettings>(true),
                 SpawnAnimations = SystemAPI.GetComponentLookup<EnemySpawnAnimation>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel();
@@ -61,7 +60,6 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<ElitePunchState> ElitePunches;
             [ReadOnly] public ComponentLookup<Health> Health;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
-            [ReadOnly] public ComponentLookup<EnemyContactDamageSettings> ContactSettings;
             [ReadOnly] public ComponentLookup<EnemySpawnAnimation> SpawnAnimations;
             public float DeltaTime;
 
@@ -105,7 +103,8 @@ namespace CrowdPunch.Systems.Presentation
                 if (animation.Profile == (byte)EnemyAnimationProfile.Goblin)
                 {
                     AnimateGoblin(owner, ref playback, ref skin, ref samples, launch);
-                    if (launch.Phase == EnemyLaunchPhase.Active && animation.JogSamples.IsCreated)
+                    bool charging = Contacts.HasComponent(owner) && Contacts[owner].IsAttempting != 0;
+                    if (launch.Phase == EnemyLaunchPhase.Active && !charging && animation.JogSamples.IsCreated)
                         AnimateJogLegs(owner, animation.BlendResponse, ref playback, ref skin, ref animation.JogSamples.Value);
                     else
                     {
@@ -594,7 +593,6 @@ namespace CrowdPunch.Systems.Presentation
                             if (playback.HitPhase >= 1f) playback.HitActive = 0;
                         }
                         var contact = Contacts.HasComponent(owner) ? Contacts[owner] : default;
-                        var tuning = ContactSettings.HasComponent(owner) ? ContactSettings[owner] : default;
                         if (RangedAttacks.HasComponent(owner) && RangedTuning.HasComponent(owner)
                             && ranged.Phase == RangedAttackPhase.WindUp)
                         {
@@ -608,15 +606,9 @@ namespace CrowdPunch.Systems.Presentation
                             motion = 4;
                             progress = playback.AttackPhase;
                         }
-                        else if (contact.IsWindingUp != 0)
-                        {
-                            motion = 3;
-                            progress = math.saturate(1f - contact.SecondsRemaining / math.max(.01f, tuning.AttemptWindUpDuration));
-                        }
                         else if (contact.IsAttempting != 0)
                         {
-                            motion = 4;
-                            progress = math.saturate(1f - contact.SecondsRemaining / math.max(.01f, tuning.AttemptDuration));
+                            motion = 2;
                         }
                         else if (playback.HitActive != 0) { motion = 5; progress = playback.HitPhase; }
                         else motion = Movement[owner].Speed <= .01f ? 0
