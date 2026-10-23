@@ -1058,7 +1058,15 @@ Enemy types and dangerous states must remain distinguishable at crowd scale with
 
 Enemies in `Active` or `Recovering` face the player's current horizontal position, independently of movement direction. During a Baseline contact charge, face actual horizontal movement instead; when stationary, use movement intent or the committed charge direction. This facing does not steer the charge. While `Launched`, they use the Flying animation and face their current movement direction, including changes during flight. Launch ends with the Falling Flat Impact animation, including when defeat was deferred until launch ended. Facing does not steer committed dash movement or launched velocity. `Defeated` retains its existing rotation behavior.
 
-Entering `Launched` does not change an enemy's archetype body color. Launch readability comes from movement, the Flying animation, and existing silhouette behavior. Other authored feedback, including damage flashes, attack telegraphs, recovery dimming, and Dasher shape changes, remains phase-specific.
+Entering `Launched` does not change an enemy's archetype body color. Launch readability comes from movement, the Flying animation, and existing silhouette behavior. Other authored feedback, including damage flashes, attack telegraphs and recovery dimming, remains profile-specific.
+
+The Dasher uses `Assets/Goblin Trooper Giant Evolution Modular Pack Cute Series/Goblin Minion Cute Series/Prefabs/Goblin Minion.prefab`
+and authored animations from that pack's `FBX` folder. Use Roll Forward In Place for both dash
+preparation and the committed dash, following the existing gameplay timing and distance.
+Use the supplied locomotion, damage, recovery and defeat animations for readability
+with stable textured Full Cel shading. Preserve the prefab's authored scale; scripts
+must not resize, stretch, shake or recolor its body for phase feedback. Dash commitment,
+contacts, launch and recovery gameplay retain ENEMY-005..008.
 
 The Baseline uses `Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Variant.prefab`
 and authored clips from the Goblin Trooper Modular Pack animation folder. Its walk/run,
@@ -1114,8 +1122,8 @@ animation. After the normal warning and safe-placement checks, place the physics
 the arena floor at the reserved XZ coordinates and play the authored emergence once.
 Normal movement and contact attacks wait for that animation; ordinary punch/launch rules
 can interrupt it. Repeat on respawn/restart. Profiles without the option or a supported
-clip keep the existing drop from spawn height. Enable this option for the Goblin Baseline
-and Ranged Wizard using the supplied Spawn clip. Motion below the floor belongs to the visual pose; the
+clip keep the existing drop from spawn height. Enable this option for the Goblin Baseline,
+Ranged Wizard and Goblin Minion Dasher using their supplied Spawn clips. Motion below the floor belongs to the visual pose; the
 physics body stays grounded (COMBAT-018).
 
 ## Progression And Weapons

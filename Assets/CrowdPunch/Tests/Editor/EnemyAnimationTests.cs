@@ -341,6 +341,7 @@ namespace CrowdPunch.Tests
 
         [TestCase(EnemyAnimationProfile.Goblin)]
         [TestCase(EnemyAnimationProfile.Explosive)]
+        [TestCase(EnemyAnimationProfile.Dasher)]
         public void Info004AuthoredAnimationBypassesTintAndProceduralDeformation(EnemyAnimationProfile profile)
         {
             UseGoblin();
@@ -467,37 +468,51 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Enemy005DasherFlapsDuringDashAndLaunchAndPlaysDeath()
+        public void Enemy005DasherRollTracksChargeAndDashThenRecoversWithoutPhysicsWrites()
         {
             var em = world.EntityManager;
             EnemyAnimation animation = em.GetComponentData<EnemyAnimation>(visual);
             animation.Profile = (byte)EnemyAnimationProfile.Dasher;
             em.SetComponentData(visual, animation);
             em.AddComponentData(owner, new DasherState { Phase = DasherPhase.Positioning });
+            em.AddComponentData(owner, new DasherSettings { TelegraphDuration = 2, MaximumDistance = 20, RecoveryDuration = 1 });
 
             Tick();
-            Assert.That(Pose.x, Is.Zero, "Flying_Idle should drive a stationary Dasher.");
+            Assert.That(Pose.x, Is.Zero, "Idle should drive a stationary Dasher.");
 
             em.SetComponentData(owner, new DesiredMovement { Direction = new float3(0, 0, 1), Speed = 4f });
             Tick();
-            Assert.That(Pose.x, Is.EqualTo(1f), "Fast_Flying should drive movement.");
+            Assert.That(Pose.x, Is.EqualTo(2f), "Run Forward In Place should drive fast movement.");
 
-            em.SetComponentData(owner, new DasherState { Phase = DasherPhase.Dashing });
+            em.SetComponentData(owner, new DasherState { Phase = DasherPhase.Preparing, SecondsRemaining = 1 });
             Tick();
-            Assert.That(Pose.x, Is.EqualTo(1f), "Dashing uses Fast_Flying.");
-            float dashFrame = Pose.y;
+            Assert.That(Pose, Is.EqualTo(new float3(3, .5f, 0)), "Roll Forward In Place follows the telegraph clock.");
+            var dash = new DasherState { Phase = DasherPhase.Dashing, DashDistanceTravelled = 10 };
+            em.SetComponentData(owner, dash);
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(4, .5f, 0)), "Roll Forward In Place spans the committed dash distance.");
             Tick(.07f);
-            Assert.That(Pose.y, Is.Not.EqualTo(dashFrame), "Wings must continue moving during the committed dash.");
+            Assert.That(Pose.y, Is.EqualTo(.5f), "Animation cannot run ahead of the gameplay dash.");
+            dash.DashDistanceTravelled = 20;
+            em.SetComponentData(owner, dash);
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(1f), "Roll Forward In Place holds its final sample instead of looping.");
+            em.SetComponentData(owner, new DasherState { Phase = DasherPhase.Recovering, SecondsRemaining = .5f });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(8, .5f, 0)), "Look Around communicates dash recovery.");
 
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
             Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)), "Launching restarts Fast_Flying.");
+            Assert.That(Pose, Is.EqualTo(new float3(9f, 0f, 0f)), "Launching restarts Roll Forward In Place.");
 
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
             Tick();
             Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Death should start at its first frame.");
             Tick();
             Assert.That(Pose.y, Is.EqualTo(0.25f).Within(0.001f), "Death should advance and then hold its final frame.");
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner), Is.EqualTo(default(PhysicsVelocity)));
+            Assert.That(em.GetComponentData<DasherState>(owner).Phase, Is.EqualTo(DasherPhase.Recovering));
         }
 
         [Test]
@@ -686,8 +701,11 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<PhysicsVelocity>(owner).Linear, Is.EqualTo(velocity.Linear));
             Assert.That(em.GetComponentData<LocalTransform>(owner).Position, Is.EqualTo(float3.zero));
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
-            Tick(); Tick(.25f);
-            Assert.That(Pose.x, Is.EqualTo(profile == EnemyAnimationProfile.Explosive ? 6 : 0),
+            Tick();
+            if (profile == EnemyAnimationProfile.Dasher)
+                em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .25f });
+            Tick(.25f);
+            Assert.That(Pose.x, Is.EqualTo(profile == EnemyAnimationProfile.Explosive || profile == EnemyAnimationProfile.Dasher ? 6 : 0).Within(.001f),
                 "Recovering uses an authored recovery or Idle, never the terminal death pose.");
             Assert.That(em.GetBuffer<SkinMatrix>(visual)[0].Value.c1.z, Is.EqualTo(0).Within(.001f));
         }
@@ -850,13 +868,62 @@ namespace CrowdPunch.Tests
             finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
         }
 
+        [TestCase(DasherPhase.Preparing)]
+        [TestCase(DasherPhase.Dashing)]
+        public void Info004DasherRollInterpolationPreservesBoneProportions(DasherPhase phase)
+        {
+            samples.Dispose();
+            using var builder = new BlobBuilder(Allocator.Temp);
+            ref var root = ref builder.ConstructRoot<EnemyAnimationSamples>();
+            root.BoneCount = 1;
+            root.FrameCount = 2;
+            var durations = builder.Allocate(ref root.Durations, EnemyAnimationSamples.MotionCount);
+            var matrices = builder.Allocate(ref root.Matrices, EnemyAnimationSamples.MotionCount * 2);
+            for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++)
+            {
+                durations[motion] = 1;
+                var rotation = new float3x3(quaternion.RotateX(math.radians(170)));
+                matrices[motion * 2] = new float3x4(float3x3.identity.c0, float3x3.identity.c1, float3x3.identity.c2, float3.zero);
+                matrices[motion * 2 + 1] = new float3x4(rotation.c0, rotation.c1, rotation.c2, float3.zero);
+            }
+            samples = builder.CreateBlobAssetReference<EnemyAnimationSamples>(Allocator.Persistent);
+            var em = world.EntityManager;
+            em.SetComponentData(visual, new EnemyAnimation { Owner = owner, Samples = samples, Profile = (byte)EnemyAnimationProfile.Dasher });
+            em.AddComponentData(owner, new DasherSettings { TelegraphDuration = 2, MaximumDistance = 20 });
+            em.AddComponentData(owner, new DasherState { Phase = phase, SecondsRemaining = 1, DashDistanceTravelled = 10 });
+            Tick();
+            var pose = em.GetBuffer<SkinMatrix>(visual)[0].Value;
+            Assert.That(math.length(pose.c0), Is.EqualTo(1).Within(.0001f));
+            Assert.That(math.length(pose.c1), Is.EqualTo(1).Within(.0001f), "Roll interpolation must not squash the bone.");
+            Assert.That(math.length(pose.c2), Is.EqualTo(1).Within(.0001f));
+            Assert.That(math.dot(pose.c1, pose.c2), Is.EqualTo(0).Within(.0001f));
+            Assert.That(math.determinant(new float3x3(pose.c0, pose.c1, pose.c2)), Is.EqualTo(1).Within(.0001f));
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
         [Test]
-        public void Info004DasherActiveAnimationKeepsHoverClearance()
+        public void Info004DasherActiveAnimationPreservesAuthoredScaleAndGroundClearance()
         {
             var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemyDasher.prefab");
             try
             {
                 var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                var source = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(CrowdPunch.Editor.EnemyDasherPrefabBuilder.ModelPath);
+                Assert.That(animator.transform.localScale, Is.EqualTo(source.transform.localScale));
+                Assert.That(root.transform.localScale, Is.EqualTo(UnityEngine.Vector3.one));
+                foreach (var transform in animator.GetComponentsInChildren<UnityEngine.Transform>(true))
+                {
+                    string path = UnityEditor.AnimationUtility.CalculateTransformPath(transform, animator.transform);
+                    var original = string.IsNullOrEmpty(path) ? source.transform : source.transform.Find(path);
+                    Assert.That(original, Is.Not.Null, path);
+                    Assert.That(UnityEngine.Vector3.Distance(transform.localScale, original.localScale),
+                        Is.LessThan(.0001f), "Prefab scale changed at " + path);
+                }
+                var controller = (UnityEditor.Animations.AnimatorController)animator.runtimeAnimatorController;
+                foreach (var state in controller.layers[0].stateMachine.states)
+                    if (state.state.name == "Motion3" || state.state.name == "Motion4" || state.state.name == "Motion9")
+                        Assert.That(UnityEditor.AssetDatabase.GetAssetPath(state.state.motion),
+                            Does.EndWith("Goblin Minion@Roll Forward In Place.FBX"));
                 var renderer = root.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
                 var authoring = renderer.GetComponent<CrowdPunch.Authoring.EnemyAnimationAuthoring>();
                 using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
@@ -867,13 +934,16 @@ namespace CrowdPunch.Tests
                 var matrices = new UnityEngine.Matrix4x4[bones];
                 var vertices = renderer.sharedMesh.vertices;
                 var weights = renderer.sharedMesh.boneWeights;
-                for (int pose = 0; pose < frames * 2; pose++)
+                for (int pose = 0; pose < frames * EnemyAnimationSamples.MotionCount; pose++)
                 {
                     for (int bone = 0; bone < bones; bone++)
                     {
                         matrices[bone] = UnityEngine.Matrix4x4.identity;
                         for (int column = 0; column < 4; column++)
                             for (int row = 0; row < 3; row++) matrices[bone][row, column] = reader.ReadSingle();
+                        for (int column = 0; column < 3; column++)
+                            Assert.That(((UnityEngine.Vector3)matrices[bone].GetColumn(column)).magnitude,
+                                Is.EqualTo(1).Within(.0001f), "Exported bones must retain prefab proportions.");
                     }
                     for (int index = 0; index < vertices.Length; index++)
                     {
@@ -883,7 +953,8 @@ namespace CrowdPunch.Tests
                             + matrices[weight.boneIndex2].MultiplyPoint3x4(point) * weight.weight2
                             + matrices[weight.boneIndex3].MultiplyPoint3x4(point) * weight.weight3;
                         position = root.transform.InverseTransformPoint(animator.transform.TransformPoint(position));
-                        Assert.That(position.y, Is.GreaterThanOrEqualTo(.199f), "Every active flight frame must clear the owner's origin.");
+                        if (pose / frames != 7)
+                            Assert.That(position.y, Is.GreaterThanOrEqualTo(-1.01f), "Only Spawn may go below the capsule floor.");
                     }
                 }
             }

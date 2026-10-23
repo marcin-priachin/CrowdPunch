@@ -14,6 +14,7 @@ namespace CrowdPunch.Editor
             string path = AssetDatabase.GetAssetPath(material);
             if (path.StartsWith(EnemyBaselinePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyRangedPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
+                || path.StartsWith(EnemyDasherPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyExplosivePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)) return;
             var atlas = AssetDatabase.LoadAssetAtPath<Texture2D>(AtlasPath);
             if (atlas == null) throw new InvalidOperationException("Ultimate Monsters color atlas is missing.");

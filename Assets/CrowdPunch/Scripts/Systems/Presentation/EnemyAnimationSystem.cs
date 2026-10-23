@@ -16,7 +16,7 @@ namespace CrowdPunch.Systems.Presentation
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            new PlaybackJob
+            new EnemyPosePlaybackJob
             {
                 Dragons = SystemAPI.GetComponentLookup<DragonFlameState>(true),
                 Wizards = SystemAPI.GetComponentLookup<WizardCastState>(true),
@@ -28,6 +28,7 @@ namespace CrowdPunch.Systems.Presentation
                 Respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true),
                 Velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true),
                 Dashers = SystemAPI.GetComponentLookup<DasherState>(true),
+                DasherTuning = SystemAPI.GetComponentLookup<DasherSettings>(true),
                 Ninjas = SystemAPI.GetComponentLookup<NinjaState>(true),
                 NinjaTuning = SystemAPI.GetComponentLookup<NinjaTuning>(true),
                 RangedAttacks = SystemAPI.GetComponentLookup<RangedAttackState>(true),
@@ -42,7 +43,7 @@ namespace CrowdPunch.Systems.Presentation
         }
 
         [BurstCompile]
-        private partial struct PlaybackJob : IJobEntity
+        private partial struct EnemyPosePlaybackJob : IJobEntity
         {
             [ReadOnly] public ComponentLookup<DragonFlameState> Dragons;
             [ReadOnly] public ComponentLookup<WizardCastState> Wizards;
@@ -54,6 +55,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<RespawnRequest> Respawns;
             [ReadOnly] public ComponentLookup<PhysicsVelocity> Velocities;
             [ReadOnly] public ComponentLookup<DasherState> Dashers;
+            [ReadOnly] public ComponentLookup<DasherSettings> DasherTuning;
             [ReadOnly] public ComponentLookup<NinjaState> Ninjas;
             [ReadOnly] public ComponentLookup<NinjaTuning> NinjaTuning;
             [ReadOnly] public ComponentLookup<RangedAttackState> RangedAttacks;
@@ -92,8 +94,12 @@ namespace CrowdPunch.Systems.Presentation
                         / math.max(.001f, SpawnAnimations[owner].Duration));
                     float spawnFrame = progress * (samples.FrameCount - 1);
                     int from = (int)spawnFrame;
-                    ApplyFrame(ref skin, ref samples, animation.SpawnMotion, from,
-                        math.min(from + 1, samples.FrameCount - 1), math.frac(spawnFrame));
+                    if (animation.Profile == (byte)EnemyAnimationProfile.Dasher)
+                        ApplyDasherFrame(ref skin, ref samples, animation.SpawnMotion, from,
+                            math.min(from + 1, samples.FrameCount - 1), math.frac(spawnFrame));
+                    else
+                        ApplyFrame(ref skin, ref samples, animation.SpawnMotion, from,
+                            math.min(from + 1, samples.FrameCount - 1), math.frac(spawnFrame));
                     playback.WasRecovering = 0;
                     playback.WasLaunched = 0;
                     playback.Landing = 0;
@@ -118,6 +124,11 @@ namespace CrowdPunch.Systems.Presentation
                 if (animation.Profile == (byte)EnemyAnimationProfile.Explosive)
                 {
                     AnimateExplosive(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Dasher)
+                {
+                    AnimateGoblinDasher(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
                 if (animation.Profile != (byte)EnemyAnimationProfile.Standard
@@ -177,11 +188,6 @@ namespace CrowdPunch.Systems.Presentation
                         ApplyFrame(ref skin, ref samples, 2, from, (from + 1) % samples.FrameCount, math.frac(danceFrame));
                     }
                     else { playback.WasAttacking = 0; AnimateBaseline(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot); }
-                    return;
-                }
-                if (animation.Profile == (byte)EnemyAnimationProfile.Dasher)
-                {
-                    AnimateDasher(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Ranged)
@@ -301,6 +307,84 @@ namespace CrowdPunch.Systems.Presentation
                     float3x4 right = Sample(ref samples, second + 1, a, b, bone, between);
                     skin[bone] = new SkinMatrix { Value = idle * (1f - amount) + (left * (1f - turn) + right * turn) * amount };
                 }
+            }
+
+            // ENEMY-005..008 / INFO-004: animation follows gameplay clocks and never writes
+            // owner transforms, scale, material colour or physics. Roll Forward In Place plays once per
+            // charge/dash; a launched Dasher loops the same authored motion language.
+            private void AnimateGoblinDasher(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                const int prepareMotion = 3, dashMotion = 4, riseMotion = 6, dashRecoveryMotion = 8;
+                var dash = Dashers.HasComponent(owner) ? Dashers[owner] : default;
+                var tuning = DasherTuning.HasComponent(owner) ? DasherTuning[owner] : default;
+                int motion;
+                float progress = -1f;
+                bool restart = false;
+                bool hit = false;
+                if (Health.HasComponent(owner))
+                {
+                    float health = Health[owner].Current;
+                    hit = playback.HealthInitialized != 0 && health < playback.PreviousHealth;
+                    playback.HealthInitialized = 1;
+                    playback.PreviousHealth = health;
+                }
+                if (launch.Phase == EnemyLaunchPhase.Launched)
+                {
+                    motion = EnemyAnimationSamples.FlyingMotion;
+                    restart = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
+                    playback.WasLaunched = 1;
+                    playback.LaunchSequence = launch.LaunchSequence;
+                    playback.HitActive = 0;
+                }
+                else if (launch.Phase == EnemyLaunchPhase.Defeated) motion = EnemyAnimationSamples.ImpactMotion;
+                else if (launch.Phase == EnemyLaunchPhase.Recovering)
+                {
+                    if (playback.WasRecovering == 0)
+                        playback.ImpactDuration = math.max(.001f, launch.RecoverySecondsRemaining);
+                    float recovery = math.saturate(1 - launch.RecoverySecondsRemaining / playback.ImpactDuration);
+                    motion = recovery < .45f ? EnemyAnimationSamples.ImpactMotion : riseMotion;
+                    progress = recovery < .45f ? recovery / .45f : (recovery - .45f) / .55f;
+                }
+                else if (dash.Phase == DasherPhase.Preparing)
+                {
+                    motion = prepareMotion;
+                    progress = math.saturate(1 - dash.SecondsRemaining / math.max(.001f, tuning.TelegraphDuration));
+                }
+                else if (dash.Phase == DasherPhase.Dashing)
+                {
+                    motion = dashMotion;
+                    progress = math.saturate(dash.DashDistanceTravelled / math.max(.001f, tuning.MaximumDistance));
+                }
+                else if (dash.Phase == DasherPhase.Recovering)
+                {
+                    motion = dashRecoveryMotion;
+                    progress = math.saturate(1 - dash.SecondsRemaining / math.max(.001f, tuning.RecoveryDuration));
+                }
+                else
+                {
+                    if (hit) { playback.HitActive = 1; playback.HitPhase = 0; }
+                    else if (playback.HitActive != 0)
+                    {
+                        playback.HitPhase += DeltaTime / math.max(.001f, samples.Durations[5]);
+                        if (playback.HitPhase >= 1) playback.HitActive = 0;
+                    }
+                    motion = playback.HitActive != 0 ? 5 : Movement[owner].Speed <= .01f ? 0
+                        : Movement[owner].Speed > Settings[owner].MoveSpeed * .65f ? 2 : 1;
+                    if (motion == 5) progress = playback.HitPhase;
+                }
+                playback.WasRecovering = (byte)(launch.Phase == EnemyLaunchPhase.Recovering ? 1 : 0);
+                if (launch.Phase != EnemyLaunchPhase.Launched) playback.WasLaunched = 0;
+                bool loop = motion == 0 || motion == 1 || motion == 2 || motion == EnemyAnimationSamples.FlyingMotion;
+                if (restart || motion != playback.GoblinMotion) playback.Phase = 0;
+                else playback.Phase += DeltaTime / math.max(.001f, samples.Durations[motion]);
+                playback.Phase = loop ? math.frac(playback.Phase) : math.saturate(playback.Phase);
+                playback.GoblinMotion = (byte)motion;
+                if (progress < 0) progress = playback.Phase;
+                float frame = progress * (loop ? samples.FrameCount : samples.FrameCount - 1);
+                int from = math.min((int)frame, samples.FrameCount - 1);
+                ApplyDasherFrame(ref skin, ref samples, motion, from,
+                    loop ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1), math.frac(frame));
             }
 
             private void AnimateDasher(Entity owner, ref EnemyAnimationPlayback playback,
@@ -815,6 +899,27 @@ namespace CrowdPunch.Systems.Presentation
                 float rise = math.smoothstep(0, 1, playback.RecoveryAge / math.min(.24f, playback.ImpactDuration));
                 ApplyRotatedFrame(ref skin, ref samples, 0, from, (from + 1) % samples.FrameCount,
                     math.frac(frame), quaternion.RotateX(sideways ? -math.PI * .5f * (1 - rise) : 0), pivot);
+            }
+
+            private static void ApplyDasherFrame(ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples,
+                int motion, int from, int to, float blend)
+            {
+                int start = motion * samples.FrameCount * samples.BoneCount;
+                for (int bone = 0; bone < skin.Length; bone++)
+                {
+                    float3x4 a = samples.Matrices[start + from * samples.BoneCount + bone];
+                    float3x4 b = samples.Matrices[start + to * samples.BoneCount + bone];
+                    float3 scaleA = new float3(math.length(a.c0), math.length(a.c1), math.length(a.c2));
+                    float3 scaleB = new float3(math.length(b.c0), math.length(b.c1), math.length(b.c2));
+                    quaternion rotationA = math.normalize(new quaternion(new float3x3(a.c0 / scaleA.x, a.c1 / scaleA.y, a.c2 / scaleA.z)));
+                    quaternion rotationB = math.normalize(new quaternion(new float3x3(b.c0 / scaleB.x, b.c1 / scaleB.y, b.c2 / scaleB.z)));
+                    // Linear matrix blending collapses limbs between very different roll poses.
+                    // Interpolate rotation separately, retaining only the scale in the authored samples.
+                    float3x3 rotation = new float3x3(math.slerp(rotationA, rotationB, blend));
+                    float3 scale = math.lerp(scaleA, scaleB, blend);
+                    skin[bone] = new SkinMatrix { Value = new float3x4(rotation.c0 * scale.x,
+                        rotation.c1 * scale.y, rotation.c2 * scale.z, math.lerp(a.c3, b.c3, blend)) };
+                }
             }
 
             private static void ApplyFrame(ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples,

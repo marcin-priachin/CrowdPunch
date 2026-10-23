@@ -9,7 +9,7 @@ using Unity.Transforms;
 namespace CrowdPunch.Systems.Presentation
 {
     [UpdateInGroup(typeof(GamePresentationGroup))]
-    [UpdateAfter(typeof(DasherPresentationSystem))]
+    [UpdateAfter(typeof(EnemyReadabilitySystem))]
     public partial struct DasherTelegraphBridgeSystem : ISystem
     {
         public void OnUpdate(ref SystemState state)
