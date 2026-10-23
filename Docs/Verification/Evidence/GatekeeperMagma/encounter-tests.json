@@ -1,0 +1,217 @@
+{
+  "success": true,
+  "command": "command test_status",
+  "data": {
+    "command": "test_status",
+    "parameters": {},
+    "result": {
+      "status": "completed",
+      "duration": 0.21,
+      "summary": {
+        "total": 27,
+        "passed": 27,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "results": [
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_DasherUsesSameEligibilityAndInvulnerability(Player,True)",
+          "Status": "Passed",
+          "Duration": 0.0154941,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_DasherUsesSameEligibilityAndInvulnerability(Boss,False)",
+          "Status": "Passed",
+          "Duration": 0.001167,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_DasherUsesSameEligibilityAndInvulnerability(Enemy,False)",
+          "Status": "Passed",
+          "Duration": 0.0012164,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_ExplosionAndGenericDamageCannotDamageOrLaunchParts",
+          "Status": "Passed",
+          "Duration": 0.0371432,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_ExplosiveBodyContactRequestsOrdinaryDetonationOnlyWhileLaunched",
+          "Status": "Passed",
+          "Duration": 0.0020485,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_HeadBounceChoosesTheSideAwayFromTheHead",
+          "Status": "Passed",
+          "Duration": 0.0017996,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_HeadBouncePreservesAlreadySafeSolverMotion",
+          "Status": "Passed",
+          "Duration": 0.0009957,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_HeadBounceTurnsAPlayerBoundShotSidewaysWithoutAddingSpeed",
+          "Status": "Passed",
+          "Duration": 0.0010393,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_InvulnerabilityAndDuplicateContactsNeverBecomeDelayedDamage",
+          "Status": "Passed",
+          "Duration": 0.0010525,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead(ElitePunch)",
+          "Status": "Passed",
+          "Duration": 0.0012498,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead(BossAttack)",
+          "Status": "Passed",
+          "Duration": 0.0009343,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_NonPlayerBodiesAndDescendantsCannotDamageHead(Explosion)",
+          "Status": "Passed",
+          "Duration": 0.0010734,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_PlayerPropagationRemainsEligible",
+          "Status": "Passed",
+          "Duration": 0.0012249,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss001_RangedProjectileCrossingHeadCannotDamageIt",
+          "Status": "Passed",
+          "Duration": 0.0069451,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss002_AttackLocksThePlayersPositionAcrossTheCourt(0)",
+          "Status": "Passed",
+          "Duration": 0.0093829,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss002_AttackLocksThePlayersPositionAcrossTheCourt(1)",
+          "Status": "Passed",
+          "Duration": 0.0014231,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss002_AttackLocksThePlayersPositionAcrossTheCourt(2)",
+          "Status": "Passed",
+          "Duration": 0.0014623,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss002_PlayerPunchCannotAffectParts(Head)",
+          "Status": "Passed",
+          "Duration": 0.002059,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss002_PlayerPunchCannotAffectParts(LeftHand)",
+          "Status": "Passed",
+          "Duration": 0.0008442,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss002_StaggerInterruptsActiveStrikeAndHasRepeatProtection",
+          "Status": "Passed",
+          "Duration": 0.0012124,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss003_RealFreshPunchReclaimsBossBodyAndReplacesMomentum",
+          "Status": "Passed",
+          "Duration": 0.0031268,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss004_BurstStopsAtEachThresholdAndCancelsBothHitboxes",
+          "Status": "Passed",
+          "Duration": 0.0022788,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss005_HandRetargetCannotCarryItsEnlargedColliderOutOfBounds",
+          "Status": "Passed",
+          "Duration": 0.0015227,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss005_RoundedPerimeterIsContinuousAndAlwaysInsideBounds",
+          "Status": "Passed",
+          "Duration": 0.022955,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss006_ReplenishmentStopsWithBossDeathAndDoesNotCreateExtraEntities",
+          "Status": "Passed",
+          "Duration": 0.0106838,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss007_CrowdCompletionCannotWinAndHeadDefeatReportsOnce",
+          "Status": "Passed",
+          "Duration": 0.009658,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.BossEncounterTests.Boss007_RestartClearsAllBossAndCrowdOwnership",
+          "Status": "Passed",
+          "Duration": 0.0471442,
+          "Message": null,
+          "StackTrace": null
+        }
+      ]
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7802,
+      "projectPath": "C:\\Users\\pc\\.codex\\worktrees\\unity-agent-a\\CrowdPunch"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

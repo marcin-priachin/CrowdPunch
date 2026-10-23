@@ -63,7 +63,6 @@ namespace CrowdPunch.Editor
                     }
                     foreach (var finale in root.GetComponentsInChildren<FinalePresentation>(true)) ConfigureFinale(finale);
                 }
-                ConfigureHandMaterials();
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
                 AssetDatabase.SaveAssets();
@@ -79,42 +78,7 @@ namespace CrowdPunch.Editor
 
         public static void AddGatekeeper(GameObject root)
         {
-            const string source = Root + "Models/UltimateMonsters/Blob/Orc.fbx";
-            var visual = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(source), root.transform);
-            visual.name = "Gatekeeper Model";
-            var renderer = visual.GetComponentInChildren<SkinnedMeshRenderer>();
-            visual.transform.localScale *= 4.4f / renderer.bounds.size.y;
-            visual.transform.localPosition -= root.transform.InverseTransformPoint(renderer.bounds.center) - Vector3.up * .2f;
-            var animator = visual.GetComponent<Animator>();
-            if (animator == null) animator = visual.AddComponent<Animator>();
-            string[] names = { "Idle", "Walk", "No", "HitRecieve", "Death" };
-            var clips = names.Select(n => AssetDatabase.LoadAllAssetsAtPath(source).OfType<AnimationClip>()
-                .First(c => !c.name.StartsWith("__") && c.name.EndsWith("|" + n))).ToArray();
-            string controllerPath = GateArt + "Gatekeeper.controller";
-            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath);
-            if (controller == null)
-            {
-                controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
-                foreach (var clip in clips) controller.layers[0].stateMachine.AddState(clip.name.Split('|').Last()).motion = clip;
-            }
-            animator.runtimeAnimatorController = controller;
-            animator.applyRootMotion = false;
-            renderer.rootBone = animator.transform;
-            renderer.quality = SkinQuality.Bone4;
-            string materialPath = GateArt + "Gatekeeper Atlas.mat";
-            var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
-            if (material == null)
-            {
-                material = new Material(AssetDatabase.LoadAssetAtPath<Material>(Root + "Animation/EnemySkinning.mat"));
-                AssetDatabase.CreateAsset(material, materialPath);
-            }
-            EnemyAppearanceMaterials.Configure(material);
-            renderer.sharedMaterials = renderer.sharedMaterials.Select(_ => material).ToArray();
-            AssetDatabase.SaveAssets();
-            string samples = GateArt + "GatekeeperMovement.bytes";
-            GauntletProgressionBuilder.WriteBossSamples(animator, renderer, clips, samples, controllerPath);
-            renderer.gameObject.AddComponent<EnemyAnimationAuthoring>().Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samples);
-            GroundModel(visual, root.GetComponent<BossPartAuthoring>().height);
+            GatekeeperMagmaBuilder.AddModel(root);
         }
 
         // Use the exported skin positions, not BakeMesh bounds (FBX armatures can carry 100x scale).
@@ -260,17 +224,5 @@ namespace CrowdPunch.Editor
             renderer.sharedMesh=saved;
         }
 
-        private static void ConfigureHandMaterials()
-        {
-            foreach (string name in new[] { "Hand Gold", "Hand Cuffs" })
-            {
-                var material = AssetDatabase.LoadAssetAtPath<Material>(GateArt + name + ".mat");
-                if (material == null) continue;
-                material.SetColor("_BaseColor", name == "Hand Gold" ? new Color(.88f, .65f, .28f) : new Color(.24f, .16f, .38f));
-                material.SetFloat("_Smoothness", .24f); material.SetFloat("_Metallic", .12f);
-                material.SetColor("_EmissionColor", material.color * .09f); material.EnableKeyword("_EMISSION");
-                EditorUtility.SetDirty(material);
-            }
-        }
     }
 }

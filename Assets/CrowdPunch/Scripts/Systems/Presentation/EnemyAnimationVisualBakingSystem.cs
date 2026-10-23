@@ -36,7 +36,7 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     Entity entity = child.Value;
                     if (!SystemAPI.HasComponent<RenderBounds>(entity)) continue;
-                    if (gatekeeper) commands.AddComponent(entity, new BossVisualOwner { Value = animation.ValueRO.Owner, Color = new float4(1.15f, 1.15f, 1.15f, 1) });
+                    if (gatekeeper) commands.AddComponent(entity, new BossVisualOwner { Value = animation.ValueRO.Owner, Color = new float4(1) });
                     else if (dino) commands.AddComponent(entity, new DinoVisualOwner { Value = animation.ValueRO.Owner });
                     else if (rolling) commands.AddComponent(entity, new RollingVisualOwner { Value = animation.ValueRO.Owner });
                     else if (chicken) commands.AddComponent(entity, new ChickenVisualOwner { Value = animation.ValueRO.Owner });
@@ -48,7 +48,7 @@ namespace CrowdPunch.Systems.Presentation
                         if (SystemAPI.HasComponent<SnakeHead>(animation.ValueRO.Owner))
                             commands.AddComponent(entity, new SnakeBodyColor { Value = new float4(1f) });
                     }
-                    commands.AddComponent(entity, new URPMaterialPropertyBaseColor { Value = new float4(1f) });
+                    if (!gatekeeper) commands.AddComponent(entity, new URPMaterialPropertyBaseColor { Value = new float4(1f) });
                 }
             }
             commands.Playback(state.EntityManager);

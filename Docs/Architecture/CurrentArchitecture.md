@@ -237,9 +237,39 @@ See `Docs/Verification/ChapterFourObservatory.md` for evidence and acceptance li
 
 `BossAppearanceBuilder` applies appearance updates to the eight campaign boss introductions/rematches, four legacy boss SubScenes and the finale main scene. It replaces only model children and assigns dedicated atlas materials; encounter roots, collider geometry, settings, waves and progression remain authored. The normal boss recipes reproduce the same model treatment. Source FBXs and their importers remain unchanged.
 
-The Gatekeeper's formerly static Orc head now uses the existing sampled ECS skinning pipeline. `EnemyAnimationBaker` recognizes `BossPartAuthoring`; the visual baking pass tags its rendered submeshes with `BossVisualOwner` instead of ordinary enemy lifecycle data. `GatekeeperAnimationSystem` chooses idle, travelling, transition, hit and death poses. A `BossAnimationAnchor` on Gatekeeper/Chicken/Dino skin entities stores the model-space floor point, so squash stays grounded. `BossSkinPose` interpolates sampled poses and bounded silhouette accents with short blends. Chicken wind-up follows the actual release timer, including paired-shot waits; Dino retains walking during its charge crouch and accelerates its burst stride. Rolling Blob spins its quiet pose around the existing centre pivot, with the complete sampled silhouette fitted inside its collider radius. A 64-angle baked support curve adds skin-only vertical correction so the asymmetric spikes meet the floor rather than hover or cut through it. Its recovery eases the rotation angle rather than blending opposite matrices, which would flatten the body.
+The Gatekeeper uses the supplied Polygonal Magma Orange prefab in campaign 10/50 and legacy
+Gauntlet 11 (BOSS-002/008, VISION-006). `GatekeeperMagmaBuilder` preserves encounter settings,
+physics part identities and transforms, generates a default 4.4m head silhouette, and fits
+both rig fists to the existing 5.2m physical diameter. Owned materials use the supplied orange
+texture under `CrowdPunch/Cel/Enemy`; original pack assets are preserved. `BossAppearanceBuilder`
+and the legacy encounter builder use the same path for future rebuilds.
 
-`BossHandPoseSystem` adds a small anticipation squeeze, recoil and stagger wobble to the Gatekeeper fists through `LocalToWorld` only. Its cached unmodified matrix prevents cumulative scale. Boss physics, attack clocks and hit geometry retain their original owners. Neutral states preserve the monster atlas, while transient attack/protection multipliers retain facial and costume detail. The finale uses a dedicated royal-blue body UV palette while preserving its gold crown, face and wing membranes, an atlas-backed URP material, cyan vulnerability emission and the existing ring. Its Mono presentation bridge triggers strikes when ECS warnings resolve, adds landing compression, and distinguishes flight/fall/takeoff without reading entities. Per-clip sampled support heights settle its floating source model onto the ground during vulnerability and blend away through fall/takeoff.
+The existing sampled ECS skinning format stores Idle, Move Forward WO Root, Explode,
+Take Damage, Die, Cast Spell, Punch Attack, Swing Attack, Charge, Spawn and Idle in slots 0-10.
+`GatekeeperAnimationSystem` uses accepted-hit sequences to play complete damage reactions,
+with movement, transition and defeat driven by the original encounter state. It adds no squash.
+`GatekeeperRigBaker` records the RigLArm1/RigRArm1 descendant masks, palm bind points,
+model entity and animated hand bounds measured from the supplied mesh and skin samples.
+`GatekeeperArmAnimationSystem` runs after body sampling,
+selects each arm's authored attack/stagger/guard pose independently from its physical hand's
+phase clock, then overrides arm-root translation through the sampled skin matrices. Each hand's
+horizontal mesh bounds center follows its physical damage area. A fixed radius measured across
+the clips and the current model world scale determine its size from `BossPart.Radius`, so later
+model scaling does not enlarge the fists. Interpolated mesh bounds conservatively enclose the
+animated vertices; a presentation-only vertical lift keeps their bottom above the encounter
+`ArenaGroundPlane.SurfaceHeight` plus `GatekeeperRigAuthoring.groundClearance` (default 0.02m), including defeat. Finger
+articulation stays authored. Campaign 10/50 retain the user's model scale of 6. No MonoBehaviour queries entities, no runtime
+Animator is introduced, and presentation never writes physics transforms or attack clocks.
+The primitive hand renderers are removed; invisible ECS hand owners keep collisions and
+committed attacks. Whole-arena skin bounds cover their travel. `BossPresentationSystem`
+retains world telegraphs and combat feedback but no longer changes Gatekeeper material colors.
+
+Other bosses retain their existing presentation: `BossAnimationAnchor` grounds Chicken/Dino
+poses; `BossSkinPose` blends samples and their bounded silhouette accents. Rolling Blob retains
+its collider fit and 64-angle sampled floor support. Legacy `BossHandPoseSystem` only affects
+remaining primitive visuals, and no longer has targets in the authored Gatekeeper scenes.
+
+The finale uses a dedicated royal-blue body UV palette while preserving its gold crown, face and wing membranes, an atlas-backed URP material, cyan vulnerability emission and the existing ring. Its Mono presentation bridge triggers strikes when ECS warnings resolve, adds landing compression, and distinguishes flight/fall/takeoff without reading entities. Per-clip sampled support heights settle its floating source model onto the ground during vulnerability and blend away through fall/takeoff.
 
 `BossAppearanceTests` checks source hashes and grounded sampled geometry, full-roll clearance, finite transitions, unchanged physical transforms/velocities and non-accumulating hand deformation. See `Docs/Validation/BossAppearance.md` for verification evidence and remaining visual tuning limits.
 

@@ -39,8 +39,6 @@ namespace CrowdPunch.Editor
                 var settings=AssetDatabase.LoadAssetAtPath<BossEncounterSettings>(SettingsPath);
                 if(settings==null) { settings=ScriptableObject.CreateInstance<BossEncounterSettings>(); AssetDatabase.CreateAsset(settings,SettingsPath); }
                 var wave=CreateWave();
-                var gold=Material("Hand Gold",new Color(.9f,.62f,.25f));
-                var cuff=Material("Hand Cuffs",new Color(.3f,.14f,.47f));
                 Scene sub=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive); SceneManager.SetActiveScene(sub);
                 var arena=new GameObject("Boss Arena Bounds").AddComponent<ArenaAuthoring>(); arena.transform.position=new Vector3(0,1,0);
                 var arenaData=new SerializedObject(arena); arenaData.FindProperty("spacingSize").vector3Value=new Vector3(36,16,32);
@@ -56,9 +54,9 @@ namespace CrowdPunch.Editor
                 Vector3 inward=(new Vector3(t.Center.x,0,t.Center.y)-head.transform.position); inward.y=0; inward.Normalize();
                 head.transform.rotation=Quaternion.LookRotation(inward);
                 var hp=head.AddComponent<BossPartAuthoring>(); hp.encounter=encounter; hp.kind=BossPartKind.Head; hp.radius=2; hp.height=4;
+                encounter.leftHand=Hand("Left Detached Fist",BossPartKind.LeftHand,encounter,head.transform.position-head.transform.right*t.OpenOffset+inward);
+                encounter.rightHand=Hand("Right Detached Fist",BossPartKind.RightHand,encounter,head.transform.position+head.transform.right*t.OpenOffset+inward);
                 BossAppearanceBuilder.AddGatekeeper(head);
-                encounter.leftHand=Hand("Left Detached Fist",BossPartKind.LeftHand,encounter,head.transform.position-head.transform.right*t.OpenOffset+inward,gold,cuff);
-                encounter.rightHand=Hand("Right Detached Fist",BossPartKind.RightHand,encounter,head.transform.position+head.transform.right*t.OpenOffset+inward,gold,cuff);
                 EditorSceneManager.SaveScene(sub,SubPath); EditorSceneManager.CloseScene(sub,true);
                 Scene main=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive); SceneManager.SetActiveScene(main);
                 var marker=new GameObject("Gauntlet 11 - The Gatekeeper").AddComponent<GauntletLevel>();
@@ -99,26 +97,11 @@ namespace CrowdPunch.Editor
             d.ApplyModifiedPropertiesWithoutUndo(); AssetDatabase.CreateAsset(w,WavePath); return w;
         }
 
-        private static BossPartAuthoring Hand(string name,BossPartKind kind,BossEncounterAuthoring encounter,Vector3 position,Material gold,Material cuff)
+        private static BossPartAuthoring Hand(string name,BossPartKind kind,BossEncounterAuthoring encounter,Vector3 position)
         {
             var go=new GameObject(name); position.y=encounter.settings.handHeight; go.transform.position=position; go.transform.rotation=encounter.transform.rotation;
             var part=go.AddComponent<BossPartAuthoring>(); part.encounter=encounter; part.kind=kind; part.radius=2.6f; part.height=5.2f;
-            var model=new GameObject("Model").transform; model.SetParent(go.transform,false); model.localScale=Vector3.one*2;
-            Primitive("Palm",model,new Vector3(0,0,0),new Vector3(2.4f,2,1.9f),gold);
-            for(int i=0;i<4;i++) Primitive("Knuckle "+i,model,new Vector3((i-1.5f)*.52f,.42f,.75f),new Vector3(.67f,.85f,.7f),gold);
-            Primitive("Thumb",model,new Vector3(kind==BossPartKind.LeftHand?1.05f:-1.05f,-.3f,.15f),new Vector3(.75f,1.3f,.85f),gold);
-            Primitive("Cuff",model,new Vector3(0,-.05f,-.8f),new Vector3(2.1f,1.75f,.6f),cuff);
             return part;
-        }
-        private static void Primitive(string name,Transform parent,Vector3 p,Vector3 scale,Material mat)
-        {
-            var go=GameObject.CreatePrimitive(PrimitiveType.Sphere); go.name=name; UnityEngine.Object.DestroyImmediate(go.GetComponent<Collider>());
-            go.transform.SetParent(parent,false); go.transform.localPosition=p; go.transform.localScale=scale; go.GetComponent<MeshRenderer>().sharedMaterial=mat;
-        }
-        private static Material Material(string name,Color color)
-        {
-            string path=Art+name+".mat"; var mat=AssetDatabase.LoadAssetAtPath<Material>(path); if(mat!=null) return mat;
-            mat=new Material(Shader.Find("CrowdPunch/Cel/Environment")) { name=name,enableInstancing=true }; mat.SetColor("_BaseColor",color); mat.SetFloat("_Smoothness",.3f); AssetDatabase.CreateAsset(mat,path); return mat;
         }
     }
 }

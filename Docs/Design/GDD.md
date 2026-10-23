@@ -1189,7 +1189,9 @@ The complete encounter is gauntlet 11 after the existing ten. Gauntlet 10 advanc
 
 Status: Must
 
-Use Assets/CrowdPunch/Models/UltimateMonsters/Blob/Orc.fbx for the head, preserving the original asset. Placeholder hands and procedural movement follow the toy-box style. Reuse the elite health-bar presentation for one head/boss bar, without hand bars, phase markers or additional boss HUD. Reuse proportionate combat feedback and readable world telegraphs. A dedicated baked ScriptableObject owns boss health, invulnerability, thresholds, movement, attacks, telegraphs, recovery, shielding and stagger; crowd tuning stays in wave settings.
+Use `Assets/Polygonal Magma/Prefabs/Polygonal Magma Orange.prefab` for the Gatekeeper, preserving the supplied asset. Use its authored animations from `Assets/Polygonal Magma/FBX` for movement, attacks, stagger, transitions and defeat instead of scripted material-color changes or squash. Override `RigLArm1` and `RigRArm1` movement to follow the existing independent physical hands; remove the primitive sphere-hand visuals. Match the previous head and hand footprints and use the established Full Cel shading with the supplied orange texture. Reuse the elite health-bar presentation for one head/boss bar, without hand bars, phase markers or additional boss HUD. Reuse proportionate combat feedback and readable world telegraphs. A dedicated baked ScriptableObject owns boss health, invulnerability, thresholds, movement, attacks, telegraphs, recovery, shielding and stagger; crowd tuning stays in wave settings.
+
+Keep the rig hands fitted to their original damage footprints when the model scale changes, and keep animated hand geometry above the arena ground throughout movement and attack poses.
 
 ### BOSS-009 - Encounter Duration
 
