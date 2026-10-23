@@ -15,13 +15,17 @@ namespace CrowdPunch.Systems.Movement
         public void OnUpdate(ref SystemState state)
         {
             float dt=SystemAPI.Time.DeltaTime; if(dt<=0) return;
-            foreach(var (part,target,transform,velocity) in SystemAPI.Query<RefRO<BossPart>,RefRO<BossMotionTarget>,RefRO<LocalTransform>,RefRW<PhysicsVelocity>>())
+            foreach(var (part,target,transform,velocity,entity) in SystemAPI.Query<RefRO<BossPart>,RefRO<BossMotionTarget>,RefRO<LocalTransform>,RefRW<PhysicsVelocity>>().WithEntityAccess())
             {
                 var t=SystemAPI.GetComponent<BossTuning>(part.ValueRO.Encounter);
                 var boss=SystemAPI.GetComponent<BossEncounter>(part.ValueRO.Encounter);
                 if(boss.Cycle==BossCycle.Defeated || !SystemAPI.HasSingleton<PlayerSnapshot>() || !SystemAPI.GetSingleton<PlayerSnapshot>().IsAvailable)
                 { velocity.ValueRW=default; continue; }
-                float3 goal=BossPerimeterRoute.Clamp(target.ValueRO.Position,t,part.ValueRO.Radius);
+                bool hand = part.ValueRO.Kind != BossPartKind.Head;
+                float radius = part.ValueRO.Radius;
+                if (hand && SystemAPI.HasComponent<GatekeeperHandFootprint>(entity))
+                    radius = SystemAPI.GetComponent<GatekeeperHandFootprint>(entity).Radius;
+                float3 goal=hand?BossPerimeterRoute.ClampHand(target.ValueRO.Position,t,radius):BossPerimeterRoute.Clamp(target.ValueRO.Position,t,radius);
                 float3 offset=goal-transform.ValueRO.Position;
                 float maxSpeed=part.ValueRO.Kind==BossPartKind.Head?t.MoveSpeed:t.HandSpeed;
                 float3 desired=math.normalizesafe(offset)*math.min(maxSpeed,math.length(offset)/dt);
@@ -32,7 +36,12 @@ namespace CrowdPunch.Systems.Movement
                     velocity.ValueRW.Linear=offset/dt;
                 // Retargeting can reverse a fast hand at the edge; cap the next physics step
                 // before residual outward momentum carries its enlarged collider out of court.
-                velocity.ValueRW.Linear=LimitToBounds(transform.ValueRO.Position,velocity.ValueRO.Linear,dt,t,part.ValueRO.Radius);
+                velocity.ValueRW.Linear=LimitToBounds(transform.ValueRO.Position,velocity.ValueRO.Linear,dt,t,radius);
+                if (hand && t.HandCourtRadius > 0)
+                {
+                    float3 next = transform.ValueRO.Position + velocity.ValueRO.Linear * dt;
+                    velocity.ValueRW.Linear = (BossPerimeterRoute.ClampHand(next, t, radius) - transform.ValueRO.Position) / dt;
+                }
                 float3 forward=math.forward(transform.ValueRO.Rotation), wanted=math.forward(target.ValueRO.Rotation);
                 float yaw=math.atan2(wanted.x,wanted.z)-math.atan2(forward.x,forward.z);
                 yaw=math.atan2(math.sin(yaw),math.cos(yaw));

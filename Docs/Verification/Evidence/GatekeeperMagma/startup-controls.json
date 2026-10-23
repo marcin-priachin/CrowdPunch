@@ -1,0 +1,183 @@
+{
+  "date": "2026-10-23",
+  "editor": "Agent A, Unity 6000.3.10f1",
+  "result": "User confirmed startup movement works with Play Focused",
+  "priorMode": "PlayMaximized",
+  "finalMode": "PlayFocused",
+  "inputRouting": "PointersAndKeyboardsRespectGameViewFocus",
+  "firstMovementFrame": 22,
+  "firstMovementGameTime": 0.6431027054786682,
+  "firstMovementVelocity": {
+    "x": -6.411611080169678,
+    "y": 0.0,
+    "z": 10.143531799316406
+  },
+  "sampledEvents": [
+    {
+      "frame": 2,
+      "realtime": 8.776244600172504,
+      "eventTime": 8.218394499999704,
+      "inputTime": 8.776294100000086,
+      "a": 0.0,
+      "w": 0.0,
+      "s": 0.0,
+      "d": 0.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 22,
+      "realtime": 9.51276000017242,
+      "eventTime": 9.503670099998999,
+      "inputTime": 9.51275959999839,
+      "a": 1.0,
+      "w": 0.0,
+      "s": 0.0,
+      "d": 0.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 47,
+      "realtime": 9.915324000172404,
+      "eventTime": 9.904652799999894,
+      "inputTime": 9.915323599998374,
+      "a": 0.0,
+      "w": 0.0,
+      "s": 0.0,
+      "d": 0.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 51,
+      "realtime": 9.9819115001701,
+      "eventTime": 9.971340000000055,
+      "inputTime": 9.981911099999706,
+      "a": 0.0,
+      "w": 0.0,
+      "s": 0.0,
+      "d": 1.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 68,
+      "realtime": 10.26564720017268,
+      "eventTime": 10.254447999999684,
+      "inputTime": 10.265646799998649,
+      "a": 0.0,
+      "w": 0.0,
+      "s": 1.0,
+      "d": 1.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 72,
+      "realtime": 10.332410400173103,
+      "eventTime": 10.321622499999648,
+      "inputTime": 10.332409999999072,
+      "a": 0.0,
+      "w": 0.0,
+      "s": 1.0,
+      "d": 0.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 88,
+      "realtime": 10.599396800171235,
+      "eventTime": 10.588702199998806,
+      "inputTime": 10.599396499997965,
+      "a": 1.0,
+      "w": 0.0,
+      "s": 1.0,
+      "d": 0.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 93,
+      "realtime": 10.68281860017305,
+      "eventTime": 10.672114599998167,
+      "inputTime": 10.68281819999902,
+      "a": 1.0,
+      "w": 0.0,
+      "s": 0.0,
+      "d": 0.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 105,
+      "realtime": 10.8993323001705,
+      "eventTime": 10.889604799998779,
+      "inputTime": 10.899331900000107,
+      "a": 1.0,
+      "w": 1.0,
+      "s": 0.0,
+      "d": 0.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 109,
+      "realtime": 10.965928500172595,
+      "eventTime": 10.95544869999867,
+      "inputTime": 10.965928099998564,
+      "a": 0.0,
+      "w": 1.0,
+      "s": 0.0,
+      "d": 0.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 119,
+      "realtime": 11.133283900169772,
+      "eventTime": 11.124636599997757,
+      "inputTime": 11.13328349999938,
+      "a": 0.0,
+      "w": 1.0,
+      "s": 0.0,
+      "d": 1.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 125,
+      "realtime": 11.232780600170372,
+      "eventTime": 11.22180279999884,
+      "inputTime": 11.23278019999998,
+      "a": 0.0,
+      "w": 0.0,
+      "s": 0.0,
+      "d": 1.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 138,
+      "realtime": 11.450896200170973,
+      "eventTime": 11.440052599999035,
+      "inputTime": 11.450895799996943,
+      "a": 0.0,
+      "w": 0.0,
+      "s": 1.0,
+      "d": 1.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 145,
+      "realtime": 11.56847450017085,
+      "eventTime": 11.556536399999459,
+      "inputTime": 11.568474100000458,
+      "a": 0.0,
+      "w": 0.0,
+      "s": 1.0,
+      "d": 0.0,
+      "update": "Dynamic"
+    },
+    {
+      "frame": 149,
+      "realtime": 11.63438300017151,
+      "eventTime": 11.624522299996897,
+      "inputTime": 11.63438259999748,
+      "a": 1.0,
+      "w": 0.0,
+      "s": 1.0,
+      "d": 0.0,
+      "update": "Dynamic"
+    }
+  ],
+  "limitations": "Editor workaround verified by user. Engine-level cause and standalone behavior were not established."
+}
