@@ -31,6 +31,7 @@ namespace CrowdPunch.Systems.Presentation
                 Ninjas = SystemAPI.GetComponentLookup<NinjaState>(true),
                 NinjaTuning = SystemAPI.GetComponentLookup<NinjaTuning>(true),
                 RangedAttacks = SystemAPI.GetComponentLookup<RangedAttackState>(true),
+                RangedTuning = SystemAPI.GetComponentLookup<RangedEnemySettings>(true),
                 ElitePunches = SystemAPI.GetComponentLookup<ElitePunchState>(true),
                 Health = SystemAPI.GetComponentLookup<Health>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
@@ -56,6 +57,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<NinjaState> Ninjas;
             [ReadOnly] public ComponentLookup<NinjaTuning> NinjaTuning;
             [ReadOnly] public ComponentLookup<RangedAttackState> RangedAttacks;
+            [ReadOnly] public ComponentLookup<RangedEnemySettings> RangedTuning;
             [ReadOnly] public ComponentLookup<ElitePunchState> ElitePunches;
             [ReadOnly] public ComponentLookup<Health> Health;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
@@ -521,11 +523,26 @@ namespace CrowdPunch.Systems.Presentation
                 ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
             }
 
-            // Goblin slots: idle, walk, run, anticipation, strike, hit, rise, idle, idle, flight, fall.
+            // Goblin slots: idle, walk, run, anticipation, strike, hit, rise, spawn, idle, flight, fall.
             // All motion comes from authored poses; the physics owner keeps its transform and velocity.
             private void AnimateGoblin(Entity owner, ref EnemyAnimationPlayback playback,
                 ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
             {
+                var ranged = RangedAttacks.HasComponent(owner) ? RangedAttacks[owner] : default;
+                bool fired = ranged.ProjectilesSpawned != playback.ProjectileSequence;
+                playback.ProjectileSequence = ranged.ProjectilesSpawned;
+                if (launch.Phase != EnemyLaunchPhase.Active) playback.WasAttacking = 0;
+                else if (fired)
+                {
+                    // Continue the split Cut Attack only when gameplay actually emits a shot.
+                    playback.WasAttacking = 1;
+                    playback.AttackPhase = 0;
+                }
+                else if (playback.WasAttacking != 0)
+                {
+                    playback.AttackPhase += DeltaTime / math.max(.01f, samples.Durations[4]);
+                    if (playback.AttackPhase >= 1f) playback.WasAttacking = 0;
+                }
                 bool hit = false;
                 if (Health.HasComponent(owner))
                 {
@@ -567,7 +584,20 @@ namespace CrowdPunch.Systems.Presentation
                         }
                         var contact = Contacts.HasComponent(owner) ? Contacts[owner] : default;
                         var tuning = ContactSettings.HasComponent(owner) ? ContactSettings[owner] : default;
-                        if (contact.IsWindingUp != 0)
+                        if (RangedAttacks.HasComponent(owner) && RangedTuning.HasComponent(owner)
+                            && ranged.Phase == RangedAttackPhase.WindUp)
+                        {
+                            motion = 3;
+                            progress = math.saturate(1f - ranged.SecondsRemaining
+                                / math.max(.01f, RangedTuning[owner].WindUpDuration));
+                            playback.WasAttacking = 0;
+                        }
+                        else if (playback.WasAttacking != 0)
+                        {
+                            motion = 4;
+                            progress = playback.AttackPhase;
+                        }
+                        else if (contact.IsWindingUp != 0)
                         {
                             motion = 3;
                             progress = math.saturate(1f - contact.SecondsRemaining / math.max(.01f, tuning.AttemptWindUpDuration));

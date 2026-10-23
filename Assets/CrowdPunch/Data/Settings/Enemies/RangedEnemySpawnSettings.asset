@@ -18,6 +18,7 @@ MonoBehaviour:
   initialCount: 30
   radius: 100
   respawnEnabled: 0
+  spawnFromGround: 1
   moveSpeed: 8
   wanderSpeed: 1.5
   chargeDistance: 99999
@@ -144,3 +145,38 @@ MonoBehaviour:
   eliteWindUpDuration: 0
   eliteEnableTelegraph: 0
   eliteTelegraphDuration: 0.25
+  armorStaggerDuration: 0.3
+  armorKnockbackSpeed: 3
+  armorInvulnerabilityDuration: 0.25
+  wizardSettings:
+    Cooldown: 2
+    CheckInterval: 0.5
+    EngagementRange: 12
+    TelegraphDuration: 1
+    ActiveDuration: 3
+    CastRadius: 4
+    ImpactRadius: 4
+    BaseChance: 0.15
+    ProximityBonus: 0.35
+    ApproachBonus: 0.35
+    FullApproachSpeed: 4
+    CastWheneverInRange: 0
+    PreferredMinimum: 6
+    PreferredMaximum: 9
+    ApproachSpeed: 3
+    RetreatSpeed: 4
+    Acceleration: 10
+    Braking: 10
+    TurnSpeed: 10
+    PlayerDamage: 10
+    EnemyDamage: 8
+    TickInterval: 0.5
+    PlayerInvulnerability: 0.5
+    EnemyPush: 3
+    EnemyKnockback: 12
+    PlayerPush: 2
+    PlayerKnockback: 8
+    MovementMode: 0
+    ForceMode: 1
+    AlwaysReserveRadius: 0
+  trailSettings: {fileID: 0}

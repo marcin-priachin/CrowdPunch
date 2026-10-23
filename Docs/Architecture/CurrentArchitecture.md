@@ -1292,12 +1292,20 @@ Full restart destroys all old wave-owned instances, increments each sequence run
 
 `EnemySpawnSettings.Archetype` explicitly selects `Baseline` or `Ranged`; no prefab, scene-object, or presentation name participates in runtime identification. Every spawned enemy receives `EnemyArchetype`. A ranged selection additionally receives the baked `RangedEnemySettings`, `RangedPositioningState`, and `RangedAttackState`. The existing `EnemySpawnSettings.asset` remains baseline. `RangedEnemySpawnSettings.asset` is used by a second ordinary `SpawnerAuthoring` in the arena subscene to add five ranged enemies without changing the 500-enemy baseline batch.
 
-`EnemyRanged.prefab` uses `Models/UltimateMonsters/Big/Alien.fbx` through the sampled GPU-skinning path.
-Its `EnemyAnimationProfile.Ranged` loops `Idle` while stationary and `Walk` while moving, plays `Wave`
-from the beginning during ranged wind-up, uses a sideways `Idle` pose while launched, returns to locomotion
-during recovery, and plays `Death` after entering `Defeated`. Generated instanced materials live under
-`Materials/Enemies/Ranged`; mesh-specific CPA3 sample blobs, the controller, prefab, materials, and the
-`RangedEnemySpawnSettings` prefab reference can be rebuilt through **Crowd Punch > Enemies > Rebuild Ranged Prefab**.
+`EnemyRanged.prefab` uses `Prefabs/Enemies/Goblin Trooper Wizard Variant.prefab` through
+the sampled GPU-skinning path and `EnemyAnimationProfile.Goblin` (INFO-004, VISION-006).
+Its supplied Idle, Walk/Run Forward In Place, Take Damage, Jump In Place and Die motions
+share the Baseline Goblin mapping. Cut Attack is split at 38%: slot 3 follows the ranged
+wind-up clock, and an increment of `RangedAttackState.ProjectilesSpawned` starts slot 4's
+one-shot follow-through. Cancellation and launch discard the firing pose without changing
+combat state, physics or projectile timing (ENEMY-002/004). Hat and wand are converted to
+single-bone skinned meshes so all three renderers follow the same sampled rig. Render
+entities carry `AnimationDriven`, bypassing body tint pulses, flashes and deformation.
+Generated instanced Full Cel materials preserve source textures under `Materials/Enemies/GoblinRanged`;
+the shared atlas tool excludes these materials. The shared ranged settings enable Spawn
+From Ground and every skinned part uses the supplied Spawn in slot 7 (INFO-006). Mesh-specific
+CPA3 samples, accessory meshes, controller, prefab, materials and settings reference can be
+rebuilt through **Crowd Punch > Enemies > Rebuild Ranged Prefab**.
 
 All ranged numerical settings are provisional and live on the ranged spawn settings asset: preferred minimum/maximum distance, engagement range, approach/retreat speed, initial delay and per-instance variation, wind-up, base cooldown and per-shot cooldown variation, damage, player invulnerability duration, projectile speed, horizontal aim-spread radius, fire-time target Y offset, arc height, minimum world-space altitude, lifetime, and radius. Independent per-enemy cadence plus initial and per-shot timing variation is the first-pass multi-attacker control; there is no global simultaneous-attack cap.
 

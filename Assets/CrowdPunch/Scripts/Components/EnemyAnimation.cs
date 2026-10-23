@@ -43,6 +43,7 @@ namespace CrowdPunch.Components
         public float ImpactDuration;
         public float AttackPhase;
         public byte WasAttacking;
+        public uint ProjectileSequence;
         public float HitPhase;
         public float PreviousHealth;
         public byte HitActive;

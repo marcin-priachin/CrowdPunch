@@ -77,6 +77,96 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Enemy002GoblinRangedCutAttackTracksWindUpAndActualShotOnce()
+        {
+            UseGoblin();
+            var em = world.EntityManager;
+            em.AddComponentData(owner, new RangedEnemySettings { WindUpDuration = .8f });
+            em.AddComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.WindUp, SecondsRemaining = .4f });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(3));
+            Assert.That(Pose.y, Is.EqualTo(.5f).Within(.001f));
+            em.SetComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.Cooldown, ProjectilesSpawned = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(4));
+            Assert.That(Pose.y, Is.Zero, "Projectile emission starts the remaining Cut Attack segment.");
+            Tick(.5f);
+            Assert.That(Pose.y, Is.EqualTo(.5f).Within(.001f));
+            Tick(.6f);
+            Assert.That(Pose.x, Is.Zero, "Follow-through finishes once during cooldown.");
+            Tick(2f);
+            Assert.That(Pose.x, Is.Zero);
+            em.SetComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.Cooldown, ProjectilesSpawned = 2 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(4));
+            Assert.That(Pose.y, Is.Zero, "Each actual shot restarts the strike.");
+        }
+
+        [Test]
+        public void Enemy002GoblinRangedCancellationAndLaunchDiscardCutAttack()
+        {
+            UseGoblin();
+            var em = world.EntityManager;
+            em.AddComponentData(owner, new RangedEnemySettings { WindUpDuration = 1 });
+            em.AddComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.WindUp, SecondsRemaining = .5f });
+            Tick();
+            em.SetComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.Cooldown, CancelledWindUps = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.Zero, "Cancelled wind-up never plays a firing strike.");
+            em.SetComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.Cooldown, ProjectilesSpawned = 1 });
+            Tick();
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(EnemyAnimationSamples.FlyingMotion));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            Tick();
+            Assert.That(Pose.x, Is.Zero, "Returning to Active cannot resume an interrupted strike.");
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [Test]
+        public void Info004GoblinRangedPrefabUsesSuppliedClipsCelMaterialsAndSpawn()
+        {
+            var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemyRanged.prefab");
+            try
+            {
+                var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                var controller = (UnityEditor.Animations.AnimatorController)animator.runtimeAnimatorController;
+                var states = controller.layers[0].stateMachine.states;
+                Assert.That(states[3].state.motion.name, Does.Contain("Cut Attack"));
+                Assert.That(states[4].state.motion.name, Does.Contain("Cut Attack"));
+                Assert.That(states[7].state.motion.name, Does.Contain("Spawn"));
+                Assert.That(UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(animator.gameObject), Is.EqualTo(
+                    UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(
+                        "Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Wizard Variant.prefab")));
+                Assert.That(root.GetComponentsInChildren<UnityEngine.MeshRenderer>(true), Is.Empty,
+                    "Rigid equipment must be skinned to follow sampled hand and head bones.");
+                foreach (var authoring in root.GetComponentsInChildren<CrowdPunch.Authoring.EnemyAnimationAuthoring>(true))
+                {
+                    Assert.That(authoring.Profile, Is.EqualTo(EnemyAnimationProfile.Goblin));
+                    Assert.That(authoring.SpawnMotion, Is.EqualTo(7));
+                    var renderer = authoring.GetComponent<UnityEngine.SkinnedMeshRenderer>();
+                    foreach (var material in renderer.sharedMaterials)
+                        Assert.That(material.shader.name, Is.EqualTo("CrowdPunch/Cel/Enemy"));
+                    using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
+                    Assert.That(reader.ReadInt32(), Is.EqualTo(0x43504133));
+                    string hash = UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(controller)).ToString()
+                        + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(renderer.sharedMesh))
+                        + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.avatar));
+                    Assert.That(reader.ReadString(), Is.EqualTo(hash), "Every skinned part must have current samples.");
+                    Assert.That(reader.ReadInt32(), Is.EqualTo(renderer.bones.Length));
+                    Assert.That(reader.ReadInt32(), Is.EqualTo(32));
+                }
+                var settings = UnityEditor.AssetDatabase.LoadAssetAtPath<CrowdPunch.Configuration.EnemySpawnSettings>(
+                    "Assets/CrowdPunch/Data/Settings/Enemies/RangedEnemySpawnSettings.asset");
+                Assert.That(settings.SpawnFromGround, Is.True);
+                Assert.That(settings.EnemyPrefab, Is.EqualTo(UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(
+                    "Assets/CrowdPunch/Prefabs/EnemyRanged.prefab")));
+            }
+            finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        [Test]
         public void Info006SpawnMotionUsesSharedClockAndPunchImmediatelyInterrupts()
         {
             UseGoblin();

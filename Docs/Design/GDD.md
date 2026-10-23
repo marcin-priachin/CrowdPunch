@@ -1069,6 +1069,12 @@ The mace is visual equipment; contact damage and launch physics retain their exi
 The supplied jump supplies the airborne pose; Die supplies the landing/defeat and reverse
 rise poses because the pack has no dedicated Flying, Falling Flat Impact or get-up clip.
 
+The Ranged enemy uses `Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Wizard Variant.prefab`
+with the same Goblin animation folder and stable textured Full Cel treatment. Use Cut Attack
+for ranged anticipation and projectile release, with authored damage, flight, landing,
+recovery and defeat poses instead of runtime tint changes or procedural shake/deformation.
+Its equipment is visual; ranged projectile and shared physics rules remain authoritative.
+
 ### INFO-005 — Trajectory Scope
 
 Status: Must
@@ -1090,7 +1096,7 @@ the arena floor at the reserved XZ coordinates and play the authored emergence o
 Normal movement and contact attacks wait for that animation; ordinary punch/launch rules
 can interrupt it. Repeat on respawn/restart. Profiles without the option or a supported
 clip keep the existing drop from spawn height. Enable this option for the Goblin Baseline
-using the supplied Spawn clip. Motion below the floor belongs to the visual pose; the
+and Ranged Wizard using the supplied Spawn clip. Motion below the floor belongs to the visual pose; the
 physics body stays grounded (COMBAT-018).
 
 ## Progression And Weapons
