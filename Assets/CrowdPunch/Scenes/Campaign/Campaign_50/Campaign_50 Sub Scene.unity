@@ -3084,7 +3084,7 @@ Transform:
   m_GameObject: {fileID: 874615866}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: -4.7, y: 0.4, z: 17.29}
+  m_LocalPosition: {x: -4.2888417, y: 0.4, z: 15.777462}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -4087,7 +4087,7 @@ Transform:
   m_GameObject: {fileID: 1072792850}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 4.7, y: 0.4, z: 17.29}
+  m_LocalPosition: {x: 4.2888417, y: 0.4, z: 15.777462}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -5785,27 +5785,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4118849665111598, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.9162968
+      value: 1.916297
       objectReference: {fileID: 0}
     - target: {fileID: 4118849665111598, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.9162962
+      value: 1.9162964
       objectReference: {fileID: 0}
     - target: {fileID: 4118849665111598, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.9163008
+      value: 1.9163009
       objectReference: {fileID: 0}
     - target: {fileID: 4118849665111598, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.1558363
+      value: -0.1631628
       objectReference: {fileID: 0}
     - target: {fileID: 4118849665111598, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.3672451
+      value: -0.11257568
       objectReference: {fileID: 0}
     - target: {fileID: 4118849665111598, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.21614122
+      value: 0.15839344
       objectReference: {fileID: 0}
     - target: {fileID: 4118849665111598, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalRotation.w
@@ -6393,27 +6393,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4656222641815120, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.8136725
+      value: 1.8136722
       objectReference: {fileID: 0}
     - target: {fileID: 4656222641815120, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.8136754
+      value: 1.813675
       objectReference: {fileID: 0}
     - target: {fileID: 4656222641815120, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.8136698
+      value: 1.8136694
       objectReference: {fileID: 0}
     - target: {fileID: 4656222641815120, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.097936645
+      value: 0.09063927
       objectReference: {fileID: 0}
     - target: {fileID: 4656222641815120, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.2048792
+      value: 0.45372096
       objectReference: {fileID: 0}
     - target: {fileID: 4656222641815120, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.17366603
+      value: -0.09448491
       objectReference: {fileID: 0}
     - target: {fileID: 4656222641815120, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: m_LocalRotation.w
@@ -6754,7 +6754,7 @@ PrefabInstance:
     - target: {fileID: 137604096464692698, guid: ecde77c4a1dc2204e8254e749fce636d, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: acb78a75bd417e84480d5d85c91a5c45, type: 2}
+      objectReference: {fileID: 2100000, guid: fbd3477e890137449bad5faa56883213, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6788,6 +6788,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2ff6970584af394884ebb17fef752ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GatekeeperRigAuthoring
+  leftFistScale: 1.5
+  rightFistScale: 1.5
   groundClearance: 0.02
 --- !u!114 &1485014518
 MonoBehaviour:

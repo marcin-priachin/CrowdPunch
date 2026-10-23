@@ -215,6 +215,39 @@ namespace CrowdPunch.Tests
                 Assert.That(math.distance(em.GetComponentData<BossHand>(left).Target.xz,target.xz),Is.LessThan(.001f));
             }
         }
+        [TestCase(0,.016666667f,2.65f)] [TestCase(1,.033333333f,5.25f)] [TestCase(2,.008333333f,7.85f)]
+        public void Boss005ConstantSizedHandsStayInsideRoundBarrierAndFinishRecovery(int attack,float dt,float envelope)
+        {
+            tuning.HandCourtRadius=19; tuning.BoundsExtents=new float2(27);
+            tuning.RouteExtents=new float2(18.29f); tuning.RouteCornerRadius=18.29f; em.SetComponentData(head,tuning);
+            var player=em.CreateEntity(typeof(PlayerSnapshot));
+            em.SetComponentData(player,new PlayerSnapshot { Position=new float3(0,0,-18.2f),IsAvailable=true });
+            em.SetComponentData(head,LocalTransform.FromPosition(new float3(0,tuning.HeadHeight,18.29f)));
+            foreach(var hand in new[]{left,right})
+            {
+                em.AddComponentData(hand,new GatekeeperHandFootprint { Radius=envelope });
+                em.SetComponentData(hand,LocalTransform.FromPosition(new float3(0,tuning.HandHeight,18.95f-envelope)));
+                em.SetComponentData(hand,new BossHand { Phase=BossHandPhase.Ready });
+                em.SetComponentData(hand,new PhysicsVelocity { Linear=new float3(0,0,100) });
+            }
+            em.SetComponentData(head,new BossEncounter { LeftHand=left,RightHand=right,Stage=1,Cycle=BossCycle.Opening,AttackIndex=attack });
+            var coordinator=world.GetOrCreateSystem<BossHandCoordinationSystem>(); var motor=world.GetOrCreateSystem<BossMotionSystem>();
+            bool active=false,recovery=false,finished=false;
+            for(int tick=0;tick<2400;tick++)
+            {
+                world.SetTime(new TimeData(tick*dt,dt)); coordinator.Update(world.Unmanaged);motor.Update(world.Unmanaged);em.CompleteAllTrackedJobs();
+                foreach(var part in new[]{head,left,right})
+                {
+                    var transform=em.GetComponentData<LocalTransform>(part);
+                    transform.Position+=em.GetComponentData<PhysicsVelocity>(part).Linear*dt;em.SetComponentData(part,transform);
+                    if(part!=head)Assert.That(math.length(transform.Position.xz)+envelope,Is.LessThanOrEqualTo(19.0001f));
+                }
+                var current=em.GetComponentData<BossHand>(left); active|=current.Phase==BossHandPhase.Active; recovery|=current.Phase==BossHandPhase.Recovery;
+                if(recovery&&(current.Phase==BossHandPhase.Ready||current.Phase==BossHandPhase.Shielding)){finished=true;break;}
+            }
+            Assert.That(active,Is.True);Assert.That(recovery,Is.True);Assert.That(finished,Is.True);
+        }
+
         [Test] public void Boss001_HeadBounceTurnsAPlayerBoundShotSidewaysWithoutAddingSpeed()
         {
             float3 before=new float3(1,2,-12);

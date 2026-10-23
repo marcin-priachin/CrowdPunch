@@ -69,6 +69,7 @@ namespace CrowdPunch.Editor
             settings.routeExtents = Vector2.one * RouteRadius;
             settings.cornerRadius = RouteRadius;
             settings.boundsExtents = Vector2.one * 27;
+            settings.handCourtRadius = CourtRadius;
             EditorUtility.SetDirty(settings);
             var data = new SerializedObject(arena);
             data.FindProperty("spacingSize").vector3Value = new Vector3(24, 16, 24);

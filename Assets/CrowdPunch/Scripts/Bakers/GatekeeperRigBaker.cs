@@ -31,6 +31,7 @@ namespace CrowdPunch.Bakers
                 LeftBindPalm = renderer.sharedMesh.bindposes[lp].inverse.MultiplyPoint3x4(Vector3.zero),
                 RightBindPalm = renderer.sharedMesh.bindposes[rp].inverse.MultiplyPoint3x4(Vector3.zero),
                 GroundClearance = Mathf.Max(0, authoring.groundClearance),
+                FistScale = new Unity.Mathematics.float2(Mathf.Max(.1f, authoring.leftFistScale), Mathf.Max(.1f, authoring.rightFistScale)),
                 Bounds = bounds
             });
             var mask = AddBuffer<GatekeeperArmBone>(entity);

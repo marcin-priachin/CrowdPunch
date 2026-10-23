@@ -21,6 +21,8 @@ namespace CrowdPunch.Configuration
         [Min(.1f)] public float moveSpeed = 3;
         [Min(0)] public float moveDistance = 7;
         public float headHeight = 1.05f, handHeight = .4f;
+        [Min(0), Tooltip("Inner radius of the circular hand barrier. Zero retains rectangular bounds for other arena layouts.")]
+        public float handCourtRadius;
         [Header("Hands and openings")]
         [Min(1)] public float handSpeed = 44;
         [Min(1)] public float handAcceleration = 160;
@@ -55,7 +57,7 @@ namespace CrowdPunch.Configuration
             BoundsExtents=math.max(new float2(9), (float2)boundsExtents),
             RouteExtents=math.clamp((float2)routeExtents,new float2(4),math.max(new float2(4),(float2)boundsExtents-6)),
             RouteCornerRadius=math.max(1,cornerRadius), MoveSpeed=math.max(.1f,moveSpeed), MoveDistance=math.max(0,moveDistance),
-            HeadHeight=headHeight, HandHeight=handHeight, HandSpeed=math.max(1,handSpeed), HandAcceleration=math.max(1,handAcceleration),
+            HeadHeight=headHeight, HandHeight=handHeight, HandCourtRadius=math.max(0,handCourtRadius), HandSpeed=math.max(1,handSpeed), HandAcceleration=math.max(1,handAcceleration),
             OpenOffset=math.max(2,openOffset), ShieldOffset=math.max(0,shieldOffset), ShieldForward=math.max(1,shieldForward),
             OpeningDuration=math.max(1.25f,openingDuration), StageThreeTiming=math.clamp(stageThreeTiming,.75f,1),
             CoordinationDelay=math.max(.5f,coordinationDelay), StaggerDuration=math.max(0,staggerDuration),

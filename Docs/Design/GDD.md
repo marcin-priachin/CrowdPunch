@@ -1193,6 +1193,8 @@ Use `Assets/Polygonal Magma/Prefabs/Polygonal Magma Orange.prefab` for the Gatek
 
 Keep the rig hands fitted to their original damage footprints when the model scale changes, and keep animated hand geometry above the arena ground throughout movement and attack poses.
 
+Fist size is constant and manually adjustable, with no automatic growth during attacks. Keep the complete animated hands inside the level barrier during attack travel; boundary clearance must respect the chosen visual size. Preserve existing attack markers and damage areas.
+
 ### BOSS-009 - Encounter Duration
 
 Status: Should

@@ -22,6 +22,7 @@ namespace CrowdPunch.Components
         public float Health, Invulnerability, StageTwoThreshold, StageThreeThreshold, TransitionDuration;
         public float2 Center, RouteExtents, BoundsExtents;
         public float RouteCornerRadius, MoveSpeed, MoveDistance, HeadHeight, HandHeight;
+        public float HandCourtRadius;
         public float HandSpeed, HandAcceleration, OpenOffset, ShieldOffset, ShieldForward;
         public float OpeningDuration, StageThreeTiming, CoordinationDelay;
         public float StaggerDuration, StaggerProtection, StaggerMinimumImpulse;

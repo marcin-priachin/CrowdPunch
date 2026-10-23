@@ -264,6 +264,14 @@ The primitive hand renderers are removed; invisible ECS hand owners keep collisi
 committed attacks. Whole-arena skin bounds cover their travel. `BossPresentationSystem`
 retains world telegraphs and combat feedback but no longer changes Gatekeeper material colors.
 
+`GatekeeperRigAuthoring.leftFistScale/rightFistScale` are independent constant visual multipliers
+(default 1). The rig baker records them; skinning applies them without changing collider sizes,
+damage or attack clocks. `GatekeeperHandFootprintBakingSystem` records matching conservative
+hand envelopes. Coordination clips committed attack positions to the configured circular
+`BossTuning.HandCourtRadius` (19m in all three round courts); the motor limits each predicted
+physics step using the same envelope. Authored model scale, ground clearance and the original
+attack telegraphs remain unchanged. No wind-up growth or marker-coverage fitting is applied.
+
 Other bosses retain their existing presentation: `BossAnimationAnchor` grounds Chicken/Dino
 poses; `BossSkinPose` blends samples and their bounded silhouette accents. Rolling Blob retains
 its collider fit and 64-angle sampled floor support. Legacy `BossHandPoseSystem` only affects

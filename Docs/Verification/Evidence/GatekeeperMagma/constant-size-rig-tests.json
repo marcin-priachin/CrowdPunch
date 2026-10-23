@@ -1,0 +1,126 @@
+{
+  "success": true,
+  "command": "command test_status",
+  "data": {
+    "command": "test_status",
+    "parameters": {},
+    "result": {
+      "status": "completed",
+      "duration": 18.43,
+      "summary": {
+        "total": 14,
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "results": [
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperHandFitTests.Boss005BarrierEnvelopeUsesManualFistSizesWithoutChangingColliderRadii",
+          "Status": "Passed",
+          "Duration": 0.4120487,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperHandFitTests.Boss008ConstantSizedAnimatedHandsStayInsideBarrierAboveGround(0,1.0f,0.0f,1.0f)",
+          "Status": "Passed",
+          "Duration": 3.5504532,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperHandFitTests.Boss008ConstantSizedAnimatedHandsStayInsideBarrierAboveGround(1,1.0f,0.0f,1.0f)",
+          "Status": "Passed",
+          "Duration": 2.0761741,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperHandFitTests.Boss008ConstantSizedAnimatedHandsStayInsideBarrierAboveGround(2,1.0f,0.0f,1.0f)",
+          "Status": "Passed",
+          "Duration": 1.9849928,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperHandFitTests.Boss008ConstantSizedAnimatedHandsStayInsideBarrierAboveGround(0,0.6f,0.0f,1.0f)",
+          "Status": "Passed",
+          "Duration": 1.9729817,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperHandFitTests.Boss008ConstantSizedAnimatedHandsStayInsideBarrierAboveGround(1,1.8f,0.0f,1.0f)",
+          "Status": "Passed",
+          "Duration": 1.9813913,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperHandFitTests.Boss008ConstantSizedAnimatedHandsStayInsideBarrierAboveGround(0,1.0f,3.5f,1.0f)",
+          "Status": "Passed",
+          "Duration": 1.972548,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperHandFitTests.Boss008ConstantSizedAnimatedHandsStayInsideBarrierAboveGround(0,1.0f,0.0f,1.5f)",
+          "Status": "Passed",
+          "Duration": 1.9681371,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperHandFitTests.Boss008ConstantSizedAnimatedHandsStayInsideBarrierAboveGround(1,1.0f,0.0f,2.0f)",
+          "Status": "Passed",
+          "Duration": 1.9962476,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperMagmaTests.Boss002BothRigArmsFollowPhysicalHandsWithoutAccumulationOrPhysicsWrites",
+          "Status": "Passed",
+          "Duration": 0.079076,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperMagmaTests.Boss008AcceptedHitPlaysCompleteDamageClipWithoutMaterialFlashTimer",
+          "Status": "Passed",
+          "Duration": 0.0189788,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperMagmaTests.Boss008EveryEncounterUsesMagmaRigWithoutPrimitiveHands(0)",
+          "Status": "Passed",
+          "Duration": 0.0268275,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperMagmaTests.Boss008EveryEncounterUsesMagmaRigWithoutPrimitiveHands(1)",
+          "Status": "Passed",
+          "Duration": 0.0105911,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "CrowdPunch.Tests.GatekeeperMagmaTests.Boss008EveryEncounterUsesMagmaRigWithoutPrimitiveHands(2)",
+          "Status": "Passed",
+          "Duration": 0.0102468,
+          "Message": null,
+          "StackTrace": null
+        }
+      ]
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7800,
+      "projectPath": "C:\\Users\\pc\\.codex\\worktrees\\unity-agent-a\\CrowdPunch"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

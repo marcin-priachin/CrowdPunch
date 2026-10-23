@@ -120,11 +120,17 @@ namespace CrowdPunch.Editor
             var renderer = rig.GetComponent<SkinnedMeshRenderer>();
             var arena = encounter.gameObject.scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<ArenaAuthoring>(true)).SingleOrDefault();
             float floor = (arena != null ? arena.GroundSurfaceHeight : -1f) + rig.groundClearance;
-            FitArm(renderer, "RigLArm1", "RigLArmPalm", encounter.leftHand, floor);
-            FitArm(renderer, "RigRArm1", "RigRArmPalm", encounter.rightHand, floor);
+            var tuning = encounter.settings.Bake();
+            var hands = new[] { encounter.leftHand, encounter.rightHand };
+            var sizes = new[] { rig.leftFistScale, rig.rightFistScale };
+            for (int i = 0; i < hands.Length; i++)
+                hands[i].transform.position = CrowdPunch.Systems.Movement.BossPerimeterRoute.ClampHand(hands[i].transform.position, tuning,
+                    Mathf.Max(hands[i].radius, hands[i].radius * sizes[i]) + .05f);
+            FitArm(renderer, "RigLArm1", "RigLArmPalm", encounter.leftHand, floor, rig.leftFistScale);
+            FitArm(renderer, "RigRArm1", "RigRArmPalm", encounter.rightHand, floor, rig.rightFistScale);
         }
 
-        private static void FitArm(SkinnedMeshRenderer renderer, string rootName, string palmName, BossPartAuthoring hand, float floor)
+        private static void FitArm(SkinnedMeshRenderer renderer, string rootName, string palmName, BossPartAuthoring hand, float floor, float sizeMultiplier)
         {
             if (hand == null) throw new InvalidOperationException("The Magma rig requires both physical hand owners.");
             var arm = renderer.bones.First(b => b.name == rootName);
@@ -148,7 +154,7 @@ namespace CrowdPunch.Editor
                 if (!any) { bounds = new Bounds(p, Vector3.zero); any = true; } else bounds.Encapsulate(p);
             }
             float radius = points.Max(p => new Vector2(p.x - bounds.center.x, p.z - bounds.center.z).magnitude);
-            float scale = hand.radius / Mathf.Max(.01f, radius);
+            float scale = hand.radius * Mathf.Max(.1f, sizeMultiplier) / Mathf.Max(.01f, radius);
             Vector3 fittedCenter = arm.position + (bounds.center - arm.position) * scale;
             float fittedBottom = arm.position.y + (bounds.min.y - arm.position.y) * scale;
             arm.localScale *= scale;

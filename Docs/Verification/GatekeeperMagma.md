@@ -69,6 +69,39 @@ Evidence: [rig tests](Evidence/GatekeeperMagma/hand-fit-tests.json),
 [live mesh measurements](Evidence/GatekeeperMagma/hand-fit-live.json),
 [scene preservation audit](Evidence/GatekeeperMagma/hand-fit-serialized-audit.json).
 
+## Constant fist size and attack barrier
+
+The attack growth, projected marker-coverage fitting and telegraph changes from
+the last follow-up were reverted at the user's request. Hand size is constant.
+Only round-barrier containment and manual size controls remain from that slice.
+The existing ground clearance and the user's model scales of 6 are preserved.
+
+To adjust size in either campaign SubScene, select the skinned-mesh child under
+`Gatekeeper Model`, then edit **Gatekeeper Rig Authoring > Left Fist Scale /
+Right Fist Scale**. Both default to 1 (previous size); 1.5 makes that fist 50%
+larger. Save the scene and restart Play to rebake. These are visual multipliers;
+colliders, damage areas and attack markers are unchanged. Boundary envelopes
+automatically account for the selected sizes.
+
+- Unity compilation passed. All 14 rig checks and 30 encounter checks passed,
+  including independent manual sizes, model rescaling, ground clearance, and
+  attack/recovery movement at 30/60/120 Hz without crossing the circular barrier.
+- Live Campaign 10 and 50 covered all three active attacks over 1,099 and 967
+  recorded frames. Maximum vertex distances from the court center were
+  18.170757m and 18.176730m (barrier radius 19m). No animated vertex exceeded the
+  configured constant fist-size envelope. Minimum height stayed at -0.980002m
+  against the -1m ground. No live bound assertions failed.
+- Model scales remain 6 in campaign 10/50. The original telegraph and presentation
+  files match their pre-growth versions. Both size multipliers are explicitly 1
+  in all three scenes. Temporary review configuration was restored, and the
+  Campaign 50 rig was selected in the Inspector for tuning.
+- The separate dotnet build still exits 1 with no reported errors/warnings;
+  Unity compilation and the 44 focused checks are the verified build results.
+
+Evidence: [rig tests](Evidence/GatekeeperMagma/constant-size-rig-tests.json),
+[encounter tests](Evidence/GatekeeperMagma/constant-size-encounter-tests.json),
+[live bounds](Evidence/GatekeeperMagma/constant-size-live.json).
+
 ## Play startup controls
 
 The user reproduced unresponsive startup input with the Agent A Game view set to

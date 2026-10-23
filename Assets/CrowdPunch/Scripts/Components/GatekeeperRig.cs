@@ -9,6 +9,7 @@ namespace CrowdPunch.Components
         public int LeftPalm, RightPalm;
         public float3 LeftBindPalm, RightBindPalm;
         public float GroundClearance;
+        public float2 FistScale;
         public BlobAssetReference<GatekeeperHandBounds> Bounds;
     }
 
@@ -31,5 +32,10 @@ namespace CrowdPunch.Components
     public struct GatekeeperHandFrame
     {
         public float3 Min, Max;
+    }
+
+    public struct GatekeeperHandFootprint : IComponentData
+    {
+        public float Radius;
     }
 }

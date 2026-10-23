@@ -40,12 +40,12 @@ namespace CrowdPunch.Systems.Presentation
                 if (skin.Length != samples.BoneCount || mask.Length != skin.Length) return;
                 var model = Worlds[rig.Model].Value;
                 ref var bounds = ref rig.Bounds.Value;
-                ApplyArm(ref samples, ref bounds, ref skin, in mask, 1, rig.LeftPalm, rig.LeftBindPalm, boss.LeftHand, model, GroundY + rig.GroundClearance, boss.Cycle, playback.Phase);
-                ApplyArm(ref samples, ref bounds, ref skin, in mask, 2, rig.RightPalm, rig.RightBindPalm, boss.RightHand, model, GroundY + rig.GroundClearance, boss.Cycle, playback.Phase);
+                ApplyArm(ref samples, ref bounds, ref skin, in mask, 1, rig.LeftPalm, rig.LeftBindPalm, rig.FistScale.x, boss.LeftHand, model, GroundY + rig.GroundClearance, boss.Cycle, playback.Phase);
+                ApplyArm(ref samples, ref bounds, ref skin, in mask, 2, rig.RightPalm, rig.RightBindPalm, rig.FistScale.y, boss.RightHand, model, GroundY + rig.GroundClearance, boss.Cycle, playback.Phase);
             }
 
             private void ApplyArm(ref EnemyAnimationSamples samples, ref GatekeeperHandBounds bounds, ref DynamicBuffer<SkinMatrix> skin,
-                in DynamicBuffer<GatekeeperArmBone> mask, byte side, int palm, float3 bindPalm,
+                in DynamicBuffer<GatekeeperArmBone> mask, byte side, int palm, float3 bindPalm, float fistScale,
                 Entity handEntity, float4x4 model, float groundY, BossCycle cycle, float bodyPhase)
             {
                 if (!Hands.HasComponent(handEntity) || !Parts.HasComponent(handEntity) || !Worlds.HasComponent(handEntity) || palm < 0 || palm >= skin.Length) return;
@@ -71,7 +71,7 @@ namespace CrowdPunch.Systems.Presentation
                 float3 origin = math.mul(new float3x3(palmMatrix.c0, palmMatrix.c1, palmMatrix.c2), bindPalm) + palmMatrix.c3;
                 float modelScale = math.cmax(new float3(math.length(model.c0.xyz), math.length(model.c1.xyz), math.length(model.c2.xyz)));
                 float radius = side == 1 ? bounds.LeftRadius : bounds.RightRadius;
-                float scale = Parts[handEntity].Radius / math.max(.0001f, radius * modelScale);
+                float scale = Parts[handEntity].Radius * (fistScale > 0 ? fistScale : 1) / math.max(.0001f, radius * modelScale);
                 float frame = math.saturate(phase) * (bounds.FrameCount - 1);
                 int a = (int)frame, b = math.min(a + 1, bounds.FrameCount - 1);
                 var from = bounds.Frames[(motion * bounds.FrameCount + a) * 2 + side - 1];

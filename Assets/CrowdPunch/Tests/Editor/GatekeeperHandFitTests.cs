@@ -20,9 +20,10 @@ namespace CrowdPunch.Tests
 {
     public sealed class GatekeeperHandFitTests
     {
-        [TestCase(0, 1f, 0f)] [TestCase(1, 1f, 0f)] [TestCase(2, 1f, 0f)]
-        [TestCase(0, .6f, 0f)] [TestCase(1, 1.8f, 0f)] [TestCase(0, 1f, 3.5f)]
-        public void Boss008AnimatedHandVerticesFitDamageFootprintsAndStayAboveGroundAfterModelRescaling(int sceneIndex, float resize, float raisedFloor)
+        [TestCase(0, 1f, 0f, 1f)] [TestCase(1, 1f, 0f, 1f)] [TestCase(2, 1f, 0f, 1f)]
+        [TestCase(0, .6f, 0f, 1f)] [TestCase(1, 1.8f, 0f, 1f)] [TestCase(0, 1f, 3.5f, 1f)]
+        [TestCase(0, 1f, 0f, 1.5f)] [TestCase(1, 1f, 0f, 2f)]
+        public void Boss008ConstantSizedAnimatedHandsStayInsideBarrierAboveGround(int sceneIndex, float resize, float raisedFloor, float fistScale)
         {
             var scene = EditorSceneManager.OpenPreviewScene(GatekeeperMagmaBuilder.Scenes[sceneIndex]);
             try
@@ -51,6 +52,8 @@ namespace CrowdPunch.Tests
                     em.SetComponentData(left, new BossPart { Radius = encounter.leftHand.radius });
                     em.SetComponentData(right, new BossPart { Radius = encounter.rightHand.radius });
                     var boss = em.CreateEntity(typeof(BossEncounter));
+                    var tuning = encounter.settings.Bake();
+                    float leftSize = fistScale, rightSize = fistScale > 1 ? fistScale + .25f : 1;
                     var model = em.CreateEntity(typeof(LocalToWorld));
                     var visual = em.CreateEntity(typeof(EnemyAnimationPlayback));
                     var arena = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<ArenaAuthoring>()).Single();
@@ -59,7 +62,8 @@ namespace CrowdPunch.Tests
                     em.AddComponentData(visual, new EnemyAnimation { Owner = boss, Samples = samples });
                     em.AddComponentData(visual, new GatekeeperRig { Model = model, LeftPalm = lp, RightPalm = rp,
                         LeftBindPalm = mesh.bindposes[lp].inverse.MultiplyPoint3x4(Vector3.zero),
-                        RightBindPalm = mesh.bindposes[rp].inverse.MultiplyPoint3x4(Vector3.zero), Bounds = bounds, GroundClearance = authoring.groundClearance });
+                        RightBindPalm = mesh.bindposes[rp].inverse.MultiplyPoint3x4(Vector3.zero), Bounds = bounds, GroundClearance = authoring.groundClearance,
+                        FistScale = new float2(leftSize,rightSize) });
                     var mask = em.AddBuffer<GatekeeperArmBone>(visual);
                     foreach (byte side in sides) mask.Add(new GatekeeperArmBone { Side = side });
                     var skin = em.AddBuffer<SkinMatrix>(visual);
@@ -79,6 +83,8 @@ namespace CrowdPunch.Tests
                         float height = segment >= 3 && segment <= 8 ? 6 * (1 - progress) : 0;
                         float3 lpos = new float3(-7 + progress * 8, encounter.settings.handHeight + height, segment - 8);
                         float3 rpos = new float3(7 - progress * 6, encounter.settings.handHeight, 8 - segment);
+                        lpos.xz = tuning.Center + math.normalizesafe(lpos.xz) * (tuning.HandCourtRadius - encounter.leftHand.radius * math.max(1,leftSize) - .1f);
+                        rpos.xz = tuning.Center + math.normalizesafe(rpos.xz) * (tuning.HandCourtRadius - encounter.rightHand.radius * math.max(1,rightSize) - .1f);
                         em.SetComponentData(left, new LocalToWorld { Value = float4x4.Translate(lpos) });
                         em.SetComponentData(right, new LocalToWorld { Value = float4x4.Translate(rpos) });
                         var modelWorld = float4x4.TRS(new float3(3, animator.transform.position.y, -6),
@@ -87,6 +93,7 @@ namespace CrowdPunch.Tests
                         system.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
                         skin = em.GetBuffer<SkinMatrix>(visual);
                         float lowest = float.MaxValue, excessRadius = float.MinValue;
+                        float farthest = 0;
                         bool finite = true;
                         for (int i = 0; i < vertices.Length; i++)
                         {
@@ -99,12 +106,14 @@ namespace CrowdPunch.Tests
                             finite &= math.all(math.isfinite(p));
                             lowest = math.min(lowest, p.y);
                             float radius = math.distance(p.xz, (side == 1 ? lpos : rpos).xz);
-                            excessRadius = math.max(excessRadius, radius - (side == 1 ? encounter.leftHand.radius : encounter.rightHand.radius));
+                            excessRadius = math.max(excessRadius, radius - (side == 1 ? encounter.leftHand.radius * leftSize : encounter.rightHand.radius * rightSize));
+                            farthest = math.max(farthest,math.distance(p.xz,tuning.Center));
                             largestRadius = math.max(largestRadius, radius);
                         }
                         Assert.That(finite, Is.True);
                         Assert.That(lowest, Is.GreaterThanOrEqualTo(floor - .0001f), $"scene {sceneIndex}, segment {segment}, step {step}");
                         Assert.That(excessRadius, Is.LessThanOrEqualTo(.0001f));
+                        Assert.That(farthest,Is.LessThanOrEqualTo(tuning.HandCourtRadius+.0001f));
                         Assert.That(em.GetComponentData<LocalToWorld>(left).Position, Is.EqualTo(lpos));
                         Assert.That(em.GetComponentData<LocalToWorld>(right).Position, Is.EqualTo(rpos));
                         Assert.That(em.GetComponentData<PhysicsVelocity>(left).Linear, Is.EqualTo(float3.zero));
@@ -115,6 +124,26 @@ namespace CrowdPunch.Tests
                 finally { samples.Dispose(); bounds.Dispose(); }
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [Test]
+        public void Boss005BarrierEnvelopeUsesManualFistSizesWithoutChangingColliderRadii()
+        {
+            using var world = new World("Gatekeeper manual size baking");
+            var em = world.EntityManager;
+            var left = em.CreateEntity(typeof(BossPart)); var right = em.CreateEntity(typeof(BossPart));
+            em.SetComponentData(left,new BossPart { Radius=2.6f }); em.SetComponentData(right,new BossPart { Radius=2.6f });
+            var owner = em.CreateEntity(typeof(BossEncounter),typeof(BossTuning));
+            em.SetComponentData(owner,new BossEncounter { LeftHand=left,RightHand=right });
+            em.SetComponentData(owner,new BossTuning { HandCourtRadius=19 });
+            var visual=em.CreateEntity(typeof(GatekeeperRig),typeof(EnemyAnimation));
+            em.SetComponentData(visual,new GatekeeperRig { FistScale=new float2(1.5f,2f) });
+            em.SetComponentData(visual,new EnemyAnimation { Owner=owner });
+            world.GetOrCreateSystem<GatekeeperHandFootprintBakingSystem>().Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<GatekeeperHandFootprint>(left).Radius,Is.EqualTo(3.95f).Within(.0001f));
+            Assert.That(em.GetComponentData<GatekeeperHandFootprint>(right).Radius,Is.EqualTo(5.25f).Within(.0001f));
+            Assert.That(em.GetComponentData<BossPart>(left).Radius,Is.EqualTo(2.6f));
+            Assert.That(em.GetComponentData<BossPart>(right).Radius,Is.EqualTo(2.6f));
         }
 
         private static BossHand Pose(int segment, float progress)

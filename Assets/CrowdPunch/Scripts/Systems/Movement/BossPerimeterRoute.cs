@@ -30,5 +30,15 @@ namespace CrowdPunch.Systems.Movement
         {
             p.xz=math.clamp(p.xz,t.Center-t.BoundsExtents+radius,t.Center+t.BoundsExtents-radius); return p;
         }
+
+        public static float3 ClampHand(float3 p, in BossTuning t, float radius)
+        {
+            p = Clamp(p, t, radius);
+            if (t.HandCourtRadius <= 0) return p;
+            float2 offset = p.xz - t.Center;
+            float legalRadius = math.max(0, t.HandCourtRadius - radius);
+            p.xz = t.Center + math.normalizesafe(offset) * math.min(math.length(offset), legalRadius);
+            return p;
+        }
     }
 }
