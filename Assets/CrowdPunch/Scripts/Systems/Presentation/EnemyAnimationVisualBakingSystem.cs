@@ -47,6 +47,7 @@ namespace CrowdPunch.Systems.Presentation
                         commands.AddComponent<EnemyVisualDeformation>(entity);
                         commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner, UsesAtlas = 1,
                             AnimationDriven = (byte)(animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Goblin
+                                || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Dasher
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Explosive ? 1 : 0) });
                         if (SystemAPI.HasComponent<SnakeHead>(animation.ValueRO.Owner))
                             commands.AddComponent(entity, new SnakeBodyColor { Value = new float4(1f) });

@@ -13,7 +13,7 @@ namespace CrowdPunch.Systems.Presentation
     // Final render-only composition after the role/telegraph colors. LocalTransform,
     // PostTransformMatrix, skin samples and physics geometry retain their owners.
     [BurstCompile, UpdateInGroup(typeof(GamePresentationGroup))]
-    [UpdateAfter(typeof(DasherPresentationSystem))]
+    [UpdateAfter(typeof(EnemyReadabilitySystem))]
     [UpdateAfter(typeof(EnemyReadabilitySystem))]
     [UpdateAfter(typeof(EnemyAnimationSystem))]
     public partial struct EnemyImpactVisualSystem : ISystem

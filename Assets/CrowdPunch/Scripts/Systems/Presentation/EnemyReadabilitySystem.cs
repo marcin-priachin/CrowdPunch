@@ -11,7 +11,6 @@ namespace CrowdPunch.Systems.Presentation
 {
     /// <summary>Enemy bodies carry role, attack commitment, launch, recovery and impact feedback (INFO-004).</summary>
     [BurstCompile, UpdateInGroup(typeof(GamePresentationGroup))]
-    [UpdateBefore(typeof(DasherPresentationSystem))]
     public partial struct EnemyReadabilitySystem : ISystem
     {
         [BurstCompile]

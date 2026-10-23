@@ -6,6 +6,26 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Goblin Minion Dasher Presentation (2026-10-23, ENEMY-005..008, INFO-004, VISION-006)
+
+`EnemyDasherPrefabBuilder` instantiates the supplied Goblin Minion prefab inside the
+existing Dasher physics root, preserving authored scale and the shared prefab GUID.
+Its 11-motion samples use Idle, Walk Forward In Place, Run Forward In Place, Roll Forward In Place
+twice (preparation/dash), Take Damage, reverse Die (rise), Spawn, Look Around (dash
+recovery), Roll Forward In Place (launched) and Die. Preparation follows the telegraph clock;
+the dash plays once across travelled/max distance, including obstruction redirects.
+Launch loops Roll Forward In Place and repunch restarts it. Shared recovery uses Die then rise.
+Animation writes only skin matrices. Dasher pose interpolation uses quaternion slerp
+and retains the sampled bone scales, avoiding the shrinking caused by linearly
+blending rotated matrix axes. Root and descendant scales match the supplied prefab.
+`EnemyVisualOwner.AnimationDriven` suppresses
+body tints, flashes, bobbing, shaking and squash. The obsolete grey-box
+`DasherPresentationSystem` was removed; its bridge/impact ordering now follows
+`EnemyReadabilitySystem`. Dedicated materials retain the pack texture with the
+production `CrowdPunch/Cel/Enemy` shader and are protected from monster-atlas refreshes.
+LOD0 and disabled moving-mesh shadow casting preserve the established rendering policy.
+The model is aligned to the unchanged capsule floor through translation only.
+
 ## Goblin Baseline Presentation (2026-10-22, ENEMY-012, INFO-004, VISION-006)
 
 `EnemyBaselinePrefabBuilder` retains the shared `EnemyBaseline.prefab` identity and physics
@@ -292,8 +312,8 @@ The finale uses a dedicated royal-blue body UV palette while preserving its gold
 The October 15 appearance pass uses the supplied Ultimate Monsters atlas on all normal/elite
 monster materials. `EnemyAppearanceMaterials` applies point-filtered, uncompressed atlas sampling
 and is called by each monster prefab builder, so rebuilding a prefab preserves its appearance.
-The supplied atlas and guide images are unchanged. The Dasher uses Flying/Armabee, with continuous
-wing motion during its committed dash. Its sampled culling bounds use the same bone matrices as
+The supplied atlas and guide images are unchanged. Dasher presentation now uses the
+Goblin Minion path documented above. Sampled culling bounds use the same bone matrices as
 the GPU vertices, avoiding double application of the imported FBX scale. The Exploder uses the smooth GreenBlob; generated mesh copies
 remap only its green body UV swatch to the atlas's amber swatch, retaining its face details. Its material enables a 1.2-second amber emission pulse in the
   ECS skinning graph, accompanied by a bounded 6.5% render-only swelling pulse. This steady
@@ -1258,7 +1278,7 @@ The 2026-10-21 player appearance verification is recorded in `Docs/Verification/
 | Enemy combat state | ECS | health, damage, impulse, explicit launch lifecycle, death/respawn requests |
 | Punch trajectory preview | ECS â†’ bridge â†’ GameObject | `PresentationBridgeSystem`, `PlayerEcsBridge`, `PunchTrajectoryPreview` |
 | Punch cooldown feedback | GameObject | `PlayerPunchCooldownFeedback` scales `hand_r` and owns the generated cooldown-aura and ready-flash particles; tuning lives in `PlayerPunchSettings` |
-| Enemy body feedback | ECS rendering | Baked `EnemyVisualOwner` connects root/child renderers to gameplay state; `EnemyReadabilitySystem` writes body color. `DasherPresentationSystem` retains ownership of Dasher color/shape. |
+| Enemy body feedback | ECS rendering | Baked `EnemyVisualOwner` connects root/child renderers to gameplay state; `EnemyReadabilitySystem` writes body color. Animation-driven profiles including Dasher retain a neutral multiplier and bypass procedural deformation. |
 | Temporary normal health and elite health UI | ECS â†’ presentation registry â†’ Canvas | `EnemyHealthBarVisibility`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas`; no repeated normal launch/recovery text, and zero-health normal bars are suppressed. |
 
 The same presentation registry and pooled Canvas now draw one shield icon per remaining Armored armor stage.

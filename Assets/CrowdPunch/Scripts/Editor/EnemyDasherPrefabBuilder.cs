@@ -12,33 +12,27 @@ namespace CrowdPunch.Editor
 {
     public static class EnemyDasherPrefabBuilder
     {
-        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Flying/Armabee.fbx";
+        public const string ModelPath = "Assets/Goblin Trooper Giant Evolution Modular Pack Cute Series/Goblin Minion Cute Series/Prefabs/Goblin Minion.prefab";
+        private const string AnimationFolder = "Assets/Goblin Trooper Giant Evolution Modular Pack Cute Series/Goblin Minion Cute Series/FBX";
         private const string PrefabPath = "Assets/CrowdPunch/Prefabs/EnemyDasher.prefab";
         private const string ControllerPath = "Assets/CrowdPunch/Animation/EnemyDasher.controller";
-        private const string SamplesPath = "Assets/CrowdPunch/Animation/EnemyDasherMovement.bytes";
         private const string SettingsPath = "Assets/CrowdPunch/Data/Settings/Enemies/EnemyDasherSpawnSettings.asset";
-        private const string MaterialFolder = "Assets/CrowdPunch/Materials/Enemies/Dasher";
+        public const string MaterialFolder = "Assets/CrowdPunch/Materials/Enemies/Dasher";
         private const string SkinningMaterialPath = "Assets/CrowdPunch/Animation/EnemySkinning.mat";
         private const string PhysicsMaterialPath = "Assets/CrowdPunch/PhysicsMaterial/Enemy.physicMaterial";
-        private const string TelegraphPrefabPath = "Assets/CrowdPunch/Prefabs/Feedback/DasherTelegraph.prefab";
-        private const string TelegraphMaterialPath = "Assets/CrowdPunch/Materials/Feedback/DasherTelegraph.mat";
-        private const string FeedbackSettingsPath = "Assets/CrowdPunch/Resources/CombatFeedbackSettings.asset";
         private const int FrameCount = 32;
 
         [MenuItem("Crowd Punch/Enemies/Rebuild Dasher Prefab")]
         public static void Rebuild()
         {
-            EnsureFolder("Assets/CrowdPunch/Materials", "Enemies");
             EnsureFolder("Assets/CrowdPunch/Materials/Enemies", "Dasher");
-            BuildTelegraphParticles();
-            ConfigureAnimationImport();
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Rebuild the Dasher outside Play Mode.");
 
             GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath);
             if (model == null) throw new InvalidOperationException($"Missing Dasher model: {ModelPath}");
-            AnimationClip idle = FindClip("Flying_Idle");
-            AnimationClip movement = FindClip("Fast_Flying");
-            AnimationClip death = FindClip("Death");
-            AnimatorController controller = BuildController(idle, movement, death);
+            AnimationClip[] clips = FindClips();
+            AnimatorController controller = BuildController(clips);
 
             GameObject root = new GameObject("EnemyDasher") { layer = 7 };
             try
@@ -46,10 +40,10 @@ namespace CrowdPunch.Editor
                 ConfigurePhysics(root);
                 root.AddComponent<EnemyAuthoring>();
                 GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
-                visual.name = "Armabee";
+                visual.name = "Goblin Minion";
                 visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-                visual.transform.localScale = Vector3.one;
                 SetLayerRecursively(visual, 7);
+                foreach (var lod in visual.GetComponentsInChildren<LODGroup>(true)) UnityEngine.Object.DestroyImmediate(lod);
 
                 Animator animator = visual.GetComponent<Animator>();
                 if (animator == null) animator = visual.AddComponent<Animator>();
@@ -59,21 +53,32 @@ namespace CrowdPunch.Editor
 
                 SkinnedMeshRenderer[] renderers = visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
                 if (renderers.Length != 1)
-                    throw new InvalidOperationException($"Armabee.fbx must contain exactly one skinned renderer; found {renderers.Length}.");
-                SkinnedMeshRenderer renderer = renderers[0];
-                FitVisualToEnemy(root.transform, visual.transform, renderer, idle, movement);
-                renderer.quality = SkinQuality.Bone4;
-                renderer.rootBone = animator.transform;
-                renderer.sharedMaterials = BuildMaterials(renderer.sharedMaterials);
-
-                EnemyAnimationAuthoring authoring = renderer.gameObject.GetComponent<EnemyAnimationAuthoring>();
-                if (authoring == null) authoring = renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
-                authoring.Profile = EnemyAnimationProfile.Dasher;
-                authoring.BlendResponse = 12f;
-
-                WriteSamples(animator, renderer, idle, movement, death);
-                authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(SamplesPath);
-                idle.SampleAnimation(animator.gameObject, 0f);
+                    throw new InvalidOperationException("Goblin Minion.prefab must contain one skinned renderer.");
+                animator.Rebind();
+                animator.Play("Motion0", 0, 0f);
+                animator.Update(0f);
+                AlignVisualToFloor(visual.transform, renderers);
+                for (int index = 0; index < renderers.Length; index++)
+                {
+                    SkinnedMeshRenderer renderer = renderers[index];
+                    renderer.quality = SkinQuality.Bone4;
+                    renderer.forceMeshLod = 0;
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    renderer.rootBone = animator.transform;
+                    renderer.sharedMaterials = BuildMaterials(renderer.sharedMaterials);
+                    string samplesPath = "Assets/CrowdPunch/Animation/EnemyDasherMovement.bytes";
+                    WriteSamples(samplesPath, animator, renderer, clips);
+                    EnemyAnimationAuthoring authoring = renderer.GetComponent<EnemyAnimationAuthoring>();
+                    if (authoring == null) authoring = renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
+                    authoring.Profile = EnemyAnimationProfile.Dasher;
+                    authoring.SpawnMotion = 7;
+                    authoring.BlendResponse = 12f;
+                    authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samplesPath);
+                }
+                // Restore the upright authored pose after sampling Die.
+                animator.Rebind();
+                animator.Play("Motion0", 0, 0f);
+                animator.Update(0f);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -84,60 +89,82 @@ namespace CrowdPunch.Editor
             AssignSpawnSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Created {PrefabPath} from Armabee.fbx and assigned it to {SettingsPath}.");
+            Debug.Log($"Created {PrefabPath} from Goblin Minion.prefab and assigned it to {SettingsPath}.");
         }
 
-        private static void ConfigureAnimationImport()
+        [MenuItem("Crowd Punch/Animation/Rebuild Dasher Samples")]
+        public static void RebuildSamples()
         {
-            var importer = AssetImporter.GetAtPath(ModelPath) as ModelImporter;
-            if (importer == null) throw new InvalidOperationException($"Expected a model importer at {ModelPath}.");
-            ModelImporterClipAnimation[] clips = importer.defaultClipAnimations;
-            bool changed = false;
-            foreach (ModelImporterClipAnimation clip in clips)
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Rebuild animation samples outside Play Mode.");
+
+            AnimationClip[] clips = FindClips();
+            BuildController(clips);
+            GameObject root = PrefabUtility.LoadPrefabContents(PrefabPath);
+            try
             {
-                bool shouldLoop = MatchesClipName(clip.name, "Flying_Idle")
-                    || MatchesClipName(clip.name, "Fast_Flying");
-                if (clip.loopTime == shouldLoop) continue;
-                clip.loopTime = shouldLoop;
-                changed = true;
+                Animator animator = root.GetComponentInChildren<Animator>(true);
+                if (animator == null) throw new InvalidOperationException("Dasher prefab has no Animator.");
+                foreach (EnemyAnimationAuthoring authoring in root.GetComponentsInChildren<EnemyAnimationAuthoring>(true))
+                {
+                    SkinnedMeshRenderer renderer = authoring.GetComponent<SkinnedMeshRenderer>();
+                    string samplesPath = AssetDatabase.GetAssetPath(authoring.Samples);
+                    if (renderer == null || string.IsNullOrEmpty(samplesPath))
+                        throw new InvalidOperationException("Dasher renderer has no generated sample asset.");
+                    WriteSamples(samplesPath, animator, renderer, clips);
+                }
+                animator.Rebind();
+                animator.Play("Motion0", 0, 0f);
+                animator.Update(0f);
+                PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
-            if (changed)
+            finally
             {
-                importer.clipAnimations = clips;
-                importer.SaveAndReimport();
+                PrefabUtility.UnloadPrefabContents(root);
             }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("Rebuilt Dasher animation samples while preserving authored transforms.");
         }
+
+        // INFO-004: authored motion replaces tint pulses and procedural deformation.
+        // ENEMY-005..008: pose playback never owns dash timing, movement, scale or contacts.
+        private static AnimationClip[] FindClips() => new[] {
+            FindClip("Idle"), FindClip("Walk Forward In Place"), FindClip("Run Forward In Place"),
+            FindClip("Roll Forward In Place"), FindClip("Roll Forward In Place"), FindClip("Take Damage"),
+            FindClip("Die"), FindClip("Spawn"), FindClip("Look Around"),
+            FindClip("Roll Forward In Place"), FindClip("Die") };
 
         private static AnimationClip FindClip(string name)
         {
-            AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(ModelPath)
-                .OfType<AnimationClip>()
+            string path = $"{AnimationFolder}/Goblin Minion@{name}.FBX";
+            AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>()
                 .FirstOrDefault(candidate => MatchesClipName(candidate.name, name));
             if (clip != null) return clip;
-            string available = string.Join(", ", AssetDatabase.LoadAllAssetsAtPath(ModelPath)
+            string available = string.Join(", ", AssetDatabase.LoadAllAssetsAtPath(path)
                 .OfType<AnimationClip>().Select(candidate => candidate.name));
-            throw new InvalidOperationException($"Armabee.fbx has no animation named '{name}'. Available: {available}");
+            throw new InvalidOperationException($"Goblin Minion pack has no animation named '{name}'. Available: {available}");
         }
 
-        private static bool MatchesClipName(string candidate, string requested)
-        {
-            return candidate == requested || candidate.EndsWith("|" + requested, StringComparison.Ordinal);
-        }
+        private static bool MatchesClipName(string candidate, string requested) =>
+            candidate == requested || candidate.EndsWith("|" + requested, StringComparison.Ordinal);
 
-        private static AnimatorController BuildController(AnimationClip idle, AnimationClip movement, AnimationClip death)
+        private static AnimatorController BuildController(AnimationClip[] clips)
         {
             AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
-            if (controller == null)
-                controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
+            if (controller == null) controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
             AnimatorStateMachine machine = controller.layers[0].stateMachine;
             foreach (ChildAnimatorState state in machine.states) machine.RemoveState(state.state);
-            AnimatorState idleState = machine.AddState("Flying_Idle");
-            idleState.motion = idle;
-            machine.defaultState = idleState;
-            machine.AddState("Fast_Flying").motion = movement;
-            machine.AddState("Death").motion = death;
+            for (int i = 0; i < clips.Length; i++)
+            {
+                AnimatorState state = machine.AddState("Motion" + i);
+                state.motion = clips[i];
+                if (i == 0) machine.defaultState = state;
+            }
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
+            AssetDatabase.ImportAsset(ControllerPath, ImportAssetOptions.ForceSynchronousImport);
             return controller;
         }
 
@@ -146,15 +173,15 @@ namespace CrowdPunch.Editor
             Material template = AssetDatabase.LoadAssetAtPath<Material>(SkinningMaterialPath);
             if (template == null) throw new InvalidOperationException($"Missing skinning material: {SkinningMaterialPath}");
             var results = new Material[sources.Length];
-            for (int i = 0; i < sources.Length; i++)
+            for (int index = 0; index < sources.Length; index++)
             {
-                Material source = sources[i];
-                string safeName = string.IsNullOrWhiteSpace(source?.name) ? $"Armabee_{i}" : source.name;
-                string path = $"{MaterialFolder}/{safeName}.mat";
+                Material source = sources[index];
+                string name = string.IsNullOrWhiteSpace(source?.name) ? $"Goblin Minion_{index}" : source.name;
+                string path = $"{MaterialFolder}/{SafeName(name)}.mat";
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null)
                 {
-                    material = new Material(template.shader) { name = safeName };
+                    material = new Material(template) { name = name };
                     AssetDatabase.CreateAsset(material, path);
                 }
                 material.shader = template.shader;
@@ -165,23 +192,20 @@ namespace CrowdPunch.Editor
                 if (material.HasProperty("_ColorMap")) material.SetTexture("_ColorMap", texture);
                 if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
                 if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
-                EnemyAppearanceMaterials.Configure(material);
+                foreach (string property in new[] { "_SkinColorAmount", "_DarkAmount", "_DirtAmount", "_EyelinerAmount", "_DasherPulse" })
+                    if (material.HasProperty(property)) material.SetFloat(property, 0f);
                 material.enableInstancing = true;
                 EditorUtility.SetDirty(material);
-                results[i] = material;
+                results[index] = material;
             }
             AssetDatabase.SaveAssets();
             return results;
         }
 
-        private static void WriteSamples(Animator animator, SkinnedMeshRenderer renderer,
-            AnimationClip idle, AnimationClip movement, AnimationClip death)
+        private static void WriteSamples(string path, Animator animator, SkinnedMeshRenderer renderer,
+            AnimationClip[] clips)
         {
             animator.Rebind();
-            var clips = new AnimationClip[EnemyAnimationSamples.MotionCount];
-            clips[0] = idle;
-            for (int i = 1; i < EnemyAnimationSamples.ImpactMotion; i++) clips[i] = movement;
-            clips[EnemyAnimationSamples.ImpactMotion] = death;
             var matrices = new Matrix4x4[EnemyAnimationSamples.MotionCount * FrameCount * renderer.bones.Length];
             var durations = new float[EnemyAnimationSamples.MotionCount];
             Matrix4x4[] bindposes = renderer.sharedMesh.bindposes;
@@ -189,23 +213,26 @@ namespace CrowdPunch.Editor
             bool hasBounds = false;
             Vector3[] vertices = renderer.sharedMesh.vertices;
             BoneWeight[] weights = renderer.sharedMesh.boneWeights;
+            var positions = new Vector3[vertices.Length];
+            float floor = animator.transform.InverseTransformPoint(
+                animator.transform.parent.TransformPoint(Vector3.down)).y;
             for (int motion = 0; motion < clips.Length; motion++)
             {
                 AnimationClip clip = clips[motion];
                 durations[motion] = clip.length;
                 for (int frame = 0; frame < FrameCount; frame++)
                 {
-                    float normalized = motion == EnemyAnimationSamples.ImpactMotion
-                        ? frame / (float)(FrameCount - 1)
-                        : frame / (float)FrameCount;
-                    clip.SampleAnimation(animator.gameObject, normalized * clip.length);
+                    bool loop = motion == 0 || motion == 1 || motion == 2 || motion == 9;
+                    float normalized = frame / (float)(loop ? FrameCount : FrameCount - 1);
+                    if (motion == 6) normalized = 1f - normalized;
+                    animator.Play("Motion" + motion, 0, normalized);
+                    animator.Update(0f);
                     Matrix4x4 inverse = animator.transform.worldToLocalMatrix;
                     int poseStart = (motion * FrameCount + frame) * renderer.bones.Length;
                     for (int bone = 0; bone < renderer.bones.Length; bone++)
                         matrices[poseStart + bone] = inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
-
-                    // Bounds must use exactly the root-relative matrices consumed by GPU skinning.
-                    // BakeMesh can include an imported FBX scale a second time.
+                    // Match GPU root-space skinning without reapplying the imported scale.
+                    float minimum = float.PositiveInfinity;
                     for (int vertex = 0; vertex < vertices.Length; vertex++)
                     {
                         BoneWeight weight = weights[vertex];
@@ -214,15 +241,29 @@ namespace CrowdPunch.Editor
                             + matrices[poseStart + weight.boneIndex1].MultiplyPoint3x4(point) * weight.weight1
                             + matrices[poseStart + weight.boneIndex2].MultiplyPoint3x4(point) * weight.weight2
                             + matrices[poseStart + weight.boneIndex3].MultiplyPoint3x4(point) * weight.weight3;
+                        positions[vertex] = position;
+                        minimum = Mathf.Min(minimum, position.y);
+                    }
+                    // INFO-004: keep authored roll/fall poses above the capsule floor.
+                    // Only Spawn intentionally emerges from below it. This is a sampled
+                    // translation; retain authored bone rotations, scale and proportions.
+                    float lift = motion != 7 ? Mathf.Max(0f, floor - minimum) : 0f;
+                    if (lift > 0f)
+                        for (int bone = 0; bone < renderer.bones.Length; bone++)
+                            matrices[poseStart + bone][1, 3] += lift;
+                    for (int vertex = 0; vertex < positions.Length; vertex++)
+                    {
+                        Vector3 position = positions[vertex] + Vector3.up * lift;
                         if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
                         else bounds.Encapsulate(position);
                     }
                 }
             }
+
             string hash = AssetDatabase.GetAssetDependencyHash(ControllerPath).ToString()
                 + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(renderer.sharedMesh))
                 + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(animator.avatar));
-            using (var writer = new BinaryWriter(File.Create(SamplesPath)))
+            using (var writer = new BinaryWriter(File.Create(path)))
             {
                 writer.Write(0x43504133);
                 writer.Write(hash);
@@ -234,9 +275,40 @@ namespace CrowdPunch.Editor
                     for (int column = 0; column < 4; column++)
                         for (int row = 0; row < 3; row++) writer.Write(matrix[row, column]);
             }
-            AssetDatabase.ImportAsset(SamplesPath, ImportAssetOptions.ForceSynchronousImport);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
             bounds.Expand(0.1f);
             renderer.localBounds = bounds;
+        }
+
+        private static void AlignVisualToFloor(Transform visual, SkinnedMeshRenderer[] renderers)
+        {
+            // Imported renderer bounds can remain cached in the source root-bone space.
+            // Align the sampled Idle vertices without changing the prefab's authored scale.
+            Bounds bounds = default;
+            bool hasBounds = false;
+            foreach (var renderer in renderers)
+            {
+                var bindposes = renderer.sharedMesh.bindposes;
+                var vertices = renderer.sharedMesh.vertices;
+                var weights = renderer.sharedMesh.boneWeights;
+                var matrices = renderer.bones.Select((bone, i) =>
+                    visual.worldToLocalMatrix * bone.localToWorldMatrix * bindposes[i]).ToArray();
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    var weight = weights[i];
+                    var vertex = vertices[i];
+                    Vector3 point = matrices[weight.boneIndex0].MultiplyPoint3x4(vertex) * weight.weight0
+                        + matrices[weight.boneIndex1].MultiplyPoint3x4(vertex) * weight.weight1
+                        + matrices[weight.boneIndex2].MultiplyPoint3x4(vertex) * weight.weight2
+                        + matrices[weight.boneIndex3].MultiplyPoint3x4(vertex) * weight.weight3;
+                    if (!hasBounds) { bounds = new Bounds(point, Vector3.zero); hasBounds = true; }
+                    else bounds.Encapsulate(point);
+                }
+            }
+            float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Goblin Minion renderers have empty bounds.");
+            // Keep the visual's feet on the unchanged physics capsule floor.
+            visual.localPosition = -Vector3.Scale(new Vector3(bounds.center.x, bounds.min.y, bounds.center.z), visual.localScale) - Vector3.up;
         }
 
         private static void ConfigurePhysics(GameObject root)
@@ -252,125 +324,12 @@ namespace CrowdPunch.Editor
             body.constraints = (RigidbodyConstraints)84;
         }
 
-        private static void BuildTelegraphParticles()
-        {
-            Shader shader = Shader.Find("CrowdPunch/CombatFeedback");
-            if (shader == null) throw new InvalidOperationException("Missing CrowdPunch/CombatFeedback shader.");
-            Material material = AssetDatabase.LoadAssetAtPath<Material>(TelegraphMaterialPath);
-            if (material == null)
-            {
-                material = new Material(shader) { name = "DasherTelegraph" };
-                AssetDatabase.CreateAsset(material, TelegraphMaterialPath);
-            }
-            material.shader = shader;
-            EditorUtility.SetDirty(material);
-
-            var root = new GameObject("DasherTelegraph");
-            try
-            {
-                ParticleSystem particles = root.AddComponent<ParticleSystem>();
-                particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                ParticleSystem.MainModule main = particles.main;
-                main.loop = true;
-                main.playOnAwake = false;
-                main.duration = 0.5f;
-                main.startLifetime = new ParticleSystem.MinMaxCurve(0.24f, 0.42f);
-                main.startSpeed = new ParticleSystem.MinMaxCurve(-2.2f, -1.15f);
-                main.startSize = new ParticleSystem.MinMaxCurve(0.045f, 0.12f);
-                main.startColor = new ParticleSystem.MinMaxGradient(
-                    new Color(1f, 0.12f, 0.015f, 0.5f),
-                    new Color(1f, 0.62f, 0.08f, 0.95f));
-                main.maxParticles = 64;
-                main.simulationSpace = ParticleSystemSimulationSpace.Local;
-                main.scalingMode = ParticleSystemScalingMode.Hierarchy;
-                main.stopAction = ParticleSystemStopAction.None;
-
-                ParticleSystem.EmissionModule emission = particles.emission;
-                emission.rateOverTime = 42f;
-                ParticleSystem.ShapeModule shape = particles.shape;
-                shape.shapeType = ParticleSystemShapeType.Circle;
-                shape.radius = 1.15f;
-                shape.radiusThickness = 0.32f;
-                shape.rotation = new Vector3(90f, 0f, 0f);
-
-                ParticleSystem.ColorOverLifetimeModule color = particles.colorOverLifetime;
-                color.enabled = true;
-                var gradient = new Gradient();
-                gradient.SetKeys(
-                    new[] { new GradientColorKey(new Color(1f, 0.18f, 0.02f), 0f), new GradientColorKey(new Color(1f, 0.78f, 0.16f), 1f) },
-                    new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(0.95f, 0.2f), new GradientAlphaKey(0f, 1f) });
-                color.color = gradient;
-                ParticleSystem.SizeOverLifetimeModule size = particles.sizeOverLifetime;
-                size.enabled = true;
-                size.size = new ParticleSystem.MinMaxCurve(1f,
-                    AnimationCurve.EaseInOut(0f, 0.25f, 1f, 1f));
-
-                ParticleSystemRenderer renderer = root.GetComponent<ParticleSystemRenderer>();
-                renderer.sharedMaterial = material;
-                renderer.renderMode = ParticleSystemRenderMode.Stretch;
-                renderer.velocityScale = 0.16f;
-                renderer.lengthScale = 1.8f;
-                renderer.sortingOrder = 3;
-
-                PrefabUtility.SaveAsPrefabAsset(root, TelegraphPrefabPath);
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(root);
-            }
-
-            CombatFeedbackSettings feedback = AssetDatabase.LoadAssetAtPath<CombatFeedbackSettings>(FeedbackSettingsPath);
-            ParticleSystem prefab = AssetDatabase.LoadAssetAtPath<ParticleSystem>(TelegraphPrefabPath);
-            if (feedback == null || prefab == null)
-                throw new InvalidOperationException("Could not load Dasher telegraph feedback assets.");
-            feedback.DasherTelegraphParticles = prefab;
-            EditorUtility.SetDirty(feedback);
-        }
-
-        private static void FitVisualToEnemy(Transform enemy, Transform visual, SkinnedMeshRenderer renderer,
-            AnimationClip idle, AnimationClip movement)
-        {
-            var vertices = renderer.sharedMesh.vertices;
-            var weights = renderer.sharedMesh.boneWeights;
-            var bindposes = renderer.sharedMesh.bindposes;
-            var matrices = new Matrix4x4[renderer.bones.Length];
-            Bounds bounds = default;
-            bool hasBounds = false;
-            foreach (var clip in new[] { idle, movement })
-                for (int frame = 0; frame < FrameCount; frame++)
-                {
-                    clip.SampleAnimation(visual.gameObject, clip.length * frame / FrameCount);
-                    var inverse = visual.worldToLocalMatrix;
-                    for (int bone = 0; bone < matrices.Length; bone++)
-                        matrices[bone] = inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
-                    for (int index = 0; index < vertices.Length; index++)
-                    {
-                        var weight = weights[index];
-                        var point = vertices[index];
-                        var position = matrices[weight.boneIndex0].MultiplyPoint3x4(point) * weight.weight0
-                            + matrices[weight.boneIndex1].MultiplyPoint3x4(point) * weight.weight1
-                            + matrices[weight.boneIndex2].MultiplyPoint3x4(point) * weight.weight2
-                            + matrices[weight.boneIndex3].MultiplyPoint3x4(point) * weight.weight3;
-                        if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
-                        else bounds.Encapsulate(position);
-                    }
-                }
-            float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Armabee animation has empty bounds.");
-            float scale = 2.5f / largest;
-            visual.localScale = Vector3.one * scale;
-            // Keep the entire active wing cycle above the owner's origin with a small hover gap.
-            // Centering the imported bind pose placed the animated body below that origin.
-            visual.localPosition = new Vector3(-bounds.center.x * scale, .2f - bounds.min.y * scale,
-                -bounds.center.z * scale);
-            idle.SampleAnimation(visual.gameObject, 0f);
-        }
-
         private static void AssignSpawnSettings()
         {
             EnemySpawnSettings settings = AssetDatabase.LoadAssetAtPath<EnemySpawnSettings>(SettingsPath);
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
             if (settings == null || prefab == null) throw new InvalidOperationException("Could not load Dasher settings or prefab.");
+            if (settings.EnemyPrefab == prefab) return;
             var serialized = new SerializedObject(settings);
             serialized.FindProperty("enemyPrefab").objectReferenceValue = prefab;
             serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -382,6 +341,8 @@ namespace CrowdPunch.Editor
             string path = $"{parent}/{child}";
             if (!AssetDatabase.IsValidFolder(path)) AssetDatabase.CreateFolder(parent, child);
         }
+
+        private static string SafeName(string value) => value.Replace('.', '_').Replace('|', '_').Replace('/', '_');
 
         private static void SetLayerRecursively(GameObject root, int layer)
         {
