@@ -80,6 +80,7 @@ namespace CrowdPunch.Editor
                 animator.Rebind();
                 animator.Play("Motion0", 0, 0);
                 animator.Update(0f);
+                GoblinJogSampling.Configure(root, "EnemyBaseline");
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally

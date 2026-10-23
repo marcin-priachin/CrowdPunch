@@ -81,25 +81,57 @@ namespace CrowdPunch.Tests
         {
             UseGoblin();
             var em = world.EntityManager;
-            em.AddComponentData(owner, new RangedEnemySettings { WindUpDuration = .8f });
+            em.AddComponentData(owner, new RangedEnemySettings { WindUpDuration = .8f, ProjectileLaunchProgress = .4f });
             em.AddComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.WindUp, SecondsRemaining = .4f });
             Tick();
             Assert.That(Pose.x, Is.EqualTo(3));
-            Assert.That(Pose.y, Is.EqualTo(.5f).Within(.001f));
+            Assert.That(Pose.y, Is.EqualTo(.2f).Within(.001f));
             em.SetComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.Cooldown, ProjectilesSpawned = 1 });
             Tick();
             Assert.That(Pose.x, Is.EqualTo(4));
-            Assert.That(Pose.y, Is.Zero, "Projectile emission starts the remaining Cut Attack segment.");
-            Tick(.5f);
-            Assert.That(Pose.y, Is.EqualTo(.5f).Within(.001f));
-            Tick(.6f);
+            Assert.That(Pose.y, Is.EqualTo(.4f).Within(.001f), "Projectile emission starts at the configured authored frame.");
+            Tick(.3f);
+            Assert.That(Pose.y, Is.EqualTo(.7f).Within(.001f));
+            Tick(.4f);
             Assert.That(Pose.x, Is.Zero, "Follow-through finishes once during cooldown.");
             Tick(2f);
             Assert.That(Pose.x, Is.Zero);
             em.SetComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.Cooldown, ProjectilesSpawned = 2 });
             Tick();
             Assert.That(Pose.x, Is.EqualTo(4));
-            Assert.That(Pose.y, Is.Zero, "Each actual shot restarts the strike.");
+            Assert.That(Pose.y, Is.EqualTo(.4f).Within(.001f), "Each actual shot restarts at the configured frame.");
+        }
+
+        [TestCase(0)]
+        [TestCase(10)]
+        [TestCase(25)]
+        public void Enemy002RangedLaunchFrameSelectsFullClipPoseWithoutRebuilding(int frame)
+        {
+            UseGoblin();
+            var settings = UnityEngine.ScriptableObject.CreateInstance<CrowdPunch.Configuration.EnemySpawnSettings>();
+            try
+            {
+                var serialized = new UnityEditor.SerializedObject(settings);
+                serialized.FindProperty("projectileLaunchFrame").intValue = frame;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                var em = world.EntityManager;
+                float release = settings.ProjectileLaunchProgress;
+                Assert.That(release, Is.EqualTo(frame / 25f).Within(.001f));
+                em.AddComponentData(owner, new RangedEnemySettings { WindUpDuration = 1, ProjectileLaunchProgress = release });
+                em.AddComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.WindUp, SecondsRemaining = .5f });
+                Tick();
+                Assert.That(Pose.y, Is.EqualTo(release * .5f).Within(.001f));
+                em.SetComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.Cooldown, ProjectilesSpawned = 1 });
+                Tick();
+                Assert.That(Pose.x, Is.EqualTo(4));
+                Assert.That(Pose.y, Is.EqualTo(release).Within(.001f));
+                if (frame == 25)
+                {
+                    Tick();
+                    Assert.That(Pose.x, Is.Zero, "A release on the final frame has no looping follow-through.");
+                }
+            }
+            finally { UnityEngine.Object.DestroyImmediate(settings); }
         }
 
         [Test]

@@ -7,6 +7,8 @@ namespace CrowdPunch.Authoring
     public sealed class EnemyAnimationAuthoring : MonoBehaviour
     {
         public TextAsset Samples;
+        [Tooltip("Optional directional jog samples applied only to leg bones during active movement.")]
+        public TextAsset JogSamples;
         public EnemyAnimationProfile Profile;
         [Tooltip("Sampled motion index for ground spawning; -1 when this model has no spawn clip.")]
         [Range(-1, EnemyAnimationSamples.MotionCount - 1)] public int SpawnMotion = -1;

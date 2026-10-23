@@ -10,15 +10,19 @@ GPU-skinning format. Body, hat and wand use matching sampled poses; the rigid ac
 are converted to one-bone skinned meshes. Materials match the Baseline Full Cel shader
 and preserve source textures. The Monster Atlas refresh excludes both Goblin material folders.
 
-Cut Attack is split at 38%: anticipation follows the existing ranged wind-up timer,
-and the emitted projectile sequence starts the remaining segment once. Cancellation and
+Cut Attack is sampled in full for anticipation and follow-through. Projectile Launch Frame
+selects a zero-based authored frame (0-25, default 10) in the ranged spawn settings.
+Anticipation is retimed to reach that frame at the end of Wind Up Duration, and the emitted
+projectile sequence starts the remaining clip once. The frame setting changes playback
+without resampling. The builder retains the source model's scale; ranged initialization
+adds no scripted proportion scaling. Cancellation and
 launch discard firing follow-through. Existing projectile, navigation and physics rules
 remain authoritative. The Goblin profile supplies authored locomotion, damage, jump flight,
 Die landing/defeat and reverse-Die recovery. `AnimationDriven` render ownership bypasses
 runtime tint pulses, hit flashes, bobbing and procedural deformation. The ranged settings
 enable Spawn From Ground; all three parts use the pack's Spawn in slot 7.
 
-## Checks completed
+## Initial integration checks
 
 - Unity recompilation passed with zero errors and zero reported warnings.
 - Unity Edit Mode Test Runner: all 34 `EnemyAnimationTests` and all seven
@@ -52,3 +56,31 @@ completed successfully. Its resulting assets and current dependency hashes were 
 the rebuild was not repeated blindly. The Unity CLI update check could not reach its CDN.
 No source-import changes, campaign scene edits, standalone build, human combat playtest
 or target-device performance validation were performed.
+
+## Prefab scale and projectile frame follow-up
+
+- Removed the builder's scale reset/height fitting and the ranged spawn system's
+  `(0.85, 1.3, 0.85)` proportion stretch. Generated visual scale now equals the supplied
+  prefab scale. Root capsule authoring is retained.
+- Added **Projectile Launch Frame** to the ranged section of Enemy Spawn Settings.
+  `RangedEnemySpawnSettings.asset` defaults to authored frame 10 of 0-25. Wind Up Duration
+  still sets the delay to firing; anticipation reaches the selected frame at that time.
+  Complete Cut Attack samples allow changing the frame without rebuilding the samples.
+- Clean Unity compilation passed with zero errors. After an initial stale compiled spawn
+  path failed the new scale regression checks, a clean script compilation resolved it;
+  all 37 animation tests and all nine ground-spawn tests passed. Frame tests cover 0, 10
+  and 25, while spawn tests cover both absent and explicitly authored proportion matrices.
+- Controlled Campaign 5 preview verified no runtime root scale matrix, baked frame 10/25,
+  and a temporary runtime-only switch to frame 20/25. The next natural shot played that
+  release pose on body, hat and wand, then completed once. Ground emergence and neutral
+  materials remained correct. The probe observed 406 advancing frames / 7.67 game seconds.
+  Player health was maintained; no human combat playtest was performed.
+- Report and captures are under `Temp/RangedWizardValidation/frame-setting/`; the saved
+  settings remain at frame 10. The original scene, stopped state and background settings
+  were restored, and auto-tick was disabled again.
+- The focused .NET build still fails with the same 132 missing generated package-DLL
+  errors and four assembly-conflict warnings. Log: `Temp/RangedWizardValidation/dotnet-frame-setting.txt`.
+- The updated samples passed finite-pose/texture checks. An isolated CPU repeat with 500
+  ranged owners / 1,500 parts averaged 0.1480 ms per animation update (20 warmups, 120
+  measured updates, schedule plus completion). This excludes physics/rendering/GPU and
+  is not an FPS claim. Report: `Temp/RangedWizardValidation/frame-setting/profile.txt`.

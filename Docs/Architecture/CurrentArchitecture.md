@@ -25,6 +25,21 @@ the Ultimate Monsters atlas refresh. Source prefabs and imported pack materials 
 The common spawn settings continue referencing the shared baseline prefab, including boss
 ammunition and campaign waves. No runtime Animator or additional Mono-to-ECS bridge is added.
 
+Both Goblin bodies optionally reference `EnemyAnimationAuthoring.JogSamples`. The Editor's
+`GoblinJogSampling` retargets the existing `EnemyMovement.controller` and its eight directional
+jog clips from `Animation/` onto the supplied Humanoid rig. CPJ1 blobs store only the eight
+thigh/calf/foot/toe skin matrices relative to the pelvis, plus the pelvis bind inverse.
+`EnemyAnimationBaker` validates the controller/mesh/avatar hash and bakes `EnemyJogSamples`.
+The normal Goblin pose is evaluated first. While Active, the same animation job blends the
+jog directions relative to owner facing, smooths movement weight, and composes the masked
+legs below the original pelvis. Upper-body matrices and hand/head equipment stay on their
+original pose, including contact attacks and ranged Cut Attack. A separate jog phase keeps
+the gait continuous when upper actions change. Spawn, launch, recovery and defeat bypass
+the leg layer. No animation layer changes physics or owner transforms (INFO-004, ENEMY-002/012).
+**Crowd Punch > Animation > Apply Goblin Jog Legs** updates existing prefabs in place without
+rebuilding their original samples or model transforms; both prefab builders also configure
+the leg samples for future explicit rebuilds. Render bounds include the leg-motion envelope.
+
 ## Chapter Eight Citadel Presentation (2026-10-21, VISION-004..006)
 
 `ChapterEightCitadelBuilder` dresses saved Campaign 71-80 scenes. Chapter-owned
@@ -1295,10 +1310,17 @@ Full restart destroys all old wave-owned instances, increments each sequence run
 `EnemyRanged.prefab` uses `Prefabs/Enemies/Goblin Trooper Wizard Variant.prefab` through
 the sampled GPU-skinning path and `EnemyAnimationProfile.Goblin` (INFO-004, VISION-006).
 Its supplied Idle, Walk/Run Forward In Place, Take Damage, Jump In Place and Die motions
-share the Baseline Goblin mapping. Cut Attack is split at 38%: slot 3 follows the ranged
-wind-up clock, and an increment of `RangedAttackState.ProjectilesSpawned` starts slot 4's
-one-shot follow-through. Cancellation and launch discard the firing pose without changing
-combat state, physics or projectile timing (ENEMY-002/004). Hat and wand are converted to
+share the Baseline Goblin mapping. Slots 3 and 4 both contain the full Cut Attack clip.
+`EnemySpawnSettings.ProjectileLaunchFrame` selects its original zero-based release frame
+(currently 0-25, default 10); the builder stores the clip's final frame in settings.
+Profile baking normalizes that frame into `RangedEnemySettings.ProjectileLaunchProgress`.
+Slot 3 retimes anticipation to that pose using the existing wind-up clock. An increment
+of `RangedAttackState.ProjectilesSpawned` starts slot 4 at that same pose and plays the
+rest once at authored speed. Changing the release frame requires no sample rebuild.
+Cancellation and launch discard the firing pose without changing
+combat state, physics or projectile timing (ENEMY-002/004). The builder preserves the source
+visual scale, and ranged spawn initialization adds no procedural proportion scaling.
+Hat and wand are converted to
 single-bone skinned meshes so all three renderers follow the same sampled rig. Render
 entities carry `AnimationDriven`, bypassing body tint pulses, flashes and deformation.
 Generated instanced Full Cel materials preserve source textures under `Materials/Enemies/GoblinRanged`;

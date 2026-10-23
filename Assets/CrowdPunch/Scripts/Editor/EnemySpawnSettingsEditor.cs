@@ -30,7 +30,7 @@ namespace CrowdPunch.Editor
         private static readonly string[] RangedProperties =
         {
             "rangedProjectilePrefab", "preferredMinimumDistance", "preferredMaximumDistance", "engagementRange",
-            "retreatSpeed", "approachSpeed", "initialAttackDelay", "initialDelayVariation", "windUpDuration",
+            "retreatSpeed", "approachSpeed", "initialAttackDelay", "initialDelayVariation", "windUpDuration", "projectileLaunchFrame",
             "cooldown", "cooldownVariation", "projectileDamage", "playerInvincibilitySeconds", "projectileSpeed",
             "projectileMovementLeadMultiplier", "projectileAimSpreadRadius", "projectileAimTargetYOffset", "projectileArcHeight",
             "projectileMinimumAltitude", "projectileLifetime", "projectileRadius", "projectilePlayerLayers"
@@ -175,7 +175,12 @@ namespace CrowdPunch.Editor
             foreach (string propertyName in propertyNames)
             {
                 SerializedProperty property = serializedObject.FindProperty(propertyName);
-                if (property != null)
+                if (propertyName == "projectileLaunchFrame" && property != null)
+                {
+                    int lastFrame = System.Math.Max(1, serializedObject.FindProperty("firingAnimationLastFrame").intValue);
+                    EditorGUILayout.IntSlider(property, 0, lastFrame);
+                }
+                else if (property != null)
                     EditorGUILayout.PropertyField(property, true);
             }
         }

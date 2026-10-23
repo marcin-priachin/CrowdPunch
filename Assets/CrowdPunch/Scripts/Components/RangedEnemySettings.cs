@@ -14,6 +14,7 @@ namespace CrowdPunch.Components
         public float InitialAttackDelay;
         public float InitialDelayVariation;
         public float WindUpDuration;
+        public float ProjectileLaunchProgress;
         public float Cooldown;
         public float CooldownVariation;
         public float ProjectileDamage;

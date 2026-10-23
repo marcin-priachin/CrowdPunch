@@ -1074,6 +1074,17 @@ with the same Goblin animation folder and stable textured Full Cel treatment. Us
 for ranged anticipation and projectile release, with authored damage, flight, landing,
 recovery and defeat poses instead of runtime tint changes or procedural shake/deformation.
 Its equipment is visual; ranged projectile and shared physics rules remain authoritative.
+Preserve the model scale authored in the supplied prefab; do not fit it to a scripted
+target size or stretch its proportions at spawn. Ranged settings expose Projectile Launch
+Frame in the original Cut Attack frame range (zero-based). Wind Up Duration remains time
+until the shot; retime anticipation to reach the selected frame when the projectile fires,
+then play the rest of the authored clip once.
+
+For both Goblin Baseline and Ranged enemies, active movement blends the directional jog
+clips in `Assets/CrowdPunch/Animation/` on the legs only. Retain the original Goblin upper
+body animation, including attacks while moving. Blend movement relative to facing, so
+retreat and strafing use the appropriate leg motion. Spawn, flight, landing, recovery and
+defeat keep their original full-body poses. Preserve authored model scale and gameplay movement.
 
 ### INFO-005 — Trajectory Scope
 

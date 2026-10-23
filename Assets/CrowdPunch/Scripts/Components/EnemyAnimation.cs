@@ -22,6 +22,7 @@ namespace CrowdPunch.Components
     {
         public Entity Owner;
         public BlobAssetReference<EnemyAnimationSamples> Samples;
+        public BlobAssetReference<EnemyJogSamples> JogSamples;
         public byte Profile;
         public float BlendResponse;
         public float3 LaunchPivot;
@@ -51,6 +52,7 @@ namespace CrowdPunch.Components
         public byte WasRecovering;
         public float RecoveryAge;
         public byte GoblinMotion;
+        public float JogPhase;
     }
 
     public struct EnemyAnimationSamples
@@ -62,6 +64,19 @@ namespace CrowdPunch.Components
         public int FrameCount;
         // Idle, eight clockwise locomotion directions, Flying, Falling Flat Impact.
         public BlobArray<float> Durations;
+        public BlobArray<float3x4> Matrices;
+    }
+
+    public struct EnemyJogSamples
+    {
+        public const int DirectionCount = 8;
+        public int BoneCount;
+        public int FrameCount;
+        public int HipBoneIndex;
+        public float4x4 HipBindInverse;
+        public BlobArray<int> LegBones;
+        public BlobArray<float> Durations;
+        // Eight clockwise directions, frames, then leg bones; matrices are relative to hips.
         public BlobArray<float3x4> Matrices;
     }
 }

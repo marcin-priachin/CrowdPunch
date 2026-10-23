@@ -57,10 +57,13 @@ namespace CrowdPunch.Bakers
             var blob = builder.CreateBlobAssetReference<EnemyAnimationSamples>(Allocator.Persistent);
             AddBlobAsset(ref blob, out _);
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+            var jog = ReadJogSamples(authoring, renderer, animator, bones);
+            if (jog.IsCreated) AddBlobAsset(ref jog, out _);
             AddComponent(entity, new EnemyAnimation
             {
                 Owner = gatekeeper != null ? GetEntity(gatekeeper, TransformUsageFlags.Dynamic) : dino != null ? GetEntity(dino, TransformUsageFlags.Dynamic) : rolling != null ? GetEntity(rolling, TransformUsageFlags.Dynamic) : chicken != null ? GetEntity(chicken, TransformUsageFlags.Dynamic) : GetEntity(owner, TransformUsageFlags.Dynamic),
                 Samples = blob,
+                JogSamples = jog,
                 Profile = (byte)authoring.Profile,
                 SpawnMotion = authoring.SpawnMotion,
                 BlendResponse = math.max(0f, authoring.BlendResponse),
@@ -92,6 +95,49 @@ namespace CrowdPunch.Bakers
                 }
                 AddComponent(entity, pivot);
             }
+        }
+
+        private BlobAssetReference<EnemyJogSamples> ReadJogSamples(EnemyAnimationAuthoring authoring,
+            SkinnedMeshRenderer renderer, Animator animator, int boneCount)
+        {
+            if (authoring.JogSamples == null) return default;
+            DependsOn(authoring.JogSamples);
+            using var reader = new BinaryReader(new MemoryStream(authoring.JogSamples.bytes));
+            if (reader.ReadInt32() != 0x43504A31) throw new InvalidDataException("Unsupported Goblin jog samples.");
+            string hash = reader.ReadString();
+#if UNITY_EDITOR
+            var controller = UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
+                "Assets/CrowdPunch/Animation/EnemyMovement.controller");
+            DependsOn(controller);
+            string currentHash = UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(controller)).ToString()
+                + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(renderer.sharedMesh))
+                + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.avatar));
+            if (hash != currentHash) throw new InvalidDataException("Goblin jog sources changed. Run Crowd Punch/Animation/Apply Goblin Jog Legs.");
+#endif
+            using var builder = new BlobBuilder(Allocator.Temp);
+            ref var data = ref builder.ConstructRoot<EnemyJogSamples>();
+            data.BoneCount = reader.ReadInt32();
+            data.FrameCount = reader.ReadInt32();
+            data.HipBoneIndex = reader.ReadInt32();
+            int legCount = reader.ReadInt32();
+            if (data.BoneCount != boneCount || data.FrameCount < 2 || data.FrameCount > 120
+                || data.HipBoneIndex < 0 || data.HipBoneIndex >= boneCount || legCount < 1 || legCount > boneCount)
+                throw new InvalidDataException("Goblin jog skeleton does not match the body.");
+            data.HipBindInverse = new float4x4(new float4(ReadColumn(reader), reader.ReadSingle()),
+                new float4(ReadColumn(reader), reader.ReadSingle()), new float4(ReadColumn(reader), reader.ReadSingle()),
+                new float4(ReadColumn(reader), reader.ReadSingle()));
+            var legs = builder.Allocate(ref data.LegBones, legCount);
+            for (int i = 0; i < legCount; i++)
+            {
+                legs[i] = reader.ReadInt32();
+                if (legs[i] < 0 || legs[i] >= boneCount || legs[i] == data.HipBoneIndex)
+                    throw new InvalidDataException("Invalid Goblin jog leg mask.");
+            }
+            var durations = builder.Allocate(ref data.Durations, EnemyJogSamples.DirectionCount);
+            for (int i = 0; i < durations.Length; i++) durations[i] = reader.ReadSingle();
+            var matrices = builder.Allocate(ref data.Matrices, EnemyJogSamples.DirectionCount * data.FrameCount * legCount);
+            for (int i = 0; i < matrices.Length; i++) matrices[i] = new float3x4(ReadColumn(reader), ReadColumn(reader), ReadColumn(reader), ReadColumn(reader));
+            return builder.CreateBlobAssetReference<EnemyJogSamples>(Allocator.Persistent);
         }
 
         private static float3 ReadColumn(BinaryReader reader) => new float3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());

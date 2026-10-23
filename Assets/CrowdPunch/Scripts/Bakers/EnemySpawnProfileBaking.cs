@@ -69,6 +69,7 @@ namespace CrowdPunch.Bakers
                     InitialAttackDelay = settings.InitialAttackDelay,
                     InitialDelayVariation = settings.InitialDelayVariation,
                     WindUpDuration = settings.WindUpDuration,
+                    ProjectileLaunchProgress = settings.ProjectileLaunchProgress,
                     Cooldown = settings.Cooldown,
                     CooldownVariation = settings.CooldownVariation,
                     ProjectileDamage = settings.ProjectileDamage,

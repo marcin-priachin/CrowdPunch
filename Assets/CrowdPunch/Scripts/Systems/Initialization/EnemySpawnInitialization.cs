@@ -194,10 +194,6 @@ namespace CrowdPunch.Systems.Initialization
             }
             if (profile.Archetype == EnemyArchetypeKind.Ranged)
             {
-                commandBuffer.AddComponent(enemy, new PostTransformMatrix
-                {
-                    Value = float4x4.Scale(new float3(0.85f, 1.3f, 0.85f))
-                });
                 commandBuffer.AddComponent(enemy, profile.RangedSettings);
                 commandBuffer.AddComponent(enemy, new RangedPositioningState
                 {

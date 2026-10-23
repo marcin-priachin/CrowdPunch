@@ -170,5 +170,41 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<EnemyLaunchState>(enemy).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
             Assert.That(em.GetComponentData<PhysicsVelocity>(enemy).Linear, Is.EqualTo(velocity));
         }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Info004RangedSpawnPreservesAuthoredProportions(bool authoredScale)
+        {
+            var em = world.EntityManager;
+            var prefab = em.CreateEntity(typeof(Prefab), typeof(Enemy), typeof(LocalTransform),
+                typeof(EnemyMovementSettings), typeof(NavigationAgent), typeof(Health),
+                typeof(EnemyContactDamageSettings), typeof(EnemyContactAttemptState),
+                typeof(EnemySeparationDistance), typeof(EnemyArchetypeSeparationDistances), typeof(KnockbackResponse));
+            var original = new PostTransformMatrix { Value = float4x4.Scale(new float3(1.2f, .9f, 1.1f)) };
+            if (authoredScale) em.AddComponentData(prefab, original);
+            em.AddComponentData(em.CreateEntity(), new MatchState());
+            em.AddComponentData(em.CreateEntity(), new SpawnSettings
+            {
+                InitialCount = 1,
+                Profile = new EnemySpawnProfile
+                {
+                    EnemyPrefab = prefab, Archetype = EnemyArchetypeKind.Ranged,
+                    Health = new Health { Current = 10, Max = 10 },
+                    RangedSettings = new RangedEnemySettings { ProjectileLaunchProgress = .4f }
+                }
+            });
+            world.GetOrCreateSystem<EnemySpawnSystem>().Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+            using var query = em.CreateEntityQuery(new EntityQueryDesc
+            {
+                All = new[] { ComponentType.ReadOnly<RangedAttackState>() },
+                Options = EntityQueryOptions.IncludeDisabledEntities
+            });
+            var spawned = query.GetSingletonEntity();
+            Assert.That(em.HasComponent<PostTransformMatrix>(spawned), Is.EqualTo(authoredScale),
+                "Ranged identity must not add scripted proportion scaling.");
+            if (authoredScale) Assert.That(em.GetComponentData<PostTransformMatrix>(spawned).Value, Is.EqualTo(original.Value));
+            Assert.That(em.GetComponentData<RangedEnemySettings>(spawned).ProjectileLaunchProgress, Is.EqualTo(.4f));
+        }
     }
 }

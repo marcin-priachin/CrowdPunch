@@ -1,0 +1,215 @@
+using System.IO;
+using CrowdPunch.Components;
+using CrowdPunch.Systems.Presentation;
+using NUnit.Framework;
+using Unity.Collections;
+using Unity.Core;
+using Unity.Deformations;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Physics;
+using Unity.Transforms;
+
+namespace CrowdPunch.Tests
+{
+    public sealed class EnemyJogAnimationTests
+    {
+        private World world;
+        private Entity owner, layered, original;
+        private BlobAssetReference<EnemyAnimationSamples> body;
+        private BlobAssetReference<EnemyJogSamples> jog;
+
+        [SetUp]
+        public void SetUp()
+        {
+            world = new World("Goblin leg layer");
+            var em = world.EntityManager;
+            owner = em.CreateEntity(typeof(DesiredMovement), typeof(EnemyMovementSettings), typeof(LocalTransform),
+                typeof(EnemyLaunchState), typeof(RespawnRequest), typeof(PhysicsVelocity));
+            em.SetComponentData(owner, LocalTransform.Identity);
+            em.SetComponentData(owner, new EnemyMovementSettings { MoveSpeed = 4 });
+            em.SetComponentEnabled<RespawnRequest>(owner, false);
+            using (var builder = new BlobBuilder(Allocator.Temp))
+            {
+                ref var root = ref builder.ConstructRoot<EnemyAnimationSamples>();
+                root.BoneCount = 3; root.FrameCount = 2;
+                var durations = builder.Allocate(ref root.Durations, EnemyAnimationSamples.MotionCount);
+                var matrices = builder.Allocate(ref root.Matrices, EnemyAnimationSamples.MotionCount * 6);
+                for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++)
+                {
+                    durations[motion] = 1;
+                    for (int frame = 0; frame < 2; frame++)
+                        for (int bone = 0; bone < 3; bone++)
+                            matrices[(motion * 2 + frame) * 3 + bone] = Pose(new float3(motion * 10 + bone, frame, 0));
+                }
+                body = builder.CreateBlobAssetReference<EnemyAnimationSamples>(Allocator.Persistent);
+            }
+            using (var builder = new BlobBuilder(Allocator.Temp))
+            {
+                ref var root = ref builder.ConstructRoot<EnemyJogSamples>();
+                root.BoneCount = 3; root.FrameCount = 2; root.HipBoneIndex = 0;
+                root.HipBindInverse = float4x4.Translate(new float3(0, 0, 3));
+                builder.Allocate(ref root.LegBones, 1)[0] = 2;
+                var durations = builder.Allocate(ref root.Durations, EnemyJogSamples.DirectionCount);
+                var matrices = builder.Allocate(ref root.Matrices, EnemyJogSamples.DirectionCount * 2);
+                for (int direction = 0; direction < EnemyJogSamples.DirectionCount; direction++)
+                {
+                    durations[direction] = 1;
+                    for (int frame = 0; frame < 2; frame++)
+                        matrices[direction * 2 + frame] = Pose(new float3(direction + 1, frame, 0));
+                }
+                jog = builder.CreateBlobAssetReference<EnemyJogSamples>(Allocator.Persistent);
+            }
+            layered = Visual(jog); original = Visual(default);
+        }
+
+        private static float3x4 Pose(float3 position) => new float3x4(new float3(1, 0, 0),
+            new float3(0, 1, 0), new float3(0, 0, 1), position);
+
+        private Entity Visual(BlobAssetReference<EnemyJogSamples> layer)
+        {
+            var em = world.EntityManager;
+            var entity = em.CreateEntity(typeof(EnemyAnimation), typeof(EnemyAnimationPlayback));
+            em.SetComponentData(entity, new EnemyAnimation { Owner = owner, Profile = (byte)EnemyAnimationProfile.Goblin,
+                Samples = body, JogSamples = layer, SpawnMotion = 7 });
+            em.SetComponentData(entity, new EnemyAnimationPlayback { Initialized = 1 });
+            em.AddBuffer<SkinMatrix>(entity).ResizeUninitialized(3);
+            return entity;
+        }
+
+        [TearDown]
+        public void TearDown() { world.Dispose(); body.Dispose(); jog.Dispose(); }
+
+        private void Tick(float delta = .125f)
+        {
+            world.SetTime(new TimeData(world.Time.ElapsedTime + delta, delta));
+            world.GetOrCreateSystem<EnemyAnimationSystem>().Update(world.Unmanaged);
+            world.EntityManager.CompleteAllTrackedJobs();
+        }
+
+        private void AssertOriginalUpperBody()
+        {
+            var em = world.EntityManager;
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[0].Value, Is.EqualTo(em.GetBuffer<SkinMatrix>(original)[0].Value));
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[1].Value, Is.EqualTo(em.GetBuffer<SkinMatrix>(original)[1].Value));
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner), Is.EqualTo(new PhysicsVelocity()));
+        }
+
+        [TestCase(0f, 1f)]
+        [TestCase(45f, 2f)]
+        [TestCase(90f, 3f)]
+        [TestCase(180f, 5f)]
+        [TestCase(270f, 7f)]
+        [TestCase(22.5f, 1.5f)]
+        public void Info004JogLegsBlendInLocalMovementDirection(float degrees, float expected)
+        {
+            var em = world.EntityManager;
+            float angle = math.radians(degrees);
+            em.SetComponentData(owner, new DesiredMovement { Direction = new float3(math.sin(angle), 0, math.cos(angle)), Speed = 4 });
+            Tick();
+            AssertOriginalUpperBody();
+            var hip = em.GetBuffer<SkinMatrix>(layered)[0].Value.c3;
+            var leg = em.GetBuffer<SkinMatrix>(layered)[2].Value.c3;
+            Assert.That(leg.x - hip.x, Is.EqualTo(expected).Within(.001f));
+            Assert.That(leg.z - hip.z, Is.EqualTo(3).Within(.001f), "Restore the original hip transform before attaching the jog legs.");
+        }
+
+        [Test]
+        public void Info004JogLegsUseFacingBlendOutAtIdleAndKeepUpperFiring()
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(owner, new DesiredMovement { Direction = new float3(1, 0, 0), Speed = 4 });
+            em.SetComponentData(owner, LocalTransform.FromRotation(quaternion.RotateY(math.PI / 2)));
+            em.AddComponentData(owner, new RangedEnemySettings { WindUpDuration = 1, ProjectileLaunchProgress = .4f });
+            em.AddComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.WindUp, SecondsRemaining = .5f });
+            Tick();
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[2].Value.c3.x - em.GetBuffer<SkinMatrix>(layered)[0].Value.c3.x,
+                Is.EqualTo(1).Within(.001f), "World right is local forward while facing right.");
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[1].Value, Is.EqualTo(em.GetBuffer<SkinMatrix>(original)[1].Value));
+            em.SetComponentData(owner, new RangedAttackState { Phase = RangedAttackPhase.Cooldown, ProjectilesSpawned = 1 });
+            Tick();
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.EqualTo(4));
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[1].Value, Is.EqualTo(em.GetBuffer<SkinMatrix>(original)[1].Value));
+            em.SetComponentData(owner, new DesiredMovement());
+            Tick();
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[2].Value, Is.EqualTo(em.GetBuffer<SkinMatrix>(original)[2].Value));
+        }
+
+        [TestCase(EnemyLaunchPhase.Launched)]
+        [TestCase(EnemyLaunchPhase.Recovering)]
+        [TestCase(EnemyLaunchPhase.Defeated)]
+        public void Combat011JogLegsDoNotOverrideLaunchRecoveryOrDefeat(EnemyLaunchPhase phase)
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(owner, new DesiredMovement { Direction = math.forward(), Speed = 4 });
+            Tick();
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = phase, RecoverySecondsRemaining = 1, LaunchSequence = 1 });
+            Tick();
+            for (int bone = 0; bone < 3; bone++)
+                Assert.That(em.GetBuffer<SkinMatrix>(layered)[bone].Value, Is.EqualTo(em.GetBuffer<SkinMatrix>(original)[bone].Value));
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).Movement, Is.EqualTo(float2.zero));
+        }
+
+        [Test]
+        public void Info006JogLegsDoNotOverrideGroundEmergence()
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(owner, new DesiredMovement { Direction = math.forward(), Speed = 4 });
+            em.AddComponentData(owner, new EnemySpawnAnimation { Duration = 1 });
+            em.SetComponentEnabled<EnemySpawnAnimation>(owner, true);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
+            Tick();
+            for (int bone = 0; bone < 3; bone++)
+                Assert.That(em.GetBuffer<SkinMatrix>(layered)[bone].Value, Is.EqualTo(em.GetBuffer<SkinMatrix>(original)[bone].Value));
+        }
+
+        [TestCase("Baseline")]
+        [TestCase("Ranged")]
+        public void Info004GoblinPrefabLegMasksExcludeUpperBodyAndEquipment(string kind)
+        {
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(
+                "Assets/CrowdPunch/Prefabs/Enemy" + kind + ".prefab");
+            int layeredBodies = 0;
+            foreach (var authoring in prefab.GetComponentsInChildren<CrowdPunch.Authoring.EnemyAnimationAuthoring>(true))
+            {
+                var renderer = authoring.GetComponent<UnityEngine.SkinnedMeshRenderer>();
+                if (renderer.bones.Length == 1) { Assert.That(authoring.JogSamples, Is.Null); continue; }
+                layeredBodies++;
+                Assert.That(authoring.JogSamples, Is.Not.Null);
+                using var reader = new BinaryReader(new MemoryStream(authoring.JogSamples.bytes));
+                Assert.That(reader.ReadInt32(), Is.EqualTo(0x43504A31));
+                reader.ReadString();
+                Assert.That(reader.ReadInt32(), Is.EqualTo(renderer.bones.Length));
+                Assert.That(reader.ReadInt32(), Is.EqualTo(32));
+                Assert.That(renderer.bones[reader.ReadInt32()].name, Is.EqualTo("RigPelvis"));
+                int count = reader.ReadInt32();
+                for (int i = 0; i < 16; i++) reader.ReadSingle();
+                Assert.That(count, Is.EqualTo(8));
+                for (int i = 0; i < count; i++) Assert.That(renderer.bones[reader.ReadInt32()].name, Does.Contain("Leg"));
+            }
+            Assert.That(layeredBodies, Is.EqualTo(1));
+        }
+
+        [TestCase("Baseline")]
+        [TestCase("Ranged")]
+        public void Info004JogSamplingPreservesAuthoredScaleControllerAndOriginalSamples(string kind)
+        {
+            var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/Enemy" + kind + ".prefab");
+            try
+            {
+                var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                var scale = animator.transform.localScale;
+                var controller = animator.runtimeAnimatorController;
+                var parts = root.GetComponentsInChildren<CrowdPunch.Authoring.EnemyAnimationAuthoring>(true);
+                var originals = new byte[parts.Length][];
+                for (int i = 0; i < parts.Length; i++) originals[i] = parts[i].Samples.bytes;
+                CrowdPunch.Editor.GoblinJogSampling.Configure(root, "Enemy" + kind);
+                Assert.That(animator.transform.localScale, Is.EqualTo(scale));
+                Assert.That(animator.runtimeAnimatorController, Is.EqualTo(controller));
+                for (int i = 0; i < parts.Length; i++) Assert.That(parts[i].Samples.bytes, Is.EqualTo(originals[i]));
+            }
+            finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
+        }
+    }
+}

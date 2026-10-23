@@ -93,7 +93,11 @@ namespace CrowdPunch.Configuration
         [Header("Ranged attack (provisional)")]
         [SerializeField, Min(0f)] private float initialAttackDelay = 1.5f;
         [SerializeField, Min(0f)] private float initialDelayVariation = 1.5f;
+        [Tooltip("Seconds until the projectile fires. The firing animation is retimed so Projectile Launch Frame coincides with this time.")]
         [SerializeField, Min(0f)] private float windUpDuration = 0.75f;
+        [Tooltip("Zero-based authored Cut Attack frame at projectile release. Wind Up Duration controls the time to this frame; the rest of the clip plays once afterward.")]
+        [SerializeField, Min(0)] private int projectileLaunchFrame = 10;
+        [SerializeField, HideInInspector] private int firingAnimationLastFrame = 25;
         [SerializeField, Min(0f)] private float cooldown = 3f;
         [SerializeField, Min(0f)] private float cooldownVariation = 1.5f;
         [SerializeField, Min(0f)] private float projectileDamage = 10f;
@@ -248,6 +252,9 @@ namespace CrowdPunch.Configuration
         public float InitialAttackDelay => initialAttackDelay;
         public float InitialDelayVariation => initialDelayVariation;
         public float WindUpDuration => windUpDuration;
+        public int FiringAnimationLastFrame => Mathf.Max(1, firingAnimationLastFrame);
+        public int ProjectileLaunchFrame => Mathf.Clamp(projectileLaunchFrame, 0, FiringAnimationLastFrame);
+        public float ProjectileLaunchProgress => ProjectileLaunchFrame / (float)FiringAnimationLastFrame;
         public float Cooldown => cooldown;
         public float CooldownVariation => cooldownVariation;
         public float ProjectileDamage => projectileDamage;

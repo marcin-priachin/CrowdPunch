@@ -45,7 +45,6 @@ namespace CrowdPunch.Editor
                 GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
                 visual.name = "Goblin Trooper Wizard";
                 visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-                visual.transform.localScale = Vector3.one;
                 SetLayerRecursively(visual, 7);
 
                 Animator animator = visual.GetComponent<Animator>();
@@ -59,7 +58,7 @@ namespace CrowdPunch.Editor
                 SkinnedMeshRenderer[] renderers = visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
                 if (renderers.Length == 0)
                     throw new InvalidOperationException("Goblin prefab contains no skinned renderers.");
-                FitVisualToEnemy(root.transform, visual.transform, renderers);
+                AlignVisualToFloor(root.transform, visual.transform, renderers);
                 for (int index = 0; index < renderers.Length; index++)
                 {
                     SkinnedMeshRenderer renderer = renderers[index];
@@ -80,6 +79,7 @@ namespace CrowdPunch.Editor
                 animator.Rebind();
                 animator.Play("Motion0", 0, 0);
                 animator.Update(0f);
+                GoblinJogSampling.Configure(root, "EnemyRanged");
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -204,8 +204,8 @@ namespace CrowdPunch.Editor
             for (int motion = 0; motion < clips.Length; motion++)
             {
                 AnimationClip clip = clips[motion];
-                float start = motion == 4 ? .38f : motion == 9 ? .3f : motion == 6 ? 1f : 0f;
-                float end = motion == 3 ? .38f : motion == 9 ? .65f : motion == 6 ? 0f : 1f;
+                float start = motion == 9 ? .3f : motion == 6 ? 1f : 0f;
+                float end = motion == 9 ? .65f : motion == 6 ? 0f : 1f;
                 durations[motion] = clip.length * Mathf.Abs(end - start);
                 for (int frame = 0; frame < FrameCount; frame++)
                 {
@@ -270,14 +270,9 @@ namespace CrowdPunch.Editor
             renderer.localBounds = bounds;
         }
 
-        private static void FitVisualToEnemy(Transform enemy, Transform visual, SkinnedMeshRenderer[] renderers)
+        private static void AlignVisualToFloor(Transform enemy, Transform visual, SkinnedMeshRenderer[] renderers)
         {
             Bounds bounds = renderers[0].bounds;
-            for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
-            float largest = bounds.size.y;
-            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Goblin renderers have empty bounds.");
-            visual.localScale *= 2f / largest;
-            bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
             Vector3 floor = new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
             visual.localPosition -= enemy.InverseTransformPoint(floor) + Vector3.up;
@@ -302,10 +297,11 @@ namespace CrowdPunch.Editor
             EnemySpawnSettings settings = AssetDatabase.LoadAssetAtPath<EnemySpawnSettings>(SettingsPath);
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
             if (settings == null || prefab == null) throw new InvalidOperationException("Could not load ranged settings or prefab.");
-            if (settings.EnemyPrefab == prefab && settings.SpawnFromGround) return;
             var serialized = new SerializedObject(settings);
             serialized.FindProperty("enemyPrefab").objectReferenceValue = prefab;
             serialized.FindProperty("spawnFromGround").boolValue = true;
+            AnimationClip firing = FindClip("Cut Attack");
+            serialized.FindProperty("firingAnimationLastFrame").intValue = Mathf.Max(1, Mathf.RoundToInt(firing.length * firing.frameRate));
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(settings);
         }

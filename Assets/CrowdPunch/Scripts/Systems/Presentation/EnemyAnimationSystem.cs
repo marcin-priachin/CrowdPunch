@@ -98,11 +98,20 @@ namespace CrowdPunch.Systems.Presentation
                     playback.WasLaunched = 0;
                     playback.Landing = 0;
                     playback.HitActive = 0;
+                    playback.Movement = 0;
+                    playback.JogPhase = 0;
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Goblin)
                 {
                     AnimateGoblin(owner, ref playback, ref skin, ref samples, launch);
+                    if (launch.Phase == EnemyLaunchPhase.Active && animation.JogSamples.IsCreated)
+                        AnimateJogLegs(owner, animation.BlendResponse, ref playback, ref skin, ref animation.JogSamples.Value);
+                    else
+                    {
+                        playback.Movement = 0;
+                        playback.JogPhase = 0;
+                    }
                     return;
                 }
                 if (animation.Profile != (byte)EnemyAnimationProfile.Standard
@@ -529,14 +538,16 @@ namespace CrowdPunch.Systems.Presentation
                 ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
             {
                 var ranged = RangedAttacks.HasComponent(owner) ? RangedAttacks[owner] : default;
+                float release = RangedTuning.HasComponent(owner)
+                    ? math.saturate(RangedTuning[owner].ProjectileLaunchProgress) : 0f;
                 bool fired = ranged.ProjectilesSpawned != playback.ProjectileSequence;
                 playback.ProjectileSequence = ranged.ProjectilesSpawned;
                 if (launch.Phase != EnemyLaunchPhase.Active) playback.WasAttacking = 0;
                 else if (fired)
                 {
-                    // Continue the split Cut Attack only when gameplay actually emits a shot.
+                    // Continue the full Cut Attack at the configured release pose only after a real shot.
                     playback.WasAttacking = 1;
-                    playback.AttackPhase = 0;
+                    playback.AttackPhase = release;
                 }
                 else if (playback.WasAttacking != 0)
                 {
@@ -588,7 +599,7 @@ namespace CrowdPunch.Systems.Presentation
                             && ranged.Phase == RangedAttackPhase.WindUp)
                         {
                             motion = 3;
-                            progress = math.saturate(1f - ranged.SecondsRemaining
+                            progress = release * math.saturate(1f - ranged.SecondsRemaining
                                 / math.max(.01f, RangedTuning[owner].WindUpDuration));
                             playback.WasAttacking = 0;
                         }
@@ -625,6 +636,47 @@ namespace CrowdPunch.Systems.Presentation
                 int to = motion == 0 || motion == 1 || motion == 2 || motion == EnemyAnimationSamples.FlyingMotion
                     ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1);
                 ApplyFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
+            }
+
+            private void AnimateJogLegs(Entity owner, float blendResponse, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyJogSamples samples)
+            {
+                if (samples.BoneCount != skin.Length) return;
+                var intent = Movement[owner];
+                float3 local = math.rotate(math.inverse(Transforms[owner].Rotation),
+                    math.normalizesafe(intent.Direction) * math.max(0, intent.Speed));
+                float2 target = local.xz / math.max(.01f, Settings[owner].MoveSpeed);
+                target /= math.max(1, math.length(target));
+                float blend = blendResponse <= 0 ? 1 : 1 - math.exp(-blendResponse * DeltaTime);
+                playback.Movement = math.lerp(playback.Movement, target, blend);
+                float amount = math.saturate(math.length(playback.Movement));
+                if (amount < .0001f) return;
+                float sector = math.frac(math.atan2(playback.Movement.x, playback.Movement.y) / (2 * math.PI)) * 8;
+                int first = (int)math.floor(sector) % EnemyJogSamples.DirectionCount;
+                int second = (first + 1) % EnemyJogSamples.DirectionCount;
+                float turn = math.frac(sector);
+                float duration = math.lerp(samples.Durations[first], samples.Durations[second], turn);
+                playback.JogPhase = math.frac(playback.JogPhase + DeltaTime / math.max(.01f, duration));
+                float frame = playback.JogPhase * samples.FrameCount;
+                int a = (int)frame, b = (a + 1) % samples.FrameCount;
+                float between = math.frac(frame);
+                var originalHip = skin[samples.HipBoneIndex].Value;
+                var hip = math.mul(new float4x4(new float4(originalHip.c0, 0), new float4(originalHip.c1, 0),
+                    new float4(originalHip.c2, 0), new float4(originalHip.c3, 1)), samples.HipBindInverse);
+                int count = samples.LegBones.Length;
+                for (int leg = 0; leg < count; leg++)
+                {
+                    var left = samples.Matrices[(first * samples.FrameCount + a) * count + leg] * (1 - between)
+                        + samples.Matrices[(first * samples.FrameCount + b) * count + leg] * between;
+                    var right = samples.Matrices[(second * samples.FrameCount + a) * count + leg] * (1 - between)
+                        + samples.Matrices[(second * samples.FrameCount + b) * count + leg] * between;
+                    var relative = left * (1 - turn) + right * turn;
+                    var pose = math.mul(hip, new float4x4(new float4(relative.c0, 0), new float4(relative.c1, 0),
+                        new float4(relative.c2, 0), new float4(relative.c3, 1)));
+                    int bone = samples.LegBones[leg];
+                    skin[bone] = new SkinMatrix { Value = skin[bone].Value * (1 - amount)
+                        + new float3x4(pose.c0.xyz, pose.c1.xyz, pose.c2.xyz, pose.c3.xyz) * amount };
+                }
             }
 
             private void AnimateBaseline(Entity owner, ref EnemyAnimationPlayback playback,
