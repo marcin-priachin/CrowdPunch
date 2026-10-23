@@ -1069,8 +1069,13 @@ The mace is visual equipment; contact damage and launch physics retain their exi
 Baseline charge preparation uses idle with no wind-up or attack pose. During the charge,
 loop the supplied Run Forward In Place on the whole body; bypass the directional jog-leg
 layer until the charge ends. Keep the existing charge timing and contact-damage rules.
-The supplied jump supplies the airborne pose; Die supplies the landing/defeat and reverse
-rise poses because the pack has no dedicated Flying, Falling Flat Impact or get-up clip.
+For both Goblin Baseline and Ranged, Launched holds Jump In Place at original source
+frame 6 (zero-based; 0.2 seconds at 30 fps). Rotate the visual 90 degrees top-forward
+around the physics owner's centre so the head points along the current launch direction.
+Hold the pose for the entire launch, including repunches; body and equipment stay aligned.
+Owner yaw still follows actual horizontal velocity. Keep physics, collision, launch duration
+and landing/recovery rules unchanged. Die supplies landing/defeat and reverse-rise poses
+because the pack has no dedicated Falling Flat Impact or get-up clip.
 
 The Ranged enemy uses `Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Wizard Variant.prefab`
 with the same Goblin animation folder and stable textured Full Cel treatment. Use Cut Attack

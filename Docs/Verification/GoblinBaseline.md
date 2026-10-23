@@ -99,3 +99,28 @@ therefore update facing without modifying velocity. After charging, ordinary fac
 - Source/documentation whitespace checks passed. The Editor remained outside Play Mode in
   the original New Scene. No model, prefab, sample, timing, damage or scene assets changed.
   No new live combat or standalone player playtest was performed for this follow-up.
+
+## Frozen launched pose follow-up (2026-10-23, INFO-004)
+
+Both Goblin Baseline and Ranged now hold the supplied Jump In Place source frame 6
+(zero-based, 0.2 seconds at 30 fps) for the entire Launched state. Motion 9 contains that
+same pose at every exported frame. Runtime skinning samples the first frame without
+advancing, rotating the visual +90 degrees around owner-centred LaunchPivot so its top
+points along local forward. Owner yaw still follows current launch velocity. Body and
+all one-bone accessories share the pose/pivot; repunch keeps the pose frozen.
+
+- Updated all five existing body/equipment sample files in place. Binary comparison with
+  HEAD confirms only motion 9 changed; source hashes, other motions and durations are
+  unchanged. Prefab edits only enable owner-centred launch rotation and extend render bounds.
+  Both authored 1.30 model scales, meshes, materials, controllers and gameplay assets are retained.
+  Future explicit rebuilds also sample the exact frame and configure the pivot/bounds.
+- All 66 focused animation, facing and jog-layer cases passed inside the assigned Unity Editor.
+  New checks cover frozen matrices across time/repunch, top-forward rotation, owner-centred
+  pivot, unchanged physics and identical flight samples on body and every accessory.
+- A rendered CPU skinning preview of the actual exported body, mace, hat and wand poses was
+  reviewed at Temp/AgentB/frozen-launch-preview.png. The lowest owner-relative vertex is
+  -0.1863 for the baseline body and -0.4034 for the ranged body; all accessories remain
+  above -0.696, clearing the collider-aligned floor at -1.
+- Unity compilation passed. The separate no-dependencies dotnet check remains blocked by
+  132 CS0006 missing generated-package DLL references in Temp/Bin/Debug. Source/documentation
+  whitespace checks passed. No new live combat or standalone playtest was performed.

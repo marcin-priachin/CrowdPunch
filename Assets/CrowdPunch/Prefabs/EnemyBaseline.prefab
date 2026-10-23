@@ -1707,15 +1707,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8840592254622162822, guid: c1c28852e21f174428d2f2331d11dbd8, type: 3}
       propertyPath: m_AABB.m_Extent.x
-      value: 0.971911
+      value: 0.981911
       objectReference: {fileID: 0}
     - target: {fileID: 8840592254622162822, guid: c1c28852e21f174428d2f2331d11dbd8, type: 3}
       propertyPath: m_AABB.m_Extent.y
-      value: 2.3840573
+      value: 2.3940573
       objectReference: {fileID: 0}
     - target: {fileID: 8840592254622162822, guid: c1c28852e21f174428d2f2331d11dbd8, type: 3}
       propertyPath: m_AABB.m_Extent.z
-      value: 1.3086109
+      value: 1.3186109
       objectReference: {fileID: 0}
     - target: {fileID: 8840592254622162822, guid: c1c28852e21f174428d2f2331d11dbd8, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -1774,7 +1774,7 @@ MonoBehaviour:
   JogSamples: {fileID: 4900000, guid: 1caa02ee1254e3046aa76fb745aea0eb, type: 3}
   Profile: 10
   SpawnMotion: 7
-  RotateLaunchAroundOwner: 0
+  RotateLaunchAroundOwner: 1
   LaunchPivotHeight: 0
   BlendResponse: 12
 --- !u!4 &4554438394391886330 stripped
@@ -1846,7 +1846,7 @@ SkinnedMeshRenderer:
   m_RootBone: {fileID: 8741375207416449617}
   m_AABB:
     m_Center: {x: 0.17613876, y: 0.12032628, z: 0.47013098}
-    m_Extent: {x: 1.2592875, y: 1.9478583, z: 1.1384515}
+    m_Extent: {x: 1.2692875, y: 1.9578583, z: 1.1484514}
   m_DirtyAABB: 0
 --- !u!114 &6826369203074209149
 MonoBehaviour:
@@ -1864,7 +1864,7 @@ MonoBehaviour:
   JogSamples: {fileID: 0}
   Profile: 10
   SpawnMotion: 7
-  RotateLaunchAroundOwner: 0
+  RotateLaunchAroundOwner: 1
   LaunchPivotHeight: 0
   BlendResponse: 12
 --- !u!4 &8741375207416449617 stripped

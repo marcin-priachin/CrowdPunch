@@ -72,6 +72,8 @@ namespace CrowdPunch.Editor
                     EnemyAnimationAuthoring authoring = renderer.GetComponent<EnemyAnimationAuthoring>();
                     if (authoring == null) authoring = renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
                     authoring.Profile = EnemyAnimationProfile.Goblin;
+                    authoring.RotateLaunchAroundOwner = true;
+                    authoring.LaunchPivotHeight = 0f;
                     authoring.SpawnMotion = 7;
                     authoring.BlendResponse = 12f;
                     authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samplesPath);
@@ -211,7 +213,10 @@ namespace CrowdPunch.Editor
                 {
                     bool oneShot = motion != 0 && motion != 1 && motion != 2 && motion != 9;
                     float normalized = oneShot ? frame / (float)(FrameCount - 1) : frame / (float)FrameCount;
-                    animator.Play("Motion" + motion, 0, Mathf.Lerp(start, end, normalized));
+                    // Frame 6 is a zero-based source clip frame, independent of the 32 exported samples.
+                    float phase = motion == EnemyAnimationSamples.FlyingMotion
+                        ? Mathf.Clamp01(6f / (clip.frameRate * clip.length)) : Mathf.Lerp(start, end, normalized);
+                    animator.Play("Motion" + motion, 0, phase);
                     animator.Update(0f);
                     Matrix4x4 inverse = animator.transform.worldToLocalMatrix;
                     for (int bone = 0; bone < bodyMatrices.Length; bone++)
@@ -246,6 +251,11 @@ namespace CrowdPunch.Editor
                             + matrices[poseStart + weight.boneIndex3].MultiplyPoint3x4(source) * weight.weight3;
                         if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
                         else bounds.Encapsulate(position);
+                        if (motion == EnemyAnimationSamples.FlyingMotion)
+                        {
+                            Vector3 pivot = animator.transform.InverseTransformPoint(animator.transform.parent.position);
+                            bounds.Encapsulate(pivot + Quaternion.Euler(90, 0, 0) * (position - pivot));
+                        }
                     }
                 }
             }

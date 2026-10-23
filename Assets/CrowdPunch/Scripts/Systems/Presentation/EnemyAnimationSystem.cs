@@ -102,7 +102,7 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Goblin)
                 {
-                    AnimateGoblin(owner, ref playback, ref skin, ref samples, launch);
+                    AnimateGoblin(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot);
                     bool charging = Contacts.HasComponent(owner) && Contacts[owner].IsAttempting != 0;
                     if (launch.Phase == EnemyLaunchPhase.Active && !charging && animation.JogSamples.IsCreated)
                         AnimateJogLegs(owner, animation.BlendResponse, ref playback, ref skin, ref animation.JogSamples.Value);
@@ -534,7 +534,7 @@ namespace CrowdPunch.Systems.Presentation
             // Goblin slots: idle, walk, run, anticipation, strike, hit, rise, spawn, idle, flight, fall.
             // All motion comes from authored poses; the physics owner keeps its transform and velocity.
             private void AnimateGoblin(Entity owner, ref EnemyAnimationPlayback playback,
-                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch, float3 pivot)
             {
                 var ranged = RangedAttacks.HasComponent(owner) ? RangedAttacks[owner] : default;
                 float release = RangedTuning.HasComponent(owner)
@@ -563,14 +563,21 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 int motion;
                 float progress = -1f;
-                bool restart = false;
                 if (launch.Phase == EnemyLaunchPhase.Launched)
                 {
-                    motion = EnemyAnimationSamples.FlyingMotion;
-                    restart = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
                     playback.WasLaunched = 1;
                     playback.LaunchSequence = launch.LaunchSequence;
                     playback.HitActive = 0;
+                    playback.WasRecovering = 0;
+                    playback.Landing = 0;
+                    playback.Phase = 0;
+                    playback.FlightPhase = 0;
+                    playback.GoblinMotion = EnemyAnimationSamples.FlyingMotion;
+                    // Slot 9 contains the exact Jump In Place frame 6. Tip the model top-first;
+                    // owner yaw continues to follow physics velocity without changing the collider.
+                    ApplyRotatedFrame(ref skin, ref samples, EnemyAnimationSamples.FlyingMotion,
+                        0, 0, 0, quaternion.RotateX(math.PI * .5f), pivot);
+                    return;
                 }
                 else
                 {
@@ -617,7 +624,7 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 playback.WasRecovering = (byte)(launch.Phase == EnemyLaunchPhase.Recovering ? 1 : 0);
                 bool oneShot = motion == EnemyAnimationSamples.ImpactMotion;
-                if (motion != playback.GoblinMotion || restart) playback.Phase = 0;
+                if (motion != playback.GoblinMotion) playback.Phase = 0;
                 else playback.Phase += DeltaTime / math.max(.01f, samples.Durations[motion]);
                 playback.Phase = oneShot ? math.saturate(playback.Phase) : math.frac(playback.Phase);
                 playback.GoblinMotion = (byte)motion;

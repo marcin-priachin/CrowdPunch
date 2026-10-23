@@ -13,6 +13,12 @@ root while instantiating the user-authored Goblin Trooper variant as its visual 
 The pack's Humanoid clips are evaluated through its avatar in the Editor into the existing
 11-motion, 32-frame sampled skinning format. `EnemyAnimationProfile.Goblin` selects idle,
 walk/run, charging Run Forward, damage, airborne jump, Die and reverse-Die rise.
+Both Goblin profiles hold motion 9 at the original Jump In Place frame 6 (6/30 seconds),
+with identical matrices across all 32 samples. Playback uses the first sample without
+advancing and tips the skin 90 degrees top-forward around LaunchPivot. Both prefab
+builders configure the owner-centred pivot and include the tipped pose in render bounds.
+Body and one-bone equipment use the same pose/pivot; owner yaw and physics keep their
+existing responsibilities. Existing prefabs were updated in place, preserving authored scale.
 Recovery divides the existing recovery clock between fall and rise; no gameplay clock or
 physics transform is owned by animation. The mace is converted from a rigid hand attachment
 to a one-bone skinned mesh so the same sampled ECS path animates its attachment.

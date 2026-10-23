@@ -260,6 +260,54 @@ namespace CrowdPunch.Tests
             Assert.That(Pose.x, Is.EqualTo(2));
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Info004GoblinLaunchHoldsPoseTopForwardThroughTimeAndRepunch(bool ranged)
+        {
+            UseGoblin();
+            var em = world.EntityManager;
+            if (ranged) em.AddComponentData(owner, new RangedAttackState());
+            var animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.LaunchPivot = new float3(0, 1, 0);
+            em.SetComponentData(visual, animation);
+            var velocity = new PhysicsVelocity { Linear = new float3(6, 0, 3) };
+            em.SetComponentData(owner, velocity);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            var held = em.GetBuffer<SkinMatrix>(visual)[0].Value;
+            Assert.That(math.distance(held.c1, math.forward()), Is.LessThan(.0001f), "Model top must point along owner forward.");
+            Assert.That(math.distance(held.c3, new float3(9, 1, -1)), Is.LessThan(.0001f), "Rotate around the physics owner, not the model feet.");
+            Tick(2);
+            Assert.That(em.GetBuffer<SkinMatrix>(visual)[0].Value, Is.EqualTo(held));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 2 });
+            Tick();
+            Assert.That(em.GetBuffer<SkinMatrix>(visual)[0].Value, Is.EqualTo(held));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner).Linear, Is.EqualTo(velocity.Linear));
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [TestCase("Baseline")]
+        [TestCase("Ranged")]
+        public void Info004GoblinLaunchSamplesAreFrozenForBodyAndEquipment(string kind)
+        {
+            var root = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>("Assets/CrowdPunch/Prefabs/Enemy" + kind + ".prefab");
+            foreach (var authoring in root.GetComponentsInChildren<CrowdPunch.Authoring.EnemyAnimationAuthoring>(true))
+            {
+                Assert.That(authoring.RotateLaunchAroundOwner, Is.True);
+                Assert.That(authoring.LaunchPivotHeight, Is.Zero);
+                using var stream = new System.IO.MemoryStream(authoring.Samples.bytes);
+                using var reader = new System.IO.BinaryReader(stream);
+                Assert.That(reader.ReadInt32(), Is.EqualTo(0x43504133));
+                reader.ReadString(); int bones = reader.ReadInt32(), frames = reader.ReadInt32();
+                for (int bone = 0; bone < bones; bone++) reader.ReadString();
+                for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++) reader.ReadSingle();
+                stream.Position += (long)EnemyAnimationSamples.FlyingMotion * frames * bones * 48;
+                var held = reader.ReadBytes(bones * 48);
+                for (int frame = 1; frame < frames; frame++)
+                    Assert.That(reader.ReadBytes(bones * 48), Is.EqualTo(held), authoring.name + " frame " + frame);
+            }
+        }
+
         [Test]
         public void Combat011GoblinLaunchRecoveryDefeatAndReuseKeepPhysicsOwnership()
         {

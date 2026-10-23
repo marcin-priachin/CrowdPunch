@@ -931,15 +931,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3853331442095048482, guid: 3b1eac3ce9b06804ba09deff8b6d28c8, type: 3}
       propertyPath: m_AABB.m_Extent.x
-      value: 0.96999824
+      value: 0.97999823
       objectReference: {fileID: 0}
     - target: {fileID: 3853331442095048482, guid: 3b1eac3ce9b06804ba09deff8b6d28c8, type: 3}
       propertyPath: m_AABB.m_Extent.y
-      value: 2.384057
+      value: 2.394057
       objectReference: {fileID: 0}
     - target: {fileID: 3853331442095048482, guid: 3b1eac3ce9b06804ba09deff8b6d28c8, type: 3}
       propertyPath: m_AABB.m_Extent.z
-      value: 1.307395
+      value: 1.317395
       objectReference: {fileID: 0}
     - target: {fileID: 3853331442095048482, guid: 3b1eac3ce9b06804ba09deff8b6d28c8, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -1786,7 +1786,7 @@ MonoBehaviour:
   JogSamples: {fileID: 4900000, guid: d25a4d4197266b04c971a523864b5564, type: 3}
   Profile: 10
   SpawnMotion: 7
-  RotateLaunchAroundOwner: 0
+  RotateLaunchAroundOwner: 1
   LaunchPivotHeight: 0
   BlendResponse: 12
 --- !u!4 &3366600066323604411 stripped
@@ -1863,7 +1863,7 @@ SkinnedMeshRenderer:
   m_RootBone: {fileID: 7549043518013368026}
   m_AABB:
     m_Center: {x: -0.031013668, y: 0.5043472, z: 0.2875439}
-    m_Extent: {x: 0.90455335, y: 2.22661, z: 1.5823972}
+    m_Extent: {x: 0.91455334, y: 2.23661, z: 1.5923972}
   m_DirtyAABB: 0
 --- !u!114 &7463239199316062814
 MonoBehaviour:
@@ -1881,7 +1881,7 @@ MonoBehaviour:
   JogSamples: {fileID: 0}
   Profile: 10
   SpawnMotion: 7
-  RotateLaunchAroundOwner: 0
+  RotateLaunchAroundOwner: 1
   LaunchPivotHeight: 0
   BlendResponse: 12
 --- !u!4 &7549043518013368026 stripped
@@ -1953,7 +1953,7 @@ SkinnedMeshRenderer:
   m_RootBone: {fileID: 7549043518013368026}
   m_AABB:
     m_Center: {x: 0.18514729, y: 0.09486747, z: 0.46765798}
-    m_Extent: {x: 1.2505994, y: 1.9338486, z: 1.1354514}
+    m_Extent: {x: 1.2605994, y: 1.9438486, z: 1.1454514}
   m_DirtyAABB: 0
 --- !u!114 &4139878310612868049
 MonoBehaviour:
@@ -1971,6 +1971,6 @@ MonoBehaviour:
   JogSamples: {fileID: 0}
   Profile: 10
   SpawnMotion: 7
-  RotateLaunchAroundOwner: 0
+  RotateLaunchAroundOwner: 1
   LaunchPivotHeight: 0
   BlendResponse: 12
