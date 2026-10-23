@@ -11,6 +11,30 @@ namespace CrowdPunch.Tests
 {
     public sealed class EnemyLandingLifetimeTests
     {
+        [TestCase(0, 1.3333334f)]
+        [TestCase(1, .16666667f)]
+        public void Enemy013BombRetainsItsAuthoredDefeatVisualWithoutPriorLaunch(byte exploded, float duration)
+        {
+            using var world = new World("Bomb defeat visual");
+            var em = world.EntityManager;
+            var enemy = em.CreateEntity(typeof(Enemy), typeof(RespawnRequest), typeof(DeathRequest),
+                typeof(EnemyLaunchState), typeof(EnemyLandingAnimation), typeof(ExplosiveEnemyState));
+            em.SetComponentData(enemy, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            em.SetComponentData(enemy, new ExplosiveEnemyState { HasExploded = exploded });
+            em.SetComponentData(enemy, new EnemyLandingAnimation { Duration = .16666667f, OrdinaryDefeatDuration = 1.3333334f });
+            em.SetComponentEnabled<RespawnRequest>(enemy, false);
+            world.SetTime(new TimeData(10, .02f));
+            var system = world.GetOrCreateSystem<DefeatedEnemyLifecycleSystem>();
+            system.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<RespawnRequest>(enemy).PoolNotBefore, Is.EqualTo(10 + duration).Within(.0001));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(enemy).Phase, Is.EqualTo(EnemyLaunchPhase.Defeated));
+            Assert.That(em.GetComponentData<ExplosiveEnemyState>(enemy).HasExploded, Is.EqualTo(exploded));
+            world.SetTime(new TimeData(10.1, .02f));
+            system.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<RespawnRequest>(enemy).PoolNotBefore, Is.EqualTo(10 + duration).Within(.0001),
+                "The death visual cannot extend its own pooling deadline each frame.");
+        }
+
         [Test]
         public void Combat011DefeatedBodyStaysVisibleDuringImpact()
         {

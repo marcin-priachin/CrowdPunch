@@ -171,9 +171,11 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<PhysicsVelocity>(enemy).Linear, Is.EqualTo(velocity));
         }
 
-        [TestCase(false)]
-        [TestCase(true)]
-        public void Info004RangedSpawnPreservesAuthoredProportions(bool authoredScale)
+        [TestCase(false, EnemyArchetypeKind.Ranged)]
+        [TestCase(true, EnemyArchetypeKind.Ranged)]
+        [TestCase(false, EnemyArchetypeKind.Explosive)]
+        [TestCase(true, EnemyArchetypeKind.Explosive)]
+        public void Info004SpawnPreservesAuthoredProportions(bool authoredScale, EnemyArchetypeKind archetype)
         {
             var em = world.EntityManager;
             var prefab = em.CreateEntity(typeof(Prefab), typeof(Enemy), typeof(LocalTransform),
@@ -188,7 +190,7 @@ namespace CrowdPunch.Tests
                 InitialCount = 1,
                 Profile = new EnemySpawnProfile
                 {
-                    EnemyPrefab = prefab, Archetype = EnemyArchetypeKind.Ranged,
+                    EnemyPrefab = prefab, Archetype = archetype,
                     Health = new Health { Current = 10, Max = 10 },
                     RangedSettings = new RangedEnemySettings { ProjectileLaunchProgress = .4f }
                 }
@@ -197,14 +199,16 @@ namespace CrowdPunch.Tests
             em.CompleteAllTrackedJobs();
             using var query = em.CreateEntityQuery(new EntityQueryDesc
             {
-                All = new[] { ComponentType.ReadOnly<RangedAttackState>() },
+                All = new[] { archetype == EnemyArchetypeKind.Ranged
+                    ? ComponentType.ReadOnly<RangedAttackState>() : ComponentType.ReadOnly<ExplosiveEnemyState>() },
                 Options = EntityQueryOptions.IncludeDisabledEntities
             });
             var spawned = query.GetSingletonEntity();
             Assert.That(em.HasComponent<PostTransformMatrix>(spawned), Is.EqualTo(authoredScale),
-                "Ranged identity must not add scripted proportion scaling.");
+                "Enemy identity must not add scripted proportion scaling.");
             if (authoredScale) Assert.That(em.GetComponentData<PostTransformMatrix>(spawned).Value, Is.EqualTo(original.Value));
-            Assert.That(em.GetComponentData<RangedEnemySettings>(spawned).ProjectileLaunchProgress, Is.EqualTo(.4f));
+            if (archetype == EnemyArchetypeKind.Ranged)
+                Assert.That(em.GetComponentData<RangedEnemySettings>(spawned).ProjectileLaunchProgress, Is.EqualTo(.4f));
         }
     }
 }

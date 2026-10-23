@@ -601,6 +601,35 @@ a 36x38m clipped court with two navigation obstacles and a single finite 12 Base
 Bootstrap's legacy array includes `24 Cut The Tail`; no campaign catalog or player
 build scene list changes. Rebuilding this encounter is explicit and restores open scenes.
 
+## Bomb Exploder Presentation (2026-10-23, INFO-004, ENEMY-010/013)
+
+`EnemyExplosivePrefabBuilder` wraps `Assets/Bomb Cute Series/Prefabs/Bomb.prefab`
+in the existing Explosive physics root and retains its prefab GUID and spawn references.
+It preserves the source prefab's authored scale and proportions; floor alignment
+changes only the visual position. Explosive spawn initialization adds no role-specific
+`PostTransformMatrix` scale, preserving the prefab's baked transforms.
+Death samples (Die and Explode) translate the complete pose upward only when a
+skinned vertex would cross the capsule floor. Sampling preserves bone rotation,
+scale and proportions and computes culling bounds after this correction.
+The Bomb texture uses `CrowdPunch/Cel/Enemy`; monster-atlas reapplication skips this
+material folder. Native pack spark particles are omitted because they do not follow
+ECS skin matrices. No enemy GameObject Animator runs in gameplay.
+
+The existing 11-slot, 32-frame sample format stores Idle, Forward In Place,
+Going To Explode, Bite Attack (two reserved slots), Take Damage, Spawn (recovery),
+Spawn (optional emergence), Die, Take Damage (launch), and Explode. The Explosive
+profile plays authored contact pursuit, recoil, recovery and defeat poses without
+procedural pitch, tint flashes, pulsing emission or squash. Render children are
+marked `EnemyVisualOwner.AnimationDriven`, as for the Goblins. Launch sequence
+changes restart recoil; pooling resets playback. Optional ground spawning remains
+at its existing setting.
+
+Immediate detonation and damage remain owned by the combat systems. After defeat,
+`EnemyLandingAnimation.OrdinaryDefeatDuration` allows the Bomb's Die clip to finish;
+an exploded body instead uses the short Explode duration, including when contact
+detonation had no prior launch. `DefeatedEnemyLifecycleSystem` records the visual
+deadline once before pooling. See `Docs/Verification/BombExploder.md`.
+
 ## Animated Ground Spawning (2026-10-22, INFO-006, COMBAT-018)
 
 `EnemySpawnSettings.SpawnFromGround` is optional and defaults off. Profile baking copies

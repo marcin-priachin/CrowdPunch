@@ -38,6 +38,16 @@ namespace CrowdPunch.Systems.Lifetime
                     && SystemAPI.HasComponent<EnemyLaunchState>(enemy)
                     && SystemAPI.GetComponent<EnemyLaunchState>(enemy).LaunchSequence != 0
                     ? SystemAPI.GetComponent<EnemyLandingAnimation>(enemy).Duration : 0d;
+                // INFO-004 / ENEMY-013: retain the Bomb only for its authored visual after
+                // damage and detonation have resolved, including direct player contact.
+                if (SystemAPI.HasComponent<EnemyLandingAnimation>(enemy)
+                    && SystemAPI.GetComponent<EnemyLandingAnimation>(enemy).OrdinaryDefeatDuration > 0)
+                {
+                    var animation = SystemAPI.GetComponent<EnemyLandingAnimation>(enemy);
+                    landingDuration = SystemAPI.HasComponent<ExplosiveEnemyState>(enemy)
+                        && SystemAPI.GetComponent<ExplosiveEnemyState>(enemy).HasExploded != 0
+                        ? animation.Duration : animation.OrdinaryDefeatDuration;
+                }
                 respawnRequest.ValueRW = new RespawnRequest
                 {
                     ForcePoolAt = elapsedTime + MaximumDefeatTravelSeconds,

@@ -30,7 +30,9 @@ namespace CrowdPunch.Systems.Presentation
                     });
                 if (!chicken && !rolling && !dino && !gatekeeper) commands.AddComponent(animation.ValueRO.Owner, new EnemyLandingAnimation
                 {
-                    Duration = animation.ValueRO.Samples.Value.Durations[EnemyAnimationSamples.ImpactMotion]
+                    Duration = animation.ValueRO.Samples.Value.Durations[EnemyAnimationSamples.ImpactMotion],
+                    OrdinaryDefeatDuration = animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Explosive
+                        ? animation.ValueRO.Samples.Value.Durations[8] : 0
                 });
                 foreach (var child in additional)
                 {
@@ -44,7 +46,8 @@ namespace CrowdPunch.Systems.Presentation
                     {
                         commands.AddComponent<EnemyVisualDeformation>(entity);
                         commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner, UsesAtlas = 1,
-                            AnimationDriven = (byte)(animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Goblin ? 1 : 0) });
+                            AnimationDriven = (byte)(animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Goblin
+                                || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Explosive ? 1 : 0) });
                         if (SystemAPI.HasComponent<SnakeHead>(animation.ValueRO.Owner))
                             commands.AddComponent(entity, new SnakeBodyColor { Value = new float4(1f) });
                     }

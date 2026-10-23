@@ -339,11 +339,15 @@ namespace CrowdPunch.Tests
             Assert.That(Pose.x, Is.Zero);
         }
 
-        [Test]
-        public void Info004GoblinBypassesTintAndProceduralDeformation()
+        [TestCase(EnemyAnimationProfile.Goblin)]
+        [TestCase(EnemyAnimationProfile.Explosive)]
+        public void Info004AuthoredAnimationBypassesTintAndProceduralDeformation(EnemyAnimationProfile profile)
         {
             UseGoblin();
             var em = world.EntityManager;
+            var animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)profile;
+            em.SetComponentData(visual, animation);
             em.AddComponentData(owner, new EnemyArchetype { Value = EnemyArchetypeKind.Baseline });
             em.AddComponentData(owner, new EnemyImpactFeedback { Flash = 1, FlashRemaining = 1, FlashDuration = 1,
                 Intensity = 1, Squash = 1, VisualRemaining = 1, VisualDuration = 1 });
@@ -497,12 +501,14 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Enemy010ExplosiveUsesIdleWalkAndDeathWithoutDyingDuringRecovery()
+        public void Enemy013BombUsesAuthoredMotionWithoutChangingDetonationState()
         {
             var em = world.EntityManager;
             EnemyAnimation animation = em.GetComponentData<EnemyAnimation>(visual);
             animation.Profile = (byte)EnemyAnimationProfile.Explosive;
             em.SetComponentData(visual, animation);
+            em.AddComponentData(owner, new ExplosiveEnemyState());
+            em.AddComponentData(owner, new EnemyContactAttemptState());
 
             Tick();
             Assert.That(Pose.x, Is.Zero, "Idle should drive a stationary Explosive.");
@@ -511,18 +517,36 @@ namespace CrowdPunch.Tests
             Tick();
             Assert.That(Pose.x, Is.EqualTo(1f), "Walk should drive movement.");
 
+            em.SetComponentData(owner, new EnemyContactAttemptState { IsAttempting = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(2), "Contact pursuit uses Going To Explode without a timed fuse.");
+            Assert.That(em.GetComponentData<ExplosiveEnemyState>(owner).HasExploded, Is.Zero);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(owner).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
             Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(1f, 0f, 0f)), "Launch starts on the first Walk frame.");
+            Assert.That(Pose, Is.EqualTo(new float3(9f, 0f, 0f)), "Launch starts on the first Take Damage frame.");
 
-            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering });
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
             em.SetComponentData(owner, new DesiredMovement());
             Tick();
-            Assert.That(Pose.x, Is.Zero, "Recovery should return to Idle rather than play Death.");
+            Assert.That(Pose.x, Is.EqualTo(6), "Recovery uses the authored Spawn clip.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .25f });
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(.5f).Within(.001f), "Recovery follows the gameplay clock.");
 
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
             Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Death should begin only on defeat.");
+            Assert.That(Pose, Is.EqualTo(new float3(8f, 0f, 0f)), "An ordinary defeat uses Die without displaying an explosion.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            em.SetComponentData(owner, new EnemyContactAttemptState());
+            Tick();
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            em.SetComponentData(owner, new ExplosiveEnemyState { HasExploded = 1 });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(10f, 0f, 0f)), "Actual detonation uses Explode.");
+            Tick(2);
+            Assert.That(Pose.y, Is.EqualTo(1), "The one-shot explosion holds its final pose.");
         }
 
         [Test]
@@ -663,7 +687,8 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<LocalTransform>(owner).Position, Is.EqualTo(float3.zero));
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
             Tick(); Tick(.25f);
-            Assert.That(Pose.x, Is.Zero, "Recovering uses Idle, never the terminal Death pose.");
+            Assert.That(Pose.x, Is.EqualTo(profile == EnemyAnimationProfile.Explosive ? 6 : 0),
+                "Recovering uses an authored recovery or Idle, never the terminal death pose.");
             Assert.That(em.GetBuffer<SkinMatrix>(visual)[0].Value.c1.z, Is.EqualTo(0).Within(.001f));
         }
 
@@ -674,15 +699,43 @@ namespace CrowdPunch.Tests
             try
             {
                 var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                var source = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(
+                    "Assets/Bomb Cute Series/Prefabs/Bomb.prefab");
+                var configuredScale = animator.transform.localScale;
+                var sourceScale = source.transform.localScale;
+                float authoredSize = configuredScale.x / sourceScale.x;
+                Assert.That(configuredScale.y / sourceScale.y, Is.EqualTo(authoredSize).Within(.001f));
+                Assert.That(configuredScale.z / sourceScale.z, Is.EqualTo(authoredSize).Within(.001f),
+                    "Inspector-authored uniform sizing may vary; source proportions must be preserved.");
                 foreach (var authoring in root.GetComponentsInChildren<CrowdPunch.Authoring.EnemyAnimationAuthoring>())
                 {
                     var renderer = authoring.GetComponent<UnityEngine.SkinnedMeshRenderer>();
-                    Assert.That(renderer.name, Does.StartWith("Green_Blob"), "The Exploder uses the smooth blob silhouette.");
-                    Assert.That(renderer.sharedMaterial.GetFloat("_ExploderPulse"), Is.GreaterThan(0));
+                    Assert.That(renderer.name, Is.EqualTo("Bomb"));
+                    Assert.That(renderer.bones.Length, Is.EqualTo(6));
+                    Assert.That(renderer.sharedMaterial.shader.name, Is.EqualTo("CrowdPunch/Cel/Enemy"));
+                    Assert.That(renderer.sharedMaterial.GetFloat("_ExploderPulse"), Is.Zero);
+                    Assert.That(UnityEditor.AssetDatabase.GetAssetPath(renderer.sharedMaterial.GetTexture("_ColorMap")),
+                        Is.EqualTo("Assets/Bomb Cute Series/Textures/Bomb.psd"));
                     Assert.That(renderer.localBounds.center.magnitude, Is.LessThan(4f),
-                        "The eye's visibility bounds must stay on the blob, not inherit the FBX scale twice.");
+                        "Bounds must cover the authored Bomb poses without inheriting FBX scale twice.");
                     Assert.That(renderer.localBounds.extents.magnitude, Is.LessThan(5f));
                     Assert.That(authoring.Profile, Is.EqualTo(EnemyAnimationProfile.Explosive));
+                    var vertices = renderer.sharedMesh.vertices;
+                    var weights = renderer.sharedMesh.boneWeights;
+                    var bindposes = renderer.sharedMesh.bindposes;
+                    float floor = float.MaxValue;
+                    for (int vertex = 0; vertex < vertices.Length; vertex++)
+                    {
+                        var w = weights[vertex];
+                        var v = vertices[vertex];
+                        UnityEngine.Vector3 p = renderer.bones[w.boneIndex0].localToWorldMatrix.MultiplyPoint3x4(bindposes[w.boneIndex0].MultiplyPoint3x4(v)) * w.weight0
+                            + renderer.bones[w.boneIndex1].localToWorldMatrix.MultiplyPoint3x4(bindposes[w.boneIndex1].MultiplyPoint3x4(v)) * w.weight1
+                            + renderer.bones[w.boneIndex2].localToWorldMatrix.MultiplyPoint3x4(bindposes[w.boneIndex2].MultiplyPoint3x4(v)) * w.weight2
+                            + renderer.bones[w.boneIndex3].localToWorldMatrix.MultiplyPoint3x4(bindposes[w.boneIndex3].MultiplyPoint3x4(v)) * w.weight3;
+                        floor = UnityEngine.Mathf.Min(floor, root.transform.InverseTransformPoint(p).y);
+                    }
+                    Assert.That(floor, Is.GreaterThanOrEqualTo(-1.005f),
+                        "The upright Bomb must clear the capsule floor while retaining its Inspector-authored offset.");
                     using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
                     Assert.That(reader.ReadInt32(), Is.EqualTo(0x43504133));
                     string currentHash = UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.runtimeAnimatorController)).ToString()
@@ -690,9 +743,10 @@ namespace CrowdPunch.Tests
                         + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.avatar));
                     Assert.That(reader.ReadString(), Is.EqualTo(currentHash), "Stale samples prevent the animation baker from attaching playback.");
                     int bones = reader.ReadInt32();
-                    reader.ReadInt32();
+                    int frames = reader.ReadInt32();
                     for (int bone = 0; bone < bones; bone++) reader.ReadString();
                     for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++) reader.ReadSingle();
+                    long matrixStart = reader.BaseStream.Position;
                     for (int bone = 0; bone < bones; bone++)
                     {
                         var idle = animator.transform.worldToLocalMatrix * renderer.bones[bone].localToWorldMatrix * renderer.sharedMesh.bindposes[bone];
@@ -700,6 +754,96 @@ namespace CrowdPunch.Tests
                             for (int row = 0; row < 3; row++)
                                 Assert.That(reader.ReadSingle(), Is.EqualTo(idle[row, column]).Within(.001f),
                                     "The saved skeleton must match upright Idle, not the final sampled Death pose.");
+                    }
+                    foreach (int motion in new[] { 0, 1, 2, 5, 6, 8, 9, 10 })
+                    {
+                        reader.BaseStream.Position = matrixStart + motion * frames * bones * 48;
+                        byte[] first = reader.ReadBytes(bones * 48);
+                        reader.BaseStream.Position = matrixStart + (motion * frames + frames / 2) * bones * 48;
+                        Assert.That(reader.ReadBytes(bones * 48), Is.Not.EqualTo(first),
+                            $"Bomb motion {motion} must contain animated poses.");
+                    }
+                }
+            }
+            finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        [Test]
+        public void Info004BombDeathSamplesStayAboveFloorIncludingInterpolatedPoses()
+        {
+            var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemyExplosive.prefab");
+            try
+            {
+                var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                var renderer = root.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
+                var authoring = renderer.GetComponent<CrowdPunch.Authoring.EnemyAnimationAuthoring>();
+                var collider = root.GetComponent<UnityEngine.CapsuleCollider>();
+                float floor = collider.center.y - collider.height * .5f;
+                var vertices = renderer.sharedMesh.vertices;
+                var weights = renderer.sharedMesh.boneWeights;
+                var toOwner = root.transform.worldToLocalMatrix * animator.transform.localToWorldMatrix;
+                using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
+                reader.ReadInt32(); reader.ReadString();
+                int bones = reader.ReadInt32(), frames = reader.ReadInt32();
+                for (int bone = 0; bone < bones; bone++) reader.ReadString();
+                for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++) reader.ReadSingle();
+                long start = reader.BaseStream.Position;
+                foreach (int motion in new[] { 8, EnemyAnimationSamples.ImpactMotion })
+                {
+                    reader.BaseStream.Position = start + motion * frames * bones * 48;
+                    var poses = new UnityEngine.Matrix4x4[frames * bones];
+                    for (int i = 0; i < poses.Length; i++)
+                    {
+                        var matrix = UnityEngine.Matrix4x4.identity;
+                        for (int column = 0; column < 4; column++)
+                            for (int row = 0; row < 3; row++) matrix[row, column] = reader.ReadSingle();
+                        poses[i] = matrix;
+                    }
+                    string clipName = motion == 8 ? "Die" : "Explode";
+                    var clip = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(
+                        $"Assets/Bomb Cute Series/FBX/Bomb@{clipName}.FBX");
+                    UnityEngine.AnimationClip sourceClip = null;
+                    foreach (var asset in clip)
+                        if (asset is UnityEngine.AnimationClip candidate && !candidate.name.StartsWith("__"))
+                            sourceClip = candidate;
+                    Assert.That(sourceClip, Is.Not.Null);
+                    var bindposes = renderer.sharedMesh.bindposes;
+                    for (int frame = 0; frame < frames; frame++)
+                    {
+                        sourceClip.SampleAnimation(animator.gameObject, sourceClip.length * frame / (frames - 1));
+                        for (int bone = 0; bone < bones; bone++)
+                        {
+                            var authored = animator.transform.worldToLocalMatrix
+                                * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
+                            for (int column = 0; column < 3; column++)
+                                for (int row = 0; row < 3; row++)
+                                    Assert.That(poses[frame * bones + bone][row, column],
+                                        Is.EqualTo(authored[row, column]).Within(.001f),
+                                        "Floor correction must preserve authored rotation, scale and proportions.");
+                        }
+                    }
+                    for (int frame = 0; frame < frames; frame++)
+                    for (int step = 0; step < 4; step++)
+                    {
+                        float blend = step * .25f;
+                        int next = UnityEngine.Mathf.Min(frame + 1, frames - 1);
+                        float minimum = float.MaxValue;
+                        for (int vertex = 0; vertex < vertices.Length; vertex++)
+                        {
+                            var w = weights[vertex];
+                            var v = vertices[vertex];
+                            var a = poses[frame * bones + w.boneIndex0].MultiplyPoint3x4(v) * w.weight0
+                                + poses[frame * bones + w.boneIndex1].MultiplyPoint3x4(v) * w.weight1
+                                + poses[frame * bones + w.boneIndex2].MultiplyPoint3x4(v) * w.weight2
+                                + poses[frame * bones + w.boneIndex3].MultiplyPoint3x4(v) * w.weight3;
+                            var b = poses[next * bones + w.boneIndex0].MultiplyPoint3x4(v) * w.weight0
+                                + poses[next * bones + w.boneIndex1].MultiplyPoint3x4(v) * w.weight1
+                                + poses[next * bones + w.boneIndex2].MultiplyPoint3x4(v) * w.weight2
+                                + poses[next * bones + w.boneIndex3].MultiplyPoint3x4(v) * w.weight3;
+                            minimum = UnityEngine.Mathf.Min(minimum, toOwner.MultiplyPoint3x4(UnityEngine.Vector3.Lerp(a, b, blend)).y);
+                        }
+                        Assert.That(minimum, Is.GreaterThanOrEqualTo(floor - .001f),
+                            $"Bomb death motion {motion}, frame {frame}, blend {blend} penetrates the floor.");
                     }
                 }
             }

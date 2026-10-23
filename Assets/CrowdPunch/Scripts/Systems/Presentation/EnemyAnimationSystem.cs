@@ -34,6 +34,7 @@ namespace CrowdPunch.Systems.Presentation
                 RangedTuning = SystemAPI.GetComponentLookup<RangedEnemySettings>(true),
                 ElitePunches = SystemAPI.GetComponentLookup<ElitePunchState>(true),
                 Health = SystemAPI.GetComponentLookup<Health>(true),
+                Exploders = SystemAPI.GetComponentLookup<ExplosiveEnemyState>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
                 SpawnAnimations = SystemAPI.GetComponentLookup<EnemySpawnAnimation>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime
@@ -59,6 +60,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<RangedEnemySettings> RangedTuning;
             [ReadOnly] public ComponentLookup<ElitePunchState> ElitePunches;
             [ReadOnly] public ComponentLookup<Health> Health;
+            [ReadOnly] public ComponentLookup<ExplosiveEnemyState> Exploders;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
             [ReadOnly] public ComponentLookup<EnemySpawnAnimation> SpawnAnimations;
             public float DeltaTime;
@@ -111,6 +113,11 @@ namespace CrowdPunch.Systems.Presentation
                         playback.Movement = 0;
                         playback.JogPhase = 0;
                     }
+                    return;
+                }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Explosive)
+                {
+                    AnimateExplosive(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
                 if (animation.Profile != (byte)EnemyAnimationProfile.Standard
@@ -175,11 +182,6 @@ namespace CrowdPunch.Systems.Presentation
                 if (animation.Profile == (byte)EnemyAnimationProfile.Dasher)
                 {
                     AnimateDasher(owner, ref playback, ref skin, ref samples, launch);
-                    return;
-                }
-                if (animation.Profile == (byte)EnemyAnimationProfile.Explosive)
-                {
-                    AnimateExplosive(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Ranged)
@@ -355,15 +357,40 @@ namespace CrowdPunch.Systems.Presentation
             private void AnimateExplosive(Entity owner, ref EnemyAnimationPlayback playback,
                 ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
             {
+                bool damaged = false;
+                if (Health.HasComponent(owner))
+                {
+                    float health = Health[owner].Current;
+                    damaged = playback.HealthInitialized != 0 && health < playback.PreviousHealth;
+                    playback.PreviousHealth = health;
+                    playback.HealthInitialized = 1;
+                }
                 if (launch.Phase == EnemyLaunchPhase.Launched)
                 {
-                    AnimateCreatureFlight(owner, ref playback, ref skin, ref samples, launch, 1, false);
+                    playback.HitActive = 0;
+                    playback.WasAttacking = 0;
+                    playback.WasRecovering = 0;
+                    playback.Landing = 0;
+                    bool newLaunch = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
+                    playback.FlightPhase = newLaunch ? 0 : math.saturate(playback.FlightPhase
+                        + DeltaTime / math.max(.01f, samples.Durations[EnemyAnimationSamples.FlyingMotion]));
+                    playback.WasLaunched = 1;
+                    playback.LaunchSequence = launch.LaunchSequence;
+                    float flightFrame = playback.FlightPhase * (samples.FrameCount - 1);
+                    int from = (int)flightFrame;
+                    ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.FlyingMotion, from,
+                        math.min(from + 1, samples.FrameCount - 1), math.frac(flightFrame));
                     return;
                 }
 
                 playback.WasLaunched = 0;
                 if (launch.Phase == EnemyLaunchPhase.Defeated)
                 {
+                    // ENEMY-013: the gameplay blast has already resolved. Only play its visual here.
+                    int deathMotion = Exploders.HasComponent(owner) && Exploders[owner].HasExploded != 0
+                        ? EnemyAnimationSamples.ImpactMotion : 8;
+                    playback.HitActive = 0;
+                    playback.WasAttacking = 0;
                     if (playback.Landing == 0)
                     {
                         playback.Landing = 1;
@@ -372,19 +399,46 @@ namespace CrowdPunch.Systems.Presentation
                     else
                     {
                         playback.ImpactPhase = math.saturate(playback.ImpactPhase
-                            + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
+                            + DeltaTime / math.max(0.01f, samples.Durations[deathMotion]));
                     }
                     float deathFrame = playback.ImpactPhase * (samples.FrameCount - 1);
                     int from = (int)deathFrame;
-                    ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
+                    ApplyFrame(ref skin, ref samples, deathMotion, from,
                         math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
                     return;
                 }
 
                 playback.Landing = 0;
-                if (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)
+                if (launch.Phase == EnemyLaunchPhase.Recovering)
+                {
+                    if (playback.WasRecovering == 0)
+                        playback.ImpactDuration = math.max(.01f, launch.RecoverySecondsRemaining);
+                    playback.WasRecovering = 1;
+                    playback.HitActive = 0;
+                    playback.WasAttacking = 0;
+                    float recoveryFrame = math.saturate(1 - launch.RecoverySecondsRemaining / playback.ImpactDuration)
+                        * (samples.FrameCount - 1);
+                    int from = (int)recoveryFrame;
+                    ApplyFrame(ref skin, ref samples, 6, from, math.min(from + 1, samples.FrameCount - 1), math.frac(recoveryFrame));
                     return;
-                int motion = Movement[owner].Speed > 0.01f ? 1 : 0;
+                }
+                playback.WasRecovering = 0;
+                if (launch.Phase != EnemyLaunchPhase.Active) return;
+                if (damaged) { playback.HitActive = 1; playback.HitPhase = 0; }
+                if (playback.HitActive != 0)
+                {
+                    float hitFrame = playback.HitPhase * (samples.FrameCount - 1);
+                    int from = (int)hitFrame;
+                    ApplyFrame(ref skin, ref samples, 5, from, math.min(from + 1, samples.FrameCount - 1), math.frac(hitFrame));
+                    playback.HitPhase = math.saturate(playback.HitPhase + DeltaTime / math.max(.01f, samples.Durations[5]));
+                    if (playback.HitPhase >= 1) playback.HitActive = 0;
+                    return;
+                }
+                bool pursuing = Contacts.HasComponent(owner)
+                    && (Contacts[owner].IsAttempting != 0 || Contacts[owner].IsWindingUp != 0);
+                int motion = pursuing ? 2 : Movement[owner].Speed > .01f ? 1 : 0;
+                if (pursuing != (playback.WasAttacking != 0)) playback.Phase = 0;
+                playback.WasAttacking = (byte)(pursuing ? 1 : 0);
                 playback.Phase = math.frac(playback.Phase
                     + DeltaTime / math.max(0.01f, samples.Durations[motion]));
                 float frame = playback.Phase * samples.FrameCount;
