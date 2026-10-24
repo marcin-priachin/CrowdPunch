@@ -20,8 +20,14 @@ namespace CrowdPunch.Systems.Initialization
                 em.SetComponentData(e,new Health { Current=t.Health,Max=t.Health });
                 em.SetComponentData(e,LocalTransform.FromPositionRotation(t.InitialPosition,t.InitialRotation));
                 em.SetComponentData(e,new PhysicsVelocity());
+                if(em.HasComponent<ChickenTurnState>(e)) em.SetComponentData(e,new ChickenTurnState());
                 em.GetBuffer<ChickenHit>(e).Clear(); em.GetBuffer<ChickenHitHistory>(e).Clear();
             }
+            using var animations=em.CreateEntityQuery(typeof(EnemyAnimation),typeof(EnemyAnimationPlayback));
+            using var renderers=animations.ToEntityArray(Allocator.Temp);
+            foreach(var renderer in renderers)
+                if(em.HasComponent<ChickenBoss>(em.GetComponentData<EnemyAnimation>(renderer).Owner))
+                    em.SetComponentData(renderer,new EnemyAnimationPlayback());
         }
     }
 }

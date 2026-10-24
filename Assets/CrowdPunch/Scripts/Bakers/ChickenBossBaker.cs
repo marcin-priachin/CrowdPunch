@@ -18,6 +18,8 @@ namespace CrowdPunch.Bakers
             t.InitialPosition=a.transform.position; t.InitialRotation=a.transform.rotation;
             t.ArenaCenter=a.arenaCenter; t.ArenaHalfSize=a.arenaHalfSize;
             AddComponent(e,t);
+            AddComponent(e,new ChickenCastTuning { Duration=math.max(.05f,a.settings.castDuration) });
+            AddComponent<ChickenTurnState>(e);
             AddComponent(e,new ChickenBoss { Stage=1, Phase=ChickenPhase.Pause, Remaining=t.OpeningPause,
                 PreviousPosition=t.InitialPosition, Destination=t.InitialPosition, Facing=t.InitialRotation });
             AddComponent(e,new Health { Current=t.Health,Max=t.Health });

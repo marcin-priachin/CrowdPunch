@@ -22,6 +22,8 @@ MonoBehaviour:
   shotAim: 0
   openingPause: 2.5
   windUp: 0.8
+  projectileLaunchFrame: 18
+  firingAnimationLastFrame: 30
   shotSpacing: 1.5
   pause: 1.6
   finalPauseMultiplier: 0.55
@@ -30,6 +32,7 @@ MonoBehaviour:
   rushDistance: 9
   sidewaysWeight: 1.5
   proximityDistance: 7
+  castDuration: 1
   stagger: 0.65
   invulnerability: 1.15
   bodyRadius: 1.7

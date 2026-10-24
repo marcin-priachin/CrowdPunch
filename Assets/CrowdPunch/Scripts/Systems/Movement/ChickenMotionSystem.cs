@@ -8,18 +8,21 @@ using Unity.Physics;
 using Unity.Transforms;
 namespace CrowdPunch.Systems.Movement
 {
-    [BurstCompile, UpdateInGroup(typeof(GamePrePhysicsGroup)), UpdateAfter(typeof(ChickenAttackSystem))]
+    [BurstCompile, UpdateInGroup(typeof(GamePrePhysicsGroup)), UpdateAfter(typeof(ChickenTeleportSystem))]
     public partial struct ChickenMotionSystem : ISystem
     {
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             float dt=math.max(.0001f,SystemAPI.Time.DeltaTime);
-            foreach(var (boss,tuning,transform,mass,velocity) in SystemAPI.Query<RefRO<ChickenBoss>,RefRO<ChickenTuning>,RefRO<LocalTransform>,RefRO<PhysicsMass>,RefRW<PhysicsVelocity>>())
+            foreach(var (boss,tuning,transform,mass,velocity,turn) in SystemAPI.Query<RefRO<ChickenBoss>,RefRO<ChickenTuning>,RefRO<LocalTransform>,RefRO<PhysicsMass>,RefRW<PhysicsVelocity>,RefRW<ChickenTurnState>>())
             {
                 var b=boss.ValueRO; var t=tuning.ValueRO;
                 float3 delta=b.Destination-transform.ValueRO.Position;
                 float speed=t.RushSpeed*(b.Stage==3?t.FinalRushMultiplier:1);
+                float3 forward=math.forward(transform.ValueRO.Rotation), target=math.forward(b.Facing);
+                turn.ValueRW.YawRate=b.Phase==ChickenPhase.Pause
+                    ? math.atan2(math.cross(forward,target).y,math.dot(forward,target))/dt : 0;
                 velocity.ValueRW.Linear=b.Phase==ChickenPhase.Rush?math.normalizesafe(delta)*math.min(speed,math.length(delta)/dt):float3.zero;
                 velocity.ValueRW.Angular=PhysicsVelocity.CalculateVelocityToTarget(
                     mass.ValueRO,
