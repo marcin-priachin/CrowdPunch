@@ -61,7 +61,7 @@ namespace CrowdPunch.Editor
         private static readonly string[] EliteCrowd = { "eliteCrowdCorridorRadius", "eliteCrowdDistanceBeyondPlayer", "eliteCrowdNearPlayerWeight", "eliteMinimumCrowdScore" };
         private static readonly string[] EliteRepositioning = { "eliteDesiredPunchDistance", "elitePositionTolerance", "eliteAimAngleToleranceDegrees", "elitePlayerMovementInvalidationDistance", "eliteTargetMovementInvalidationDistance", "eliteSetupMovementSpeedMultiplier", "eliteApplySeparationDuringSetup" };
         private static readonly string[] EliteEffects = { "elitePunchRange", "elitePunchRadius", "eliteLaunchForce", "elitePunchDamage", "elitePushDirectionPositionWeight", "eliteInteractionMode", "eliteProjectileReceivesDamage", "eliteAffectActive", "eliteAffectRecovering", "eliteAffectLaunched", "eliteCanDirectlyHitPlayer", "eliteDirectPlayerDamage", "elitePlayerPush", "elitePlayerInvincibilityDuration" };
-        private static readonly string[] EliteWindUp = { "eliteWindUpDuration", "eliteEnableTelegraph", "eliteTelegraphDuration" };
+        private static readonly string[] EliteWindUp = { "eliteWindUpDuration", "eliteEnemyLaunchFrame", "eliteEnableTelegraph", "eliteTelegraphDuration" };
 
         public override void OnInspectorGUI()
         {
@@ -123,7 +123,7 @@ namespace CrowdPunch.Editor
             DrawSection("Elite Punch - Crowd Shot", EliteCrowd);
             DrawSection("Elite Punch - Repositioning", EliteRepositioning);
             DrawSection("Elite Punch - Punch Effects", EliteEffects);
-            DrawSection("Elite Punch - Optional Wind-up / Telegraph", EliteWindUp);
+            DrawSection("Elite Punch - Sweep Animation / Telegraph", EliteWindUp);
             SerializedProperty active = serializedObject.FindProperty("eliteAllowActiveTargets");
             SerializedProperty recovering = serializedObject.FindProperty("eliteAllowRecoveringTargets");
             if (!active.boolValue && !recovering.boolValue)
@@ -135,11 +135,7 @@ namespace CrowdPunch.Editor
             float range = serializedObject.FindProperty("elitePunchRange").floatValue;
             float tolerance = serializedObject.FindProperty("elitePositionTolerance").floatValue;
             if (distance > range + tolerance) EditorGUILayout.HelpBox("Desired punch distance is outside the punch range, making valid setup impossible.", MessageType.Error);
-            float timeout = serializedObject.FindProperty("eliteMaximumSetupDuration").floatValue;
-            float windup = serializedObject.FindProperty("eliteWindUpDuration").floatValue;
-            if (timeout < windup) EditorGUILayout.HelpBox("Setup timeout is shorter than wind-up.", MessageType.Error);
-            if (serializedObject.FindProperty("eliteEnableTelegraph").boolValue)
-                EditorGUILayout.HelpBox("Telegraph state is baked and inspectable; a dedicated grey-box presentation renderer is not yet assigned.", MessageType.Info);
+            EditorGUILayout.HelpBox("Enemy Launch Frame uses the original Sweep Attack frames (zero-based). Wind Up Duration is time to contact. The selected target stays committed through movement; the rest of the sweep plays once before cooldown.", MessageType.Info);
         }
 
         private void DrawArchetypeSeparationOverrides()
@@ -179,6 +175,11 @@ namespace CrowdPunch.Editor
                 {
                     int lastFrame = System.Math.Max(1, serializedObject.FindProperty("firingAnimationLastFrame").intValue);
                     EditorGUILayout.IntSlider(property, 0, lastFrame);
+                }
+                else if (propertyName == "eliteEnemyLaunchFrame" && property != null)
+                {
+                    int lastFrame = System.Math.Max(1, serializedObject.FindProperty("eliteSweepAnimationLastFrame").intValue);
+                    EditorGUILayout.IntSlider(property, 0, lastFrame, new UnityEngine.GUIContent("Enemy Launch Frame"));
                 }
                 else if (property != null)
                     EditorGUILayout.PropertyField(property, true);

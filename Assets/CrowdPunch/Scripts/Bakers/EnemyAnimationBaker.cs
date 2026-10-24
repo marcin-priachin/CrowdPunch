@@ -67,6 +67,7 @@ namespace CrowdPunch.Bakers
                 Profile = (byte)authoring.Profile,
                 SpawnMotion = authoring.SpawnMotion,
                 BlendResponse = math.max(0f, authoring.BlendResponse),
+                MaxLegAnimationSpeed = math.max(0f, authoring.MaxLegAnimationSpeed),
                 LaunchPivot = authoring.RotateLaunchAroundOwner && owner != null
                     ? (float3)animator.transform.InverseTransformPoint(owner.transform.position
                         + owner.transform.up * authoring.LaunchPivotHeight) : float3.zero
@@ -135,6 +136,10 @@ namespace CrowdPunch.Bakers
             }
             var durations = builder.Allocate(ref data.Durations, EnemyJogSamples.DirectionCount);
             for (int i = 0; i < durations.Length; i++) durations[i] = reader.ReadSingle();
+            var distances = builder.Allocate(ref data.CycleDistances, EnemyJogSamples.DirectionCount);
+            for (int i = 0; i < distances.Length; i++)
+                distances[i] = authoring.JogCycleDistances != null && authoring.JogCycleDistances.Length == distances.Length
+                    ? math.max(.01f, authoring.JogCycleDistances[i]) : 2f;
             var matrices = builder.Allocate(ref data.Matrices, EnemyJogSamples.DirectionCount * data.FrameCount * legCount);
             for (int i = 0; i < matrices.Length; i++) matrices[i] = new float3x4(ReadColumn(reader), ReadColumn(reader), ReadColumn(reader), ReadColumn(reader));
             return builder.CreateBlobAssetReference<EnemyJogSamples>(Allocator.Persistent);

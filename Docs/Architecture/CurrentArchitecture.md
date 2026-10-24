@@ -6,6 +6,54 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Goblin Giant Elite (2026-10-24, ENEMY-009, INFO-004/006, VISION-006)
+
+`EnemyElitePrefabBuilder` retains `EliteEnemy.prefab` and its physics footprint while
+instantiating the supplied Goblin Giant Elite Variant at its authored scale. Translation
+aligns the visual floor with the capsule floor. The Humanoid Giant clips are sampled
+into the existing 11-motion format; slots 3/4 use Sweep Attack, 5 Take Damage, 6 reverse
+Die, 7 Spawn and 10 Die. `EnemyAnimationProfile.Goblin` uses the existing animation-driven
+visual flag, suppressing material pulses and procedural shake/squash. Dedicated
+`GoblinElite` materials preserve the source texture under `CrowdPunch/Cel/Enemy` and
+are excluded from monster-atlas replacement. Spawn From Ground is enabled in the
+Elite settings and reuses the warning, ground locking and respawn path.
+
+`GoblinJogSampling` also generates Elite pelvis-relative leg samples. Elite full-body
+and directional leg blending interpolate rotations separately from authored scale,
+preventing shrinking between rotated poses. Upper-body and equipment poses remain
+authored; skinning owns no physics transform or gameplay movement.
+
+Elite locomotion reads resolved planar `PhysicsVelocity` after simulation, expressed
+relative to current facing. It uses full directional leg poses even during slow setup
+adjustments and keeps stepping through residual braking motion; an old contact-attempt
+flag cannot suppress this layer. Direction changes do not vector-blend through idle.
+`GoblinJogSampling` measures both feet's projected travel for each of the eight retargeted
+jogs at authored scale and stores `EnemyAnimationAuthoring.JogCycleDistances` on the
+prefab. The baker adds those distances to `EnemyJogSamples`; Elite gait phase advances
+by actual travel divided by the blended directional stride, independent of the authored
+maximum movement speed. Idle/blocked bodies stop locomotion. Baseline and Ranged retain
+their existing playback path; spawn, recovery, defeat and authored upper-body poses
+keep their existing ownership.
+
+`EnemyAnimationAuthoring.MaxLegAnimationSpeed` caps jog playback relative to the original
+blended clip duration (1 = original speed, 2 = double, 0 = unlimited). It is baked into
+`EnemyAnimation` and clamps only gait phase advancement. The Elite prefab defaults to
+2, and rebuilding it preserves the saved cap. Physical movement and upper-body clocks
+are independent; reaching a low cap can permit foot sliding at higher travel speeds.
+
+`ElitePunchSystem` enters `CommittedSweep` only after valid staging/alignment and
+effect eligibility. It owns elapsed sweep time, normalized pose progress, one-shot
+launch state, target reservation and committed direction. Setup revalidation and
+navigation recovery no longer run during the committed animation. Crowd support holds
+the selected projectile's staging position, and facing preserves the committed yaw.
+The selected live projectile bypasses punch-volume and active/recovering/launched
+eligibility changes at contact; other area victims retain ordinary geometry and flags.
+Armor, defeat and pooling gates remain authoritative. Presentation reads sweep progress
+directly, so damage feedback cannot restart the committed animation or move contact.
+Wind Up Duration retimes anticipation to the original Enemy Launch Frame; the remaining
+Sweep Attack frames play at source rate before cooldown. The builder records the
+source clip's last frame and frame rate for the Inspector slider and baked timing.
+
 ## Goblin Minion Dasher Presentation (2026-10-23, ENEMY-005..008, INFO-004, VISION-006)
 
 `EnemyDasherPrefabBuilder` instantiates the supplied Goblin Minion prefab inside the

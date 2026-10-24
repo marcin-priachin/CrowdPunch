@@ -14,6 +14,7 @@ namespace CrowdPunch.Systems.Combat
         public float3 Origin, Direction;
         public float3 AssistedLaunchDirection;
         public Entity AssistedLaunchTarget;
+        public Entity CommittedEliteTarget;
         public float Range, Radius, Strength, Damage, PositionWeight;
         public EnemyLaunchCause Cause;
         public double EventTime;
@@ -59,7 +60,11 @@ namespace CrowdPunch.Systems.Combat
             EnemyLaunchState launch = manager.GetComponentData<EnemyLaunchState>(target);
             Health health = manager.GetComponentData<Health>(target);
             float3 position = manager.GetComponentData<LocalTransform>(target).Position;
-            if (!IsEligible(launch, health, punch) || !Contains(position, punch)) return false;
+            // ENEMY-009: after Sweep Attack starts, the chosen projectile can move or be
+            // punched into another live phase without cancelling the committed launch.
+            bool committed = punch.Cause == EnemyLaunchCause.ElitePunch && punch.CommittedEliteTarget == target;
+            if (committed ? launch.Phase == EnemyLaunchPhase.Defeated || health.Current <= 0f && launch.Phase != EnemyLaunchPhase.Launched
+                : !IsEligible(launch, health, punch) || !Contains(position, punch)) return false;
             if (ArmorHitResolution.IsProtected(manager, target)) return false;
             bool paired = LinkedPairLaunchResolution.TryGet(manager, target, out var pairEntity, out var pair);
             bool repeatPairPunch = paired && punch.Cause == EnemyLaunchCause.PlayerPunch && pair.LastPunchAt == punch.EventTime;

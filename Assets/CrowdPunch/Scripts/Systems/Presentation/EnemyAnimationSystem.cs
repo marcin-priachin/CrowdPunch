@@ -94,7 +94,7 @@ namespace CrowdPunch.Systems.Presentation
                         / math.max(.001f, SpawnAnimations[owner].Duration));
                     float spawnFrame = progress * (samples.FrameCount - 1);
                     int from = (int)spawnFrame;
-                    if (animation.Profile == (byte)EnemyAnimationProfile.Dasher)
+                    if (animation.Profile == (byte)EnemyAnimationProfile.Dasher || ElitePunches.HasComponent(owner))
                         ApplyDasherFrame(ref skin, ref samples, animation.SpawnMotion, from,
                             math.min(from + 1, samples.FrameCount - 1), math.frac(spawnFrame));
                     else
@@ -111,9 +111,11 @@ namespace CrowdPunch.Systems.Presentation
                 if (animation.Profile == (byte)EnemyAnimationProfile.Goblin)
                 {
                     AnimateGoblin(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot);
-                    bool charging = Contacts.HasComponent(owner) && Contacts[owner].IsAttempting != 0;
+                    bool charging = !ElitePunches.HasComponent(owner)
+                        && Contacts.HasComponent(owner) && Contacts[owner].IsAttempting != 0;
                     if (launch.Phase == EnemyLaunchPhase.Active && !charging && animation.JogSamples.IsCreated)
-                        AnimateJogLegs(owner, animation.BlendResponse, ref playback, ref skin, ref animation.JogSamples.Value);
+                        AnimateJogLegs(owner, animation.BlendResponse, ref playback, ref skin, ref animation.JogSamples.Value,
+                            ElitePunches.HasComponent(owner), animation.MaxLegAnimationSpeed);
                     else
                     {
                         playback.Movement = 0;
@@ -738,7 +740,13 @@ namespace CrowdPunch.Systems.Presentation
                             if (playback.HitPhase >= 1f) playback.HitActive = 0;
                         }
                         var contact = Contacts.HasComponent(owner) ? Contacts[owner] : default;
-                        if (RangedAttacks.HasComponent(owner) && RangedTuning.HasComponent(owner)
+                        if (ElitePunches.HasComponent(owner) && ElitePunches[owner].Phase == ElitePunchPhase.CommittedSweep)
+                        {
+                            motion = 4;
+                            progress = ElitePunches[owner].SweepProgress;
+                            playback.HitActive = 0;
+                        }
+                        else if (RangedAttacks.HasComponent(owner) && RangedTuning.HasComponent(owner)
                             && ranged.Phase == RangedAttackPhase.WindUp)
                         {
                             motion = 3;
@@ -751,13 +759,18 @@ namespace CrowdPunch.Systems.Presentation
                             motion = 4;
                             progress = playback.AttackPhase;
                         }
-                        else if (contact.IsAttempting != 0)
+                        else if (contact.IsAttempting != 0 && !ElitePunches.HasComponent(owner))
                         {
                             motion = 2;
                         }
                         else if (playback.HitActive != 0) { motion = 5; progress = playback.HitPhase; }
-                        else motion = Movement[owner].Speed <= .01f ? 0
-                            : Movement[owner].Speed > Settings[owner].MoveSpeed * .65f ? 2 : 1;
+                        else
+                        {
+                            float speed = ElitePunches.HasComponent(owner) && Velocities.HasComponent(owner)
+                                ? math.length(Velocities[owner].Linear.xz) : Movement[owner].Speed;
+                            float idleThreshold = ElitePunches.HasComponent(owner) ? .03f : .01f;
+                            motion = speed <= idleThreshold ? 0 : speed > Settings[owner].MoveSpeed * .65f ? 2 : 1;
+                        }
                     }
                 }
                 playback.WasRecovering = (byte)(launch.Phase == EnemyLaunchPhase.Recovering ? 1 : 0);
@@ -772,20 +785,34 @@ namespace CrowdPunch.Systems.Presentation
                 int from = math.min((int)frame, samples.FrameCount - 1);
                 int to = motion == 0 || motion == 1 || motion == 2 || motion == EnemyAnimationSamples.FlyingMotion
                     ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1);
-                ApplyFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
+                if (ElitePunches.HasComponent(owner)) ApplyDasherFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
+                else ApplyFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
             }
 
             private void AnimateJogLegs(Entity owner, float blendResponse, ref EnemyAnimationPlayback playback,
-                ref DynamicBuffer<SkinMatrix> skin, ref EnemyJogSamples samples)
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyJogSamples samples, bool resolvedMotion, float maxPlaybackSpeed)
             {
                 if (samples.BoneCount != skin.Length) return;
                 var intent = Movement[owner];
-                float3 local = math.rotate(math.inverse(Transforms[owner].Rotation),
-                    math.normalizesafe(intent.Direction) * math.max(0, intent.Speed));
-                float2 target = local.xz / math.max(.01f, Settings[owner].MoveSpeed);
-                target /= math.max(1, math.length(target));
-                float blend = blendResponse <= 0 ? 1 : 1 - math.exp(-blendResponse * DeltaTime);
-                playback.Movement = math.lerp(playback.Movement, target, blend);
+                float3 velocity = resolvedMotion && Velocities.HasComponent(owner)
+                    ? new float3(Velocities[owner].Linear.x, 0, Velocities[owner].Linear.z)
+                    : math.normalizesafe(intent.Direction) * math.max(0, intent.Speed);
+                float3 local = math.rotate(math.inverse(Transforms[owner].Rotation), velocity);
+                float speed = math.length(local.xz);
+                if (resolvedMotion)
+                {
+                    // INFO-004 / ENEMY-009: setup intent can stop or reverse before physics
+                    // does. Use resolved motion immediately; vector smoothing can cancel
+                    // opposite directions and leave a translating Giant with idle legs.
+                    playback.Movement = speed > .03f ? local.xz / speed : float2.zero;
+                }
+                else
+                {
+                    float2 target = local.xz / math.max(.01f, Settings[owner].MoveSpeed);
+                    target /= math.max(1, math.length(target));
+                    float blend = blendResponse <= 0 ? 1 : 1 - math.exp(-blendResponse * DeltaTime);
+                    playback.Movement = math.lerp(playback.Movement, target, blend);
+                }
                 float amount = math.saturate(math.length(playback.Movement));
                 if (amount < .0001f) return;
                 float sector = math.frac(math.atan2(playback.Movement.x, playback.Movement.y) / (2 * math.PI)) * 8;
@@ -793,7 +820,12 @@ namespace CrowdPunch.Systems.Presentation
                 int second = (first + 1) % EnemyJogSamples.DirectionCount;
                 float turn = math.frac(sector);
                 float duration = math.lerp(samples.Durations[first], samples.Durations[second], turn);
-                playback.JogPhase = math.frac(playback.JogPhase + DeltaTime / math.max(.01f, duration));
+                float cycleDistance = samples.CycleDistances.Length == EnemyJogSamples.DirectionCount
+                    ? math.max(.01f, math.lerp(samples.CycleDistances[first], samples.CycleDistances[second], turn)) : 2f;
+                float rate = resolvedMotion ? speed / cycleDistance : 1f / math.max(.01f, duration);
+                if (maxPlaybackSpeed > 0f) rate = math.min(rate, maxPlaybackSpeed / math.max(.01f, duration));
+                float advance = rate * DeltaTime;
+                playback.JogPhase = math.frac(playback.JogPhase + advance);
                 float frame = playback.JogPhase * samples.FrameCount;
                 int a = (int)frame, b = (a + 1) % samples.FrameCount;
                 float between = math.frac(frame);
@@ -803,17 +835,29 @@ namespace CrowdPunch.Systems.Presentation
                 int count = samples.LegBones.Length;
                 for (int leg = 0; leg < count; leg++)
                 {
-                    var left = samples.Matrices[(first * samples.FrameCount + a) * count + leg] * (1 - between)
-                        + samples.Matrices[(first * samples.FrameCount + b) * count + leg] * between;
-                    var right = samples.Matrices[(second * samples.FrameCount + a) * count + leg] * (1 - between)
-                        + samples.Matrices[(second * samples.FrameCount + b) * count + leg] * between;
-                    var relative = left * (1 - turn) + right * turn;
+                    var left = BlendPose(samples.Matrices[(first * samples.FrameCount + a) * count + leg],
+                        samples.Matrices[(first * samples.FrameCount + b) * count + leg], between, resolvedMotion);
+                    var right = BlendPose(samples.Matrices[(second * samples.FrameCount + a) * count + leg],
+                        samples.Matrices[(second * samples.FrameCount + b) * count + leg], between, resolvedMotion);
+                    var relative = BlendPose(left, right, turn, resolvedMotion);
                     var pose = math.mul(hip, new float4x4(new float4(relative.c0, 0), new float4(relative.c1, 0),
                         new float4(relative.c2, 0), new float4(relative.c3, 1)));
                     int bone = samples.LegBones[leg];
-                    skin[bone] = new SkinMatrix { Value = skin[bone].Value * (1 - amount)
-                        + new float3x4(pose.c0.xyz, pose.c1.xyz, pose.c2.xyz, pose.c3.xyz) * amount };
+                    skin[bone] = new SkinMatrix { Value = BlendPose(skin[bone].Value,
+                        new float3x4(pose.c0.xyz, pose.c1.xyz, pose.c2.xyz, pose.c3.xyz), amount, resolvedMotion) };
                 }
+            }
+
+            private static float3x4 BlendPose(float3x4 a, float3x4 b, float blend, bool preserveScale)
+            {
+                if (!preserveScale) return a * (1f - blend) + b * blend;
+                float3 scaleA = math.max(new float3(.000001f), new float3(math.length(a.c0), math.length(a.c1), math.length(a.c2)));
+                float3 scaleB = math.max(new float3(.000001f), new float3(math.length(b.c0), math.length(b.c1), math.length(b.c2)));
+                var rotationA = math.normalize(new quaternion(new float3x3(a.c0 / scaleA.x, a.c1 / scaleA.y, a.c2 / scaleA.z)));
+                var rotationB = math.normalize(new quaternion(new float3x3(b.c0 / scaleB.x, b.c1 / scaleB.y, b.c2 / scaleB.z)));
+                var rotation = new float3x3(math.slerp(rotationA, rotationB, blend));
+                float3 scale = math.lerp(scaleA, scaleB, blend);
+                return new float3x4(rotation.c0 * scale.x, rotation.c1 * scale.y, rotation.c2 * scale.z, math.lerp(a.c3, b.c3, blend));
             }
 
             private void AnimateBaseline(Entity owner, ref EnemyAnimationPlayback playback,

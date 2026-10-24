@@ -339,6 +339,58 @@ namespace CrowdPunch.Tests
             return elite;
         }
 
+        [TestCase(false, .4f)]
+        [TestCase(true, .4f)]
+        [TestCase(false, 0f)]
+        [TestCase(false, 1f)]
+        public void Enemy009CommittedSweepLaunchesChosenMovingTargetOnceAtContact(bool alreadyLaunched, float release)
+        {
+            using var world = new World("Committed Sweep Attack");
+            Entity elite = CreateEliteAttempt(world, out Entity target);
+            var em = world.EntityManager;
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(0, 0, 1)));
+            em.SetComponentData(target, new ElitePunchReservation { Owner = elite, IsStaged = 1 });
+            em.AddComponent<ExternalImpulse>(target);
+            em.SetComponentEnabled<ExternalImpulse>(target, false);
+            em.AddComponent<DamageRequest>(target);
+            em.SetComponentEnabled<DamageRequest>(target, false);
+            em.SetComponentData(elite, new ElitePunchSettings
+            {
+                AllowActiveTargets = 1, AffectActive = 1, DesiredPunchDistance = 1,
+                PositionTolerance = .4f, PunchRange = 1.5f, PunchRadius = .75f, LaunchForce = 20,
+                MaximumSetupDuration = 1, RetargetInterval = .01f, WindUpDuration = .2f,
+                LaunchAnimationProgress = release, SweepFollowThroughDuration = 1f - release, Cooldown = 1
+            });
+            var system = world.GetOrCreateSystemManaged<ElitePunchSystem>();
+            system.Update();
+            Assert.AreEqual(ElitePunchPhase.CommittedSweep, em.GetComponentData<ElitePunchState>(elite).Phase);
+
+            // Movement, nearer candidates, a failed navigation route and phase changes used
+            // to invalidate the setup. None may cancel an animation that has already begun.
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(40, 4, -20)));
+            CreateProjectile(em, .25f);
+            em.SetComponentData(elite, new NavigationPathState { TravelState = NavigationTravelState.Failed });
+            if (alreadyLaunched)
+                em.SetComponentData(target, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            using var playerQuery = em.CreateEntityQuery(typeof(PlayerSnapshot));
+            em.SetComponentData(playerQuery.GetSingletonEntity(), new PlayerSnapshot { IsAvailable = true, Position = new float3(0, 0, -10) });
+            world.SetTime(new TimeData(2, .1f));
+            system.Update();
+            Assert.AreEqual(release <= 0f, em.IsComponentEnabled<ExternalImpulse>(target));
+            Assert.AreEqual(target, em.GetComponentData<ElitePunchState>(elite).Target);
+            system.Update();
+            Assert.True(em.IsComponentEnabled<ExternalImpulse>(target));
+            Assert.AreEqual(new float3(0, 0, 20), em.GetComponentData<ExternalImpulse>(target).Value);
+            var launched = em.GetComponentData<EnemyLaunchState>(target);
+            Assert.AreEqual(EnemyLaunchCause.ElitePunch, launched.LastCause);
+            Assert.AreEqual(1, launched.LaunchSequence);
+            if (release > 0f && release < 1f)
+                Assert.That(em.GetComponentData<ElitePunchState>(elite).SweepProgress, Is.EqualTo(release).Within(.001f));
+            for (int i = 0; i < 9; i++) system.Update();
+            Assert.AreEqual(1, em.GetComponentData<EnemyLaunchState>(target).LaunchSequence);
+            Assert.AreEqual(ElitePunchPhase.Cooldown, em.GetComponentData<ElitePunchState>(elite).Phase);
+        }
+
         private static Entity CreateProjectile(EntityManager em, float distance)
         {
             Entity target = em.CreateEntity(typeof(Enemy), typeof(EnemyTier), typeof(EnemyArchetype),

@@ -57,6 +57,13 @@ namespace CrowdPunch.Systems.AI
                     Cancel(elite, ref state.ValueRW); movement.ValueRW = default; EntityManager.SetComponentData(elite, new NavigationIntent()); continue;
                 }
                 state.ValueRW.SecondsRemaining -= dt;
+                if (state.ValueRO.Phase == ElitePunchPhase.CommittedSweep)
+                {
+                    movement.ValueRW = default;
+                    EntityManager.SetComponentData(elite, new NavigationIntent());
+                    AdvanceSweep(elite, transform.ValueRO.Position, player, settings.ValueRO, all, dt, ref state.ValueRW);
+                    continue;
+                }
                 // ENEMY-009 / COMBAT-017: staging requires a valid elite anchor. Physics can
                 // push the waiting elite outside it, so reentry must precede the staging hold.
                 if (TryGetNavigationReentry(elite, transform.ValueRO.Position, out float3 reentry))
@@ -220,12 +227,6 @@ namespace CrowdPunch.Systems.AI
                     if (state.ValueRO.Phase == ElitePunchPhase.WindUp) { state.ValueRW.Phase = ElitePunchPhase.Repositioning; state.ValueRW.TelegraphActive = 0; }
                     continue;
                 }
-                if (state.ValueRO.Phase != ElitePunchPhase.WindUp && settings.ValueRO.WindUpDuration > 0f)
-                {
-                    state.ValueRW.Phase = ElitePunchPhase.WindUp; state.ValueRW.SecondsRemaining = settings.ValueRO.WindUpDuration;
-                    state.ValueRW.TelegraphActive = settings.ValueRO.EnableTelegraph; continue;
-                }
-                if (state.ValueRO.Phase == ElitePunchPhase.WindUp && state.ValueRO.SecondsRemaining > 0f) continue;
                 PunchSpecification executionPunch = Spec(transform.ValueRO.Position, launchDirection, settings.ValueRO);
                 if (!PunchResolution.IsEligible(
                         EntityManager.GetComponentData<EnemyLaunchState>(state.ValueRO.Target),
@@ -237,8 +238,15 @@ namespace CrowdPunch.Systems.AI
                     state.ValueRW.SecondsRemaining = 0f;
                     continue;
                 }
-                ExecutePunch(elite, transform.ValueRO.Position, targetTransform.Position, player, settings.ValueRO, all, state.ValueRO.Target);
-                BeginCooldown(elite, settings.ValueRO, ref state.ValueRW);
+                state.ValueRW.Phase = ElitePunchPhase.CommittedSweep;
+                state.ValueRW.SweepElapsed = 0f;
+                state.ValueRW.SweepProgress = 0f;
+                state.ValueRW.SweepLaunched = 0;
+                state.ValueRW.CommittedDirection = launchDirection;
+                state.ValueRW.TelegraphActive = settings.ValueRO.EnableTelegraph;
+                movement.ValueRW = default;
+                EntityManager.SetComponentData(elite, new NavigationIntent());
+                AdvanceSweep(elite, transform.ValueRO.Position, player, settings.ValueRO, all, 0f, ref state.ValueRW);
             }
         }
 
@@ -325,11 +333,64 @@ namespace CrowdPunch.Systems.AI
         { transform = default; if (state.Target == Entity.Null || !IsCandidate(elite, state.Target, s)) return false; transform = EntityManager.GetComponentData<LocalTransform>(state.Target); return true; }
         private bool IsLinedUp(LocalTransform elite, float3 target, float3 direction, ElitePunchSettings s)
         { float3 desired = target - direction * s.DesiredPunchDistance; desired.y = elite.Position.y; if (math.distance(elite.Position.xz, desired.xz) > s.PositionTolerance) return false; float3 forward = math.forward(elite.Rotation); forward.y = 0f; float cosine = math.cos(math.radians(math.clamp(s.AimAngleToleranceDegrees, 0f, 180f))); if (math.dot(math.normalizesafe(forward, direction), direction) < cosine) return false; return PunchResolution.Contains(target, Spec(elite.Position, direction, s)); }
-        private void ExecutePunch(Entity elite, float3 origin, float3 target, PlayerSnapshot player, ElitePunchSettings s, NativeArray<Entity> all, Entity selected)
-        { float3 direction = HorizontalDirection(target, player.Position); PunchSpecification spec = Spec(origin, direction, s); if (s.InteractionMode == ElitePunchInteractionMode.SelectedTargetOnly) { spec.ApplyDamage = s.ProjectileReceivesDamage; PunchResolution.TryApply(EntityManager, selected, spec); } else for (int i = 0; i < all.Length; i++) { Entity e = all[i]; if (EntityManager.Exists(e) && EntityManager.GetComponentData<EnemyTier>(e).Value == EnemyCombatTier.Normal) { PunchSpecification hit = spec; hit.ApplyDamage = e == selected ? s.ProjectileReceivesDamage : (byte)1; PunchResolution.TryApply(EntityManager, e, hit); } } if (s.CanDirectlyHitPlayer != 0 && PunchResolution.Contains(player.Position, spec) && PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge)) bridge.ReceiveEnemyHit(s.DirectPlayerDamage, s.PlayerInvincibilityDuration, direction * s.PlayerPush); }
+        private void AdvanceSweep(Entity elite, float3 origin, PlayerSnapshot player, ElitePunchSettings settings,
+            NativeArray<Entity> all, float dt, ref ElitePunchState state)
+        {
+            state.SweepElapsed += math.max(0f, dt);
+            float contactTime = settings.LaunchAnimationProgress <= 0f ? 0f : math.max(0f, settings.WindUpDuration);
+            float followThrough = math.max(0f, settings.SweepFollowThroughDuration);
+            state.SweepProgress = state.SweepElapsed < contactTime
+                ? math.saturate(state.SweepElapsed / math.max(.001f, contactTime)) * settings.LaunchAnimationProgress
+                : math.lerp(settings.LaunchAnimationProgress, 1f,
+                    followThrough <= 0f ? 1f : math.saturate((state.SweepElapsed - contactTime) / followThrough));
+            if (state.SweepLaunched == 0 && state.SweepElapsed >= contactTime)
+            {
+                ExecutePunch(origin, state.CommittedDirection, player, settings, all, state.Target);
+                state.SweepLaunched = 1;
+                state.TelegraphActive = 0;
+            }
+            if (state.SweepElapsed >= contactTime + followThrough)
+                BeginCooldown(elite, settings, ref state);
+        }
+
+        private void ExecutePunch(float3 origin, float3 direction, PlayerSnapshot player,
+            ElitePunchSettings settings, NativeArray<Entity> all, Entity selected)
+        {
+            PunchSpecification punch = Spec(origin, direction, settings);
+            punch.CommittedEliteTarget = selected;
+            punch.ApplyDamage = settings.ProjectileReceivesDamage;
+            PunchResolution.TryApply(EntityManager, selected, punch);
+            if (settings.InteractionMode == ElitePunchInteractionMode.AllValidEnemiesInPunchVolume)
+            {
+                punch.CommittedEliteTarget = Entity.Null;
+                punch.ApplyDamage = 1;
+                foreach (Entity enemy in all)
+                    if (enemy != selected && EntityManager.Exists(enemy)
+                        && EntityManager.GetComponentData<EnemyTier>(enemy).Value == EnemyCombatTier.Normal)
+                        PunchResolution.TryApply(EntityManager, enemy, punch);
+            }
+            if (settings.CanDirectlyHitPlayer != 0 && PunchResolution.Contains(player.Position, punch)
+                && PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
+                bridge.ReceiveEnemyHit(settings.DirectPlayerDamage, settings.PlayerInvincibilityDuration, direction * settings.PlayerPush);
+        }
         private static PunchSpecification Spec(float3 origin, float3 direction, ElitePunchSettings s) => new PunchSpecification { Origin = origin, Direction = direction, Range = s.PunchRange, Radius = s.PunchRadius, Strength = s.LaunchForce, Damage = s.PunchDamage, PositionWeight = s.PushDirectionPositionWeight, Cause = EnemyLaunchCause.ElitePunch, AffectActive = s.AffectActive, AffectRecovering = s.AffectRecovering, AffectLaunched = s.AffectLaunched, ApplyDamage = 1 };
         private void BeginCooldown(Entity elite, ElitePunchSettings s, ref ElitePunchState state) { Cancel(elite, ref state); Random r = new Random(state.RandomState == 0 ? 1u : state.RandomState); state.Phase = ElitePunchPhase.Cooldown; state.SecondsRemaining = math.max(0f, s.Cooldown) + r.NextFloat(0f, math.max(0f, s.CooldownVariation)); state.RandomState = r.state; }
-        private void Cancel(Entity elite, ref ElitePunchState state) { if (state.Target != Entity.Null && EntityManager.Exists(state.Target) && EntityManager.HasComponent<ElitePunchReservation>(state.Target)) { var r = EntityManager.GetComponentData<ElitePunchReservation>(state.Target); if (r.Owner == elite) EntityManager.SetComponentData(state.Target, new ElitePunchReservation()); } state.Target = Entity.Null; state.SetupSeconds = 0f; state.TelegraphActive = 0; }
+        private void Cancel(Entity elite, ref ElitePunchState state)
+        {
+            if (state.Target != Entity.Null && EntityManager.Exists(state.Target) && EntityManager.HasComponent<ElitePunchReservation>(state.Target))
+            {
+                var reservation = EntityManager.GetComponentData<ElitePunchReservation>(state.Target);
+                if (reservation.Owner == elite) EntityManager.SetComponentData(state.Target, new ElitePunchReservation());
+            }
+            if (state.Phase == ElitePunchPhase.CommittedSweep)
+            {
+                state.Phase = ElitePunchPhase.SelectingTarget;
+                state.SecondsRemaining = 0f;
+            }
+            state.Target = Entity.Null;
+            state.SetupSeconds = 0f;
+            state.TelegraphActive = 0;
+        }
         private bool HasWorldObstruction(float3 a, float3 b) { if (!SystemAPI.HasSingleton<PhysicsWorldSingleton>()) return false; var input = new RaycastInput { Start = a, End = b, Filter = new CollisionFilter { BelongsTo = uint.MaxValue, CollidesWith = ~(1u << 7), GroupIndex = 0 } }; return SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld.CastRay(input); }
         private bool HasEnemyBlocker(Entity target, float3 a, float3 b, float radius, NativeArray<Entity> all) => CorridorScore(target, a, b, radius, all, 0f) > 0f;
         private float CorridorScore(Entity target, float3 a, float3 b, float radius, NativeArray<Entity> all, float nearWeight) { float score = 0f; float2 ab = b.xz - a.xz; float len2 = math.lengthsq(ab); for (int i = 0; i < all.Length; i++) { Entity e = all[i]; if (e == target || !EntityManager.Exists(e) || EntityManager.GetComponentData<EnemyTier>(e).Value != EnemyCombatTier.Normal) continue; if (EntityManager.HasComponent<RespawnRequest>(e) && EntityManager.IsComponentEnabled<RespawnRequest>(e)) continue; EnemyLaunchState launch = EntityManager.GetComponentData<EnemyLaunchState>(e); if (launch.Phase == EnemyLaunchPhase.Defeated) continue; float2 p = EntityManager.GetComponentData<LocalTransform>(e).Position.xz; float t = math.saturate(math.dot(p - a.xz, ab) / math.max(.0001f, len2)); if (math.distancesq(p, a.xz + ab * t) <= radius * radius) score += 1f + nearWeight * t; } return score; }

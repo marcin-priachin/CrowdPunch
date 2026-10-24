@@ -835,6 +835,15 @@ Status: Must
 
 While at least one non-defeated elite is active in the arena, active normal enemies cooperate with the nearest active elite to make its projectile punch easier to execute. Normal enemies with armor remaining are ineligible, including stale selections and area punch resolution. After armor breaks, ordinary eligibility applies. The closest eligible active normal enemy to the elite is always selected as its projectile regardless of spawn order or its distance from the player, and that choice is re-evaluated during setup at the elite's retarget interval. Before waiting, the projectile adjusts to the nearest sampled staging position whose path and resulting elite-to-behind-projectile approach lane are not blocked by static geometry or another non-defeated enemy. If the selected projectile is beside an obstacle, it must keep moving far enough away to provide clearance for the elite's full behind-projectile aiming position and approach lane before the elite approaches. It stops only once that lane is clear, anchoring a stable setup position; until then, the elite waits and does not consume its setup timeout. The elite then repositions behind it within punch tolerance and steers through a side waypoint whenever a direct approach would cross the target's collision clearance, avoiding premature target contact before alignment. After launching a projectile, the elite retains its attack cooldown but uses that interval to approach the next closest eligible active normal rather than resuming ordinary player chase. Other active normal enemies steer laterally out of the projectile-to-player shot corridor. Launched, recovering, defeated, disabled, and pooled enemies do not perform this support movement. With multiple active elites, each normal enemy supports the nearest elite, with entity index used only as a deterministic exact-distance tie break.
 
+Once the Elite begins its authored Sweep Attack, it commits to the selected projectile
+and launch direction. Subsequent movement, loss of alignment, setup timeout, navigation
+failure, retargeting or a change between live launch/recovery phases cannot cancel that
+launch. Launch the selected enemy once at the configurable original animation frame,
+even outside the original punch volume. Other enemies in the optional area-punch mode
+still require its normal volume and eligibility checks. Defeat, pooling and armor
+protection retain their existing lifecycle rules. Wind Up Duration is the time to contact;
+play the rest of Sweep Attack once before returning to the attack cooldown.
+
 ### ENEMY-010 — Explosive Proximity Pressure
 
 Status: Must
@@ -1102,6 +1111,22 @@ body animation, including attacks while moving. Blend movement relative to facin
 retreat and strafing use the appropriate leg motion. Spawn, flight, landing, recovery and
 defeat keep their original full-body poses. Preserve authored model scale and gameplay movement.
 
+The Elite uses `Assets/CrowdPunch/Prefabs/Enemies/Goblin Giant Elite Variant.prefab`
+and clips from `Assets/Goblin Trooper Giant Evolution Modular Pack Cute Series/Goblin Giant Modular Pack Cute Series/Animations`.
+Use Sweep Attack for launching enemies and Spawn for ground emergence. Preserve every
+authored transform scale and the supplied textures with Full Cel shading. Use the pack's
+idle, locomotion, damage, Die and reverse-Die recovery poses instead of procedural
+recoloring, flashing, bobbing, shaking or squash. Blend the existing directional jogs
+on the legs while retaining the original upper-body pose. Ground spawn, recovery and
+defeat retain full-body animation. Expose Enemy Launch Frame in Elite spawn settings
+as a zero-based original Sweep Attack frame (ENEMY-009).
+
+During Elite setup/repositioning, directional leg motion and gait cadence follow actual
+resolved horizontal movement relative to current facing, including slow adjustments and
+braking. Requested movement alone must not leave a moving Elite with idle or wrongly
+directed legs, or make a blocked Elite jog in place. Preserve the supplied upper-body
+animation, prefab scale and gameplay movement.
+
 ### INFO-005 — Trajectory Scope
 
 Status: Must
@@ -1123,7 +1148,7 @@ the arena floor at the reserved XZ coordinates and play the authored emergence o
 Normal movement and contact attacks wait for that animation; ordinary punch/launch rules
 can interrupt it. Repeat on respawn/restart. Profiles without the option or a supported
 clip keep the existing drop from spawn height. Enable this option for the Goblin Baseline,
-Ranged Wizard and Goblin Minion Dasher using their supplied Spawn clips. Motion below the floor belongs to the visual pose; the
+Ranged Wizard, Goblin Minion Dasher and Goblin Giant Elite using their supplied Spawn clips. Motion below the floor belongs to the visual pose; the
 physics body stays grounded (COMBAT-018).
 
 ## Progression And Weapons

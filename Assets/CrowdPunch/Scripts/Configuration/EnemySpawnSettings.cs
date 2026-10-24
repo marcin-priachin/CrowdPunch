@@ -175,6 +175,10 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float eliteDirectPlayerDamage = 10f, elitePlayerPush = 8f, elitePlayerInvincibilityDuration = 0.5f;
         [Header("Elite punch - optional wind-up / telegraph")]
         [SerializeField, Min(0f)] private float eliteWindUpDuration;
+        [Tooltip("Zero-based Sweep Attack frame at enemy launch. Wind Up Duration controls time to contact. Once the sweep starts, movement and retargeting cannot cancel the selected launch.")]
+        [SerializeField, Min(0)] private int eliteEnemyLaunchFrame = 12;
+        [SerializeField, HideInInspector] private int eliteSweepAnimationLastFrame = 30;
+        [SerializeField, HideInInspector] private float eliteSweepAnimationFrameRate = 30f;
         [SerializeField] private bool eliteEnableTelegraph;
         [SerializeField, Min(0f)] private float eliteTelegraphDuration = 0.25f;
 
@@ -305,7 +309,10 @@ namespace CrowdPunch.Configuration
             PunchRange=elitePunchRange, PunchRadius=elitePunchRadius, LaunchForce=eliteLaunchForce, PunchDamage=elitePunchDamage, PushDirectionPositionWeight=elitePushDirectionPositionWeight,
             InteractionMode=eliteInteractionMode, ProjectileReceivesDamage=eliteProjectileReceivesDamage?(byte)1:(byte)0, AffectActive=eliteAffectActive?(byte)1:(byte)0, AffectRecovering=eliteAffectRecovering?(byte)1:(byte)0, AffectLaunched=eliteAffectLaunched?(byte)1:(byte)0,
             CanDirectlyHitPlayer=eliteCanDirectlyHitPlayer?(byte)1:(byte)0, DirectPlayerDamage=eliteDirectPlayerDamage, PlayerPush=elitePlayerPush, PlayerInvincibilityDuration=elitePlayerInvincibilityDuration,
-            WindUpDuration=eliteWindUpDuration, EnableTelegraph=eliteEnableTelegraph?(byte)1:(byte)0, TelegraphDuration=eliteTelegraphDuration
+            WindUpDuration=eliteWindUpDuration,
+            LaunchAnimationProgress=math.clamp(eliteEnemyLaunchFrame,0,math.max(1,eliteSweepAnimationLastFrame))/(float)math.max(1,eliteSweepAnimationLastFrame),
+            SweepFollowThroughDuration=(math.max(1,eliteSweepAnimationLastFrame)-math.clamp(eliteEnemyLaunchFrame,0,math.max(1,eliteSweepAnimationLastFrame)))/math.max(1f,eliteSweepAnimationFrameRate),
+            EnableTelegraph=eliteEnableTelegraph?(byte)1:(byte)0, TelegraphDuration=eliteTelegraphDuration
         };
     }
 }

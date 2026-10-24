@@ -21,9 +21,10 @@ namespace CrowdPunch.Editor
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
                 throw new InvalidOperationException("Sample Goblin jogs outside Play Mode.");
-            foreach (string kind in new[] { "Baseline", "Ranged" })
+            foreach (string kind in new[] { "Baseline", "Ranged", "Elite" })
             {
-                string path = $"Assets/CrowdPunch/Prefabs/Enemy{kind}.prefab";
+                string path = kind == "Elite" ? "Assets/CrowdPunch/Prefabs/EliteEnemy.prefab"
+                    : $"Assets/CrowdPunch/Prefabs/Enemy{kind}.prefab";
                 var root = PrefabUtility.LoadPrefabContents(path);
                 try
                 {
@@ -89,16 +90,28 @@ namespace CrowdPunch.Editor
             var legMask = new bool[sampled.bones.Length];
             foreach (int leg in legs) legMask[leg] = true;
             var pose = new Matrix4x4[sampled.bones.Length];
+            Transform leftFoot = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
+            Transform rightFoot = animator.GetBoneTransform(HumanBodyBones.RightFoot);
+            source.JogCycleDistances = new float[EnemyJogSamples.DirectionCount];
             float radius = 0;
             for (int direction = 0; direction < EnemyJogSamples.DirectionCount; direction++)
             {
                 float angle = direction * Mathf.PI / 4;
                 animator.SetFloat("MoveX", Mathf.Sin(angle));
                 animator.SetFloat("MoveZ", Mathf.Cos(angle));
+                Vector2 minimumFootTravel = new Vector2(float.MaxValue, float.MaxValue);
+                Vector2 maximumFootTravel = new Vector2(float.MinValue, float.MinValue);
+                Vector3 travelDirection = animator.transform.TransformDirection(new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle)));
                 for (int frame = 0; frame < FrameCount; frame++)
                 {
                     animator.Play("Base Layer.Locomotion", 0, frame / (float)FrameCount);
                     animator.Update(0);
+                    // Each planted foot travels along the step for half a cycle.
+                    // Measure every direction at the supplied rig's authored scale.
+                    Vector2 travel = new Vector2(Vector3.Dot(leftFoot.position - hip.position, travelDirection),
+                        Vector3.Dot(rightFoot.position - hip.position, travelDirection));
+                    minimumFootTravel = Vector2.Min(minimumFootTravel, travel);
+                    maximumFootTravel = Vector2.Max(maximumFootTravel, travel);
                     durations[direction] = animator.GetCurrentAnimatorStateInfo(0).length;
                     if (durations[direction] <= 0) throw new InvalidOperationException("Jog controller did not evaluate.");
                     Matrix4x4 inverseHip = hip.worldToLocalMatrix;
@@ -119,6 +132,8 @@ namespace CrowdPunch.Editor
                         radius = Mathf.Max(radius, p.magnitude);
                     }
                 }
+                Vector2 stride = maximumFootTravel - minimumFootTravel;
+                source.JogCycleDistances[direction] = Mathf.Max(.01f, stride.x + stride.y);
             }
             string hash = AssetDatabase.GetAssetDependencyHash(ControllerPath).ToString()
                 + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(renderer.sharedMesh))

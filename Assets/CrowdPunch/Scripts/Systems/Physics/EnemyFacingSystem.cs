@@ -30,6 +30,7 @@ namespace CrowdPunch.Systems.Physics
                 Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
                 Movements = SystemAPI.GetComponentLookup<DesiredMovement>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
+                Elites = SystemAPI.GetComponentLookup<ElitePunchState>(true),
                 Archetypes = SystemAPI.GetComponentLookup<EnemyArchetype>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 PlayerPosition = player.Position,
@@ -48,6 +49,7 @@ namespace CrowdPunch.Systems.Physics
             public bool Defending;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movements;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
+            [ReadOnly] public ComponentLookup<ElitePunchState> Elites;
             [ReadOnly] public ComponentLookup<EnemyArchetype> Archetypes;
             public float DeltaTime;
             public float3 PlayerPosition;
@@ -66,12 +68,14 @@ namespace CrowdPunch.Systems.Physics
                     return;
                 bool committedDash = Dashers.HasComponent(entity)
                     && Dashers[entity].Phase == DasherPhase.Dashing;
+                bool committedSweep = Elites.HasComponent(entity) && Elites[entity].Phase == ElitePunchPhase.CommittedSweep;
                 float3 toward = launched
                     ? velocity.Linear
                     : committedDash
                         ? Dashers[entity].LockedDirection
                         : PlayerPosition - transform.Position;
                 toward.y = 0f;
+                if (!launched && committedSweep) toward = Elites[entity].CommittedDirection;
                 if (charging)
                 {
                     // Match resolved motion after collisions; never steer the committed charge toward the player.

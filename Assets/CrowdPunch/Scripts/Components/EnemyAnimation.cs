@@ -25,6 +25,7 @@ namespace CrowdPunch.Components
         public BlobAssetReference<EnemyJogSamples> JogSamples;
         public byte Profile;
         public float BlendResponse;
+        public float MaxLegAnimationSpeed;
         public float3 LaunchPivot;
         public int SpawnMotion;
     }
@@ -76,6 +77,8 @@ namespace CrowdPunch.Components
         public float4x4 HipBindInverse;
         public BlobArray<int> LegBones;
         public BlobArray<float> Durations;
+        // World-space stride per complete cycle, eight clockwise directions.
+        public BlobArray<float> CycleDistances;
         // Eight clockwise directions, frames, then leg bones; matrices are relative to hips.
         public BlobArray<float3x4> Matrices;
     }

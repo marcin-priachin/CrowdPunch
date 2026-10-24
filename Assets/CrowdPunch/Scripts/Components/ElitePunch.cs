@@ -3,7 +3,7 @@ using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
-    public enum ElitePunchPhase : byte { InitialDelay, SelectingTarget, Repositioning, WindUp, Cooldown }
+    public enum ElitePunchPhase : byte { InitialDelay, SelectingTarget, Repositioning, WindUp, Cooldown, CommittedSweep }
     public enum ElitePunchTactic : byte { ClearPath, CrowdShot }
     public enum ElitePunchInteractionMode : byte { SelectedTargetOnly, AllValidEnemiesInPunchVolume }
 
@@ -25,6 +25,7 @@ namespace CrowdPunch.Components
         public byte CanDirectlyHitPlayer;
         public float DirectPlayerDamage, PlayerPush, PlayerInvincibilityDuration;
         public float WindUpDuration;
+        public float LaunchAnimationProgress, SweepFollowThroughDuration;
         public byte EnableTelegraph;
         public float TelegraphDuration;
     }
@@ -38,6 +39,9 @@ namespace CrowdPunch.Components
         public float3 ValidatedPlayerPosition, ValidatedTargetPosition;
         public uint RandomState, AttackSequence;
         public byte TelegraphActive;
+        public float SweepElapsed, SweepProgress;
+        public float3 CommittedDirection;
+        public byte SweepLaunched;
     }
 
     public struct ElitePunchReservation : IComponentData

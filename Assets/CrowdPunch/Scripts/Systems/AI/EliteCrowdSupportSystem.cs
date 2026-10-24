@@ -63,6 +63,7 @@ namespace CrowdPunch.Systems.AI
                     Entity = elite,
                     Position = eliteTransform.ValueRO.Position,
                     Settings = settings.ValueRO,
+                    CommittedSweep = punchState.ValueRO.Phase == ElitePunchPhase.CommittedSweep,
                     SelectedProjectile = punchState.ValueRO.Target
                 });
             }
@@ -88,19 +89,20 @@ namespace CrowdPunch.Systems.AI
             for (int eliteIndex = 0; eliteIndex < elites.Length; eliteIndex++)
             {
                 SupportElite elite = elites[eliteIndex];
-                Entity projectile = IsActiveNormal(elite.SelectedProjectile)
+                Entity projectile = elite.CommittedSweep ? elite.SelectedProjectile : IsActiveNormal(elite.SelectedProjectile)
                     && GetClosestEliteIndex(
                         EntityManager.GetComponentData<LocalTransform>(elite.SelectedProjectile).Position,
                         elites) == eliteIndex
                     ? elite.SelectedProjectile
                     : FindClosestActiveNormal(eliteIndex, normalEnemies, elites);
-                if (projectile == Entity.Null)
+                if (projectile == Entity.Null || elite.CommittedSweep && !IsActiveNormal(projectile))
                 {
                     continue;
                 }
 
                 float3 projectilePosition = EntityManager.GetComponentData<LocalTransform>(projectile).Position;
-                float3 stagingPosition = FindStagingPosition(
+                bool isStaged = elite.CommittedSweep;
+                float3 stagingPosition = elite.CommittedSweep ? projectilePosition : FindStagingPosition(
                     elite.Entity,
                     projectile,
                     elite.Position,
@@ -108,7 +110,7 @@ namespace CrowdPunch.Systems.AI
                     player.Position,
                     elite.Settings,
                     normalEnemies,
-                    out bool isStaged);
+                    out isStaged);
                 if (!isStaged)
                     ClearProjectileReentry(elite, projectile, projectilePosition, stagingPosition);
                 if (!isStaged)
@@ -726,6 +728,7 @@ namespace CrowdPunch.Systems.AI
             public float3 Position;
             public ElitePunchSettings Settings;
             public Entity SelectedProjectile;
+            public bool CommittedSweep;
         }
 
         public static bool TryGetCorridorExitDirection(

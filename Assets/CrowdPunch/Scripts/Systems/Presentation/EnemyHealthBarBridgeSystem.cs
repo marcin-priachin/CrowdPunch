@@ -38,9 +38,13 @@ namespace CrowdPunch.Systems.Presentation
                     continue;
                 }
 
+                // The canvas adds its shared 1.5m offset; the Giant needs 3.5m
+                // above its physics root to keep the bar clear of its head.
+                var barPosition = transform.ValueRO.Position;
+                if (SystemAPI.HasComponent<ElitePunchSettings>(enemy)) barPosition.y += 2f;
                 EnemyHealthBarCanvasRegistry.Publish(
                     enemy.Index,
-                    transform.ValueRO.Position,
+                    barPosition,
                     healthBar.ValueRO.Normalized,
                     alwaysVisible || healthBarVisibility.ValueRO,
                     alwaysVisible,
