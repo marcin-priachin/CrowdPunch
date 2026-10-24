@@ -1279,6 +1279,12 @@ Status: Must
 
 The fleeing Chicken uses a stationary wind-up that tracks the player until release. Each shot
 immediately commits a reachable rush away with a strong sideways offset, followed by a brief pause.
+While moving, the boss faces the player's current position independently of its committed travel
+direction; directional jog legs supply backward and sideways movement. While standing, keep
+facing the current player position. During idle pauses use the supplied Turn Left/Turn Right
+animations on the legs only, with the pelvis, upper body and equipment continuing Idle. Return
+the legs to Idle after the turn step; active casting and firing animations keep priority over idle
+turning.
 Stage one defaults to one shot, rush, pause; stage two to shot, rush, second shot from the new
 position, rush, pause; stage three to paired shots with faster rushes and shorter pauses. Single
 and paired patterns remain configurable per stage. Pair spacing must allow normal punch cooldown.
@@ -1288,11 +1294,16 @@ Do not add rush warnings or destination markers.
 
 Status: Must
 
-Expose finish-pause and interrupt-pause-and-flee responses, defaulting to interrupt and flee.
-Proximity never cancels a committed wind-up or shot. The solid boss damages the player only
-during rushes and pushes crowd bodies aside without dealing damage or initiating launches.
-Accepted damage briefly staggers it, interrupts rushes, cancels pending shots, starts temporary
-damage invulnerability, and begins a fresh attack cycle after recovery.
+Expose finish-pause and interrupt-pause-and-cast responses, defaulting to interrupt and cast.
+When the player gets close during a pause, the boss plays the full supplied Cast Spell animation
+while remaining stationary. Contact during the cast damages and pushes the player away using
+normal player damage protection. At animation end, teleport the boss to the point farthest from
+the player's current position inside the open rectangular arena, inset by the boss collider radius
+and wall clearance, then resume its attack cycle. The teleport path does not damage the player.
+Proximity never cancels a committed wind-up or shot. The solid boss also damages the player during
+rushes and pushes crowd bodies aside without dealing damage or initiating launches. Accepted
+damage briefly staggers it, interrupts rushes or casting, cancels pending shots/teleport, starts
+temporary damage invulnerability, and begins a fresh attack cycle after recovery.
 
 ### CHICKEN-003 - Punchable Bouncing Projectiles
 
@@ -1345,9 +1356,13 @@ Restart restores the boss, population, projectiles, timers and hit histories.
 
 Status: Must
 
-Use the supplied `Assets/CrowdPunch/Models/UltimateMonsters/Blob/Chicken.fbx`, the existing elite-style
-health bar, readable ownership colors that do not imply returned shots are safe, hit/invulnerability
-feedback and one brief opening hint. A dedicated boss settings asset exposes health/damage, stage
+Use `Assets/CrowdPunch/Prefabs/Enemies/Goblin Giant Wizard Variant.prefab` at its authored scale,
+with animations from the Goblin Giant Modular Pack Cute Series animation folder and Full Cel shading.
+Use blended directional jogs from `Assets/CrowdPunch/Animation/` on the legs while retaining the
+pack animation on the upper body. Fire with Sweep Attack and expose its zero-based projectile
+release frame in the dedicated settings. Use authored animation for boss feedback rather than
+scripted tint, shaking or squash. Retain the existing elite-style health bar, dangerous projectile
+ownership colors and one brief opening hint. A dedicated boss settings asset exposes health/damage, stage
 thresholds/patterns, wind-up/spacing/pauses, rush/proximity, stagger/protection and projectile tuning.
 Initial numbers, arena size and minor model presentation are delegated to implementation/playtesting.
 

@@ -39,7 +39,13 @@ namespace CrowdPunch.Tests
                         + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(renderer.sharedMesh))
                         + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(animator.avatar));
                     Assert.That(reader.ReadString(), Is.EqualTo(hash), renderer.name);
-                    Assert.That(renderer.sharedMaterial.GetTexture("_ColorMap"), Is.EqualTo(level == 10 ? AssetDatabase.LoadAssetAtPath<UnityEngine.Material>(GatekeeperMagmaBuilder.Art + "Gatekeeper Magma Cel.mat").GetTexture("_ColorMap") : AssetDatabase.LoadAssetAtPath<Texture2D>(EnemyAppearanceMaterials.AtlasPath)));
+                    if (level == 20)
+                    {
+                        Assert.That(renderer.sharedMaterial.shader.name, Is.EqualTo("CrowdPunch/Cel/Enemy"));
+                        Assert.That(renderer.sharedMaterial.GetTexture("_ColorMap"), Is.Not.Null);
+                        Assert.That(AssetDatabase.GetAssetPath(renderer.sharedMaterial), Does.StartWith(ChickenModelBuilder.MaterialFolder + "/"));
+                    }
+                    else Assert.That(renderer.sharedMaterial.GetTexture("_ColorMap"), Is.EqualTo(level == 10 ? AssetDatabase.LoadAssetAtPath<UnityEngine.Material>(GatekeeperMagmaBuilder.Art + "Gatekeeper Magma Cel.mat").GetTexture("_ColorMap") : AssetDatabase.LoadAssetAtPath<Texture2D>(EnemyAppearanceMaterials.AtlasPath)));
                 }
                 var model = animations[0].GetComponentInParent<Animator>().gameObject;
                 var toOwner = model.transform.parent.worldToLocalMatrix * model.transform.localToWorldMatrix;

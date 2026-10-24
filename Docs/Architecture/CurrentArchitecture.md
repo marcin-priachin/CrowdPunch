@@ -54,6 +54,40 @@ Wind Up Duration retimes anticipation to the original Enemy Launch Frame; the re
 Sweep Attack frames play at source rate before cooldown. The builder records the
 source clip's last frame and frame rate for the Inspector slider and baked timing.
 
+## Chicken Proximity Cast And Teleport (2026-10-24, CHICKEN-002/006/007)
+
+The default proximity response during Pause now plays the supplied full-body Cast Spell (1s),
+then teleports to the farthest corner of the collider-inset rectangular arena relative to the
+player's current position. The existing finish-pause alternative and committed shot/rush cycle
+remain available. `ChickenCastTuning` owns the cast duration; the model builder samples motion 5
+and serializes its clip duration in all three settings assets. AI advances Cast to a transient
+Teleport phase. `ChickenTeleportSystem`, between AI and movement before physics world build,
+owns the discontinuous position write, clears velocity and contact sweep history, preserves scale
+and height, and resumes Pause. Ordinary movement remains velocity-owned. Cast contact uses the
+existing health/protection/push bridge; no teleport path sweep is damaging. Hits and defeat cancel
+the action through the existing phase transition. Cast animation bypasses directional jog masking.
+
+## Goblin Chicken Boss Presentation (2026-10-24, CHICKEN-001/007, INFO-004, VISION-006)
+
+`ChickenModelBuilder` replaces Chicken presentation in Campaign 20/60 and Gauntlet 20 with the
+supplied Giant Wizard prefab at authored scale and Giant-pack Humanoid clips. CPA3 body, shoulder,
+hat and wand samples remain ECS-owned; CPJ1 directional jogs override only legs below the
+original pelvis. `ChickenSkinPose` preserves authored scales through rotation interpolation.
+There are no phase tints or procedural deformation. Textured dedicated Full Cel materials are
+protected from monster-atlas refresh. Simulation and Sweep playback share the configured
+zero-based projectile release frame; `ShotSequence` preserves upper-body follow-through during
+the immediate rush. Rush facing follows the current player independently of the committed
+destination; the existing physics angular velocity applies yaw and the jog layer supplies backward
+or sideways steps. Pause and Cast track current player facing too. During Pause, the movement
+system writes signed idle yaw rate to `ChickenTurnState`; presentation selects leg-only Turn
+Left/Right (samples 6/7), finishes the step before returning to idle, and repeats for continuing
+turns. The existing jog leg mask selects the bones; turn legs are composed under the Idle pelvis.
+Upper-body and equipment skin matrices share a continuous Idle clock, including on direction
+changes and turn restarts. Cast/Sweep override idle turning. Export removes the clips' authored 90-degree body yaw
+relative to frame zero, preventing a second rotation on top of physics facing. Reset clears turn
+state and sampled playback. Paired releases retain minimum spacing, and hit/defeat cancel the Sweep.
+Model alignment uses translation only. See `ChickenBoss.md` and `../Verification/GoblinChicken.md`.
+
 ## Goblin Minion Dasher Presentation (2026-10-23, ENEMY-005..008, INFO-004, VISION-006)
 
 `EnemyDasherPrefabBuilder` instantiates the supplied Goblin Minion prefab inside the

@@ -3,9 +3,9 @@ using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
-    public enum ChickenPhase : byte { Pause, WindUp, Rush, Stagger, Defeated }
+    public enum ChickenPhase : byte { Pause, WindUp, Rush, Stagger, Defeated, Cast, Teleport }
     public enum ChickenPattern : byte { Single, Paired }
-    public enum ChickenPauseResponse : byte { InterruptAndFlee, FinishPause }
+    public enum ChickenPauseResponse : byte { InterruptAndCast, FinishPause }
     public enum ChickenShotAim : byte { PlayerPosition, MovementLead }
 
     // CHICKEN-001..006: encounter state stays separate from ordinary Enemy lifecycle.
@@ -18,6 +18,7 @@ namespace CrowdPunch.Components
         public quaternion Facing;
         public double InvulnerableUntil;
         public uint RushSequence, AcceptedHits;
+        public uint ShotSequence;
         public byte RushHitPlayer, AlternateSide;
     }
 
@@ -29,6 +30,9 @@ namespace CrowdPunch.Components
         public ChickenPauseResponse PauseResponse;
         public ChickenShotAim ShotAim;
         public float OpeningPause, WindUp, ShotSpacing, Pause, FinalPauseMultiplier;
+        public float ShotReleasePhase;
+
+        public readonly float ShotReleaseDelay => WindUp * ShotReleasePhase;
         public float RushSpeed, FinalRushMultiplier, RushDistance, SidewaysWeight, ProximityDistance;
         public float Stagger, Invulnerability, BodyRadius, BodyHeight;
         public float PlayerDamage, PlayerProtection, PlayerPush;
@@ -53,4 +57,15 @@ namespace CrowdPunch.Components
         public uint Launch, Lifetime;
     }
     public struct ChickenVisualOwner : IComponentData { public Entity Value; }
+
+    public struct ChickenCastTuning : IComponentData
+    {
+        public float Duration;
+    }
+
+    public struct ChickenTurnState : IComponentData
+    {
+        // Signed world yaw rate during idle tracking; negative is left.
+        public float YawRate;
+    }
 }

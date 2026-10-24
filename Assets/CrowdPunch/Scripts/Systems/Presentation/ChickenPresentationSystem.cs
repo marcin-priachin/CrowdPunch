@@ -11,18 +11,10 @@ namespace CrowdPunch.Systems.Presentation
     {
         public void OnUpdate(ref SystemState state)
         {
-            double now=SystemAPI.Time.ElapsedTime;
             foreach(var (owner,color) in SystemAPI.Query<RefRO<ChickenVisualOwner>,RefRW<URPMaterialPropertyBaseColor>>())
             {
                 if(!SystemAPI.HasComponent<ChickenBoss>(owner.ValueRO.Value)) continue;
-                var b=SystemAPI.GetComponent<ChickenBoss>(owner.ValueRO.Value);
-                float3 tint=new float3(1.15f);
-                if(b.Phase==ChickenPhase.WindUp) tint=new float3(1.5f,1.1f,.65f);
-                else if(b.Phase==ChickenPhase.Rush) tint=new float3(1.45f,.8f,.6f);
-                else if(b.Phase==ChickenPhase.Stagger) tint=new float3(2.5f);
-                else if(b.Phase==ChickenPhase.Defeated) tint=new float3(.25f);
-                else if(now<b.InvulnerableUntil) tint=new float3(.75f,1.35f,1.5f)*(1+.25f*math.sin((float)now*20));
-                color.ValueRW.Value=new float4(tint,1);
+                color.ValueRW.Value=new float4(1);
             }
             foreach(var (shot,color) in SystemAPI.Query<RefRO<ChickenProjectile>,RefRW<URPMaterialPropertyBaseColor>>())
                 // Both are danger colors. Returned shots never use a safe/green cue.

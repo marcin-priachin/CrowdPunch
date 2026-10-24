@@ -15,6 +15,7 @@ namespace CrowdPunch.Editor
             if (path.StartsWith(EnemyBaselinePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyRangedPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyElitePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
+                || path.StartsWith(ChickenModelBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyDasherPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyExplosivePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)) return;
             var atlas = AssetDatabase.LoadAssetAtPath<Texture2D>(AtlasPath);

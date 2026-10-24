@@ -19,8 +19,6 @@ namespace CrowdPunch.Editor
         public const string ChickenSettingsPath=Root+"Data/Settings/ChickenBossSettings.asset";
         public const string ChickenWavePath=Waves+"CP20_01_Chicken_Crowd.asset";
         private const string ChickenArt=Root+"Data/ChickenBoss/";
-        private const string ChickenModel=Root+"Models/UltimateMonsters/Blob/Chicken.fbx";
-        private const string ChickenController=ChickenArt+"Chicken.controller";
 
         [MenuItem("Crowd Punch/Levels/Build Chicken Boss Gauntlet 20")]
         public static void BuildChicken()
@@ -101,41 +99,9 @@ namespace CrowdPunch.Editor
         }
         internal static void AddChickenModel(GameObject root,ChickenBossSettings settings)
         {
-            var source=AssetDatabase.LoadAssetAtPath<GameObject>(ChickenModel);
-            if(source==null) throw new InvalidOperationException("Missing supplied Chicken.fbx model.");
-            var visual=(GameObject)PrefabUtility.InstantiatePrefab(source,root.transform);
-            visual.name="Chicken Model";
-            var renderer=visual.GetComponentInChildren<SkinnedMeshRenderer>();
-            if(renderer==null) throw new InvalidOperationException("Chicken model needs a skinned renderer.");
-            Bounds bounds=renderer.bounds;
-            visual.transform.localScale*=settings.bodyHeight/Mathf.Max(.01f,bounds.size.y);
-            bounds=renderer.bounds;
-            visual.transform.localPosition-=root.transform.InverseTransformPoint(bounds.center);
-            var animator=visual.GetComponent<Animator>();
-            if(animator==null) animator=visual.AddComponent<Animator>();
-            string[] suffixes={"Idle","Walk","Bite_Front","HitRecieve","Death"};
-            var clips=suffixes.Select(s=>AssetDatabase.LoadAllAssetsAtPath(ChickenModel).OfType<AnimationClip>()
-                .First(c=>!c.name.StartsWith("__preview__") && c.name.EndsWith("|"+s))).ToArray();
-            var controller=AssetDatabase.LoadAssetAtPath<AnimatorController>(ChickenController);
-            if(controller==null)
-            {
-                controller=AnimatorController.CreateAnimatorControllerAtPath(ChickenController);
-                for(int i=0;i<clips.Length;i++) controller.layers[0].stateMachine.AddState(suffixes[i]).motion=clips[i];
-            }
-            animator.runtimeAnimatorController=controller; animator.applyRootMotion=false; animator.cullingMode=AnimatorCullingMode.AlwaysAnimate;
-            renderer.rootBone=animator.transform; renderer.quality=SkinQuality.Bone4;
-            var template=AssetDatabase.LoadAssetAtPath<Material>(Root+"Animation/EnemySkinning.mat");
-            var mat=AssetDatabase.LoadAssetAtPath<Material>(ChickenArt+"Chicken.mat");
-            if(mat==null) { mat=new Material(template) { enableInstancing=true }; AssetDatabase.CreateAsset(mat,ChickenArt+"Chicken.mat"); }
-            EnemyAppearanceMaterials.Configure(mat);
-            renderer.sharedMaterials=renderer.sharedMaterials.Select(_=>mat).ToArray();
-            AssetDatabase.SaveAssets();
-            WriteBossSamples(animator,renderer,clips,ChickenArt+"ChickenMovement.bytes",ChickenController);
-            var animation=renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
-            animation.Samples=AssetDatabase.LoadAssetAtPath<TextAsset>(ChickenArt+"ChickenMovement.bytes");
-            BossAppearanceBuilder.GroundModel(visual, settings.bodyHeight);
+            ChickenModelBuilder.AddModel(root, settings);
         }
-        internal static void WriteBossSamples(Animator animator,SkinnedMeshRenderer renderer,AnimationClip[] clips,string path,string controllerPath)
+        internal static void WriteBossSamples(Animator animator,SkinnedMeshRenderer renderer,AnimationClip[] clips,string path,string controllerPath, bool humanoid = false, bool inPlaceTurns = false)
         {
             const int frames=32;
             animator.Rebind();
@@ -146,13 +112,24 @@ namespace CrowdPunch.Editor
             for(int motion=0;motion<EnemyAnimationSamples.MotionCount;motion++)
             {
                 var clip=clips[Math.Min(motion,clips.Length-1)]; durations[motion]=clip.length;
+                float initialYaw=0;
                 for(int frame=0;frame<frames;frame++)
                 {
                     float phase=frame/(float)(motion<2?frames:frames-1);
-                    clip.SampleAnimation(animator.gameObject,phase*clip.length);
+                    if (humanoid) { animator.Play("Motion" + Math.Min(motion, clips.Length - 1), 0, phase); animator.Update(0f); }
+                    else clip.SampleAnimation(animator.gameObject,phase*clip.length);
+                    var correction=Matrix4x4.identity;
+                    if(inPlaceTurns && (motion==6 || motion==7))
+                    {
+                        // The clips author 90-degree root turns. Physics owns facing; retain only the turn steps.
+                        Vector3 forward=Quaternion.Inverse(animator.transform.rotation)*animator.bodyRotation*Vector3.forward;
+                        float yaw=Mathf.Atan2(forward.x,forward.z)*Mathf.Rad2Deg;
+                        if(frame==0) initialYaw=yaw;
+                        correction=Matrix4x4.Rotate(Quaternion.Euler(0,-Mathf.DeltaAngle(initialYaw,yaw),0));
+                    }
                     int start=(motion*frames+frame)*renderer.bones.Length;
                     for(int bone=0;bone<renderer.bones.Length;bone++)
-                        matrices[start+bone]=animator.transform.worldToLocalMatrix*renderer.bones[bone].localToWorldMatrix*bindposes[bone];
+                        matrices[start+bone]=correction*animator.transform.worldToLocalMatrix*renderer.bones[bone].localToWorldMatrix*bindposes[bone];
                     for(int i=0;i<vertices.Length;i++)
                     {
                         var w=weights[i]; var v=vertices[i];
@@ -174,7 +151,8 @@ namespace CrowdPunch.Editor
             }
             AssetDatabase.ImportAsset(path,ImportAssetOptions.ForceSynchronousImport);
             bounds.Expand(.2f); renderer.localBounds=bounds;
-            clips[0].SampleAnimation(animator.gameObject,0);
+            if (humanoid) { animator.Play("Motion0", 0, 0); animator.Update(0f); }
+            else clips[0].SampleAnimation(animator.gameObject,0);
         }
     }
 }

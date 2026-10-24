@@ -15,10 +15,15 @@ namespace CrowdPunch.Configuration
         public ChickenPattern stageTwoPattern = ChickenPattern.Paired;
         public ChickenPattern stageThreePattern = ChickenPattern.Paired;
         [Header("Attack cycle")]
-        public ChickenPauseResponse pauseResponse = ChickenPauseResponse.InterruptAndFlee;
+        public ChickenPauseResponse pauseResponse = ChickenPauseResponse.InterruptAndCast;
         public ChickenShotAim shotAim = ChickenShotAim.PlayerPosition;
         [Min(0)] public float openingPause = 2.5f;
         [Min(.05f)] public float windUp = .8f;
+        [Header("Sweep Attack animation")]
+        [Tooltip("Zero-based source animation frame that releases the projectile. Wind Up is the full Sweep Attack playback duration.")]
+        [Min(0)] public int projectileLaunchFrame = 18;
+        [Tooltip("Last source frame of Sweep Attack; populated by the boss model builder.")]
+        [Min(1)] public int firingAnimationLastFrame = 30;
         [Tooltip("Minimum time between releases, including reposition and next wind-up.")]
         [Min(.1f)] public float shotSpacing = 1.5f;
         [Min(.05f)] public float pause = 1.6f;
@@ -29,6 +34,8 @@ namespace CrowdPunch.Configuration
         [Min(1)] public float rushDistance = 9;
         [Min(0)] public float sidewaysWeight = 1.5f;
         [Min(0)] public float proximityDistance = 7;
+        [Tooltip("Full Cast Spell playback duration before the proximity teleport. Populated from the supplied animation by the boss model builder.")]
+        [Min(.05f)] public float castDuration = 1;
         [Min(.05f)] public float stagger = .65f;
         [Min(0)] public float invulnerability = 1.15f;
         [Min(.1f)] public float bodyRadius = 1.7f;
@@ -54,6 +61,7 @@ namespace CrowdPunch.Configuration
             StageOnePattern=stageOnePattern, StageTwoPattern=stageTwoPattern, StageThreePattern=stageThreePattern,
             PauseResponse=pauseResponse, ShotAim=shotAim, OpeningPause=math.max(0,openingPause),
             WindUp=math.max(.05f,windUp), ShotSpacing=math.max(.1f,shotSpacing), Pause=math.max(.05f,pause),
+            ShotReleasePhase=math.saturate(projectileLaunchFrame/(float)math.max(1,firingAnimationLastFrame)),
             FinalPauseMultiplier=math.clamp(finalPauseMultiplier,.1f,1), RushSpeed=math.max(.1f,rushSpeed),
             FinalRushMultiplier=math.max(1,finalRushMultiplier), RushDistance=math.max(1,rushDistance),
             SidewaysWeight=math.max(0,sidewaysWeight), ProximityDistance=math.max(0,proximityDistance),

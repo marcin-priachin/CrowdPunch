@@ -21,11 +21,20 @@ namespace CrowdPunch.Systems.AI
             if(!player.IsAvailable) return;
             float dt=SystemAPI.Time.DeltaTime;
             var commands=new EntityCommandBuffer(Allocator.Temp);
-            foreach(var (boss,tuning,transform,entity) in SystemAPI.Query<RefRW<ChickenBoss>,RefRO<ChickenTuning>,RefRO<LocalTransform>>().WithEntityAccess())
+            foreach(var (boss,tuning,cast,transform,entity) in SystemAPI.Query<RefRW<ChickenBoss>,RefRO<ChickenTuning>,RefRO<ChickenCastTuning>,RefRO<LocalTransform>>().WithEntityAccess())
             {
                 ref var b=ref boss.ValueRW; var t=tuning.ValueRO; var p=transform.ValueRO.Position;
                 b.PreviousPosition=p; b.SinceShot+=dt; b.Remaining-=dt;
                 if(b.Phase==ChickenPhase.Defeated) continue;
+                if(b.Phase==ChickenPhase.Pause || b.Phase==ChickenPhase.Cast || b.Phase==ChickenPhase.Rush)
+                    b.Facing=quaternion.LookRotationSafe(math.normalizesafe(new float3(player.Position.x-p.x,0,player.Position.z-p.z),
+                        math.forward(b.Facing)),math.up());
+                if(b.Phase==ChickenPhase.Cast)
+                {
+                    if(b.Remaining<=0) b.Phase=ChickenPhase.Teleport;
+                    continue;
+                }
+                if(b.Phase==ChickenPhase.Teleport) continue;
                 if(b.Phase==ChickenPhase.Stagger)
                 {
                     if(b.Remaining<=0) { b.Phase=ChickenPhase.Pause; b.Remaining=PauseDuration(b.Stage,t); }
@@ -34,17 +43,21 @@ namespace CrowdPunch.Systems.AI
                 if(b.Phase==ChickenPhase.Rush)
                 {
                     if(math.distancesq(p.xz,b.Destination.xz)>.01f) continue;
-                    if(b.ShotsRemaining>0) { b.Phase=ChickenPhase.WindUp; b.Remaining=math.max(t.WindUp,t.ShotSpacing-b.SinceShot); }
+                    if(b.ShotsRemaining>0) { b.Phase=ChickenPhase.WindUp; b.Remaining=math.max(t.ShotReleaseDelay,t.ShotSpacing-b.SinceShot); }
                     else { b.Phase=ChickenPhase.Pause; b.Remaining=PauseDuration(b.Stage,t); }
                 }
                 if(b.Phase==ChickenPhase.Pause)
                 {
-                    if(t.PauseResponse==ChickenPauseResponse.InterruptAndFlee
+                    if(t.PauseResponse==ChickenPauseResponse.InterruptAndCast
                         && math.distancesq(p.xz,player.Position.xz)<t.ProximityDistance*t.ProximityDistance)
-                    { b.ShotsRemaining=0; CommitRush(ref b,p,player.Position,t); continue; }
+                    {
+                        b.ShotsRemaining=0; b.Phase=ChickenPhase.Cast;
+                        b.Remaining=math.max(.05f,cast.ValueRO.Duration); b.Destination=p;
+                        continue;
+                    }
                     if(b.Remaining>0) continue;
                     b.ShotsRemaining=Pattern(b.Stage,t)==ChickenPattern.Paired?2:1;
-                    b.Phase=ChickenPhase.WindUp; b.Remaining=t.WindUp;
+                    b.Phase=ChickenPhase.WindUp; b.Remaining=t.ShotReleaseDelay;
                 }
                 if(b.Phase!=ChickenPhase.WindUp) continue;
                 float3 aim=player.Position;
@@ -57,7 +70,7 @@ namespace CrowdPunch.Systems.AI
                 float3 start=p+direction*(t.BodyRadius+t.ProjectileRadius+.15f); start.y=t.ProjectileHeight;
                 commands.SetComponent(shot,LocalTransform.FromPositionRotationScale(start,quaternion.identity,t.ProjectileRadius*2));
                 commands.SetComponent(shot,new ChickenProjectile { Boss=entity,Velocity=direction*t.FireSpeed,Launch=1 });
-                b.ShotsRemaining--; b.SinceShot=0;
+                b.ShotsRemaining--; b.SinceShot=0; b.ShotSequence++;
                 // Release and committed rush happen in the same pre-physics step.
                 CommitRush(ref b,p,player.Position,t);
             }
@@ -81,7 +94,8 @@ namespace CrowdPunch.Systems.AI
                 if(distance>score) { best=candidate; score=distance; }
             }
             b.Destination=new float3(best.x,position.y,best.y); b.Phase=ChickenPhase.Rush;
-            b.Facing=quaternion.LookRotationSafe(math.normalizesafe(b.Destination-position,new float3(0,0,1)),math.up());
+            b.Facing=quaternion.LookRotationSafe(math.normalizesafe(new float3(player.x-position.x,0,player.z-position.z),
+                math.forward(b.Facing)),math.up());
             b.RushSequence++; b.RushHitPlayer=0; b.AlternateSide^=1;
         }
     }

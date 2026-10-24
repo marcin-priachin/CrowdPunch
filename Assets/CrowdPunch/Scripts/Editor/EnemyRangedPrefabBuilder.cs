@@ -126,7 +126,7 @@ namespace CrowdPunch.Editor
         }
 
         // Rigid equipment must follow the sampled hand bone after Animator is removed by baking.
-        private static void ConvertAccessories(GameObject visual)
+        internal static void ConvertAccessories(GameObject visual, string prefix = "GoblinRangedAccessory")
         {
             int index = 0;
             foreach (var renderer in visual.GetComponentsInChildren<MeshRenderer>(true))
@@ -135,10 +135,10 @@ namespace CrowdPunch.Editor
                 if (filter == null || filter.sharedMesh == null) continue;
                 var bone = renderer.transform.parent;
                 var mesh = UnityEngine.Object.Instantiate(filter.sharedMesh);
-                mesh.name = $"GoblinRangedAccessory_{index:00}";
+                mesh.name = $"{prefix}_{index:00}";
                 mesh.bindposes = new[] { bone.worldToLocalMatrix * renderer.transform.localToWorldMatrix };
                 mesh.boneWeights = Enumerable.Repeat(new BoneWeight { boneIndex0 = 0, weight0 = 1 }, mesh.vertexCount).ToArray();
-                string path = $"Assets/CrowdPunch/Animation/GoblinRangedAccessory_{index++:00}.asset";
+                string path = $"Assets/CrowdPunch/Animation/{prefix}_{index++:00}.asset";
                 var saved = AssetDatabase.LoadAssetAtPath<Mesh>(path);
                 if (saved == null) { AssetDatabase.CreateAsset(mesh, path); saved = mesh; }
                 else { EditorUtility.CopySerialized(mesh, saved); UnityEngine.Object.DestroyImmediate(mesh); EditorUtility.SetDirty(saved); }
@@ -154,7 +154,7 @@ namespace CrowdPunch.Editor
             AssetDatabase.SaveAssets();
         }
 
-        private static Material[] BuildMaterials(Material[] sources)
+        internal static Material[] BuildMaterials(Material[] sources, string folder = MaterialFolder)
         {
             Material template = AssetDatabase.LoadAssetAtPath<Material>(SkinningMaterialPath);
             if (template == null) throw new InvalidOperationException($"Missing skinning material: {SkinningMaterialPath}");
@@ -163,7 +163,7 @@ namespace CrowdPunch.Editor
             {
                 Material source = sources[index];
                 string name = string.IsNullOrWhiteSpace(source?.name) ? $"Goblin_{index}" : source.name;
-                string path = $"{MaterialFolder}/{SafeName(name)}.mat";
+                string path = $"{folder}/{SafeName(name)}.mat";
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null)
                 {
