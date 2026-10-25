@@ -21,7 +21,7 @@ namespace CrowdPunch.Editor
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
                 throw new InvalidOperationException("Sample Goblin jogs outside Play Mode.");
-            foreach (string kind in new[] { "Baseline", "Ranged", "Elite", "Armored" })
+            foreach (string kind in new[] { "Baseline", "Ranged", "Elite", "Armored", "LinkedPair" })
             {
                 string path = kind == "Elite" || kind == "Armored" ? $"Assets/CrowdPunch/Prefabs/{kind}Enemy.prefab"
                     : $"Assets/CrowdPunch/Prefabs/Enemy{kind}.prefab";

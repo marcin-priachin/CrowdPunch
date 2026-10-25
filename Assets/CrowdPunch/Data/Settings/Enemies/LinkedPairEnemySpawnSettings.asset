@@ -18,6 +18,7 @@ MonoBehaviour:
   initialCount: 100
   radius: 100
   respawnEnabled: 0
+  spawnFromGround: 1
   moveSpeed: 8
   wanderSpeed: 1.5
   chargeDistance: 99999
@@ -52,6 +53,8 @@ MonoBehaviour:
   initialAttackDelay: 1.5
   initialDelayVariation: 1.5
   windUpDuration: 0.75
+  projectileLaunchFrame: 10
+  firingAnimationLastFrame: 25
   cooldown: 3
   cooldownVariation: 1.5
   projectileDamage: 10
@@ -142,6 +145,9 @@ MonoBehaviour:
   elitePlayerPush: 8
   elitePlayerInvincibilityDuration: 0.5
   eliteWindUpDuration: 0
+  eliteEnemyLaunchFrame: 12
+  eliteSweepAnimationLastFrame: 30
+  eliteSweepAnimationFrameRate: 30
   eliteEnableTelegraph: 0
   eliteTelegraphDuration: 0.25
   armorStaggerDuration: 0.3

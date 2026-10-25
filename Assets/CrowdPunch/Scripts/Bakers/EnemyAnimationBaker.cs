@@ -73,6 +73,32 @@ namespace CrowdPunch.Bakers
                         + owner.transform.up * authoring.LaunchPivotHeight) : float3.zero
             });
             AddComponent<EnemyAnimationPlayback>(entity);
+            if (owner != null && GetComponentInParent<LinkedPairAuthoring>() != null)
+            {
+                var left = animator.GetBoneTransform(HumanBodyBones.LeftHand);
+                var right = animator.GetBoneTransform(HumanBodyBones.RightHand);
+                int leftIndex = System.Array.IndexOf(renderer.bones, left);
+                int rightIndex = System.Array.IndexOf(renderer.bones, right);
+                // Equipment may contain only one hand; the body supplies both endpoints.
+                if (leftIndex >= 0 && rightIndex >= 0)
+                {
+                    var leftMarker = left.Find("+ L Hand");
+                    var rightMarker = right.Find("+ R Hand");
+                    if (leftMarker == null || rightMarker == null)
+                        throw new System.InvalidOperationException("LinkedPair requires + L Hand and + R Hand markers.");
+                    DependsOn(leftMarker);
+                    DependsOn(rightMarker);
+                    AddComponent(entity, new LinkedPairHandAnchors
+                    {
+                        Owner = GetEntity(owner, TransformUsageFlags.Dynamic),
+                        Root = GetEntity(animator, TransformUsageFlags.Dynamic),
+                        LeftBone = leftIndex,
+                        RightBone = rightIndex,
+                        LeftBindPosition = renderer.sharedMesh.bindposes[leftIndex].inverse.MultiplyPoint3x4(left.InverseTransformPoint(leftMarker.position)),
+                        RightBindPosition = renderer.sharedMesh.bindposes[rightIndex].inverse.MultiplyPoint3x4(right.InverseTransformPoint(rightMarker.position))
+                    });
+                }
+            }
             if (authoring.Profile == EnemyAnimationProfile.Trail && owner != null)
             {
                 using var groundingBuilder = new BlobBuilder(Allocator.Temp);

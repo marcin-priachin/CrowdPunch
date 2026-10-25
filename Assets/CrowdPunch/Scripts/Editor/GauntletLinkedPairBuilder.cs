@@ -50,7 +50,7 @@ namespace CrowdPunch.Editor
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
                 var main = EditorSceneManager.OpenScene(Scenes + "Gauntlet_27.unity", OpenSceneMode.Single);
                 var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue = "Punch either Mushnub to swing its partner through the crowd. The tether can hurt you, even after your punch. Use cover and flank.";
+                marker.FindProperty("openingHint").stringValue = "Punch either linked Goblin to swing its partner through the crowd. The tether can hurt you, even after your punch. Use cover and flank.";
                 marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap = EditorSceneManager.OpenScene(Root + "Scenes/Bootstrap.unity", OpenSceneMode.Single);
                 var sequence = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());

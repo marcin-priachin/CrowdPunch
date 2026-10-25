@@ -1178,7 +1178,8 @@ namespace CrowdPunch.Tests
                     var vertices = renderer.sharedMesh.vertices;
                     var weights = renderer.sharedMesh.boneWeights;
                     var matrices = new UnityEngine.Matrix4x4[bones];
-                    foreach (int motion in new[] { 0, EnemyAnimationSamples.FlyingMotion })
+                    bool authoredGoblin = authoring.Profile == EnemyAnimationProfile.Goblin;
+                    foreach (int motion in authoredGoblin ? new[] { 0, 1, 2, 5, 6, 9, 10 } : new[] { 0, EnemyAnimationSamples.FlyingMotion })
                     {
                         reader.BaseStream.Position = start + motion * frames * bones * 48L;
                         for (int frame = 0; frame < frames; frame++)
@@ -1189,9 +1190,12 @@ namespace CrowdPunch.Tests
                                 for (int column = 0; column < 4; column++)
                                     for (int row = 0; row < 3; row++) matrices[bone][row, column] = reader.ReadSingle();
                             }
-                            for (int angle = 0; angle < 25; angle++)
+                            for (int angle = 0; angle < (authoredGoblin ? 1 : 25); angle++)
                             {
-                                var rotation = UnityEngine.Quaternion.Euler(-118.65f * angle / 24f, 0, 0);
+                                // Goblins launch at +90 degrees; their hit/recovery/death clips remain upright.
+                                var rotation = UnityEngine.Quaternion.Euler(authoredGoblin
+                                    ? motion == EnemyAnimationSamples.FlyingMotion ? 90f : 0f
+                                    : -118.65f * angle / 24f, 0, 0);
                                 for (int index = 0; index < vertices.Length; index++)
                                 {
                                     var w = weights[index]; var v = vertices[index];

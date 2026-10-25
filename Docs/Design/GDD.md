@@ -401,7 +401,7 @@ The pair remains flying while either endpoint retains useful momentum, until bot
 
 Status: Must
 
-Use dedicated pair settings for maximum length, tension, movement and straddle/sweep positioning, damaging width, player/enemy damage, tick interval, launch/push strength, shared flight limit/settling and recovery. Initial numeric values, visuals, effects and animations are delegated tuning. Use the supplied Mushnub model and its clips. Endpoint health remains in the spawn profile. Only launch/push are agreed alternate behavior modes.
+Use dedicated pair settings for maximum length, tension, movement and straddle/sweep positioning, damaging width, player/enemy damage, tick interval, launch/push strength, shared flight limit/settling and recovery. Initial numeric values, visuals, effects and animations are delegated tuning. Use `Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Linked Variant.prefab` at its authored scale with Full Cel shading. Use Trooper authored Spawn, hit, launch and recovery/defeat animation; blend the shared directional jogs on legs while retaining Giant movement animation on the upper body. Enable ground spawning. Body readability uses authored animation without scripted tint, shaking or scale changes. Attach the visible tether to the animated `+ L Hand` or `+ R Hand` marker facing the partner (presentation amendment requested 2026-10-25). Endpoint health remains in the spawn profile. Only launch/push are agreed alternate behavior modes.
 
 ### LINK-007 - Legacy Gauntlet_27
 

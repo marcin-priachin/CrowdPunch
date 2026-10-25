@@ -49,6 +49,7 @@ namespace CrowdPunch.Editor
                 if (sequence.Phase != EnemyWaveRuntimePhase.AwaitingActivation || records.Length != 1) return;
                 pair = records[0]; var p = em.GetComponentData<LinkedPair>(pair);
                 if (!em.IsEnabled(p.A) || !em.IsEnabled(p.B) || em.GetComponentData<EnemyGroundConstraint>(p.A).IsLocked == 0) return;
+                if (p.Phase != EnemyLaunchPhase.Active) return; // Ground Spawn finishes before the controlled punch.
                 Require(sequence.SpawnedCount == 8, "First wave is not 2+6");
                 target = Entity.Null;
                 foreach (var e in bodies) if (!em.HasComponent<LinkedPairEndpoint>(e)) { target = e; break; }
@@ -58,7 +59,7 @@ namespace CrowdPunch.Editor
                 Require(PunchResolution.TryApply(em, p.A, new PunchSpecification { Origin = pose - math.forward(), Direction = math.forward(),
                     Range = 2, Radius = .5f, Strength = 22, Damage = 0, EventTime = world.Time.ElapsedTime,
                     Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1 }), "Initial punch failed");
-                Record("PASS exact 1 pair + 6 Baselines and baked Mushnub endpoints"); Next(world, 1);
+                Record("PASS exact 1 pair + 6 Baselines and baked Goblin endpoints"); Next(world, 1);
             } else if (stage == 1) {
                 var p = em.GetComponentData<LinkedPair>(pair);
                 Require(em.GetComponentData<EnemyLaunchState>(p.A).Phase == EnemyLaunchPhase.Launched && em.GetComponentData<EnemyLaunchState>(p.B).Phase == EnemyLaunchPhase.Launched, "Pair split launch phases");
@@ -91,6 +92,7 @@ namespace CrowdPunch.Editor
             } else if (stage == 5) {
                 if (sequence.CurrentWaveIndex != 0 || sequence.Phase != EnemyWaveRuntimePhase.AwaitingActivation || records.Length != 1 || bodies.Length != 8) return;
                 var p = em.GetComponentData<LinkedPair>(records[0]);
+                if (em.HasComponent<EnemySpawnAnimation>(p.A) && em.IsComponentEnabled<EnemySpawnAnimation>(p.A)) return;
                 Require(p.Phase == EnemyLaunchPhase.Active && em.GetBuffer<LinkedPairClock>(records[0]).Length == 0, "Retry retained flight/clock");
                 Require(em.GetComponentData<Health>(p.A).Current == em.GetComponentData<Health>(p.A).Max && em.GetComponentData<Health>(p.B).Current == em.GetComponentData<Health>(p.B).Max, "Retry missing health");
                 Record("PASS retry restores intact healthy pairs and clears clocks"); Defeat(em, bodies); Next(world, 6);

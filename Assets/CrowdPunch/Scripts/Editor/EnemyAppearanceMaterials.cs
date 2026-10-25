@@ -16,6 +16,7 @@ namespace CrowdPunch.Editor
                 || path.StartsWith(EnemyRangedPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyElitePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyArmoredPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
+                || path.StartsWith(EnemyLinkedPairPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(ChickenModelBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(RollingSpikeBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyDasherPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)

@@ -67,6 +67,45 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Link005PairSpawnUsesSharedClockAndBothEndpointsResume()
+        {
+            var em = world.EntityManager;
+            var partner = em.Instantiate(enemy);
+            var warning = em.GetComponentData<EnemySpawnWarning>(partner);
+            warning.Position.x += 5;
+            em.SetComponentData(partner, warning);
+            var sequence = em.CreateEntity(typeof(EnemyWaveSequence));
+            em.SetComponentData(sequence, new EnemyWaveSequence { RunGeneration = 1 });
+            var pair = em.CreateEntity(typeof(LinkedPair), typeof(LinkedPairTuning));
+            em.SetComponentData(pair, new LinkedPair { A = enemy, B = partner, Sequence = sequence,
+                RunGeneration = 1, LifetimeA = 1, LifetimeB = 1 });
+            foreach (var endpoint in new[] { enemy, partner })
+            {
+                em.AddComponentData(endpoint, new EnemyLifetime { Generation = 1 });
+                em.AddComponentData(endpoint, new LinkedPairEndpoint { Pair = pair });
+                em.AddComponentData(endpoint, new EnemyArchetype { Value = EnemyArchetypeKind.LinkedPair });
+            }
+            Activate();
+            Assert.That(em.GetComponentData<LinkedPair>(pair).Phase, Is.EqualTo(EnemyLaunchPhase.Recovering));
+            Assert.That(em.GetComponentData<LinkedPair>(pair).RecoveryRemaining, Is.EqualTo(.8f));
+            var lifecycle = world.GetOrCreateSystem<LinkedPairLifecycleSystem>();
+            for (int step = 0; step < 2; step++)
+            {
+                world.SetTime(new TimeData(world.Time.ElapsedTime + .4f, .4f));
+                lifecycle.Update(world.Unmanaged);
+                world.GetOrCreateSystem<EnemyRecoverySystem>().Update(world.Unmanaged);
+                em.CompleteAllTrackedJobs();
+                foreach (var endpoint in new[] { enemy, partner })
+                {
+                    Assert.That(em.IsComponentEnabled<EnemySpawnAnimation>(endpoint), Is.EqualTo(step == 0));
+                    Assert.That(em.GetComponentData<EnemyLaunchState>(endpoint).Phase,
+                        Is.EqualTo(step == 0 ? EnemyLaunchPhase.Recovering : EnemyLaunchPhase.Active));
+                }
+            }
+            Assert.That(em.GetComponentData<LinkedPairEndpoint>(partner).Pair, Is.EqualTo(pair));
+        }
+
+        [Test]
         public void Info006OptionStartsAtColliderAlignedFloorAndPreservesXZ()
         {
             Activate();

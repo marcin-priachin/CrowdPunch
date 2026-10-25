@@ -37,7 +37,7 @@ namespace CrowdPunch.Systems.Initialization
             var pairWorld = pairHasGround ? SystemAPI.GetSingleton<PhysicsWorldSingleton>() : default;
             var player = SystemAPI.HasSingleton<PlayerSnapshot>() ? SystemAPI.GetSingleton<PlayerSnapshot>() : default;
             // LINK-007: reserve and activate a pair atomically, including when one endpoint is obstructed.
-            foreach (var pair in SystemAPI.Query<RefRO<LinkedPair>>())
+            foreach (var pair in SystemAPI.Query<RefRW<LinkedPair>>())
             {
                 var p = pair.ValueRO;
                 if (!SystemAPI.HasComponent<EnemySpawnWarning>(p.A) || !SystemAPI.HasComponent<EnemySpawnWarning>(p.B)) continue;
@@ -45,7 +45,14 @@ namespace CrowdPunch.Systems.Initialization
                 a.SecondsRemaining -= SystemAPI.Time.DeltaTime; b.SecondsRemaining -= SystemAPI.Time.DeltaTime;
                 SystemAPI.SetComponent(p.A, a); SystemAPI.SetComponent(p.B, b);
                 if (a.SecondsRemaining > 0 || b.SecondsRemaining > 0 || !PairClear(p.A, a) || !PairClear(p.B, b)) continue;
-                Activate(p.A, a); Activate(p.B, b);
+                float spawnDuration = math.max(Activate(p.A, a), Activate(p.B, b));
+                if (spawnDuration > 0)
+                {
+                    // Ordinary recovery skips intact pairs; their shared clock must own Spawn too.
+                    p.Phase = EnemyLaunchPhase.Recovering;
+                    p.RecoveryRemaining = spawnDuration;
+                    pair.ValueRW = p;
+                }
                 Reserve(p.A, a); Reserve(p.B, b);
             }
             foreach (var (warning, enemy) in SystemAPI.Query<RefRW<EnemySpawnWarning>>()
@@ -86,16 +93,16 @@ namespace CrowdPunch.Systems.Initialization
             }
             commands.Playback(state.EntityManager);
 
-            void Activate(Entity enemy, EnemySpawnWarning warning)
+            float Activate(Entity enemy, EnemySpawnWarning warning)
             {
                 commands.SetEnabled(enemy, true);
                 commands.RemoveComponent<EnemySpawnWarning>(enemy);
                 var em = pairManager;
                 if (!hasFloor || !em.HasComponent<EnemySpawnAnimation>(enemy)
-                    || !em.HasComponent<PhysicsCollider>(enemy) || !em.HasComponent<EnemyLaunchState>(enemy)) return;
+                    || !em.HasComponent<PhysicsCollider>(enemy) || !em.HasComponent<EnemyLaunchState>(enemy)) return 0;
                 var spawn = em.GetComponentData<EnemySpawnAnimation>(enemy);
                 var collider = em.GetComponentData<PhysicsCollider>(enemy);
-                if (spawn.UseAnimation == 0 || spawn.Duration <= 0f || !collider.IsValid) return;
+                if (spawn.UseAnimation == 0 || spawn.Duration <= 0f || !collider.IsValid) return 0;
                 var transform = em.GetComponentData<LocalTransform>(enemy);
                 var bounds = collider.Value.Value.CalculateAabb(new RigidTransform(transform.Rotation, transform.Position), transform.Scale);
                 float height = pairFloor + transform.Position.y - bounds.Min.y;
@@ -109,6 +116,7 @@ namespace CrowdPunch.Systems.Initialization
                 launch.RecoverySecondsRemaining = spawn.Duration;
                 commands.SetComponent(enemy, launch);
                 commands.SetComponentEnabled<EnemySpawnAnimation>(enemy, true);
+                return spawn.Duration;
             }
 
             bool PairClear(Entity enemy, EnemySpawnWarning warning)
