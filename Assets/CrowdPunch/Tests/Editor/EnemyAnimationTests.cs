@@ -1097,7 +1097,7 @@ namespace CrowdPunch.Tests
             Assert.That(Pose.y, Is.EqualTo(.5f).Within(.001f));
             em.SetComponentEnabled<EnemySpawnAnimation>(owner, false);
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
-            Tick(); Assert.That(Pose.x, Is.EqualTo(6), "Take off after ground emergence.");
+            Tick(); Assert.That(Pose.x, Is.EqualTo(7), "The first active frame retains the spawn endpoint instead of playing a second takeoff.");
             for (int i = 0; i < 6; i++) Tick();
             Assert.That(Pose.x, Is.Zero);
             em.SetComponentData(owner, new DesiredMovement { Speed = 2 });

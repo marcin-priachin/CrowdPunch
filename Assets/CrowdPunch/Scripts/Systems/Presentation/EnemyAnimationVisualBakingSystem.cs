@@ -38,6 +38,12 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     Entity entity = child.Value;
                     if (!SystemAPI.HasComponent<RenderBounds>(entity)) continue;
+                    if (animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Wizard)
+                        commands.AddComponent(entity, new EnemyAnimationBounds
+                        {
+                            Animation = animationEntity,
+                            Original = SystemAPI.GetComponent<RenderBounds>(entity).Value
+                        });
                     if (entity != animationEntity && SystemAPI.HasComponent<EnemyArmorVisual>(animationEntity))
                         commands.AddComponent(entity, SystemAPI.GetComponent<EnemyArmorVisual>(animationEntity));
                     if (gatekeeper) commands.AddComponent(entity, new BossVisualOwner { Value = animation.ValueRO.Owner, Color = new float4(1) });

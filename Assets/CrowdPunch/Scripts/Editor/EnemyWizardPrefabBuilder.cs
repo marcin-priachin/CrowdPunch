@@ -20,7 +20,37 @@ namespace CrowdPunch.Editor
         public const string MaterialFolder = "Assets/CrowdPunch/Materials/Enemies/Wizard";
         private const string SkinningMaterialPath = "Assets/CrowdPunch/Animation/EnemySkinning.mat";
         private const string PhysicsMaterialPath = "Assets/CrowdPunch/PhysicsMaterial/Enemy.physicMaterial";
-        private const int FrameCount = 32;
+        // Dense samples retain the supplied animation when interpolating at the current scale.
+        private const int FrameCount = 96;
+
+        [MenuItem("Crowd Punch/Animation/Rebuild Wizard Samples")]
+        public static void RebuildSamples()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Rebuild Wizard samples outside Play Mode.");
+            GameObject root = PrefabUtility.LoadPrefabContents(PrefabPath);
+            try
+            {
+                var animator = root.GetComponentInChildren<Animator>(true);
+                var transforms = root.GetComponentsInChildren<Transform>(true);
+                var positions = transforms.Select(transform => transform.localPosition).ToArray();
+                var rotations = transforms.Select(transform => transform.localRotation).ToArray();
+                var scales = transforms.Select(transform => transform.localScale).ToArray();
+                AnimationClip[] clips = FindClips();
+                foreach (var authoring in root.GetComponentsInChildren<EnemyAnimationAuthoring>(true))
+                    WriteSamples(AssetDatabase.GetAssetPath(authoring.Samples), animator,
+                        authoring.GetComponent<SkinnedMeshRenderer>(), clips);
+                // Sampling must not save animated transforms over the current Inspector values.
+                for (int index = 0; index < transforms.Length; index++)
+                {
+                    transforms[index].SetLocalPositionAndRotation(positions[index], rotations[index]);
+                    transforms[index].localScale = scales[index];
+                }
+                PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+            AssetDatabase.SaveAssets();
+        }
 
         [MenuItem("Crowd Punch/Enemies/Rebuild Wizard Prefab")]
         public static void Rebuild()
@@ -199,6 +229,9 @@ namespace CrowdPunch.Editor
             {
                 AnimationClip clip = clips[motion];
                 durations[motion] = clip.length;
+                float clipMinimum = float.PositiveInfinity;
+                Bounds clipBounds = default;
+                bool hasClipBounds = false;
                 for (int frame = 0; frame < FrameCount; frame++)
                 {
                     bool oneShot = motion == 3 || motion == 5 || motion == 6 || motion == 7
@@ -221,19 +254,34 @@ namespace CrowdPunch.Editor
                         positions[vertex] = position;
                         minimum = Mathf.Min(minimum, position.y);
                     }
-                    // The supplied death dips slightly below its origin. Preserve emergence only for Spawn.
-                    float floorOffset = motion == 7 ? 0f : Mathf.Max(0f, -minimum);
-                    for (int bone = 0; bone < renderer.bones.Length; bone++)
-                        matrices[poseStart + bone][1, 3] += floorOffset;
-                    for (int vertex = 0; vertex < positions.Length; vertex++)
+                    if (motion == EnemyAnimationSamples.ImpactMotion)
                     {
-                        Vector3 position = positions[vertex] + Vector3.up * floorOffset;
-                        if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
-                        else bounds.Encapsulate(position);
+                        // Anchor the death pose to movement clearance throughout, rather than
+                        // lifting its early frames according to the final fallen pose's minimum.
+                        for (int bone = 0; bone < renderer.bones.Length; bone++)
+                            matrices[poseStart + bone][1, 3] -= minimum;
+                        for (int vertex = 0; vertex < positions.Length; vertex++)
+                            positions[vertex].y -= minimum;
+                        minimum = 0f;
+                    }
+                    clipMinimum = Mathf.Min(clipMinimum, minimum);
+                    foreach (Vector3 position in positions)
+                    {
+                        if (!hasClipBounds) { clipBounds = new Bounds(position, Vector3.zero); hasClipBounds = true; }
+                        else clipBounds.Encapsulate(position);
                     }
                 }
+                // Preserve the complete authored cycle with one constant offset, not per-frame grounding.
+                float floorOffset = motion == 7 ? 0f : -clipMinimum;
+                int first = motion * FrameCount * renderer.bones.Length;
+                int last = first + FrameCount * renderer.bones.Length;
+                for (int pose = first; pose < last; pose++) matrices[pose][1, 3] += floorOffset;
+                clipBounds.center += Vector3.up * floorOffset;
+                if (!hasBounds) { bounds = clipBounds; hasBounds = true; }
+                else bounds.Encapsulate(clipBounds);
             }
 
+            bounds.Encapsulate(LimitSpawnRise(matrices, renderer.bones.Length, sourceVertices, boneWeights));
             string hash = AssetDatabase.GetAssetDependencyHash(ControllerPath).ToString()
                 + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(renderer.sharedMesh))
                 + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(animator.avatar));
@@ -252,6 +300,52 @@ namespace CrowdPunch.Editor
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
             bounds.Expand(0.1f);
             renderer.localBounds = bounds;
+        }
+
+        private static Bounds LimitSpawnRise(Matrix4x4[] poses, int bones, Vector3[] vertices, BoneWeight[] weights)
+        {
+            int spawn = 7 * FrameCount * bones;
+            float startHeight = PoseBounds(poses, spawn, vertices, weights).max.y;
+            float flyHeight = PoseBounds(poses, 0, vertices, weights).max.y;
+            Bounds bounds = default;
+            for (int frame = 0; frame < FrameCount; frame++)
+            {
+                float phase = frame / (float)(FrameCount - 1);
+                int first = spawn + frame * bones;
+                // Keep emergence below cruise height, retaining the clip's pose articulation.
+                float rise = Mathf.SmoothStep(0f, 1f, phase);
+                float offset = Mathf.Lerp(startHeight, flyHeight, rise) - PoseBounds(poses, first, vertices, weights).max.y;
+                float settle = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((phase - .75f) / .25f));
+                for (int bone = 0; bone < bones; bone++)
+                {
+                    poses[first + bone][1, 3] += offset;
+                    // End at the exact first fly-idle pose; no extra takeoff is needed after spawning.
+                    for (int column = 0; column < 4; column++)
+                    for (int row = 0; row < 3; row++)
+                        poses[first + bone][row, column] = Mathf.Lerp(poses[first + bone][row, column], poses[bone][row, column], settle);
+                }
+                var poseBounds = PoseBounds(poses, first, vertices, weights);
+                if (frame == 0) bounds = poseBounds;
+                else bounds.Encapsulate(poseBounds);
+            }
+            return bounds;
+        }
+
+        private static Bounds PoseBounds(Matrix4x4[] poses, int first, Vector3[] vertices, BoneWeight[] weights)
+        {
+            Bounds bounds = default;
+            for (int vertex = 0; vertex < vertices.Length; vertex++)
+            {
+                var weight = weights[vertex];
+                var point = vertices[vertex];
+                Vector3 position = poses[first + weight.boneIndex0].MultiplyPoint3x4(point) * weight.weight0
+                    + poses[first + weight.boneIndex1].MultiplyPoint3x4(point) * weight.weight1
+                    + poses[first + weight.boneIndex2].MultiplyPoint3x4(point) * weight.weight2
+                    + poses[first + weight.boneIndex3].MultiplyPoint3x4(point) * weight.weight3;
+                if (vertex == 0) bounds = new Bounds(position, Vector3.zero);
+                else bounds.Encapsulate(position);
+            }
+            return bounds;
         }
 
         private static void ConfigurePhysics(GameObject root)

@@ -6,6 +6,7 @@ using Unity.Deformations;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Rendering;
 using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Presentation
@@ -16,10 +17,11 @@ namespace CrowdPunch.Systems.Presentation
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            new EnemyPosePlaybackJob
+            state.Dependency = new EnemyPosePlaybackJob
             {
                 Dragons = SystemAPI.GetComponentLookup<DragonFlameState>(true),
                 Wizards = SystemAPI.GetComponentLookup<WizardCastState>(true),
+                WizardTuning = SystemAPI.GetComponentLookup<WizardSettings>(true),
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
                 Movement = SystemAPI.GetComponentLookup<DesiredMovement>(true),
                 Settings = SystemAPI.GetComponentLookup<EnemyMovementSettings>(true),
@@ -39,7 +41,30 @@ namespace CrowdPunch.Systems.Presentation
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
                 SpawnAnimations = SystemAPI.GetComponentLookup<EnemySpawnAnimation>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime
-            }.ScheduleParallel();
+            }.ScheduleParallel(state.Dependency);
+            state.Dependency = new WizardBoundsJob
+            {
+                Animations = SystemAPI.GetComponentLookup<EnemyAnimation>(true),
+                Tuning = SystemAPI.GetComponentLookup<WizardSettings>(true)
+            }.ScheduleParallel(state.Dependency);
+        }
+
+        [BurstCompile]
+        private partial struct WizardBoundsJob : IJobEntity
+        {
+            [ReadOnly] public ComponentLookup<EnemyAnimation> Animations;
+            [ReadOnly] public ComponentLookup<WizardSettings> Tuning;
+            private void Execute(in EnemyAnimationBounds original, ref RenderBounds bounds)
+            {
+                if (!Animations.HasComponent(original.Animation)) return;
+                var animation = Animations[original.Animation];
+                float clearance = Tuning.HasComponent(animation.Owner)
+                    ? math.max(0f, Tuning[animation.Owner].AnimationGroundClearance) * animation.WorldToAnimationHeight : 0f;
+                bounds.Value = original.Original;
+                // Cover both unshifted emergence and the configurable visual lift.
+                bounds.Value.Center.y += clearance * .5f;
+                bounds.Value.Extents.y += clearance * .5f;
+            }
         }
 
         [BurstCompile]
@@ -47,6 +72,7 @@ namespace CrowdPunch.Systems.Presentation
         {
             [ReadOnly] public ComponentLookup<DragonFlameState> Dragons;
             [ReadOnly] public ComponentLookup<WizardCastState> Wizards;
+            [ReadOnly] public ComponentLookup<WizardSettings> WizardTuning;
             [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movement;
             [ReadOnly] public ComponentLookup<EnemyMovementSettings> Settings;
@@ -101,7 +127,19 @@ namespace CrowdPunch.Systems.Presentation
                     else
                         ApplyFrame(ref skin, ref samples, animation.SpawnMotion, from,
                             math.min(from + 1, samples.FrameCount - 1), math.frac(spawnFrame));
-                    playback.WasRecovering = (byte)(animation.Profile == (byte)EnemyAnimationProfile.Wizard ? 1 : 0);
+                    if (animation.Profile == (byte)EnemyAnimationProfile.Wizard)
+                    {
+                        float lift = WizardTuning.HasComponent(owner) ? math.max(0f, WizardTuning[owner].AnimationGroundClearance)
+                            * animation.WorldToAnimationHeight * math.smoothstep(0f, 1f, progress) : 0f;
+                        for (int bone = 0; bone < skin.Length; bone++)
+                        {
+                            var pose = skin[bone].Value;
+                            pose.c3.y += lift;
+                            skin[bone] = new SkinMatrix { Value = pose };
+                        }
+                        playback.Phase = 0f;
+                    }
+                    playback.WasRecovering = (byte)(animation.Profile == (byte)EnemyAnimationProfile.Wizard ? 2 : 0);
                     playback.RecoveryAge = 0;
                     playback.WasAttacking = 0;
                     playback.WasLaunched = 0;
@@ -140,7 +178,9 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Wizard)
                 {
-                    AnimateWizard(owner, ref playback, ref skin, ref samples, launch);
+                    AnimateWizard(owner, ref playback, ref skin, ref samples, launch,
+                        WizardTuning.HasComponent(owner) ? math.max(0f, WizardTuning[owner].AnimationGroundClearance)
+                            * animation.WorldToAnimationHeight : 0f);
                     return;
                 }
                 if (animation.Profile != (byte)EnemyAnimationProfile.Standard
@@ -874,7 +914,7 @@ namespace CrowdPunch.Systems.Presentation
 
             // Bud clips provide all body feedback. Never rotate, squash or recolor the model for readability.
             private void AnimateWizard(Entity owner, ref EnemyAnimationPlayback playback,
-                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch, float clearance)
             {
                 bool damaged = false;
                 if (Health.HasComponent(owner))
@@ -884,6 +924,7 @@ namespace CrowdPunch.Systems.Presentation
                     playback.HealthInitialized = 1;
                     playback.PreviousHealth = health;
                 }
+                bool leavingSpawn = launch.Phase == EnemyLaunchPhase.Active && playback.WasRecovering == 2;
                 int motion;
                 float progress = -1f;
                 if (launch.Phase == EnemyLaunchPhase.Launched)
@@ -936,7 +977,7 @@ namespace CrowdPunch.Systems.Presentation
                         motion = 2;
                         progress = playback.AttackPhase;
                     }
-                    else if (playback.WasRecovering != 0)
+                    else if (playback.WasRecovering == 1)
                     {
                         motion = 6;
                         progress = math.saturate(playback.RecoveryAge / math.max(.01f, samples.Durations[6]));
@@ -962,8 +1003,26 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 float frame = progress * (loop ? samples.FrameCount : samples.FrameCount - 1);
                 int from = (int)frame;
-                ApplyDasherFrame(ref skin, ref samples, motion, from,
+                ApplyFrame(ref skin, ref samples, motion, from,
                     loop ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1), math.frac(frame));
+                float spawnBlend = math.smoothstep(0f, 1f, math.saturate(playback.RecoveryAge / .12f));
+                for (int bone = 0; bone < skin.Length; bone++)
+                {
+                    float3x4 pose = skin[bone].Value;
+                    pose.c3.y += clearance;
+                    if (leavingSpawn)
+                    {
+                        var origin = samples.Matrices[(7 * samples.FrameCount + samples.FrameCount - 1) * samples.BoneCount + bone];
+                        origin.c3.y += clearance;
+                        pose = origin * (1f - spawnBlend) + pose * spawnBlend;
+                    }
+                    skin[bone] = new SkinMatrix { Value = pose };
+                }
+                if (leavingSpawn)
+                {
+                    playback.RecoveryAge += DeltaTime;
+                    playback.WasRecovering = (byte)(spawnBlend < 1f ? 2 : 0);
+                }
             }
 
             private void AnimateBaseline(Entity owner, ref EnemyAnimationPlayback playback,

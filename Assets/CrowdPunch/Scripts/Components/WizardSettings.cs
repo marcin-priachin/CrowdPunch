@@ -21,6 +21,8 @@ namespace CrowdPunch.Components
         public WizardMovementMode MovementMode;
         public WizardForceMode ForceMode;
         public bool AlwaysReserveRadius;
+        [UnityEngine.Min(0f), UnityEngine.Tooltip("Minimum model clearance above the ground in world metres across each non-spawn animation cycle. Preserves the original animation and does not change scale.")]
+        public float AnimationGroundClearance;
 
         public static WizardSettings Default => new WizardSettings
         {
@@ -30,6 +32,7 @@ namespace CrowdPunch.Components
             ApproachSpeed = 3, RetreatSpeed = 4, Acceleration = 10, Braking = 10, TurnSpeed = 10,
             PlayerDamage = 10, EnemyDamage = 8, TickInterval = .5f, PlayerInvulnerability = .5f,
             EnemyPush = 3, EnemyKnockback = 12, PlayerPush = 2, PlayerKnockback = 8,
+            AnimationGroundClearance = .1f,
             ForceMode = WizardForceMode.SmallPush
         };
     }
