@@ -1,5 +1,22 @@
 # Crowd Punch â€” Current Architecture
 
+## Slime Snake Presentation (2026-10-25, SNAKE-001/004/006, INFO-004, VISION-006)
+
+`EnemySnakePrefabBuilder` instantiates the supplied Slime Variant under the existing Snake
+physics root, preserving its authored scale (2) and translating only to the capsule floor.
+Dedicated Full Cel materials retain the Slime texture and are excluded from monster-atlas repair.
+The append-only `EnemyAnimationProfile.Slime` selects Idle, Move Forward In Place, Take Damage,
+looping Roll Forward In Place during launch, reverse Die during recovery, and Die on defeat.
+Slot 7 samples Spawn using the shared ground-spawn recovery clock. Generic clip vertical root
+motion is captured into fixed-root skin matrices, so emergence reaches ground Idle without
+moving the physics entity or changing model scale. Non-spawn sampled poses receive only
+translation where needed for floor clearance; bounds enclose the complete sampled motion.
+Quaternion interpolation retains authored rotation and scale. Additional skinned render entities
+are animation-driven and skip procedural deformation and transient hit-color feedback.
+`SnakeBodyColor` and per-render `SnakeBodyTintAmount` preserve the authored head texture while protected, then tint only its masked green body after the final attached orb is removed. The cel shader supports per-entity `_SkinColorAmount`; eyes and markings stay textured. `EnemySnakePrefabBuilder.RebuildSegments` replaces only the SnakeOrb visual children, preserving its prefab GUID and spherical physics root. Each segment uses the head's Slime mesh, source scale, cel materials and shared sample asset through `EnemyAnimationProfile.SlimeSegment`. The model is centred on its physics body; existing segment-radius scaling remains on that body. The tail motor publishes presentation movement intent, while attached animation reads the head's emergence clock without changing segment combat state. Released models use authored roll playback and retain their masked vulnerable body color. Protected segment models keep the same source texture as the head. `SnakeSettings` retains serialized radius/spacing fields and adds `segmentHeightOffset` (default -0.4m). Spawning and the tail motor set attached orb ground planes to head Y plus that offset; the existing pre/post-physics projection enforces it without changing head scale or horizontal collision response. Detached orbs retain their release plane. `SnakeContactSystem` suppresses attached-to-attached solver contacts across all Snakes; detached projectile owner/bounce rules remain unchanged. The tail motor keeps steering during the head's ground-spawn recovery so other crowd contacts cannot leave it unsteered during emergence. All severing,
+protection, contact damage, aiming, wave counts and cleanup remain owned by existing systems.
+
+
 Status: Repository snapshot
 Last inspected: 2026-10-15
 Unity: 6000.3.10f1

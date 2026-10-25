@@ -10,7 +10,7 @@ namespace CrowdPunch.Components
     {
         public Entity OrbPrefab;
         public int SegmentCount;
-        public float OrbRadius, Spacing, WaveAmplitude, WaveFrequencyHz, PursuitSpeed, ContactDamagePercent;
+        public float OrbRadius, Spacing, HeightOffset, WaveAmplitude, WaveFrequencyHz, PursuitSpeed, ContactDamagePercent;
         public float4 ProtectedColor, VulnerableColor;
         public SnakeExplosionResponse ExplosionResponse;
     }

@@ -67,9 +67,15 @@ namespace CrowdPunch.Systems.Presentation
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Ninja
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Trail
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Wizard
+                                || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Slime
+                                || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.SlimeSegment
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Explosive ? 1 : 0) });
-                        if (SystemAPI.HasComponent<SnakeHead>(animation.ValueRO.Owner))
+                        if (SystemAPI.HasComponent<SnakeHead>(animation.ValueRO.Owner)
+                            || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.SlimeSegment)
+                        {
                             commands.AddComponent(entity, new SnakeBodyColor { Value = new float4(1f) });
+                            commands.AddComponent<SnakeBodyTintAmount>(entity);
+                        }
                     }
                     if (!gatekeeper) commands.AddComponent(entity, new URPMaterialPropertyBaseColor { Value = new float4(1f) });
                 }

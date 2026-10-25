@@ -33,6 +33,7 @@ namespace CrowdPunch.Systems.Presentation
             }.ScheduleParallel(state.Dependency);
             state.Dependency = new SnakeBodyColorJob {
                 Heads = SystemAPI.GetComponentLookup<SnakeHead>(true),
+                Segments = SystemAPI.GetComponentLookup<SnakeSegment>(true),
                 Tunings = SystemAPI.GetComponentLookup<SnakeTuning>(true)
             }.ScheduleParallel(state.Dependency);
         }
@@ -41,16 +42,21 @@ namespace CrowdPunch.Systems.Presentation
         private partial struct SnakeBodyColorJob : IJobEntity
         {
             [ReadOnly] public ComponentLookup<SnakeHead> Heads;
+            [ReadOnly] public ComponentLookup<SnakeSegment> Segments;
             [ReadOnly] public ComponentLookup<SnakeTuning> Tunings;
 
-            private void Execute(in EnemyVisualOwner owner, ref SnakeBodyColor color)
+            private void Execute(in EnemyVisualOwner owner, ref SnakeBodyColor color, ref SnakeBodyTintAmount amount)
             {
-                if (!Heads.HasComponent(owner.Value) || !Tunings.HasComponent(owner.Value)) return;
-                var tuning = Tunings[owner.Value];
-                var body = SnakeHitRules.Protected(Heads[owner.Value]) ? tuning.ProtectedColor : tuning.VulnerableColor;
-                // Atlas bodies use the shared 1.15 brightness multiplier. Match
-                // the untextured tail while recoloring only the masked body.
-                color.Value = new float4(body.xyz / 1.15f, 1);
+                bool segment = Segments.HasComponent(owner.Value);
+                Entity head = segment ? Segments[owner.Value].Head : owner.Value;
+                if (!Heads.HasComponent(head) || !Tunings.HasComponent(head)) return;
+                var tuning = Tunings[head];
+                bool exposed = segment ? Segments[owner.Value].Detached != 0
+                    || SnakeHitRules.IsTip(Segments[owner.Value], Heads[head]) : !SnakeHitRules.Protected(Heads[head]);
+                // SNAKE-006: preserve the textured green body until the final tail part is gone.
+                // The mask keeps eyes and markings intact; animation still owns other feedback.
+                color.Value = tuning.VulnerableColor;
+                amount.Value = exposed ? 1f : 0f;
             }
         }
 

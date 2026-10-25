@@ -40,6 +40,7 @@ namespace CrowdPunch.Systems.Presentation
                 Exploders = SystemAPI.GetComponentLookup<ExplosiveEnemyState>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
                 SpawnAnimations = SystemAPI.GetComponentLookup<EnemySpawnAnimation>(true),
+                SnakeSegments = SystemAPI.GetComponentLookup<SnakeSegment>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel(state.Dependency);
             state.Dependency = new WizardBoundsJob
@@ -91,6 +92,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<ExplosiveEnemyState> Exploders;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
             [ReadOnly] public ComponentLookup<EnemySpawnAnimation> SpawnAnimations;
+            [ReadOnly] public ComponentLookup<SnakeSegment> SnakeSegments;
             public float DeltaTime;
 
             private void Execute(in EnemyAnimation animation, ref EnemyAnimationPlayback playback, ref DynamicBuffer<SkinMatrix> skin)
@@ -112,17 +114,22 @@ namespace CrowdPunch.Systems.Presentation
                     playback.Initialized = 1;
                 }
                 EnemyLaunchState launch = Launches[owner];
+                Entity spawnOwner = owner;
+                if (animation.Profile == (byte)EnemyAnimationProfile.SlimeSegment && SnakeSegments.HasComponent(owner)
+                    && SnakeSegments[owner].Detached == 0) spawnOwner = SnakeSegments[owner].Head;
                 if (animation.SpawnMotion >= 0 && animation.SpawnMotion < EnemyAnimationSamples.MotionCount
-                    && SpawnAnimations.HasComponent(owner) && SpawnAnimations.IsComponentEnabled(owner)
-                    && launch.Phase == EnemyLaunchPhase.Recovering)
+                    && SpawnAnimations.HasComponent(spawnOwner) && SpawnAnimations.IsComponentEnabled(spawnOwner)
+                    && Launches.HasComponent(spawnOwner) && Launches[spawnOwner].Phase == EnemyLaunchPhase.Recovering)
                 {
-                    float progress = math.saturate(1f - launch.RecoverySecondsRemaining
-                        / math.max(.001f, SpawnAnimations[owner].Duration));
+                    float progress = math.saturate(1f - Launches[spawnOwner].RecoverySecondsRemaining
+                        / math.max(.001f, SpawnAnimations[spawnOwner].Duration));
                     float spawnFrame = progress * (samples.FrameCount - 1);
                     int from = (int)spawnFrame;
                     if (animation.Profile == (byte)EnemyAnimationProfile.Dasher
                         || animation.Profile == (byte)EnemyAnimationProfile.Dragon
                         || animation.Profile == (byte)EnemyAnimationProfile.Trail
+                        || animation.Profile == (byte)EnemyAnimationProfile.Slime
+                        || animation.Profile == (byte)EnemyAnimationProfile.SlimeSegment
                         || animation.Profile == (byte)EnemyAnimationProfile.GoblinArmored || ElitePunches.HasComponent(owner))
                         ApplyDasherFrame(ref skin, ref samples, animation.SpawnMotion, from,
                             math.min(from + 1, samples.FrameCount - 1), math.frac(spawnFrame));
@@ -166,6 +173,12 @@ namespace CrowdPunch.Systems.Presentation
                         playback.Movement = 0;
                         playback.JogPhase = 0;
                     }
+                    return;
+                }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Slime
+                    || animation.Profile == (byte)EnemyAnimationProfile.SlimeSegment)
+                {
+                    AnimateSlime(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Trail)
@@ -635,6 +648,90 @@ namespace CrowdPunch.Systems.Presentation
                         {
                             float speed = Movement[owner].Speed;
                             motion = speed <= .01f ? 0 : speed > Settings[owner].MoveSpeed * .75f ? 2 : 1;
+                            if (playback.GoblinMotion != motion) playback.Phase = 0;
+                            playback.GoblinMotion = (byte)motion;
+                            playback.Phase = math.frac(playback.Phase
+                                + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                            phase = playback.Phase;
+                            loop = true;
+                        }
+                    }
+                }
+                float frame = phase * (loop ? samples.FrameCount : samples.FrameCount - 1);
+                int from = (int)frame;
+                ApplyDasherFrame(ref skin, ref samples, motion, from,
+                    loop ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1), math.frac(frame));
+            }
+
+            // SNAKE-001/004/006: the supplied poses provide feedback without tint, shake,
+            // pitch, recovery flips or scale writes. Physics and combat keep their clocks.
+            private void AnimateSlime(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                bool damaged = false;
+                if (Health.HasComponent(owner))
+                {
+                    float health = Health[owner].Current;
+                    damaged = playback.HealthInitialized != 0 && health < playback.PreviousHealth;
+                    playback.PreviousHealth = health;
+                    playback.HealthInitialized = 1;
+                }
+                int motion;
+                float phase;
+                bool loop = false;
+                if (launch.Phase == EnemyLaunchPhase.Launched)
+                {
+                    bool newLaunch = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
+                    playback.FlightPhase = newLaunch ? 0 : math.frac(playback.FlightPhase
+                        + DeltaTime / math.max(.01f, samples.Durations[EnemyAnimationSamples.FlyingMotion]));
+                    playback.WasLaunched = 1;
+                    playback.LaunchSequence = launch.LaunchSequence;
+                    playback.WasRecovering = 0;
+                    playback.Landing = 0;
+                    playback.HitActive = 0;
+                    motion = EnemyAnimationSamples.FlyingMotion;
+                    phase = playback.FlightPhase;
+                    loop = true;
+                }
+                else
+                {
+                    playback.WasLaunched = 0;
+                    if (launch.Phase == EnemyLaunchPhase.Defeated)
+                    {
+                        motion = EnemyAnimationSamples.ImpactMotion;
+                        playback.ImpactPhase = playback.Landing == 0 ? 0 : math.saturate(playback.ImpactPhase
+                            + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                        playback.Landing = 1;
+                        playback.HitActive = 0;
+                        phase = playback.ImpactPhase;
+                    }
+                    else if (launch.Phase == EnemyLaunchPhase.Recovering)
+                    {
+                        if (playback.WasRecovering == 0)
+                            playback.ImpactDuration = math.max(.01f, launch.RecoverySecondsRemaining);
+                        playback.WasRecovering = 1;
+                        playback.HitActive = 0;
+                        motion = 6;
+                        phase = math.saturate(1 - launch.RecoverySecondsRemaining / playback.ImpactDuration);
+                    }
+                    else
+                    {
+                        playback.WasRecovering = 0;
+                        playback.Landing = 0;
+                        if (launch.Phase != EnemyLaunchPhase.Active) return;
+                        if (damaged) { playback.HitActive = 1; playback.HitPhase = 0; }
+                        if (playback.HitActive != 0)
+                        {
+                            motion = 5;
+                            phase = playback.HitPhase;
+                            playback.HitPhase = math.saturate(playback.HitPhase
+                                + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                            if (playback.HitPhase >= 1) playback.HitActive = 0;
+                        }
+                        else
+                        {
+                            float speed = Movement[owner].Speed;
+                            motion = speed <= .01f ? 0 : 1;
                             if (playback.GoblinMotion != motion) playback.Phase = 0;
                             playback.GoblinMotion = (byte)motion;
                             playback.Phase = math.frac(playback.Phase

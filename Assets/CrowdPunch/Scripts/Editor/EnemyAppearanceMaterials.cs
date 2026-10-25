@@ -12,7 +12,8 @@ namespace CrowdPunch.Editor
         public static void Configure(Material material)
         {
             string path = AssetDatabase.GetAssetPath(material);
-            if (path.StartsWith(EnemyBaselinePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
+            if (path.StartsWith(EnemySnakePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
+                || path.StartsWith(EnemyBaselinePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyRangedPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyElitePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyArmoredPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
@@ -69,7 +70,6 @@ namespace CrowdPunch.Editor
             importer.SaveAndReimport();
             foreach (string guid in AssetDatabase.FindAssets("t:Material", new[] { "Assets/CrowdPunch/Materials/Enemies" }))
                 Configure(AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid)));
-            EnemySnakePrefabBuilder.ApplyPalette();
             AssetDatabase.SaveAssets();
         }
     }

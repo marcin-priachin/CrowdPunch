@@ -14,11 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.SnakeSettings
   explosionResponse: 0
   initialTailSegmentCount: 6
-  orbRadius: 0.6
-  segmentSpacing: 1.5
+  orbRadius: 0.8
+  segmentSpacing: 1.2
+  segmentHeightOffset: -0.7
   waveAmplitude: 0.5
   waveFrequencyHz: 0.7
   pursuitSpeed: 8
   contactDamagePercent: 0.08
-  protectedColor: {r: 0.035601314, g: 0.10224175, b: 0.30498737, a: 1}
+  protectedColor: {r: 0.2, g: 0.6, b: 0, a: 1}
   vulnerableColor: {r: 1, g: 0.38005632, b: 0.0071944077, a: 1}

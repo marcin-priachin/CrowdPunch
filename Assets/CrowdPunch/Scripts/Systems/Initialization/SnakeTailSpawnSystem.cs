@@ -64,6 +64,7 @@ namespace CrowdPunch.Systems.Initialization
                 {
                     var orb = commands.Instantiate(t.OrbPrefab);
                     float3 p = start + new float3(back.x, 0, back.y) * math.min(length, (i + 1) * t.Spacing);
+                    p.y += t.HeightOffset;
                     commands.SetComponent(orb, LocalTransform.FromPositionRotationScale(p, quaternion.identity, t.OrbRadius));
                     commands.AddComponent(orb, new SnakeSegment { Head = entity, Generation = lifetime.ValueRO.Generation,
                         Index = i, Radius = t.OrbRadius, Encounter = encounter });
@@ -75,7 +76,7 @@ namespace CrowdPunch.Systems.Initialization
                     commands.SetComponent(orb, new Health { Current = 30, Max = 30 });
                     contact.ContactRadius = t.OrbRadius; commands.SetComponent(orb, contact);
                     commands.SetComponent(orb, movement);
-                    commands.SetComponent(orb, new EnemyGroundConstraint { SnapRequested = 1 });
+                    commands.SetComponent(orb, new EnemyGroundConstraint { Height = p.y, HasGround = 1, IsLocked = 1 });
                     commands.SetComponent(orb, new NavigationAgent { Radius = t.OrbRadius });
                     links.Add(new SnakeTailLink { Orb = orb });
                 }

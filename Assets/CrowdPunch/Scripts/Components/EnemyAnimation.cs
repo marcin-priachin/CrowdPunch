@@ -17,7 +17,9 @@ namespace CrowdPunch.Components
         Dragon,
         Goblin,
         GoblinArmored,
-        Trail
+        Trail,
+        Slime,
+        SlimeSegment
     }
 
     public struct EnemyAnimation : IComponentData

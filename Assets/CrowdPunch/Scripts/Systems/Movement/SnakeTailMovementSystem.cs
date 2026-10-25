@@ -29,7 +29,22 @@ namespace CrowdPunch.Systems.Movement
                 mass.InverseInertia.x = 0; mass.InverseInertia.z = 0;
                 if (SnakeHitRules.Protected(head.ValueRO)) { mass.InverseMass = 0; mass.InverseInertia = float3.zero; }
                 SystemAPI.SetComponent(entity, mass);
-                if (SystemAPI.GetComponent<EnemyLaunchState>(entity).Phase != EnemyLaunchPhase.Active) continue;
+                // Attached segments use their authored head-relative plane. The shared ground
+                // projection applies Y before/after physics; this motor still owns only XZ velocity.
+                for (int i = 0; i < links.Length; i++)
+                {
+                    Entity orb = links[i].Orb;
+                    if (!SystemAPI.HasComponent<SnakeSegment>(orb) || SystemAPI.GetComponent<SnakeSegment>(orb).Detached != 0
+                        || !SystemAPI.HasComponent<EnemyGroundConstraint>(orb)) continue;
+                    SystemAPI.SetComponent(orb, new EnemyGroundConstraint {
+                        Height = pose.ValueRO.Position.y + t.HeightOffset, HasGround = 1, IsLocked = 1 });
+                }
+                var phase = SystemAPI.GetComponent<EnemyLaunchState>(entity).Phase;
+                bool spawning = phase == EnemyLaunchPhase.Recovering
+                    && SystemAPI.HasComponent<EnemySpawnAnimation>(entity)
+                    && SystemAPI.IsComponentEnabled<EnemySpawnAnimation>(entity);
+                // A ground-spawning head stays still, but its dynamic tail still needs its motor.
+                if (phase != EnemyLaunchPhase.Active && !spawning) continue;
                 if (grid.Data.IsCreated && SystemAPI.HasComponent<NavigationAgent>(entity))
                 {
                     var headVelocity = SystemAPI.GetComponent<PhysicsVelocity>(entity);
@@ -69,6 +84,9 @@ namespace CrowdPunch.Systems.Movement
                     velocity.Linear.xz = target;
                     velocity.Angular = float3.zero;
                     SystemAPI.SetComponent(orb, velocity);
+                    if (SystemAPI.HasComponent<DesiredMovement>(orb))
+                        SystemAPI.SetComponent(orb, new DesiredMovement { Direction = math.normalizesafe(new float3(target.x, 0, target.y)),
+                            Speed = math.length(target) });
                 }
             }
         }

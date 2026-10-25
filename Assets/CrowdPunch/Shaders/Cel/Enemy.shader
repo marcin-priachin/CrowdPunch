@@ -348,6 +348,7 @@ CBUFFER_END
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _ComputeMeshIndex)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _SkinColor)
+    UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _SkinColorAmount)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _BaseColor)
 UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 // DOTS instancing usage macros
@@ -357,6 +358,7 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 UNITY_INSTANCING_BUFFER_START(SGPerInstanceData)
     UNITY_DEFINE_INSTANCED_PROP(float, _ComputeMeshIndex)
     UNITY_DEFINE_INSTANCED_PROP(float4, _SkinColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _SkinColorAmount)
     UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_INSTANCING_BUFFER_END(SGPerInstanceData)
 // Unity instancing usage macros
@@ -563,7 +565,7 @@ float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_R_4_Float = _SampleTextu
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_G_5_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.g;
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_B_6_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.b;
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_A_7_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.a;
-float _Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float = _SkinColorAmount;
+float _Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float = UNITY_ACCESS_HYBRID_INSTANCED_PROP(_SkinColorAmount, float);
 float4 _Lerp_82953a0631914e78ba370c51d143d891_Out_3_Vector4;
 Unity_Lerp_float4(Color_22af752f56df4b69a15a74bd003266a0, _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4, (_Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float.xxxx), _Lerp_82953a0631914e78ba370c51d143d891_Out_3_Vector4);
 float4 _Lerp_56dd8066e70d4c85a8d72c30ef200bb7_Out_3_Vector4;
@@ -1000,6 +1002,7 @@ CBUFFER_END
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _ComputeMeshIndex)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _SkinColor)
+    UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _SkinColorAmount)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _BaseColor)
 UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 // DOTS instancing usage macros
@@ -1009,6 +1012,7 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 UNITY_INSTANCING_BUFFER_START(SGPerInstanceData)
     UNITY_DEFINE_INSTANCED_PROP(float, _ComputeMeshIndex)
     UNITY_DEFINE_INSTANCED_PROP(float4, _SkinColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _SkinColorAmount)
     UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_INSTANCING_BUFFER_END(SGPerInstanceData)
 // Unity instancing usage macros
@@ -1215,7 +1219,7 @@ float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_R_4_Float = _SampleTextu
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_G_5_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.g;
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_B_6_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.b;
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_A_7_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.a;
-float _Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float = _SkinColorAmount;
+float _Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float = UNITY_ACCESS_HYBRID_INSTANCED_PROP(_SkinColorAmount, float);
 float4 _Lerp_82953a0631914e78ba370c51d143d891_Out_3_Vector4;
 Unity_Lerp_float4(Color_22af752f56df4b69a15a74bd003266a0, _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4, (_Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float.xxxx), _Lerp_82953a0631914e78ba370c51d143d891_Out_3_Vector4);
 float4 _Lerp_56dd8066e70d4c85a8d72c30ef200bb7_Out_3_Vector4;
@@ -1537,6 +1541,7 @@ CBUFFER_END
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _ComputeMeshIndex)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _SkinColor)
+    UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _SkinColorAmount)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _BaseColor)
 UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 // DOTS instancing usage macros
@@ -1546,6 +1551,7 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 UNITY_INSTANCING_BUFFER_START(SGPerInstanceData)
     UNITY_DEFINE_INSTANCED_PROP(float, _ComputeMeshIndex)
     UNITY_DEFINE_INSTANCED_PROP(float4, _SkinColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _SkinColorAmount)
     UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_INSTANCING_BUFFER_END(SGPerInstanceData)
 // Unity instancing usage macros
@@ -1926,6 +1932,7 @@ CBUFFER_END
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _ComputeMeshIndex)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _SkinColor)
+    UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _SkinColorAmount)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _BaseColor)
 UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 // DOTS instancing usage macros
@@ -1935,6 +1942,7 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 UNITY_INSTANCING_BUFFER_START(SGPerInstanceData)
     UNITY_DEFINE_INSTANCED_PROP(float, _ComputeMeshIndex)
     UNITY_DEFINE_INSTANCED_PROP(float4, _SkinColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _SkinColorAmount)
     UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_INSTANCING_BUFFER_END(SGPerInstanceData)
 // Unity instancing usage macros
@@ -2312,6 +2320,7 @@ CBUFFER_END
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _ComputeMeshIndex)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _SkinColor)
+    UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _SkinColorAmount)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _BaseColor)
 UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 // DOTS instancing usage macros
@@ -2321,6 +2330,7 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 UNITY_INSTANCING_BUFFER_START(SGPerInstanceData)
     UNITY_DEFINE_INSTANCED_PROP(float, _ComputeMeshIndex)
     UNITY_DEFINE_INSTANCED_PROP(float4, _SkinColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _SkinColorAmount)
     UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_INSTANCING_BUFFER_END(SGPerInstanceData)
 // Unity instancing usage macros
@@ -2715,6 +2725,7 @@ CBUFFER_END
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _ComputeMeshIndex)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _SkinColor)
+    UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _SkinColorAmount)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _BaseColor)
 UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 // DOTS instancing usage macros
@@ -2724,6 +2735,7 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 UNITY_INSTANCING_BUFFER_START(SGPerInstanceData)
     UNITY_DEFINE_INSTANCED_PROP(float, _ComputeMeshIndex)
     UNITY_DEFINE_INSTANCED_PROP(float4, _SkinColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _SkinColorAmount)
     UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_INSTANCING_BUFFER_END(SGPerInstanceData)
 // Unity instancing usage macros
@@ -3129,6 +3141,7 @@ CBUFFER_END
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _ComputeMeshIndex)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _SkinColor)
+    UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _SkinColorAmount)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _BaseColor)
 UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 // DOTS instancing usage macros
@@ -3138,6 +3151,7 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 UNITY_INSTANCING_BUFFER_START(SGPerInstanceData)
     UNITY_DEFINE_INSTANCED_PROP(float, _ComputeMeshIndex)
     UNITY_DEFINE_INSTANCED_PROP(float4, _SkinColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _SkinColorAmount)
     UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_INSTANCING_BUFFER_END(SGPerInstanceData)
 // Unity instancing usage macros
@@ -3340,7 +3354,7 @@ float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_R_4_Float = _SampleTextu
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_G_5_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.g;
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_B_6_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.b;
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_A_7_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.a;
-float _Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float = _SkinColorAmount;
+float _Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float = UNITY_ACCESS_HYBRID_INSTANCED_PROP(_SkinColorAmount, float);
 float4 _Lerp_82953a0631914e78ba370c51d143d891_Out_3_Vector4;
 Unity_Lerp_float4(Color_22af752f56df4b69a15a74bd003266a0, _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4, (_Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float.xxxx), _Lerp_82953a0631914e78ba370c51d143d891_Out_3_Vector4);
 float4 _Lerp_56dd8066e70d4c85a8d72c30ef200bb7_Out_3_Vector4;
@@ -3649,6 +3663,7 @@ CBUFFER_END
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _ComputeMeshIndex)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _SkinColor)
+    UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _SkinColorAmount)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _BaseColor)
 UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 // DOTS instancing usage macros
@@ -3658,6 +3673,7 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 UNITY_INSTANCING_BUFFER_START(SGPerInstanceData)
     UNITY_DEFINE_INSTANCED_PROP(float, _ComputeMeshIndex)
     UNITY_DEFINE_INSTANCED_PROP(float4, _SkinColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _SkinColorAmount)
     UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_INSTANCING_BUFFER_END(SGPerInstanceData)
 // Unity instancing usage macros
@@ -4045,6 +4061,7 @@ CBUFFER_END
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _ComputeMeshIndex)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _SkinColor)
+    UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _SkinColorAmount)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _BaseColor)
 UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 // DOTS instancing usage macros
@@ -4054,6 +4071,7 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 UNITY_INSTANCING_BUFFER_START(SGPerInstanceData)
     UNITY_DEFINE_INSTANCED_PROP(float, _ComputeMeshIndex)
     UNITY_DEFINE_INSTANCED_PROP(float4, _SkinColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _SkinColorAmount)
     UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_INSTANCING_BUFFER_END(SGPerInstanceData)
 // Unity instancing usage macros
@@ -4240,7 +4258,7 @@ float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_R_4_Float = _SampleTextu
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_G_5_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.g;
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_B_6_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.b;
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_A_7_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.a;
-float _Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float = _SkinColorAmount;
+float _Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float = UNITY_ACCESS_HYBRID_INSTANCED_PROP(_SkinColorAmount, float);
 float4 _Lerp_82953a0631914e78ba370c51d143d891_Out_3_Vector4;
 Unity_Lerp_float4(Color_22af752f56df4b69a15a74bd003266a0, _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4, (_Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float.xxxx), _Lerp_82953a0631914e78ba370c51d143d891_Out_3_Vector4);
 float4 _Lerp_56dd8066e70d4c85a8d72c30ef200bb7_Out_3_Vector4;
@@ -4538,6 +4556,7 @@ CBUFFER_END
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _ComputeMeshIndex)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _SkinColor)
+    UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float, _SkinColorAmount)
     UNITY_DOTS_INSTANCED_PROP_OVERRIDE_SUPPORTED(float4, _BaseColor)
 UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 // DOTS instancing usage macros
@@ -4547,6 +4566,7 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 UNITY_INSTANCING_BUFFER_START(SGPerInstanceData)
     UNITY_DEFINE_INSTANCED_PROP(float, _ComputeMeshIndex)
     UNITY_DEFINE_INSTANCED_PROP(float4, _SkinColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _SkinColorAmount)
     UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_INSTANCING_BUFFER_END(SGPerInstanceData)
 // Unity instancing usage macros
@@ -4733,7 +4753,7 @@ float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_R_4_Float = _SampleTextu
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_G_5_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.g;
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_B_6_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.b;
 float _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_A_7_Float = _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4.a;
-float _Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float = _SkinColorAmount;
+float _Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float = UNITY_ACCESS_HYBRID_INSTANCED_PROP(_SkinColorAmount, float);
 float4 _Lerp_82953a0631914e78ba370c51d143d891_Out_3_Vector4;
 Unity_Lerp_float4(Color_22af752f56df4b69a15a74bd003266a0, _SampleTexture2D_864cfb091b7d4331bd7218fdeaf8d858_RGBA_0_Vector4, (_Property_495de44ef11d40cb91ca34953cc899b1_Out_0_Float.xxxx), _Lerp_82953a0631914e78ba370c51d143d891_Out_3_Vector4);
 float4 _Lerp_56dd8066e70d4c85a8d72c30ef200bb7_Out_3_Vector4;

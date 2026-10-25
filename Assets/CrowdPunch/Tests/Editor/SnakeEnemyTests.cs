@@ -173,6 +173,43 @@ namespace CrowdPunch.Tests
             world.GetOrCreateSystem<EnemyRecoverySystem>().Update(world.Unmanaged);
             Assert.That(em.GetComponentData<EnemyLaunchState>(head).Phase, Is.EqualTo(EnemyLaunchPhase.Defeated));
         }
+        [TestCase(.3f, 1.1f, -.6f)]
+        [TestCase(.8f, 2.4f, .5f)]
+        [TestCase(.6f, 1.5f, -.4f)]
+        public void Snake006_SegmentSizeSpacingAndHeightSurvivePhysicsProjection(float radius,float spacing,float offset)
+        {
+            foreach(var orb in orbs)em.DestroyEntity(orb);
+            var prefab=Body(float3.zero);em.AddComponent<Prefab>(prefab);em.RemoveComponent<EnemyTier>(prefab);
+            em.AddComponent<EnemyMovementSettings>(prefab);em.AddComponent<EnemyGroundConstraint>(prefab);em.AddComponent<NavigationAgent>(prefab);
+            em.AddComponent<EnemyMovementSettings>(head);em.AddComponent<EnemyGroundConstraint>(head);
+            em.AddComponentData(head,new EnemyLifetime {Generation=1});
+            em.SetComponentData(head,LocalTransform.FromPosition(new float3(0,1,0)));
+            em.SetComponentData(head,new SnakeHead());
+            var tuning=em.GetComponentData<SnakeTuning>(head);
+            tuning.OrbPrefab=prefab;tuning.OrbRadius=radius;tuning.Spacing=spacing;tuning.HeightOffset=offset;
+            em.SetComponentData(head,tuning);
+            world.GetOrCreateSystem<SnakeTailSpawnSystem>().Update(world.Unmanaged);
+            var links=em.GetBuffer<SnakeTailLink>(head);
+            for(int i=0;i<links.Length;i++)
+            {
+                var orb=links[i].Orb;var pose=em.GetComponentData<LocalTransform>(orb);
+                Assert.That(pose.Scale,Is.EqualTo(radius));
+                Assert.That(em.GetComponentData<SnakeSegment>(orb).Radius,Is.EqualTo(radius));
+                Assert.That(em.GetComponentData<NavigationAgent>(orb).Radius,Is.EqualTo(radius));
+                Assert.That(em.GetComponentData<EnemyContactDamageSettings>(orb).ContactRadius,Is.EqualTo(radius));
+                Assert.That(pose.Position.y,Is.EqualTo(1+offset).Within(.001f));
+                var previous=i==0?em.GetComponentData<LocalTransform>(head).Position:em.GetComponentData<LocalTransform>(links[i-1].Orb).Position;
+                Assert.That(math.distance(previous.xz,pose.Position.xz),Is.EqualTo(spacing).Within(.001f));
+            }
+            var released=links[5].Orb;var segment=em.GetComponentData<SnakeSegment>(released);segment.Detached=1;em.SetComponentData(released,segment);
+            em.SetComponentData(head,LocalTransform.FromPosition(new float3(0,2.25f,0)));
+            world.GetOrCreateSystem<SnakeTailMovementSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<EnemyGroundReconciliationSystem>().Update(world.Unmanaged);em.CompleteAllTrackedJobs();
+            links=em.GetBuffer<SnakeTailLink>(head);
+            for(int i=0;i<links.Length;i++)
+                Assert.That(em.GetComponentData<LocalTransform>(links[i].Orb).Position.y,
+                    Is.EqualTo((i==5?1:2.25f)+offset).Within(.001f),"Only attached segments follow the head-relative Y plane.");
+        }
         [Test] public void Snake004_HeadRemainsProtectedUntilEveryOrbHasLaunched()
         {
             for(int i=5;i>=0;i--)
@@ -234,6 +271,69 @@ namespace CrowdPunch.Tests
             Assert.That(SnakeContactSystem.Excludes(projectile,sibling), Is.False);
             Assert.That(SnakeContactSystem.Excludes(sibling,projectile), Is.True, "Unbounced sibling still needs its exemption");
         }
+        [TestCase(false,false), TestCase(true,false), TestCase(false,true), TestCase(true,true)]
+        public void Snake001_ActualSolverIgnoresAttachedSegmentsAndRestoresReleasedContacts(bool differentHead,bool released)
+        {
+            var collisionWorld=new World("Snake attached contact regression");
+            var sphere=Unity.Physics.SphereCollider.Create(new SphereGeometry {Center=float3.zero,Radius=.6f});
+            try
+            {
+                var types=new System.Collections.Generic.List<System.Type>();
+                foreach(var type in DefaultWorldInitialization.GetAllSystems(WorldSystemFilterFlags.Default))
+                {
+                    if(type.Namespace=="Unity.Physics.Systems")types.Add(type);
+                }
+                types.Add(typeof(SnakeContactSystem));
+                DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(collisionWorld,types);
+                var manager=collisionWorld.EntityManager;
+                var step=Unity.Physics.PhysicsStep.Default;step.Gravity=float3.zero;
+                var settings=manager.CreateEntity(typeof(Unity.Physics.PhysicsStep));manager.SetComponentData(settings,step);
+                var firstHead=manager.CreateEntity();var secondHead=differentHead?manager.CreateEntity():firstHead;
+                var bodies=new Entity[2];
+                for(int i=0;i<2;i++)
+                {
+                    var e=manager.CreateEntity(typeof(LocalTransform),typeof(LocalToWorld),typeof(PhysicsCollider),typeof(PhysicsMass),
+                        typeof(PhysicsVelocity),typeof(PhysicsWorldIndex),typeof(Simulate),typeof(SnakeSegment));bodies[i]=e;
+                    manager.SetComponentData(e,LocalTransform.FromPosition(new float3(i*.5f,0,0)));
+                    manager.SetComponentData(e,new PhysicsCollider {Value=sphere});
+                    manager.SetComponentData(e,PhysicsMass.CreateDynamic(sphere.Value.MassProperties,1));
+                    manager.SetComponentData(e,new SnakeSegment {Head=i==0?firstHead:secondHead,Generation=1,Radius=.6f,
+                        Detached=(byte)(i==1&&released?1:0),BouncedOutsideOwner=(byte)(released?1:0)});
+                }
+                var physics=collisionWorld.GetOrCreateSystemManaged<Unity.Physics.Systems.PhysicsSystemGroup>();
+                for(int i=0;i<5;i++)
+                {
+                    collisionWorld.SetTime(new TimeData((i+1)*.02,.02f));physics.Update();manager.CompleteAllTrackedJobs();
+                }
+                float speed=math.length(manager.GetComponentData<PhysicsVelocity>(bodies[0]).Linear);
+                if(released)Assert.That(speed,Is.GreaterThan(.1f),"Detached projectiles retain eligible solver contacts.");
+                else
+                {
+                    Assert.That(speed,Is.LessThan(.0001f),"Overlapping attached segments must not repel one another.");
+                    Assert.That(math.distance(manager.GetComponentData<LocalTransform>(bodies[0]).Position,float3.zero),Is.LessThan(.0001f));
+                    Assert.That(math.distance(manager.GetComponentData<LocalTransform>(bodies[1]).Position,new float3(.5f,0,0)),Is.LessThan(.0001f));
+                }
+            }
+            finally {collisionWorld.Dispose();sphere.Dispose();}
+        }
+
+        [TestCase(false),TestCase(true)]
+        public void Snake001_TailMotorHoldsPathDuringGroundEmergenceOnly(bool spawning)
+        {
+            em.AddComponent<EnemySpawnAnimation>(head);em.SetComponentEnabled<EnemySpawnAnimation>(head,spawning);
+            em.SetComponentData(head,new EnemyLaunchState {Phase=EnemyLaunchPhase.Recovering,RecoverySecondsRemaining=.8f});
+            var tuning=em.GetComponentData<SnakeTuning>(head);tuning.WaveAmplitude=0;em.SetComponentData(head,tuning);
+            var path=em.GetBuffer<SnakePathPoint>(head);for(int i=12;i>=0;i--)path.Add(new SnakePathPoint {Position=new float3(0,0,i)});
+            var original=new float3(2,0,1.5f);em.SetComponentData(orbs[0],LocalTransform.FromPosition(original));
+            world.GetOrCreateSystem<SnakeTailMovementSystem>().Update(world.Unmanaged);em.CompleteAllTrackedJobs();
+            float correction=em.GetComponentData<PhysicsVelocity>(orbs[0]).Linear.x;
+            if(spawning)Assert.That(correction,Is.LessThan(0),"The tail must steer back to its path while the head emerges.");
+            else Assert.That(correction,Is.Zero,"Ordinary recovery retains its existing movement gate.");
+            Assert.That(em.GetComponentData<LocalTransform>(orbs[0]).Position,Is.EqualTo(original),"The tail motor must steer velocity, not teleport bodies.");
+            Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount,Is.EqualTo(6));
+            Assert.That(em.GetComponentData<SnakeSegment>(orbs[0]).Detached,Is.Zero);
+        }
+
         [TestCase(false), TestCase(true)]
         public void Snake003_SweptWallOrCoverReboundArmsReturnWithoutSolverEvent(bool cover)
         {
@@ -416,8 +516,8 @@ namespace CrowdPunch.Tests
                 UnityEngine.Object.DestroyImmediate(root);
             }
         }
-        [TestCase(false)] [TestCase(true)]
-        public void Snake006_OnlyTipUsesVulnerableColorThenHeadInheritsIt(bool texturedHead)
+        [Test]
+        public void Snake006_TipAndExposedHeadChangeColorWithoutTintingFace()
         {
             var entities=new Entity[7]; entities[0]=head;
             for(int i=0;i<6;i++)entities[i+1]=orbs[i];
@@ -426,9 +526,9 @@ namespace CrowdPunch.Tests
             {
                 em.AddComponent<EnemyArchetype>(entities[i]);
                 visuals[i]=em.CreateEntity(typeof(EnemyVisualOwner),typeof(URPMaterialPropertyBaseColor));
-                em.SetComponentData(visuals[i],new EnemyVisualOwner {Value=entities[i], UsesAtlas=(byte)(texturedHead && i==0?1:0)});
-                if(texturedHead && i==0) em.AddComponent<SnakeBodyColor>(visuals[i]);
+                em.SetComponentData(visuals[i],new EnemyVisualOwner {Value=entities[i],UsesAtlas=1,AnimationDriven=1});
             }
+            foreach(var visual in visuals) {em.AddComponent<SnakeBodyColor>(visual);em.AddComponent<SnakeBodyTintAmount>(visual);}
             var presentation=world.GetOrCreateSystem<EnemyReadabilitySystem>();
             var tuning=em.GetComponentData<SnakeTuning>(head);
             for(int tip=5;tip>=-1;tip--)
@@ -436,20 +536,40 @@ namespace CrowdPunch.Tests
                 presentation.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
                 for(int i=0;i<7;i++)
                 {
-                    bool vulnerable=tip<0 ? i==0 : i==tip+1;
-                    var expected=vulnerable?tuning.VulnerableColor:tuning.ProtectedColor;
-                    if(texturedHead && i==0)
-                    {
-                        var skin=em.GetComponentData<SnakeBodyColor>(visuals[i]).Value;
-                        Assert.That(math.distance(skin.xyz*1.15f,expected.xyz),Is.LessThan(.001f));
-                        expected=new float4(1.15f,1.15f,1.15f,1);
-                    }
-                    Assert.That(math.distance(em.GetComponentData<URPMaterialPropertyBaseColor>(visuals[i]).Value,expected), Is.LessThan(.001f));
+                    var expected=new float4(1);
+                    bool tinted=i==0?tip<0:i-1>=tip;
+                    Assert.That(em.GetComponentData<SnakeBodyTintAmount>(visuals[i]).Value,Is.EqualTo(tinted?1f:0f));
+                    Assert.That(math.distance(em.GetComponentData<URPMaterialPropertyBaseColor>(visuals[i]).Value,expected),Is.LessThan(.001f));
                 }
+                Assert.That(em.GetComponentData<SnakeBodyTintAmount>(visuals[0]).Value,Is.EqualTo(tip<0?1f:0f));
+                Assert.That(em.GetComponentData<SnakeBodyColor>(visuals[0]).Value,Is.EqualTo(tuning.VulnerableColor));
                 if(tip>=0) { Launch(orbs[tip]); Sever(); }
             }
         }
-        [Test] public void Snake006_BirbSamplesRemainBakeableAndPrefabStartsInForwardIdle()
+        [Test] public void Snake006_SegmentsUseHeadMeshMaterialSamplesAndAuthoredScale()
+        {
+            var headPrefab=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>("Assets/CrowdPunch/Prefabs/EnemySnake.prefab");
+            var segment=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>("Assets/CrowdPunch/Prefabs/SnakeOrb.prefab");
+            var headSkin=headPrefab.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
+            var skin=segment.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
+            Assert.That(skin,Is.Not.Null);Assert.That(skin.sharedMesh,Is.EqualTo(headSkin.sharedMesh));
+            Assert.That(skin.sharedMaterials,Is.EqualTo(headSkin.sharedMaterials));
+            var animator=segment.GetComponentInChildren<UnityEngine.Animator>();
+            var headAnimator=headPrefab.GetComponentInChildren<UnityEngine.Animator>();
+            Assert.That(animator.transform.localScale,Is.EqualTo(headAnimator.transform.localScale));
+            Assert.That(animator.runtimeAnimatorController,Is.EqualTo(headAnimator.runtimeAnimatorController));
+            Assert.That(animator.applyRootMotion,Is.False);
+            var authoring=skin.GetComponent<CrowdPunch.Authoring.EnemyAnimationAuthoring>();
+            Assert.That(authoring.Samples,Is.EqualTo(headSkin.GetComponent<CrowdPunch.Authoring.EnemyAnimationAuthoring>().Samples));
+            Assert.That(authoring.Profile,Is.EqualTo(EnemyAnimationProfile.SlimeSegment));
+            Assert.That(authoring.SpawnMotion,Is.EqualTo(7));
+            Assert.That(segment.GetComponentsInChildren<UnityEngine.MeshRenderer>(),Is.Empty,"No primitive sphere visual remains.");
+            Assert.That(segment.GetComponentsInChildren<UnityEngine.Collider>().Length,Is.EqualTo(1));
+            Assert.That(segment.GetComponent<UnityEngine.SphereCollider>().radius,Is.EqualTo(1));
+            Assert.That(segment.GetComponent<CrowdPunch.Authoring.SnakeAuthoring>(),Is.Null,"A segment cannot spawn a recursive tail.");
+        }
+
+        [Test] public void Snake006_SlimeSamplesRemainBakeableAndPrefabStartsInForwardIdle()
         {
             var root=UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemySnake.prefab");
             try
@@ -463,7 +583,7 @@ namespace CrowdPunch.Tests
                     + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(renderer.sharedMesh))
                     + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.avatar));
                 Assert.That(reader.ReadString(),Is.EqualTo(currentHash),
-                    "Stale samples strip animation and the Snake body-color component from the baked renderer.");
+                    "Stale samples prevent the Slime renderer from baking.");
                 int bones=reader.ReadInt32(); reader.ReadInt32();
                 for(int bone=0;bone<bones;bone++)reader.ReadString();
                 for(int motion=0;motion<EnemyAnimationSamples.MotionCount;motion++)reader.ReadSingle();
@@ -472,30 +592,65 @@ namespace CrowdPunch.Tests
                     var saved=animator.transform.worldToLocalMatrix*renderer.bones[bone].localToWorldMatrix*renderer.sharedMesh.bindposes[bone];
                     for(int column=0;column<4;column++)for(int row=0;row<3;row++)
                         Assert.That(reader.ReadSingle(),Is.EqualTo(saved[row,column]).Within(.001f),
-                            "The saved Birb skeleton must face forward in Idle, rather than upwards in the last sampled Death frame.");
+                            "The saved Slime skeleton must face forward in Idle, rather than upwards in the last sampled Death frame.");
                 }
             }
             finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
         }
-        [Test] public void Snake006_BirbUsesMaskedAtlasAndMatchingTailPalette()
+        [Test] public void Snake006_SlimePreservesPrefabScaleTextureAndGroundEmergence()
         {
             var prefab=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>("Assets/CrowdPunch/Prefabs/EnemySnake.prefab");
-            Assert.That(prefab.transform.Find("Birb"),Is.Not.Null);
-            var visual=prefab.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
-            var material=visual.sharedMaterial;
-            Assert.That(UnityEditor.AssetDatabase.GetAssetPath(material.GetTexture("_ColorMap")),Is.EqualTo(CrowdPunch.Editor.EnemyAppearanceMaterials.AtlasPath));
-            Assert.That(material.GetFloat("_SkinColorAmount"),Is.EqualTo(1));
-            var mask=(UnityEngine.Texture2D)material.GetTexture("_SkinMaskTexture");
-            foreach(var uv in visual.sharedMesh.uv)
+            var source=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(CrowdPunch.Editor.EnemySnakePrefabBuilder.ModelPath);
+            var animator=prefab.GetComponentInChildren<UnityEngine.Animator>();
+            Assert.That(animator.transform.localScale,Is.EqualTo(source.transform.localScale));
+            Assert.That(prefab.transform.localScale,Is.EqualTo(UnityEngine.Vector3.one));
+            Assert.That(prefab.transform.Find("Slime"),Is.Not.Null);
+            Assert.That(animator.applyRootMotion,Is.False);
+            var renderer=prefab.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
+            var material=renderer.sharedMaterial;
+            Assert.That(material.shader.name,Is.EqualTo("CrowdPunch/Cel/Enemy"));
+            Assert.That(material.GetTexture("_ColorMap"),Is.EqualTo(source.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>().sharedMaterial.mainTexture));
+            Assert.That(material.GetFloat("_SkinColorAmount"),Is.Zero);
+            var authoring=renderer.GetComponent<CrowdPunch.Authoring.EnemyAnimationAuthoring>();
+            Assert.That(authoring.Profile,Is.EqualTo(EnemyAnimationProfile.Slime));
+            Assert.That(authoring.SpawnMotion,Is.EqualTo(7));
+            var settings=UnityEditor.AssetDatabase.LoadAssetAtPath<CrowdPunch.Configuration.EnemySpawnSettings>("Assets/CrowdPunch/Data/Settings/Enemies/SnakeEnemySpawnSettings.asset");
+            Assert.That(settings.SpawnFromGround,Is.True);
+            Assert.That(settings.EnemyPrefab,Is.EqualTo(prefab));
+            var controller=(UnityEditor.Animations.AnimatorController)animator.runtimeAnimatorController;
+            foreach(var state in controller.layers[0].stateMachine.states)
+                Assert.That(UnityEditor.AssetDatabase.GetAssetPath(state.state.motion),Does.StartWith(CrowdPunch.Editor.EnemySnakePrefabBuilder.AnimationFolder));
+            Assert.That(controller.layers[0].stateMachine.states[7].state.motion.name,Is.EqualTo("Spawn"));
+            using var reader=new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
+            reader.ReadInt32();reader.ReadString();int bones=reader.ReadInt32(),frames=reader.ReadInt32();
+            for(int b=0;b<bones;b++)reader.ReadString();
+            for(int m=0;m<EnemyAnimationSamples.MotionCount;m++)reader.ReadSingle();
+            var poses=new UnityEngine.Matrix4x4[bones];var vs=renderer.sharedMesh.vertices;var ws=renderer.sharedMesh.boneWeights;
+            float spawnStart=float.NegativeInfinity,spawnEnd=float.PositiveInfinity;
+            for(int pose=0;pose<frames*EnemyAnimationSamples.MotionCount;pose++)
             {
-                var pixel=mask.GetPixel(UnityEngine.Mathf.FloorToInt(uv.x*mask.width),UnityEngine.Mathf.FloorToInt(uv.y*mask.height));
-                bool blueBody=uv.x>.0625f && uv.x<.09375f;
-                Assert.That(pixel.r,Is.EqualTo(blueBody?0:1),"Only the blue body swatch should change; face details retain their atlas colors.");
+                for(int b=0;b<bones;b++)
+                {
+                    poses[b]=UnityEngine.Matrix4x4.identity;
+                    for(int c=0;c<4;c++)for(int r=0;r<3;r++)poses[b][r,c]=reader.ReadSingle();
+                }
+                float minimum=float.PositiveInfinity,maximum=float.NegativeInfinity;
+                for(int v=0;v<vs.Length;v++)
+                {
+                    var w=ws[v];var local=poses[w.boneIndex0].MultiplyPoint3x4(vs[v])*w.weight0
+                        +poses[w.boneIndex1].MultiplyPoint3x4(vs[v])*w.weight1
+                        +poses[w.boneIndex2].MultiplyPoint3x4(vs[v])*w.weight2
+                        +poses[w.boneIndex3].MultiplyPoint3x4(vs[v])*w.weight3;
+                    Assert.That(renderer.localBounds.Contains(local),Is.True,"Animated vertex escaped culling bounds.");
+                    float y=animator.transform.TransformPoint(local).y;
+                    minimum=UnityEngine.Mathf.Min(minimum,y);maximum=UnityEngine.Mathf.Max(maximum,y);
+                }
+                if(pose/frames!=7)Assert.That(minimum,Is.GreaterThanOrEqualTo(-1.001f),"Grounded poses must stay above the capsule floor.");
+                if(pose==7*frames)spawnStart=maximum;
+                if(pose==8*frames-1)spawnEnd=minimum;
             }
-            var settings=UnityEditor.AssetDatabase.LoadAssetAtPath<CrowdPunch.Configuration.SnakeSettings>("Assets/CrowdPunch/Data/Settings/SnakeSettings.asset");
-            var tail=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Material>("Assets/CrowdPunch/Materials/Enemies/SnakeOrb.mat");
-            Assert.That(UnityEngine.Vector4.Distance(tail.GetColor("_BaseColor"),settings.protectedColor),Is.LessThan(.00001f));
-            Assert.That(settings.protectedColor,Is.Not.EqualTo(settings.vulnerableColor));
+            Assert.That(spawnStart,Is.LessThan(-1.1f),"Spawn begins completely underground.");
+            Assert.That(spawnEnd,Is.EqualTo(-1f).Within(.01f),"Extracted root motion must emerge to ground Idle.");
         }
         [Test] public void Snake002_MissingTipCannotStrandTheEncounter()
         {

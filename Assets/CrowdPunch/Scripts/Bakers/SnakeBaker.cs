@@ -20,6 +20,7 @@ namespace CrowdPunch.Bakers
                 OrbPrefab = GetEntity(authoring.orbPrefab, TransformUsageFlags.Dynamic),
                 SegmentCount = math.clamp(s.initialTailSegmentCount, 0, 32),
                 OrbRadius = math.max(.1f, s.orbRadius), Spacing = math.max(.2f, s.segmentSpacing),
+                HeightOffset = s.segmentHeightOffset,
                 WaveAmplitude = math.max(0, s.waveAmplitude), WaveFrequencyHz = math.max(0, s.waveFrequencyHz),
                 PursuitSpeed = math.max(0, s.pursuitSpeed), ContactDamagePercent = math.saturate(s.contactDamagePercent),
                 ProtectedColor = new float4(s.protectedColor.r, s.protectedColor.g, s.protectedColor.b, s.protectedColor.a),

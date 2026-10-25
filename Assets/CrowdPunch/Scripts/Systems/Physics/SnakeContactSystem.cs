@@ -16,7 +16,7 @@ namespace CrowdPunch.Systems.Physics
         public void OnUpdate(ref SystemState state)
         {
             var world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld;
-            state.Dependency = new Contacts { Segments = SystemAPI.GetComponentLookup<SnakeSegment>(true) }
+            state.Dependency = new SegmentContactFilterJob { Segments = SystemAPI.GetComponentLookup<SnakeSegment>(true) }
                 .Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), ref world, state.Dependency);
         }
         internal static bool Excludes(in SnakeSegment s, Entity other, ComponentLookup<SnakeSegment> segments)
@@ -26,12 +26,15 @@ namespace CrowdPunch.Systems.Physics
         }
         internal static bool Excludes(in SnakeSegment s, in SnakeSegment other)
         {
+            // SNAKE-001: attached tails may overlap during spawning or when snakes cross.
+            // Suppress solver separation across all attached segments, including other snakes.
+            if (s.Detached == 0 && other.Detached == 0) return true;
             if (other.Head != s.Head || other.Generation != s.Generation) return false;
             // An attached counterpart must not re-disable a returning, bounced projectile.
             return s.Detached != 0 ? s.BouncedOutsideOwner == 0 : other.Detached == 0;
         }
         [BurstCompile]
-        private struct Contacts : IContactsJob
+        private struct SegmentContactFilterJob : IContactsJob
         {
             [ReadOnly] public ComponentLookup<SnakeSegment> Segments;
             public void Execute(ref ModifiableContactHeader header, ref ModifiableContactPoint point)
