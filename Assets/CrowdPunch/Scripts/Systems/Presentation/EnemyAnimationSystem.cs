@@ -195,6 +195,11 @@ namespace CrowdPunch.Systems.Presentation
                     AnimateDragon(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Ninja)
+                {
+                    AnimateNinja(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
                 if (animation.Profile != (byte)EnemyAnimationProfile.Standard
                     && animation.Profile != (byte)EnemyAnimationProfile.Elite
                     && launch.Phase == EnemyLaunchPhase.Recovering)
@@ -205,26 +210,6 @@ namespace CrowdPunch.Systems.Presentation
                     return;
                 }
                 playback.WasRecovering = 0;
-                if (animation.Profile == (byte)EnemyAnimationProfile.Ninja)
-                {
-                    if (launch.Phase == EnemyLaunchPhase.Active && Ninjas.HasComponent(owner) && NinjaTuning.HasComponent(owner))
-                    {
-                        var ninja = Ninjas[owner];
-                        int motion = ninja.Phase == NinjaPhase.Preparing ? 2
-                            : ninja.Phase == NinjaPhase.ArrivalWarning || ninja.Phase == NinjaPhase.Dashing ? 3 : -1;
-                        if (motion >= 0)
-                        {
-                            float progress = ninja.Phase == NinjaPhase.Preparing
-                                ? math.saturate(1 - ninja.SecondsRemaining / math.max(.001f, NinjaTuning[owner].PreparationDuration)) : .35f;
-                            float pose = progress * (samples.FrameCount - 1);
-                            int from = (int)pose;
-                            ApplyFrame(ref skin, ref samples, motion, from, math.min(from + 1, samples.FrameCount - 1), math.frac(pose));
-                            return;
-                        }
-                    }
-                    AnimateBaseline(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot);
-                    return;
-                }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Ranged)
                 {
                     AnimateRanged(owner, ref playback, ref skin, ref samples, launch);
@@ -471,6 +456,115 @@ namespace CrowdPunch.Systems.Presentation
                 float frame = playback.Phase * samples.FrameCount;
                 int a = (int)frame;
                 ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
+            }
+
+            // NINJA-001/005: authored humanoid poses own body feedback, preserving scale.
+            private void AnimateNinja(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                bool damaged = false;
+                if (Health.HasComponent(owner))
+                {
+                    float health = Health[owner].Current;
+                    damaged = playback.HealthInitialized != 0 && health < playback.PreviousHealth;
+                    playback.PreviousHealth = health;
+                    playback.HealthInitialized = 1;
+                }
+                int motion;
+                float phase;
+                bool loop = false;
+                if (launch.Phase == EnemyLaunchPhase.Launched)
+                {
+                    bool entering = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
+                    playback.FlightPhase = entering ? 0 : math.saturate(playback.FlightPhase
+                        + DeltaTime / math.max(.01f, samples.Durations[EnemyAnimationSamples.FlyingMotion]));
+                    playback.WasLaunched = 1;
+                    playback.LaunchSequence = launch.LaunchSequence;
+                    playback.WasRecovering = playback.Landing = playback.HitActive = 0;
+                    motion = EnemyAnimationSamples.FlyingMotion;
+                    phase = playback.FlightPhase;
+                }
+                else
+                {
+                    playback.WasLaunched = 0;
+                    if (launch.Phase == EnemyLaunchPhase.Defeated)
+                    {
+                        motion = EnemyAnimationSamples.ImpactMotion;
+                        playback.ImpactPhase = playback.Landing == 0 ? 0 : math.saturate(playback.ImpactPhase
+                            + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                        playback.Landing = 1;
+                        playback.HitActive = 0;
+                        phase = playback.ImpactPhase;
+                    }
+                    else if (launch.Phase == EnemyLaunchPhase.Recovering)
+                    {
+                        if (playback.WasRecovering == 0)
+                            playback.ImpactDuration = math.max(.01f, launch.RecoverySecondsRemaining);
+                        playback.WasRecovering = 1;
+                        playback.HitActive = 0;
+                        motion = 6;
+                        phase = math.saturate(1 - launch.RecoverySecondsRemaining / playback.ImpactDuration);
+                    }
+                    else
+                    {
+                        playback.WasRecovering = playback.Landing = 0;
+                        if (launch.Phase != EnemyLaunchPhase.Active) return;
+                        var ninja = Ninjas.HasComponent(owner) ? Ninjas[owner] : default;
+                        var tuning = NinjaTuning.HasComponent(owner) ? NinjaTuning[owner] : default;
+                        motion = 0;
+                        phase = 0;
+                        bool committed = ninja.Phase != NinjaPhase.Positioning;
+                        if (committed)
+                        {
+                            playback.HitActive = 0;
+                            if (ninja.Phase == NinjaPhase.Preparing || ninja.Phase == NinjaPhase.TeleportPending)
+                            {
+                                motion = 3;
+                                phase = ninja.Phase == NinjaPhase.TeleportPending ? 1 : math.saturate(1
+                                    - ninja.SecondsRemaining / math.max(.001f, tuning.PreparationDuration));
+                            }
+                            else if (ninja.Phase == NinjaPhase.ArrivalWarning) motion = 4;
+                            else if (ninja.Phase == NinjaPhase.Dashing)
+                            {
+                                motion = 4;
+                                phase = math.saturate(ninja.DistanceTravelled / math.max(.001f, tuning.MaximumDashDistance));
+                            }
+                            else if (ninja.Phase == NinjaPhase.Recovering)
+                            {
+                                motion = 8;
+                                phase = math.saturate(1 - ninja.SecondsRemaining / math.max(.001f, tuning.RecoveryDuration));
+                            }
+                        }
+                        else
+                        {
+                            if (damaged) { playback.HitActive = 1; playback.HitPhase = 0; }
+                            if (playback.HitActive != 0)
+                            {
+                                motion = 5;
+                                phase = playback.HitPhase;
+                                playback.HitPhase = math.saturate(playback.HitPhase
+                                    + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                                if (playback.HitPhase >= 1) playback.HitActive = 0;
+                            }
+                            else
+                            {
+                                float speed = Velocities.HasComponent(owner) ? math.length(Velocities[owner].Linear.xz)
+                                    : Movement[owner].Speed;
+                                motion = speed <= .03f ? 0 : speed > Settings[owner].MoveSpeed * .75f ? 2 : 1;
+                                if (playback.GoblinMotion != motion) playback.Phase = 0;
+                                playback.GoblinMotion = (byte)motion;
+                                playback.Phase = math.frac(playback.Phase
+                                    + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                                phase = playback.Phase;
+                                loop = true;
+                            }
+                        }
+                    }
+                }
+                float frame = phase * (loop ? samples.FrameCount : samples.FrameCount - 1);
+                int from = (int)frame;
+                ApplyDasherFrame(ref skin, ref samples, motion, from,
+                    loop ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1), math.frac(frame));
             }
 
             // TRAIL-001/006: the supplied poses provide feedback without tint, shake,

@@ -1239,8 +1239,127 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Ninja005AmbushSamplesFollowGameplayClocksAndLaunchInterruptsWithoutTransformWrites()
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(visual, new EnemyAnimation { Owner = owner, Samples = samples,
+                Profile = (byte)EnemyAnimationProfile.Ninja, SpawnMotion = -1 });
+            em.AddComponentData(owner, new NinjaTuning { PreparationDuration = .75f, ArrivalWarningDuration = .2f,
+                MaximumDashDistance = 5, RecoveryDuration = 1.6f });
+            em.SetComponentData(owner, new PhysicsVelocity { Linear = new float3(7, 2, 3) });
+            var transform = LocalTransform.FromPositionRotationScale(new float3(2, 1, 4), quaternion.identity, 1.2f);
+            em.SetComponentData(owner, transform);
+            em.AddComponentData(owner, new NinjaState { Phase = NinjaPhase.Preparing, SecondsRemaining = .375f });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(3, .5f, 0)), "Preparation runs the complete authored windup.");
+            em.SetComponentData(owner, new NinjaState { Phase = NinjaPhase.TeleportPending });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(3, 1, 0)));
+            em.SetComponentData(owner, new NinjaState { Phase = NinjaPhase.ArrivalWarning, SecondsRemaining = .1f });
+            Tick(); Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(4, 0, 0)), "Arrival holds the locked slash start.");
+            em.SetComponentData(owner, new NinjaState { Phase = NinjaPhase.Dashing, DistanceTravelled = 2.5f });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(4, .5f, 0)), "Slash follows committed dash distance.");
+            em.SetComponentData(owner, new NinjaState { Phase = NinjaPhase.Recovering, SecondsRemaining = .8f });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(8, .5f, 0)), "Follow-through uses Ninja recovery, not ordinary launch recovery.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(9, 0, 0)), "Launch immediately interrupts the ambush without procedural pitch.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = 1 });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(6, 0, 0)));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(6, .5f, 0)));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick(); Tick(2);
+            Assert.That(Pose, Is.EqualTo(new float3(10, 1, 0)), "Defeat holds the authored final pose.");
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(transform));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner).Linear, Is.EqualTo(new float3(7, 2, 3)));
+        }
+
+        [Test]
+        public void Ninja005PrefabPreservesHumanoidScaleEquipmentPaletteAndSampledBounds()
+        {
+            var source = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(
+                CrowdPunch.Editor.EnemyNinjaPrefabBuilder.ModelPath);
+            var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemyNinja.prefab");
+            try
+            {
+                var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                Assert.That(animator.avatar.isHuman, Is.True);
+                foreach (var transform in animator.GetComponentsInChildren<UnityEngine.Transform>(true))
+                {
+                    string path = UnityEditor.AnimationUtility.CalculateTransformPath(transform, animator.transform);
+                    var original = path.Length == 0 ? source.transform : source.transform.Find(path);
+                    Assert.That(original, Is.Not.Null, path);
+                    Assert.That(transform.localScale, Is.EqualTo(original.localScale), path);
+                }
+                Assert.That(root.GetComponentsInChildren<UnityEngine.MeshRenderer>().Length, Is.Zero,
+                    "Rigid hood, mask and sword must join GPU skinning.");
+                Assert.That(root.GetComponentsInChildren<UnityEngine.SkinnedMeshRenderer>().Length, Is.EqualTo(4));
+                var controller = (UnityEditor.Animations.AnimatorController)animator.runtimeAnimatorController;
+                Assert.That(controller.layers[0].stateMachine.states.Length, Is.EqualTo(11));
+                foreach (var state in controller.layers[0].stateMachine.states)
+                    Assert.That(((UnityEngine.AnimationClip)state.state.motion).humanMotion, Is.True);
+                foreach (var authoring in root.GetComponentsInChildren<CrowdPunch.Authoring.EnemyAnimationAuthoring>())
+                {
+                    Assert.That(authoring.Profile, Is.EqualTo(EnemyAnimationProfile.Ninja));
+                    Assert.That(authoring.RotateLaunchAroundOwner, Is.False);
+                    var renderer = authoring.GetComponent<UnityEngine.SkinnedMeshRenderer>();
+                    foreach (var material in renderer.sharedMaterials)
+                    {
+                        Assert.That(material.shader.name, Is.EqualTo("CrowdPunch/Cel/Enemy"));
+                        Assert.That(material.GetTexture("_ColorMap"), Is.Not.Null);
+                        Assert.That(UnityEditor.AssetDatabase.GetAssetPath(material.GetTexture("_ColorMap")),
+                            Does.StartWith("Assets/Male Ninja Pack Cute Series/"));
+                    }
+                    using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
+                    Assert.That(reader.ReadInt32(), Is.EqualTo(0x43504133));
+                    string hash = UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(controller)).ToString()
+                        + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(renderer.sharedMesh))
+                        + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.avatar));
+                    Assert.That(reader.ReadString(), Is.EqualTo(hash));
+                    int bones = reader.ReadInt32(), frames = reader.ReadInt32();
+                    for (int b = 0; b < bones; b++) Assert.That(reader.ReadString(), Is.EqualTo(renderer.bones[b].name));
+                    for (int m = 0; m < 11; m++) Assert.That(reader.ReadSingle(), Is.GreaterThan(0));
+                    var vertices = renderer.sharedMesh.vertices;
+                    var weights = renderer.sharedMesh.boneWeights;
+                    var matrices = new UnityEngine.Matrix4x4[bones];
+                    var scales = new UnityEngine.Vector3[bones];
+                    for (int pose = 0; pose < 11 * frames; pose++)
+                    {
+                        for (int b = 0; b < bones; b++)
+                        {
+                            matrices[b] = UnityEngine.Matrix4x4.identity;
+                            for (int c = 0; c < 4; c++) for (int r = 0; r < 3; r++) matrices[b][r, c] = reader.ReadSingle();
+                            var scale = new UnityEngine.Vector3(((UnityEngine.Vector3)matrices[b].GetColumn(0)).magnitude,
+                                ((UnityEngine.Vector3)matrices[b].GetColumn(1)).magnitude, ((UnityEngine.Vector3)matrices[b].GetColumn(2)).magnitude);
+                            if (pose == 0) scales[b] = scale;
+                            Assert.That(UnityEngine.Vector3.Distance(scale, scales[b]), Is.LessThan(.001f), "No squash or scaling in exported poses.");
+                        }
+                        for (int i = 0; i < vertices.Length; i++)
+                        {
+                            var w = weights[i]; var v = vertices[i];
+                            var point = matrices[w.boneIndex0].MultiplyPoint3x4(v) * w.weight0
+                                + matrices[w.boneIndex1].MultiplyPoint3x4(v) * w.weight1
+                                + matrices[w.boneIndex2].MultiplyPoint3x4(v) * w.weight2
+                                + matrices[w.boneIndex3].MultiplyPoint3x4(v) * w.weight3;
+                            Assert.That(renderer.localBounds.Contains(point), Is.True, renderer.name + " sampled bounds");
+                            point = root.transform.InverseTransformPoint(animator.transform.TransformPoint(point));
+                            // Equipment can extend below the feet in the authored sword poses.
+                            if (renderer.name == "Male Ninja 03") Assert.That(point.y, Is.GreaterThanOrEqualTo(-1.001f));
+                        }
+                    }
+                }
+            }
+            finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        [Test]
         [TestCase(EnemyAnimationProfile.Baseline)]
-        [TestCase(EnemyAnimationProfile.Ninja)]
         public void Info004CenteredLaunchAndRecoveryPreserveBodyHeight(EnemyAnimationProfile profile)
         {
             var em = world.EntityManager;
@@ -1262,7 +1381,6 @@ namespace CrowdPunch.Tests
 
         [Test]
         [TestCase("EnemyLinkedPair")]
-        [TestCase("EnemyNinja")]
         public void Info004CenteredPrefabFlightAndRecoveryClearTheFloor(string prefab)
         {
             var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/" + prefab + ".prefab");

@@ -64,6 +64,7 @@ namespace CrowdPunch.Systems.Presentation
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.GoblinArmored
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Dasher
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Dragon
+                                || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Ninja
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Trail
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Wizard
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Explosive ? 1 : 0) });

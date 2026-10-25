@@ -1721,8 +1721,11 @@ Status: Must
 
 Punches and launched-body impacts interrupt either warning or the dash. A launched Ninja uses
 Baseline projectile damage, knockback, chain propagation, ownership, recovery and defeat rules,
-with no enhanced Dasher impacts. Use Models/UltimateMonsters/Big/Ninja.fbx and suitable embedded
-animations, a recognizable preparation, an arrival attack pose, and compact departure/arrival
+with no enhanced Dasher impacts. Use `Assets/CrowdPunch/Prefabs/Enemies/Fair Black Male Ninja 03 Variant.prefab`
+at its authored scale, retargeting suitable existing humanoid animations for preparation, arrival,
+dash, recovery, launch and defeat (model amendment requested 2026-10-25). Use authored animation
+instead of scripted body tints, flashes, shaking or scale deformation, with established Full Cel
+shading. Keep a recognizable preparation, a locked arrival attack pose, and compact departure/arrival
 smoke that preserves the character's short reaction window. Add no directional dash line,
 screen-space warning or dedicated HUD. Audio is deferred; a later audio pass may add distinct
 preparation and arrival sounds.

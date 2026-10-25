@@ -657,9 +657,20 @@ the swept player hit; shared recovery follows these systems. Final truncated das
 steps retain their sweep until combat consumes it. Shared player health accepts
 damage and knockback through the existing bridge/invulnerability path.
 
-The existing skin-matrix animation job selects sampled Ninja Run/Idle, Duck
-preparation, a held Punch arrival/dash pose and shared flight/Death playback.
-Body colors strengthen preparation/arrival readability. `NinjaSmokeBridgeSystem`
+`EnemyNinjaPrefabBuilder` now instantiates the Fair Black Male Ninja 03 Variant at its
+authored 1.2 root scale without fitting or rescaling the body. Its humanoid avatar retargets
+Ninja-pack Idle/Walk/Run, the project's Goblin Cut Attack/Take Damage/Die and Flying clips.
+Cut Attack is split into continuous windup (0-.38), slash (.38-.68) and follow-through
+(.68-1). Preparation and recovery follow their gameplay clocks; arrival holds the slash
+start and dash progress follows committed travel distance. Ordinary launches interrupt the
+ambush and use Flying, reverse-Die recovery and Die defeat without procedural pitch or flips.
+The hood, mask and sword are converted to single-bone sampled skins so they remain attached
+under ECS rendering. Translation-only floor clearance uses the body's sample for all pieces;
+scale and proportions stay authored. Generated Full Cel materials retain source textures and
+are excluded from the monster-atlas rewrite. The Ninja animation profile sets
+`EnemyVisualOwner.AnimationDriven`, bypassing body tint, flash, shake and squash.
+
+`NinjaSmokeBridgeSystem`
 publishes only departure/arrival positions through `PlayerEcsBridge` to a bounded
 eight-effect `NinjaSmokePresentation` pool on the player. It contains no entities
 or enemy queries. No directional indicators, HUD or audio were added.
