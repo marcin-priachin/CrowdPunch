@@ -53,7 +53,7 @@ namespace CrowdPunch.Editor
                     }
                     foreach (var boss in root.GetComponentsInChildren<RollingBossAuthoring>(true))
                     {
-                        RemoveModel(boss.transform, "Green Spiky Blob Model");
+                        RemoveModel(boss.transform, "Green Spiky Blob Model", "Spike Model");
                         GauntletProgressionBuilder.AddRollingModel(boss.gameObject, boss.settings);
                     }
                     foreach (var boss in root.GetComponentsInChildren<DinoBossAuthoring>(true))
@@ -123,30 +123,6 @@ namespace CrowdPunch.Editor
             foreach (var renderer in visual.GetComponentsInChildren<SkinnedMeshRenderer>())
             {
                 var bounds = renderer.localBounds; bounds.Expand(bounds.size * .4f + Vector3.one * .2f); renderer.localBounds = bounds;
-            }
-        }
-
-        public static void FitRollingSphere(GameObject visual, RollingBossAuthoring owner, RollingBossSettings settings)
-        {
-            Vector3 pivot = owner.animationPivot;
-            float radius = 0;
-            VisitSamples(visual, p => radius = Mathf.Max(radius, Vector3.Distance(p, pivot)));
-            float worldRadius = radius * visual.transform.localScale.x;
-            float fit = Mathf.Min(1, (Mathf.Min(settings.bodyRadius, settings.bodyHeight * .5f) - .1f) / Mathf.Max(.01f, worldRadius));
-            visual.transform.localScale *= fit;
-            visual.transform.localPosition = -pivot * visual.transform.localScale.x;
-            const int angles = 64;
-            var lowest = Enumerable.Repeat(float.PositiveInfinity, angles).ToArray();
-            var sine = new float[angles]; var cosine = new float[angles];
-            for (int i=0; i<angles; i++) { sine[i]=Mathf.Sin(i*Mathf.PI*2/angles); cosine[i]=Mathf.Cos(i*Mathf.PI*2/angles); }
-            VisitSamples(visual, p => {
-                var d=p-pivot;
-                for(int i=0; i<angles; i++) lowest[i]=Mathf.Min(lowest[i],cosine[i]*d.y-sine[i]*d.z);
-            });
-            owner.animationFloorOffsets = lowest.Select(y => (-settings.bodyHeight*.5f+.08f)/visual.transform.localScale.x-y).ToArray();
-            float extra = owner.animationFloorOffsets.Max(v => Mathf.Abs(v));
-            foreach(var renderer in visual.GetComponentsInChildren<SkinnedMeshRenderer>()) {
-                var bounds=renderer.localBounds; bounds.Expand(Vector3.up*extra*2); renderer.localBounds=bounds;
             }
         }
 

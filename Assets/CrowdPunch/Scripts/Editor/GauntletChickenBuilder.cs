@@ -101,7 +101,7 @@ namespace CrowdPunch.Editor
         {
             ChickenModelBuilder.AddModel(root, settings);
         }
-        internal static void WriteBossSamples(Animator animator,SkinnedMeshRenderer renderer,AnimationClip[] clips,string path,string controllerPath, bool humanoid = false, bool inPlaceTurns = false)
+        internal static void WriteBossSamples(Animator animator,SkinnedMeshRenderer renderer,AnimationClip[] clips,string path,string controllerPath, bool humanoid = false, bool inPlaceTurns = false, int reverseMotion = -1, bool groundEachFrame = false)
         {
             const int frames=32;
             animator.Rebind();
@@ -116,6 +116,7 @@ namespace CrowdPunch.Editor
                 for(int frame=0;frame<frames;frame++)
                 {
                     float phase=frame/(float)(motion<2?frames:frames-1);
+                    if (motion == reverseMotion) phase = 1 - phase;
                     if (humanoid) { animator.Play("Motion" + Math.Min(motion, clips.Length - 1), 0, phase); animator.Update(0f); }
                     else clip.SampleAnimation(animator.gameObject,phase*clip.length);
                     var correction=Matrix4x4.identity;
@@ -130,6 +131,19 @@ namespace CrowdPunch.Editor
                     int start=(motion*frames+frame)*renderer.bones.Length;
                     for(int bone=0;bone<renderer.bones.Length;bone++)
                         matrices[start+bone]=correction*animator.transform.worldToLocalMatrix*renderer.bones[bone].localToWorldMatrix*bindposes[bone];
+                    float support = 0;
+                    if (groundEachFrame)
+                    {
+                        // Translate below-floor authored geometry; never resize the supplied model.
+                        for (int i=0; i<vertices.Length; i++)
+                        {
+                            var w=weights[i]; var v=vertices[i];
+                            float y=(matrices[start+w.boneIndex0].MultiplyPoint3x4(v)*w.weight0+matrices[start+w.boneIndex1].MultiplyPoint3x4(v)*w.weight1
+                                +matrices[start+w.boneIndex2].MultiplyPoint3x4(v)*w.weight2+matrices[start+w.boneIndex3].MultiplyPoint3x4(v)*w.weight3).y;
+                            support=Mathf.Max(support,-y);
+                        }
+                        for (int bone=0; bone<renderer.bones.Length; bone++) matrices[start+bone][1,3]+=support;
+                    }
                     for(int i=0;i<vertices.Length;i++)
                     {
                         var w=weights[i]; var v=vertices[i];

@@ -161,14 +161,14 @@ namespace CrowdPunch.Tests
             world.GetOrCreateSystem<BossCrowdReplenishmentSystem>().Update(world.Unmanaged);
             Assert.AreEqual(0,em.GetComponentData<EnemyRespawnSettings>(body).Enabled);
             em.GetBuffer<RollingHitHistory>(boss).Add(new RollingHitHistory { Source=body });
-            var skin=em.CreateEntity(typeof(RollingAnimationPivot),typeof(EnemyAnimationPlayback));
-            em.SetComponentData(skin,new RollingAnimationPivot { Center=new float3(1),Angle=2 });
+            var skin=em.CreateEntity(typeof(RollingAnimationState),typeof(EnemyAnimationPlayback));
+            em.SetComponentData(skin,new RollingAnimationState { AcceptedHits=5,Returning=1 });
             em.SetComponentData(skin,new EnemyAnimationPlayback { Phase=.6f });
             RollingEncounterReset.Reset(em);
             Assert.AreEqual(0,em.GetBuffer<RollingHitHistory>(boss).Length); Assert.AreEqual(t.Health,em.GetComponentData<Health>(boss).Current);
             Assert.AreEqual(t.OpeningPause,em.GetComponentData<RollingBoss>(boss).Remaining);
-            Assert.AreEqual(0,em.GetComponentData<RollingAnimationPivot>(skin).Angle);
-            Assert.AreEqual(new float3(1),em.GetComponentData<RollingAnimationPivot>(skin).Center);
+            Assert.AreEqual(0,em.GetComponentData<RollingAnimationState>(skin).AcceptedHits);
+            Assert.AreEqual(0,em.GetComponentData<RollingAnimationState>(skin).Returning);
             Assert.AreEqual(0,em.GetComponentData<EnemyAnimationPlayback>(skin).Phase);
             world.GetOrCreateSystem<BossCrowdReplenishmentSystem>().Update(world.Unmanaged);
             Assert.AreEqual(1,em.GetComponentData<EnemyRespawnSettings>(body).Enabled);

@@ -39,11 +39,11 @@ namespace CrowdPunch.Tests
                         + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(renderer.sharedMesh))
                         + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(animator.avatar));
                     Assert.That(reader.ReadString(), Is.EqualTo(hash), renderer.name);
-                    if (level == 20)
+                    if (level == 20 || level == 30)
                     {
                         Assert.That(renderer.sharedMaterial.shader.name, Is.EqualTo("CrowdPunch/Cel/Enemy"));
                         Assert.That(renderer.sharedMaterial.GetTexture("_ColorMap"), Is.Not.Null);
-                        Assert.That(AssetDatabase.GetAssetPath(renderer.sharedMaterial), Does.StartWith(ChickenModelBuilder.MaterialFolder + "/"));
+                        Assert.That(AssetDatabase.GetAssetPath(renderer.sharedMaterial), Does.StartWith((level == 20 ? ChickenModelBuilder.MaterialFolder : RollingSpikeBuilder.MaterialFolder) + "/"));
                     }
                     else Assert.That(renderer.sharedMaterial.GetTexture("_ColorMap"), Is.EqualTo(level == 10 ? AssetDatabase.LoadAssetAtPath<UnityEngine.Material>(GatekeeperMagmaBuilder.Art + "Gatekeeper Magma Cel.mat").GetTexture("_ColorMap") : AssetDatabase.LoadAssetAtPath<Texture2D>(EnemyAppearanceMaterials.AtlasPath)));
                 }
@@ -62,22 +62,22 @@ namespace CrowdPunch.Tests
                 Assert.That(minimum, Is.GreaterThanOrEqualTo(-height * .5f + .075f));
                 if (level == 30)
                 {
-                    Assert.That(radius, Is.LessThanOrEqualTo(height * .5f - .095f), "Every rolling angle must clear the floor.");
-                    var rolling = model.GetComponentInParent<RollingBossAuthoring>();
-                    Assert.That(rolling.animationFloorOffsets.Length, Is.EqualTo(64));
-                    var lowest = Enumerable.Repeat(float.PositiveInfinity, 128).ToArray();
-                    var rotations = Enumerable.Range(0, 128).Select(i => Quaternion.Euler(i * 360f / 128, 0, 0)).ToArray();
-                    BossAppearanceBuilder.VisitSamples(model, point => {
-                        for (int i=0; i<128; i++)
-                        {
-                            float coordinate=i*.5f; int a=(int)coordinate;
-                            float offset=Mathf.Lerp(rolling.animationFloorOffsets[a],rolling.animationFloorOffsets[(a+1)%64],coordinate-a);
-                            var rotated=rolling.animationPivot+rotations[i]*(point-rolling.animationPivot)+Vector3.up*offset;
-                            lowest[i]=Mathf.Min(lowest[i],toOwner.MultiplyPoint3x4(rotated).y);
-                        }
-                    });
-                    Assert.That(lowest.Min(), Is.GreaterThanOrEqualTo(-height*.5f+.04f));
-                    Assert.That(lowest.Max(), Is.LessThan(-height*.5f+.12f), "The silhouette should rest on the floor, not hover.");
+                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RollingSpikeBuilder.ModelPath);
+                    Vector3 ratio = new Vector3(model.transform.localScale.x / prefab.transform.localScale.x,
+                        model.transform.localScale.y / prefab.transform.localScale.y, model.transform.localScale.z / prefab.transform.localScale.z);
+                    Assert.That(ratio.x, Is.GreaterThan(1), "Spike is enlarged to the existing hitbox.");
+                    Assert.That(ratio.y, Is.EqualTo(ratio.x).Within(.0001f));
+                    Assert.That(ratio.z, Is.EqualTo(ratio.x).Within(.0001f), "Uniform fitting preserves proportions.");
+                    float footprint = 0;
+                    BossAppearanceBuilder.VisitSamples(model, point =>
+                    {
+                        var position = toOwner.MultiplyPoint3x4(point);
+                        footprint = Mathf.Max(footprint, new Vector2(position.x, position.z).magnitude);
+                    }, 2);
+                    Assert.That(footprint, Is.EqualTo(model.GetComponentInParent<RollingBossAuthoring>().settings.bodyRadius).Within(.005f),
+                        "The idle/spin silhouette must reach the existing collision footprint.");
+                    var controller = (UnityEditor.Animations.AnimatorController)model.GetComponent<Animator>().runtimeAnimatorController;
+                    Assert.That(controller.layers[0].stateMachine.states[1].state.motion.name, Is.EqualTo("Hide and Spin Attack In Place"));
                 }
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
@@ -109,7 +109,7 @@ namespace CrowdPunch.Tests
                 var visual = em.CreateEntity(typeof(EnemyAnimationPlayback));
                 em.AddComponentData(visual, new EnemyAnimation { Owner = owner, Samples = samples });
                 em.AddComponentData(visual, new BossAnimationAnchor());
-                if (kind == 2) em.AddComponentData(visual, new RollingAnimationPivot { Center = new float3(0, 1, 0) });
+                if (kind == 2) em.AddComponentData(visual, new RollingAnimationState());
                 em.AddBuffer<SkinMatrix>(visual).Add(default);
                 for (int tick = 0; tick < 300; tick++)
                 {
@@ -135,16 +135,14 @@ namespace CrowdPunch.Tests
             finally { samples.Dispose(); }
         }
 
-        [TestCase(-2.06213883e-7f)]
-        [TestCase(-2.1329668e-20f)]
-        [TestCase(0f)]
-        [TestCase(.15f)]
-        public void Roll007UprightRecoveryKeepsBodyAndEyeSynchronized(float angle)
+        [Test]
+        public void Roll007SpinInterpolationKeepsAuthoredScaleAndHitsPreserveCommittedCycle()
         {
-            using var world = new World("Rolling floor seam regression");
+            using var world = new World("Spike animation regression");
             var em = world.EntityManager;
             var owner = em.CreateEntity(typeof(RollingBoss), typeof(RollingTuning));
-            em.SetComponentData(owner, new RollingBoss { Phase = RollingPhase.Pause });
+            em.SetComponentData(owner, new RollingBoss { Phase = RollingPhase.Roll, Remaining = 2 });
+            em.SetComponentData(owner, new RollingTuning { WindUp = 1, Invulnerability = .75f });
             using var builder = new BlobBuilder(Allocator.Temp);
             ref var data = ref builder.ConstructRoot<EnemyAnimationSamples>();
             data.FrameCount = 2; data.BoneCount = 1;
@@ -152,45 +150,34 @@ namespace CrowdPunch.Tests
             var matrices = builder.Allocate(ref data.Matrices, EnemyAnimationSamples.MotionCount * 2);
             for (int i = 0; i < durations.Length; i++) durations[i] = 1;
             for (int i = 0; i < matrices.Length; i++)
-                matrices[i] = new float3x4(new float3(1, 0, 0), new float3(0, 1, 0), new float3(0, 0, 1), new float3(0, 1, 0));
+            {
+                var r = new float3x3(quaternion.RotateY(i % 2 == 0 ? 0 : math.PI * .5f));
+                matrices[i] = new float3x4(r.c0 * 2, r.c1 * 2, r.c2 * 2, new float3(i / 2, 1, 0));
+            }
             var samples = builder.CreateBlobAssetReference<EnemyAnimationSamples>(Allocator.Persistent);
-            using var floorBuilder = new BlobBuilder(Allocator.Temp);
-            ref var floor = ref floorBuilder.ConstructRoot<RollingFloorSamples>();
-            var offsets = floorBuilder.Allocate(ref floor.Offsets, 64);
-            for (int i = 0; i < offsets.Length; i++) offsets[i] = .5f + .2f * math.sin(i * 2 * math.PI / offsets.Length);
-            var floorSamples = floorBuilder.CreateBlobAssetReference<RollingFloorSamples>(Allocator.Persistent);
             try
             {
-                var renderers = new Entity[2];
-                for (int i = 0; i < renderers.Length; i++)
-                {
-                    var visual = em.CreateEntity(typeof(EnemyAnimationPlayback));
-                    em.AddComponentData(visual, new EnemyAnimation { Owner = owner, Samples = samples });
-                    em.AddComponentData(visual, new RollingAnimationPivot {
-                        Center = new float3(0, 1, 0), Angle = angle, Floor = floorSamples
-                    });
-                    em.AddBuffer<SkinMatrix>(visual).Add(default);
-                    renderers[i] = visual;
-                }
+                var visual = em.CreateEntity(typeof(EnemyAnimationPlayback), typeof(RollingAnimationState));
+                em.AddComponentData(visual, new EnemyAnimation { Owner = owner, Samples = samples });
+                em.AddBuffer<SkinMatrix>(visual).Add(default);
                 var system = world.GetOrCreateSystem<RollingAnimationSystem>();
-                for (int tick = 0; tick < 180; tick++)
-                {
-                    world.SetTime(new TimeData(tick / 60.0, 1f / 60));
-                    system.Update(world.Unmanaged);
-                    em.CompleteAllTrackedJobs();
-                    var body = em.GetBuffer<SkinMatrix>(renderers[0])[0].Value;
-                    var eye = em.GetBuffer<SkinMatrix>(renderers[1])[0].Value;
-                    Assert.That(math.all(math.isfinite(body.c3)), Is.True);
-                    Assert.That(eye, Is.EqualTo(body), "Every renderer must finish its skin and floor update.");
-                    Assert.That(em.GetComponentData<EnemyAnimationPlayback>(renderers[0]).Phase,
-                        Is.EqualTo(em.GetComponentData<EnemyAnimationPlayback>(renderers[1]).Phase));
-                }
-                Assert.That(em.GetBuffer<SkinMatrix>(renderers[0])[0].Value.c3.y, Is.EqualTo(1.5f).Within(.0001f),
-                    "Recovery must wrap to the first floor sample at zero, not clamp to the last sample.");
+                world.SetTime(new TimeData(.25, .25f));
+                system.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+                var pose = em.GetBuffer<SkinMatrix>(visual)[0].Value;
+                Assert.That(math.length(pose.c0), Is.EqualTo(2).Within(.0001f));
+                Assert.That(math.length(pose.c1), Is.EqualTo(2).Within(.0001f));
+                Assert.That(pose.c3.x, Is.EqualTo(1), "Roll plays the authored spin slot.");
+                var boss = new RollingBoss { Phase = RollingPhase.WindUp, Remaining = .5f, AcceptedHits = 1 };
+                em.SetComponentData(owner, boss);
+                system.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+                Assert.That(em.GetBuffer<SkinMatrix>(visual)[0].Value.c3.x, Is.EqualTo(3), "Accepted hits play Take Damage.");
+                Assert.That(em.GetComponentData<RollingBoss>(owner), Is.EqualTo(boss), "Presentation preserves action and timing.");
+                boss.Phase = RollingPhase.Defeated; em.SetComponentData(owner, boss);
+                for (int tick = 0; tick < 8; tick++) { system.Update(world.Unmanaged); em.CompleteAllTrackedJobs(); }
+                Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Phase, Is.EqualTo(1), "Death holds its final pose.");
             }
-            finally { samples.Dispose(); floorSamples.Dispose(); }
+            finally { samples.Dispose(); }
         }
-
         [Test]
         public void Boss002HandPoseDoesNotAccumulateOrMoveCollider()
         {

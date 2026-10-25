@@ -403,9 +403,10 @@ hand envelopes. Coordination clips committed attack positions to the configured 
 physics step using the same envelope. Authored model scale, ground clearance and the original
 attack telegraphs remain unchanged. No wind-up growth or marker-coverage fitting is applied.
 
+`RollingSpikeBuilder` replaces the Rolling boss visual in campaign 30/70 and legacy Gauntlet 21 with the supplied Spike prefab. A constant uniform authoring scale fits the sampled idle/spin silhouette to the existing collision footprint; proportions are preserved and the visual is translated to the collider floor. Runtime never changes model scale. Dedicated cel materials preserve Spike textures. Slots 0-5 contain Idle, Hide and Spin Attack In Place, reversed Hide to Idle for wind-up, Take Damage, Die and forward Hide to Idle. `RollingAnimationSystem` owns sampled playback through `RollingAnimationState`, uses accepted-hit sequences for reactions, and preserves committed combat clocks. Quaternion interpolation preserves authored bone scale. Procedural rolling, squash, floor-angle correction and material pulses are removed. ECS physics and encounter settings remain unchanged (ROLL-001/006/007).
+
 Other bosses retain their existing presentation: `BossAnimationAnchor` grounds Chicken/Dino
-poses; `BossSkinPose` blends samples and their bounded silhouette accents. Rolling Blob retains
-its collider fit and 64-angle sampled floor support. Legacy `BossHandPoseSystem` only affects
+poses; `BossSkinPose` blends samples and their bounded silhouette accents. Rolling Spike uses its authored spin clip without collider fitting. Legacy `BossHandPoseSystem` only affects
 remaining primitive visuals, and no longer has targets in the authored Gatekeeper scenes.
 
 The finale uses a dedicated royal-blue body UV palette while preserving its gold crown, face and wing membranes, an atlas-backed URP material, cyan vulnerability emission and the existing ring. Its Mono presentation bridge triggers strikes when ECS warnings resolve, adds landing compression, and distinguishes flight/fall/takeoff without reading entities. Per-clip sampled support heights settle its floating source model onto the ground during vulnerability and blend away through fall/takeoff.
