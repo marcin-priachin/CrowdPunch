@@ -893,7 +893,7 @@ An opted-in encounter supplies one Baseline when undefeated protected Armored en
 Status: Must
 
 Wizard is a normal, baseline-health, medium-range area-denial archetype using
-`Models/UltimateMonsters/Blob/Wizard.fbx`. It has no contact attack. Normal punch damage,
+`Assets/Bud Cute Series/Prefabs/Bud.prefab` at its Inspector-authored scale (currently 3x). It has no contact attack. Normal punch damage,
 launching, aim assistance, initial-direction preview, collisions, recovery, deferred death
 and pooling remain available. Wizard state and tuning are explicit ECS data.
 The full final accepted decisions and rejected alternatives are recorded in [Wizard](Wizard.md).
@@ -976,11 +976,26 @@ from the collision cannot suppress the zone hit or its creation. Scene exit/rest
 
 Status: Must
 
-Use permanent violet tint, soft/pulsing telegraph and brighter active treatment on both body
-and full-radius ground disc with clear ring. Overlaps blend additively. Stationary zones use
-the same active treatment. Dance loops continuously through telegraph and active, interrupting
-immediately for launch/recovery. Use embedded Idle/Walk/Death as appropriate, with root motion
-disabled and ECS movement authoritative. No new HUD or normal-enemy health bars.
+Use Bud's supplied FBX animations and textured Full Cel shading. Preserve the current Inspector scales;
+body readability uses authored animation without scripted tint, shaking or squash effects.
+Use the original supplied flight motion without smoothing, frozen leaves, redirected sway
+or per-frame grounding. Give each non-spawn clip except death one constant vertical offset, preserving
+its original bobbing and articulation. At the lowest point of the full cycle, the model
+clears the ground by Animation Ground Clearance, default 0.1 world metres and adjustable
+in Wizard Enemy Spawn Settings. During death, place each pose at that same clearance
+level so the earlier death frames do not float above movement altitude. Preserve the
+current model scale. Ground spawn retains
+underground emergence while limiting the spawn rise to the fly-idle destination height.
+Enable Spawn From Ground and use `Spawn to Ground Idle`, ending at the first fly-idle pose
+without an additional takeoff. Spawn must never rise above its destination flight altitude.
+Apply the configured clearance gradually during emergence and blend into active flight
+without a height snap. Normal post-launch recovery may still use `Ground Idle to Fly Idle`.
+Use `Fly Idle`, `Fly Forward In Place`, `Fly Take Damage`, `Fly Spin Attack` for launched
+presentation and `Fly Die` for defeat. Loop `Fly Projectile Upward` continuously through
+telegraph and active casting, interrupting for launch/recovery. Root motion stays disabled
+and ECS movement remains authoritative. Preserve the soft/pulsing violet ground telegraph,
+brighter active full-radius disc and clear ring; overlapping zones blend additively.
+No new HUD or normal-enemy health bars.
 
 ### WIZARD-007 - Waves And Gauntlet_17
 

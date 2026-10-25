@@ -26,6 +26,7 @@ namespace CrowdPunch.Bakers
             DependsOn(renderer.sharedMesh);
             DependsOn(animator.runtimeAnimatorController);
             DependsOn(animator.avatar);
+            DependsOn(animator.transform);
             using var reader = new BinaryReader(new MemoryStream(authoring.Samples.bytes));
             if (reader.ReadInt32() != 0x43504133)
                 throw new InvalidDataException("Unsupported enemy animation samples. Run Crowd Punch/Animation/Rebuild Enemy Samples.");
@@ -66,6 +67,7 @@ namespace CrowdPunch.Bakers
                 JogSamples = jog,
                 Profile = (byte)authoring.Profile,
                 SpawnMotion = authoring.SpawnMotion,
+                WorldToAnimationHeight = math.abs(animator.transform.InverseTransformVector(Vector3.up).y),
                 BlendResponse = math.max(0f, authoring.BlendResponse),
                 MaxLegAnimationSpeed = math.max(0f, authoring.MaxLegAnimationSpeed),
                 LaunchPivot = authoring.RotateLaunchAroundOwner && owner != null

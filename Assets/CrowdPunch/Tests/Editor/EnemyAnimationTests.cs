@@ -506,6 +506,7 @@ namespace CrowdPunch.Tests
         [TestCase(EnemyAnimationProfile.GoblinArmored)]
         [TestCase(EnemyAnimationProfile.Explosive)]
         [TestCase(EnemyAnimationProfile.Dasher)]
+        [TestCase(EnemyAnimationProfile.Wizard)]
         public void Info004AuthoredAnimationBypassesTintAndProceduralDeformation(EnemyAnimationProfile profile)
         {
             UseGoblin();
@@ -1127,7 +1128,6 @@ namespace CrowdPunch.Tests
 
         [Test]
         [TestCase(EnemyAnimationProfile.Baseline)]
-        [TestCase(EnemyAnimationProfile.Wizard)]
         [TestCase(EnemyAnimationProfile.Ninja)]
         public void Info004CenteredLaunchAndRecoveryPreserveBodyHeight(EnemyAnimationProfile profile)
         {
@@ -1216,6 +1216,71 @@ namespace CrowdPunch.Tests
                 Assert.That(minimum, Is.GreaterThanOrEqualTo(floor + .01f), "Every launch/recovery pose must clear the physics floor.");
             }
             finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        private void UseWizard()
+        {
+            var em = world.EntityManager;
+            var animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)EnemyAnimationProfile.Wizard;
+            animation.SpawnMotion = 7;
+            em.SetComponentData(visual, animation);
+            em.AddComponentData(owner, new WizardCastState());
+            em.AddComponentData(owner, new Health { Current = 10, Max = 10 });
+        }
+
+        [Test]
+        public void Wizard006CastLoopsAcrossActiveBoundaryAndLaunchInterruptsImmediately()
+        {
+            UseWizard();
+            var em = world.EntityManager;
+            em.SetComponentData(owner, new WizardCastState { Phase = WizardCastPhase.Telegraph });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(2));
+            Tick(.2f);
+            float phase = em.GetComponentData<EnemyAnimationPlayback>(visual).AttackPhase;
+            em.SetComponentData(owner, new WizardCastState { Phase = WizardCastPhase.Active });
+            Tick(.2f);
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).AttackPhase,
+                Is.EqualTo(phase + .2f).Within(.001f));
+            Tick(1f);
+            Assert.That(Pose.x, Is.EqualTo(2), "The cast loops instead of holding its final pose.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(9));
+            Assert.That(Pose.y, Is.Zero, "Authored spin starts without a scripted pitch or scale.");
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [Test]
+        public void Wizard006SpawnRecoveryHitAndDeathUseBudClips()
+        {
+            UseWizard();
+            var em = world.EntityManager;
+            em.AddComponentData(owner, new EnemySpawnAnimation { Duration = 1f });
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(7));
+            Assert.That(Pose.y, Is.EqualTo(.5f).Within(.001f));
+            em.SetComponentEnabled<EnemySpawnAnimation>(owner, false);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            Tick(); Assert.That(Pose.x, Is.EqualTo(7), "The first active frame retains the spawn endpoint instead of playing a second takeoff.");
+            for (int i = 0; i < 6; i++) Tick();
+            Assert.That(Pose.x, Is.Zero);
+            em.SetComponentData(owner, new DesiredMovement { Speed = 2 });
+            Tick(); Assert.That(Pose.x, Is.EqualTo(1));
+            em.SetComponentData(owner, new WizardCastState { Phase = WizardCastPhase.Active });
+            em.SetComponentData(owner, new Health { Current = 9, Max = 10 });
+            Tick(); Assert.That(Pose.x, Is.EqualTo(5));
+            Assert.That(em.GetComponentData<WizardCastState>(owner).Phase, Is.EqualTo(WizardCastPhase.Active));
+            for (int i = 0; i < 5; i++) Tick();
+            Assert.That(Pose.x, Is.EqualTo(2), "Hit reaction must not cancel the cast.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
+            Tick(); Assert.That(Pose.x, Is.EqualTo(4));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick(); Assert.That(Pose.x, Is.EqualTo(10));
+            Tick(2f); Assert.That(Pose.y, Is.EqualTo(1));
+            Tick(); Assert.That(Pose.y, Is.EqualTo(1), "Death holds its final pose.");
         }
 
         [Test]

@@ -16,7 +16,7 @@ bypassing probability checks and their interval. All other cast lifecycle rules 
 ### 1. Core Wizard role
 
 - New enemy archetype: **Wizard**.
-- Model: `Assets/CrowdPunch/Models/UltimateMonsters/Blob/Wizard.fbx`.
+- Model: `Assets/Bud Cute Series/Prefabs/Bud.prefab` at its Inspector-authored scale, currently 3x (visual replacement accepted 2026-10-25).
 - Wizard is a **medium-range area-denial enemy** whose main threat is a periodically activated radial damage zone.
 - It has **no normal contact/melee attack**.
 - Direct player punches behave normally:
@@ -352,31 +352,30 @@ However, a committed casting Wizard does not cancel or reposition out of another
 
 ### 14. Animation
 
-`Wizard.fbx` should be inspected for embedded animation clips.
+Use the supplied animations in `Assets/Bud Cute Series/FBX`:
 
-- `Dance` is reserved for casting.
-- `Dance` loops continuously through Telegraph + Active.
-- It stops immediately if casting is interrupted.
-- Normal launched/recovery presentation then takes over.
-- Other suitable embedded clips should be used for idle/locomotion if available.
-- Root motion disabled.
-- ECS/gameplay movement remains authoritative.
+- `Fly Projectile Upward` loops continuously through Telegraph + Active.
+- Casting presentation stops immediately for launch/recovery.
+- `Fly Idle` / original `Fly Forward In Place` provide normal locomotion without custom smoothing or leaf remapping.
+- `Fly Take Damage` provides hit feedback without canceling the gameplay cast.
+- `Fly Spin Attack` provides launched presentation; `Fly Die` provides defeat. Death poses
+  stay at the same ground clearance as movement instead of floating above it.
+- Spawn From Ground is enabled: `Spawn to Ground Idle`, with a limited rise and a final blend
+  into Fly Idle. Do not overshoot flight height or play an additional takeoff after spawn.
+  Ease in the configured clearance and transition continuously into active movement.
+- Recovery holds `Ground Idle`, then plays the authored takeoff when control returns.
+- Root motion disabled; ECS/gameplay movement remains authoritative.
+- Keep the current Inspector scale (3x visual-root override), with no scripted fitting or scale effects.
+- Give each non-spawn cycle except death one constant vertical offset, preserving the original motion.
+  Death uses per-pose vertical alignment to the shared movement clearance.
+  At its lowest point it clears the ground by Animation Ground Clearance (default 0.1 world metres),
+  adjustable in Wizard Enemy Spawn Settings. Preserve underground spawn emergence.
 
 ### 15. Visual/readability treatment
 
-Wizard permanent role tint:
-
-- **purple/violet**.
-
-Telegraph and active zone use the same color family:
-
-- softer/pulsing violet telegraph;
-- stronger/brighter/more saturated active zone.
-
-Wizard body also:
-
-- brightens/pulses during telegraph;
-- gets stronger active-cast treatment during Active.
+Bud retains its source texture with the established Full Cel enemy shader. Body readability
+comes from authored animation; no violet body tint, flashing, pulsing or procedural shaking/squash.
+The damage zone keeps its softer/pulsing violet telegraph and brighter active treatment.
 
 Ground visualization:
 
@@ -588,7 +587,7 @@ The remaining decisions are implementation-level details Codex can reasonably de
 - whether moving and stationary zones share one component with a mode flag or use small companion components;
 - exact procedural mesh/material implementation for the ground disc/ring;
 - exact purple/violet material values;
-- which non-`Dance` embedded Wizard clips map best to idle/movement;
+- minor animation transition details within the accepted Bud clip mapping;
 - exact Gauntlet_17 arena dimensions and object placement;
 - exact tutorial wording;
 - exact serialized field/property names;

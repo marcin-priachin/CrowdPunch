@@ -30,6 +30,13 @@ namespace CrowdPunch.Components
         public float MaxLegAnimationSpeed;
         public float3 LaunchPivot;
         public int SpawnMotion;
+        public float WorldToAnimationHeight;
+    }
+
+    public struct EnemyAnimationBounds : IComponentData
+    {
+        public Entity Animation;
+        public AABB Original;
     }
 
     public struct EnemyAnimationPlayback : IComponentData

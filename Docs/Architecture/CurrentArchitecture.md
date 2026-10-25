@@ -477,7 +477,7 @@ updates measured animation 0.0392 ms, readability 0.0239 ms and impact accents 0
 with zero calling-thread managed allocations in each measured loop. These are Editor CPU system
 measurements, not standalone frame-rate/GPU acceptance results; OQ-001 and final art approval remain open.
 
-Trail and Wizard authoring enable `RotateLaunchAroundOwner`. The animation baker converts the
+Trail authoring enables `RotateLaunchAroundOwner`; Bud Wizard uses its authored spin without a procedural launch turn. The animation baker converts the
 owner origin plus the configured launch clearance into model space as `EnemyAnimation.LaunchPivot`; flight and recovery rotate skins
 around that shared body center rather than their feet. Their bounds cover the centered turn.
 This changes presentation only and leaves the physics transform and launch velocity untouched.
@@ -2744,14 +2744,31 @@ Moving zones are cancelled by launch or defeat; fixed zones keep their own timer
 source death, pooling, recovery and recasting. Scene/run ownership and `GameRestartSystem`
 remove old zones on unload/reset. Respawn and restart reset cast state.
 
-`EnemyWizard.prefab` uses Blob/Wizard.fbx and the established sampled ECS skinning path.
-`EnemyAnimationProfile.Wizard` selects Idle, Walk, looping Dance for both cast phases,
-the established launched pose and Death. Root motion is disabled. Rebuild its controller,
-samples, materials, prefab and settings reference with **Crowd Punch > Enemies > Rebuild
-Wizard Prefab**. `WizardZonePresentationSystem` draws a shared procedural disc using
-`Resources/WizardZone.mat` and the additive URP `WizardZone.shader`; the full radius and
-outer ring pulse during telegraph and brighten while active. The Wizard's body remains
-violet through shared readability data. No extra HUD element is introduced.
+`EnemyWizard.prefab` nests `Assets/Bud Cute Series/Prefabs/Bud.prefab` at its current
+Inspector-authored scale (3x visual root) and uses the established CPA3 sampled ECS skinning path. `EnemyWizardPrefabBuilder`
+exports Bud's supplied FBX clips and a textured `CrowdPunch/Cel/Enemy` material. The Wizard
+profile bypasses procedural body tint/impact deformation through `EnemyVisualOwner.AnimationDriven`.
+`EnemyAnimationSystem` loops Fly Projectile Upward across both cast phases, uses authored
+flight/hit/death and ground-idle/takeoff recovery, and keeps physics transforms unchanged.
+Spawn From Ground is enabled in WizardEnemySpawnSettings; motion 7 samples Spawn to Ground Idle.
+EnemySpawnAnimation uses that clip's duration. Export bounds the emergence height by the
+first fly-idle pose and blends its final quarter to that exact pose. Clearance eases in during
+spawn, followed by a 0.12 s visual handoff into active flight; spawn does not trigger the
+normal recovery takeoff clip. Playback uses WasRecovering=2 for this brief spawn handoff.
+The sampler preserves the raw FBX motion and uses one constant vertical translation per
+non-spawn cycle except death so the clip minimum is zero; flight poses are not smoothed
+or grounded individually. Death samples instead translate each pose's lowest vertex
+to zero, avoiding the elevated early frames caused by fitting the final fallen pose.
+`WizardSettings.AnimationGroundClearance` defaults to 0.1 world metres and travels through
+the existing spawn profile into the owner entity. The animation baker records a world-to-root
+height conversion, preserving the Inspector scale. Playback interpolates original poses and
+adds the configured lift to non-spawn skin matrices and eases it in during emergence. `EnemyAnimationBounds` links render
+entities to their animation data and original AABB; the animation system expands bounds to
+cover both underground emergence and the configurable lift. No physics transform changes.
+Rebuild Wizard Samples preserves saved Inspector transforms while resampling raw clips.
+The existing Rebuild Wizard Prefab menu regenerates the prefab, controller, material and samples.
+`WizardZonePresentationSystem` retains the full-radius violet telegraph/active ground disc,
+ring and additive overlaps via `Resources/WizardZone.mat` and `WizardZone.shader`.
 
 Wave assets expose optional Wizard Baseline supply, supply delay, persistent-zone waiting
 and an alive-Wizard cap (zero means unlimited). These features default off for existing
