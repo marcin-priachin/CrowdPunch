@@ -84,29 +84,6 @@ namespace CrowdPunch.Editor
             finally { EditorSceneManager.RestoreSceneManagerSetup(previous); }
         }
 
-        private static void BuildSnakeOrb()
-        {
-            const string materialPath = Root + "Materials/Enemies/SnakeOrb.mat";
-            var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
-            if (material == null)
-            {
-                material = new Material(Shader.Find("CrowdPunch/Cel/Environment")) { color = new Color(.3f,.8f,.95f), enableInstancing = true };
-                AssetDatabase.CreateAsset(material, materialPath);
-            }
-            var root = new GameObject("SnakeOrb") { layer = 7 };
-            try
-            {
-                root.AddComponent<EnemyAuthoring>();
-                var collider = root.AddComponent<SphereCollider>(); collider.radius = 1; collider.providesContacts = true;
-                collider.sharedMaterial = AssetDatabase.LoadAssetAtPath<PhysicsMaterial>(Root + "PhysicsMaterial/Enemy.physicMaterial");
-                var body = root.AddComponent<Rigidbody>(); body.mass = 1; body.constraints = (RigidbodyConstraints)84;
-                var visual = GameObject.CreatePrimitive(PrimitiveType.Sphere); visual.name = "Orb Visual"; visual.layer = 7;
-                UnityEngine.Object.DestroyImmediate(visual.GetComponent<SphereCollider>());
-                visual.transform.SetParent(root.transform, false); visual.transform.localScale = Vector3.one * 2;
-                visual.GetComponent<Renderer>().sharedMaterial = material;
-                PrefabUtility.SaveAsPrefabAsset(root, Root + "Prefabs/SnakeOrb.prefab");
-            }
-            finally { UnityEngine.Object.DestroyImmediate(root); }
-        }
+        private static void BuildSnakeOrb() => EnemySnakePrefabBuilder.RebuildSegments();
     }
 }

@@ -4,6 +4,12 @@ using Unity.Rendering;
 
 namespace CrowdPunch.Components
 {
+    [MaterialProperty("_SkinColorAmount")]
+    public struct SnakeBodyTintAmount : IComponentData
+    {
+        public float Value;
+    }
+
     [MaterialProperty("_SkinColor")]
     public struct SnakeBodyColor : IComponentData
     {

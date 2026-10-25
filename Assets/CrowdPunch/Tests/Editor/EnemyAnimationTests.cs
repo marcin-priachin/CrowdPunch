@@ -76,6 +76,55 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Snake006SlimeAuthoredMotionKeepsPhysicsOwnership()
+        {
+            UseTrail();
+            var animation = world.EntityManager.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)EnemyAnimationProfile.Slime;
+            world.EntityManager.SetComponentData(visual, animation);
+            var em = world.EntityManager;
+            var velocity = new PhysicsVelocity { Linear = new float3(3, 4, 5) };
+            em.SetComponentData(owner, velocity);
+            Tick();
+            Assert.That(Pose.x, Is.Zero);
+            em.SetComponentData(owner, new DesiredMovement { Speed = 2, Direction = math.forward() });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(1));
+            em.SetComponentData(owner, new DesiredMovement { Speed = 4, Direction = math.forward() });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(1));
+            em.SetComponentData(owner, new Health { Current = 4, Max = 5 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(5));
+            Tick(.25f);
+            Assert.That(Pose.y, Is.EqualTo(.25f).Within(.001f));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(9));
+            Tick(.25f);
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).FlightPhase, Is.EqualTo(.25f).Within(.001f));
+            Tick(1f);
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).FlightPhase, Is.EqualTo(.25f).Within(.001f), "Authored roll loops during launch.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 2 });
+            Tick();
+            Assert.That(Pose.y, Is.Zero, "A fresh launch restarts the reaction.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(6));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(.5f).Within(.001f));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(10));
+            Assert.That(Pose.y, Is.Zero);
+            Tick(2);
+            Assert.That(Pose.y, Is.EqualTo(1).Within(.001f));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner), Is.EqualTo(velocity));
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [Test]
         public void Trail006AuthoredLocomotionHitLaunchRecoveryAndDefeatKeepPhysicsOwnership()
         {
             UseTrail();
@@ -119,10 +168,14 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
         }
 
-        [Test]
-        public void Trail006SpawnUsesSharedClockAndLaunchInterruptsImmediately()
+        [TestCase(EnemyAnimationProfile.Trail)]
+        [TestCase(EnemyAnimationProfile.Slime)]
+        public void Snake006AndTrailSpawnUseSharedClockAndLaunchInterruptsImmediately(EnemyAnimationProfile profile)
         {
             UseTrail();
+            var animation = world.EntityManager.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)profile;
+            world.EntityManager.SetComponentData(visual, animation);
             var em = world.EntityManager;
             em.AddComponentData(owner, new EnemySpawnAnimation { Duration = 2, UseAnimation = 1 });
             em.SetComponentEnabled<EnemySpawnAnimation>(owner, true);
@@ -140,10 +193,29 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Trail006BodyFeedbackDoesNotTintShakeOrScaleAuthoredVisuals()
+        public void Snake006SegmentUsesHeadEmergenceClockAndDetachesIntoRoll()
+        {
+            UseTrail();var em=world.EntityManager;
+            var animation=em.GetComponentData<EnemyAnimation>(visual);animation.Profile=(byte)EnemyAnimationProfile.SlimeSegment;
+            em.SetComponentData(visual,animation);
+            var head=em.CreateEntity(typeof(EnemyLaunchState),typeof(EnemySpawnAnimation));
+            em.SetComponentData(head,new EnemySpawnAnimation {Duration=2,UseAnimation=1});em.SetComponentEnabled<EnemySpawnAnimation>(head,true);
+            em.SetComponentData(head,new EnemyLaunchState {Phase=EnemyLaunchPhase.Recovering,RecoverySecondsRemaining=1});
+            em.AddComponentData(owner,new SnakeSegment {Head=head});
+            Tick();Assert.That(Pose.x,Is.EqualTo(7));Assert.That(Pose.y,Is.EqualTo(.5f).Within(.001f));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(owner).Phase,Is.EqualTo(EnemyLaunchPhase.Active),"Presentation must not alter segment combat state.");
+            em.SetComponentData(owner,new SnakeSegment {Head=head,Detached=1});
+            em.SetComponentData(owner,new EnemyLaunchState {Phase=EnemyLaunchPhase.Launched,LaunchSequence=1});
+            Tick();Assert.That(Pose.x,Is.EqualTo(9),"A released model rolls immediately even while its head emerges.");
+            Assert.That(em.GetComponentData<LocalTransform>(owner),Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [TestCase(EnemyArchetypeKind.Trail)]
+        [TestCase(EnemyArchetypeKind.Baseline)]
+        public void Snake006AndTrailFeedbackDoesNotTintShakeOrScaleAuthoredVisuals(EnemyArchetypeKind kind)
         {
             var em = world.EntityManager;
-            em.AddComponentData(owner, new EnemyArchetype { Value = EnemyArchetypeKind.Trail });
+            em.AddComponentData(owner, new EnemyArchetype { Value = kind });
             em.AddComponentData(owner, new EnemyImpactFeedback { Squash = 1, Intensity = 1, VisualRemaining = 1, VisualDuration = 1 });
             em.AddComponentData(visual, new EnemyVisualOwner { Value = owner, UsesAtlas = 1, AnimationDriven = 1 });
             em.AddComponentData(visual, new EnemyVisualDeformation());
