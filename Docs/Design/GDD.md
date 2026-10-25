@@ -1806,7 +1806,11 @@ movement. Route around solid cover with the existing navigation/physics pipeline
 
 Status: Must
 
-Use Models/UltimateMonsters/Flying/Dragon_Evolved.fbx and suitable supplied animations.
+Use `Assets/Dragon Fire Cute Series/Prefabs/Dragon Fire.prefab` at its authored scale and
+animations from `Assets/Dragon Fire Cute Series/FBX` (model amendment requested 2026-10-25).
+Enable Spawn From Ground and use Cast Spell for spawning and flame casting. Authored flying,
+hit, recovery and death clips provide body readability instead of procedural tint, shake,
+squash or resizing; retain textured Full Cel shading.
 Expose a dedicated Dragon settings asset with every mode above, warning/active/cooldown
 seconds, engagement range, preferred distance band, approach/retreat speeds, explicit
 angular rate, independent normal/launched lengths/angles/player-enemy damage/push, and

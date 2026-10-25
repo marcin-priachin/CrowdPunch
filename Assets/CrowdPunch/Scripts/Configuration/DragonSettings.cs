@@ -21,8 +21,8 @@ namespace CrowdPunch.Configuration
         public DragonFlameProfile launched = new DragonFlameProfile { Length = 10, AngleDegrees = 65,
             PlayerDamage = 6, EnemyDamage = 16, PlayerPush = 1.5f, EnemyPush = 1.8f };
         [Tooltip("World-space floor height for XZ flame projection and cover tests.")] public float groundY = -1;
-        [HideInInspector] public float idleDuration = 1.5f, moveDuration = .8333334f;
-        [Tooltip("Root-local mouth attachment; calibrated by prefab builder from supplied Head bone.")]
+        [HideInInspector] public float idleDuration = 1.5f, moveDuration = .8333334f, castDuration = 1f;
+        [Tooltip("Root-local mouth attachment; calibrated by prefab builder from supplied jaw bone.")]
         public Vector3 mouthOffset = new Vector3(0, .6f, .65f);
 
         public DragonTuning Tuning => new DragonTuning
@@ -34,7 +34,7 @@ namespace CrowdPunch.Configuration
             PreferredMaximum = Mathf.Max(preferredMinimum, preferredMaximum), ApproachSpeed = Mathf.Max(0, approachSpeed), RetreatSpeed = Mathf.Max(0, retreatSpeed),
             TurnDegreesPerSecond = Mathf.Max(0, turnDegreesPerSecond), HitInterval = Mathf.Max(.01f, hitInterval),
             Normal = Sanitize(normal), Launched = Sanitize(launched), MouthOffset = mouthOffset, GroundY = groundY,
-            IdleDuration = idleDuration, MoveDuration = moveDuration
+            IdleDuration = idleDuration, MoveDuration = moveDuration, CastDuration = castDuration
         };
 
         private static DragonFlameProfile Sanitize(DragonFlameProfile p) => new DragonFlameProfile

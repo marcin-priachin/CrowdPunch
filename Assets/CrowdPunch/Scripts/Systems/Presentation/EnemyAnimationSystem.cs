@@ -121,6 +121,7 @@ namespace CrowdPunch.Systems.Presentation
                     float spawnFrame = progress * (samples.FrameCount - 1);
                     int from = (int)spawnFrame;
                     if (animation.Profile == (byte)EnemyAnimationProfile.Dasher
+                        || animation.Profile == (byte)EnemyAnimationProfile.Dragon
                         || animation.Profile == (byte)EnemyAnimationProfile.Trail
                         || animation.Profile == (byte)EnemyAnimationProfile.GoblinArmored || ElitePunches.HasComponent(owner))
                         ApplyDasherFrame(ref skin, ref samples, animation.SpawnMotion, from,
@@ -189,31 +190,21 @@ namespace CrowdPunch.Systems.Presentation
                             * animation.WorldToAnimationHeight : 0f);
                     return;
                 }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Dragon)
+                {
+                    AnimateDragon(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
                 if (animation.Profile != (byte)EnemyAnimationProfile.Standard
                     && animation.Profile != (byte)EnemyAnimationProfile.Elite
                     && launch.Phase == EnemyLaunchPhase.Recovering)
                 {
                     AnimateCreatureRecovery(ref playback, ref skin, ref samples, launch,
                         animation.Profile != (byte)EnemyAnimationProfile.Dasher
-                        && animation.Profile != (byte)EnemyAnimationProfile.Dragon
                         && animation.Profile != (byte)EnemyAnimationProfile.Explosive, animation.LaunchPivot);
                     return;
                 }
                 playback.WasRecovering = 0;
-                if (animation.Profile == (byte)EnemyAnimationProfile.Dragon)
-                {
-                    if ((launch.Phase == EnemyLaunchPhase.Active || launch.Phase == EnemyLaunchPhase.Launched) && Dragons.HasComponent(owner))
-                    {
-                        var flame = Dragons[owner];
-                        int motion = flame.Motion;
-                        float dragonFrame = flame.AnimationPhase * (motion == 2 ? samples.FrameCount - 1 : samples.FrameCount);
-                        int from = (int)dragonFrame;
-                        ApplyFrame(ref skin, ref samples, motion, from,
-                            motion == 2 ? math.min(from + 1, samples.FrameCount - 1) : (from + 1) % samples.FrameCount, math.frac(dragonFrame));
-                    }
-                    else AnimateDasher(owner, ref playback, ref skin, ref samples, launch);
-                    return;
-                }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Ninja)
                 {
                     if (launch.Phase == EnemyLaunchPhase.Active && Ninjas.HasComponent(owner) && NinjaTuning.HasComponent(owner))
@@ -1112,6 +1103,80 @@ namespace CrowdPunch.Systems.Presentation
                     playback.RecoveryAge += DeltaTime;
                     playback.WasRecovering = (byte)(spawnBlend < 1f ? 2 : 0);
                 }
+            }
+
+            // DRAGON-001/006: the jaw and body consume the same cast clock, including continuous launched flame.
+            private void AnimateDragon(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                bool damaged = false;
+                if (Health.HasComponent(owner))
+                {
+                    float health = Health[owner].Current;
+                    damaged = playback.HealthInitialized != 0 && health < playback.PreviousHealth;
+                    playback.HealthInitialized = 1;
+                    playback.PreviousHealth = health;
+                }
+                int motion;
+                float progress;
+                bool loop = false;
+                if (launch.Phase == EnemyLaunchPhase.Defeated)
+                {
+                    playback.ImpactPhase = playback.Landing == 0 ? 0f : math.saturate(playback.ImpactPhase
+                        + DeltaTime / math.max(.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
+                    playback.Landing = 1;
+                    playback.HitActive = 0;
+                    motion = EnemyAnimationSamples.ImpactMotion;
+                    progress = playback.ImpactPhase;
+                }
+                else if (launch.Phase == EnemyLaunchPhase.Recovering)
+                {
+                    playback.RecoveryAge = playback.WasRecovering == 0 ? 0f : playback.RecoveryAge + DeltaTime;
+                    playback.WasRecovering = 1;
+                    playback.HitActive = 0;
+                    motion = 6;
+                    progress = math.saturate(playback.RecoveryAge / math.max(.01f, samples.Durations[motion]));
+                }
+                else
+                {
+                    playback.Landing = 0;
+                    playback.WasRecovering = 0;
+                    var flame = Dragons.HasComponent(owner) ? Dragons[owner] : default;
+                    bool casting = Dragons.HasComponent(owner) && flame.Motion == 2;
+                    if (casting)
+                    {
+                        playback.HitActive = 0;
+                        motion = 2;
+                        progress = math.saturate(flame.AnimationPhase);
+                    }
+                    else
+                    {
+                        if (damaged) { playback.HitActive = 1; playback.HitPhase = 0f; }
+                        if (playback.HitActive != 0)
+                        {
+                            motion = 5;
+                            progress = playback.HitPhase;
+                            playback.HitPhase = math.saturate(playback.HitPhase
+                                + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                            if (playback.HitPhase >= 1f) playback.HitActive = 0;
+                        }
+                        else
+                        {
+                            motion = Movement[owner].Speed > .01f ? 1 : 0;
+                            loop = true;
+                            if (Dragons.HasComponent(owner)) progress = flame.AnimationPhase;
+                            else
+                            {
+                                playback.Phase = math.frac(playback.Phase + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                                progress = playback.Phase;
+                            }
+                        }
+                    }
+                }
+                float frame = progress * (loop ? samples.FrameCount : samples.FrameCount - 1);
+                int from = (int)frame;
+                ApplyDasherFrame(ref skin, ref samples, motion, from,
+                    loop ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1), math.frac(frame));
             }
 
             private void AnimateBaseline(Entity owner, ref EnemyAnimationPlayback playback,

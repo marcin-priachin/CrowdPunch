@@ -3342,3 +3342,17 @@ Rebake after scenery, sun or fixed-layout changes with `Crowd Punch > Art Direct
 Bake Chapter One Shadows`. The village dressing command invalidates its old baked-only
 policy and restores realtime fallback until the explicit bake completes. Other chapters
 keep their existing lighting policy. No ECS runtime system or enemy query was added.
+
+## Dragon Fire authored presentation (2026-10-25)
+
+DRAGON-001/002/006, VISION-005/006: EnemyDragonPrefabBuilder nests Dragon Fire.prefab at its
+exact authored scales and places its origin at the unchanged capsule floor. Fly Idle,
+Fly Forward In Place, Cast Spell, Take Damage and Die feed the existing CPA3 ECS skinning
+path. SpawnMotion 7 uses Cast Spell with Spawn From Ground enabled in the shared Dragon
+spawn profile. DragonFlameCycleSystem advances the cast across warning/active phases and
+loops it during launched flame; the same phase drives the sampled jaw attachment and body.
+EnemyAnimationSystem uses authored reactions/recovery/death with scale-preserving pose
+interpolation. Exported Die samples receive only upward translation where the mesh crosses
+the capsule floor. AnimationDriven bypasses procedural body tint and impact deformation.
+Game-owned Full Cel materials keep the supplied texture, excluded from atlas replacement.
+Combat, cone cover tests, launch ownership, physics dimensions and encounter composition remain owned by their existing systems.

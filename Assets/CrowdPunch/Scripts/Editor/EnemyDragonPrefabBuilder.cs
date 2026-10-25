@@ -12,11 +12,12 @@ namespace CrowdPunch.Editor
 {
     public static class EnemyDragonPrefabBuilder
     {
-        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Flying/Dragon_Evolved.fbx";
+        private const string ModelPath = "Assets/Dragon Fire Cute Series/Prefabs/Dragon Fire.prefab";
+        private const string AnimationFolder = "Assets/Dragon Fire Cute Series/FBX";
+        public const string MaterialFolder = "Assets/CrowdPunch/Materials/Enemies/Dragon";
         private const string PrefabPath = "Assets/CrowdPunch/Prefabs/EnemyDragon.prefab";
         private const string ControllerPath = "Assets/CrowdPunch/Animation/EnemyDragon.controller";
         private const string SettingsPath = "Assets/CrowdPunch/Data/Settings/Enemies/DragonEnemySpawnSettings.asset";
-        private const string MaterialFolder = "Assets/CrowdPunch/Materials/Enemies/Dragon";
         private const string SkinningMaterialPath = "Assets/CrowdPunch/Animation/EnemySkinning.mat";
         private const string PhysicsMaterialPath = "Assets/CrowdPunch/PhysicsMaterial/Enemy.physicMaterial";
         private const int FrameCount = 32;
@@ -32,15 +33,17 @@ namespace CrowdPunch.Editor
                 AssetDatabase.CreateAsset(tuning, "Assets/CrowdPunch/Data/Settings/DragonSettings.asset");
             }
             EnsureFolder("Assets/CrowdPunch/Materials/Enemies", "Dragon");
-            ConfigureAnimationImport();
 
             GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath);
             if (model == null) throw new InvalidOperationException($"Missing Dragon model: {ModelPath}");
-            AnimationClip idle = FindClip("Flying_Idle");
-            AnimationClip walk = FindClip("Fast_Flying");
-            AnimationClip death = FindClip("Death");
+            AnimationClip idle = FindClip("Fly Idle");
+            AnimationClip walk = FindClip("Fly Forward In Place");
+            AnimationClip death = FindClip("Die");
 
-            AnimatorController controller = BuildController(idle, walk, death);
+            var clips = new[] { idle, walk, FindClip("Cast Spell"), FindClip("Cast Spell"), idle,
+                FindClip("Take Damage"), FindClip("Take Damage"), FindClip("Cast Spell"), idle,
+                FindClip("Cast Spell"), death };
+            AnimatorController controller = BuildController(clips);
 
             GameObject root = new GameObject("EnemyDragon") { layer = 7 };
             try
@@ -49,9 +52,11 @@ namespace CrowdPunch.Editor
                 root.AddComponent<EnemyAuthoring>();
                 var dragon = root.AddComponent<DragonAuthoring>(); dragon.settings = AssetDatabase.LoadAssetAtPath<DragonSettings>("Assets/CrowdPunch/Data/Settings/DragonSettings.asset");
                 GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
-                visual.name = "Dragon";
+                var authoredTransforms = visual.GetComponentsInChildren<Transform>(true);
+                var authoredScales = authoredTransforms.Select(t => t.localScale).ToArray();
+                visual.name = "Dragon Fire";
                 visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-                visual.transform.localScale = Vector3.one;
+
                 SetLayerRecursively(visual, 7);
 
                 Animator animator = visual.GetComponent<Animator>();
@@ -62,15 +67,16 @@ namespace CrowdPunch.Editor
 
                 SkinnedMeshRenderer[] renderers = visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
                 if (renderers.Length == 0)
-                    throw new InvalidOperationException("Dragon_Evolved.fbx contains no skinned renderers.");
-                FitVisualToEnemy(root.transform, visual.transform, renderers);
+                    throw new InvalidOperationException("Dragon Fire.prefab contains no skinned renderers.");
+                // The prefab origin is at its feet; the unchanged capsule floor is one metre below its root.
+                visual.transform.localPosition = Vector3.down;
                 idle.SampleAnimation(visual, 0);
-                var head = visual.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "Head");
-                if (head == null) throw new InvalidOperationException("Dragon_Evolved has no Head attachment.");
+                var head = visual.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "RigJaw");
+                if (head == null) throw new InvalidOperationException("Dragon Fire has no RigJaw attachment.");
                 tuning.mouthOffset = root.transform.InverseTransformPoint(head.position) + Vector3.forward * .15f;
-                tuning.idleDuration = idle.length; tuning.moveDuration = walk.length;
+                tuning.idleDuration = idle.length; tuning.moveDuration = walk.length; tuning.castDuration = clips[2].length;
                 dragon.mouthFrames = new Vector3[96];
-                var mouthClips = new[] { idle, walk, FindClip("Headbutt") };
+                var mouthClips = new[] { idle, walk, FindClip("Cast Spell") };
                 for (int motion = 0; motion < 3; motion++) for (int frame = 0; frame < FrameCount; frame++)
                 {
                     mouthClips[motion].SampleAnimation(visual, mouthClips[motion].length * frame / (motion == 2 ? 31f : 32f));
@@ -84,13 +90,18 @@ namespace CrowdPunch.Editor
                     renderer.rootBone = animator.transform;
                     renderer.sharedMaterials = BuildMaterials(renderer.sharedMaterials);
                     string samplesPath = $"Assets/CrowdPunch/Animation/EnemyDragonMovement_{index:00}_{SafeName(renderer.name)}.bytes";
-                    WriteSamples(samplesPath, animator, renderer, idle, walk, death, FindClip("Headbutt"), FindClip("Headbutt"));
+                    WriteSamples(samplesPath, animator, renderer, clips);
                     EnemyAnimationAuthoring authoring = renderer.GetComponent<EnemyAnimationAuthoring>();
                     if (authoring == null) authoring = renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
                     authoring.Profile = EnemyAnimationProfile.Dragon;
+                    authoring.SpawnMotion = 7;
+                    authoring.RotateLaunchAroundOwner = false;
                     authoring.BlendResponse = 12f;
                     authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samplesPath);
                 }
+                idle.SampleAnimation(visual, 0f);
+                for (int index = 0; index < authoredTransforms.Length; index++)
+                    authoredTransforms[index].localScale = authoredScales[index];
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -101,52 +112,30 @@ namespace CrowdPunch.Editor
             AssignSpawnSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Created {PrefabPath} from Dragon_Evolved.fbx and assigned it to {SettingsPath}.");
-        }
-
-        private static void ConfigureAnimationImport()
-        {
-            var importer = AssetImporter.GetAtPath(ModelPath) as ModelImporter;
-            if (importer == null) throw new InvalidOperationException($"Expected a model importer at {ModelPath}.");
-            ModelImporterClipAnimation[] clips = importer.defaultClipAnimations;
-            bool changed = false;
-            foreach (ModelImporterClipAnimation clip in clips)
-            {
-                bool shouldLoop = MatchesClipName(clip.name, "Flying_Idle") || MatchesClipName(clip.name, "Fast_Flying");
-                if (clip.loopTime == shouldLoop) continue;
-                clip.loopTime = shouldLoop;
-                changed = true;
-            }
-            if (!changed) return;
-            importer.clipAnimations = clips;
-            importer.SaveAndReimport();
+            Debug.Log($"Created {PrefabPath} from Dragon Fire.prefab and assigned it to {SettingsPath}.");
         }
 
         private static AnimationClip FindClip(string name)
         {
-            AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(ModelPath).OfType<AnimationClip>()
-                .FirstOrDefault(candidate => MatchesClipName(candidate.name, name));
-            if (clip != null) return clip;
-            string available = string.Join(", ", AssetDatabase.LoadAllAssetsAtPath(ModelPath)
-                .OfType<AnimationClip>().Select(candidate => candidate.name));
-            throw new InvalidOperationException($"Dragon_Evolved.fbx has no animation named '{name}'. Available: {available}");
+            string path = $"{AnimationFolder}/Dragon Fire@{name}.FBX";
+            var clip = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>()
+                .FirstOrDefault(candidate => candidate.name == name);
+            if (clip == null) throw new InvalidOperationException($"Missing Dragon Fire animation '{name}' at {path}.");
+            return clip;
         }
 
-        private static bool MatchesClipName(string candidate, string requested) =>
-            candidate == requested || candidate.EndsWith("|" + requested, StringComparison.Ordinal);
-
-        private static AnimatorController BuildController(AnimationClip idle, AnimationClip walk,
-            AnimationClip death)
+        private static AnimatorController BuildController(AnimationClip[] clips)
         {
             AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
             if (controller == null) controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
             AnimatorStateMachine machine = controller.layers[0].stateMachine;
             foreach (ChildAnimatorState state in machine.states) machine.RemoveState(state.state);
-            AnimatorState idleState = machine.AddState("Idle");
-            idleState.motion = idle;
-            machine.defaultState = idleState;
-            machine.AddState("Walk").motion = walk;
-            machine.AddState("Death").motion = death;
+            for (int motion = 0; motion < clips.Length; motion++)
+            {
+                var state = machine.AddState("Motion" + motion);
+                state.motion = clips[motion];
+                if (motion == 0) machine.defaultState = state;
+            }
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
             return controller;
@@ -165,7 +154,7 @@ namespace CrowdPunch.Editor
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null)
                 {
-                    material = new Material(template.shader) { name = name };
+                    material = new Material(template) { name = name };
                     AssetDatabase.CreateAsset(material, path);
                 }
                 material.shader = template.shader;
@@ -176,7 +165,8 @@ namespace CrowdPunch.Editor
                 if (material.HasProperty("_ColorMap")) material.SetTexture("_ColorMap", texture);
                 if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
                 if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
-                EnemyAppearanceMaterials.Configure(material);
+                foreach (string property in new[] { "_SkinColorAmount", "_DarkAmount", "_DirtAmount", "_EyelinerAmount", "_ExploderPulse" })
+                    if (material.HasProperty(property)) material.SetFloat(property, 0f);
                 material.enableInstancing = true;
                 EditorUtility.SetDirty(material);
                 results[index] = material;
@@ -186,14 +176,9 @@ namespace CrowdPunch.Editor
         }
 
         private static void WriteSamples(string path, Animator animator, SkinnedMeshRenderer renderer,
-            AnimationClip idle, AnimationClip walk, AnimationClip death, AnimationClip preparation, AnimationClip attack)
+            AnimationClip[] clips)
         {
             animator.Rebind();
-            var clips = new AnimationClip[EnemyAnimationSamples.MotionCount];
-            clips[0] = idle;
-            for (int index = 1; index < EnemyAnimationSamples.ImpactMotion; index++) clips[index] = walk;
-            clips[2] = preparation; clips[3] = attack; clips[EnemyAnimationSamples.FlyingMotion] = idle;
-            clips[EnemyAnimationSamples.ImpactMotion] = death;
             var matrices = new Matrix4x4[EnemyAnimationSamples.MotionCount * FrameCount * renderer.bones.Length];
             var durations = new float[EnemyAnimationSamples.MotionCount];
             Matrix4x4[] bindposes = renderer.sharedMesh.bindposes;
@@ -201,19 +186,22 @@ namespace CrowdPunch.Editor
             BoneWeight[] boneWeights = renderer.sharedMesh.boneWeights;
             Bounds bounds = default;
             bool hasBounds = false;
+            var positions = new Vector3[sourceVertices.Length];
             for (int motion = 0; motion < clips.Length; motion++)
             {
                 AnimationClip clip = clips[motion];
                 durations[motion] = clip.length;
                 for (int frame = 0; frame < FrameCount; frame++)
                 {
-                    bool oneShot = motion == EnemyAnimationSamples.ImpactMotion || motion == 2 || motion == 3;
+                    bool oneShot = motion == EnemyAnimationSamples.ImpactMotion || motion == 2 || motion == 3
+                        || motion == 5 || motion == 6 || motion == 7 || motion == EnemyAnimationSamples.FlyingMotion;
                     float normalized = oneShot ? frame / (float)(FrameCount - 1) : frame / (float)FrameCount;
                     clip.SampleAnimation(animator.gameObject, normalized * clip.length);
                     Matrix4x4 inverse = animator.transform.worldToLocalMatrix;
                     int poseStart = (motion * FrameCount + frame) * renderer.bones.Length;
                     for (int bone = 0; bone < renderer.bones.Length; bone++)
                         matrices[poseStart + bone] = inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
+                    float minimum = float.PositiveInfinity;
                     for (int vertex = 0; vertex < sourceVertices.Length; vertex++)
                     {
                         BoneWeight weight = boneWeights[vertex];
@@ -222,10 +210,17 @@ namespace CrowdPunch.Editor
                             + matrices[poseStart + weight.boneIndex1].MultiplyPoint3x4(source) * weight.weight1
                             + matrices[poseStart + weight.boneIndex2].MultiplyPoint3x4(source) * weight.weight2
                             + matrices[poseStart + weight.boneIndex3].MultiplyPoint3x4(source) * weight.weight3;
-                        if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
-                        else bounds.Encapsulate(position);
-                        if (motion == EnemyAnimationSamples.FlyingMotion)
-                            bounds.Encapsulate(Quaternion.Euler(-90f, 0f, 0f) * position);
+                        positions[vertex] = position;
+                        minimum = Mathf.Min(minimum, position.y);
+                    }
+                    // Keep Die above the capsule floor by translation only; preserve the authored bone scale/rotation.
+                    float lift = motion == EnemyAnimationSamples.ImpactMotion ? Mathf.Max(0f, -minimum) : 0f;
+                    for (int bone = 0; bone < renderer.bones.Length; bone++) matrices[poseStart + bone][1, 3] += lift;
+                    foreach (Vector3 position in positions)
+                    {
+                        Vector3 grounded = position + Vector3.up * lift;
+                        if (!hasBounds) { bounds = new Bounds(grounded, Vector3.zero); hasBounds = true; }
+                        else bounds.Encapsulate(grounded);
                     }
                 }
             }
@@ -248,18 +243,6 @@ namespace CrowdPunch.Editor
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
             bounds.Expand(0.1f);
             renderer.localBounds = bounds;
-        }
-
-        private static void FitVisualToEnemy(Transform enemy, Transform visual, SkinnedMeshRenderer[] renderers)
-        {
-            Bounds bounds = renderers[0].bounds;
-            for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
-            float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Dragon renderers have empty bounds.");
-            visual.localScale *= 2.5f / largest;
-            bounds = renderers[0].bounds;
-            for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
-            visual.localPosition -= enemy.InverseTransformPoint(bounds.center);
         }
 
         private static void ConfigurePhysics(GameObject root)
@@ -294,6 +277,7 @@ namespace CrowdPunch.Editor
             if (settings == null || prefab == null) throw new InvalidOperationException("Could not load Dragon settings or prefab.");
             var serialized = new SerializedObject(settings);
             serialized.FindProperty("enemyPrefab").objectReferenceValue = prefab;
+            serialized.FindProperty("spawnFromGround").boolValue = true;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(settings);
         }

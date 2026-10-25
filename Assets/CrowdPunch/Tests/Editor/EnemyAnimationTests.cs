@@ -65,6 +65,117 @@ namespace CrowdPunch.Tests
 
         private float3 Pose => world.EntityManager.GetBuffer<SkinMatrix>(visual)[0].Value.c3;
 
+        [Test]
+        public void Dragon006SpawnCastReactionRecoveryAndDefeatPreservePhysics()
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(visual, new EnemyAnimation { Owner = owner, Samples = samples,
+                Profile = (byte)EnemyAnimationProfile.Dragon, SpawnMotion = 7 });
+            em.AddComponentData(owner, new Health { Current = 5, Max = 5 });
+            em.AddComponentData(owner, new DragonFlameState { Motion = 2, AnimationPhase = .6f });
+            em.AddComponentData(owner, new EnemySpawnAnimation { Duration = 1, UseAnimation = 1 });
+            em.SetComponentEnabled<EnemySpawnAnimation>(owner, true);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
+            var velocity = new PhysicsVelocity { Linear = new float3(3, 4, 5) };
+            em.SetComponentData(owner, velocity);
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(7, .5f, 0)), "Cast Spell uses the shared spawn clock.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(2, .6f, 0)), "Launch interrupts spawning and uses the mouth's cast phase without scripted pitch.");
+            em.SetComponentEnabled<EnemySpawnAnimation>(owner, false);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(6));
+            Tick(.25f);
+            Assert.That(Pose.y, Is.EqualTo(.25f).Within(.0001f));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            em.SetComponentData(owner, new DragonFlameState());
+            Tick();
+            em.SetComponentData(owner, new Health { Current = 4, Max = 5 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(5), "Cooldown damage uses Take Damage.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(10, 0, 0)));
+            Tick(2);
+            Assert.That(Pose, Is.EqualTo(new float3(10, 1, 0)), "Die holds its final pose.");
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner), Is.EqualTo(velocity));
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [Test]
+        public void Dragon006PrefabPreservesSourceScaleTextureAndAnimationDependencies()
+        {
+            const string sourcePath = "Assets/Dragon Fire Cute Series/Prefabs/Dragon Fire.prefab";
+            var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemyDragon.prefab");
+            try
+            {
+                var source = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(sourcePath);
+                var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                foreach (var transform in animator.GetComponentsInChildren<UnityEngine.Transform>(true))
+                {
+                    string path = UnityEditor.AnimationUtility.CalculateTransformPath(transform, animator.transform);
+                    var original = string.IsNullOrEmpty(path) ? source.transform : source.transform.Find(path);
+                    Assert.That(original, Is.Not.Null, path);
+                    Assert.That(transform.localScale, Is.EqualTo(original.localScale), path);
+                }
+                var controller = (UnityEditor.Animations.AnimatorController)animator.runtimeAnimatorController;
+                foreach (var state in controller.layers[0].stateMachine.states)
+                    Assert.That(UnityEditor.AssetDatabase.GetAssetPath(state.state.motion),
+                        Does.StartWith("Assets/Dragon Fire Cute Series/FBX/"));
+                Assert.That(controller.layers[0].stateMachine.states[7].state.motion.name, Is.EqualTo("Cast Spell"));
+                var renderer = root.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
+                var originalRenderer = source.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
+                Assert.That(renderer.sharedMesh, Is.EqualTo(originalRenderer.sharedMesh));
+                Assert.That(renderer.sharedMaterial.GetTexture("_ColorMap"), Is.EqualTo(originalRenderer.sharedMaterial.mainTexture));
+                Assert.That(renderer.sharedMaterial.shader.name, Is.EqualTo("CrowdPunch/Cel/Enemy"));
+                var authoring = renderer.GetComponent<CrowdPunch.Authoring.EnemyAnimationAuthoring>();
+                Assert.That(authoring.SpawnMotion, Is.EqualTo(7));
+                Assert.That(authoring.Profile, Is.EqualTo(EnemyAnimationProfile.Dragon));
+                Assert.That(root.GetComponent<UnityEngine.CapsuleCollider>().height, Is.EqualTo(2));
+                var settings = new UnityEditor.SerializedObject(UnityEditor.AssetDatabase.LoadAssetAtPath<CrowdPunch.Configuration.EnemySpawnSettings>(
+                    "Assets/CrowdPunch/Data/Settings/Enemies/DragonEnemySpawnSettings.asset"));
+                Assert.That(settings.FindProperty("spawnFromGround").boolValue, Is.True);
+                using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
+                Assert.That(reader.ReadInt32(), Is.EqualTo(0x43504133));
+                Assert.That(reader.ReadString(), Is.EqualTo(
+                    UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(controller)).ToString()
+                    + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(renderer.sharedMesh))
+                    + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.avatar))));
+                int bones = reader.ReadInt32(), frames = reader.ReadInt32();
+                for (int bone = 0; bone < bones; bone++) reader.ReadString();
+                for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++) reader.ReadSingle();
+                reader.BaseStream.Position += EnemyAnimationSamples.ImpactMotion * frames * bones * 12L * sizeof(float);
+                var vertices = renderer.sharedMesh.vertices;
+                var weights = renderer.sharedMesh.boneWeights;
+                var matrices = new UnityEngine.Matrix4x4[bones];
+                for (int frame = 0; frame < frames; frame++)
+                {
+                    for (int bone = 0; bone < bones; bone++)
+                    {
+                        matrices[bone] = UnityEngine.Matrix4x4.identity;
+                        for (int column = 0; column < 4; column++)
+                            for (int row = 0; row < 3; row++) matrices[bone][row, column] = reader.ReadSingle();
+                        for (int column = 0; column < 3; column++)
+                            Assert.That(((UnityEngine.Vector3)matrices[bone].GetColumn(column)).magnitude,
+                                Is.EqualTo(1f).Within(.0001f), "Grounding must preserve the authored scale.");
+                    }
+                    for (int vertex = 0; vertex < vertices.Length; vertex++)
+                    {
+                        var w = weights[vertex]; var point = vertices[vertex];
+                        var position = matrices[w.boneIndex0].MultiplyPoint3x4(point) * w.weight0
+                            + matrices[w.boneIndex1].MultiplyPoint3x4(point) * w.weight1
+                            + matrices[w.boneIndex2].MultiplyPoint3x4(point) * w.weight2
+                            + matrices[w.boneIndex3].MultiplyPoint3x4(point) * w.weight3;
+                        Assert.That(position.y, Is.GreaterThanOrEqualTo(-.001f), "Die must stay above the capsule floor.");
+                    }
+                }
+
+            }
+            finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
+        }
+
         private void UseTrail()
         {
             var em = world.EntityManager;
@@ -139,11 +250,12 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized, Is.Zero);
         }
 
-        [Test]
-        public void Trail006BodyFeedbackDoesNotTintShakeOrScaleAuthoredVisuals()
+        [TestCase(EnemyArchetypeKind.Trail)]
+        [TestCase(EnemyArchetypeKind.Dragon)]
+        public void Info004AuthoredBodyFeedbackDoesNotTintShakeOrScale(EnemyArchetypeKind kind)
         {
             var em = world.EntityManager;
-            em.AddComponentData(owner, new EnemyArchetype { Value = EnemyArchetypeKind.Trail });
+            em.AddComponentData(owner, new EnemyArchetype { Value = kind });
             em.AddComponentData(owner, new EnemyImpactFeedback { Squash = 1, Intensity = 1, VisualRemaining = 1, VisualDuration = 1 });
             em.AddComponentData(visual, new EnemyVisualOwner { Value = owner, UsesAtlas = 1, AnimationDriven = 1 });
             em.AddComponentData(visual, new EnemyVisualDeformation());

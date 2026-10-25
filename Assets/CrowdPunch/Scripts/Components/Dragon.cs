@@ -22,7 +22,7 @@ namespace CrowdPunch.Components
         public float WarningDuration, ActiveDuration, CooldownDuration, InitialDelay, InitialVariation;
         public float EngagementRange, PreferredMinimum, PreferredMaximum, ApproachSpeed, RetreatSpeed, TurnDegreesPerSecond, HitInterval;
         public float3 MouthOffset;
-        public float GroundY, IdleDuration, MoveDuration;
+        public float GroundY, IdleDuration, MoveDuration, CastDuration;
         public DragonFlameProfile Normal, Launched;
     }
 

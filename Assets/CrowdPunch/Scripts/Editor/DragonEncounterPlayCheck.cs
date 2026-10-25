@@ -46,17 +46,17 @@ namespace CrowdPunch.Editor
             var flow = UnityEngine.Object.FindFirstObjectByType<GauntletSequence>();
             var world = World.DefaultGameObjectInjectionWorld;
             if (flow == null || world == null || !world.IsCreated || flow.TransitionInProgress) return;
-            Require(!flow.HasCampaign && flow.CurrentLevelIndex == 25, "Changed campaign/level selection");
             var health = UnityEngine.Object.FindFirstObjectByType<PlayerHealth>(FindObjectsInactive.Include);
             if (health != null) { health.gameObject.SetActive(true); health.Restore(health.MaxHealth); }
             var em = world.EntityManager; em.CompleteAllTrackedJobs();
             using var sq = em.CreateEntityQuery(typeof(EnemyWaveSequence));
             using var dq = em.CreateEntityQuery(new EntityQueryDesc { All = new[] { ComponentType.ReadOnly<DragonTuning>() }, None = new[] { ComponentType.ReadOnly<RespawnRequest>() } });
-            if (stage == 10 && flow.RunComplete)
+            if (stage == 10 && !flow.HasCampaign && (flow.RunComplete || flow.CurrentLevelIndex == 26))
             {
                 Require(dq.CalculateEntityCount() == 0, "Flame source survived scene unload");
                 Record("PASS retry, exact finite waves, final completion and scene cleanup"); running = false; EditorApplication.isPaused = true; return;
             }
+            Require(!flow.HasCampaign && flow.CurrentLevelIndex == 25, "Changed campaign/level selection");
             if (sq.CalculateEntityCount() != 1) return;
             if (stage > 0 && world.Time.ElapsedTime <= stageTime + .02) return;
             var wave = sq.GetSingleton<EnemyWaveSequence>();

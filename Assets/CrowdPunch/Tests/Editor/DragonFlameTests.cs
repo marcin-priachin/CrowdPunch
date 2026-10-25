@@ -56,6 +56,40 @@ namespace CrowdPunch.Tests
         { var l = em.GetComponentData<EnemyLaunchState>(source); l.Phase = phase; l.Owner = owner; em.SetComponentData(source, l); }
         private void Move(Entity e, float3 p) { var pose = em.GetComponentData<LocalTransform>(e); pose.Position = p; em.SetComponentData(e, pose); }
 
+        [Test]
+        public void Dragon006CastAndJawAdvanceTogetherThroughWarningActiveAndLaunch()
+        {
+            tuning.WarningDuration = 1; tuning.ActiveDuration = 1; tuning.CastDuration = 1;
+            em.SetComponentData(source, tuning);
+            SourceLaunch(EnemyLaunchPhase.Active, EnemyLaunchOwner.None);
+            em.SetComponentData(source, new DragonFlameState { Initialized = 1, Generation = 1,
+                ObservedLaunchSequence = 5, Phase = DragonFlamePhase.Warning, Remaining = .5f });
+            var mouth = em.GetBuffer<DragonMouthFrame>(source);
+            for (int i = 0; i < 96; i++) mouth.Add(new DragonMouthFrame { Position = new float3(i % 32, 0, 0) });
+            void Cycle()
+            {
+                world.GetOrCreateSystem<DragonFlameCycleSystem>().Update(world.Unmanaged);
+                em.CompleteAllTrackedJobs();
+            }
+            Cycle();
+            var warning = em.GetComponentData<DragonFlameState>(source);
+            Assert.That(warning.Motion, Is.EqualTo(2));
+            Assert.That(warning.AnimationPhase, Is.EqualTo(.2475f).Within(.0001f));
+            Assert.That(warning.MouthOffset.x, Is.EqualTo(warning.AnimationPhase * 31).Within(.0001f));
+            em.SetComponentData(source, new DragonFlameState { Initialized = 1, Generation = 1,
+                ObservedLaunchSequence = 5, Phase = DragonFlamePhase.Active, Remaining = .5f });
+            Cycle();
+            var active = em.GetComponentData<DragonFlameState>(source);
+            Assert.That(active.AnimationPhase, Is.EqualTo(.7525f).Within(.0001f), "Active flame continues the cast instead of freezing it.");
+            Assert.That(active.MouthOffset.x, Is.EqualTo(active.AnimationPhase * 31).Within(.0001f));
+            SourceLaunch(EnemyLaunchPhase.Launched, EnemyLaunchOwner.Player);
+            Cycle();
+            var launched = em.GetComponentData<DragonFlameState>(source);
+            Assert.That(launched.Motion, Is.EqualTo(2));
+            Assert.That(launched.AnimationPhase, Is.EqualTo(.8025f).Within(.0001f));
+            Assert.That(launched.MouthOffset.x, Is.EqualTo(launched.AnimationPhase * 31).Within(.0001f));
+        }
+
         [TestCase(DragonEnemyFlameMode.PlayerLaunches, EnemyLaunchPhase.Active, EnemyLaunchOwner.None, false)]
         [TestCase(DragonEnemyFlameMode.PlayerLaunches, EnemyLaunchPhase.Launched, EnemyLaunchOwner.Player, true)]
         [TestCase(DragonEnemyFlameMode.PlayerLaunches, EnemyLaunchPhase.Launched, EnemyLaunchOwner.Boss, false)]

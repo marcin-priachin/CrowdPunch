@@ -32,11 +32,21 @@ namespace CrowdPunch.Systems.Combat
                 Advance(ref f, t, l, player.IsAvailable && math.distance(player.Position.xz, pose.ValueRO.Position.xz) <= t.EngagementRange,
                     SystemAPI.Time.DeltaTime);
                 bool moving = SystemAPI.HasComponent<DesiredMovement>(entity) && SystemAPI.GetComponent<DesiredMovement>(entity).Speed > .01f;
-                f.Motion = l.Phase == EnemyLaunchPhase.Active && f.Phase != DragonFlamePhase.Cooldown ? 2
-                    : l.Phase == EnemyLaunchPhase.Launched || !moving ? 0 : 1;
-                f.AnimationPhase = f.Motion == 2 ? f.Phase == DragonFlamePhase.Warning
-                    ? math.saturate(1 - f.Remaining / math.max(.01f, t.WarningDuration)) * .45f : .45f
-                    : math.frac(f.AnimationPhase + SystemAPI.Time.DeltaTime / math.max(.01f, f.Motion == 0 ? t.IdleDuration : t.MoveDuration));
+                f.Motion = l.Phase == EnemyLaunchPhase.Launched
+                    || l.Phase == EnemyLaunchPhase.Active && f.Phase != DragonFlamePhase.Cooldown ? 2 : !moving ? 0 : 1;
+                if (f.Motion == 2)
+                {
+                    // DRAGON-002/006: one uninterrupted cast; the jaw uses exactly this phase.
+                    if (l.Phase == EnemyLaunchPhase.Launched)
+                        f.AnimationPhase = math.frac(f.AnimationPhase + SystemAPI.Time.DeltaTime / math.max(.01f, t.CastDuration));
+                    else if (f.Phase == DragonFlamePhase.Warning)
+                        f.AnimationPhase = math.saturate(1 - f.Remaining / math.max(.01f, t.WarningDuration)) * .45f;
+                    else
+                        f.AnimationPhase = .45f + .55f * math.saturate(1 - f.Remaining / math.max(.01f, t.ActiveDuration));
+                }
+                else
+                    f.AnimationPhase = math.frac(f.AnimationPhase + SystemAPI.Time.DeltaTime
+                        / math.max(.01f, f.Motion == 0 ? t.IdleDuration : t.MoveDuration));
                 f.MouthOffset = t.MouthOffset;
                 var mouth = mouths[entity];
                 if (mouth.Length == 96)

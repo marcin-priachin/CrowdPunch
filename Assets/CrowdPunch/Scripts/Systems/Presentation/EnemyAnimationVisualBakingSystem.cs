@@ -63,6 +63,7 @@ namespace CrowdPunch.Systems.Presentation
                             AnimationDriven = (byte)(animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Goblin
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.GoblinArmored
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Dasher
+                                || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Dragon
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Trail
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Wizard
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Explosive ? 1 : 0) });
