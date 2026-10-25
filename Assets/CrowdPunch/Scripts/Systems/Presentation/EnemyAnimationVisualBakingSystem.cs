@@ -51,6 +51,7 @@ namespace CrowdPunch.Systems.Presentation
                             AnimationDriven = (byte)(animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Goblin
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.GoblinArmored
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Dasher
+                                || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Wizard
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Explosive ? 1 : 0) });
                         if (SystemAPI.HasComponent<SnakeHead>(animation.ValueRO.Owner))
                             commands.AddComponent(entity, new SnakeBodyColor { Value = new float4(1f) });

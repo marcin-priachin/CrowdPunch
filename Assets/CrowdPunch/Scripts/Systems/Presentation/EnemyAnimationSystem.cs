@@ -101,7 +101,9 @@ namespace CrowdPunch.Systems.Presentation
                     else
                         ApplyFrame(ref skin, ref samples, animation.SpawnMotion, from,
                             math.min(from + 1, samples.FrameCount - 1), math.frac(spawnFrame));
-                    playback.WasRecovering = 0;
+                    playback.WasRecovering = (byte)(animation.Profile == (byte)EnemyAnimationProfile.Wizard ? 1 : 0);
+                    playback.RecoveryAge = 0;
+                    playback.WasAttacking = 0;
                     playback.WasLaunched = 0;
                     playback.Landing = 0;
                     playback.HitActive = 0;
@@ -134,6 +136,11 @@ namespace CrowdPunch.Systems.Presentation
                 if (animation.Profile == (byte)EnemyAnimationProfile.Dasher)
                 {
                     AnimateGoblinDasher(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
+                if (animation.Profile == (byte)EnemyAnimationProfile.Wizard)
+                {
+                    AnimateWizard(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
                 if (animation.Profile != (byte)EnemyAnimationProfile.Standard
@@ -179,20 +186,6 @@ namespace CrowdPunch.Systems.Presentation
                         }
                     }
                     AnimateBaseline(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot);
-                    return;
-                }
-                if (animation.Profile == (byte)EnemyAnimationProfile.Wizard)
-                {
-                    bool casting = launch.Phase == EnemyLaunchPhase.Active && Wizards.HasComponent(owner) && Wizards[owner].IsCasting;
-                    if (casting)
-                    {
-                        playback.AttackPhase = playback.WasAttacking == 0 ? 0 : math.frac(playback.AttackPhase + DeltaTime / math.max(.01f, samples.Durations[2]));
-                        playback.WasAttacking = 1;
-                        float danceFrame = playback.AttackPhase * samples.FrameCount;
-                        int from = (int)danceFrame;
-                        ApplyFrame(ref skin, ref samples, 2, from, (from + 1) % samples.FrameCount, math.frac(danceFrame));
-                    }
-                    else { playback.WasAttacking = 0; AnimateBaseline(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot); }
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Ranged)
@@ -877,6 +870,100 @@ namespace CrowdPunch.Systems.Presentation
                 var rotation = new float3x3(math.slerp(rotationA, rotationB, blend));
                 float3 scale = math.lerp(scaleA, scaleB, blend);
                 return new float3x4(rotation.c0 * scale.x, rotation.c1 * scale.y, rotation.c2 * scale.z, math.lerp(a.c3, b.c3, blend));
+            }
+
+            // Bud clips provide all body feedback. Never rotate, squash or recolor the model for readability.
+            private void AnimateWizard(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                bool damaged = false;
+                if (Health.HasComponent(owner))
+                {
+                    float health = Health[owner].Current;
+                    damaged = playback.HealthInitialized != 0 && health < playback.PreviousHealth;
+                    playback.HealthInitialized = 1;
+                    playback.PreviousHealth = health;
+                }
+                int motion;
+                float progress = -1f;
+                if (launch.Phase == EnemyLaunchPhase.Launched)
+                {
+                    playback.WasRecovering = 0;
+                    playback.WasAttacking = 0;
+                    playback.HitActive = 0;
+                    bool entering = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
+                    playback.FlightPhase = entering ? 0f : math.frac(playback.FlightPhase
+                        + DeltaTime / math.max(.01f, samples.Durations[EnemyAnimationSamples.FlyingMotion]));
+                    playback.WasLaunched = 1;
+                    playback.LaunchSequence = launch.LaunchSequence;
+                    motion = EnemyAnimationSamples.FlyingMotion;
+                    progress = playback.FlightPhase;
+                }
+                else if (launch.Phase == EnemyLaunchPhase.Defeated)
+                {
+                    if (playback.Landing == 0) playback.ImpactPhase = 0f;
+                    else playback.ImpactPhase = math.saturate(playback.ImpactPhase
+                        + DeltaTime / math.max(.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
+                    playback.Landing = 1;
+                    playback.WasAttacking = 0;
+                    playback.HitActive = 0;
+                    motion = EnemyAnimationSamples.ImpactMotion;
+                    progress = playback.ImpactPhase;
+                }
+                else if (launch.Phase == EnemyLaunchPhase.Recovering)
+                {
+                    // Takeoff is authored from ground idle, so hold that pose until recovery ends.
+                    playback.WasRecovering = 1;
+                    playback.RecoveryAge = 0;
+                    playback.WasLaunched = 0;
+                    playback.WasAttacking = 0;
+                    playback.HitActive = 0;
+                    motion = 4;
+                }
+                else
+                {
+                    playback.Landing = 0;
+                    playback.WasLaunched = 0;
+                    bool casting = Wizards.HasComponent(owner) && Wizards[owner].IsCasting;
+                    playback.AttackPhase = !casting || playback.WasAttacking == 0 ? 0f
+                        : math.frac(playback.AttackPhase + DeltaTime / math.max(.01f, samples.Durations[2]));
+                    playback.WasAttacking = (byte)(casting ? 1 : 0);
+                    if (damaged) { playback.HitActive = 1; playback.HitPhase = 0; }
+                    if (casting)
+                    {
+                        // Keep a single uninterrupted loop at the Telegraph -> Active boundary.
+                        playback.WasRecovering = 0;
+                        motion = 2;
+                        progress = playback.AttackPhase;
+                    }
+                    else if (playback.WasRecovering != 0)
+                    {
+                        motion = 6;
+                        progress = math.saturate(playback.RecoveryAge / math.max(.01f, samples.Durations[6]));
+                        playback.RecoveryAge += DeltaTime;
+                        if (progress >= 1f) playback.WasRecovering = 0;
+                    }
+                    else motion = Movement[owner].Speed > .01f ? 1 : 0;
+                    if (playback.HitActive != 0)
+                    {
+                        motion = 5;
+                        progress = playback.HitPhase;
+                        playback.HitPhase = math.saturate(playback.HitPhase
+                            + DeltaTime / math.max(.01f, samples.Durations[5]));
+                        if (playback.HitPhase >= 1f) playback.HitActive = 0;
+                    }
+                }
+                bool loop = motion == 0 || motion == 1 || motion == 2 || motion == 4
+                    || motion == EnemyAnimationSamples.FlyingMotion;
+                if (progress < 0f)
+                {
+                    playback.Phase = math.frac(playback.Phase + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                    progress = playback.Phase;
+                }
+                float frame = progress * (loop ? samples.FrameCount : samples.FrameCount - 1);
+                int from = (int)frame;
+                ApplyDasherFrame(ref skin, ref samples, motion, from,
+                    loop ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1), math.frac(frame));
             }
 
             private void AnimateBaseline(Entity owner, ref EnemyAnimationPlayback playback,
