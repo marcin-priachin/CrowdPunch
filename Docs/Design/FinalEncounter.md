@@ -4,8 +4,7 @@ Agreed design, 14 October 2026. Planning handoff; no repository changes performe
 ## Purpose and scope
 Add level 81 as the sole encounter in its own ninth chapter, after the existing 80-level campaign. A giant flying boss continuously pressures the player in a 100 × 100 metre arena containing every available enemy type. The player chooses among four familiar objective challenges to bring the boss down, then damages him using the crowd.
 
-Boss model: `Assets/CrowdPunch/Models/UltimateMonsters/Flying/Goleling_Evolved.fbx`.
-Make him properly large; exact scale, collider dimensions, flight height and animation choices are delegated to Codex. Keep the player, launch direction, ground warnings and objectives readable with the existing TPP camera.
+Boss model (amended 25 October 2026): `Assets/Wraith Cute Series/Prefabs/Wraith.prefab`, retaining its authored scale. Use the supplied `Assets/Wraith Cute Series/FBX` animations and established Full Cel shading. Authored animation replaces scripted body colors, flashes, shaking and squash/stretch; retain the vulnerability ground ring. Collider dimensions and flight tuning remain unchanged. Keep the player, launch direction, ground warnings and objectives readable with the existing TPP camera.
 
 Target approximately 6–8 minutes and 6–8 successful downings in typical play. These are playtest balance targets, not a timer, mandatory cycle count or damage cap. Strong play may defeat him sooner.
 
@@ -107,7 +106,7 @@ Use dedicated finale-owned settings; do not overwrite legacy objectives, other b
 | Installation ownership | Player-owned launched bodies/explosions; direct-punch exposed-core exception |
 | Crowd supply | Continuous bounded replenishment |
 | Duration/downings target | 6–8 minutes; approximately 6–8 downings in typical play |
-| Boss scale, collider, health, flight height/offset/turning | Codex chooses editable initial values |
+| Boss scale, collider, health, flight height/offset/turning | Prefab-authored model scale; other editable initial values remain delegated |
 | Stage health thresholds/attack and crowd recipes | Codex chooses editable initial values |
 | Fall/takeoff durations, downed duration, initial stun | Codex chooses editable initial values |
 | Airborne/ground attacks: warnings, cadence, areas, damage/push | Codex chooses editable initial values |

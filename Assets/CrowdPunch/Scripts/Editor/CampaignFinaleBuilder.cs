@@ -17,7 +17,7 @@ namespace CrowdPunch.Editor
     public static partial class GauntletProgressionBuilder
     {
         private const string FinaleData=CampaignData+"Finale/";
-        private const string FinaleModel=Root+"Models/UltimateMonsters/Flying/Goleling_Evolved.fbx";
+        private const string FinaleModel=FinaleWraithBuilder.Source;
 
         [MenuItem("Crowd Punch/Campaign/Create Final Encounter")]
         public static void BuildFinale()
@@ -26,7 +26,7 @@ namespace CrowdPunch.Editor
             var catalog=AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CampaignBuildRegistration.CatalogPath);
             if(catalog==null || catalog.Count!=80 || !catalog.Get(79).Available) throw new InvalidOperationException("The existing 80-level campaign is required.");
             if(File.Exists(CampaignScenes+"Campaign_81.unity")) throw new InvalidOperationException("Finale already exists; edit its saved assets.");
-            if(AssetDatabase.LoadAssetAtPath<GameObject>(FinaleModel)==null) throw new InvalidOperationException("Goleling model is unavailable.");
+            if(AssetDatabase.LoadAssetAtPath<GameObject>(FinaleModel)==null) throw new InvalidOperationException("Wraith model is unavailable.");
             for(int i=0;i<SceneManager.sceneCount;i++) if(SceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save dirty scenes before authoring.");
             var setup=EditorSceneManager.GetSceneManagerSetup();
             Directory.CreateDirectory(FinaleData); AssetDatabase.Refresh();
@@ -118,7 +118,7 @@ namespace CrowdPunch.Editor
                 FinishFinaleScene();
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
-            Debug.Log("Authored level 81, four anchors, Goleling and bounded finale supply.");
+            Debug.Log("Authored level 81, four anchors, Wraith and bounded finale supply.");
         }
 
         public static void FinishFinaleScene()
@@ -128,25 +128,6 @@ namespace CrowdPunch.Editor
                 var presentation=new GameObject("Finale presentation").AddComponent<FinalePresentation>();
                 presentation.gameObject.AddComponent<CrowdPunch.Mono.UI.FinaleBossHealthBar>();
                 presentation.settings=settings;
-                var model=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(FinaleModel));
-                model.transform.SetParent(presentation.transform,false); model.transform.localScale=Vector3.one*settings.modelScale;
-                model.transform.position=new Vector3(0,settings.flightHeight-settings.colliderSize.y*.5f,0);
-                presentation.model=model.transform; presentation.groundHeight=settings.colliderSize.y*.5f;
-                presentation.animator=model.GetComponent<Animator>();
-                if(presentation.animator==null) presentation.animator=model.AddComponent<Animator>();
-                presentation.animator.applyRootMotion=false;
-                var controller=AnimatorController.CreateAnimatorControllerAtPath(FinaleData+"Goleling.controller");
-                foreach(var clip in AssetDatabase.LoadAllAssetsAtPath(FinaleModel).OfType<AnimationClip>().Where(c=>!c.name.StartsWith("__"))) {
-                    var anim=controller.layers[0].stateMachine.AddState(clip.name.Split('|').Last()); anim.motion=clip;
-                    if(anim.name=="Fast_Flying" || anim.name=="Flying_Idle") {
-                        var loop=UnityEngine.Object.Instantiate(clip); loop.name=anim.name;
-                        var clipSettings=AnimationUtility.GetAnimationClipSettings(loop); clipSettings.loopTime=true;
-                        AnimationUtility.SetAnimationClipSettings(loop,clipSettings);
-                        AssetDatabase.CreateAsset(loop,FinaleData+anim.name+".anim"); anim.motion=loop;
-                    }
-                    if(anim.name=="Fast_Flying") controller.layers[0].stateMachine.defaultState=anim;
-                }
-                presentation.animator.runtimeAnimatorController=controller;
                 BossAppearanceBuilder.ConfigureFinale(presentation);
                 var hint=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<CrowdPunch.Mono.Levels.GauntletLevel>());
                 hint.FindProperty("openingHint").stringValue="Overload any cyan anchor: shoot through the cover, blast the shell then break its core, dock the rail, or hit the narrow target. Dodge the landing, then launch the crowd into the grounded giant. Dark anchors reset after all four are used.";

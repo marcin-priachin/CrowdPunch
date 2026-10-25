@@ -136,7 +136,7 @@ The accepted detailed handoff is [FinalEncounter.md](FinalEncounter.md), from th
 
 Status: Must
 
-Append stable cp-081 in a one-level ninth chapter, unlocked by level 80. Preserve all previous IDs, scenes and saved progress. Final campaign completion requires level 81 victory. Use a 100 x 100 metre arena and the supplied Goleling_Evolved model. Continue, chapter selection, replay and Level Play support the shorter chapter. Target 6-8 minutes and roughly 6-8 downings without enforcing either.
+Append stable cp-081 in a one-level ninth chapter, unlocked by level 80. Preserve all previous IDs, scenes and saved progress. Final campaign completion requires level 81 victory. Use a 100 x 100 metre arena and `Assets/Wraith Cute Series/Prefabs/Wraith.prefab` at its authored scale, with animations from its FBX folder (model amendment requested 2026-10-25). Continue, chapter selection, replay and Level Play support the shorter chapter. Target 6-8 minutes and roughly 6-8 downings without enforcing either.
 
 ### FINALE-002 - Anchor Lifecycle
 
@@ -176,7 +176,7 @@ Status: Must
 
 Boss death immediately ends hostile combat, cancels attacks and replenishment including pending allocations, neutralizes survivors/effects, then presents a short victory before campaign completion. No survivor clear is required. Retry restores full player/boss health, flight, anchors, histories, cover clocks, rail state and supply. Scene exit cleans all encounter state. Provide a brief nonblocking opening instruction and in-world active/paused/spent/damaged feedback.
 
-The final boss has a long red health bar centered at the top of the screen, matching the player's thin bar style with no text or background. Clearly distinguish vulnerability with a cyan boss glow and a pulsing ground ring. This HUD exception and its revised appearance were requested on 2026-10-14.
+The final boss has a long red health bar centered at the top of the screen, matching the player's thin bar style with no text or background. Keep the pulsing cyan ground ring for vulnerability. Use authored Wraith animations for flight, attack preparation/follow-through, hit reactions and defeat; do not apply scripted body tint, flashes, shaking or scale changes for readability. Preserve prefab proportions and use the established Full Cel shading. This supersedes the cyan body glow and procedural model feedback on 2026-10-25; the HUD exception was requested on 2026-10-14.
 
 ## Player And Controls
 

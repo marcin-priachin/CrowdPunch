@@ -6,7 +6,7 @@ namespace CrowdPunch.Configuration
     public sealed class FinaleSettings : ScriptableObject
     {
         [Min(1)] public float health = 6000;
-        public float modelScale = 2.5f, flightHeight = 6, flightOffset = 22, flightSpeed = 9, turnDegreesPerSecond = 60;
+        public float flightHeight = 6, flightOffset = 22, flightSpeed = 9, turnDegreesPerSecond = 60;
         public float cameraLookHeight = 4;
         public Vector3 colliderSize = new(10, 8, 10);
         public float fallSeconds = 2.5f, downedSeconds = 24, stunSeconds = 7, takeoffSeconds = 2.5f, victorySeconds = 3;
