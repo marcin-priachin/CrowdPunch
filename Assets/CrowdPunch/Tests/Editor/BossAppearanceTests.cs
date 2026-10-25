@@ -39,11 +39,11 @@ namespace CrowdPunch.Tests
                         + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(renderer.sharedMesh))
                         + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(animator.avatar));
                     Assert.That(reader.ReadString(), Is.EqualTo(hash), renderer.name);
-                    if (level == 20 || level == 30)
+                    if (level == 20 || level == 30 || level == 40)
                     {
                         Assert.That(renderer.sharedMaterial.shader.name, Is.EqualTo("CrowdPunch/Cel/Enemy"));
                         Assert.That(renderer.sharedMaterial.GetTexture("_ColorMap"), Is.Not.Null);
-                        Assert.That(AssetDatabase.GetAssetPath(renderer.sharedMaterial), Does.StartWith((level == 20 ? ChickenModelBuilder.MaterialFolder : RollingSpikeBuilder.MaterialFolder) + "/"));
+                        Assert.That(AssetDatabase.GetAssetPath(renderer.sharedMaterial), Does.StartWith((level == 20 ? ChickenModelBuilder.MaterialFolder : level == 30 ? RollingSpikeBuilder.MaterialFolder : DinoModelBuilder.MaterialFolder) + "/"));
                     }
                     else Assert.That(renderer.sharedMaterial.GetTexture("_ColorMap"), Is.EqualTo(level == 10 ? AssetDatabase.LoadAssetAtPath<UnityEngine.Material>(GatekeeperMagmaBuilder.Art + "Gatekeeper Magma Cel.mat").GetTexture("_ColorMap") : AssetDatabase.LoadAssetAtPath<Texture2D>(EnemyAppearanceMaterials.AtlasPath)));
                 }

@@ -74,16 +74,21 @@ namespace CrowdPunch.Systems.Presentation
         }
 
         internal static void Jog(ref EnemyJogSamples samples, ref DynamicBuffer<SkinMatrix> skin,
-            ref EnemyAnimationPlayback playback, float delta)
+            ref EnemyAnimationPlayback playback, float delta, float speed = -1, float maxPlaybackSpeed = 0)
         {
             if (samples.BoneCount != skin.Length) return;
             float amount = math.saturate(math.length(playback.Movement));
             if (amount < .0001f) return;
             float sector = math.frac(math.atan2(playback.Movement.x, playback.Movement.y) / (2 * math.PI)) * 8;
-            int first = (int)sector, second = (first + 1) % 8;
+            // Tiny negative angles can round frac(angle) to exactly one in Burst.
+            int first = (int)math.floor(sector) % EnemyJogSamples.DirectionCount, second = (first + 1) % EnemyJogSamples.DirectionCount;
             float turn = math.frac(sector);
             float duration = math.lerp(samples.Durations[first], samples.Durations[second], turn);
-            playback.JogPhase = math.frac(playback.JogPhase + delta / math.max(.01f, duration));
+            float distance = samples.CycleDistances.Length == EnemyJogSamples.DirectionCount
+                ? math.max(.01f, math.lerp(samples.CycleDistances[first], samples.CycleDistances[second], turn)) : 2f;
+            float rate = speed >= 0 ? speed / distance : 1 / math.max(.01f, duration);
+            if (maxPlaybackSpeed > 0) rate = math.min(rate, maxPlaybackSpeed / math.max(.01f, duration));
+            playback.JogPhase = math.frac(playback.JogPhase + delta * rate);
             float frame = playback.JogPhase * samples.FrameCount;
             int a = (int)frame, b = (a + 1) % samples.FrameCount;
             var originalHip = skin[samples.HipBoneIndex].Value;

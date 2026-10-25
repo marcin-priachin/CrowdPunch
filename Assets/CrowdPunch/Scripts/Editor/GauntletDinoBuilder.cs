@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using CrowdPunch.Authoring;
 using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Levels;
 using UnityEditor;
-using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -18,8 +16,6 @@ namespace CrowdPunch.Editor
         public const string DinoSettingsPath=Root+"Data/Settings/DinoBossSettings.asset";
         public const string DinoWavePath=Waves+"CP22_01_Dino_Crowd.asset";
         private const string DinoArt=Root+"Data/DinoBoss/";
-        private const string DinoModel=Root+"Models/UltimateMonsters/Big/Dino.fbx";
-        private const string DinoController=DinoArt+"Dino.controller";
 
         [MenuItem("Crowd Punch/Levels/Build Dino Pillars Gauntlet 22")]
         public static void BuildDino()
@@ -86,54 +82,7 @@ namespace CrowdPunch.Editor
 
         internal static void AddDinoModel(GameObject root,DinoBossSettings settings)
         {
-            var source=AssetDatabase.LoadAssetAtPath<GameObject>(DinoModel);
-            if(source==null) throw new InvalidOperationException("Missing supplied Dino.fbx model.");
-            var visual=(GameObject)PrefabUtility.InstantiatePrefab(source,root.transform);
-            visual.name="Dino Model";
-            var renderers=visual.GetComponentsInChildren<SkinnedMeshRenderer>();
-            if(renderers.Length==0) throw new InvalidOperationException("Dino model needs skinned renderers.");
-            Bounds bounds=renderers[0].bounds;
-            foreach(var renderer in renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
-            visual.transform.localScale*=Mathf.Min(settings.bodyHeight/Mathf.Max(.01f,bounds.size.y),
-                2*settings.bodyRadius/Mathf.Max(.01f,Mathf.Max(bounds.size.x,bounds.size.z)));
-            bounds=renderers[0].bounds;
-            foreach(var renderer in renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
-            visual.transform.localPosition-=root.transform.InverseTransformPoint(bounds.center);
-            var animator=visual.GetComponent<Animator>(); if(animator==null) animator=visual.AddComponent<Animator>();
-            string[] suffixes={"Walk","Run","Walk","HitReact","Death"};
-            var clips=suffixes.Select(s=>AssetDatabase.LoadAllAssetsAtPath(DinoModel).OfType<AnimationClip>()
-                .First(c=>!c.name.StartsWith("__preview__") && c.name.EndsWith("|"+s))).ToArray();
-            var controller=AssetDatabase.LoadAssetAtPath<AnimatorController>(DinoController);
-            if(controller==null)
-            {
-                controller=AnimatorController.CreateAnimatorControllerAtPath(DinoController);
-                for(int i=0;i<clips.Length;i++) controller.layers[0].stateMachine.AddState("Motion"+i).motion=clips[i];
-            }
-            animator.runtimeAnimatorController=controller; animator.applyRootMotion=false; animator.cullingMode=AnimatorCullingMode.AlwaysAnimate;
-            var template=AssetDatabase.LoadAssetAtPath<Material>(Root+"Animation/EnemySkinning.mat");
-            bounds=renderers[0].bounds;
-            foreach(var renderer in renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
-            for(int i=0;i<renderers.Length;i++)
-            {
-                var renderer=renderers[i]; renderer.rootBone=animator.transform; renderer.quality=SkinQuality.Bone4;
-                string materialPath=DinoArt+(i==0?"Dino.mat":"DinoSpikes.mat");
-                var mat=AssetDatabase.LoadAssetAtPath<Material>(materialPath);
-                if(mat==null)
-                {
-                    mat=new Material(template) { enableInstancing=true };
-                    var original=renderer.sharedMaterial;
-                    if(original!=null && original.mainTexture!=null) mat.mainTexture=original.mainTexture;
-                    AssetDatabase.CreateAsset(mat,materialPath);
-                }
-                EnemyAppearanceMaterials.Configure(mat);
-                renderer.sharedMaterials=renderer.sharedMaterials.Select(_=>mat).ToArray();
-                AssetDatabase.SaveAssets();
-                string samplePath=DinoArt+(i==0?"DinoMovement.bytes":"DinoSpikesMovement.bytes");
-                WriteBossSamples(animator,renderer,clips,samplePath,DinoController);
-                var animation=renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
-                animation.Samples=AssetDatabase.LoadAssetAtPath<TextAsset>(samplePath);
-            }
-            BossAppearanceBuilder.GroundModel(visual, settings.bodyHeight);
+            DinoModelBuilder.AddModel(root, settings);
         }
 
         private static void AddPillar(DinoBossAuthoring boss,Vector3 position)
@@ -152,4 +101,3 @@ namespace CrowdPunch.Editor
         }
     }
 }
-

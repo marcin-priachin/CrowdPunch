@@ -1500,7 +1500,10 @@ Status: Must
 
 Upright pillars participate in existing launch aim assistance, homing and short trajectory
 previews. Exclude the immune boss and unavailable pillars from targeting. Use
-`Assets/CrowdPunch/Models/UltimateMonsters/Big/Dino.fbx` with supplied animations, one existing
+`Assets/CrowdPunch/Prefabs/Enemies/Goblin Giant Armored Variant.prefab` at its authored scale,
+with the Giant pack's authored animations and directional jog legs from `Assets/CrowdPunch/Animation/`.
+Use Block for upper-body locomotion and animation cues instead of boss color flashes or scripted
+shaking/squash/stretch. Preserve the source palette with Full Cel shading. Retain one existing
 boss health bar and a brief opening hint. Show readable warning, burst, stagger, pillar
 impact and regeneration feedback in-world. A dedicated settings asset owns stage movement,
 turning, cycle/stagger/contact timing, pillar geometry/fall/regeneration and damage/push/launch

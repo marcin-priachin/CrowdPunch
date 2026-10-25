@@ -6,6 +6,23 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Goblin Giant Dino Presentation (2026-10-25, PILLAR-001/006, VISION-005/006)
+
+`DinoModelBuilder` replaces Dino's visual in Campaign 40/80 and legacy Gauntlet 22 with
+`Goblin Giant Armored Variant.prefab`. Every authored transform scale is preserved.
+Only translation grounds the sampled geometry, including defeat. The body and five rigid
+accessories use sampled ECS skinning, dedicated source-textured Full Cel materials and LOD0.
+The level builder and general boss appearance migration reuse this model builder.
+
+`DinoAnimationSystem` samples Block during chase/burst, Cast Spell across the authoritative
+warning interval, Take Damage across stagger, and Die once on defeat. Directional CPJ1
+jog samples are composed below the authored pelvis during chase/warning/burst. Physics
+velocity in boss-local space selects direction and stride cadence; Max Leg Animation Speed
+caps playback independently of gameplay speed. Quaternion interpolation preserves mirrored
+equipment and bone scale. Boss tint pulses and procedural squash/stretch are removed;
+`DinoPresentationSystem` retains pillar impact/regeneration colors only. Collision, pursuit,
+stage timings, pillar damage, supporting waves, health UI and resets remain ECS-owned.
+
 ## Goblin Trooper Armored (2026-10-24, ENEMY-014, INFO-004/006, VISION-006)
 
 `EnemyArmoredPrefabBuilder` retains ArmoredEnemy.prefab and its original physics root,
@@ -405,8 +422,8 @@ attack telegraphs remain unchanged. No wind-up growth or marker-coverage fitting
 
 `RollingSpikeBuilder` replaces the Rolling boss visual in campaign 30/70 and legacy Gauntlet 21 with the supplied Spike prefab. A constant uniform authoring scale fits the sampled idle/spin silhouette to the existing collision footprint; proportions are preserved and the visual is translated to the collider floor. Runtime never changes model scale. Dedicated cel materials preserve Spike textures. Slots 0-5 contain Idle, Hide and Spin Attack In Place, reversed Hide to Idle for wind-up, Take Damage, Die and forward Hide to Idle. `RollingAnimationSystem` owns sampled playback through `RollingAnimationState`, uses accepted-hit sequences for reactions, and preserves committed combat clocks. Quaternion interpolation preserves authored bone scale. Procedural rolling, squash, floor-angle correction and material pulses are removed. ECS physics and encounter settings remain unchanged (ROLL-001/006/007).
 
-Other bosses retain their existing presentation: `BossAnimationAnchor` grounds Chicken/Dino
-poses; `BossSkinPose` blends samples and their bounded silhouette accents. Rolling Spike uses its authored spin clip without collider fitting. Legacy `BossHandPoseSystem` only affects
+Chicken and Dino use authored sampled poses and directional jog leg layers through
+`ChickenSkinPose`, without procedural silhouette accents. Rolling Spike uses its authored spin clip without collider fitting. Legacy `BossHandPoseSystem` only affects
 remaining primitive visuals, and no longer has targets in the authored Gatekeeper scenes.
 
 The finale uses a dedicated royal-blue body UV palette while preserving its gold crown, face and wing membranes, an atlas-backed URP material, cyan vulnerability emission and the existing ring. Its Mono presentation bridge triggers strikes when ECS warnings resolve, adds landing compression, and distinguishes flight/fall/takeoff without reading entities. Per-clip sampled support heights settle its floating source model onto the ground during vulnerability and blend away through fall/takeoff.
@@ -2854,9 +2871,10 @@ receive outward velocity; collision is restored only after they actually clear t
 This avoids teleporting physics-driven enemies into an upright obstacle.
 
 Upright pillars join aim-assist candidates and launch homing. Falling/waiting/consumed
-pillars and immune Dino are ineligible. `DinoAnimationSystem` uses generated Dino Walk,
-Run, HitReact and Death samples through the established GPU skinning path. Presentation
-colors distinguish warning, burst, stagger, impact and regeneration; no ground marker or
+pillars and immune Dino are ineligible. `DinoAnimationSystem` uses the armored Goblin Giant's
+Block, Cast Spell, Take Damage and Die samples with directional jog legs through the
+established GPU skinning path. Boss phases use animation; pillars retain impact and
+regeneration colors. No ground marker or
 additional HUD is created. `EnemyHealthBarBridgeSystem` reuses the existing boss bar.
 
 `BossCrowdSequence`, spawning and replenishment now recognize Dino as an owner. The
