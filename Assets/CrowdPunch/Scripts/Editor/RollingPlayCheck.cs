@@ -89,8 +89,8 @@ namespace CrowdPunch.Editor
                 Require(Time.frameCount>startFrame+30,"Game frames did not advance");
                 Require((phases&7)==7,"Pause/wind-up/roll cycle did not advance");
                 Require(bounces>0,"Natural roll did not redirect against arena geometry");
-                using var skin=em.CreateEntityQuery(typeof(RollingAnimationPivot),typeof(EnemyAnimation));
-                Require(skin.CalculateEntityCount()==2,"Blob sampled animation owners missing");
+                using var skin=em.CreateEntityQuery(typeof(RollingAnimationState),typeof(EnemyAnimation));
+                Require(skin.CalculateEntityCount()>0,"Blob sampled animation owners missing");
                 Record($"PASS live baked cycle, {Time.frameCount-startFrame} advancing frames, {bounces} natural redirects, three bounded Baselines and sampled animation");
                 Commit(em,boss,RollingAim.Reflect,new float3(16,t.InitialPosition.y,-7),new float3(1,0,0));
                 step=2; since=now; return;

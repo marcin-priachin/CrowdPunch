@@ -81,21 +81,7 @@ namespace CrowdPunch.Bakers
                 float halfHeight = gatekeeper != null ? gatekeeper.height * .5f : dino != null ? dino.settings.bodyHeight * .5f : chicken.settings.bodyHeight * .5f;
                 AddComponent(entity, new BossAnimationAnchor { Floor = animator.transform.InverseTransformPoint(root.position - root.up * halfHeight) });
             }
-            if(rolling!=null)
-            {
-                var pivot = new RollingAnimationPivot { Center=rolling.animationPivot };
-                if (rolling.animationFloorOffsets != null && rolling.animationFloorOffsets.Length > 1)
-                {
-                    using var floorBuilder = new BlobBuilder(Allocator.Temp);
-                    ref var floorRoot = ref floorBuilder.ConstructRoot<RollingFloorSamples>();
-                    var offsets = floorBuilder.Allocate(ref floorRoot.Offsets, rolling.animationFloorOffsets.Length);
-                    for (int i=0; i<offsets.Length; i++) offsets[i]=rolling.animationFloorOffsets[i];
-                    var floorBlob = floorBuilder.CreateBlobAssetReference<RollingFloorSamples>(Allocator.Persistent);
-                    AddBlobAsset(ref floorBlob, out _);
-                    pivot.Floor = floorBlob;
-                }
-                AddComponent(entity, pivot);
-            }
+            if (rolling != null) AddComponent<RollingAnimationState>(entity);
         }
 
         private BlobAssetReference<EnemyJogSamples> ReadJogSamples(EnemyAnimationAuthoring authoring,

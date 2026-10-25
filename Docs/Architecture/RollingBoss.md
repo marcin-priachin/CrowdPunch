@@ -49,11 +49,16 @@ The 40x40m arena contains three well-spaced `SolidObstacleAuthoring` rectangles 
 navigation arena. Broad side/bottom spawn regions exclude them. Their ECS solid colliders
 and immutable navigation footprints share the same authored dimensions.
 
-GreenSpikyBlob.fbx supplies two skinned meshes and separate CPA3 Idle/Walk/Bite/Hit/Death samples.
-Both use compute-deformation materials. Rolling rotates only skin matrices around one authored
-shared centre, keeping body and spikes together; the collider stays upright. Expanded spherical
-render bounds include every spin angle. `RollingAnimationSystem` and `RollingPresentationSystem`
-own sampled motion and green pause/amber wind-up/red roll/pulsing cyan hit-protection feedback.
+The supplied `Assets/Spike Cute Series/Prefabs/Spike.prefab` provides the visual with a constant
+uniform scene scale fitted to the existing hitbox footprint. `RollingSpikeBuilder` measures the
+idle/spin samples, preserves proportions and aligns the visual with the collider floor. Runtime
+never resizes it. The builder applies it to legacy Gauntlet 21 and campaign 30/70. Dedicated
+`CrowdPunch/Cel/Enemy` materials preserve the Spike texture. The CPA3 samples contain Idle,
+Hide and Spin Attack In Place, reversed Hide to Idle for wind-up, Take Damage, Die and forward
+Hide to Idle for recovery. Sampled floor corrections use translation only, including defeat.
+`RollingAnimationSystem` uses `RollingAnimationState` and accepted-hit sequences to select these
+clips without changing combat timers or physics. Quaternion interpolation preserves authored
+bone scale. The procedural roll, squash and material-color presentation system are removed.
 The existing elite-style Canvas publishes one boss bar; there is no countdown UI.
 
 **Crowd Punch > Levels > Build Rolling Blob Gauntlet 21** reproduces this level, generated

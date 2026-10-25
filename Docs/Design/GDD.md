@@ -1434,7 +1434,7 @@ reset or remove boss timers/state/history, supporting crowd and completion state
 
 Status: Must
 
-Use `Assets/CrowdPunch/Models/UltimateMonsters/Blob/GreenSpikyBlob.fbx`. A dedicated boss asset owns
+Use `Assets/Spike Cute Series/Prefabs/Spike.prefab` with a constant uniform authoring scale fitted to the existing hitbox footprint (visual revision 2026-10-24). Preserve its proportions. Use the supplied FBX animations for state readability, including Hide and Spin Attack In Place during rolling, without runtime tint, shake, squash or model resizing. A dedicated boss asset owns
 health, thresholds, protection, wind-up/pause/roll timing, bounce limits, speed, contact damage,
 launch/push and presentation tuning. Composition/replenishment remain wave-owned. Reuse one elite-style
 boss health bar without vulnerability countdown. Distinguish pause, wind-up, rolling and temporary

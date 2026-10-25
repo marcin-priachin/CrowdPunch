@@ -60,12 +60,10 @@ namespace CrowdPunch.Components
         public uint Lifetime, Roll;
         public double LastSeen;
     }
-    public struct RollingVisualOwner : IComponentData { public Entity Value; }
-    public struct RollingAnimationPivot : IComponentData
+    public struct RollingAnimationState : IComponentData
     {
-        public float3 Center;
-        public float Angle;
-        public BlobAssetReference<RollingFloorSamples> Floor;
+        public uint AcceptedHits;
+        public RollingPhase PreviousPhase;
+        public byte Initialized, Returning;
     }
-    public struct RollingFloorSamples { public BlobArray<float> Offsets; }
 }

@@ -23,12 +23,11 @@ namespace CrowdPunch.Systems.Initialization
                 em.SetComponentData(e,new PhysicsVelocity());
                 em.GetBuffer<RollingHit>(e).Clear(); em.GetBuffer<RollingHitHistory>(e).Clear(); em.GetBuffer<RollingCrowdContact>(e).Clear();
             }
-            using var animations=em.CreateEntityQuery(ComponentType.ReadWrite<RollingAnimationPivot>(),ComponentType.ReadWrite<EnemyAnimationPlayback>());
+            using var animations=em.CreateEntityQuery(ComponentType.ReadWrite<RollingAnimationState>(),ComponentType.ReadWrite<EnemyAnimationPlayback>());
             using var renderers=animations.ToEntityArray(Allocator.Temp);
             foreach(var renderer in renderers)
             {
-                var pivot=em.GetComponentData<RollingAnimationPivot>(renderer); pivot.Angle=0;
-                em.SetComponentData(renderer,pivot); em.SetComponentData(renderer,new EnemyAnimationPlayback());
+                em.SetComponentData(renderer,new RollingAnimationState()); em.SetComponentData(renderer,new EnemyAnimationPlayback());
             }
         }
     }

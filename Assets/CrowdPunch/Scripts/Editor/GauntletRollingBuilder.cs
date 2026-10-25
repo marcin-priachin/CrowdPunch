@@ -18,8 +18,6 @@ namespace CrowdPunch.Editor
         public const string RollingSettingsPath=Root+"Data/Settings/RollingBossSettings.asset";
         public const string RollingWavePath=Waves+"CP21_01_Rolling_Crowd.asset";
         private const string RollingArt=Root+"Data/RollingBoss/";
-        private const string RollingModel=Root+"Models/UltimateMonsters/Blob/GreenSpikyBlob.fbx";
-        private const string RollingController=RollingArt+"RollingBlob.controller";
 
         [MenuItem("Crowd Punch/Levels/Build Rolling Blob Gauntlet 21")]
         public static void BuildRolling()
@@ -66,7 +64,7 @@ namespace CrowdPunch.Editor
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
                 var main=EditorSceneManager.OpenScene(Scenes+"Gauntlet_21.unity",OpenSceneMode.Single);
                 var marker=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue="Dodge the red roll. Launch enemies into the Blob while it pauses or winds up. Launched bodies still hurt you.";
+                marker.FindProperty("openingHint").stringValue="Dodge the spin. Launch enemies into Spike while it pauses or hides. Launched bodies still hurt you.";
                 marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap=EditorSceneManager.OpenScene(Root+"Scenes/Bootstrap.unity",OpenSceneMode.Single);
                 var sequence=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
@@ -86,59 +84,7 @@ namespace CrowdPunch.Editor
 
         internal static void AddRollingModel(GameObject root,RollingBossSettings settings)
         {
-            var source=AssetDatabase.LoadAssetAtPath<GameObject>(RollingModel);
-            if(source==null) throw new InvalidOperationException("Missing supplied GreenSpikyBlob.fbx model.");
-            var visual=(GameObject)PrefabUtility.InstantiatePrefab(source,root.transform);
-            visual.name="Green Spiky Blob Model";
-            var renderers=visual.GetComponentsInChildren<SkinnedMeshRenderer>();
-            if(renderers.Length==0) throw new InvalidOperationException("Blob model needs skinned renderers.");
-            Bounds bounds=renderers[0].bounds;
-            foreach(var renderer in renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
-            visual.transform.localScale*=Mathf.Min(settings.bodyHeight/Mathf.Max(.01f,bounds.size.y),
-                2*settings.bodyRadius/Mathf.Max(.01f,Mathf.Max(bounds.size.x,bounds.size.z)));
-            bounds=renderers[0].bounds;
-            foreach(var renderer in renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
-            visual.transform.localPosition-=root.transform.InverseTransformPoint(bounds.center);
-            var animator=visual.GetComponent<Animator>(); if(animator==null) animator=visual.AddComponent<Animator>();
-            string[] suffixes={"Idle","Idle","Bite_Front","HitRecieve","Death"};
-            var clips=suffixes.Select(s=>AssetDatabase.LoadAllAssetsAtPath(RollingModel).OfType<AnimationClip>()
-                .First(c=>!c.name.StartsWith("__preview__") && c.name.EndsWith("|"+s))).ToArray();
-            var controller=AssetDatabase.LoadAssetAtPath<AnimatorController>(RollingController);
-            if(controller==null)
-            {
-                controller=AnimatorController.CreateAnimatorControllerAtPath(RollingController);
-                for(int i=0;i<clips.Length;i++) controller.layers[0].stateMachine.AddState(suffixes[i]).motion=clips[i];
-            }
-            animator.runtimeAnimatorController=controller; animator.applyRootMotion=false; animator.cullingMode=AnimatorCullingMode.AlwaysAnimate;
-            var template=AssetDatabase.LoadAssetAtPath<Material>(Root+"Animation/EnemySkinning.mat");
-            bounds=renderers[0].bounds;
-            foreach(var renderer in renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
-            Vector3 pivot=animator.transform.InverseTransformPoint(bounds.center);
-            root.GetComponent<RollingBossAuthoring>().animationPivot=pivot;
-            for(int i=0;i<renderers.Length;i++)
-            {
-                var renderer=renderers[i]; renderer.rootBone=animator.transform; renderer.quality=SkinQuality.Bone4;
-                string materialPath=RollingArt+(i==0?"RollingBlob.mat":"RollingBlobSpikes.mat");
-                var mat=AssetDatabase.LoadAssetAtPath<Material>(materialPath);
-                if(mat==null)
-                {
-                    mat=new Material(template) { enableInstancing=true };
-                    var original=renderer.sharedMaterial;
-                    if(original!=null && original.mainTexture!=null) mat.mainTexture=original.mainTexture;
-                    AssetDatabase.CreateAsset(mat,materialPath);
-                }
-                EnemyAppearanceMaterials.Configure(mat);
-                renderer.sharedMaterials=renderer.sharedMaterials.Select(_=>mat).ToArray();
-                AssetDatabase.SaveAssets();
-                string samplePath=RollingArt+(i==0?"RollingBlobMovement.bytes":"RollingBlobSpikesMovement.bytes");
-                WriteBossSamples(animator,renderer,clips,samplePath,RollingController);
-                var sampled=renderer.localBounds;
-                float radius=sampled.extents.magnitude+Vector3.Distance(sampled.center,pivot);
-                renderer.localBounds=new Bounds(pivot,Vector3.one*radius*2);
-                var animation=renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
-                animation.Samples=AssetDatabase.LoadAssetAtPath<TextAsset>(samplePath);
-            }
-            BossAppearanceBuilder.FitRollingSphere(visual, root.GetComponent<RollingBossAuthoring>(), settings);
+            RollingSpikeBuilder.AddModel(root, settings);
         }
 
         private static void RollingObstacle(string name,Transform arena,Vector3 position,Vector2Int footprint,Material material)
