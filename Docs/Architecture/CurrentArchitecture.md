@@ -2823,9 +2823,26 @@ local capsule repulsion to movement/navigation separation. It ignores launched b
 Dashers and explicitly anchored/stopped behavior. The None mode leaves intent alone. It never
 makes trails solid or changes launched-body collision physics.
 
-`EnemyTrailPrefabBuilder` samples Fish Idle/Walk/Death into the established CPA3 skinning path,
-using the common Baseline animation state mapping and a stable green body tint. Root motion is
-disabled and the physical capsule provides collision contacts. `TrailPresentationSystem` batches
+`EnemyTrailPrefabBuilder` samples the supplied Squid Baby White prefab into the established CPA3
+skinning path (TRAIL-001/006, VISION-006). The dedicated Trail profile uses Idle, Move Forward
+In Place, Move Forward Fast In Place, Take Damage for hits/launch/recovery, Die for defeat,
+and Spawn in slot 7. Ground spawning uses the shared baked clip-duration clock and can be
+interrupted by a launch. Source prefab scales are retained at every transform; only a fixed
+translation aligns Idle with the unchanged physics capsule floor. Quaternion pose blending
+preserves bone scale. `EnemyAnimationAuthoring.GroundClearance` defaults to 0.1 metres and
+is saved on the Trail mesh. The animation baker shares immutable mesh vertices and bone
+weights through `EnemyAnimationGrounding`. After pose blending, the Burst grounding job
+measures the exact lowest skinned vertex through the current model-root world matrix and
+adds the world-up translation needed to place grounded poses at `ArenaGroundPlane` plus
+that setting. Launched bodies retain their flight height with a minimum clearance clamp.
+This includes Spawn and interpolated poses, supports the user's current scale of 3, and
+requires no sample rebuild when scale or clearance changes. A following job translates
+the baked renderer bounds by the same offset without accumulating drift. It never moves
+the physical owner or changes authored rotations/scales, and it does not lower airborne bodies.
+The Trail visual is animation-driven, bypassing procedural body colors, shake, squash, launch
+pitch and recovery flips. Owned Full Cel materials retain the supplied white texture and are
+excluded from the old monster-atlas replacement command. Root motion is disabled; ECS still
+owns movement, trail emission, collision and lifetime. `TrailPresentationSystem` batches
 all ground capsules into one reusable mesh/draw, with green normal and orange launched colors.
 Each retains full width while alpha fades through the last 35% of its lifetime.
 

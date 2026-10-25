@@ -73,6 +73,33 @@ namespace CrowdPunch.Bakers
                         + owner.transform.up * authoring.LaunchPivotHeight) : float3.zero
             });
             AddComponent<EnemyAnimationPlayback>(entity);
+            if (authoring.Profile == EnemyAnimationProfile.Trail && owner != null)
+            {
+                using var groundingBuilder = new BlobBuilder(Allocator.Temp);
+                ref var grounding = ref groundingBuilder.ConstructRoot<EnemyGroundingMesh>();
+                var vertices = renderer.sharedMesh.vertices;
+                var weights = renderer.sharedMesh.boneWeights;
+                var destination = groundingBuilder.Allocate(ref grounding.Vertices, vertices.Length);
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    var weight = weights[i];
+                    destination[i] = new EnemyGroundingVertex
+                    {
+                        Position = vertices[i],
+                        Bones = new int4(weight.boneIndex0, weight.boneIndex1, weight.boneIndex2, weight.boneIndex3),
+                        Weights = new float4(weight.weight0, weight.weight1, weight.weight2, weight.weight3)
+                    };
+                }
+                var groundingMesh = groundingBuilder.CreateBlobAssetReference<EnemyGroundingMesh>(Allocator.Persistent);
+                AddBlobAsset(ref groundingMesh, out _);
+                AddComponent(entity, new EnemyAnimationGrounding
+                {
+                    Root = GetEntity(animator, TransformUsageFlags.Dynamic),
+                    Owner = GetEntity(owner, TransformUsageFlags.Dynamic),
+                    Clearance = math.max(0, authoring.GroundClearance),
+                    Mesh = groundingMesh
+                });
+            }
             if (authoring.ArmorStagesRequired > 0 && owner != null)
                 AddComponent(entity, new EnemyArmorVisual
                 {

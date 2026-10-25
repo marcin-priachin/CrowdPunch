@@ -65,6 +65,169 @@ namespace CrowdPunch.Tests
 
         private float3 Pose => world.EntityManager.GetBuffer<SkinMatrix>(visual)[0].Value.c3;
 
+        private void UseTrail()
+        {
+            var em = world.EntityManager;
+            var animation = em.GetComponentData<EnemyAnimation>(visual);
+            animation.Profile = (byte)EnemyAnimationProfile.Trail;
+            animation.SpawnMotion = 7;
+            em.SetComponentData(visual, animation);
+            em.AddComponentData(owner, new Health { Current = 5, Max = 5 });
+        }
+
+        [Test]
+        public void Trail006AuthoredLocomotionHitLaunchRecoveryAndDefeatKeepPhysicsOwnership()
+        {
+            UseTrail();
+            var em = world.EntityManager;
+            var velocity = new PhysicsVelocity { Linear = new float3(3, 4, 5) };
+            em.SetComponentData(owner, velocity);
+            Tick();
+            Assert.That(Pose.x, Is.Zero);
+            em.SetComponentData(owner, new DesiredMovement { Speed = 2, Direction = math.forward() });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(1));
+            em.SetComponentData(owner, new DesiredMovement { Speed = 4, Direction = math.forward() });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(2));
+            em.SetComponentData(owner, new Health { Current = 4, Max = 5 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(5));
+            Tick(.25f);
+            Assert.That(Pose.y, Is.EqualTo(.25f).Within(.001f));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(9));
+            Tick(2);
+            Assert.That(Pose.y, Is.EqualTo(1).Within(.001f), "Launch holds the final authored damage pose.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 2 });
+            Tick();
+            Assert.That(Pose.y, Is.Zero, "A fresh launch restarts the reaction.");
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(6));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = .5f });
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(.5f).Within(.001f));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(10));
+            Assert.That(Pose.y, Is.Zero);
+            Tick(2);
+            Assert.That(Pose.y, Is.EqualTo(1).Within(.001f));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner), Is.EqualTo(velocity));
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [Test]
+        public void Trail006SpawnUsesSharedClockAndLaunchInterruptsImmediately()
+        {
+            UseTrail();
+            var em = world.EntityManager;
+            em.AddComponentData(owner, new EnemySpawnAnimation { Duration = 2, UseAnimation = 1 });
+            em.SetComponentEnabled<EnemySpawnAnimation>(owner, true);
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering, RecoverySecondsRemaining = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(7));
+            Assert.That(Pose.y, Is.EqualTo(.5f).Within(.001f));
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            Assert.That(Pose.x, Is.EqualTo(9));
+            em.SetComponentEnabled<RespawnRequest>(owner, true);
+            em.SetComponentData(owner, new RespawnRequest { IsPooled = 1 });
+            Tick();
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized, Is.Zero);
+        }
+
+        [Test]
+        public void Trail006BodyFeedbackDoesNotTintShakeOrScaleAuthoredVisuals()
+        {
+            var em = world.EntityManager;
+            em.AddComponentData(owner, new EnemyArchetype { Value = EnemyArchetypeKind.Trail });
+            em.AddComponentData(owner, new EnemyImpactFeedback { Squash = 1, Intensity = 1, VisualRemaining = 1, VisualDuration = 1 });
+            em.AddComponentData(visual, new EnemyVisualOwner { Value = owner, UsesAtlas = 1, AnimationDriven = 1 });
+            em.AddComponentData(visual, new EnemyVisualDeformation());
+            var matrix = float4x4.TRS(new float3(1, 2, 3), quaternion.RotateY(.5f), new float3(2));
+            em.AddComponentData(visual, new LocalToWorld { Value = matrix });
+            em.AddComponentData(visual, new Unity.Rendering.URPMaterialPropertyBaseColor { Value = new float4(1) });
+            world.GetOrCreateSystem<EnemyReadabilitySystem>().Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+            world.GetOrCreateSystem<EnemyImpactVisualSystem>().Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+            Assert.That(em.GetComponentData<LocalToWorld>(visual).Value, Is.EqualTo(matrix));
+            Assert.That(em.GetComponentData<Unity.Rendering.URPMaterialPropertyBaseColor>(visual).Value, Is.EqualTo(new float4(1)));
+        }
+
+        [Test]
+        public void Trail006SquidPrefabPreservesScaleTextureAndGroundedSamples()
+        {
+            var root = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemyTrail.prefab");
+            try
+            {
+                var source = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(CrowdPunch.Editor.EnemyTrailPrefabBuilder.ModelPath);
+                var animator = root.GetComponentInChildren<UnityEngine.Animator>();
+                foreach (var transform in animator.GetComponentsInChildren<UnityEngine.Transform>(true))
+                {
+                    string path = UnityEditor.AnimationUtility.CalculateTransformPath(transform, animator.transform);
+                    // The model root is intentionally user-scalable; descendants retain source proportions.
+                    if (string.IsNullOrEmpty(path)) continue;
+                    var original = string.IsNullOrEmpty(path) ? source.transform : source.transform.Find(path);
+                    Assert.That(original, Is.Not.Null, path);
+                    Assert.That(UnityEngine.Vector3.Distance(transform.localScale, original.localScale), Is.LessThan(.0001f), path);
+                }
+                Assert.That(root.transform.localScale, Is.EqualTo(UnityEngine.Vector3.one));
+                Assert.That(animator.applyRootMotion, Is.False);
+                var renderer = root.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>();
+                Assert.That(renderer.sharedMaterial.shader.name, Is.EqualTo("CrowdPunch/Cel/Enemy"));
+                Assert.That(renderer.sharedMaterial.GetTexture("_ColorMap"), Is.EqualTo(source.GetComponentInChildren<UnityEngine.SkinnedMeshRenderer>().sharedMaterial.mainTexture));
+                var authoring = renderer.GetComponent<CrowdPunch.Authoring.EnemyAnimationAuthoring>();
+                Assert.That(authoring.Profile, Is.EqualTo(EnemyAnimationProfile.Trail));
+                Assert.That(authoring.SpawnMotion, Is.EqualTo(7));
+                var controller = (UnityEditor.Animations.AnimatorController)animator.runtimeAnimatorController;
+                Assert.That(controller.layers[0].stateMachine.states[7].state.motion.name, Does.Contain("Spawn"));
+                var settings = UnityEditor.AssetDatabase.LoadAssetAtPath<CrowdPunch.Configuration.EnemySpawnSettings>(
+                    "Assets/CrowdPunch/Data/Settings/Enemies/TrailEnemySpawnSettings.asset");
+                Assert.That(settings.SpawnFromGround, Is.True);
+                Assert.That(settings.EnemyPrefab, Is.EqualTo(UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>("Assets/CrowdPunch/Prefabs/EnemyTrail.prefab")));
+                using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(authoring.Samples.bytes));
+                Assert.That(reader.ReadInt32(), Is.EqualTo(0x43504133));
+                string hash = UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(controller)).ToString()
+                    + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(renderer.sharedMesh))
+                    + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.avatar));
+                Assert.That(reader.ReadString(), Is.EqualTo(hash));
+                int bones = reader.ReadInt32(), frames = reader.ReadInt32();
+                for (int bone = 0; bone < bones; bone++) reader.ReadString();
+                for (int motion = 0; motion < EnemyAnimationSamples.MotionCount; motion++) reader.ReadSingle();
+                var matrices = new UnityEngine.Matrix4x4[bones];
+                var vertices = renderer.sharedMesh.vertices;
+                var weights = renderer.sharedMesh.boneWeights;
+                bool spawnBelowFloor = false;
+                for (int pose = 0; pose < frames * EnemyAnimationSamples.MotionCount; pose++)
+                {
+                    for (int bone = 0; bone < bones; bone++)
+                    {
+                        matrices[bone] = UnityEngine.Matrix4x4.identity;
+                        for (int column = 0; column < 4; column++)
+                            for (int row = 0; row < 3; row++) matrices[bone][row, column] = reader.ReadSingle();
+                    }
+                    for (int index = 0; index < vertices.Length; index++)
+                    {
+                        var w = weights[index]; var point = vertices[index];
+                        var local = matrices[w.boneIndex0].MultiplyPoint3x4(point) * w.weight0
+                            + matrices[w.boneIndex1].MultiplyPoint3x4(point) * w.weight1
+                            + matrices[w.boneIndex2].MultiplyPoint3x4(point) * w.weight2
+                            + matrices[w.boneIndex3].MultiplyPoint3x4(point) * w.weight3;
+                        Assert.That(renderer.localBounds.Contains(local), Is.True, "Animated vertex escaped culling bounds.");
+                        var position = root.transform.InverseTransformPoint(animator.transform.TransformPoint(local));
+                        if (pose / frames == 7) spawnBelowFloor |= position.y < -1.01f;
+                        // Runtime mesh grounding handles the current user-authored model scale.
+                    }
+                }
+                Assert.That(spawnBelowFloor, Is.True, "Spawn should emerge from underground.");
+            }
+            finally { UnityEditor.PrefabUtility.UnloadPrefabContents(root); }
+        }
+
         private void UseGoblin()
         {
             var em = world.EntityManager;

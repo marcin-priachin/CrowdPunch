@@ -38,6 +38,12 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     Entity entity = child.Value;
                     if (!SystemAPI.HasComponent<RenderBounds>(entity)) continue;
+                    if (SystemAPI.HasComponent<EnemyAnimationGrounding>(animationEntity))
+                        commands.AddComponent(entity, new EnemyGroundingVisual
+                        {
+                            Animation = animationEntity,
+                            AuthoredBounds = SystemAPI.GetComponent<RenderBounds>(entity).Value
+                        });
                     if (entity != animationEntity && SystemAPI.HasComponent<EnemyArmorVisual>(animationEntity))
                         commands.AddComponent(entity, SystemAPI.GetComponent<EnemyArmorVisual>(animationEntity));
                     if (gatekeeper) commands.AddComponent(entity, new BossVisualOwner { Value = animation.ValueRO.Owner, Color = new float4(1) });
@@ -51,6 +57,7 @@ namespace CrowdPunch.Systems.Presentation
                             AnimationDriven = (byte)(animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Goblin
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.GoblinArmored
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Dasher
+                                || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Trail
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Explosive ? 1 : 0) });
                         if (SystemAPI.HasComponent<SnakeHead>(animation.ValueRO.Owner))
                             commands.AddComponent(entity, new SnakeBodyColor { Value = new float4(1f) });

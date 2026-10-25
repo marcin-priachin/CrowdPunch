@@ -1033,7 +1033,7 @@ A dedicated settings asset exposes enemy damage from launched sections only or b
 
 Status: Must
 
-Both trail types share one visual style with distinct colors, show the full damaging width and fade toward expiry. Use Blob/Fish.fbx supplied by the user, with suitable existing animations. Placeholder colors and animation choices are delegated. Add no individual normal-enemy health bars or other HUD elements.
+Both trail types share one visual style with distinct colors, show the full damaging width and fade toward expiry. Use `Assets/Squid Baby Cute Series/Prefabs/Squid Baby White.prefab` at its authored scale, with animations from that pack's FBX folder and the established Full Cel shading. Use authored animations for movement, damage, launch, recovery and defeat instead of scripted body tint, shaking or scale changes. Enable Spawn From Ground and use the supplied Spawn animation (model amendment requested 2026-10-25). Keep every animated pose, including Spawn, at least a configurable 0.1 metres above the ground at the current model scale, using visual translation only (clearance amendment requested 2026-10-25). Animation choices remain delegated. Add no individual normal-enemy health bars or other HUD elements.
 
 ### TRAIL-007 - Gauntlet_19
 

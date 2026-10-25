@@ -19,6 +19,7 @@ namespace CrowdPunch.Editor
                 || path.StartsWith(ChickenModelBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(RollingSpikeBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyDasherPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
+                || path.StartsWith(EnemyTrailPrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)
                 || path.StartsWith(EnemyExplosivePrefabBuilder.MaterialFolder + "/", StringComparison.Ordinal)) return;
             var atlas = AssetDatabase.LoadAssetAtPath<Texture2D>(AtlasPath);
             if (atlas == null) throw new InvalidOperationException("Ultimate Monsters color atlas is missing.");
