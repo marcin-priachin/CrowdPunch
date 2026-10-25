@@ -21,9 +21,9 @@ namespace CrowdPunch.Editor
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
                 throw new InvalidOperationException("Sample Goblin jogs outside Play Mode.");
-            foreach (string kind in new[] { "Baseline", "Ranged", "Elite" })
+            foreach (string kind in new[] { "Baseline", "Ranged", "Elite", "Armored" })
             {
-                string path = kind == "Elite" ? "Assets/CrowdPunch/Prefabs/EliteEnemy.prefab"
+                string path = kind == "Elite" || kind == "Armored" ? $"Assets/CrowdPunch/Prefabs/{kind}Enemy.prefab"
                     : $"Assets/CrowdPunch/Prefabs/Enemy{kind}.prefab";
                 var root = PrefabUtility.LoadPrefabContents(path);
                 try
@@ -54,7 +54,7 @@ namespace CrowdPunch.Editor
                 animator.Rebind();
                 foreach (var source in root.GetComponentsInChildren<EnemyAnimationAuthoring>(true))
                 {
-                    if (source.Profile != EnemyAnimationProfile.Goblin) continue;
+                    if (source.Profile != EnemyAnimationProfile.Goblin && source.Profile != EnemyAnimationProfile.GoblinArmored) continue;
                     var renderer = source.GetComponent<SkinnedMeshRenderer>();
                     string hierarchy = AnimationUtility.CalculateTransformPath(source.transform, root.transform);
                     var sampled = clone.transform.Find(hierarchy).GetComponent<SkinnedMeshRenderer>();

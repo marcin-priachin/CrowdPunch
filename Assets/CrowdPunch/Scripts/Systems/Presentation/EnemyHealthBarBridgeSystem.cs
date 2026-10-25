@@ -7,7 +7,7 @@ using Unity.Transforms;
 namespace CrowdPunch.Systems.Presentation
 {
     /// <summary>
-    /// Publishes ECS health and shield-count snapshots to the registered screen-space canvas.
+    /// Publishes ECS health snapshots to the registered screen-space canvas.
     /// </summary>
     [UpdateInGroup(typeof(GamePresentationGroup))]
     [UpdateAfter(typeof(HealthBarPresentationSystem))]
@@ -63,21 +63,6 @@ namespace CrowdPunch.Systems.Presentation
                 if(boss.ValueRO.Phase!=RollingPhase.Defeated)
                     EnemyHealthBarCanvasRegistry.Publish(entity.Index,transform.ValueRO.Position+new Unity.Mathematics.float3(0,2.2f,0),
                         health.ValueRO.Normalized,true,true,string.Empty);
-            foreach ((RefRO<EnemyArmor> armor, RefRO<LocalTransform> transform,
-                         RefRO<EnemyLaunchState> launch, EnabledRefRO<RespawnRequest> respawn,
-                         Entity enemy) in
-                     SystemAPI.Query<RefRO<EnemyArmor>, RefRO<LocalTransform>,
-                             RefRO<EnemyLaunchState>, EnabledRefRO<RespawnRequest>>()
-                         .WithAll<Enemy>()
-                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
-                         .WithEntityAccess())
-            {
-                if (respawn.ValueRO || launch.ValueRO.Phase == EnemyLaunchPhase.Defeated
-                    || armor.ValueRO.Stages == 0) continue;
-                EnemyHealthBarCanvasRegistry.PublishShields(enemy.Index,
-                    transform.ValueRO.Position,
-                    armor.ValueRO.Stages);
-            }
             foreach (var (boss,health,transform,entity) in SystemAPI.Query<RefRO<DinoBoss>,RefRO<Health>,RefRO<LocalTransform>>().WithEntityAccess())
                 if(boss.ValueRO.Phase!=DinoPhase.Defeated)
                     EnemyHealthBarCanvasRegistry.Publish(entity.Index,transform.ValueRO.Position+new Unity.Mathematics.float3(0,2.5f,0),

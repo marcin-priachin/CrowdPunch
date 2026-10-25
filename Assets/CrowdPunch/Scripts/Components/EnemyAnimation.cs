@@ -15,7 +15,8 @@ namespace CrowdPunch.Components
         Wizard,
         Ninja,
         Dragon,
-        Goblin
+        Goblin,
+        GoblinArmored
     }
 
     public struct EnemyAnimation : IComponentData

@@ -340,6 +340,7 @@ namespace CrowdPunch.Tests
         }
 
         [TestCase(EnemyAnimationProfile.Goblin)]
+        [TestCase(EnemyAnimationProfile.GoblinArmored)]
         [TestCase(EnemyAnimationProfile.Explosive)]
         [TestCase(EnemyAnimationProfile.Dasher)]
         public void Info004AuthoredAnimationBypassesTintAndProceduralDeformation(EnemyAnimationProfile profile)

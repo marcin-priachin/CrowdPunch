@@ -73,6 +73,12 @@ namespace CrowdPunch.Bakers
                         + owner.transform.up * authoring.LaunchPivotHeight) : float3.zero
             });
             AddComponent<EnemyAnimationPlayback>(entity);
+            if (authoring.ArmorStagesRequired > 0 && owner != null)
+                AddComponent(entity, new EnemyArmorVisual
+                {
+                    Owner = GetEntity(owner, TransformUsageFlags.Dynamic),
+                    StagesRequired = authoring.ArmorStagesRequired
+                });
             if (chicken != null || dino != null || gatekeeper != null)
             {
                 if (chicken != null) DependsOn(chicken.settings);

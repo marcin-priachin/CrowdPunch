@@ -13,7 +13,7 @@ namespace CrowdPunch.Tests
     public sealed class ArmoredShieldIndicatorTests
     {
         [Test]
-        public void Enemy014_IndicatorTracksStagesAndHidesForBreakAndPooling()
+        public void Enemy014_ArmorNeverPublishesOverheadUi()
         {
             using var world = new World("Armored shield presentation");
             GameObject cameraObject = null, canvasObject = null;
@@ -34,7 +34,6 @@ namespace CrowdPunch.Tests
                     .Invoke(view, null);
                 typeof(EnemyHealthBarCanvas).GetField("worldCamera", BindingFlags.NonPublic | BindingFlags.Instance)
                     .SetValue(view, camera);
-                Assert.That(Resources.Load<Sprite>("ArmorShield"), Is.Not.Null);
 
                 var em = world.EntityManager;
                 Entity enemy = em.CreateEntity(typeof(Enemy), typeof(EnemyArmor), typeof(LocalTransform),
@@ -44,35 +43,16 @@ namespace CrowdPunch.Tests
                 em.SetComponentEnabled<RespawnRequest>(enemy, false);
                 em.SetComponentEnabled<EnemyHealthBarVisibility>(enemy, true);
                 var bridge = world.GetOrCreateSystem<EnemyHealthBarBridgeSystem>();
-                for (byte remaining = 2; remaining >= 1; remaining--)
+                foreach (byte remaining in new byte[] { 2, 1, 0, 2 })
                 {
                     em.SetComponentData(enemy, new EnemyArmor { Stages = remaining });
                     bridge.Update(world.Unmanaged);
-                    Transform root = canvasObject.transform.Find("Enemy Status");
-                    Assert.That(root, Is.Not.Null);
-                    Assert.That(root.gameObject.activeSelf, Is.True);
-                    Assert.That(root.Find("Health Bar").gameObject.activeSelf, Is.False);
-                    Transform shields = root.Find("Shields");
-                    Assert.That(shields.gameObject.activeSelf, Is.True);
-                    int visible = 0;
-                    foreach (Transform icon in shields)
-                    {
-                        if (icon.gameObject.activeSelf) visible++;
-                        Assert.That(icon.GetComponent<UnityEngine.UI.Image>().sprite, Is.Not.Null);
-                    }
-                    Assert.That(visible, Is.EqualTo(remaining));
-                    if (remaining == 1)
-                        Assert.That(((RectTransform)shields.GetChild(0)).anchoredPosition.x, Is.Zero);
+                    Assert.That(canvasObject.transform.childCount, Is.Zero,
+                        "Armor is communicated by equipment, never shield icons or a health bar.");
                 }
-                em.SetComponentData(enemy, new EnemyArmor());
-                bridge.Update(world.Unmanaged);
-                Assert.That(canvasObject.transform.Find("Enemy Status").gameObject.activeSelf, Is.False);
-                em.SetComponentData(enemy, EnemyArmor.Fresh);
-                bridge.Update(world.Unmanaged);
-                Assert.That(canvasObject.transform.Find("Enemy Status").gameObject.activeSelf, Is.True);
                 em.SetComponentEnabled<RespawnRequest>(enemy, true);
                 bridge.Update(world.Unmanaged);
-                Assert.That(canvasObject.transform.Find("Enemy Status").gameObject.activeSelf, Is.False);
+                Assert.That(canvasObject.transform.childCount, Is.Zero);
             }
             finally
             {

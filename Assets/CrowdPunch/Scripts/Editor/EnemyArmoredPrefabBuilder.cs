@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
 using CrowdPunch.Authoring;
 using CrowdPunch.Components;
@@ -13,29 +12,34 @@ namespace CrowdPunch.Editor
 {
     public static class EnemyArmoredPrefabBuilder
     {
-        private const string ModelPath = "Assets/CrowdPunch/Models/UltimateMonsters/Big/Orc_Skull.fbx";
+        private const string ModelPath = "Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Armored Variant.prefab";
         private const string PrefabPath = "Assets/CrowdPunch/Prefabs/ArmoredEnemy.prefab";
         private const string ControllerPath = "Assets/CrowdPunch/Animation/EnemyArmored.controller";
         private const string SettingsPath = "Assets/CrowdPunch/Data/Settings/Enemies/ArmoredEnemySpawnSettings.asset";
-        private const string MaterialFolder = "Assets/CrowdPunch/Materials/Enemies/Armored";
+        public const string MaterialFolder = "Assets/CrowdPunch/Materials/Enemies/GoblinArmored";
         private const string SkinningMaterialPath = "Assets/CrowdPunch/Animation/EnemySkinning.mat";
         private const string PhysicsMaterialPath = "Assets/CrowdPunch/PhysicsMaterial/Enemy.physicMaterial";
         private const int FrameCount = 32;
+        private const string AnimationFolder = "Assets/Goblin Trooper Giant Evolution Modular Pack Cute Series/Goblin Trooper Modular Pack Cute Series/Animations";
+        private const string MovementFolder = "Assets/Goblin Trooper Giant Evolution Modular Pack Cute Series/Goblin Giant Modular Pack Cute Series/Animations";
 
         [MenuItem("Crowd Punch/Enemies/Rebuild Armored Prefab")]
         public static void Rebuild()
         {
-            EnsureFolder("Assets/CrowdPunch/Materials/Enemies", "Armored");
-            ConfigureAnimationImport();
+            EnsureFolder("Assets/CrowdPunch/Materials/Enemies", "GoblinArmored");
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Rebuild the armored outside Play Mode.");
+            var previous = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            var previousAnimation = previous != null ? previous.GetComponentInChildren<EnemyAnimationAuthoring>(true) : null;
+            float maxLegSpeed = previousAnimation != null ? previousAnimation.MaxLegAnimationSpeed : 2f;
 
             GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath);
-            if (model == null) throw new InvalidOperationException($"Missing Armored model: {ModelPath}");
-            AnimationClip idle = FindClip("Idle");
-            AnimationClip walk = FindClip("Run");
-            AnimationClip death = FindClip("Death");
-            AnimationClip punch = FindClip("Jump_Land");
-            AnimationClip hitReact = FindClip("HitReact");
-            AnimatorController controller = BuildController(idle, walk, death, punch, hitReact);
+            if (model == null) throw new InvalidOperationException($"Missing armored model: {ModelPath}");
+            var clips = new[] { FindClip("Idle", true), FindClip("Walk Forward In Place", true),
+                FindClip("Run Forward In Place", true), FindClip("Cut Attack"), FindClip("Cut Attack"),
+                FindClip("Take Damage"), FindClip("Die"), FindClip("Spawn"), FindClip("Block"),
+                FindClip("Jump In Place"), FindClip("Die") };
+            AnimatorController controller = BuildController(clips);
 
             GameObject root = new GameObject("ArmoredEnemy") { layer = 7 };
             try
@@ -43,9 +47,8 @@ namespace CrowdPunch.Editor
                 ConfigurePhysics(root);
                 root.AddComponent<EnemyAuthoring>();
                 GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
-                visual.name = "Orc_Skull";
+                visual.name = "Goblin Trooper Armored";
                 visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-                visual.transform.localScale = Vector3.one;
                 SetLayerRecursively(visual, 7);
 
                 Animator animator = visual.GetComponent<Animator>();
@@ -54,26 +57,37 @@ namespace CrowdPunch.Editor
                 animator.applyRootMotion = false;
                 animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
+                ConvertAccessories(visual);
+                foreach (var lod in visual.GetComponentsInChildren<LODGroup>(true)) UnityEngine.Object.DestroyImmediate(lod);
                 SkinnedMeshRenderer[] renderers = visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
                 if (renderers.Length == 0)
-                    throw new InvalidOperationException("Orc_Skull.fbx contains no skinned renderers.");
-                FitVisualToEnemy(root.transform, visual.transform, renderers);
+                    throw new InvalidOperationException("Goblin prefab contains no skinned renderers.");
+                AlignVisualToFloor(root.transform, visual.transform, renderers);
                 for (int index = 0; index < renderers.Length; index++)
                 {
                     SkinnedMeshRenderer renderer = renderers[index];
-                    ApplyTorsoPalette(renderer);
                     renderer.quality = SkinQuality.Bone4;
+                    renderer.forceMeshLod = 0;
                     renderer.rootBone = animator.transform;
                     renderer.sharedMaterials = BuildMaterials(renderer.sharedMaterials);
                     string samplesPath = $"Assets/CrowdPunch/Animation/EnemyArmoredMovement_{index:00}_{SafeName(renderer.name)}.bytes";
-                    WriteSamples(samplesPath, animator, renderer, idle, walk, death, punch, hitReact);
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    WriteSamples(samplesPath, animator, renderer, renderers[0], clips);
                     EnemyAnimationAuthoring authoring = renderer.GetComponent<EnemyAnimationAuthoring>();
                     if (authoring == null) authoring = renderer.gameObject.AddComponent<EnemyAnimationAuthoring>();
-                    authoring.Profile = EnemyAnimationProfile.Armored;
+                    authoring.Profile = EnemyAnimationProfile.GoblinArmored;
+                    authoring.ArmorStagesRequired = (byte)(renderer.name == "Helmet 05" ? 2 : renderer.name == "Shield 01" ? 1 : 0);
+                    authoring.RotateLaunchAroundOwner = true;
+                    authoring.LaunchPivotHeight = 0f;
+                    authoring.SpawnMotion = 7;
                     authoring.BlendResponse = 12f;
+                    authoring.MaxLegAnimationSpeed = maxLegSpeed;
                     authoring.Samples = AssetDatabase.LoadAssetAtPath<TextAsset>(samplesPath);
                 }
-                idle.SampleAnimation(animator.gameObject, 0f);
+                animator.Rebind();
+                animator.Play("Motion0", 0, 0);
+                animator.Update(0f);
+                GoblinJogSampling.Configure(root, "EnemyArmored");
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -84,115 +98,66 @@ namespace CrowdPunch.Editor
             AssignSpawnSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Created {PrefabPath} from Orc_Skull.fbx and assigned it to {SettingsPath}.");
+            Debug.Log($"Created {PrefabPath} from Goblin Trooper Armored Variant.prefab and assigned it to {SettingsPath}.");
         }
 
-        private static void ConfigureAnimationImport()
+        private static AnimationClip FindClip(string name, bool movement = false)
         {
-            var importer = AssetImporter.GetAtPath(ModelPath) as ModelImporter;
-            if (importer == null) throw new InvalidOperationException($"Expected a model importer at {ModelPath}.");
-            ModelImporterClipAnimation[] clips = importer.defaultClipAnimations;
-            bool changed = false;
-            foreach (ModelImporterClipAnimation clip in clips)
-            {
-                bool shouldLoop = MatchesClipName(clip.name, "Idle") || MatchesClipName(clip.name, "Run");
-                if (clip.loopTime == shouldLoop) continue;
-                clip.loopTime = shouldLoop;
-                changed = true;
-            }
-            if (!changed) return;
-            importer.clipAnimations = clips;
-            importer.SaveAndReimport();
-        }
-
-        private static AnimationClip FindClip(string name)
-        {
-            AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(ModelPath).OfType<AnimationClip>()
+            AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath($"{(movement ? MovementFolder : AnimationFolder)}/Char@{name}.FBX").OfType<AnimationClip>()
                 .FirstOrDefault(candidate => MatchesClipName(candidate.name, name));
             if (clip != null) return clip;
             string available = string.Join(", ", AssetDatabase.LoadAllAssetsAtPath(ModelPath)
                 .OfType<AnimationClip>().Select(candidate => candidate.name));
-            throw new InvalidOperationException($"Orc_Skull.fbx has no animation named '{name}'. Available: {available}");
+            throw new InvalidOperationException($"Goblin pack has no animation named '{name}'. Available: {available}");
         }
 
         private static bool MatchesClipName(string candidate, string requested) =>
             candidate == requested || candidate.EndsWith("|" + requested, StringComparison.Ordinal);
 
-        private static AnimatorController BuildController(AnimationClip idle, AnimationClip walk,
-            AnimationClip death, AnimationClip punch, AnimationClip hitReact)
+        private static AnimatorController BuildController(AnimationClip[] clips)
         {
             AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
             if (controller == null) controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
             AnimatorStateMachine machine = controller.layers[0].stateMachine;
             foreach (ChildAnimatorState state in machine.states) machine.RemoveState(state.state);
-            AnimatorState idleState = machine.AddState("Idle");
-            idleState.motion = idle;
-            machine.defaultState = idleState;
-            machine.AddState("Walk").motion = walk;
-            machine.AddState("Punch").motion = punch;
-            machine.AddState("HitReact").motion = hitReact;
-            machine.AddState("Death").motion = death;
+            for (int i = 0; i < clips.Length; i++)
+            {
+                var state = machine.AddState("Motion" + i);
+                state.motion = clips[i];
+                if (i == 0) machine.defaultState = state;
+            }
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
             return controller;
         }
 
-        private static void ApplyTorsoPalette(SkinnedMeshRenderer renderer)
+        // Rigid equipment must follow the sampled hand bone after Animator is removed by baking.
+        private static void ConvertAccessories(GameObject visual)
         {
-            if (renderer.name != "Orc_Skull") return;
-            var source = renderer.sharedMesh;
-            var mesh = UnityEngine.Object.Instantiate(source);
-            mesh.name = "ArmoredBoneTorso";
-            var vertices = new List<Vector3>(source.vertices);
-            var normals = new List<Vector3>(source.normals);
-            var tangents = new List<Vector4>(source.tangents);
-            var uv = new List<Vector2>(source.uv);
-            var weights = new List<BoneWeight>(source.boneWeights);
-            var remapped = new Dictionary<int, int>();
-            float TorsoWeight(int vertex)
+            int index = 0;
+            foreach (var renderer in visual.GetComponentsInChildren<MeshRenderer>(true))
             {
-                var w = weights[vertex];
-                float Weight(int bone, float value)
-                {
-                    string name = renderer.bones[bone].name;
-                    return name == "Body" || name == "Abdomen" || name == "Torso" ? value : 0f;
-                }
-                return Weight(w.boneIndex0, w.weight0) + Weight(w.boneIndex1, w.weight1)
-                    + Weight(w.boneIndex2, w.weight2) + Weight(w.boneIndex3, w.weight3);
+                var filter = renderer.GetComponent<MeshFilter>();
+                if (filter == null || filter.sharedMesh == null) continue;
+                var bone = renderer.transform.parent;
+                var mesh = UnityEngine.Object.Instantiate(filter.sharedMesh);
+                mesh.name = $"GoblinArmoredAccessory_{index:00}";
+                mesh.bindposes = new[] { bone.worldToLocalMatrix * renderer.transform.localToWorldMatrix };
+                mesh.boneWeights = Enumerable.Repeat(new BoneWeight { boneIndex0 = 0, weight0 = 1 }, mesh.vertexCount).ToArray();
+                string path = $"Assets/CrowdPunch/Animation/GoblinArmoredAccessory_{index++:00}.asset";
+                var saved = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+                if (saved == null) { AssetDatabase.CreateAsset(mesh, path); saved = mesh; }
+                else { EditorUtility.CopySerialized(mesh, saved); UnityEngine.Object.DestroyImmediate(mesh); EditorUtility.SetDirty(saved); }
+                var materials = renderer.sharedMaterials;
+                var target = renderer.gameObject;
+                UnityEngine.Object.DestroyImmediate(renderer);
+                UnityEngine.Object.DestroyImmediate(filter);
+                var skin = target.AddComponent<SkinnedMeshRenderer>();
+                skin.sharedMesh = saved;
+                skin.bones = new[] { bone };
+                skin.sharedMaterials = materials;
             }
-            for (int submesh = 0; submesh < source.subMeshCount; submesh++)
-            {
-                var triangles = source.GetTriangles(submesh);
-                for (int triangle = 0; triangle < triangles.Length; triangle += 3)
-                {
-                    int a = triangles[triangle], b = triangles[triangle + 1], c = triangles[triangle + 2];
-                    if (TorsoWeight(a) + TorsoWeight(b) + TorsoWeight(c) < 1.35f) continue;
-                    for (int corner = 0; corner < 3; corner++)
-                    {
-                        int original = triangles[triangle + corner];
-                        if (!remapped.TryGetValue(original, out int replacement))
-                        {
-                            replacement = vertices.Count;
-                            remapped.Add(original, replacement);
-                            vertices.Add(vertices[original]); normals.Add(normals[original]);
-                            tangents.Add(tangents[original]); weights.Add(weights[original]);
-                            // Duplicate boundary vertices to keep the atlas colors from blending across swatches.
-                            uv.Add(new Vector2(.3602f, .6096f));
-                        }
-                        triangles[triangle + corner] = replacement;
-                    }
-                }
-                mesh.SetVertices(vertices); mesh.SetNormals(normals); mesh.SetTangents(tangents);
-                mesh.SetUVs(0, uv); mesh.boneWeights = weights.ToArray();
-                mesh.SetTriangles(triangles, submesh, false);
-            }
-            const string path = "Assets/CrowdPunch/Animation/EnemyArmoredTorsoPalette.asset";
-            var saved = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-            if (saved == null) { AssetDatabase.CreateAsset(mesh, path); saved = mesh; }
-            else { EditorUtility.CopySerialized(mesh, saved); UnityEngine.Object.DestroyImmediate(mesh); }
-            EditorUtility.SetDirty(saved);
             AssetDatabase.SaveAssets();
-            renderer.sharedMesh = saved;
         }
 
         private static Material[] BuildMaterials(Material[] sources)
@@ -203,7 +168,7 @@ namespace CrowdPunch.Editor
             for (int index = 0; index < sources.Length; index++)
             {
                 Material source = sources[index];
-                string name = string.IsNullOrWhiteSpace(source?.name) ? $"Orc_Skull_{index}" : source.name;
+                string name = string.IsNullOrWhiteSpace(source?.name) ? $"Goblin_{index}" : source.name;
                 string path = $"{MaterialFolder}/{SafeName(name)}.mat";
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null)
@@ -219,7 +184,8 @@ namespace CrowdPunch.Editor
                 if (material.HasProperty("_ColorMap")) material.SetTexture("_ColorMap", texture);
                 if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
                 if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
-                EnemyAppearanceMaterials.Configure(material);
+                foreach (string property in new[] { "_SkinColorAmount", "_DarkAmount", "_DirtAmount", "_EyelinerAmount" })
+                    if (material.HasProperty(property)) material.SetFloat(property, 0f);
                 material.enableInstancing = true;
                 EditorUtility.SetDirty(material);
                 results[index] = material;
@@ -228,36 +194,59 @@ namespace CrowdPunch.Editor
             return results;
         }
 
-        private static void WriteSamples(string path, Animator animator, SkinnedMeshRenderer renderer,
-            AnimationClip idle, AnimationClip walk, AnimationClip death, AnimationClip punch, AnimationClip hitReact)
+        private static void WriteSamples(string path, Animator animator, SkinnedMeshRenderer renderer, SkinnedMeshRenderer body,
+            AnimationClip[] clips)
         {
             animator.Rebind();
-            var clips = new AnimationClip[EnemyAnimationSamples.MotionCount];
-            clips[0] = idle;
-            for (int index = 1; index < EnemyAnimationSamples.ImpactMotion; index++) clips[index] = walk;
-            clips[2] = punch;
-            clips[3] = hitReact;
-            clips[EnemyAnimationSamples.ImpactMotion] = death;
             var matrices = new Matrix4x4[EnemyAnimationSamples.MotionCount * FrameCount * renderer.bones.Length];
             var durations = new float[EnemyAnimationSamples.MotionCount];
             Matrix4x4[] bindposes = renderer.sharedMesh.bindposes;
             Vector3[] sourceVertices = renderer.sharedMesh.vertices;
             BoneWeight[] boneWeights = renderer.sharedMesh.boneWeights;
+            var bodyVertices = body.sharedMesh.vertices;
+            var bodyWeights = body.sharedMesh.boneWeights;
+            var bodyBindposes = body.sharedMesh.bindposes;
+            var bodyMatrices = new Matrix4x4[body.bones.Length];
             Bounds bounds = default;
             bool hasBounds = false;
             for (int motion = 0; motion < clips.Length; motion++)
             {
                 AnimationClip clip = clips[motion];
-                durations[motion] = clip.length;
+                float start = motion == 9 ? .3f : motion == 6 ? 1f : 0f;
+                float end = motion == 9 ? .65f : motion == 6 ? 0f : 1f;
+                durations[motion] = clip.length * Mathf.Abs(end - start);
                 for (int frame = 0; frame < FrameCount; frame++)
                 {
-                    bool oneShot = motion == 2 || motion == 3 || motion == EnemyAnimationSamples.ImpactMotion;
+                    bool oneShot = motion != 0 && motion != 1 && motion != 2 && motion != 8 && motion != 9;
                     float normalized = oneShot ? frame / (float)(FrameCount - 1) : frame / (float)FrameCount;
-                    clip.SampleAnimation(animator.gameObject, normalized * clip.length);
+                    // Frame 6 is a zero-based source clip frame, independent of the 32 exported samples.
+                    float phase = motion == EnemyAnimationSamples.FlyingMotion
+                        ? Mathf.Clamp01(6f / (clip.frameRate * clip.length)) : Mathf.Lerp(start, end, normalized);
+                    animator.Play("Motion" + motion, 0, phase);
+                    animator.Update(0f);
                     Matrix4x4 inverse = animator.transform.worldToLocalMatrix;
+                    for (int bone = 0; bone < bodyMatrices.Length; bone++)
+                        bodyMatrices[bone] = inverse * body.bones[bone].localToWorldMatrix * bodyBindposes[bone];
+                    float groundOffset = 0f;
+                    for (int vertex = 0; vertex < bodyVertices.Length; vertex++)
+                    {
+                        BoneWeight w = bodyWeights[vertex];
+                        Vector3 v = bodyVertices[vertex];
+                        Vector3 p = bodyMatrices[w.boneIndex0].MultiplyPoint3x4(v) * w.weight0
+                            + bodyMatrices[w.boneIndex1].MultiplyPoint3x4(v) * w.weight1
+                            + bodyMatrices[w.boneIndex2].MultiplyPoint3x4(v) * w.weight2
+                            + bodyMatrices[w.boneIndex3].MultiplyPoint3x4(v) * w.weight3;
+                        groundOffset = Mathf.Max(groundOffset, -p.y);
+                    }
+                    // Spawn intentionally emerges from below the floor; keep its authored vertical motion.
+                    if (motion == 7) groundOffset = 0f;
                     int poseStart = (motion * FrameCount + frame) * renderer.bones.Length;
                     for (int bone = 0; bone < renderer.bones.Length; bone++)
+                    {
                         matrices[poseStart + bone] = inverse * renderer.bones[bone].localToWorldMatrix * bindposes[bone];
+                        // Use the body's floor correction for equipment too, preserving hand attachment.
+                        matrices[poseStart + bone][1, 3] += groundOffset;
+                    }
                     for (int vertex = 0; vertex < sourceVertices.Length; vertex++)
                     {
                         BoneWeight weight = boneWeights[vertex];
@@ -268,6 +257,11 @@ namespace CrowdPunch.Editor
                             + matrices[poseStart + weight.boneIndex3].MultiplyPoint3x4(source) * weight.weight3;
                         if (!hasBounds) { bounds = new Bounds(position, Vector3.zero); hasBounds = true; }
                         else bounds.Encapsulate(position);
+                        if (motion == EnemyAnimationSamples.FlyingMotion)
+                        {
+                            Vector3 pivot = animator.transform.InverseTransformPoint(animator.transform.parent.position);
+                            bounds.Encapsulate(pivot + Quaternion.Euler(90, 0, 0) * (position - pivot));
+                        }
                     }
                 }
             }
@@ -292,16 +286,13 @@ namespace CrowdPunch.Editor
             renderer.localBounds = bounds;
         }
 
-        private static void FitVisualToEnemy(Transform enemy, Transform visual, SkinnedMeshRenderer[] renderers)
+        private static void AlignVisualToFloor(Transform enemy, Transform visual, SkinnedMeshRenderer[] renderers)
         {
             Bounds bounds = renderers[0].bounds;
             for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
-            float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            if (largest <= Mathf.Epsilon) throw new InvalidOperationException("Orc_Skull renderers have empty bounds.");
-            visual.localScale *= 2.875f / largest;
-            bounds = renderers[0].bounds;
-            for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
-            visual.localPosition -= enemy.InverseTransformPoint(bounds.center);
+            Vector3 floor = new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
+            float colliderFloor = enemy.GetComponent<CapsuleCollider>().bounds.min.y;
+            visual.localPosition -= enemy.InverseTransformPoint(floor) - Vector3.up * colliderFloor;
         }
 
         private static void ConfigurePhysics(GameObject root)
@@ -322,19 +313,10 @@ namespace CrowdPunch.Editor
         {
             EnemySpawnSettings settings = AssetDatabase.LoadAssetAtPath<EnemySpawnSettings>(SettingsPath);
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
-            if (settings == null)
-            {
-                settings = ScriptableObject.CreateInstance<EnemySpawnSettings>();
-                AssetDatabase.CreateAsset(settings, SettingsPath);
-                var defaults = new SerializedObject(settings);
-                defaults.FindProperty("moveSpeed").floatValue = 8f;
-                defaults.FindProperty("chargeSpeedMultiplier").floatValue = 1.25f;
-                defaults.ApplyModifiedPropertiesWithoutUndo();
-            }
-            if (prefab == null) throw new InvalidOperationException("Could not load Armored settings or prefab.");
+            if (settings == null || prefab == null) throw new InvalidOperationException("Could not load armored settings or prefab.");
             var serialized = new SerializedObject(settings);
             serialized.FindProperty("enemyPrefab").objectReferenceValue = prefab;
-            serialized.FindProperty("archetype").intValue = (int)Configuration.EnemyArchetype.Armored;
+            serialized.FindProperty("spawnFromGround").boolValue = true;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(settings);
         }

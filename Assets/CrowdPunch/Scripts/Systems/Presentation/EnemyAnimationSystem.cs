@@ -94,7 +94,8 @@ namespace CrowdPunch.Systems.Presentation
                         / math.max(.001f, SpawnAnimations[owner].Duration));
                     float spawnFrame = progress * (samples.FrameCount - 1);
                     int from = (int)spawnFrame;
-                    if (animation.Profile == (byte)EnemyAnimationProfile.Dasher || ElitePunches.HasComponent(owner))
+                    if (animation.Profile == (byte)EnemyAnimationProfile.Dasher
+                        || animation.Profile == (byte)EnemyAnimationProfile.GoblinArmored || ElitePunches.HasComponent(owner))
                         ApplyDasherFrame(ref skin, ref samples, animation.SpawnMotion, from,
                             math.min(from + 1, samples.FrameCount - 1), math.frac(spawnFrame));
                     else
@@ -108,14 +109,16 @@ namespace CrowdPunch.Systems.Presentation
                     playback.JogPhase = 0;
                     return;
                 }
-                if (animation.Profile == (byte)EnemyAnimationProfile.Goblin)
+                if (animation.Profile == (byte)EnemyAnimationProfile.Goblin
+                    || animation.Profile == (byte)EnemyAnimationProfile.GoblinArmored)
                 {
                     AnimateGoblin(owner, ref playback, ref skin, ref samples, launch, animation.LaunchPivot);
-                    bool charging = !ElitePunches.HasComponent(owner)
+                    bool armored = animation.Profile == (byte)EnemyAnimationProfile.GoblinArmored;
+                    bool charging = !armored && !ElitePunches.HasComponent(owner)
                         && Contacts.HasComponent(owner) && Contacts[owner].IsAttempting != 0;
                     if (launch.Phase == EnemyLaunchPhase.Active && !charging && animation.JogSamples.IsCreated)
                         AnimateJogLegs(owner, animation.BlendResponse, ref playback, ref skin, ref animation.JogSamples.Value,
-                            ElitePunches.HasComponent(owner), animation.MaxLegAnimationSpeed);
+                            armored || ElitePunches.HasComponent(owner), animation.MaxLegAnimationSpeed);
                     else
                     {
                         playback.Movement = 0;
@@ -701,6 +704,13 @@ namespace CrowdPunch.Systems.Presentation
                     playback.HealthInitialized = 1;
                     playback.PreviousHealth = health;
                 }
+                bool armored = Armors.HasComponent(owner);
+                bool shielded = armored && Armors[owner].Stages > 0;
+                if (armored && playback.ArmorHitSequence != Armors[owner].HitSequence)
+                {
+                    playback.ArmorHitSequence = Armors[owner].HitSequence;
+                    hit = true;
+                }
                 int motion;
                 float progress = -1f;
                 if (launch.Phase == EnemyLaunchPhase.Launched)
@@ -740,7 +750,12 @@ namespace CrowdPunch.Systems.Presentation
                             if (playback.HitPhase >= 1f) playback.HitActive = 0;
                         }
                         var contact = Contacts.HasComponent(owner) ? Contacts[owner] : default;
-                        if (ElitePunches.HasComponent(owner) && ElitePunches[owner].Phase == ElitePunchPhase.CommittedSweep)
+                        if (shielded)
+                        {
+                            motion = 8; // Block owns the upper body until the shield is removed.
+                            if (hit) playback.Phase = 0;
+                        }
+                        else if (ElitePunches.HasComponent(owner) && ElitePunches[owner].Phase == ElitePunchPhase.CommittedSweep)
                         {
                             motion = 4;
                             progress = ElitePunches[owner].SweepProgress;
@@ -759,16 +774,16 @@ namespace CrowdPunch.Systems.Presentation
                             motion = 4;
                             progress = playback.AttackPhase;
                         }
-                        else if (contact.IsAttempting != 0 && !ElitePunches.HasComponent(owner))
+                        else if (contact.IsAttempting != 0 && !armored && !ElitePunches.HasComponent(owner))
                         {
                             motion = 2;
                         }
                         else if (playback.HitActive != 0) { motion = 5; progress = playback.HitPhase; }
                         else
                         {
-                            float speed = ElitePunches.HasComponent(owner) && Velocities.HasComponent(owner)
+                            float speed = (armored || ElitePunches.HasComponent(owner)) && Velocities.HasComponent(owner)
                                 ? math.length(Velocities[owner].Linear.xz) : Movement[owner].Speed;
-                            float idleThreshold = ElitePunches.HasComponent(owner) ? .03f : .01f;
+                            float idleThreshold = armored || ElitePunches.HasComponent(owner) ? .03f : .01f;
                             motion = speed <= idleThreshold ? 0 : speed > Settings[owner].MoveSpeed * .65f ? 2 : 1;
                         }
                     }
@@ -783,9 +798,9 @@ namespace CrowdPunch.Systems.Presentation
                 float frame = progress * (oneShot || motion == 3 || motion == 4 || motion == 5 || motion == 6
                     ? samples.FrameCount - 1 : samples.FrameCount);
                 int from = math.min((int)frame, samples.FrameCount - 1);
-                int to = motion == 0 || motion == 1 || motion == 2 || motion == EnemyAnimationSamples.FlyingMotion
+                int to = motion == 0 || motion == 1 || motion == 2 || (armored && motion == 8) || motion == EnemyAnimationSamples.FlyingMotion
                     ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1);
-                if (ElitePunches.HasComponent(owner)) ApplyDasherFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
+                if (armored || ElitePunches.HasComponent(owner)) ApplyDasherFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
                 else ApplyFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
             }
 
@@ -853,6 +868,10 @@ namespace CrowdPunch.Systems.Presentation
                 if (!preserveScale) return a * (1f - blend) + b * blend;
                 float3 scaleA = math.max(new float3(.000001f), new float3(math.length(a.c0), math.length(a.c1), math.length(a.c2)));
                 float3 scaleB = math.max(new float3(.000001f), new float3(math.length(b.c0), math.length(b.c1), math.length(b.c2)));
+                // Mirrored equipment has a negative determinant in its authored bind pose.
+                // Keep that reflection in scale before extracting a proper rotation.
+                if (math.determinant(new float3x3(a.c0, a.c1, a.c2)) < 0) scaleA.x = -scaleA.x;
+                if (math.determinant(new float3x3(b.c0, b.c1, b.c2)) < 0) scaleB.x = -scaleB.x;
                 var rotationA = math.normalize(new quaternion(new float3x3(a.c0 / scaleA.x, a.c1 / scaleA.y, a.c2 / scaleA.z)));
                 var rotationB = math.normalize(new quaternion(new float3x3(b.c0 / scaleB.x, b.c1 / scaleB.y, b.c2 / scaleB.z)));
                 var rotation = new float3x3(math.slerp(rotationA, rotationB, blend));
@@ -953,16 +972,8 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     float3x4 a = samples.Matrices[start + from * samples.BoneCount + bone];
                     float3x4 b = samples.Matrices[start + to * samples.BoneCount + bone];
-                    float3 scaleA = new float3(math.length(a.c0), math.length(a.c1), math.length(a.c2));
-                    float3 scaleB = new float3(math.length(b.c0), math.length(b.c1), math.length(b.c2));
-                    quaternion rotationA = math.normalize(new quaternion(new float3x3(a.c0 / scaleA.x, a.c1 / scaleA.y, a.c2 / scaleA.z)));
-                    quaternion rotationB = math.normalize(new quaternion(new float3x3(b.c0 / scaleB.x, b.c1 / scaleB.y, b.c2 / scaleB.z)));
-                    // Linear matrix blending collapses limbs between very different roll poses.
-                    // Interpolate rotation separately, retaining only the scale in the authored samples.
-                    float3x3 rotation = new float3x3(math.slerp(rotationA, rotationB, blend));
-                    float3 scale = math.lerp(scaleA, scaleB, blend);
-                    skin[bone] = new SkinMatrix { Value = new float3x4(rotation.c0 * scale.x,
-                        rotation.c1 * scale.y, rotation.c2 * scale.z, math.lerp(a.c3, b.c3, blend)) };
+                    // Shared rotation interpolation also preserves mirrored equipment bind poses.
+                    skin[bone] = new SkinMatrix { Value = BlendPose(a, b, blend, true) };
                 }
             }
 

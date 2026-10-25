@@ -6,6 +6,29 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Goblin Trooper Armored (2026-10-24, ENEMY-014, INFO-004/006, VISION-006)
+
+`EnemyArmoredPrefabBuilder` retains ArmoredEnemy.prefab and its original physics root,
+instantiating the supplied Goblin Trooper Armored Variant at its authored scale.
+Alignment uses translation only. CPA3 slots 0/1/2 retarget Giant Idle/Walk/Run onto
+its Humanoid avatar; Trooper clips supply damage, reverse-Die rise, Spawn, Block,
+Jump In Place and Die. `GoblinArmored` follows the Goblin lifecycle, with Block
+(slot 8) overriding protected active poses and CPJ1 directional jogs replacing only
+legs below the original pelvis. Gait uses resolved planar velocity and measured stride;
+rotation interpolation preserves sampled scale. Spawn, launch, recovery and defeat
+bypass jogs. Armor hit sequence changes restart Block or Take Damage after the final
+shield loss. Spawn From Ground is enabled and uses the authored Spawn duration.
+
+Rigid equipment becomes one-bone sampled skins. `EnemyAnimationAuthoring.ArmorStagesRequired`
+bakes `EnemyArmorVisual` onto the animation source and additional submesh render entities.
+`EnemyArmorVisualSystem` toggles `MaterialMeshInfo` without structural changes: Helmet 05
+requires two stages and Shield 01 one. Disabled-render queries still see broken equipment,
+so fresh armor restores both on pooling/restart. Dedicated GoblinArmored materials retain
+the pack texture under Full Cel and are protected from monster-atlas refresh. The
+animation-driven flag suppresses tint, flash and procedural deformation. The health
+canvas no longer creates or publishes shield indicators; Armored remains excluded from
+individual health bars. Armor gameplay and collision ownership are unchanged.
+
 ## Goblin Giant Elite (2026-10-24, ENEMY-009, INFO-004/006, VISION-006)
 
 `EnemyElitePrefabBuilder` retains `EliteEnemy.prefab` and its physics footprint while
@@ -1363,8 +1386,8 @@ The 2026-10-21 player appearance verification is recorded in `Docs/Verification/
 | Enemy body feedback | ECS rendering | Baked `EnemyVisualOwner` connects root/child renderers to gameplay state; `EnemyReadabilitySystem` writes body color. Animation-driven profiles including Dasher retain a neutral multiplier and bypass procedural deformation. |
 | Temporary normal health and elite health UI | ECS â†’ presentation registry â†’ Canvas | `EnemyHealthBarVisibility`, `EnemyHealthBarBridgeSystem`, `EnemyHealthBarCanvasRegistry`, `EnemyHealthBarCanvas`; no repeated normal launch/recovery text, and zero-health normal bars are suppressed. |
 
-The same presentation registry and pooled Canvas now draw one shield icon per remaining Armored armor stage.
-The canvas never queries enemy entities, and Armored does not publish health bars.
+The presentation registry and pooled Canvas publish health snapshots only.
+The canvas never queries enemy entities; Armored uses equipment visibility and publishes no UI.
 
 MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exposes the one active `PlayerEcsBridge` to the few managed systems that cross the boundary.
 
@@ -2174,9 +2197,8 @@ Armored appends serialized archetype value 5 and stays Normal tier. EnemySpawnSe
 three armor timing/recoil values; shared profile baking and spawn
 initialization add EnemyArmorSettings, EnemyArmor and ArmorHitHistory only to this archetype.
 Recovery leaves armor alone. Pooling and restart reset it; wave reload destroys old owned roots.
-Armored never publishes an individual health bar. The existing health-bar presentation bridge
-publishes its remaining armor count to the pooled screen-space Canvas instead. The Canvas displays
-one shield icon per stage, hides the indicator on break, defeat or pooling, and reuses views across spawns.
+Armored never publishes an individual health bar or armor indicator. Equipment visibility
+communicates stage count through the sampled presentation path described above.
 GameBootstrap keeps Canvas ownership; MonoBehaviour UI does not query enemy entities.
 
 ArmorHitResolution is shared by solver body impacts, swept launched-Dasher impacts and explosions.
@@ -2194,11 +2216,10 @@ Elite selection, stale/area punch resolution and direct boss scattering reject p
 EnemyChaseSystem uses its existing local-separation neighborhood and writes direct player pursuit
 for Armored without allocating pressure slots. Navigation remains the path owner. Armored uses
 MoveSpeed * ChargeSpeedMultiplier; stagger never lets normal movement overwrite recoil velocity.
-EnemyReadabilitySystem uses one stable Armored tint at every stage; EnemyImpactVisualSystem still
-composes transient flashes over it. The shield indicator alone communicates the stage count.
-EnemyAnimationProfile.Armored reuses CPA3 sampling: Idle/Run, HitReact on armor-hit sequence changes,
-a sideways Idle flight pose, Jump_Land recovery and Death defeat. Physics never depends on the poses.
-EnemyArmoredPrefabBuilder regenerates the Orc_Skull prefab, controller, materials and samples.
+EnemyArmoredPrefabBuilder generates the supplied Goblin Trooper Armored visual, authored
+animations and directional jog legs. The GoblinArmored profile suppresses procedural tint,
+flash, shake and scaling. Helmet 05 disappears after the first armor reduction; Shield 01
+after the second. See the Goblin Trooper Armored presentation section above.
 
 Wave settings optionally reference a Baseline armoredAmmunitionProfile. Its baked profile is used
 only after the wave's original pending spawn queue drains. ArmoredAmmunitionSupply checks owned
@@ -2213,7 +2234,7 @@ GauntletProgressionBuilder.BuildArmored authors only Gauntlet_12 and its two wav
 Armored+Baseline), navigation, opening hint and Bootstrap/build-list registration. Nature-kit rendering
 uses the existing recipe. Rebuilding the original ten or boss preserves later sequence entries.
 Default armor tuning: 0.30 s stagger, 3 m/s planar recoil, 0.25 s hit protection.
-The stable body tint and shield icons are presentation constants.
+Authored animation, textured Full Cel materials and removable equipment communicate armor state.
 
 Scene, physics, regression and crowd-cost evidence is recorded in [Armored validation](../Validation/Armored.md).
 

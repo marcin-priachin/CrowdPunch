@@ -90,7 +90,7 @@ namespace CrowdPunch.Editor
                     if (em.HasComponent<EnemyArmor>(e)) target = e; else if (source == Entity.Null) source = e;
                 Require(target != Entity.Null && source != Entity.Null && enemies.Length == 7, "Opening composition");
                 Require(em.GetComponentData<EnemyArmor>(target).Stages == 2, "Fresh armor");
-                Require(VisibleShields() == 2, "Fresh shield indicator");
+                Require(VisibleArmor(em, target) == 2, "Fresh helmet and shield");
                 if (em.GetComponentData<DesiredMovement>(target).Speed <= 0)
                 { Require(now - since < 30, "Continuous pursuit not active"); return; }
                 using var animationQuery = em.CreateEntityQuery(typeof(EnemyAnimation), typeof(EnemyAnimationPlayback));
@@ -100,7 +100,7 @@ namespace CrowdPunch.Editor
                 {
                     var animation = em.GetComponentData<EnemyAnimation>(v);
                     if (animation.Owner != target) continue;
-                    Require(animation.Profile == (byte)EnemyAnimationProfile.Armored && animation.Samples.IsCreated, "Baked profile/samples");
+                    Require(animation.Profile == (byte)EnemyAnimationProfile.GoblinArmored && animation.Samples.IsCreated, "Baked profile/samples");
                     foreach (var skin in em.GetBuffer<SkinMatrix>(v)) Require(math.all(math.isfinite(skin.Value.c3)), "Invalid skin matrix");
                     animated++;
                 }
@@ -134,7 +134,7 @@ namespace CrowdPunch.Editor
                     em.GetComponentData<EnemyLaunchState>(target).Phase != EnemyLaunchPhase.Launched)
                 { Require(now - since < 5, "Solver body did not hit target"); return; }
                 Require(stages == math.max(0, 1 - hit), "One body consumed multiple shields");
-                Require(VisibleShields() == stages, "Shield indicator did not follow armor stage");
+                Require(VisibleArmor(em, target) == stages, "Equipment did not follow armor stage");
                 if (hit < 2)
                 {
                     Require(em.GetComponentData<Health>(target).Current == initialHealth, "Armor lost health");
@@ -164,7 +164,7 @@ namespace CrowdPunch.Editor
                 if (sequence.Phase != EnemyWaveRuntimePhase.AwaitingActivation) return;
                 foreach (var e in enemies) if (em.HasComponent<EnemyArmor>(e))
                 { target = e; Require(em.GetComponentData<EnemyArmor>(e).Stages == 2, "Restart did not restore armor"); }
-                Require(VisibleShields() == 2, "Restart did not restore shield indicator");
+                Require(VisibleArmor(em, target) == 2, "Restart did not restore equipment");
                 foreach (var e in enemies) if (!em.HasComponent<EnemyArmor>(e)) Defeat(em, e);
                 Record("PASS restart restores fresh armor; exhausted original ammunition"); Next(6); return;
             }
@@ -214,19 +214,18 @@ namespace CrowdPunch.Editor
         }
         private static void Next(int value) { step=value; since=EditorApplication.timeSinceStartup; }
         private static void Require(bool condition,string message) { if(!condition) throw new InvalidOperationException(message); }
-        private static int VisibleShields()
+        private static int VisibleArmor(EntityManager em, Entity owner)
         {
-            var canvas = Object.FindFirstObjectByType<EnemyHealthBarCanvas>();
-            if (canvas == null) return 0;
-            int visible = 0;
-            foreach (Transform root in canvas.transform)
+            using var query = em.CreateEntityQuery(new EntityQueryDesc
             {
-                if (!root.gameObject.activeInHierarchy) continue;
-                var row = root.Find("Shields");
-                if (row == null || !row.gameObject.activeInHierarchy) continue;
-                foreach (Transform icon in row)
-                    if (icon.gameObject.activeInHierarchy) visible++;
-            }
+                All = new[] { ComponentType.ReadOnly<EnemyArmorVisual>(), ComponentType.ReadOnly<MaterialMeshInfo>() },
+                Options = EntityQueryOptions.IgnoreComponentEnabledState
+            });
+            using var parts = query.ToEntityArray(Allocator.Temp);
+            int visible = 0;
+            foreach (var part in parts)
+                if (em.GetComponentData<EnemyArmorVisual>(part).Owner == owner
+                    && em.IsComponentEnabled<MaterialMeshInfo>(part)) visible++;
             return visible;
         }
         private static void Record(string value) => File.AppendAllText(Output,value+"\n");

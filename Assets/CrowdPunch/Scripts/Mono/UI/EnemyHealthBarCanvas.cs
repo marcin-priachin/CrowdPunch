@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace CrowdPunch.Mono.UI
 {
     /// <summary>
-    /// Pooled screen-space presentation for enemy health and Armored shield counts.
+    /// Pooled screen-space presentation for enemy health.
     /// </summary>
     [RequireComponent(typeof(Canvas))]
     public sealed class EnemyHealthBarCanvas : MonoBehaviour
@@ -21,8 +21,6 @@ namespace CrowdPunch.Mono.UI
             public GameObject HealthBar;
             public RectTransform Fill;
             public Text StateLabel;
-            public GameObject ShieldIndicator;
-            public UnityEngine.UI.Image[] ShieldIcons;
             public bool WasPublished;
         }
 
@@ -35,13 +33,11 @@ namespace CrowdPunch.Mono.UI
         private RectTransform canvasRect;
         private Canvas canvas;
         private UnityEngine.Camera worldCamera;
-        private Sprite shieldSprite;
 
         private void Awake()
         {
             canvas = GetComponent<Canvas>();
             canvasRect = (RectTransform)transform;
-            shieldSprite = Resources.Load<Sprite>("ArmorShield");
         }
 
         private void OnEnable()
@@ -97,29 +93,6 @@ namespace CrowdPunch.Mono.UI
             view.StateLabel.text = stateLabel;
             view.HealthBar.SetActive(displayHealth);
             view.StateLabel.gameObject.SetActive(displayState);
-            view.ShieldIndicator.SetActive(false);
-        }
-
-        public void PublishShields(int displayId, Vector3 worldPosition, byte remaining)
-        {
-            if (remaining == 0 || !TryProject(worldPosition, out Vector2 localPosition)) return;
-            if (!activeViews.TryGetValue(displayId, out BarView view))
-            {
-                view = GetOrCreateView();
-                activeViews.Add(displayId, view);
-            }
-            view.WasPublished = true;
-            view.Root.anchoredPosition = localPosition;
-            view.HealthBar.SetActive(false);
-            view.StateLabel.gameObject.SetActive(false);
-            view.ShieldIndicator.SetActive(true);
-            for (int index = 0; index < view.ShieldIcons.Length; index++)
-            {
-                view.ShieldIcons[index].gameObject.SetActive(index < remaining);
-                if (index < remaining)
-                    view.ShieldIcons[index].rectTransform.anchoredPosition =
-                        new Vector2((index - (remaining - 1) * .5f) * 20f, 0f);
-            }
         }
 
         private bool TryProject(Vector3 worldPosition, out Vector2 localPosition)
@@ -213,42 +186,12 @@ namespace CrowdPunch.Mono.UI
             stateLabel.fontSize = 11;
             stateLabel.raycastTarget = false;
 
-            GameObject shieldIndicator = new GameObject("Shields", typeof(RectTransform));
-            shieldIndicator.layer = gameObject.layer;
-            RectTransform shieldRow = (RectTransform)shieldIndicator.transform;
-            shieldRow.SetParent(root, false);
-            shieldRow.anchorMin = Vector2.zero;
-            shieldRow.anchorMax = new Vector2(1f, 0f);
-            shieldRow.pivot = new Vector2(.5f, 0f);
-            shieldRow.anchoredPosition = new Vector2(0f, 3f);
-            shieldRow.sizeDelta = new Vector2(0f, 22f);
-            var icons = new UnityEngine.UI.Image[2];
-            for (int index = 0; index < icons.Length; index++)
-            {
-                var iconObject = new GameObject("Shield " + (index + 1), typeof(RectTransform),
-                    typeof(CanvasRenderer), typeof(UnityEngine.UI.Image));
-                iconObject.layer = gameObject.layer;
-                var iconRect = (RectTransform)iconObject.transform;
-                iconRect.SetParent(shieldRow, false);
-                iconRect.anchorMin = iconRect.anchorMax = new Vector2(.5f, .5f);
-                iconRect.anchoredPosition = new Vector2((index - .5f) * 20f, 0f);
-                iconRect.sizeDelta = new Vector2(16f, 19f);
-                var icon = iconObject.GetComponent<UnityEngine.UI.Image>();
-                icon.sprite = shieldSprite;
-                icon.color = Color.white;
-                icon.raycastTarget = false;
-                icons[index] = icon;
-            }
-            shieldIndicator.SetActive(false);
-
             return new BarView
             {
                 Root = root,
                 HealthBar = healthBarObject,
                 Fill = fill,
                 StateLabel = stateLabel,
-                ShieldIndicator = shieldIndicator,
-                ShieldIcons = icons,
                 WasPublished = true
             };
         }

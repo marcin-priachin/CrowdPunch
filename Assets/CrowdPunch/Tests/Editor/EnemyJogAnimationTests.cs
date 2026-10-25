@@ -65,6 +65,54 @@ namespace CrowdPunch.Tests
             layered = Visual(jog); original = Visual(default);
         }
 
+        [Test]
+        public void Enemy014ShieldOverridesUpperBodyWhileJogLegsFollowMotionAndArmorBreak()
+        {
+            var em = world.EntityManager;
+            em.AddComponentData(owner, EnemyArmor.Fresh);
+            em.SetComponentData(owner, new PhysicsVelocity { Linear = new float3(2, 0, 2) });
+            foreach (var visual in new[] { layered, original })
+            {
+                var animation = em.GetComponentData<EnemyAnimation>(visual);
+                animation.Profile = (byte)EnemyAnimationProfile.GoblinArmored;
+                em.SetComponentData(visual, animation);
+            }
+            Tick();
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.EqualTo(8));
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).JogPhase, Is.GreaterThan(0));
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[1].Value, Is.EqualTo(em.GetBuffer<SkinMatrix>(original)[1].Value));
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[2].Value, Is.Not.EqualTo(em.GetBuffer<SkinMatrix>(original)[2].Value));
+            em.SetComponentData(owner, new EnemyArmor { Stages = 1, HitSequence = 1 });
+            Tick();
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.EqualTo(8));
+            em.SetComponentData(owner, new EnemyArmor { Stages = 0, HitSequence = 2 });
+            Tick();
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.EqualTo(5));
+            Tick(1.1f);
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.EqualTo(2));
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(owner).Linear, Is.EqualTo(new float3(2, 0, 2)));
+        }
+
+        [Test]
+        public void Enemy014MirroredEquipmentRetainsItsAuthoredReflectionDuringPoseBlending()
+        {
+            var em = world.EntityManager;
+            em.AddComponentData(owner, EnemyArmor.Fresh);
+            var animation = em.GetComponentData<EnemyAnimation>(layered);
+            animation.Profile = (byte)EnemyAnimationProfile.GoblinArmored;
+            em.SetComponentData(layered, animation);
+            for (int frame = 0; frame < 2; frame++)
+                body.Value.Matrices[(8 * 2 + frame) * 3 + 1] = new float3x4(
+                    new float3(-1, 0, 0), new float3(0, 1, 0), new float3(0, 0, 1), new float3(1, 2, 3));
+            Tick();
+            var pose = em.GetBuffer<SkinMatrix>(layered)[1].Value;
+            Assert.That(pose.c0, Is.EqualTo(new float3(-1, 0, 0)));
+            Assert.That(pose.c1, Is.EqualTo(new float3(0, 1, 0)));
+            Assert.That(pose.c2, Is.EqualTo(new float3(0, 0, 1)));
+            Assert.That(pose.c3, Is.EqualTo(new float3(1, 2, 3)));
+        }
+
         private static float3x4 Pose(float3 position) => new float3x4(new float3(1, 0, 0),
             new float3(0, 1, 0), new float3(0, 0, 1), position);
 

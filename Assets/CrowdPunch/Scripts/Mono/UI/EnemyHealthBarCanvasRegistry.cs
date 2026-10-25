@@ -43,10 +43,5 @@ namespace CrowdPunch.Mono.UI
         {
             activeCanvas?.EndFrame();
         }
-
-        public static void PublishShields(int displayId, Vector3 worldPosition, byte remaining)
-        {
-            activeCanvas?.PublishShields(displayId, worldPosition, remaining);
-        }
     }
 }

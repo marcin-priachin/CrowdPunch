@@ -13,6 +13,8 @@ namespace CrowdPunch.Authoring
         [Min(0f)] public float MaxLegAnimationSpeed = 2f;
         [HideInInspector] public float[] JogCycleDistances;
         public EnemyAnimationProfile Profile;
+        [Tooltip("Minimum remaining armor stages required to render this equipment. Zero keeps it visible.")]
+        [Range(0, 2)] public byte ArmorStagesRequired;
         [Tooltip("Sampled motion index for ground spawning; -1 when this model has no spawn clip.")]
         [Range(-1, EnemyAnimationSamples.MotionCount - 1)] public int SpawnMotion = -1;
         public bool RotateLaunchAroundOwner;

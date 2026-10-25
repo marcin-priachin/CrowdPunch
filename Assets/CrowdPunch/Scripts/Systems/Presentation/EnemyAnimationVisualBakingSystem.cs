@@ -15,8 +15,8 @@ namespace CrowdPunch.Systems.Presentation
         public void OnUpdate(ref SystemState state)
         {
             using var commands = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (animation, additional) in SystemAPI.Query<RefRO<EnemyAnimation>, DynamicBuffer<AdditionalEntitiesBakingData>>()
-                         .WithOptions(EntityQueryOptions.IncludePrefab | EntityQueryOptions.IncludeDisabledEntities))
+            foreach (var (animation, additional, animationEntity) in SystemAPI.Query<RefRO<EnemyAnimation>, DynamicBuffer<AdditionalEntitiesBakingData>>()
+                         .WithOptions(EntityQueryOptions.IncludePrefab | EntityQueryOptions.IncludeDisabledEntities).WithEntityAccess())
             {
                 bool chicken = SystemAPI.HasComponent<ChickenBoss>(animation.ValueRO.Owner);
                 bool rolling = SystemAPI.HasComponent<RollingBoss>(animation.ValueRO.Owner);
@@ -38,6 +38,8 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     Entity entity = child.Value;
                     if (!SystemAPI.HasComponent<RenderBounds>(entity)) continue;
+                    if (entity != animationEntity && SystemAPI.HasComponent<EnemyArmorVisual>(animationEntity))
+                        commands.AddComponent(entity, SystemAPI.GetComponent<EnemyArmorVisual>(animationEntity));
                     if (gatekeeper) commands.AddComponent(entity, new BossVisualOwner { Value = animation.ValueRO.Owner, Color = new float4(1) });
                     else if (dino) commands.AddComponent(entity, new DinoVisualOwner { Value = animation.ValueRO.Owner });
                     else if (rolling) commands.AddComponent(entity, new RollingVisualOwner { Value = animation.ValueRO.Owner });
@@ -47,6 +49,7 @@ namespace CrowdPunch.Systems.Presentation
                         commands.AddComponent<EnemyVisualDeformation>(entity);
                         commands.AddComponent(entity, new EnemyVisualOwner { Value = animation.ValueRO.Owner, UsesAtlas = 1,
                             AnimationDriven = (byte)(animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Goblin
+                                || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.GoblinArmored
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Dasher
                                 || animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Explosive ? 1 : 0) });
                         if (SystemAPI.HasComponent<SnakeHead>(animation.ValueRO.Owner))
