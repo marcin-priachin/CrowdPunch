@@ -28,6 +28,8 @@ namespace CrowdPunch.Mono.Player
         private Material particleMaterial, flashMaterial;
         private Transform poolRoot;
         private float flashRemaining, dashRemaining;
+        private Vector3 dashDirection;
+        private bool dashEndPending;
         private double nextCameraTime, nextExceptionalTime, nextDamageTime;
         private uint restart, observedPunch;
         private bool bound;
@@ -126,16 +128,19 @@ namespace CrowdPunch.Mono.Player
         private void OnDashStart()
         {
             if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended) return;
-            dashRemaining = 0f;
+            dashDirection = controller.DashDirection;
+            dashEndPending = false;
+            dashRemaining = settings.DashMovementInterval;
             if (cameraFeedback != null) cameraFeedback.Dashing = true;
-            particles.Show(CombatImpactKind.DashStart, bridge.transform.position, Vector3.up, .7f);
+            particles.Show(CombatImpactKind.DashStart, bridge.transform.position, -dashDirection, .7f);
         }
         private void OnDashEnd()
         {
             if (!isActiveAndEnabled) return;
             if (cameraFeedback != null) cameraFeedback.Dashing = false;
-            if (bridge.gameObject.activeInHierarchy && !FeedbackTimeController.IsSuspended)
-                particles.Show(CombatImpactKind.DashEnd, bridge.transform.position, Vector3.up, .4f);
+            // The controller ends its timer before applying the last displacement.
+            // Present the stop puff after movement/collision resolution in LateUpdate.
+            dashEndPending = bridge.gameObject.activeInHierarchy && !FeedbackTimeController.IsSuspended;
         }
         private void Update()
         {
@@ -150,20 +155,27 @@ namespace CrowdPunch.Mono.Player
             flashRemaining -= Time.unscaledDeltaTime;
             if (flashRemaining <= 0f || settings.ReduceFlashes || !bridge.gameObject.activeInHierarchy) flash.Clear();
             else flash.Show(settings.PlayerFlashColor, settings.PlayerFlashIntensity * flashRemaining / Mathf.Max(.001f, settings.FlashDuration));
-            if (controller != null && controller.IsDashing && Time.deltaTime > 0f)
+        }
+        private void LateUpdate()
+        {
+            if (!bound) return;
+            comicImpacts?.Tick(Time.unscaledDeltaTime, feedbackCamera);
+            if (bridge == null || !bridge.gameObject.activeInHierarchy || FeedbackTimeController.IsSuspended) return;
+            if (dashEndPending)
+            {
+                dashEndPending = false;
+                particles.Show(CombatImpactKind.DashEnd, bridge.transform.position, -dashDirection, .35f);
+            }
+            if (controller != null && controller.isActiveAndEnabled && controller.IsDashing && Time.deltaTime > 0f)
             {
                 dashRemaining -= Time.deltaTime;
                 if (dashRemaining <= 0f)
                 {
                     dashRemaining = settings.DashMovementInterval;
                     particles.Show(CombatImpactKind.DashMove, bridge.transform.position,
-                        -controller.LocomotionVelocity.normalized, .3f);
+                        -dashDirection, .35f);
                 }
             }
-        }
-        private void LateUpdate()
-        {
-            if (bound) comicImpacts?.Tick(Time.unscaledDeltaTime, feedbackCamera);
         }
         public void ResetFeedback()
         {
@@ -171,6 +183,8 @@ namespace CrowdPunch.Mono.Player
             if (explosions == null && bridge != null) explosions = bridge.GetComponent<ExplosionFeedback>();
             explosions?.Clear();
             flashRemaining = dashRemaining = 0f;
+            dashEndPending = false;
+            dashDirection = Vector3.zero;
             nextCameraTime = nextExceptionalTime = nextDamageTime = 0;
             particles?.Clear(); comicImpacts?.Clear(); trails?.Clear(); dasherTelegraphs?.Clear(); flash?.Clear();
             if (cameraFeedback != null) cameraFeedback.ResetFeedback();

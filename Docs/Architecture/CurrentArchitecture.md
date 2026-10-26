@@ -1,5 +1,30 @@
 # Crowd Punch â€” Current Architecture
 
+## Player Dash Accents (2026-10-26, PLAYER-002/005, VISION-005/006)
+
+`CombatFeedback` uses the existing controller dash events and bounded `ImpactParticlePool`
+for a backward-facing takeoff fan, short white speed streaks with sparse dust during travel,
+and a smaller stopping puff. It caches `PlayerController.DashDirection` at takeoff; presentation
+does not infer direction from facing or the previous frame's locomotion velocity.
+Movement accents and the deferred end accent run in `LateUpdate`, after the player's resolved
+movement. The end event occurs before the controller's final displacement, so deferring the
+puff places it at the actual endpoint. Reset, suspension and disable clear the pending accent
+along with the existing pools. Effects remain finite and use the existing unscaled particle
+clock; they introduce no gameplay writes or crowd queries.
+
+`PlayerDashEffectsBuilder` updates the three existing dash prefabs in place through
+**Crowd Punch > Player > Rebuild Dash Effects**. It reuses Cartoon FX's `cfxr smoke cloud x4 ab`
+material/atlas and the project `CombatParticles` material. Dust expands and slows with eased
+curves; streaks shrink and fade within 200 ms. Start/end dust lasts at most 340/270 ms.
+`CombatFeedbackSettings.DashMovementInterval` is 45 ms; each effect is still prewarmed eight
+times, with at most 16 particles per system. Prefabs remain directly editable. Audio language
+and broader camera design remain dependencies of OQ-019/OQ-016.
+
+Verification: the C# build passed with the existing package/deprecation warnings, and Unity
+compiled the builder. Live Chapter One checks showed backward-facing wakes during forward,
+backward and sideways dashes, then complete particle expiry. A dash-punch check preserved
+the committed heading, and the stopping puff matched the resolved player endpoint.
+
 ## Comic Impact Accents (2026-10-26, VISION-004/005/006, PLAYER-004/005/009, COMBAT-001/003/012, INFO-004)
 
 `CombatFeedback` now layers `ComicImpactPool` over its existing confirmed-punch,
