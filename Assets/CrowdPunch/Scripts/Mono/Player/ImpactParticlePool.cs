@@ -56,6 +56,12 @@ namespace CrowdPunch.Mono.Player
                     config.playOnAwake = false;
                     config.stopAction = ParticleSystemStopAction.None;
                     config.loop = false;
+                    // Accents must bloom and expire while a confirmed impact freezes gameplay.
+                    foreach (var child in effect.GetComponentsInChildren<ParticleSystem>(true))
+                    {
+                        var childMain = child.main;
+                        childMain.useUnscaledTime = true;
+                    }
                     particles[kind, slot] = effect;
                 }
             }

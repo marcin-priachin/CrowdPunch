@@ -1,6 +1,7 @@
 using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Player;
+using CrowdPunch.Mono.Camera;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Presentation;
 using NUnit.Framework;
@@ -14,6 +15,81 @@ namespace CrowdPunch.Tests
 {
     public sealed class CombatFeedbackTests
     {
+        [Test]
+        public void Vision005ComicCrowdSaturationKeepsPlayerAccentAndExpiresDuringFreeze()
+        {
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            settings.ParticlePoolSizePerEffect = 1;
+            var go = new GameObject("comic pool test");
+            var view = new GameObject("comic camera test").AddComponent<UnityEngine.Camera>();
+            var material = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            float scale = Time.timeScale;
+            ComicImpactPool pool = null;
+            try
+            {
+                pool = new ComicImpactPool(go.transform, settings, material);
+                for (int i = 0; i < 200; i++)
+                    pool.Show(CombatImpactKind.EnemyCollision, Vector3.zero, Vector3.right, 1);
+                Assert.That(pool.ActiveCount, Is.EqualTo(pool.Capacity));
+                pool.Show(CombatImpactKind.PlayerDamage, Vector3.zero, Vector3.right, 1);
+                pool.Tick(0, view);
+                Assert.That(go.GetComponentsInChildren<MeshRenderer>().Length, Is.EqualTo(1));
+                var mesh = go.GetComponentInChildren<MeshFilter>().sharedMesh;
+                Assert.That(System.Array.Exists(mesh.colors, c => c.r > .95f && c.g < .3f), Is.True,
+                    "Saturation must not hide the coral player-damage accent.");
+                Assert.That(mesh.vertexCount, Is.LessThanOrEqualTo(768 * pool.Capacity));
+                Time.timeScale = 0;
+                pool.Tick(.4f, view);
+                Assert.That(pool.ActiveCount, Is.Zero);
+                Assert.That(go.GetComponentInChildren<MeshRenderer>().enabled, Is.False);
+                pool.Show(CombatImpactKind.Punch, Vector3.one, Vector3.forward, 1);
+                pool.Tick(.02f, view);
+                Assert.That(pool.ActiveCount, Is.EqualTo(1));
+                pool.Clear();
+                Assert.That(mesh.vertexCount, Is.Zero);
+            }
+            finally
+            {
+                pool?.Dispose();
+                Object.DestroyImmediate(go); Object.DestroyImmediate(view.gameObject);
+                Object.DestroyImmediate(material); Object.DestroyImmediate(settings);
+                Time.timeScale = scale;
+            }
+        }
+
+        [Test]
+        public void Player004CameraSpringIsBoundedRestoresExactlyAndNeverRotatesAim()
+        {
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            var go = new GameObject("camera recoil test");
+            go.AddComponent<UnityEngine.Camera>();
+            var feedback = go.AddComponent<CombatCameraFeedback>();
+            go.transform.SetPositionAndRotation(new Vector3(3, 7, -4), Quaternion.Euler(35, 20, 0));
+            Vector3 baseline = go.transform.position;
+            Quaternion aim = go.transform.rotation;
+            try
+            {
+                feedback.Configure(settings);
+                for (int i = 0; i < 100; i++) feedback.Impulse(Vector3.right, .3f, 1);
+                for (int i = 0; i < 120; i++)
+                {
+                    feedback.RemoveOffset(); feedback.Advance(1f / 60f);
+                    Assert.That(Vector3.Distance(go.transform.position, baseline),
+                        Is.LessThanOrEqualTo(settings.MaximumCameraOffset * settings.CameraMotionScale + .00001f));
+                    Assert.That(go.transform.rotation, Is.EqualTo(aim));
+                }
+                Assert.That(Vector3.Distance(go.transform.position, baseline), Is.LessThan(.00001f));
+                feedback.RemoveOffset();
+                settings.CameraMotionScale = 0;
+                feedback.Impulse(Vector3.up, .3f, 1);
+                feedback.Advance(.02f);
+                Assert.That(go.transform.position, Is.EqualTo(baseline));
+                feedback.ResetFeedback();
+                Assert.That(go.transform.position, Is.EqualTo(baseline));
+            }
+            finally { Object.DestroyImmediate(go); Object.DestroyImmediate(settings); }
+        }
+
         [Test]
         public void Player009FreezeAndExceptionalSlowMotionExpireIndependently()
         {

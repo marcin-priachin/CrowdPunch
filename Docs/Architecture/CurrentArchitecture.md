@@ -1,5 +1,56 @@
 # Crowd Punch â€” Current Architecture
 
+## Comic Impact Accents (2026-10-26, VISION-004/005/006, PLAYER-004/005/009, COMBAT-001/003/012, INFO-004)
+
+`CombatFeedback` now layers `ComicImpactPool` over its existing confirmed-punch,
+accepted-player-damage and launched-body-contact events. Gold punch bursts, smaller cyan
+collision bursts and larger coral player-hit bursts combine an outlined starburst,
+expanding ring and tumbling stars. Their 320 ms envelopes overshoot and ease away on
+unscaled time. Volume-punch accents sit 0.65 m above the reported enemy ground origin;
+collision accents use the existing solver contact point. This does not change contact
+geometry, damage, launch momentum, authored character poses or model proportions.
+
+The pool holds three times `ParticlePoolSizePerEffect` slots (24 with the saved defaults,
+clamped to 3-48), renders all live accents through one dynamic vertex-color mesh, and
+reuses preallocated vertex/index arrays and cached outlines. Saturation drops background
+accents; player damage and punches can replace a collision slot. The existing ECS bridge
+still limits emitted impact messages per frame. No enemy entity references cross into
+the Mono endpoint. `CombatFeedback.LateUpdate` runs after camera follow and rebuilds
+billboards from copied world contacts. Reset/transition clears the mesh; disable destroys
+its generated resources and re-enable reconstructs them. Existing particle pool children
+also use unscaled time so impact particles bloom and expire during hit-stop.
+
+`CombatCameraFeedback` uses a damped directional spring and additive, decaying trauma
+with squared shake strength. The existing remove/apply offset boundary still keeps
+feedback out of camera follow history and never rotates aim. Resources settings now use
+a 55 ms confirmed-punch freeze, 65 ms accepted-damage freeze, 0.22 m punch kick and
+0.075 m maximum trauma shake. Damage accents have a 250 ms real-time retrigger gate;
+repeated hazard callbacks still apply health changes but cannot extend the freeze.
+Ordinary collisions retain their existing camera distance/strength/cadence gates, and
+exceptional chains retain their existing slow-motion gate. The shared time controller
+continues to own pause/transition restoration and does not change the fixed timestep.
+
+`CombatFeedbackSettings.asset` adds `ComicImpactScale` (1; zero disables the new layer),
+`CameraMotionScale` (0.75; zero disables impact camera displacement), and `ReduceFlashes`
+(false; disables body hit overlays/flashes and uses saturated burst centres). These are
+Inspector controls, without additional HUD. Animation-driven enemies still bypass their
+existing procedural body deformation and flash. OQ-019's audio language remains unresolved;
+this pass adds no audio. OQ-001's target hardware/crowd performance remains unresolved.
+
+Verification: Unity compilation and `dotnet build Assembly-CSharp.csproj --no-restore`
+passed with no errors; existing package conflicts/legacy warnings remain. All 11
+`CombatFeedbackTests` passed, including saturation/player-accent priority, expiry at
+timeScale zero, exact reset, bounded camera restoration and unchanged aiming rotation.
+In a temporary legacy Play Mode preview, one arranged seven-body punch emitted one punch
+accent and four collision accents, reaching depth three; timeScale reached zero and
+returned to one. An accepted damage event followed by 30 immediate callbacks produced one
+accent and an unchanged freeze deadline; an eligible punch queued during that freeze.
+Rendered gameplay-camera previews of all three accent types were inspected. A synthetic
+200-request saturation check held 24 accents and one renderer. The final cached-outline
+mesh update measured 1.53 ms mean / 1.78 ms maximum over 100 warmed Editor samples
+(13,536 vertices); this excludes GPU rendering, crowd physics and standalone-build cost.
+Temporary Play Mode state was discarded and preview assets were removed from Assets.
+
 ## Slime Snake Presentation (2026-10-25, SNAKE-001/004/006, INFO-004, VISION-006)
 
 `EnemySnakePrefabBuilder` instantiates the supplied Slime Variant under the existing Snake

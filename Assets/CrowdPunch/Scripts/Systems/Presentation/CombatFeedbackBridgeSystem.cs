@@ -55,7 +55,7 @@ namespace CrowdPunch.Systems.Presentation
                         f.Intensity = intensity;
                         f.VisualDirection = f.Direction;
                         f.Squash = settings.SquashAmount;
-                        f.Flash = settings.EnemyFlashIntensity;
+                        f.Flash = settings.ReduceFlashes ? 0f : settings.EnemyFlashIntensity;
                         f.VisualDuration = settings.SquashDuration;
                         f.FlashDuration = settings.FlashDuration;
                         f.VisualRemaining = intensity >= settings.DeformationThreshold ? f.VisualDuration : 0f;

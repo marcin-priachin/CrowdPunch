@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 504e1d2676985dd42b7442c956ed60cb, type: 3}
   m_Name: CombatFeedbackSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.CombatFeedbackSettings
-  PunchHitStop: 0.045
+  PunchHitStop: 0.055
+  DamageHitStop: 0.065
   ExceptionalSlowMotion: 1
   ExceptionalChainDepth: 4
   SlowMotionScale: 0.22
@@ -26,16 +27,19 @@ MonoBehaviour:
   SingleImpactIntensity: 0.7
   ChainGainPerDepth: 0.18
   MaximumChainMultiplier: 1.8
-  PunchKick: 0.17
+  PunchKick: 0.22
   DamageKick: 0.28
   CollisionKick: 0.085
   ExceptionalKick: 0.22
-  Shake: 0.045
+  Shake: 0.075
   CameraRecovery: 0.1
   MaximumCameraOffset: 0.34
   CollisionCameraThreshold: 0.55
   CollisionCameraInterval: 0.22
   CameraImpactRange: 25
+  CameraMotionScale: 0.75
+  ReduceFlashes: 0
+  ComicImpactScale: 1
   PunchParticles: {fileID: 1183239090233884171, guid: 2b71e9b1a27c79043a4b3116d1042eb7, type: 3}
   EnemyParticles: {fileID: 7021618706063733172, guid: 1299e3167ca70d348857d9cb366fb100, type: 3}
   PlayerDamageParticles: {fileID: 2807005332899504765, guid: 7ce3558794005854c95b0312bc9358b9, type: 3}

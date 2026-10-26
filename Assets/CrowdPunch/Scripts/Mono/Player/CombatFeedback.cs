@@ -8,6 +8,7 @@ namespace CrowdPunch.Mono.Player
 {
     /// <summary>Scene presentation endpoint. Owns bounded pools and consumes bridge/player events only.</summary>
     [DisallowMultipleComponent]
+    [DefaultExecutionOrder(100)]
     public sealed class CombatFeedback : MonoBehaviour
     {
         private PlayerEcsBridge bridge;
@@ -18,6 +19,8 @@ namespace CrowdPunch.Mono.Player
         private CombatFeedbackSettings settings;
         private CombatCameraFeedback cameraFeedback;
         private ImpactParticlePool particles;
+        private ComicImpactPool comicImpacts;
+        private UnityEngine.Camera feedbackCamera;
         private DasherTelegraphParticlePool dasherTelegraphs;
         private LaunchedTrailPool trails;
         private PlayerDamageFlash flash;
@@ -25,7 +28,7 @@ namespace CrowdPunch.Mono.Player
         private Material particleMaterial, flashMaterial;
         private Transform poolRoot;
         private float flashRemaining, dashRemaining;
-        private double nextCameraTime, nextExceptionalTime;
+        private double nextCameraTime, nextExceptionalTime, nextDamageTime;
         private uint restart, observedPunch;
         private bool bound;
 
@@ -40,6 +43,7 @@ namespace CrowdPunch.Mono.Player
             punch = player.GetComponent<PlayerPunch>();
             punchAnimation = player.GetComponentInChildren<PlayerPunchAnimation>(true);
             var camera = UnityEngine.Camera.main;
+            feedbackCamera = camera;
             if (camera != null)
             {
                 cameraFeedback = camera.GetComponent<CombatCameraFeedback>();
@@ -51,6 +55,7 @@ namespace CrowdPunch.Mono.Player
             particleMaterial = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
             flashMaterial = new Material(Resources.Load<Shader>("Shaders/ExplosionFeedback"));
             particles = new ImpactParticlePool(poolRoot, settings, particleMaterial);
+            comicImpacts = new ComicImpactPool(poolRoot, settings, particleMaterial);
             dasherTelegraphs = new DasherTelegraphParticlePool(poolRoot, settings, particleMaterial);
             trails = new LaunchedTrailPool(poolRoot, settings, particleMaterial);
             flash = new PlayerDamageFlash(player.transform, flashMaterial);
@@ -81,6 +86,9 @@ namespace CrowdPunch.Mono.Player
         {
             if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
             particles.Show(message.Kind, message.Position, message.Direction, message.Intensity);
+            // Volume punches report the enemy's ground-plane origin, not a surface manifold.
+            Vector3 accentPosition = message.Position + (message.Kind == CombatImpactKind.Punch ? Vector3.up * .65f : Vector3.zero);
+            comicImpacts.Show(message.Kind, accentPosition, message.Direction, message.Intensity);
             if (message.Kind != CombatImpactKind.EnemyCollision || cameraFeedback == null) return;
             float distance = Vector3.Distance(message.Position, bridge.transform.position);
             float attenuation = Mathf.Clamp01(1f - distance / Mathf.Max(1f, settings.CameraImpactRange));
@@ -99,11 +107,17 @@ namespace CrowdPunch.Mono.Player
         }
         private void OnDamage(Vector3 impulse)
         {
-            if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended) return;
+            if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
             Vector3 direction = impulse.sqrMagnitude > .001f ? impulse.normalized : -bridge.transform.forward;
-            particles.Show(CombatImpactKind.PlayerDamage, bridge.transform.position - direction * bridge.Radius, -direction, 1f);
+            // Repeated hazard ticks still deal damage; their strongest feedback cannot prolong a freeze.
+            if (Time.unscaledTimeAsDouble < nextDamageTime) return;
+            nextDamageTime = Time.unscaledTimeAsDouble + .25;
+            Vector3 contact = bridge.transform.position - direction * bridge.Radius + Vector3.up * .65f;
+            particles.Show(CombatImpactKind.PlayerDamage, contact, -direction, 1f);
+            comicImpacts.Show(CombatImpactKind.PlayerDamage, contact, direction, 1f);
             cameraFeedback?.Impulse(direction, settings.DamageKick, 1.4f);
-            if (bridge.gameObject.activeInHierarchy)
+            FeedbackTimeController.Freeze(settings.DamageHitStop);
+            if (!settings.ReduceFlashes)
             {
                 flashRemaining = settings.FlashDuration;
                 flash.Show(settings.PlayerFlashColor, settings.PlayerFlashIntensity);
@@ -134,7 +148,7 @@ namespace CrowdPunch.Mono.Player
             }
             if (cameraFeedback != null) cameraFeedback.Dashing = controller != null && controller.isActiveAndEnabled && controller.IsDashing;
             flashRemaining -= Time.unscaledDeltaTime;
-            if (flashRemaining <= 0f || !bridge.gameObject.activeInHierarchy) flash.Clear();
+            if (flashRemaining <= 0f || settings.ReduceFlashes || !bridge.gameObject.activeInHierarchy) flash.Clear();
             else flash.Show(settings.PlayerFlashColor, settings.PlayerFlashIntensity * flashRemaining / Mathf.Max(.001f, settings.FlashDuration));
             if (controller != null && controller.IsDashing && Time.deltaTime > 0f)
             {
@@ -147,14 +161,18 @@ namespace CrowdPunch.Mono.Player
                 }
             }
         }
+        private void LateUpdate()
+        {
+            if (bound) comicImpacts?.Tick(Time.unscaledDeltaTime, feedbackCamera);
+        }
         public void ResetFeedback()
         {
             if (bridge != null) observedPunch = bridge.PunchSequence;
             if (explosions == null && bridge != null) explosions = bridge.GetComponent<ExplosionFeedback>();
             explosions?.Clear();
             flashRemaining = dashRemaining = 0f;
-            nextCameraTime = nextExceptionalTime = 0;
-            particles?.Clear(); trails?.Clear(); dasherTelegraphs?.Clear(); flash?.Clear();
+            nextCameraTime = nextExceptionalTime = nextDamageTime = 0;
+            particles?.Clear(); comicImpacts?.Clear(); trails?.Clear(); dasherTelegraphs?.Clear(); flash?.Clear();
             if (cameraFeedback != null) cameraFeedback.ResetFeedback();
             FeedbackTimeController.CancelEffects();
         }
@@ -169,12 +187,18 @@ namespace CrowdPunch.Mono.Player
                 if (flashMaterial != null) Destroy(flashMaterial);
                 Configure(bridge, settings);
             }
-            else if (bound && bridge != null) bridge.FeedbackSettings = settings;
+            else if (bound && bridge != null)
+            {
+                bridge.FeedbackSettings = settings;
+                if (comicImpacts == null) comicImpacts = new ComicImpactPool(poolRoot, settings, particleMaterial);
+            }
         }
         private void OnDisable()
         {
             if (bridge != null) bridge.FeedbackSettings = null;
             ResetFeedback();
+            comicImpacts?.Dispose();
+            comicImpacts = null;
         }
         private void OnDestroy()
         {
@@ -197,6 +221,7 @@ namespace CrowdPunch.Mono.Player
             if (punch != null) punch.PunchStateReset -= ResetFeedback;
             if (particleMaterial != null) Destroy(particleMaterial);
             if (flashMaterial != null) Destroy(flashMaterial);
+            comicImpacts?.Dispose();
             if (poolRoot != null) Destroy(poolRoot.gameObject);
         }
     }
