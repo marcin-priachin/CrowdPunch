@@ -223,6 +223,7 @@ namespace CrowdPunch.Mono.Player
             if (flashMaterial != null) Destroy(flashMaterial);
             comicImpacts?.Dispose();
             if (poolRoot != null) Destroy(poolRoot.gameObject);
+            trails?.Dispose();
         }
     }
 }

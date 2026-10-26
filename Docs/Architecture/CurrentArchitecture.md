@@ -3476,3 +3476,36 @@ existing Cartoon FX explosion. ImpactStoneMesh merges the source rock's two subm
 Unity particle meshes require one. External source assets are preserved. Regenerate owned assets
 with `Crowd Punch > Art Direction > Apply Combat VFX`; normal tuning belongs in the two Resources
 assets. See `Docs/Verification/CombatVfx.md` for performed checks and remaining limitations.
+
+## Model-relative launched trails (2026-10-26)
+
+VISION-005/006: launched trails now use the visible flying pose rather than the physics root
+or broad animation culling envelope. EnemyAnimationBaker stores at most 96 weighted skin probes
+per animated renderer in EnemyTrailVisual. EnemyTrailBoundsSystem runs after animation/grounding
+and before CombatFeedbackBridgeSystem, measuring only the roots within MaximumTrails (48 by
+default). Its Burst job reads the current skin matrices and model root to find world altitude,
+width across horizontal flight, height and length along flight. Mesh pieces merge per owner.
+Primitive/older visuals fall back to their transformed render bounds.
+
+The bridge sends centre and dimensions as copied values; MonoBehaviours retain no entities.
+LaunchedTrailPool uses TrailWidthInModels (default 1) and TrailLengthInModels (default 2.5),
+converting the target spatial length to lifetime using current speed. Length is approximate
+while speed changes because TrailRenderer retains timed history. LaunchStreak's shader draws
+five parallel off-white strokes with a soft Gaussian opacity profile and no outlines, following
+the supplied Asterix references and the subsequent request for blurrier lines.
+The TrailRenderer uses a constant width curve and equal head/tail opacity: neither stroke width
+nor spacing tapers along the path. Mitered joins avoid stripe distortion from rounded corner fans.
+The shader's existing _Ribbon flag now selects these speed lines; other particle materials keep
+their textured sprite paths. Re-punch, release and reset still clear history.
+The change does not alter model transforms, animation, launch physics or the pool capacity.
+
+`CombatFeedbackSettings` exposes line opacity, count, stroke thickness (fraction of model-width
+envelope), blur, outer-line span and brightness. Separate AnimationCurves control opacity,
+thickness, blur and spacing along the trail, with a colour/alpha gradient as another multiplier.
+All profile axes use 0 = oldest tail and 1 = enemy; the shader reverses Unity's head-first U.
+Flat profiles and a white gradient retain the default uniform soft white lines.
+`LaunchTrailStyle` samples the profiles into one reusable 128x2 RGBAHalf texture per pool and
+applies scalar controls through MaterialPropertyBlocks. OnValidate marks settings edits;
+the pool uploads changed profiles on its next Begin, including during Play mode. Unchanged
+frames perform a revision comparison. Code-driven edits call RefreshTrailStyle(). The pool
+owns and disposes its texture; no shared material asset is mutated during play.

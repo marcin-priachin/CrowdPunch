@@ -16,6 +16,140 @@ namespace CrowdPunch.Tests
     public sealed class CombatFeedbackTests
     {
         [Test]
+        public void Vision005TrailStyleEditsUpdateActiveLinesAndLengthProfilesWithoutReplacingMaterials()
+        {
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            settings.MaximumTrails = 1;
+            var go = new GameObject("Trail style live edit test");
+            var fallback = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            using var pool = new LaunchedTrailPool(go.transform, settings, fallback);
+            try
+            {
+                pool.Begin(); pool.Show(1, 1, Vector3.zero, 10, 1, Vector3.one); pool.End();
+                var trail = go.GetComponentInChildren<TrailRenderer>();
+                var material = trail.sharedMaterial;
+                var block = new MaterialPropertyBlock();
+                trail.GetPropertyBlock(block);
+                var originalProfiles = block.GetTexture("_LineProfiles");
+                settings.TrailLineOpacity = .25f;
+                settings.TrailLineCount = 3;
+                settings.TrailLineWidth = .08f;
+                settings.TrailLineBlur = .5f;
+                settings.TrailLineSpacing = .7f;
+                settings.TrailLineBrightness = 1.5f;
+                settings.TrailOpacityAlongLength = AnimationCurve.Linear(0, 0, 1, 1);
+                settings.TrailLineWidthAlongLength = AnimationCurve.Linear(0, .5f, 1, 1);
+                settings.TrailLineBlurAlongLength = AnimationCurve.Linear(0, .25f, 1, 1);
+                settings.TrailLineSpacingAlongLength = AnimationCurve.Linear(0, .5f, 1, 1);
+                settings.TrailTintAlongLength = new Gradient
+                {
+                    colorKeys = new[] { new GradientColorKey(Color.red, 0), new GradientColorKey(Color.blue, 1) },
+                    alphaKeys = new[] { new GradientAlphaKey(.5f, 0), new GradientAlphaKey(1, 1) }
+                };
+                settings.RefreshTrailStyle();
+                pool.Begin(); pool.Show(1, 1, Vector3.one, 10, 1, Vector3.one); pool.End();
+                trail.GetPropertyBlock(block);
+                Assert.That(block.GetFloat("_LineOpacity"), Is.EqualTo(.25f));
+                Assert.That(block.GetVector("_LineParameters"), Is.EqualTo(new Vector4(3, .08f, .5f, .7f)));
+                Assert.That(block.GetFloat("_LineBrightness"), Is.EqualTo(1.5f));
+                var profiles = (Texture2D)block.GetTexture("_LineProfiles");
+                Assert.That(profiles, Is.SameAs(originalProfiles), "Live edits must reuse the shared profile texture.");
+                Assert.That(trail.sharedMaterial, Is.SameAs(material));
+                Color tail = profiles.GetPixel(0, 0), head = profiles.GetPixel(profiles.width - 1, 0);
+                Assert.That(tail.r, Is.EqualTo(.5f).Within(.002f));
+                Assert.That(tail.g, Is.Zero); Assert.That(head.g, Is.EqualTo(1));
+                Assert.That(tail.b, Is.EqualTo(.25f).Within(.002f));
+                Assert.That(tail.a, Is.EqualTo(.5f).Within(.002f));
+                Assert.That(profiles.GetPixel(0, 1).r, Is.EqualTo(1));
+                Assert.That(profiles.GetPixel(profiles.width - 1, 1).b, Is.EqualTo(1));
+            }
+            finally { Object.DestroyImmediate(go); Object.DestroyImmediate(fallback); Object.DestroyImmediate(settings); }
+        }
+
+        [Test]
+        public void Combat001LaunchTrailUsesVisibleModelAltitudeAndSizeInsteadOfPhysicsRoot()
+        {
+            using var world = new World("Launch trail model bounds");
+            var em = world.EntityManager;
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            var go = new GameObject("Trail bridge test");
+            var bridge = go.AddComponent<PlayerEcsBridge>();
+            bridge.FeedbackSettings = settings;
+            PlayerBridgeRegistry.TryGetBridge(out var previousBridge);
+            PlayerBridgeRegistry.Register(bridge);
+            var fallback = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            using var pool = new LaunchedTrailPool(go.transform, settings, fallback);
+            bridge.TrailReceived += pool.Show;
+            try
+            {
+                var enemy = em.CreateEntity(typeof(EnemyImpactFeedback), typeof(EnemyLaunchState),
+                    typeof(LocalTransform), typeof(Unity.Physics.PhysicsVelocity));
+                em.SetComponentData(enemy, LocalTransform.FromPosition(new float3(3, .5f, 7)));
+                em.SetComponentData(enemy, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+                em.SetComponentData(enemy, new Unity.Physics.PhysicsVelocity { Linear = new float3(0, 0, 10) });
+                var visual = em.CreateEntity(typeof(EnemyVisualOwner), typeof(RenderBounds), typeof(LocalToWorld));
+                em.SetComponentData(visual, new EnemyVisualOwner { Value = enemy });
+                em.SetComponentData(visual, new RenderBounds { Value = new AABB
+                    { Center = new float3(0, 2, 0), Extents = new float3(1.5f, 2, .5f) } });
+                em.SetComponentData(visual, new LocalToWorld { Value = float4x4.Translate(new float3(3, 5, 7)) });
+                var system = world.GetOrCreateSystem<CombatFeedbackBridgeSystem>();
+                system.Update(world.Unmanaged);
+                var trail = go.GetComponentInChildren<TrailRenderer>();
+                Assert.That(trail.transform.position, Is.EqualTo(new Vector3(3, 7, 7)),
+                    "A floating model's trail must follow its visible centre, not the capsule centre.");
+                Assert.That(trail.startWidth, Is.EqualTo(3).Within(.001f));
+                var view = new GameObject("Trail width test camera").AddComponent<UnityEngine.Camera>();
+                var mesh = new Mesh();
+                try
+                {
+                    view.transform.position = new Vector3(10, 10, -10);
+                    view.transform.LookAt(new Vector3(0, 7, 9));
+                    trail.transform.position = new Vector3(0, 7, 7);
+                    trail.Clear();
+                    trail.AddPositions(new[] { new Vector3(0, 7, 7), new Vector3(0, 7, 9), new Vector3(0, 7, 11) });
+                    trail.transform.position = new Vector3(0, 7, 11);
+                    trail.BakeMesh(mesh, view, true);
+                    var points = mesh.vertices;
+                    Assert.That(points.Length, Is.GreaterThanOrEqualTo(6));
+                    Assert.That(mesh.uv[0].x, Is.Zero.Within(.001f),
+                        "Unity's newest/head vertices use U=0; shader profiles reverse U to expose tail=0, enemy=1.");
+                    for (int i = 0; i < points.Length; i += 2)
+                        Assert.That(Vector3.Distance(points[i], points[i + 1]), Is.EqualTo(3).Within(.01f),
+                            "Parallel cartoon strokes must retain the same bundle width at head, middle and tail.");
+                    Assert.That(trail.endColor.a, Is.EqualTo(trail.startColor.a));
+                }
+                finally { Object.DestroyImmediate(view.gameObject); Object.DestroyImmediate(mesh); }
+                Assert.That(trail.time * 10, Is.EqualTo(10).Within(.001f),
+                    "At steady speed the ribbon should span two and a half model lengths.");
+                em.SetComponentData(enemy, new Unity.Physics.PhysicsVelocity { Linear = new float3(0, 0, 20) });
+                system.Update(world.Unmanaged);
+                Assert.That(trail.time * 20, Is.EqualTo(10).Within(.001f),
+                    "Faster launches should preserve the same spatial trail length.");
+                Assert.That(trail.startWidth, Is.EqualTo(3).Within(.001f));
+                using var builder = new BlobBuilder(Unity.Collections.Allocator.Temp);
+                ref var probes = ref builder.ConstructRoot<EnemyGroundingMesh>();
+                var vertices = builder.Allocate(ref probes.Vertices, 2);
+                vertices[0] = new EnemyGroundingVertex { Position = new float3(-1), Weights = new float4(1, 0, 0, 0) };
+                vertices[1] = new EnemyGroundingVertex { Position = new float3(1), Weights = new float4(1, 0, 0, 0) };
+                using var blob = builder.CreateBlobAssetReference<EnemyGroundingMesh>(Unity.Collections.Allocator.Persistent);
+                em.AddComponentData(visual, new EnemyTrailVisual { Owner = enemy, Root = visual, Probes = blob });
+                em.AddBuffer<Unity.Deformations.SkinMatrix>(visual).Add(new Unity.Deformations.SkinMatrix
+                    { Value = new float3x4(new float3(1, 0, 0), new float3(0, 1, 0), new float3(0, 0, 1), new float3(0, 3, 0)) });
+                world.GetOrCreateSystem<EnemyTrailBoundsSystem>().Update(world.Unmanaged);
+                system.Update(world.Unmanaged);
+                Assert.That(trail.transform.position, Is.EqualTo(new Vector3(3, 8, 7)),
+                    "The current skinned pose overrides the larger authored culling bounds.");
+                Assert.That(trail.startWidth, Is.EqualTo(2).Within(.001f));
+            }
+            finally
+            {
+                bridge.TrailReceived -= pool.Show;
+                PlayerBridgeRegistry.Register(previousBridge);
+                Object.DestroyImmediate(go); Object.DestroyImmediate(fallback); Object.DestroyImmediate(settings);
+            }
+        }
+
+        [Test]
         public void Vision005ComicCrowdSaturationKeepsPlayerAccentAndExpiresDuringFreeze()
         {
             var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
@@ -246,7 +380,7 @@ namespace CrowdPunch.Tests
             var material = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
             try
             {
-                var pool = new LaunchedTrailPool(go.transform, settings, material);
+                using var pool = new LaunchedTrailPool(go.transform, settings, material);
                 pool.Begin(); pool.Show(1, 1, Vector3.zero, 20, 1); pool.End();
                 var trail = go.GetComponentInChildren<TrailRenderer>();
                 Assert.That(trail.emitting, Is.True);

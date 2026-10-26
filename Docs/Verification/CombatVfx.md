@@ -58,6 +58,61 @@ Local, ignored inspection artifacts: `Temp/CombatVfx-preview.png`,
 `Temp/VfxValidation/Vfx-final-stage.png` and `Temp/CombatVfx-performance.txt`.
 The captured stage uses a synthetic floor/camera, so lighting differs from authored levels.
 
+## Launched trail correction - 2026-10-26
+
+The launch ribbon is now approximately one visible model width and 2.5 model lengths,
+centred at the current animated pose's world altitude. Its filled, soft-edged mask and 0.95
+head opacity replace the narrow eroded streak. Width is measured across horizontal flight;
+length uses the largest posed model dimension. Speed determines the trail lifetime, so
+spatial length is approximate during acceleration and deceleration.
+
+Unity compilation and all 12 CombatFeedbackTests pass, including the new integration check
+for raised model centres, speed-independent target length, and current skin pose overriding
+inflated culling bounds. Inspected an actual launched Goblin model moving through the gameplay
+camera in campaign 03, with simulation temporarily frozen and an Editor-only orbit driver.
+The visible ribbon followed the flying body at model width; example measurement was 1.41 m
+wide and approximately 5.12 m long. Temporary objects/drivers were discarded on leaving Play mode.
+
+An initial parallel-job stress measurement exposed excessive worker wait overhead. The final
+job runs synchronously under Burst and measures only the existing trail budget. Synthetic
+250 launched roots / 750 mesh pieces, 20 warmups and 120 completed updates: pose measurement
+0.5518 ms/update, bridge aggregation 1.7063 ms/update, zero calling-thread managed allocations.
+Exactly 144 mesh pieces belonging to 48 roots were measured. The bridge timing excludes Mono
+renderer callbacks; these are Editor CPU measurements, not standalone frame-rate acceptance.
+Raw local report: `Temp/LaunchTrail-performance.txt`.
+
+### Parallel cartoon line revision
+
+The supplied Asterix references supersede the filled ribbon styling. Launch trails now draw
+five softly blurred white speed lines without outlines, with constant stroke thickness and spacing along their full
+length. A constant TrailRenderer width curve and equal head/tail opacity remove taper and fade.
+Model-relative dimensions, posed altitude, lifetime calculation and pool budgets are retained.
+
+Unity compilation and all 12 CombatFeedbackTests pass. The integration test bakes actual trail
+geometry and checks equal width at head, middle and tail, in addition to the existing altitude
+and length assertions. Rendered and inspected a curved trail made by the production pool,
+using its baked mesh in a Unity preview scene. Shader compilation reports no messages.
+The ignored local inspection image is `Temp/ParallelLaunchLines.png`. No gameplay scene was saved.
+
+### Exposed speed line controls
+
+Select `Resources/CombatFeedbackSettings.asset`, then use **Launch speed lines** and
+**Speed line profiles (0 = oldest tail, 1 = enemy)**. Overall model width/length remain under
+Launched trails. Opacity 0 is transparent and 1 is opaque. Stroke width is a fraction of the
+full model-width envelope; blur runs from 0 (crisp) to 1 (Gaussian). Spacing is the span
+between outer line centres. Colour alpha, line opacity, opacity curve and gradient alpha
+multiply together. Width, blur and spacing curves multiply their corresponding controls.
+For a fading tail, set the opacity curve to 0 at time 0 and 1 at time 1; leave it flat at 1
+for the current uniform appearance. Inspector edits update pooled trails in Play mode.
+Scripts editing fields/curves must call settings.RefreshTrailStyle().
+
+All 13 CombatFeedbackTests pass, including a live-edit regression for scalar controls,
+tail/head profile samples, colour gradient and reuse of the same GPU texture/material.
+Unity compilation passes. Rendered default and nonuniform profiles through the production
+pool's property block; checked fade/thickness/blur/spacing and the tail-to-enemy direction.
+Temporary alternate settings were cloned and discarded; saved defaults retain the current look.
+Ignored inspection images: `Temp/TrailProfiles-default.png` and `Temp/TrailProfiles-varied.png`.
+
 ## Tuning and reproduction
 
 - Shared assets: `Assets/CrowdPunch/Resources/CombatVfxLibrary.asset`.

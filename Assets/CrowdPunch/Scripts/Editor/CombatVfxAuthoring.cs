@@ -32,7 +32,8 @@ namespace CrowdPunch.Editor
             try
             {
             Material streak = Sprite("LaunchStreak",Trails+"T_VFX_Trail_02.tga",true);
-            streak.SetFloat("_Erosion",.18f);
+            streak.SetFloat("_Erosion",0);
+            streak.SetFloat("_Ribbon",1);
             library.LaunchTrail=streak;
             library.ArcaneTrail=Sprite("ArcaneStreak",Trails+"T_VFX_Trail_01.tga",true);
             library.BossTrail=Sprite("ArchmageStreak",Trails+"T_VFX_Trail_03.tga",true);
@@ -62,7 +63,8 @@ namespace CrowdPunch.Editor
             settings.PlayerDamageParticles=CombatVfxParticles.Impact("ArtPlayerDamage",flash,spark,null,new Color(1,.2f,.12f),.9f);
             settings.EnvironmentParticles=CombatVfxParticles.Environment(smoke,spark);
             settings.ComicImpactScale=.65f;
-            settings.TrailWidth=.32f; settings.TrailColor=new Color(.78f,.92f,1,.7f);
+            settings.TrailWidthInModels=1; settings.TrailLengthInModels=2.5f;
+            settings.TrailColor=new Color(.97f,.99f,1,1);
             RefineExplosion(settings.ExplosionParticles);
             SetProjectileMaterial("Assets/CrowdPunch/Prefabs/RangedProjectile.prefab","ArcaneCore",new Color(.16f,.8f,1));
             SetProjectileMaterial("Assets/CrowdPunch/Data/ChickenBoss/ChickenProjectile.prefab","ArchmageCore",new Color(.7f,.22f,1));

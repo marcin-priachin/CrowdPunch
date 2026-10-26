@@ -75,6 +75,27 @@ namespace CrowdPunch.Bakers
                         + owner.transform.up * authoring.LaunchPivotHeight) : float3.zero
             });
             AddComponent<EnemyAnimationPlayback>(entity);
+            if (owner != null)
+            {
+                using var trailBuilder = new BlobBuilder(Allocator.Temp);
+                ref var trail = ref trailBuilder.ConstructRoot<EnemyGroundingMesh>();
+                var vertices = renderer.sharedMesh.vertices;
+                var weights = renderer.sharedMesh.boneWeights;
+                int count = math.min(96, vertices.Length);
+                var probes = trailBuilder.Allocate(ref trail.Vertices, count);
+                for (int i = 0; i < count; i++)
+                {
+                    int index = i * (vertices.Length - 1) / math.max(1, count - 1);
+                    var weight = weights[index];
+                    probes[i] = new EnemyGroundingVertex { Position = vertices[index],
+                        Bones = new int4(weight.boneIndex0, weight.boneIndex1, weight.boneIndex2, weight.boneIndex3),
+                        Weights = new float4(weight.weight0, weight.weight1, weight.weight2, weight.weight3) };
+                }
+                var probesBlob = trailBuilder.CreateBlobAssetReference<EnemyGroundingMesh>(Allocator.Persistent);
+                AddBlobAsset(ref probesBlob, out _);
+                AddComponent(entity, new EnemyTrailVisual { Owner = GetEntity(owner, TransformUsageFlags.Dynamic),
+                    Root = GetEntity(animator, TransformUsageFlags.Dynamic), Probes = probesBlob });
+            }
             if (owner != null && GetComponentInParent<LinkedPairAuthoring>() != null)
             {
                 var left = animator.GetBoneTransform(HumanBodyBones.LeftHand);

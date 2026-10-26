@@ -54,9 +54,40 @@ namespace CrowdPunch.Configuration
         [Header("Launched trails")]
         [Min(0)] public int MaximumTrails = 48;
         [Min(0f)] public float TrailMinimumSpeed = 4f;
-        [Range(.02f, .3f)] public float TrailDuration = 0.14f;
-        [Min(0f)] public float TrailWidth = 0.24f;
-        public Color TrailColor = new Color(.72f, .94f, 1f, .58f);
+        [Min(.1f)] public float TrailLengthInModels = 2.5f;
+        [Min(.1f)] public float TrailWidthInModels = 1f;
+        public Color TrailColor = new Color(.97f, .99f, 1f, 1f);
+        [Header("Launch speed lines")]
+        [Tooltip("0 is transparent; 1 is fully opaque. Multiplies Trail Color alpha.")]
+        [Range(0f, 1f)] public float TrailLineOpacity = 1f;
+        [Range(1, 12)] public int TrailLineCount = 5;
+        [Tooltip("Individual stroke thickness as a fraction of the full model-width trail.")]
+        [Range(.001f, .2f)] public float TrailLineWidth = .0424f;
+        [Tooltip("0 gives crisp edges; 1 gives a fully blurred Gaussian stroke.")]
+        [Range(0f, 1f)] public float TrailLineBlur = 1f;
+        [Tooltip("Span between the outer line centres, as a fraction of full trail width.")]
+        [Range(0f, 1f)] public float TrailLineSpacing = .92f;
+        [Range(0f, 2f)] public float TrailLineBrightness = 1f;
+        [Header("Speed line profiles (0 = oldest tail, 1 = enemy)")]
+        [Tooltip("Opacity multiplier along the trail. A flat value of 1 preserves uniform opacity.")]
+        public AnimationCurve TrailOpacityAlongLength = AnimationCurve.Linear(0, 1, 1, 1);
+        [Tooltip("Stroke thickness multiplier along the trail. Does not change the model-width envelope.")]
+        public AnimationCurve TrailLineWidthAlongLength = AnimationCurve.Linear(0, 1, 1, 1);
+        [Tooltip("Blur multiplier along the trail.")]
+        public AnimationCurve TrailLineBlurAlongLength = AnimationCurve.Linear(0, 1, 1, 1);
+        [Tooltip("Line spacing multiplier along the trail.")]
+        public AnimationCurve TrailLineSpacingAlongLength = AnimationCurve.Linear(0, 1, 1, 1);
+        [Tooltip("Colour and alpha multiplier along the trail. White leaves Trail Color unchanged.")]
+        public Gradient TrailTintAlongLength = new Gradient
+        {
+            colorKeys = new[] { new GradientColorKey(Color.white, 0), new GradientColorKey(Color.white, 1) },
+            alphaKeys = new[] { new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1) }
+        };
+        private int trailStyleVersion;
+        internal int TrailStyleVersion => trailStyleVersion;
+        private void OnValidate() => RefreshTrailStyle();
+        /// <summary>Refresh GPU profiles after changing trail curves or line controls from code.</summary>
+        public void RefreshTrailStyle() { unchecked { trailStyleVersion++; } }
         [Header("Visual-only enemy deformation / flash")]
         [Range(0f, .3f)] public float SquashAmount = 0.27f;
         [Range(.02f, .3f)] public float SquashDuration = 0.16f;

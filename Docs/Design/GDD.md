@@ -46,6 +46,14 @@ Status: Must
 
 Large crowds may make the screen chaotic, but the player's own action, launch direction, important threats, and major chain reactions must remain legible.
 
+Launched-enemy trails span approximately the visible model's width, extend a couple of model
+lengths behind it (default 2.5), and follow the model's animated altitude rather than its physics root.
+Represent them as softly blurred white cartoon speed lines without outlines, with constant stroke thickness and bundle width
+along the whole trail, following the supplied Asterix visual references. Do not taper them into a ribbon tip.
+Expose line opacity, thickness, blur, spacing, count, brightness and tint, including editable
+opacity/thickness/blur/spacing curves and a tint gradient along the trail. Profiles default to
+flat multipliers so the default strokes remain uniform; designers may deliberately vary them.
+
 ### VISION-006 — Full Cel Art Direction
 
 Status: Must
