@@ -16,7 +16,7 @@ namespace CrowdPunch.Mono.Player
             public float Age, Intensity;
         }
 
-        private const float Duration = .32f;
+        private const float Duration = .22f;
         private const int VerticesPerImpact = 768;
         private static readonly Color Ink = new Color(.095f, .055f, .16f);
         private static readonly Vector2[] BurstOutline = MakeOutline(10, .34f);
@@ -130,10 +130,13 @@ namespace CrowdPunch.Mono.Player
             float travel = 1f - Mathf.Pow(1f - t, 3f);
             float ringRadius = radius * Mathf.Lerp(.45f, 1.7f, travel);
             float ringWidth = radius * .065f * (1f - t);
-            Ring(ringRadius, ringWidth * 1.8f, WithAlpha(Ink, fade * .8f));
-            Ring(ringRadius, ringWidth, WithAlpha(accent, fade));
+            if (damage)
+            {
+                Ring(ringRadius, ringWidth * 1.8f, WithAlpha(Ink, fade * .8f));
+                Ring(ringRadius, ringWidth, WithAlpha(accent, fade));
+            }
 
-            int stars = collision ? 2 : 4;
+            int stars = collision ? 0 : 2;
             for (int i = 0; i < stars; i++)
             {
                 float a = .4f + i * (2f * Mathf.PI / stars);

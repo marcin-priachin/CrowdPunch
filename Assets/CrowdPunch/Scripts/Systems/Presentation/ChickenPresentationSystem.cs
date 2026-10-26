@@ -18,7 +18,7 @@ namespace CrowdPunch.Systems.Presentation
             }
             foreach(var (shot,color) in SystemAPI.Query<RefRO<ChickenProjectile>,RefRW<URPMaterialPropertyBaseColor>>())
                 // Both are danger colors. Returned shots never use a safe/green cue.
-                color.ValueRW.Value=shot.ValueRO.Redirected!=0?new float4(1.4f,.05f,.7f,1):new float4(1.4f,.3f,.015f,1);
+                color.ValueRW.Value=shot.ValueRO.Redirected!=0?new float4(1f,.42f,.08f,1):new float4(.7f,.22f,1f,1);
         }
     }
 }

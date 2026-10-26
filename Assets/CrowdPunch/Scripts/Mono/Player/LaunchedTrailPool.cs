@@ -16,9 +16,12 @@ namespace CrowdPunch.Mono.Player
         private readonly Slot[] slots;
         private readonly Dictionary<ulong, int> assigned;
         private readonly CombatFeedbackSettings settings;
+        private readonly ParticleBurstPool dust;
         public LaunchedTrailPool(Transform parent, CombatFeedbackSettings settings, Material material)
         {
             this.settings = settings;
+            var library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
+            dust = new ParticleBurstPool(parent, library != null ? library.LaunchDust : null, 8);
             slots = new Slot[Mathf.Clamp(settings.MaximumTrails, 0, 256)];
             assigned = new Dictionary<ulong, int>(slots.Length);
             for (int i = 0; i < slots.Length; i++)
@@ -26,7 +29,9 @@ namespace CrowdPunch.Mono.Player
                 var go = new GameObject("Launched trail");
                 go.transform.SetParent(parent, false);
                 var trail = go.AddComponent<TrailRenderer>();
-                trail.sharedMaterial = material;
+                trail.sharedMaterial = library != null && library.LaunchTrail != null ? library.LaunchTrail : material;
+                trail.textureMode = LineTextureMode.Stretch;
+                trail.numCornerVertices = 2;
                 trail.minVertexDistance = .08f;
                 trail.emitting = false;
                 trail.autodestruct = false;
@@ -50,6 +55,7 @@ namespace CrowdPunch.Mono.Player
                 fresh.Active = true; fresh.Id = id; fresh.Sequence = sequence;
                 fresh.Trail.transform.position = position;
                 fresh.Trail.Clear();
+                dust.Show(position + Vector3.up * .06f, Vector3.up, .7f);
             }
             var slot = slots[index];
             if (slot.Sequence != sequence) { slot.Trail.Clear(); slot.Sequence = sequence; }
@@ -73,6 +79,6 @@ namespace CrowdPunch.Mono.Player
                 slot.Trail.Clear();
             }
         }
-        public void Clear() { Begin(); End(); }
+        public void Clear() { Begin(); End(); dust.Clear(); }
     }
 }

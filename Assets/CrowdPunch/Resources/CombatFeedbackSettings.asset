@@ -39,11 +39,11 @@ MonoBehaviour:
   CameraImpactRange: 25
   CameraMotionScale: 0.75
   ReduceFlashes: 0
-  ComicImpactScale: 1
-  PunchParticles: {fileID: 1183239090233884171, guid: 2b71e9b1a27c79043a4b3116d1042eb7, type: 3}
-  EnemyParticles: {fileID: 7021618706063733172, guid: 1299e3167ca70d348857d9cb366fb100, type: 3}
-  PlayerDamageParticles: {fileID: 2807005332899504765, guid: 7ce3558794005854c95b0312bc9358b9, type: 3}
-  EnvironmentParticles: {fileID: 5507873980327532813, guid: 2c0684c58a2aea74cb4e7fa50269c15b, type: 3}
+  ComicImpactScale: 0.65
+  PunchParticles: {fileID: 2141078951841302086, guid: 5cef06f455b59ee4a8dd6ed9d387e08d, type: 3}
+  EnemyParticles: {fileID: 351161093424361992, guid: 4fe2bb625908e514699bc3213fefb61b, type: 3}
+  PlayerDamageParticles: {fileID: 4069455409671823905, guid: 1429ce8b8f059da489da5380d0b2cda6, type: 3}
+  EnvironmentParticles: {fileID: 1132414963259160139, guid: 61b54599b1b56e242afab88fff9299cb, type: 3}
   DashStartParticles: {fileID: 8895413931122264658, guid: fe8ea98b5b591674896ee61dfc16a37f, type: 3}
   DashMovementParticles: {fileID: 4259955598730627180, guid: d71d26e00ed028c4791b1f89108cfd60, type: 3}
   DashEndParticles: {fileID: 125943153959064112, guid: 1df49d1f5ca3109499a26ad3560e9923, type: 3}
@@ -57,8 +57,8 @@ MonoBehaviour:
   MaximumTrails: 48
   TrailMinimumSpeed: 4
   TrailDuration: 0.14
-  TrailWidth: 0.24
-  TrailColor: {r: 0.72, g: 0.94, b: 1, a: 0.58}
+  TrailWidth: 0.32
+  TrailColor: {r: 0.78, g: 0.92, b: 1, a: 0.7}
   SquashAmount: 0.27
   SquashDuration: 0.16
   DeformationThreshold: 0.12

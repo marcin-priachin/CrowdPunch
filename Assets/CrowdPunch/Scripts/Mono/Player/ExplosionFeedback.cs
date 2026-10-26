@@ -13,11 +13,14 @@ namespace CrowdPunch.Mono.Player
         private Visual[] visuals;
         private Transform poolRoot;
         private ParticleSystem[] bursts;
+        private Mesh ring;
+        private MaterialPropertyBlock properties;
 
         private sealed class Visual
         {
             public GameObject Object;
             public float Duration, Remaining, TargetDiameter;
+            public Renderer Renderer;
         }
 
         private void Awake() => EnsurePool();
@@ -40,6 +43,14 @@ namespace CrowdPunch.Mono.Player
             poolRoot = new GameObject("Explosion feedback pool").transform;
             visuals = new Visual[Mathf.Clamp(poolCapacity, 1, 64)];
             var settings = Resources.Load<CombatFeedbackSettings>("CombatFeedbackSettings");
+            var library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
+            if (library != null && library.Shockwave != null)
+            {
+                Destroy(material);
+                material = new Material(library.Shockwave);
+            }
+            properties = new MaterialPropertyBlock();
+            ring = BuildRing();
             if (settings != null && settings.ExplosionParticles != null)
             {
                 bursts = new ParticleSystem[visuals.Length];
@@ -52,13 +63,15 @@ namespace CrowdPunch.Mono.Player
             }
             for (int i = 0; i < visuals.Length; i++)
             {
-                var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                sphere.name = "ExplosionFeedback";
-                sphere.transform.SetParent(poolRoot, false);
-                Destroy(sphere.GetComponent<Collider>());
-                sphere.GetComponent<Renderer>().sharedMaterial = material;
-                sphere.SetActive(false);
-                visuals[i] = new Visual { Object = sphere };
+                var go = new GameObject("Explosion radius shockwave");
+                go.transform.SetParent(poolRoot, false);
+                go.AddComponent<MeshFilter>().sharedMesh = ring;
+                var renderer = go.AddComponent<MeshRenderer>();
+                renderer.sharedMaterial = material;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+                go.SetActive(false);
+                visuals[i] = new Visual { Object = go, Renderer = renderer };
             }
         }
 
@@ -81,10 +94,16 @@ namespace CrowdPunch.Mono.Player
             foreach (var visual in visuals)
             {
                 if (visual.Remaining <= 0f) continue;
-                visual.Remaining = Mathf.Max(0f, visual.Remaining - Time.deltaTime);
+                visual.Remaining = Mathf.Max(0f, visual.Remaining - Time.unscaledDeltaTime);
                 if (visual.Remaining <= 0f) visual.Object.SetActive(false);
-                else visual.Object.transform.localScale = Vector3.one
-                    * (visual.TargetDiameter * (1f - visual.Remaining / visual.Duration));
+                else
+                {
+                    float t = 1f-visual.Remaining/visual.Duration;
+                    float expansion = 1f-Mathf.Pow(1f-Mathf.Clamp01(t/.65f),3);
+                    visual.Object.transform.localScale = Vector3.one * (visual.TargetDiameter * expansion);
+                    properties.SetColor("_BaseColor",new Color(1,.64f,.2f,.65f*(1-Mathf.SmoothStep(0,1,t))));
+                    visual.Renderer.SetPropertyBlock(properties);
+                }
             }
         }
 
@@ -104,6 +123,7 @@ namespace CrowdPunch.Mono.Player
         {
             if (poolRoot != null) Destroy(poolRoot.gameObject);
             if (material != null) Destroy(material);
+            if (ring != null) Destroy(ring);
         }
 
         private void Show(Vector3 position, float radius, float duration, float sizeMultiplier)
@@ -126,12 +146,34 @@ namespace CrowdPunch.Mono.Player
                 if (visual.Remaining > 0f || visual.Object == null) continue;
                 visual.Duration = Mathf.Max(.01f, duration);
                 visual.Remaining = visual.Duration;
-                visual.TargetDiameter = Mathf.Max(0f, radius * 2f * sizeMultiplier);
-                visual.Object.transform.position = position;
+                // Radius is authoritative; cosmetic size multipliers must not suggest extra blast reach.
+                visual.TargetDiameter = Mathf.Max(0f, radius * 2f);
+                visual.Object.transform.position = position + Vector3.up * .065f;
                 visual.Object.transform.localScale = Vector3.zero;
                 visual.Object.SetActive(true);
                 return;
             }
+        }
+        private static Mesh BuildRing()
+        {
+            const int segments = 64;
+            var vertices = new Vector3[(segments+1)*2];
+            var colors = new Color[vertices.Length];
+            var uv = new Vector2[vertices.Length];
+            var indices = new int[segments*6];
+            for (int i=0;i<=segments;i++)
+            {
+                float a=i*Mathf.PI*2/segments;
+                var direction=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a));
+                vertices[i*2]=direction*.46f; vertices[i*2+1]=direction*.5f;
+                colors[i*2]=colors[i*2+1]=Color.white;
+                uv[i*2]=new Vector2(i/(float)segments,0); uv[i*2+1]=new Vector2(i/(float)segments,1);
+                if(i==segments) continue;
+                int t=i*6,n=i*2;
+                indices[t]=n;indices[t+1]=n+1;indices[t+2]=n+3;
+                indices[t+3]=n;indices[t+4]=n+3;indices[t+5]=n+2;
+            }
+            return new Mesh { name="Blast radius ring",vertices=vertices,colors=colors,uv=uv,triangles=indices };
         }
     }
 }

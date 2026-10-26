@@ -46,6 +46,14 @@ namespace CrowdPunch.Mono.Player
     /// </summary>
     public sealed class PlayerEcsBridge : MonoBehaviour
     {
+        public event Action ProjectileVisualsBegan, ProjectileVisualsEnded;
+        public event Action<ProjectileVisualSample> ProjectileVisualReceived;
+        public event Action<ProjectileVisualKind, Vector3, Vector3, float> ProjectileBurstReceived;
+        public void BeginProjectileVisuals() => ProjectileVisualsBegan?.Invoke();
+        public void EndProjectileVisuals() => ProjectileVisualsEnded?.Invoke();
+        public void ReceiveProjectileVisual(ProjectileVisualSample sample) => ProjectileVisualReceived?.Invoke(sample);
+        public void ReceiveProjectileBurst(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale = 1)
+            => ProjectileBurstReceived?.Invoke(kind, position, direction, scale);
         public CrowdPunch.Configuration.CombatFeedbackSettings FeedbackSettings { get; set; }
         public event Action<CombatFeedbackMessage> ImpactReceived;
         public event Action TrailsBegan, TrailsEnded;

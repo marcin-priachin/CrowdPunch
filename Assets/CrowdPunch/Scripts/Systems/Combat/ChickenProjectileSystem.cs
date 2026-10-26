@@ -32,6 +32,7 @@ namespace CrowdPunch.Systems.Combat
                         em.GetComponentData<LocalTransform>(p.HomingTarget).Position-pose.ValueRO.Position,math.radians(homing)*dt);
                 float remaining=math.min(dt,math.max(0,t.Lifetime-p.Age)); p.Age+=dt;
                 bool destroy=false; float3 position=pose.ValueRO.Position;
+                bool hasVfxBridge = PlayerBridgeRegistry.TryGetBridge(out var vfxBridge);
                 for(int segment=0;segment<=t.BounceLimit && remaining>.000001f;segment++)
                 {
                     float fraction=WallFraction(position,p.Velocity*remaining,t,out float3 normal);
@@ -60,17 +61,24 @@ namespace CrowdPunch.Systems.Combat
                     position=end;
                     if(playerHit)
                     {
+                        if (hasVfxBridge) vfxBridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, -p.Velocity);
                         if(PlayerBridgeRegistry.TryGetBridge(out var bridge)) bridge.ReceiveEnemyHit(t.ProjectileDamage,t.PlayerProtection,math.normalizesafe(p.Velocity)*t.PlayerPush);
                         destroy=true; break; // Consumed even when player invulnerability rejects the hit.
                     }
                     if(bossHit)
-                    { ChickenDamageResolution.Queue(em,p.Boss,entity,p.Launch,t.ReturnedBossDamage); destroy=true; break; }
+                    {
+                        if (hasVfxBridge) vfxBridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, -p.Velocity, 1.2f);
+                        ChickenDamageResolution.Queue(em,p.Boss,entity,p.Launch,t.ReturnedBossDamage); destroy=true; break;
+                    }
                     if(fraction>=1) break;
                     remaining*=1-fraction;
                     Reflect(ref p,normal); position+=normal*.001f;
+                    if (hasVfxBridge) vfxBridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, normal, .65f);
                     if(p.Bounces>=t.BounceLimit) { destroy=true; break; }
                 }
                 pose.ValueRW.Position=position;
+                if (!destroy && p.Age >= t.Lifetime && hasVfxBridge)
+                    vfxBridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, -p.Velocity, .45f);
                 if(destroy || p.Age>=t.Lifetime) commands.DestroyEntity(entity);
             }
             commands.Playback(em); commands.Dispose();

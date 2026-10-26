@@ -993,8 +993,10 @@ without a height snap. Normal post-launch recovery may still use `Ground Idle to
 Use `Fly Idle`, `Fly Forward In Place`, `Fly Take Damage`, `Fly Spin Attack` for launched
 presentation and `Fly Die` for defeat. Loop `Fly Projectile Upward` continuously through
 telegraph and active casting, interrupting for launch/recovery. Root motion stays disabled
-and ECS movement remains authoritative. Preserve the soft/pulsing violet ground telegraph,
-brighter active full-radius disc and clear ring; overlapping zones blend additively.
+and ECS movement remains authoritative. The area attack resembles a green-gold spore cloud
+with drifting pollen, a soft warning and a denser active cloud. Preserve a readable full-radius
+ground disc and clear ring; overlapping ground zones blend additively. Cloud decoration stays
+inside the damage footprint and does not obscure crowd silhouettes.
 No new HUD or normal-enemy health bars.
 
 ### WIZARD-007 - Waves And Gauntlet_17
@@ -1376,7 +1378,10 @@ with animations from the Goblin Giant Modular Pack Cute Series animation folder 
 Use blended directional jogs from `Assets/CrowdPunch/Animation/` on the legs while retaining the
 pack animation on the upper body. Fire with Sweep Attack and expose its zero-based projectile
 release frame in the dedicated settings. Use authored animation for boss feedback rather than
-scripted tint, shaking or squash. Retain the existing elite-style health bar, dangerous projectile
+scripted tint, shaking or squash. Ranged-enemy and boss projectiles share an arcane visual family
+to match their wizard models: compact cyan comets for ranged enemies, larger violet/gold orbiting
+orbs for this boss. A returned boss orb gains a warm danger accent and remains harmful to the player.
+Retain the existing elite-style health bar, dangerous projectile
 ownership colors and one brief opening hint. A dedicated boss settings asset exposes health/damage, stage
 thresholds/patterns, wind-up/spacing/pauses, rush/proximity, stagger/protection and projectile tuning.
 Initial numbers, arena size and minor model presentation are delegated to implementation/playtesting.

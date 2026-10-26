@@ -10,10 +10,17 @@ namespace CrowdPunch.Mono.Player
         private ParticleSystem[] effects;
         private int next;
         private uint restartSequence;
+        private ParticleBurstPool authoredSmoke;
 
         private void Awake()
         {
             bridge = GetComponent<PlayerEcsBridge>();
+            var library = Resources.Load<CrowdPunch.Configuration.CombatVfxLibrary>("CombatVfxLibrary");
+            if (library != null && library.NinjaSmoke != null)
+            {
+                authoredSmoke = new ParticleBurstPool(transform, library.NinjaSmoke, 8);
+                return;
+            }
             effects = new ParticleSystem[8];
             for (int i = 0; i < effects.Length; i++)
             {
@@ -46,7 +53,7 @@ namespace CrowdPunch.Mono.Player
         }
         private void Update()
         {
-            if (restartSequence == UI.GameRestartRegistry.Sequence) return;
+            if (restartSequence == UI.GameRestartRegistry.Sequence && !FeedbackTimeController.IsSuspended) return;
             restartSequence = UI.GameRestartRegistry.Sequence;
             Clear();
         }
@@ -57,12 +64,15 @@ namespace CrowdPunch.Mono.Player
         }
         private void Clear()
         {
+            authoredSmoke?.Clear();
             if (effects != null) foreach (var effect in effects) effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             next = 0;
         }
         private void Show(Vector3 departure, Vector3 arrival) { Emit(departure); Emit(arrival); }
         private void Emit(Vector3 position)
         {
+            if (FeedbackTimeController.IsSuspended) return;
+            if (authoredSmoke != null) { authoredSmoke.Show(position + Vector3.up * .15f, Vector3.up); return; }
             var effect = effects[next++ % effects.Length];
             effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             effect.transform.position = position + Vector3.down * .45f;

@@ -3435,3 +3435,44 @@ interpolation. Exported Die samples receive only upward translation where the me
 the capsule floor. AnimationDriven bypasses procedural body tint and impact deformation.
 Game-owned Full Cel materials keep the supplied texture, excluded from atlas replacement.
 Combat, cone cover tests, launch ownership, physics dimensions and encounter composition remain owned by their existing systems.
+
+## Imported combat VFX pass (2026-10-26)
+
+VISION-005/006, ENEMY-003, CHICKEN-003/004/007 and WIZARD-006: the current effects use
+`Resources/CombatVfxLibrary.asset` plus the existing `CombatFeedbackSettings.asset`.
+This supersedes the earlier sphere explosion and violet Wizard zone appearance described above.
+The enemy named Wizard is the Bud plant: green-gold spore mist/pollen replaces its violet disk styling.
+Ranged wizard comets are cyan; the larger wizard boss orbs are violet/gold, with an orange return
+accent that continues to communicate danger to the player.
+
+`ProjectileVisualBridgeSystem` runs in GamePresentationGroup and copies opaque identity/version
+keys, sequence, kind, position, velocity, radius and return state through PlayerEcsBridge events.
+`ProjectileVfxPresentation`, installed by GameBootstrap, owns fixed GameObject particle/trail pools;
+it never stores or queries entities. ECS retains all trajectory, collision, damage and ownership rules.
+Ranged and boss contact systems publish finite impact events. Boss re-punch and detached Snake
+accents follow presentation sequence changes, keeping managed callbacks outside Burst punch code.
+Defaults reserve 32 ranged, 16 boss and 16 Snake flight slots; each impact kind has 12 slots and
+accepts at most eight new bursts/frame. Exhaustion drops decoration, preserving ECS projectile cores.
+Despawn, reuse, disable, restart and suspension clear flight trails and particles.
+
+Punch/player hits use short directional flashes and splinters, with smaller crowd-hit accents.
+Launched bodies keep the 48-slot trail pool with imported streak masks and eight launch-dust slots.
+Ground impacts add four noncolliding mesh chips. Ninja smoke uses eight finite pooled poofs.
+The Cartoon FX explosion accent is shorter and accompanied by a fading horizontal shockwave
+whose outer radius matches the event radius; the former transparent sphere is removed.
+
+WizardZonePresentationSystem keeps every authoritative ground boundary and decorates up to
+32 zones with 12 cloud quads and 24 pollen quads each. CombatSpriteMesh batches decoration;
+the URP CombatSprite shader clips spore billboards to the world-space circular footprint.
+DragonFlamePresentationSystem reuses 81 cover-ray samples and emits 50 flowing textured tongues
+per active cone. Each angular cell uses its shortest sampled reach; tongue tips stay within that
+reach. GroundHazardParticlePresentationSystem reuses its existing bounded samples with textured
+fire/smoke. EnemyTrail adds subtle moving pigment without expanding its damaging footprint.
+No new colliders, renderer features, realtime lights, HUD markers or animation/body deformation were added.
+
+Game-owned materials/prefabs reference the imported Travis impact texture, Kenney particle/smoke
+textures and nature-kit rock, Vefects trail masks and fire noise, NOVA soft-smoke shader, and the
+existing Cartoon FX explosion. ImpactStoneMesh merges the source rock's two submeshes because
+Unity particle meshes require one. External source assets are preserved. Regenerate owned assets
+with `Crowd Punch > Art Direction > Apply Combat VFX`; normal tuning belongs in the two Resources
+assets. See `Docs/Verification/CombatVfx.md` for performed checks and remaining limitations.

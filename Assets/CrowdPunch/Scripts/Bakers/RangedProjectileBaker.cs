@@ -14,7 +14,7 @@ namespace CrowdPunch.Bakers
             AddComponent<RangedProjectile>(entity);
             AddComponent(entity, new URPMaterialPropertyBaseColor
             {
-                Value = new float4(1f, 0.8f, 0.1f, 1f)
+                Value = new float4(.16f, .8f, 1f, 1f)
             });
         }
     }

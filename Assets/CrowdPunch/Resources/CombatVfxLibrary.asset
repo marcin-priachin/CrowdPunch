@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfc05e7b4612a02418b37c0042995b16, type: 3}
+  m_Name: CombatVfxLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.CombatVfxLibrary
+  RangedFlight: {fileID: 2761541084434555663, guid: 708d2bfc2d871e143a31619de043d19a, type: 3}
+  BossFlight: {fileID: 6052926223512716940, guid: be054faa1c8a10345bf20e4c9dc6459e, type: 3}
+  SnakeFlight: {fileID: 844325903979962080, guid: 0f093301581f4214d88b18c74e6be25f, type: 3}
+  RangedImpact: {fileID: 6866501447468323113, guid: 87311a62987146a439ebf80ee7d245a9, type: 3}
+  BossImpact: {fileID: 7115736433150318414, guid: f1901c5ccbe5d5e419f979c6f5c3c4ac, type: 3}
+  SnakeSever: {fileID: 5264067374179694965, guid: 3c77eb0eb4bbf234287a3fc2f6e21bdf, type: 3}
+  RangedCapacity: 32
+  BossCapacity: 16
+  SnakeCapacity: 16
+  BurstCapacity: 12
+  LaunchDust: {fileID: 7886683096277587804, guid: 6ef3fe0010b5f5747ba26e6c4ce788a4, type: 3}
+  NinjaSmoke: {fileID: 2914869738984802225, guid: 5facb68d170974248ae9aabbd3ac2962, type: 3}
+  LaunchTrail: {fileID: 2100000, guid: 406e4decd87442d47b8399f02f0940bb, type: 2}
+  ArcaneTrail: {fileID: 2100000, guid: 6ca704edefd904144b4bc8f2470182ac, type: 2}
+  BossTrail: {fileID: 2100000, guid: 5061a388794c18f4580588e7eab823a1, type: 2}
+  SporeCloud: {fileID: 2100000, guid: 4c690bcb9632999419c49b366bea0ace, type: 2}
+  Pollen: {fileID: 2100000, guid: 2b336680779b83947a1d77b8ebd40413, type: 2}
+  DragonFlame: {fileID: 2100000, guid: d1b419d849f63394ebac4d3348359127, type: 2}
+  Shockwave: {fileID: 2100000, guid: 6728ec255225ab54d8c7cbd7a5181fe3, type: 2}
+  CloudsPerZone: 12
+  SporesPerZone: 24
+  MaximumCloudZones: 32

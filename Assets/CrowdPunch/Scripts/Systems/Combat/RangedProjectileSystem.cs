@@ -65,6 +65,10 @@ namespace CrowdPunch.Systems.Combat
                 bool belowMinimumAltitude = position.y <= projectile.ValueRO.MinimumAltitude;
                 if (playerHit || belowMinimumAltitude || expired)
                 {
+                    // Cosmetic termination only; no extra collision or damage is inferred.
+                    if (bridgeAvailable)
+                        bridge.ReceiveProjectileBurst(ProjectileVisualKind.Ranged, position,
+                            math.normalizesafe(position - previousPosition, math.up()), playerHit ? .8f : .5f);
                     commandBuffer.DestroyEntity(entity);
                 }
             }

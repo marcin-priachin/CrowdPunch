@@ -1,6 +1,6 @@
 Shader "CrowdPunch/WizardZone"
 {
-    Properties { _Color ("Violet", Color) = (.55,.08,1,.4) _Ring ("Ring intensity", Float) = .85 }
+    Properties { _Color ("Spore tint", Color) = (.58,.7,.12,.3) _Ring ("Ring intensity", Float) = .85 }
     SubShader
     {
         Tags { "Queue"="Transparent" "RenderType"="Transparent" "RenderPipeline"="UniversalPipeline" }
@@ -24,7 +24,10 @@ Shader "CrowdPunch/WizardZone"
             {
                 float radius=length(i.uv*2-1);
                 half ring=smoothstep(.94,.96,radius);
-                return half4(_Color.rgb, _Color.a + ring * _Ring);
+                float2 p=i.uv*2-1;
+                float drifting=sin(p.x*17+_Time.y*.8)*sin(p.y*14-_Time.y*.6);
+                half mottled=.65+.35*smoothstep(-.4,.7,drifting);
+                return half4(_Color.rgb, _Color.a*mottled + ring * _Ring*.65);
             }
             ENDHLSL
         }

@@ -40,6 +40,8 @@ namespace CrowdPunch.Mono.UI
             combatFeedback.Configure(playerBridge, combatFeedbackSettings);
             EnsurePunchTrajectoryPreview();
             EnsureExplosionFeedback();
+            if (playerBridge != null && playerBridge.GetComponent<ProjectileVfxPresentation>() == null)
+                playerBridge.gameObject.AddComponent<ProjectileVfxPresentation>();
             EnsureGameCanvas();
             EnsurePauseMenu();
             EnsureEnemyHealthBarCanvas();

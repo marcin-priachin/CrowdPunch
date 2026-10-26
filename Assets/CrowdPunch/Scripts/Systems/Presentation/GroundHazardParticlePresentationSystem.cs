@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CrowdPunch.Components;
+using CrowdPunch.Configuration;
 using CrowdPunch.Systems.Groups;
 using CrowdPunch.Utilities;
 using Unity.Entities;
@@ -18,16 +19,22 @@ namespace CrowdPunch.Systems.Presentation
         private readonly List<Color> colors=new(4096);
         private readonly List<int> triangles=new(8192);
         private Vector3 right;
+        private CombatVfxLibrary library;
+        private CombatSpriteMesh flames, smoke;
 
         protected override void OnCreate()
         {
             mesh=new Mesh{name="Ground hazard cartoon particles",indexFormat=IndexFormat.UInt32};mesh.MarkDynamic();
+            flames=new CombatSpriteMesh("Ground hazard textured flames");
+            smoke=new CombatSpriteMesh("Ground hazard shaped smoke");
             RequireForUpdate<GroundHazardAppearance>();
         }
 
         protected override void OnUpdate()
         {
             mesh.Clear();vertices.Clear();colors.Clear();triangles.Clear();
+            flames.Clear();smoke.Clear();
+            if(library==null)library=Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
             if(material==null)material=Resources.Load<Material>("GroundHazardParticles");
             var camera=Camera.main;if(material==null || camera==null)return;
             right=Vector3.ProjectOnPlane(camera.transform.right,Vector3.up).normalized;
@@ -37,6 +44,7 @@ namespace CrowdPunch.Systems.Presentation
                 for(int lane=0;lane<GroundHazardParticleGeometry.Count(patch.ValueRO,state.ValueRO);lane++)
                     if(GroundHazardParticleGeometry.TrySample(patch.ValueRO,state.ValueRO,SystemAPI.Time.ElapsedTime,lane,out var particle))Draw(particle);
             }
+            if(library!=null){flames.Draw(library.DragonFlame);smoke.Draw(library.SporeCloud);}
             if(vertices.Count==0)return;
             mesh.SetVertices(vertices);mesh.SetColors(colors);mesh.SetTriangles(triangles,0);mesh.RecalculateBounds();
             Graphics.DrawMesh(mesh,Matrix4x4.identity,material,0,null,0,null,ShadowCastingMode.Off,false);
@@ -45,6 +53,17 @@ namespace CrowdPunch.Systems.Presentation
         private void Draw(in GroundHazardParticleSample p)
         {
             Vector3 position=p.Position;
+            if(library!=null && p.Kind!=GroundHazardParticleKind.Ember)
+            {
+                if(p.Kind==GroundHazardParticleKind.Smoke)
+                    smoke.Billboard(position,right,Vector3.up,p.Radius,new Color(.43f,.42f,.38f,p.Opacity));
+                else
+                    flames.Quad(position-right*p.Radius,position+right*p.Radius,
+                        position+right*(p.Radius+p.Bend*p.Radius)+Vector3.up*p.Height,
+                        position+right*(-p.Radius+p.Bend*p.Radius)+Vector3.up*p.Height,
+                        new Color(1,.47f,.08f,p.Opacity));
+                return;
+            }
             if(p.Kind==GroundHazardParticleKind.Smoke)
             {
                 Puff(position,p.Radius,new Color(.30f,.34f,.32f,p.Opacity));
@@ -85,6 +104,6 @@ namespace CrowdPunch.Systems.Presentation
         private void Add(Vector3 p,Color c){vertices.Add(p);colors.Add(c);}
         private void Triangle(int a,int b,int c){triangles.Add(a);triangles.Add(b);triangles.Add(c);}
         protected override void OnStopRunning(){if(mesh!=null)mesh.Clear();}
-        protected override void OnDestroy(){if(mesh!=null)Object.Destroy(mesh);}
+        protected override void OnDestroy(){if(mesh!=null)Object.Destroy(mesh);flames.Dispose();smoke.Dispose();}
     }
 }
