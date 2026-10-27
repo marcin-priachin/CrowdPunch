@@ -952,10 +952,17 @@ advertised position. Player overlap, blocked ground or warning/active ground haz
 the warning until safe; invalid sequence ownership destroys the reservation. The existing
 physics-world index is restored for pooled returns before activation.
 
-`EnemySpawnWarningPresentationSystem` batches all amber pulsing ground rings into one
-dynamic mesh and one draw using the existing Resources/WizardZone material. No enemy
-GameObjects, HUD elements or per-enemy materials are added. Duration (1s), minimum marker
-radius (.75m) and ring width (.12m) are prototype tuning.
+`EnemySpawnWarningPresentationSystem` reads disabled reservations and passes their floor
+position, radius, remaining warning time and stable entity seed to `EnemySpawnBurrowMesh`.
+The indication is a heaving, cracked soil mound with tumbling clods and small cartoon dust
+puffs (2026-10-27, INFO-006/VISION-006). One immutable 474-vertex mesh and the instanced
+Resources/EnemySpawnSoil material draw all soil in batches of up to 1023. The shader animates
+heave, sway and clod arcs from per-instance simulation age; an expanded mesh bound covers
+that displacement. Dust reuses CombatVfxLibrary.SporeCloud through one CombatSpriteMesh
+batch. Geometry/instance buffers are reused. There are no per-enemy GameObjects, materials,
+ParticleSystems or gameplay writes. Delayed reservations keep digging; cancellation and
+activation remove their presentation on the next update. Duration (1s) and minimum radius
+(.75m) remain prototype tuning; activation, safety checks and authored emergence are unchanged.
 
 ## Campaign spawn spacing (2026-10-12, LOOP-002/008, INFO-006)
 

@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-21
+Last updated: 2026-10-27
 
 ## How To Read This Document
 
@@ -1166,6 +1166,10 @@ Before an enemy spawns or respawns, show a visible indication at its intended wo
 spawn location. The enemy appears at the indicated location after the warning. Keep this
 feedback in the arena without adding HUD elements. Warning duration and appearance are
 prototype tuning.
+
+The indication should read as something digging up from below the ground: disturbed soil
+heaves and cracks, with tossed dirt clods and small dust puffs in the established cartoony
+Full Cel style (presentation direction requested 2026-10-27).
 
 An enemy profile may opt into Spawn From Ground when its model has a configured spawn
 animation. After the normal warning and safe-placement checks, place the physics body on

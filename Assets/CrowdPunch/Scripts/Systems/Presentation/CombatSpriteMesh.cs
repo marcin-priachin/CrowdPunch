@@ -39,6 +39,11 @@ namespace CrowdPunch.Systems.Presentation
             mesh.SetColors(colors); mesh.SetTriangles(indices,0); mesh.RecalculateBounds();
             Graphics.DrawMesh(mesh,Matrix4x4.identity,material,0,null,0,null,ShadowCastingMode.Off,false);
         }
-        public void Dispose() { if (mesh != null) Object.Destroy(mesh); }
+        public void Dispose()
+        {
+            if (mesh == null) return;
+            if (Application.isPlaying) Object.Destroy(mesh);
+            else Object.DestroyImmediate(mesh);
+        }
     }
 }
