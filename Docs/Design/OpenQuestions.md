@@ -62,6 +62,14 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-27 - Boss Health Placement
+
+Decision: Place every boss's health bar in the upper center of the UI, exactly matching the final boss, instead of above the boss's head. Retain elite and normal-enemy presentation.
+
+Rationale: The user requested consistent boss health placement across encounters.
+
+GDD rules: INFO-007, FINALE-007
+
 ### 2026-10-16 — OQ-015: Full Cel Art Direction
 
 Decision: Use the Art Lab Full cel shading look for environment and player/enemy shading,

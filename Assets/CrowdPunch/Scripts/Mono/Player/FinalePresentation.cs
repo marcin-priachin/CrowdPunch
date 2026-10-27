@@ -12,7 +12,7 @@ namespace CrowdPunch.Mono.Player
         public float groundedModelOffset;
         private static FinalePresentation active;
         private LineRenderer warning, tether, vulnerability;
-        private Mono.UI.FinaleBossHealthBar healthBar;
+        private Mono.UI.BossHealthBar healthBar;
         private readonly LineRenderer[] anchors = new LineRenderer[4];
         private Material material;
         private string animationState;
@@ -25,7 +25,7 @@ namespace CrowdPunch.Mono.Player
             active=this;
             previousPhase=-1; previousAttack=0; animationState=null; actionUntil=0;
             previousHealth=1;
-            healthBar=GetComponent<Mono.UI.FinaleBossHealthBar>();
+            healthBar=GetComponent<Mono.UI.BossHealthBar>();
             cameraFollow=FindFirstObjectByType<Mono.Camera.CameraFollow>();
             if(settings!=null) {
                 groundHeight=settings.colliderSize.y*.5f;

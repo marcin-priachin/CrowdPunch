@@ -43,5 +43,10 @@ namespace CrowdPunch.Mono.UI
         {
             activeCanvas?.EndFrame();
         }
+
+        public static void PublishBoss(float normalizedHealth)
+        {
+            activeCanvas?.PublishBoss(normalizedHealth);
+        }
     }
 }

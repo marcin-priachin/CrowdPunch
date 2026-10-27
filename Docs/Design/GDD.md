@@ -1180,6 +1180,12 @@ clip keep the existing drop from spawn height. Enable this option for the Goblin
 Ranged Wizard, Goblin Minion Dasher and Goblin Giant Elite using their supplied Spawn clips. Motion below the floor belongs to the visual pose; the
 physics body stays grounded (COMBAT-018).
 
+### INFO-007 - Boss Health Placement
+
+Status: Must
+
+Every boss displays one long red health bar in the upper center of the screen, matching the final boss's thin bar, size and top margin, with no text or background. Boss health bars do not follow bosses above their heads. Hide the bar on defeat, encounter exit, pause and failure/completion screens. Elite and normal-enemy health presentation remains unchanged. This placement supersedes earlier elite-style boss-bar references (requested 2026-10-27).
+
 ## Progression And Weapons
 
 ### PROGRESSION-001 — Mechanics Before Modifiers
@@ -1256,7 +1262,7 @@ The complete encounter is gauntlet 11 after the existing ten. Gauntlet 10 advanc
 
 Status: Must
 
-Use `Assets/Polygonal Magma/Prefabs/Polygonal Magma Orange.prefab` for the Gatekeeper, preserving the supplied asset. Use its authored animations from `Assets/Polygonal Magma/FBX` for movement, attacks, stagger, transitions and defeat instead of scripted material-color changes or squash. Override `RigLArm1` and `RigRArm1` movement to follow the existing independent physical hands; remove the primitive sphere-hand visuals. Match the previous head and hand footprints and use the established Full Cel shading with the supplied orange texture. Reuse the elite health-bar presentation for one head/boss bar, without hand bars, phase markers or additional boss HUD. Reuse proportionate combat feedback and readable world telegraphs. A dedicated baked ScriptableObject owns boss health, invulnerability, thresholds, movement, attacks, telegraphs, recovery, shielding and stagger; crowd tuning stays in wave settings.
+Use `Assets/Polygonal Magma/Prefabs/Polygonal Magma Orange.prefab` for the Gatekeeper, preserving the supplied asset. Use its authored animations from `Assets/Polygonal Magma/FBX` for movement, attacks, stagger, transitions and defeat instead of scripted material-color changes or squash. Override `RigLArm1` and `RigRArm1` movement to follow the existing independent physical hands; remove the primitive sphere-hand visuals. Match the previous head and hand footprints and use the established Full Cel shading with the supplied orange texture. Use one upper-center boss health bar per INFO-007, without hand bars, phase markers or additional boss HUD. Reuse proportionate combat feedback and readable world telegraphs. A dedicated baked ScriptableObject owns boss health, invulnerability, thresholds, movement, attacks, telegraphs, recovery, shielding and stagger; crowd tuning stays in wave settings.
 
 Keep the rig hands fitted to their original damage footprints when the model scale changes, and keep animated hand geometry above the arena ground throughout movement and attack poses.
 
@@ -1393,7 +1399,7 @@ release frame in the dedicated settings. Use authored animation for boss feedbac
 scripted tint, shaking or squash. Ranged-enemy and boss projectiles share an arcane visual family
 to match their wizard models: compact cyan comets for ranged enemies, larger violet/gold orbiting
 orbs for this boss. A returned boss orb gains a warm danger accent and remains harmful to the player.
-Retain the existing elite-style health bar, dangerous projectile
+Use the upper-center health bar from INFO-007; retain dangerous projectile
 ownership colors and one brief opening hint. A dedicated boss settings asset exposes health/damage, stage
 thresholds/patterns, wind-up/spacing/pauses, rush/proximity, stagger/protection and projectile tuning.
 Initial numbers, arena size and minor model presentation are delegated to implementation/playtesting.
@@ -1468,8 +1474,8 @@ Status: Must
 
 Use `Assets/Spike Cute Series/Prefabs/Spike.prefab` with a constant uniform authoring scale fitted to the existing hitbox footprint (visual revision 2026-10-24). Preserve its proportions. Use the supplied FBX animations for state readability, including Hide and Spin Attack In Place during rolling, without runtime tint, shake, squash or model resizing. A dedicated boss asset owns
 health, thresholds, protection, wind-up/pause/roll timing, bounce limits, speed, contact damage,
-launch/push and presentation tuning. Composition/replenishment remain wave-owned. Reuse one elite-style
-boss health bar without vulnerability countdown. Distinguish pause, wind-up, rolling and temporary
+launch/push and presentation tuning. Composition/replenishment remain wave-owned. Use one upper-center
+boss health bar per INFO-007 without vulnerability countdown. Distinguish pause, wind-up, rolling and temporary
 hit protection; include one brief opening hint. Numbers, layout and minor presentation are delegated.
 
 ## Dino Pillar Boss (Agreed 2026-10-08)
@@ -1536,7 +1542,7 @@ previews. Exclude the immune boss and unavailable pillars from targeting. Use
 with the Giant pack's authored animations and directional jog legs from `Assets/CrowdPunch/Animation/`.
 Use Block for upper-body locomotion and animation cues instead of boss color flashes or scripted
 shaking/squash/stretch. Preserve the source palette with Full Cel shading. Retain one existing
-boss health bar and a brief opening hint. Show readable warning, burst, stagger, pillar
+upper-center boss health bar per INFO-007 and a brief opening hint. Show readable warning, burst, stagger, pillar
 impact and regeneration feedback in-world. A dedicated settings asset owns stage movement,
 turning, cycle/stagger/contact timing, pillar geometry/fall/regeneration and damage/push/launch
 strengths. General crowd composition and replenishment remain in existing wave settings.

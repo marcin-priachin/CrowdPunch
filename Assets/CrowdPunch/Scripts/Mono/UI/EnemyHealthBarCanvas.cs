@@ -33,6 +33,8 @@ namespace CrowdPunch.Mono.UI
         private RectTransform canvasRect;
         private Canvas canvas;
         private UnityEngine.Camera worldCamera;
+        private BossHealthBar bossHealthBar;
+        private bool bossWasPublished;
 
         private void Awake()
         {
@@ -48,6 +50,7 @@ namespace CrowdPunch.Mono.UI
         private void OnDisable()
         {
             EnemyHealthBarCanvasRegistry.Unregister(this);
+            if (bossHealthBar != null) bossHealthBar.Hide();
         }
 
         public void Configure(bool healthBarsVisible, bool stateLabelsVisible)
@@ -58,10 +61,18 @@ namespace CrowdPunch.Mono.UI
 
         public void BeginFrame()
         {
+            bossWasPublished = false;
             foreach (BarView view in activeViews.Values)
             {
                 view.WasPublished = false;
             }
+        }
+
+        public void PublishBoss(float normalizedHealth)
+        {
+            if (bossHealthBar == null) bossHealthBar = gameObject.AddComponent<BossHealthBar>();
+            bossWasPublished = true;
+            bossHealthBar.Present(normalizedHealth);
         }
 
         public void Publish(
@@ -108,6 +119,7 @@ namespace CrowdPunch.Mono.UI
 
         public void EndFrame()
         {
+            if (!bossWasPublished && bossHealthBar != null) bossHealthBar.Hide();
             hiddenIds.Clear();
             foreach (KeyValuePair<int, BarView> pair in activeViews)
             {

@@ -3,42 +3,62 @@ using UnityEngine;
 
 namespace CrowdPunch.Mono.UI
 {
-    // FINALE-007: presentation data only; the finale bridge owns health updates.
-    public sealed class FinaleBossHealthBar : MonoBehaviour
+    // INFO-007, FINALE-007: consumes copied health only; ECS owns boss state.
+    public sealed class BossHealthBar : MonoBehaviour
     {
         private GameObject root;
         private RectTransform fill;
         private GauntletSequence sequence;
+        private bool hasHealth;
 
         private void OnEnable()
         {
             EnsureUi();
             sequence = FindFirstObjectByType<GauntletSequence>();
-            root.SetActive(true);
+            RefreshVisibility();
         }
 
-        private void OnDisable() { if (root != null) root.SetActive(false); }
+        private void OnDisable() { Hide(); }
         private void OnDestroy() { if (root != null) Destroy(root); }
 
         private void Update()
         {
-            if (root != null) root.SetActive(sequence == null ||
-                sequence.Screen == CampaignScreen.Playing && !sequence.RunFailed && Time.timeScale > 0);
+            RefreshVisibility();
         }
 
         public void Present(float healthFraction)
         {
             EnsureUi();
             fill.anchorMax = new Vector2(Mathf.Clamp01(healthFraction), 1);
+            hasHealth = healthFraction > 0;
+            RefreshVisibility();
+        }
+
+        public void Hide()
+        {
+            hasHealth = false;
+            if (root != null) root.SetActive(false);
+        }
+
+        private void RefreshVisibility()
+        {
+            if (root != null) root.SetActive(isActiveAndEnabled && hasHealth && Time.timeScale > 0 &&
+                (sequence == null || sequence.Screen == CampaignScreen.Playing && !sequence.RunFailed));
         }
 
         private void EnsureUi()
         {
             if (root != null) return;
-            root = new GameObject("Finale boss health", typeof(RectTransform), typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler));
+            root = new GameObject("Boss health", typeof(RectTransform), typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler));
             root.transform.SetParent(transform, false);
+            // Campaign bars are nested under GameCanvas; span its full screen rect.
+            var rootRect = (RectTransform)root.transform;
+            rootRect.anchorMin = Vector2.zero;
+            rootRect.anchorMax = Vector2.one;
+            rootRect.offsetMin = rootRect.offsetMax = Vector2.zero;
             var canvas = root.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.overrideSorting = true;
             canvas.sortingOrder = 1;
             var scaler = root.GetComponent<UnityEngine.UI.CanvasScaler>();
             scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;

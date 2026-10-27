@@ -126,7 +126,7 @@ namespace CrowdPunch.Editor
                 var main=EditorSceneManager.OpenScene(CampaignScenes+"Campaign_81.unity",OpenSceneMode.Single);
                 var settings=AssetDatabase.LoadAssetAtPath<FinaleSettings>(FinaleData+"FinaleSettings.asset");
                 var presentation=new GameObject("Finale presentation").AddComponent<FinalePresentation>();
-                presentation.gameObject.AddComponent<CrowdPunch.Mono.UI.FinaleBossHealthBar>();
+                presentation.gameObject.AddComponent<CrowdPunch.Mono.UI.BossHealthBar>();
                 presentation.settings=settings;
                 BossAppearanceBuilder.ConfigureFinale(presentation);
                 var hint=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<CrowdPunch.Mono.Levels.GauntletLevel>());
