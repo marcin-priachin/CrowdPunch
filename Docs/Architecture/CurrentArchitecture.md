@@ -1468,7 +1468,21 @@ dash movement (PLAYER-005, PLAYER-009). The shared cooldown property also drives
 humanoid RightHand (`mixamorig:RightHand` on this model), scales it from the authored
 cooldown multiplier to the ready multiplier, and creates two child particle systems at runtime.
 The looping aura increases its emission and size during recovery before changing to the ready
-color; a separate burst flashes once when recovery completes. It restores the animated bone
+  color; a separate burst flashes once when recovery completes.
+  The `Enable Cooldown Aura` toggle in `PlayerPunchSettings` controls both continuous aura
+  colours, including live changes; disabling it clears existing aura particles while preserving
+  the hand scaling, ready pop and completion burst (PLAYER-008).
+  The ready transition adds a 0.32-second eased scale overshoot/recoil/settle relative to the authored ready scale, tuned by
+  `readyPopDuration` and `readyPopScale`. The burst uses `PunchReadyStars` (the existing Cartoon FX
+  star texture with the project's URP particle shader), with randomized rotation and a soft fade.
+  Accepting another punch cancels the accent immediately; reset, hide and disable clear it without
+  playing a completion cue. Zero-duration cooldowns do not trigger it (PLAYER-008/009).
+  All feedback remains local to the hand; gameplay timing and ECS data are unchanged.
+  Verification (2026-10-27): all 12 `PlayerPunchCooldownTests` pass, covering PLAYER-008/009
+  timing plus one-shot completion, scale restoration and immediate punch/reset cancellation.
+  Three repeated Play mode punch/miss cycles in Campaign_01 each completed once; captures
+  confirmed the gold star shape and the hand returning to its pre-pop ready scale.
+  It restores the animated bone
 scale before each Animator evaluation so the presentation cannot accumulate scale drift.
 `PlayerPunchAnimation` also exposes `readyYaw` and `punchYaw` offsets in degrees (current prefab:
 -8 and 5). Cooldown frames interpolate from punch yaw to ready yaw; the ready frame holds ready

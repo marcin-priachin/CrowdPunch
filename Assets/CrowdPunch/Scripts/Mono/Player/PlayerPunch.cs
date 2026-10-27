@@ -163,6 +163,7 @@ namespace CrowdPunch.Mono.Player
                 settings.DirectionPositionWeight);
             pendingPunchSequence = ecsBridge.PunchSequence;
             awaitingPunchResult = true;
+            cooldownFeedback?.CancelReadyFeedback();
             PunchStarted?.Invoke();
         }
 

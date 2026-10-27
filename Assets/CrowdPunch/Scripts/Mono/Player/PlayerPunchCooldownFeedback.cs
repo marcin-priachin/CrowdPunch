@@ -14,6 +14,7 @@ namespace CrowdPunch.Mono.Player
         private ParticleSystem readyFlash;
         private Vector3 animatedHandScale;
         private float scaleMultiplier = 1f;
+        private float readyPopStartedAt = float.NegativeInfinity;
         private bool hasScaleOverride;
         private bool wasCoolingDown;
         private bool visible;
@@ -40,16 +41,17 @@ namespace CrowdPunch.Mono.Player
 
             visible = true;
             wasCoolingDown = false;
+            CancelReadyFeedback();
             ApplyAura(1f, false);
-            cooldownAura.Play(true);
         }
 
         public void Hide()
         {
             visible = false;
             wasCoolingDown = false;
-            cooldownAura?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            readyFlash?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            CancelReadyFeedback();
+            if (cooldownAura != null)
+                cooldownAura.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             RestoreHandScale();
         }
 
@@ -64,13 +66,16 @@ namespace CrowdPunch.Mono.Player
             {
                 cooldownAura.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 if (wasCoolingDown)
+                {
+                    readyPopStartedAt = Time.time;
                     PlayReadyFlash();
+                }
+                else
+                    CancelReadyFeedback();
             }
 
             wasCoolingDown = coolingDown;
             ApplyAura(progress, coolingDown);
-            if (stateChanged)
-                cooldownAura.Play(true);
         }
 
         private void Update()
@@ -85,13 +90,27 @@ namespace CrowdPunch.Mono.Player
                 return;
 
             animatedHandScale = hand.localScale;
-            hand.localScale = animatedHandScale * scaleMultiplier;
+            // PLAYER-008: layer the transient accent over the authored pose; never touch the player root.
+            float popProgress = settings.ReadyPopDuration > 0f
+                ? (Time.time - readyPopStartedAt) / settings.ReadyPopDuration
+                : 1f;
+            float popScale = popProgress >= 0f && popProgress < 1f && settings.ReadyPopScale != null
+                ? Mathf.Max(0.01f, settings.ReadyPopScale.Evaluate(popProgress))
+                : 1f;
+            hand.localScale = animatedHandScale * (scaleMultiplier * popScale);
             hasScaleOverride = true;
         }
 
         private void OnDisable()
         {
             Hide();
+        }
+
+        public void CancelReadyFeedback()
+        {
+            readyPopStartedAt = float.NegativeInfinity;
+            if (readyFlash != null)
+                readyFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
         private void OnDestroy()
@@ -167,6 +186,7 @@ namespace CrowdPunch.Mono.Player
             main.startLifetime = settings.ReadyFlashLifetime;
             main.startSpeed = settings.ReadyFlashSpeed;
             main.startSize = settings.ReadyFlashParticleSize;
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
             main.startColor = settings.ReadyFlashColor;
             main.maxParticles = settings.ReadyFlashParticleCount;
 
@@ -179,9 +199,22 @@ namespace CrowdPunch.Mono.Player
             shape.radius = settings.CooldownAuraRadius;
             shape.radiusThickness = 1f;
 
+            var rotation = effect.rotationOverLifetime;
+            rotation.enabled = true;
+            rotation.z = new ParticleSystem.MinMaxCurve(-2f, 2f);
+
+            var color = effect.colorOverLifetime;
+            color.enabled = true;
+            var fade = new Gradient();
+            fade.SetKeys(
+                new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.35f), new GradientAlphaKey(0f, 1f) });
+            color.color = fade;
+
             var size = effect.sizeOverLifetime;
             size.enabled = true;
-            size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, 0f));
+            size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 1f, 1f, 0f));
+            effect.GetComponent<ParticleSystemRenderer>().sharedMaterial = settings.ReadyFlashMaterial;
             return effect;
         }
 
@@ -207,7 +240,15 @@ namespace CrowdPunch.Mono.Player
 
         private void ApplyAura(float progress, bool coolingDown)
         {
-            scaleMultiplier = Mathf.Lerp(settings.CooldownHandScale, settings.ReadyHandScale, progress);
+            scaleMultiplier = Mathf.Lerp(settings.CooldownHandScale, settings.ReadyHandScale,
+                Mathf.SmoothStep(0f, 1f, progress));
+
+            if (!settings.EnableCooldownAura)
+            {
+                if (!cooldownAura.isStopped || cooldownAura.particleCount > 0)
+                    cooldownAura.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                return;
+            }
 
             var main = cooldownAura.main;
             main.startColor = coolingDown ? settings.CooldownAuraColor : settings.ReadyAuraColor;
@@ -218,6 +259,8 @@ namespace CrowdPunch.Mono.Player
                 settings.CooldownAuraMinimumEmission,
                 settings.CooldownAuraMaximumEmission,
                 progress);
+            if (!cooldownAura.isPlaying)
+                cooldownAura.Play(true);
         }
 
         private void PlayReadyFlash()

@@ -28,15 +28,60 @@ MonoBehaviour:
   cooldownHandScale: 1.2
   readyHandScale: 1
   cooldownParticleMaterial: {fileID: 2100000, guid: d8aa515267ba45b4da20349355379b65, type: 2}
+  readyPopDuration: 0.32
+  readyPopScale:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.2
+      value: 1.35
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.55
+      value: 0.94
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  enableCooldownAura: 0
   cooldownAuraColor: {r: 0.2, g: 0.45, b: 1, a: 0.7}
   readyAuraColor: {r: 1, g: 0.55, b: 0.08, a: 0.9}
   cooldownAuraMinimumEmission: 4
-  cooldownAuraMaximumEmission: 32
-  cooldownAuraLifetime: 0.35
+  cooldownAuraMaximumEmission: 22
+  cooldownAuraLifetime: 0.22
   cooldownAuraParticleSize: 0.09
   cooldownAuraRadius: 0.12
-  readyFlashColor: {r: 1, g: 0.8, b: 0.18, a: 1}
-  readyFlashParticleCount: 20
-  readyFlashLifetime: 0.22
-  readyFlashParticleSize: 0.14
-  readyFlashSpeed: 0.7
+  readyFlashMaterial: {fileID: 2100000, guid: b3af984d09094319ba569c3c23e68ce4, type: 2}
+  readyFlashColor: {r: 1, g: 0.83, b: 0.3, a: 1}
+  readyFlashParticleCount: 7
+  readyFlashLifetime: 0.28
+  readyFlashParticleSize: 0.06
+  readyFlashSpeed: 0.6

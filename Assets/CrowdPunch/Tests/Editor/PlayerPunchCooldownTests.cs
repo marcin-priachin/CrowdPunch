@@ -15,11 +15,13 @@ namespace CrowdPunch.Tests
         private PlayerPunchSettings settings;
         private PlayerPunchAnimation animation;
         private Animator animator;
+        private PlayerPunchCooldownFeedback feedback;
         private const BindingFlags PrivateInstance = BindingFlags.NonPublic | BindingFlags.Instance;
 
         [SetUp]
         public void Setup()
         {
+            feedback = null;
             root = new GameObject("PLAYER-008/009 cooldown test");
             punch = root.AddComponent<PlayerPunch>();
             bridge = root.GetComponent<PlayerEcsBridge>();
@@ -37,8 +39,64 @@ namespace CrowdPunch.Tests
         {
             if (animation != null) Call(animation, "OnDisable");
             Call(punch, "OnDisable");
+            if (feedback != null)
+            {
+                feedback.Hide();
+                foreach (var particles in feedback.GetComponentsInChildren<ParticleSystem>(true))
+                    Object.DestroyImmediate(particles.gameObject);
+            }
             Object.DestroyImmediate(root);
             Object.DestroyImmediate(settings);
+        }
+
+        [Test]
+        public void Player008_ReadyPopFiresOnceSettlesAndDoesNotAccumulateBoneScale()
+        {
+            Transform hand = CreateHandFeedback();
+            Vector3 authoredScale = hand.localScale;
+            feedback.SetCooldownState(0f, true);
+            feedback.SetCooldownState(1f, false);
+            float peakTime = Time.time - settings.ReadyPopDuration * .2f;
+            Set(feedback, "readyPopStartedAt", peakTime);
+            feedback.SetCooldownState(1f, false);
+            Assert.That(Get<float>(feedback, "readyPopStartedAt"), Is.EqualTo(peakTime), "Ready frames must not retrigger the pop");
+            Call(feedback, "LateUpdate");
+            Vector3 peakScale = hand.localScale;
+            Assert.That(peakScale.x, Is.EqualTo(authoredScale.x * settings.ReadyHandScale * 1.35f).Within(.001f));
+            Call(feedback, "LateUpdate");
+            Assert.That(Vector3.Distance(hand.localScale, peakScale), Is.LessThan(.001f), "Repeated presentation must not compound scale");
+            Set(feedback, "readyPopStartedAt", Time.time - settings.ReadyPopDuration - .01f);
+            Call(feedback, "LateUpdate");
+            Assert.That(Vector3.Distance(hand.localScale, authoredScale * settings.ReadyHandScale), Is.LessThan(.001f));
+            feedback.Hide();
+            Assert.That(hand.localScale, Is.EqualTo(authoredScale));
+        }
+
+        [Test]
+        public void Player008_AcceptedPunchAndResetCancelReadyAccentImmediately()
+        {
+            CreateHandFeedback();
+            feedback.SetCooldownState(0f, true);
+            feedback.SetCooldownState(1f, false);
+            punch.RequestPunch();
+            Assert.That(Get<float>(feedback, "readyPopStartedAt"), Is.EqualTo(float.NegativeInfinity));
+            feedback.SetCooldownState(0f, true);
+            feedback.SetCooldownState(1f, false);
+            punch.ResetPunchState();
+            Assert.That(Get<float>(feedback, "readyPopStartedAt"), Is.EqualTo(float.NegativeInfinity));
+            Assert.That(feedback.transform.Find("hand_r/Punch Ready Flash").GetComponent<ParticleSystem>().particleCount, Is.Zero);
+        }
+
+        private Transform CreateHandFeedback()
+        {
+            Transform hand = new GameObject("hand_r").transform;
+            hand.SetParent(root.transform, false);
+            hand.localScale = new Vector3(.8f, 1.1f, .9f);
+            feedback = root.AddComponent<PlayerPunchCooldownFeedback>();
+            feedback.Initialize(settings);
+            feedback.ShowReady();
+            Set(punch, "cooldownFeedback", feedback);
+            return hand;
         }
 
         [TestCase(true, 1.25f)]
@@ -165,6 +223,9 @@ namespace CrowdPunch.Tests
 
         private static void Set(object target, string field, object value)
             => target.GetType().GetField(field, PrivateInstance).SetValue(target, value);
+
+        private static T Get<T>(object target, string field)
+            => (T)target.GetType().GetField(field, PrivateInstance).GetValue(target);
 
         private static void Call(object target, string method)
             => target.GetType().GetMethod(method, PrivateInstance).Invoke(target, null);

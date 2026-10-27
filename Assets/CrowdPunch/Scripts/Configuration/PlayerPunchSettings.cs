@@ -32,10 +32,20 @@ namespace CrowdPunch.Configuration
         private float cooldownHandScale = 0.65f;
         [SerializeField, Min(0.01f), Tooltip("Hand scale multiplier when the punch is ready.")]
         private float readyHandScale = 1.15f;
-        [SerializeField, Tooltip("Material used by both generated hand particle effects.")]
+        [SerializeField, Tooltip("Aura material and fallback for the ready burst.")]
         private Material cooldownParticleMaterial;
 
+        [Header("Ready Pop")]
+        [SerializeField, Min(0f), Tooltip("Duration of the presentation-only fist bounce when a nonzero cooldown finishes. Zero disables it.")]
+        private float readyPopDuration = 0.32f;
+        [SerializeField, Tooltip("Hand scale relative to its ready size: quick overshoot, small recoil, then rest at 1.")]
+        private AnimationCurve readyPopScale = new AnimationCurve(
+            new Keyframe(0f, 1f), new Keyframe(0.2f, 1.35f),
+            new Keyframe(0.55f, 0.94f), new Keyframe(1f, 1f));
+
         [Header("Cooldown Aura")]
+        [SerializeField, Tooltip("Show the continuous blue/orange particles around the fist. The ready pop and star burst remain active when disabled.")]
+        private bool enableCooldownAura = true;
         [SerializeField] private Color cooldownAuraColor = new Color(0.2f, 0.45f, 1f, 0.7f);
         [SerializeField] private Color readyAuraColor = new Color(1f, 0.55f, 0.08f, 0.9f);
         [SerializeField, Min(0f)] private float cooldownAuraMinimumEmission = 4f;
@@ -45,6 +55,8 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float cooldownAuraRadius = 0.12f;
 
         [Header("Ready Flash")]
+        [SerializeField, Tooltip("Optional cartoon sparkle material for the ready burst. Falls back to the cooldown material.")]
+        private Material readyFlashMaterial;
         [SerializeField] private Color readyFlashColor = new Color(1f, 0.8f, 0.18f, 1f);
         [SerializeField, Range(1, 64)] private int readyFlashParticleCount = 20;
         [SerializeField, Min(0.01f)] private float readyFlashLifetime = 0.22f;
@@ -65,6 +77,10 @@ namespace CrowdPunch.Configuration
         public float CooldownHandScale => cooldownHandScale;
         public float ReadyHandScale => readyHandScale;
         public Material CooldownParticleMaterial => cooldownParticleMaterial;
+        public float ReadyPopDuration => readyPopDuration;
+        public AnimationCurve ReadyPopScale => readyPopScale;
+        public Material ReadyFlashMaterial => readyFlashMaterial != null ? readyFlashMaterial : cooldownParticleMaterial;
+        public bool EnableCooldownAura => enableCooldownAura;
         public Color CooldownAuraColor => cooldownAuraColor;
         public Color ReadyAuraColor => readyAuraColor;
         public float CooldownAuraMinimumEmission => cooldownAuraMinimumEmission;
