@@ -204,7 +204,7 @@ The player can move freely and use a directional dash for rapid repositioning. D
 
 Status: Must
 
-Before an attack, when an enemy the player can launch is inside the player's punch volume, show a short semitransparent line from that enemy along its initial post-hit trajectory. This includes living enemies in `Active`, `Launched`, or `Recovering`; the indication must not depend on the enemy being `Active`. Show one line per enemy that the punch would affect. Each line covers only the first few metres and must not attempt to predict the full collision chain.
+Before an attack, when an enemy the player can launch is inside the player's punch volume, show a short white arrow at 50% opacity from that enemy along its initial post-hit trajectory. Use a filled, chunky silhouette consistent with the established cartoony style. This includes living enemies in `Active`, `Launched`, or `Recovering`; the indication must not depend on the enemy being `Active`. Show one arrow per enemy that the punch would affect. Each arrow covers only the first few metres and must not attempt to predict the full collision chain.
 
 ### PLAYER-004 — Directional Certainty
 

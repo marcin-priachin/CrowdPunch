@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace CrowdPunch.Mono.Player
 {
@@ -10,55 +11,58 @@ namespace CrowdPunch.Mono.Player
     [RequireComponent(typeof(PlayerEcsBridge))]
     public sealed class PunchTrajectoryPreview : MonoBehaviour
     {
-        [SerializeField] private Color lineColor = new Color(1f, 0.85f, 0.15f, 0.45f);
         [SerializeField] private float lineLength = 3f;
-        [SerializeField] private float lineWidth = 0.12f;
+        [SerializeField, Min(0.01f)] private float lineWidth = 0.36f;
         [SerializeField] private float verticalOffset = 0.15f;
 
         public float LineLength => Mathf.Max(0f, lineLength);
 
-        private readonly List<LineRenderer> renderers = new List<LineRenderer>();
         private PlayerEcsBridge ecsBridge;
         private Material lineMaterial;
+        private Mesh arrowMesh;
 
         private void Awake()
         {
             ecsBridge = GetComponent<PlayerEcsBridge>();
-            Shader shader = Shader.Find("Sprites/Default");
+            Shader shader = Resources.Load<Shader>("Shaders/CombatFeedback");
             if (shader != null)
             {
                 lineMaterial = new Material(shader)
                 {
                     name = "Punch Trajectory Preview Material"
                 };
+                arrowMesh = CreateArrowMesh();
             }
         }
 
         private void LateUpdate()
         {
-            IReadOnlyList<PlayerEcsBridge.TrajectoryPreviewSegment> segments = ecsBridge.TrajectoryPreviewSegments;
-            EnsureRendererCount(segments.Count);
-
-            for (int i = 0; i < renderers.Count; i++)
+            if (lineMaterial == null || arrowMesh == null)
             {
-                bool visible = i < segments.Count;
-                LineRenderer line = renderers[i];
-                line.enabled = visible;
+                return;
+            }
 
-                if (!visible)
+            IReadOnlyList<PlayerEcsBridge.TrajectoryPreviewSegment> segments = ecsBridge.TrajectoryPreviewSegments;
+            for (int i = 0; i < segments.Count; i++)
+            {
+                PlayerEcsBridge.TrajectoryPreviewSegment segment = segments[i];
+                Vector3 direction = ToVector3(segment.End - segment.Start);
+                float length = direction.magnitude;
+                if (length < 0.001f)
                 {
                     continue;
                 }
 
-                PlayerEcsBridge.TrajectoryPreviewSegment segment = segments[i];
-                line.SetPosition(0, ToVector3(segment.Start) + Vector3.up * verticalOffset);
-                Vector3 end = ToVector3(segment.End) + Vector3.up * verticalOffset;
-                Vector3 direction = (ToVector3(segment.End) - ToVector3(segment.Start)).normalized;
-                Vector3 side = Vector3.Cross(Vector3.up, direction) * 0.32f;
-                line.SetPosition(1, end);
-                line.SetPosition(2, end - direction * 0.65f + side);
-                line.SetPosition(3, end);
-                line.SetPosition(4, end - direction * 0.65f - side);
+                direction /= length;
+                Vector3 up = Mathf.Abs(Vector3.Dot(direction, Vector3.up)) > 0.99f
+                    ? Vector3.forward : Vector3.up;
+                // World-space matrices keep the arrow independent of the giant player's scale.
+                Matrix4x4 matrix = Matrix4x4.TRS(
+                    ToVector3(segment.Start) + Vector3.up * verticalOffset,
+                    Quaternion.LookRotation(direction, up),
+                    new Vector3(Mathf.Max(0.01f, lineWidth), 1f, length));
+                Graphics.DrawMesh(arrowMesh, matrix, lineMaterial, gameObject.layer, null, 0, null,
+                    ShadowCastingMode.Off, false, null, LightProbeUsage.Off);
             }
         }
 
@@ -68,26 +72,37 @@ namespace CrowdPunch.Mono.Player
             {
                 Destroy(lineMaterial);
             }
+            if (arrowMesh != null)
+            {
+                Destroy(arrowMesh);
+            }
         }
 
-        private void EnsureRendererCount(int count)
+        private static Mesh CreateArrowMesh()
         {
-            while (renderers.Count < count)
+            Mesh mesh = new Mesh { name = "Punch Trajectory Arrow" };
+            // A clipped tail, broad shoulders and a solid tip match the flat cartoon feedback.
+            mesh.vertices = new[]
             {
-                GameObject lineObject = new GameObject($"Punch Trajectory {renderers.Count + 1}");
-                lineObject.transform.SetParent(transform, false);
-                LineRenderer line = lineObject.AddComponent<LineRenderer>();
-                line.useWorldSpace = true;
-                line.positionCount = 5;
-                line.startWidth = lineWidth;
-                line.endWidth = lineWidth;
-                line.startColor = lineColor;
-                line.endColor = lineColor;
-                line.sharedMaterial = lineMaterial;
-                line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                line.receiveShadows = false;
-                renderers.Add(line);
-            }
+                new Vector3(-0.32f, 0f, 0f),
+                new Vector3(-0.5f, 0f, 0.025f),
+                new Vector3(-0.5f, 0f, 0.76f),
+                new Vector3(-1.65f, 0f, 0.76f),
+                new Vector3(0f, 0f, 1f),
+                new Vector3(1.65f, 0f, 0.76f),
+                new Vector3(0.5f, 0f, 0.76f),
+                new Vector3(0.5f, 0f, 0.025f),
+                new Vector3(0.32f, 0f, 0f)
+            };
+            // Shaft and head share edges without overlapping transparent faces.
+            mesh.triangles = new[] { 0, 1, 8, 1, 7, 8, 1, 2, 7, 2, 6, 7, 3, 4, 2, 2, 4, 6, 6, 4, 5 };
+            Color[] colors = new Color[9];
+            for (int i = 0; i < colors.Length; i++)
+                colors[i] = new Color(1f, 1f, 1f, 0.5f);
+            mesh.colors = colors;
+            mesh.RecalculateBounds();
+            mesh.UploadMeshData(true);
+            return mesh;
         }
 
         private static Vector3 ToVector3(float3 value)
