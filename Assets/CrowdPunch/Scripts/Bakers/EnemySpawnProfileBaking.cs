@@ -51,6 +51,7 @@ namespace CrowdPunch.Bakers
                 },
                 RespawnEnabled = settings.RespawnEnabled ? (byte)1 : (byte)0,
                 SpawnFromGround = settings.SpawnFromGround ? (byte)1 : (byte)0,
+                DefeatAnimationFramesToSkip = settings.DefeatAnimationFramesToSkip,
                 MovementSettings = settings.MovementSettings,
                 ArchetypeSeparationSettings = settings.ArchetypeSeparationSettings,
                 ArmorSettings = settings.ArmorSettings,

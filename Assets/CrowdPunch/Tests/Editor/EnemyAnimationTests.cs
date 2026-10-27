@@ -65,6 +65,52 @@ namespace CrowdPunch.Tests
 
         private float3 Pose => world.EntityManager.GetBuffer<SkinMatrix>(visual)[0].Value.c3;
 
+        [Test, Combinatorial]
+        public void Info004DefeatSkipsFramesAndHoldsLastPose(
+            [Values(EnemyAnimationProfile.Standard, EnemyAnimationProfile.Dasher,
+                EnemyAnimationProfile.Goblin, EnemyAnimationProfile.GoblinArmored,
+                EnemyAnimationProfile.Explosive, EnemyAnimationProfile.Wizard,
+                EnemyAnimationProfile.Dragon, EnemyAnimationProfile.Ninja,
+                EnemyAnimationProfile.Slime, EnemyAnimationProfile.Trail,
+                EnemyAnimationProfile.Ranged, EnemyAnimationProfile.Baseline,
+                EnemyAnimationProfile.Elite, EnemyAnimationProfile.Armored)] EnemyAnimationProfile profile,
+            [Values(0, 1, 100, -1)] int skipped)
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(visual, new EnemyAnimation { Owner = owner, Samples = samples, Profile = (byte)profile });
+            em.AddComponentData(owner, new EnemyLandingAnimation { Duration = 1, DefeatFramesToSkip = skipped });
+            if (profile == EnemyAnimationProfile.Standard)
+            {
+                em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+                Tick();
+            }
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(skipped > 0 ? 1f : 0f).Within(.0001f));
+            Tick(.25f);
+            Assert.That(Pose.y, Is.EqualTo(skipped > 0 ? 1f : .25f).Within(.0001f));
+            Tick(2);
+            Assert.That(Pose.y, Is.EqualTo(1f).Within(.0001f));
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(LocalTransform.Identity));
+        }
+
+        [Test]
+        public void Info004DefeatSkipLeavesNonlethalLandingUnchanged()
+        {
+            var em = world.EntityManager;
+            em.AddComponentData(owner, new EnemyLandingAnimation { Duration = 1, DefeatFramesToSkip = 100 });
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            Tick();
+            em.SetComponentData(owner, new EnemyLaunchState
+            {
+                Phase = EnemyLaunchPhase.Recovering, LaunchSequence = 1, RecoverySecondsRemaining = 1
+            });
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(0f).Within(.0001f));
+            Tick();
+            Assert.That(Pose.y, Is.EqualTo(.25f).Within(.0001f));
+        }
+
         [Test]
         public void Dragon006SpawnCastReactionRecoveryAndDefeatPreservePhysics()
         {

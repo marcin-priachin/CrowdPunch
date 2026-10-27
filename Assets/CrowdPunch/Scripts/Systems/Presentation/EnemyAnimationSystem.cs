@@ -25,6 +25,7 @@ namespace CrowdPunch.Systems.Presentation
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
                 Movement = SystemAPI.GetComponentLookup<DesiredMovement>(true),
                 Settings = SystemAPI.GetComponentLookup<EnemyMovementSettings>(true),
+                LandingAnimations = SystemAPI.GetComponentLookup<EnemyLandingAnimation>(true),
                 Transforms = SystemAPI.GetComponentLookup<LocalTransform>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
                 Respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true),
@@ -77,6 +78,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movement;
             [ReadOnly] public ComponentLookup<EnemyMovementSettings> Settings;
+            [ReadOnly] public ComponentLookup<EnemyLandingAnimation> LandingAnimations;
             [ReadOnly] public ComponentLookup<LocalTransform> Transforms;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
             [ReadOnly] public ComponentLookup<RespawnRequest> Respawns;
@@ -288,7 +290,8 @@ namespace CrowdPunch.Systems.Presentation
                     || (launch.LaunchSequence != 0 && playback.LaunchSequence != launch.LaunchSequence);
                 if (launch.Phase == EnemyLaunchPhase.Recovering || launch.Phase == EnemyLaunchPhase.Defeated)
                 {
-                    if (endingLaunch)
+                    if (endingLaunch || (launch.Phase == EnemyLaunchPhase.Defeated && playback.Landing == 0
+                        && LandingAnimations.HasComponent(owner) && LandingAnimations[owner].DefeatFramesToSkip > 0))
                     {
                         playback.Landing = 1;
                         playback.ImpactPhase = 0f;
@@ -301,7 +304,9 @@ namespace CrowdPunch.Systems.Presentation
                         playback.ImpactPhase = math.saturate(playback.ImpactPhase + DeltaTime / math.max(0.01f, playback.ImpactDuration));
                     if (playback.Landing != 0)
                     {
-                        float impactFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                        float impactPhase = launch.Phase == EnemyLaunchPhase.Defeated
+                            ? DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount) : playback.ImpactPhase;
+                        float impactFrame = impactPhase * (samples.FrameCount - 1);
                         int from = (int)impactFrame;
                         int to = math.min(from + 1, samples.FrameCount - 1);
                         for (int bone = 0; bone < skin.Length; bone++)
@@ -414,6 +419,8 @@ namespace CrowdPunch.Systems.Presentation
                 playback.Phase = loop ? math.frac(playback.Phase) : math.saturate(playback.Phase);
                 playback.GoblinMotion = (byte)motion;
                 if (progress < 0) progress = playback.Phase;
+                if (launch.Phase == EnemyLaunchPhase.Defeated)
+                    progress = DefeatPhase(owner, progress, samples.FrameCount);
                 float frame = progress * (loop ? samples.FrameCount : samples.FrameCount - 1);
                 int from = math.min((int)frame, samples.FrameCount - 1);
                 ApplyDasherFrame(ref skin, ref samples, motion, from,
@@ -453,7 +460,7 @@ namespace CrowdPunch.Systems.Presentation
                         playback.ImpactPhase = math.saturate(playback.ImpactPhase
                             + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
                     }
-                    float deathFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                    float deathFrame = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount) * (samples.FrameCount - 1);
                     int from = (int)deathFrame;
                     ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
                         math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
@@ -507,7 +514,7 @@ namespace CrowdPunch.Systems.Presentation
                             + DeltaTime / math.max(.01f, samples.Durations[motion]));
                         playback.Landing = 1;
                         playback.HitActive = 0;
-                        phase = playback.ImpactPhase;
+                        phase = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount);
                     }
                     else if (launch.Phase == EnemyLaunchPhase.Recovering)
                     {
@@ -619,7 +626,7 @@ namespace CrowdPunch.Systems.Presentation
                             + DeltaTime / math.max(.01f, samples.Durations[motion]));
                         playback.Landing = 1;
                         playback.HitActive = 0;
-                        phase = playback.ImpactPhase;
+                        phase = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount);
                     }
                     else if (launch.Phase == EnemyLaunchPhase.Recovering)
                     {
@@ -703,7 +710,7 @@ namespace CrowdPunch.Systems.Presentation
                             + DeltaTime / math.max(.01f, samples.Durations[motion]));
                         playback.Landing = 1;
                         playback.HitActive = 0;
-                        phase = playback.ImpactPhase;
+                        phase = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount);
                     }
                     else if (launch.Phase == EnemyLaunchPhase.Recovering)
                     {
@@ -794,7 +801,7 @@ namespace CrowdPunch.Systems.Presentation
                         playback.ImpactPhase = math.saturate(playback.ImpactPhase
                             + DeltaTime / math.max(0.01f, samples.Durations[deathMotion]));
                     }
-                    float deathFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                    float deathFrame = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount) * (samples.FrameCount - 1);
                     int from = (int)deathFrame;
                     ApplyFrame(ref skin, ref samples, deathMotion, from,
                         math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
@@ -864,7 +871,7 @@ namespace CrowdPunch.Systems.Presentation
                         playback.ImpactPhase = math.saturate(playback.ImpactPhase
                             + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
                     }
-                    float deathFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                    float deathFrame = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount) * (samples.FrameCount - 1);
                     int from = (int)deathFrame;
                     ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
                         math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
@@ -926,7 +933,7 @@ namespace CrowdPunch.Systems.Presentation
                         playback.ImpactPhase = math.saturate(playback.ImpactPhase
                             + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
                     }
-                    float deathFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                    float deathFrame = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount) * (samples.FrameCount - 1);
                     int from = (int)deathFrame;
                     ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
                         math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
@@ -1099,6 +1106,8 @@ namespace CrowdPunch.Systems.Presentation
                 playback.Phase = oneShot ? math.saturate(playback.Phase) : math.frac(playback.Phase);
                 playback.GoblinMotion = (byte)motion;
                 if (progress < 0) progress = oneShot ? math.saturate(playback.Phase) : math.frac(playback.Phase);
+                if (launch.Phase == EnemyLaunchPhase.Defeated)
+                    progress = DefeatPhase(owner, progress, samples.FrameCount);
                 float frame = progress * (oneShot || motion == 3 || motion == 4 || motion == 5 || motion == 6
                     ? samples.FrameCount - 1 : samples.FrameCount);
                 int from = math.min((int)frame, samples.FrameCount - 1);
@@ -1106,6 +1115,14 @@ namespace CrowdPunch.Systems.Presentation
                     ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1);
                 if (armored || ElitePunches.HasComponent(owner)) ApplyDasherFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
                 else ApplyFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
+            }
+
+            private float DefeatPhase(Entity owner, float phase, int frameCount)
+            {
+                // INFO-004: offset the visible defeat pose without changing gameplay/lifecycle clocks.
+                int skip = LandingAnimations.HasComponent(owner)
+                    ? math.clamp(LandingAnimations[owner].DefeatFramesToSkip, 0, frameCount - 1) : 0;
+                return math.saturate(phase + skip / (float)math.max(1, frameCount - 1));
             }
 
             private void AnimateJogLegs(Entity owner, float blendResponse, ref EnemyAnimationPlayback playback,
@@ -1220,7 +1237,7 @@ namespace CrowdPunch.Systems.Presentation
                     playback.WasAttacking = 0;
                     playback.HitActive = 0;
                     motion = EnemyAnimationSamples.ImpactMotion;
-                    progress = playback.ImpactPhase;
+                    progress = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount);
                 }
                 else if (launch.Phase == EnemyLaunchPhase.Recovering)
                 {
@@ -1318,7 +1335,7 @@ namespace CrowdPunch.Systems.Presentation
                     playback.Landing = 1;
                     playback.HitActive = 0;
                     motion = EnemyAnimationSamples.ImpactMotion;
-                    progress = playback.ImpactPhase;
+                    progress = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount);
                 }
                 else if (launch.Phase == EnemyLaunchPhase.Recovering)
                 {
@@ -1392,7 +1409,7 @@ namespace CrowdPunch.Systems.Presentation
                         playback.ImpactPhase = math.saturate(playback.ImpactPhase
                             + DeltaTime / math.max(0.01f, samples.Durations[EnemyAnimationSamples.ImpactMotion]));
                     }
-                    float deathFrame = playback.ImpactPhase * (samples.FrameCount - 1);
+                    float deathFrame = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount) * (samples.FrameCount - 1);
                     int from = (int)deathFrame;
                     ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
                         math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));

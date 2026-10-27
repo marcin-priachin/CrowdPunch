@@ -68,6 +68,7 @@ namespace CrowdPunch.Editor
             serializedObject.Update();
 
             DrawSection("Spawn", SpawnProperties);
+            DrawSection("Defeat Animation", new[] { "defeatAnimationFramesToSkip" });
             DrawSection("Common Movement (provisional)", MovementProperties);
             DrawArchetypeSeparationOverrides();
             DrawSection("Common Health and Contact (provisional)", HealthAndContactProperties);

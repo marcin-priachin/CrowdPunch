@@ -7,5 +7,6 @@ namespace CrowdPunch.Components
         public float Duration;
         // Optional authored death clip, including defeats that did not follow a launch.
         public float OrdinaryDefeatDuration;
+        public int DefeatFramesToSkip;
     }
 }

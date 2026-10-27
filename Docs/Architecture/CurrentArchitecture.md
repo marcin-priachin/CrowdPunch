@@ -1,5 +1,15 @@
 # Crowd Punch â€” Current Architecture
 
+## Enemy defeat frame skip (2026-10-27, INFO-004)
+
+Every EnemySpawnSettings exposes Defeat Animation Frames To Skip (default 0).
+EnemySpawnProfileBaking copies the value into EnemySpawnProfile; EnemySpawnInitialization
+applies it to the spawned owner's EnemyLandingAnimation. EnemyAnimationSystem offsets
+defeat sampling by that many baked sample frames, clamps to the final pose, and preserves
+normal playback speed. Frames refer to the baked sample grid, not source clip frames.
+Nonlethal landing/recovery and gameplay/lifecycle clocks remain unchanged. Pool reuse
+retains the owner's profile setting; existing prefab defaults skip no frames.
+
 ## Player Dash Accents (2026-10-26, PLAYER-002/005, VISION-005/006)
 
 `CombatFeedback` uses the existing controller dash events and bounded `ImpactParticlePool`

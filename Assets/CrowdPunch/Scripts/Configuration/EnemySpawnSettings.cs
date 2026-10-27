@@ -48,6 +48,10 @@ namespace CrowdPunch.Configuration
         [SerializeField, Tooltip("Use the prefab's sampled spawn animation at floor height instead of dropping from the spawn point. Requires a configured spawn motion.")]
         private bool spawnFromGround;
 
+        [Header("Defeat animation")]
+        [SerializeField, Min(0), Tooltip("Number of baked animation sample frames to skip at the start of defeat playback (0 keeps the whole animation). Clamped to the final pose. Recovery playback and defeat cleanup timing are unchanged.")]
+        private int defeatAnimationFramesToSkip = 0;
+
         [Header("Common movement (provisional)")]
         [SerializeField, Min(0f)] private float moveSpeed = 4f;
         [SerializeField, Min(0f)] private float wanderSpeed = 1.5f;
@@ -208,6 +212,7 @@ namespace CrowdPunch.Configuration
         public float Radius => radius;
         public bool RespawnEnabled => respawnEnabled;
         public bool SpawnFromGround => spawnFromGround;
+        public int DefeatAnimationFramesToSkip => math.max(0, defeatAnimationFramesToSkip);
         public EnemyMovementSettings MovementSettings => new EnemyMovementSettings
         {
             MoveSpeed = moveSpeed, WanderSpeed = wanderSpeed, ChargeDistance = chargeDistance,
