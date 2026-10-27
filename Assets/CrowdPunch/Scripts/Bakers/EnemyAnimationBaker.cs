@@ -75,6 +75,24 @@ namespace CrowdPunch.Bakers
                         + owner.transform.up * authoring.LaunchPivotHeight) : float3.zero
             });
             AddComponent<EnemyAnimationPlayback>(entity);
+            if (authoring.ProjectileOrigin != null && owner != null)
+            {
+                if (bones != 1)
+                    throw new System.InvalidOperationException("Projectile origin requires a single-bone accessory renderer.");
+                DependsOn(authoring.ProjectileOrigin);
+                var volume = GetComponent<SphereCollider>(authoring.ProjectileOrigin);
+                if (volume != null) DependsOn(volume);
+                Vector3 center = volume != null ? volume.center : Vector3.zero;
+                AddComponent(entity, new RangedProjectileOrigin
+                {
+                    Animation = entity,
+                    Root = GetEntity(animator, TransformUsageFlags.Dynamic),
+                    BindPosition = renderer.transform.InverseTransformPoint(authoring.ProjectileOrigin.TransformPoint(center)),
+                    ModelToOwner = (float4x4)(owner.transform.worldToLocalMatrix * animator.transform.localToWorldMatrix),
+                    ChargeRadius = volume != null
+                        ? volume.radius * math.cmax(math.abs((float3)authoring.ProjectileOrigin.lossyScale)) : .13f
+                });
+            }
             if (owner != null)
             {
                 using var trailBuilder = new BlobBuilder(Allocator.Temp);

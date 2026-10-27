@@ -1,6 +1,7 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using CrowdPunch.Systems.AI;
+using CrowdPunch.Utilities;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -96,9 +97,21 @@ namespace CrowdPunch.Systems.Combat
 
                 uint shotSequence = attack.ValueRO.ProjectilesSpawned + 1;
                 Random random = CreateShotRandom(shooter, shotSequence);
+                float3 origin = transform.ValueRO.Position + new float3(0f, ProjectileSpawnHeight, 0f);
+                if (SystemAPI.HasComponent<RangedProjectileOrigin>(shooter))
+                {
+                    var muzzle = SystemAPI.GetComponent<RangedProjectileOrigin>(shooter);
+                    if (SystemAPI.HasComponent<EnemyAnimation>(muzzle.Animation))
+                    {
+                        var animation = SystemAPI.GetComponent<EnemyAnimation>(muzzle.Animation);
+                        if (animation.Samples.IsCreated)
+                            origin = RangedMuzzlePose.ReleasePosition(muzzle, transform.ValueRO, ref animation.Samples.Value,
+                                settings.ValueRO.ProjectileLaunchProgress);
+                    }
+                }
                 SpawnProjectile(
                     ref commandBuffer,
-                    transform.ValueRO.Position,
+                    origin,
                     player.Position,
                     player.Velocity,
                     settings.ValueRO,
@@ -128,13 +141,12 @@ namespace CrowdPunch.Systems.Combat
 
         private static void SpawnProjectile(
             ref EntityCommandBuffer commandBuffer,
-            float3 shooterPosition,
+            float3 start,
             float3 playerPosition,
             float3 playerVelocity,
             RangedEnemySettings settings,
             ref Random random)
         {
-            float3 start = shooterPosition + new float3(0f, ProjectileSpawnHeight, 0f);
             float leadTime = CalculateInterceptTime(
                 start.xz,
                 playerPosition.xz,

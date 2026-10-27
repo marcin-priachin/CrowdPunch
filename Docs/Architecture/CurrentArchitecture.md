@@ -1688,6 +1688,19 @@ From Ground and every skinned part uses the supplied Spawn in slot 7 (INFO-006).
 CPA3 samples, accessory meshes, controller, prefab, materials and settings reference can be
 rebuilt through **Crowd Punch > Enemies > Rebuild Ranged Prefab**.
 
+ENEMY-002, VISION-006: the wand's `EnemyAnimationAuthoring.ProjectileOrigin` references
+the authored `Orb` child. Its disabled sphere collider defines the charge center/radius
+without adding a physics trigger. `EnemyAnimationBaker` records that bind-space point,
+the animation entity and model-to-owner matrix in `RangedProjectileOrigin` on its accessory;
+`EnemyAnimationVisualBakingSystem` transfers that data to the combat owner after baking.
+Combat evaluates slot 4 at the configured release progress using current owner yaw/scale,
+so emission does not depend on stale presentation skin matrices or static bone transforms.
+`ProjectileVisualBridgeSystem` runs after `EnemyAnimationSystem` and reads the live wand
+skin for a `RangedCharge` sample. The existing bounded projectile presentation pool has
+a separate ranged-sized charge budget: an eased cyan core, contracting halo and inward
+sparks from `ArcaneCharge.prefab`. Wind-up exit, pooling, disable and restart clear it.
+Prefab rebuilds preserve the Orb's authored placement and reconnect the reference.
+
 All ranged numerical settings are provisional and live on the ranged spawn settings asset: preferred minimum/maximum distance, engagement range, approach/retreat speed, initial delay and per-instance variation, wind-up, base cooldown and per-shot cooldown variation, damage, player invulnerability duration, projectile speed, horizontal aim-spread radius, fire-time target Y offset, arc height, minimum world-space altitude, lifetime, and radius. Independent per-enemy cadence plus initial and per-shot timing variation is the first-pass multi-attacker control; there is no global simultaneous-attack cap.
 
 `RangedEnemyPositioningSystem` owns the ranged approach/hold/retreat decision. It reuses the baseline active-enemy separation input and writes `NavigationIntent` plus legacy `DesiredMovement`; reachable distance-band goals preserve approach/retreat/hold semantics, and `EnemyNavigationSystem` resolves final steering before movement; `EnemyMovementSystem` remains the velocity owner and its `Active` gate prevents ranged steering from overwriting launch or recovery velocity. `RangedAttackState` exposes eligibility, lifecycle phase, remaining time, emitted count, and cancelled-wind-up count for Entities inspection. Attack evaluation runs after punch and damage application, so same-frame launch or defeat cancels before emission. Pooling resets both attack and positioning state; already-fired projectiles have no shooter reference and remain independent.

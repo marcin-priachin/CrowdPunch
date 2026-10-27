@@ -51,6 +51,7 @@ namespace CrowdPunch.Editor
             var ring=Sprite("ArcaneOrbit",Kenney+"circle_02.png");
             var droplet=Sprite("SnakeDroplet",Kenney+"circle_05.png");
             library.RangedFlight=CombatVfxParticles.Flight("ArcaneComet",library.Pollen,ring,false,false);
+            library.RangedCharge=CombatVfxParticles.Charge(library.Pollen,ring);
             library.BossFlight=CombatVfxParticles.Flight("ArchmageOrb",library.Pollen,ring,true,false);
             library.SnakeFlight=CombatVfxParticles.Flight("SnakeDroplets",droplet,ring,false,true);
             library.RangedImpact=CombatVfxParticles.Impact("ArcaneImpact",flash,spark,smoke,new Color(.25f,.85f,1),.7f);

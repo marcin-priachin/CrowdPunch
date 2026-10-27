@@ -6,6 +6,34 @@ namespace CrowdPunch.Editor
 {
     internal static class CombatVfxParticles
     {
+        internal static ParticleSystem Charge(Material glow, Material ring)
+        {
+            var root = new GameObject("ArcaneCharge");
+            try
+            {
+                var core = Particle(root, glow, new Color(.7f, .98f, 1, .95f), 1, .12f, 1, 0);
+                var halo = Child(root, "Gathering halo", ring, new Color(.2f, .85f, 1, .8f), 1, .3f, 2.4f, 0);
+                var sparks = Child(root, "Inward sparks", glow, new Color(.4f, .95f, 1, .9f), 0, .3f, .22f, 0);
+                foreach (var ps in new[] { core, halo, sparks })
+                {
+                    var main = ps.main;
+                    main.loop = true; main.duration = 1; main.useUnscaledTime = false;
+                    main.simulationSpace = ParticleSystemSimulationSpace.Local;
+                    var emission = ps.emission;
+                    emission.rateOverTime = ps == core ? 24 : ps == halo ? 5 : 18;
+                    var shape = ps.shape; shape.enabled = ps == sparks;
+                    if (ps == sparks)
+                    {
+                        shape.shapeType = ParticleSystemShapeType.Sphere; shape.radius = 1.3f; shape.radiusThickness = 0;
+                        main.startSpeed = -3.5f;
+                    }
+                    var size = ps.sizeOverLifetime;
+                    size.size = new ParticleSystem.MinMaxCurve(1, AnimationCurve.EaseInOut(0, 1, 1, ps == halo ? .35f : .8f));
+                }
+                return Save(root);
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
         internal static ParticleSystem Impact(string name,Material flash,Material splinter,Material smoke,Color color,float scale)
         {
             var root=new GameObject(name);

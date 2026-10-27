@@ -22,6 +22,12 @@ namespace CrowdPunch.Systems.Presentation
                 bool rolling = SystemAPI.HasComponent<RollingBoss>(animation.ValueRO.Owner);
                 bool dino = SystemAPI.HasComponent<DinoBoss>(animation.ValueRO.Owner);
                 bool gatekeeper = SystemAPI.HasComponent<BossPart>(animation.ValueRO.Owner);
+                // Bakers can write only their own authoring entity; transfer the muzzle to its combat owner here.
+                if (SystemAPI.HasComponent<RangedProjectileOrigin>(animationEntity))
+                {
+                    commands.AddComponent(animation.ValueRO.Owner, SystemAPI.GetComponent<RangedProjectileOrigin>(animationEntity));
+                    commands.RemoveComponent<RangedProjectileOrigin>(animationEntity);
+                }
                 if (animation.ValueRO.SpawnMotion >= 0 && animation.ValueRO.SpawnMotion < EnemyAnimationSamples.MotionCount
                     && SystemAPI.HasComponent<EnemySpawnAnimation>(animation.ValueRO.Owner))
                     commands.SetComponent(animation.ValueRO.Owner, new EnemySpawnAnimation

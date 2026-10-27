@@ -7,6 +7,8 @@ namespace CrowdPunch.Authoring
     public sealed class EnemyAnimationAuthoring : MonoBehaviour
     {
         public TextAsset Samples;
+        [Tooltip("Optional projectile origin on a single-bone accessory. Its bind-pose placement follows the sampled animation, not the static Transform hierarchy.")]
+        public Transform ProjectileOrigin;
         [Tooltip("Optional directional jog samples applied only to leg bones during active movement.")]
         public TextAsset JogSamples;
         [Tooltip("Maximum leg-animation playback multiplier: 1 = original jog speed, 2 = double speed. Zero removes the cap. Gameplay movement and upper-body playback are unaffected.")]

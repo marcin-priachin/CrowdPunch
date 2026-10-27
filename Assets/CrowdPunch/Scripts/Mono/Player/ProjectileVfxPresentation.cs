@@ -44,11 +44,12 @@ namespace CrowdPunch.Mono.Player
             var library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
             if (library == null) return;
             root = new GameObject("Arcane projectile VFX pool").transform;
-            var prefabs = new[] { library.RangedFlight, library.BossFlight, library.SnakeFlight };
-            int[] counts = { Mathf.Clamp(library.RangedCapacity, 1, 128), Mathf.Clamp(library.BossCapacity, 1, 64), Mathf.Clamp(library.SnakeCapacity, 1, 64) };
-            slots = new Slot[counts[0] + counts[1] + counts[2]];
+            var prefabs = new[] { library.RangedFlight, library.BossFlight, library.SnakeFlight, library.RangedCharge };
+            int[] counts = { Mathf.Clamp(library.RangedCapacity, 1, 128), Mathf.Clamp(library.BossCapacity, 1, 64),
+                Mathf.Clamp(library.SnakeCapacity, 1, 64), Mathf.Clamp(library.RangedCapacity, 1, 128) };
+            slots = new Slot[counts[0] + counts[1] + counts[2] + counts[3]];
             int index = 0;
-            for (int kind = 0; kind < 3; kind++)
+            for (int kind = 0; kind < counts.Length; kind++)
             for (int i = 0; i < counts[kind]; i++)
             {
                 var slot = new Slot { Kind = (ProjectileVisualKind)kind };
@@ -93,6 +94,13 @@ namespace CrowdPunch.Mono.Player
             bool newLaunch = fresh || slot.Sequence != sample.Sequence;
             slot.Sequence = sample.Sequence; slot.Seen = true;
             float diameter = Mathf.Max(.15f, sample.Radius * 2);
+            if (sample.Kind == ProjectileVisualKind.RangedCharge)
+            {
+                float progress = Mathf.SmoothStep(0, 1, sample.ChargeProgress);
+                // Ease the growing orb and tighten its pulse as release approaches.
+                diameter *= Mathf.Lerp(.25f, 1.15f, progress)
+                    * (1 + .07f * progress * Mathf.Sin(sample.ChargeProgress * Mathf.PI * 12));
+            }
             if (slot.Flight != null)
             {
                 slot.Flight.transform.SetPositionAndRotation(sample.Position, Quaternion.LookRotation(
@@ -132,7 +140,7 @@ namespace CrowdPunch.Mono.Player
         }
         private void Burst(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale)
         {
-            if (isActiveAndEnabled && !FeedbackTimeController.IsSuspended && bursts != null)
+            if (isActiveAndEnabled && !FeedbackTimeController.IsSuspended && bursts != null && (int)kind < bursts.Length)
                 bursts[(int)kind].Show(position, direction, scale);
         }
         private void Update()

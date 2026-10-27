@@ -27,6 +27,11 @@ namespace CrowdPunch.Tests
                 bridge.EndProjectileVisuals();
                 Assert.That(presentation.ActiveFlightCount, Is.EqualTo(library.RangedCapacity + 1),
                     "Crowd projectiles must not consume the boss's reserved visual budget.");
+                for (ulong i = 2000; i < 2500; i++)
+                    bridge.ReceiveProjectileVisual(new ProjectileVisualSample { Key = i,
+                        Kind = ProjectileVisualKind.RangedCharge, Position = Vector3.up, Radius = .13f, ChargeProgress = .8f });
+                Assert.That(presentation.ActiveFlightCount, Is.EqualTo(library.RangedCapacity * 2 + 1),
+                    "Charging enemies have their own bounded budget and cannot displace flying shots.");
                 int capacity = presentation.FlightCapacity;
                 bridge.BeginProjectileVisuals(); bridge.EndProjectileVisuals();
                 Assert.That(presentation.ActiveFlightCount, Is.Zero);

@@ -7,6 +7,7 @@ namespace CrowdPunch.Configuration
     {
         [Header("Arcane projectiles and detached snake droplets")]
         public ParticleSystem RangedFlight, BossFlight, SnakeFlight;
+        public ParticleSystem RangedCharge;
         public ParticleSystem RangedImpact, BossImpact, SnakeSever;
         [Min(1)] public int RangedCapacity = 32, BossCapacity = 16, SnakeCapacity = 16;
         [Min(1)] public int BurstCapacity = 12;

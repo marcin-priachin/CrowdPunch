@@ -82,6 +82,10 @@ namespace CrowdPunch.Editor
                 animator.Play("Motion0", 0, 0);
                 animator.Update(0f);
                 GoblinJogSampling.Configure(root, "EnemyRanged");
+                var previous = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+                var marker = previous != null ? previous.GetComponentsInChildren<Transform>(true)
+                    .FirstOrDefault(t => t.name == "Orb" && t.parent.name == "Wand 01") : null;
+                ConfigureProjectileOrigin(root, marker);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -93,6 +97,32 @@ namespace CrowdPunch.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log($"Created {PrefabPath} from Goblin Trooper Wizard Variant.prefab and assigned it to {SettingsPath}.");
+        }
+
+        public static void ConfigureProjectileOrigin(GameObject root, Transform template = null)
+        {
+            var wand = root.GetComponentsInChildren<SkinnedMeshRenderer>(true).Single(r => r.name == "Wand 01");
+            var marker = wand.transform.Find("Orb");
+            if (marker == null)
+            {
+                if (template != null)
+                    marker = UnityEngine.Object.Instantiate(template.gameObject, wand.transform, false).transform;
+                else
+                {
+                    marker = new GameObject("Orb").transform;
+                    marker.SetParent(wand.transform, false);
+                    marker.localPosition = new Vector3(0, -.02f, .615f);
+                    marker.localScale = Vector3.one * .2f;
+                    marker.gameObject.AddComponent<SphereCollider>().isTrigger = true;
+                }
+                marker.name = "Orb";
+            }
+            // The sphere is an authoring volume, not a trigger in the enemy's compound collider.
+            var volume = marker.GetComponent<SphereCollider>();
+            if (volume != null) volume.enabled = false;
+            var preview = marker.GetComponent<MeshRenderer>();
+            if (preview != null) preview.enabled = false;
+            wand.GetComponent<EnemyAnimationAuthoring>().ProjectileOrigin = marker;
         }
 
         private static AnimationClip FindClip(string name)

@@ -564,8 +564,9 @@ namespace CrowdPunch.Tests
                 Assert.That(UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(animator.gameObject), Is.EqualTo(
                     UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(
                         "Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Wizard Variant.prefab")));
-                Assert.That(root.GetComponentsInChildren<UnityEngine.MeshRenderer>(true), Is.Empty,
-                    "Rigid equipment must be skinned to follow sampled hand and head bones.");
+                foreach (var rigid in root.GetComponentsInChildren<UnityEngine.MeshRenderer>(true))
+                    Assert.That(rigid.enabled, Is.False,
+                        "Rigid equipment must be skinned; only disabled authoring previews may remain.");
                 foreach (var authoring in root.GetComponentsInChildren<CrowdPunch.Authoring.EnemyAnimationAuthoring>(true))
                 {
                     Assert.That(authoring.Profile, Is.EqualTo(EnemyAnimationProfile.Goblin));
