@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.Serialization;
+using CrowdPunch.Components;
 
 namespace CrowdPunch.Configuration
 {
@@ -10,9 +12,31 @@ namespace CrowdPunch.Configuration
         [Header("Campaign")]
         [Tooltip("Allow selection of all available campaign levels from startup without marking them complete or changing saved progress.")]
         [SerializeField] private bool startWithAllLevelsUnlocked;
-        [Header("Crowd Pressure (Provisional)")]
-        [Tooltip("Maximum number of closest baseline or explosive enemies that actively approach the player. Other ordinary melee enemies remain distributed across the arena.")]
-        [SerializeField, Min(0)] private int maximumApproachingEnemies = 8;
+        [Header("Baseline Crowd Tactics (Provisional)")]
+        [Tooltip("Regional engages nearby groups; Whole Arena involves every eligible Baseline. Settings are baked: restart/rebake after editing.")]
+        [SerializeField] private CrowdParticipation crowdParticipation = CrowdParticipation.Regional;
+        [SerializeField, Range(0f, 1f)] private float pursuitShare = 0.6f;
+        [Tooltip("Regional participation radius in metres. The closest participating Baselines form the pursuit group.")]
+        [SerializeField, Min(0f)] private float crowdEngagementRadius = 45f;
+        [Tooltip("Extra distance engaged enemies may travel before returning to reserve at the next plan.")]
+        [SerializeField, Min(0f)] private float crowdDisengagementMargin = 10f;
+        [SerializeField, Min(0f)] private float interceptionPredictionSeconds = 1.25f;
+        [Tooltip("Caps prediction from fast movement, including dashes, in metres.")]
+        [SerializeField, Min(0f)] private float maximumInterceptionPredictionDistance = 16f;
+        [SerializeField, Min(0f)] private float interceptionFlankDistance = 10f;
+        [Tooltip("Seconds to commit to fixed flank/interception destinations before closing in. No continuous retargeting.")]
+        [SerializeField, Min(0.1f)] private float interceptionCommitmentSeconds = 4f;
+        [Tooltip("Minimum closing-in period before the next crowd plan; opened gaps are not immediately refilled.")]
+        [SerializeField, Min(0.1f)] private float interceptionCloseInSeconds = 2f;
+        [SerializeField, Min(0f)] private float crowdGroupRadius = 4f;
+        [Tooltip("Number of concentrated reserve areas across each arena/room.")]
+        [SerializeField, Min(1)] private int reserveGroupCount = 6;
+        [Tooltip("Smaller populations pursue together instead of producing ineffective interception groups.")]
+        [SerializeField, Min(1)] private int minimumInterceptionGroupSize = 4;
+        [Header("Explosive Pressure (Provisional)")]
+        [FormerlySerializedAs("maximumApproachingEnemies")]
+        [Tooltip("Existing Explosive pressure limit outside contact range. Baselines do not use this cap.")]
+        [SerializeField, Min(0)] private int maximumApproachingExplosives = 8;
         [Header("Enemy Launch (Provisional)")]
         [Tooltip("Minimum solver-estimated contact impulse required for a launched enemy to launch another enemy.")]
         [SerializeField, Min(0f)] private float minimumPropagationImpulse = 1.5f;
@@ -36,7 +60,22 @@ namespace CrowdPunch.Configuration
 
         public bool StartRunning => startRunning;
         public bool StartWithAllLevelsUnlocked => startWithAllLevelsUnlocked;
-        public int MaximumApproachingEnemies => maximumApproachingEnemies;
+        public EnemyCrowdPressureSettings CrowdPressure => new EnemyCrowdPressureSettings
+        {
+            Participation = crowdParticipation,
+            PursuitShare = Mathf.Clamp01(pursuitShare),
+            EngagementRadius = Mathf.Max(0f, crowdEngagementRadius),
+            DisengagementMargin = Mathf.Max(0f, crowdDisengagementMargin),
+            PredictionSeconds = Mathf.Max(0f, interceptionPredictionSeconds),
+            MaximumPredictionDistance = Mathf.Max(0f, maximumInterceptionPredictionDistance),
+            FlankDistance = Mathf.Max(0f, interceptionFlankDistance),
+            CommitmentSeconds = Mathf.Max(0.1f, interceptionCommitmentSeconds),
+            CloseInSeconds = Mathf.Max(0.1f, interceptionCloseInSeconds),
+            GroupRadius = Mathf.Max(0f, crowdGroupRadius),
+            ReserveGroupCount = Mathf.Clamp(reserveGroupCount, 1, 32),
+            MinimumInterceptionGroupSize = Mathf.Max(1, minimumInterceptionGroupSize),
+            MaximumApproachingExplosives = Mathf.Max(0, maximumApproachingExplosives)
+        };
         public float MinimumPropagationImpulse => minimumPropagationImpulse;
         public float PropagationAimCorrectionRadius => propagationAimCorrectionRadius;
         public float LaunchHomingDegreesPerSecond => launchHomingDegreesPerSecond;

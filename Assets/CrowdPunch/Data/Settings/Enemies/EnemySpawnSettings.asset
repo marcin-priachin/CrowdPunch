@@ -29,7 +29,7 @@ MonoBehaviour:
   turnSpeed: 12
   stoppingDistance: 0
   surroundDistance: 4.5
-  surroundRingSpacing: 0.75
+  surroundRingSpacing: 3
   separationDistanceMin: 3
   separationDistanceMax: 5
   separationWeight: 1.4
@@ -40,12 +40,12 @@ MonoBehaviour:
   contactInvincibilitySeconds: 0.5
   contactRadius: 0.75
   contactAttemptDistance: 10
-  contactAttemptIntervalMin: 0.3
-  contactAttemptIntervalMax: 1
+  contactAttemptIntervalMin: 0.1
+  contactAttemptIntervalMax: 0.5
   contactAttemptDuration: 1.1
   contactAttemptWindUpDuration: 0.65
   contactAttemptSpeedMultiplier: 1.5
-  contactAttemptSeparationWeight: 0.35
+  contactAttemptSeparationWeight: 0.1
   preferredMinimumDistance: 8
   preferredMaximumDistance: 12
   engagementRange: 9999

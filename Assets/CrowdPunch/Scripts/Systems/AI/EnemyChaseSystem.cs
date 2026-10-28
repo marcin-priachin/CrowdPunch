@@ -107,19 +107,18 @@ namespace CrowdPunch.Systems.AI
                     }
 
                     if (!SystemAPI.HasComponent<SnakeHead>(entity) && !SystemAPI.HasComponent<SnakeSegment>(entity)
-                        && !defending && playerInRoom && playerSnapshot.IsAvailable && IsOrdinaryMelee(archetype.ValueRO.Value))
+                        && !defending && playerInRoom && playerSnapshot.IsAvailable
+                        && archetype.ValueRO.Value == EnemyArchetypeKind.Explosive)
                     {
                         float3 toPlayer = transform.ValueRO.Position - playerSnapshot.Position;
                         toPlayer.y = 0f;
                         InsertClosestCandidate(
                             pressureCandidates,
-                            math.max(0, pressureSettings.MaximumApproachingEnemies),
+                            math.max(0, pressureSettings.MaximumApproachingExplosives),
                             new PressureCandidate
                             {
                                 Entity = entity,
-                                // Finish a committed lunge before allocating its pressure slot again.
-                                DistanceSq = archetype.ValueRO.Value == EnemyArchetypeKind.Baseline
-                                    && contactAttempt.ValueRO.IsAttempting != 0 ? -1f : math.lengthsq(toPlayer)
+                                DistanceSq = math.lengthsq(toPlayer)
                             });
                     }
                 }
@@ -137,6 +136,7 @@ namespace CrowdPunch.Systems.AI
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
                 Owners = owners,
                 Rooms = rooms,
+                CrowdOrders = SystemAPI.GetComponentLookup<EnemyCrowdAssignment>(true),
                 ClosestExplosive = closestExplosive,
                 Defending = defending,
                 Objective = objective,
@@ -150,12 +150,6 @@ namespace CrowdPunch.Systems.AI
 
             JobHandle disposePressureCandidates = pressureCandidates.Dispose(chaseJob);
             state.Dependency = activeEnemies.Dispose(disposePressureCandidates);
-        }
-
-        private static bool IsOrdinaryMelee(EnemyArchetypeKind archetype)
-        {
-            return archetype == EnemyArchetypeKind.Baseline
-                || archetype == EnemyArchetypeKind.Explosive;
         }
 
         private static void InsertClosestCandidate(
@@ -219,6 +213,7 @@ namespace CrowdPunch.Systems.AI
             [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<EnemyWaveOwnership> Owners;
             [ReadOnly] public ComponentLookup<BarricadeRoom> Rooms;
+            [ReadOnly] public ComponentLookup<EnemyCrowdAssignment> CrowdOrders;
             public double Now;
             public PlayerSnapshot PlayerSnapshot;
             public ArenaBounds ArenaBounds;
@@ -296,7 +291,26 @@ namespace CrowdPunch.Systems.AI
                 }
                 bool explosiveInContactRange = playerInRoom && archetype.Value == EnemyArchetypeKind.Explosive
                     && distanceToPlayer <= math.max(0f, contactSettings.AttemptDistance);
-                if (IsPressureEnemy(entity) || explosiveInContactRange || Defending && committed)
+                bool baseline = archetype.Value == EnemyArchetypeKind.Baseline;
+                var order = CrowdOrders.HasComponent(entity) ? CrowdOrders[entity] : default;
+                bool groupOrders = baseline && !Defending && playerInRoom && order.Initialized != 0;
+                if (groupOrders && order.Role == EnemyCrowdRole.Interception && !committed)
+                {
+                    EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
+                    float3 destination = order.Destination;
+                    destination.y = transform.Position.y;
+                    float speed = movementSettings.MoveSpeed * (distanceToPlayer <= movementSettings.ChargeDistance
+                        ? movementSettings.ChargeSpeedMultiplier : 1f);
+                    desiredMovement = new DesiredMovement
+                    {
+                        Direction = math.normalizesafe(math.normalizesafe(destination - transform.Position) + separation),
+                        Speed = speed
+                    };
+                    navigation = NavigationIntent.Travel(destination, speed, .75f, separation);
+                    return;
+                }
+                if (IsPressureEnemy(entity) || explosiveInContactRange || Defending && committed
+                    || groupOrders && (order.Role == EnemyCrowdRole.Pursuit || committed))
                 {
                     bool usesCommitment = archetype.Value == EnemyArchetypeKind.Baseline
                         && contactSettings.AttemptWindUpDuration > 0f;
@@ -358,6 +372,11 @@ namespace CrowdPunch.Systems.AI
                 }
 
                 EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
+
+                // Concentrated reserve orders replace per-enemy uniform arena slots for Baselines.
+                // Room-bound reserves also receive valid local orders when the player is in another room.
+                if (baseline && !Defending && order.Initialized != 0 && order.Role == EnemyCrowdRole.Reserve)
+                    wanderDestination = new WanderDestination { IsAssigned = 1, Position = order.Destination };
 
                 float3 distributionDirection = GetDistributionDirection(
                     entity,

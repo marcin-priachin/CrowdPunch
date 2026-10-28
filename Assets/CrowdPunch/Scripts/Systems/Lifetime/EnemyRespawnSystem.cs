@@ -97,6 +97,8 @@ namespace CrowdPunch.Systems.Lifetime
                     {
                         SystemAPI.SetComponent(enemy, new EnemyContactAttemptState());
                     }
+                    if (SystemAPI.HasComponent<EnemyCrowdAssignment>(enemy))
+                        SystemAPI.SetComponent(enemy, new EnemyCrowdAssignment());
                     if (SystemAPI.HasComponent<WizardCastState>(enemy))
                     {
                         SystemAPI.SetComponent(enemy, new WizardCastState { Remaining = SystemAPI.GetComponent<WizardSettings>(enemy).Cooldown,

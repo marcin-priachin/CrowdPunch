@@ -37,6 +37,7 @@ namespace CrowdPunch.Bakers
                 Phase = EnemyLaunchPhase.Active
             });
             AddComponent<WanderDestination>(entity);
+            AddComponent<EnemyCrowdAssignment>(entity);
             AddComponent<Health>(entity);
             AddComponent(entity, new HealthBar
             {

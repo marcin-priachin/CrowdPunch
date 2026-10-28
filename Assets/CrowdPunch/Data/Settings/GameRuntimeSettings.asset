@@ -14,7 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.GameRuntimeSettings
   startRunning: 1
   startWithAllLevelsUnlocked: 1
-  maximumApproachingEnemies: 30
+  crowdParticipation: 1
+  pursuitShare: 0.6
+  crowdEngagementRadius: 45
+  crowdDisengagementMargin: 10
+  interceptionPredictionSeconds: 1.25
+  maximumInterceptionPredictionDistance: 16
+  interceptionFlankDistance: 18
+  interceptionCommitmentSeconds: 4
+  interceptionCloseInSeconds: 2
+  crowdGroupRadius: 8
+  reserveGroupCount: 6
+  minimumInterceptionGroupSize: 4
+  maximumApproachingExplosives: 30
   minimumPropagationImpulse: 1.5
   propagationAimCorrectionRadius: 0
   launchHomingDegreesPerSecond: 0

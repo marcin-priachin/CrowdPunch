@@ -62,6 +62,20 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-28 - Baseline pursuit and interception
+
+Decision: Replace the Baseline closest-attacker cap and thin uniform reserve coverage with
+a substantial pursuit crowd (initially 60%) and two movement-predicting interception groups
+(40% combined). Interceptors briefly commit to their maneuver, then close in with ordinary
+contact attacks. Expose both Regional and Whole Arena participation in Game Runtime Settings.
+Regional retains concentrated distant reserves; small populations pursue together.
+
+Rationale: Pressure should threaten escape routes while retaining substantial groups for
+launch chains. Direction changes and physical launches must create usable openings.
+Distances and timing remain provisional tuning; no extra attack or HUD is introduced.
+
+GDD rules: COMBAT-016, ENEMY-012, VISION-002
+
 ### 2026-10-27 - Boss Health Placement
 
 Decision: Place every boss's health bar in the upper center of the UI, exactly matching the final boss, instead of above the boss's head. Retain elite and normal-enemy presentation.

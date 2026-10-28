@@ -1,5 +1,41 @@
 # Crowd Punch â€” Current Architecture
 
+## Baseline pursuit and interception (2026-10-28, COMBAT-016, ENEMY-012)
+
+`GameRuntimeSettings.CrowdPressure` bakes into `EnemyCrowdPressureSettings`. The Baseline
+attacker cap is replaced by Regional/Whole Arena participation, a 60% pursuit share and
+two interception groups. `EnemyBaker` establishes `EnemyCrowdAssignment` on prefab roots.
+`EnemyCrowdTacticsSystem` runs after the player bridge/wave spawn and before chase. It
+assigns the closest participants to pursuit and divides farther participants by their
+current side of player movement into two spatially coherent interception groups.
+Each group travels through a fixed lateral waypoint when needed, then toward a fixed
+movement-predicted destination. Arrival or timeout changes the order to pursuit, never
+territory holding. Targets use bounded prediction and remain inside the enemy's arena
+or spawn room; ordinary obstacle navigation still resolves the route.
+
+Orders persist between plans. Lost/launched/recovering members are not replaced during
+that interval. The default four-second maneuver is followed by at least two seconds
+of closing pressure before another plan; committed Baseline contact attacks finish
+across plan boundaries. Populations too small for two four-body interception groups
+pursue together. Unavailable players and protected-point mode clear tactical orders;
+protected-point attacker selection remains authoritative. Room changes trigger a new
+plan; other rooms retain their own concentrated reserves. Pooling clears assignments.
+
+Regional defaults: engage within 45 m, retain engaged membership up to 55 m at replanning.
+Whole Arena includes every eligible Baseline in the player's territory. Distant reserves
+move to the nearest of six stable arena/room areas, with per-enemy offsets inside a 4 m
+radius. Interception defaults: 1.25 s prediction capped at 16 m, 10 m lateral waypoints,
+4 m group radius. `EnemyCrowdFormation` owns only this formation geometry.
+
+`EnemyChaseSystem` consumes assignments into `NavigationIntent`/`DesiredMovement`;
+`EnemyNavigationSystem` and `EnemyMovementSystem` retain route and physics ownership.
+No normal tactic writes transforms or velocities. Special archetype, elite support,
+protected-point and pillar overrides remain in their existing systems. Explosives retain
+the old allocation with an explicitly named Maximum Approaching Explosives field; its
+serialized migration preserves the previous cap (30 in the shared asset). These settings
+are baked, so Inspector edits require SubScene rebaking/restart rather than live Mono reads.
+Verification is recorded in `Docs/Verification/BaselineCrowdTactics.md`.
+
 ## Launch accents (2026-10-28, VISION-004/005/006)
 
 `CombatFeedbackBridgeSystem` observes `EnemyLaunchState` phase/sequence independently of
@@ -1633,7 +1669,7 @@ Player health was temporarily protected and restored. Evidence is in `Temp/borde
 `GamePrePhysicsGroup` runs as a direct child of `FixedStepSimulationSystemGroup` before `PhysicsSystemGroup`:
 
 1. `PlayerBridgeSystem` copies the latest GameObject player snapshot, health, and punch request into ECS.
-2. `EnemyChaseSystem` produces explicit tactical destinations and a separate separation vector for navigation, alongside the legacy blended movement intent used when assistance is disabled. `EnemyCrowdPressureSettings` supplies a global cap, and the closest active baseline or explosive enemies up to that cap receive pressure assignments. Every other ordinary melee enemy owns a stable low-discrepancy coverage slot across the inset `ArenaBounds` rectangle and moves back toward that slot when released from pressure, preserving arena-wide interior launch opportunities rather than roaming between edge-heavy waypoints (COMBAT-016). Slot restoration uses normal movement speed while an enemy is materially displaced and reduces, but does not disable, separation influence until it nears the assigned area; this prevents crowd repulsion from overpowering interior coverage. An active explosive inside its authored contact-attempt range bypasses the pressure cap, continuously targets the player, and retains its spawn-selected separation distance/weight including archetype overrides throughout pursuit and contact attempts (ENEMY-010, COMBAT-013). The existing active-enemy snapshot pass also selects the closest eligible unexploded explosive by horizontal player distance, breaking ties by entity index. Only that enemy may suppress separation when the blended direct-pursuit vector has no positive projection toward the player. Protected-point attacker selection restricts eligibility. This adds no extra crowd scan or persistent state. If that direct player target lies beyond the navigation spacing grid but the complete route is clear of authored static obstacles, `EnemyNavigationSystem` preserves the direct physics pursuit instead of resolving the goal back to the grid edge; this keeps COMBAT-017's distribution volume separate from physically reachable arena space. Other assigned enemies approach deterministic surround-ring slots, using normal speed outside their authored charge distance and the charge multiplier inside it. When a slot is compressed by the inset arena bounds, the system samples deterministic golden-angle alternatives and selects the candidate that preserves the most intended radius. Assigned enemies use per-enemy randomized intervals to make brief, speed-scaled contact attempts toward the player. Each enemy uses its spawn-selected default separation distance and weight unless its profile's override array contains an entry for the nearby enemy's explicit archetype, and ordinary contact attempts retain separation with an independently authored weight. Ranged, Dasher, and elite systems retain their later archetype-specific overrides.
+2. `EnemyCrowdTacticsSystem` assigns Baseline pursuit, interception and concentrated reserve orders before `EnemyChaseSystem` converts them into explicit navigation destinations and separate local separation. See Baseline pursuit and interception above for COMBAT-016 allocation, commitment and defaults. Explosives alone retain the configurable closest-enemy cap and individual low-discrepancy coverage slots. Slot restoration uses normal movement speed while an enemy is materially displaced and reduces, but does not disable, separation influence until it nears the assigned area; this prevents crowd repulsion from overpowering interior coverage. An active explosive inside its authored contact-attempt range bypasses the pressure cap, continuously targets the player, and retains its spawn-selected separation distance/weight including archetype overrides throughout pursuit and contact attempts (ENEMY-010, COMBAT-013). The existing active-enemy snapshot pass also selects the closest eligible unexploded explosive by horizontal player distance, breaking ties by entity index. Only that enemy may suppress separation when the blended direct-pursuit vector has no positive projection toward the player. Protected-point attacker selection restricts eligibility. This adds no extra crowd scan or persistent state. If that direct player target lies beyond the navigation spacing grid but the complete route is clear of authored static obstacles, `EnemyNavigationSystem` preserves the direct physics pursuit instead of resolving the goal back to the grid edge; this keeps COMBAT-017's distribution volume separate from physically reachable arena space. Other assigned enemies approach deterministic surround-ring slots, using normal speed outside their authored charge distance and the charge multiplier inside it. When a slot is compressed by the inset arena bounds, the system samples deterministic golden-angle alternatives and selects the candidate that preserves the most intended radius. Assigned enemies use per-enemy randomized intervals to make brief, speed-scaled contact attempts toward the player. Each enemy uses its spawn-selected default separation distance and weight unless its profile's override array contains an entry for the nearby enemy's explicit archetype, and ordinary contact attempts retain separation with an independently authored weight. Ranged, Dasher, and elite systems retain their later archetype-specific overrides.
 3. `RangedEnemyPositioningSystem`, `DasherDecisionSystem`, `ElitePunchSystem`, and `EliteCrowdSupportSystem` make their existing tactical overrides. Each intent writer publishes an explicit `NavigationIntent` destination, arrival behavior, mode, and separate local-separation vector alongside legacy `DesiredMovement`. Destinations are never reconstructed from a blended direction.
 4. `WizardCastSystem` advances cast state after the player bridge and wave spawning. `WizardPositioningSystem` writes its dedicated distance-band intent, and `WizardHazardAvoidanceSystem` adds local zone avoidance after the other tactical writers. `EnemyNavigationSystem` runs after these intent writers and before both movement systems. It resolves clearance-valid direct travel or a budgeted cached route, then applies terrain-safe local steering to `DesiredMovement`. `EnemyMovementSystem` remains the normal Unity Physics velocity owner and rejects non-`Active` enemies. `DasherMovementSystem` retains committed straight-dash velocity ownership. See [Static obstacles and navigation](Navigation.md) for scheduler, settings, lifecycle, and inspection details.
 5. `PunchAimAssistSystem` maintains an ECS-owned target lock for each punchable enemy in the live punch volume. A physics ray from the source enemy along player facing replaces the lock when it hits another eligible enemy inside the configured range and horizontal-angle limit; misses retain the lock only while it remains within those limits, and the smallest-angle rule supplies an initial in-cone fallback. `PunchDetectionSystem` uses that locked direction for each hit, clears existing linear and angular velocity before a normal player launch in any eligible state, starts a fresh `Launched` sequence with the current punch data, and enables impulse and damage requests (PLAYER-003, PLAYER-004, COMBAT-014).

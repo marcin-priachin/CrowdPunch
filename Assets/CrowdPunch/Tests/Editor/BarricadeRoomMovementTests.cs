@@ -28,7 +28,8 @@ namespace CrowdPunch.Tests
             em.SetComponentData(em.CreateEntity(typeof(ArenaBounds)), new ArenaBounds
             { Center = new float3(0, 0, 130), Extents = new float3(20, 8, 160) });
             em.SetComponentData(em.CreateEntity(typeof(EnemyCrowdPressureSettings)), new EnemyCrowdPressureSettings
-            { MaximumApproachingEnemies = 1 });
+            { EngagementRadius = 35, PursuitShare = .6f, ReserveGroupCount = 6, GroupRadius = 2,
+                MinimumInterceptionGroupSize = 4, CommitmentSeconds = 4, CloseInSeconds = 2 });
             owner = em.CreateEntity(typeof(BarricadeRoom)); em.SetComponentData(owner, Room);
             world.SetTime(new TimeData(1, .02f));
         }
@@ -41,6 +42,7 @@ namespace CrowdPunch.Tests
                 typeof(EnemyMovementSettings), typeof(EnemyContactDamageSettings), typeof(EnemySeparationDistance),
                 typeof(EnemyArchetypeSeparationDistances), typeof(PhysicsVelocity), typeof(PhysicsMass), typeof(EnemyWaveOwnership));
             em.SetComponentEnabled<RespawnRequest>(e, false);
+            em.AddComponent<EnemyCrowdAssignment>(e);
             em.SetComponentData(e, LocalTransform.FromPosition(position));
             em.SetComponentData(e, new EnemyWaveOwnership { Sequence = sequence });
             em.SetComponentData(e, new EnemyArchetype { Value = kind });
@@ -52,7 +54,10 @@ namespace CrowdPunch.Tests
             return e;
         }
         private void Chase()
-        { world.GetOrCreateSystem<EnemyChaseSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs(); }
+        {
+            world.GetOrCreateSystem<EnemyCrowdTacticsSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<EnemyChaseSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+        }
         private void Move()
         { world.GetOrCreateSystem<EnemyMovementSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs(); }
         private static void Inside(float3 position, BarricadeRoom room)
@@ -63,7 +68,7 @@ namespace CrowdPunch.Tests
             var enemies = new Entity[96];
             for (int i = 0; i < enemies.Length; i++)
             {
-                enemies[i] = Enemy(new float3(0, 0, -5), owner);
+                enemies[i] = Enemy(new float3(-8 + i % 8 * 2, 0, -18 + i / 8 * 2), owner);
                 em.SetComponentData(enemies[i], new WanderDestination { IsAssigned = 1, Position = new float3(0, 0, 250) });
             }
             Chase(); bool front = false, back = false, left = false, right = false;
@@ -146,7 +151,7 @@ namespace CrowdPunch.Tests
 
         [Test] public void Barricade008_NonRoomEncounterKeepsGlobalDistribution()
         {
-            var e = Enemy(float3.zero, Entity.Null); Chase();
+            var e = Enemy(new float3(0, 0, 130), Entity.Null); Chase();
             Assert.That(em.GetComponentData<NavigationIntent>(e).Destination.z, Is.GreaterThan(Room.Maximum.y));
         }
 
