@@ -54,7 +54,7 @@ namespace CrowdPunch.Editor
             library.RangedCharge=CombatVfxParticles.Charge(library.Pollen,ring);
             library.BossFlight=CombatVfxParticles.Flight("ArchmageOrb",library.Pollen,ring,true,false);
             library.SnakeFlight=CombatVfxParticles.Flight("SnakeDroplets",droplet,ring,false,true);
-            library.RangedImpact=CombatVfxParticles.Impact("ArcaneImpact",flash,spark,smoke,new Color(.25f,.85f,1),.7f);
+            library.RangedImpact=CombatVfxParticles.Splash(flash,ring,droplet);
             library.BossImpact=CombatVfxParticles.Impact("ArchmageImpact",flash,spark,smoke,new Color(.85f,.42f,1),1);
             library.SnakeSever=CombatVfxParticles.Impact("SnakeSever",ring,droplet,null,new Color(1,.72f,.18f),.5f);
             library.LaunchDust=CombatVfxParticles.Smoke("LaunchDust",smoke,new Color(.72f,.65f,.48f,.4f),5,.3f,.4f);

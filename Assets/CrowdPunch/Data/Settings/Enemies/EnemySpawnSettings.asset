@@ -24,11 +24,11 @@ MonoBehaviour:
   wanderSpeed: 1.5
   chargeDistance: 99999
   chargeSpeedMultiplier: 1.25
-  acceleration: 12
+  acceleration: 18
   brakingAcceleration: 40
   turnSpeed: 12
   stoppingDistance: 0
-  surroundDistance: 6
+  surroundDistance: 4.5
   surroundRingSpacing: 0.75
   separationDistanceMin: 3
   separationDistanceMax: 5
@@ -40,11 +40,11 @@ MonoBehaviour:
   contactInvincibilitySeconds: 0.5
   contactRadius: 0.75
   contactAttemptDistance: 10
-  contactAttemptIntervalMin: 1
-  contactAttemptIntervalMax: 3
+  contactAttemptIntervalMin: 0.3
+  contactAttemptIntervalMax: 1
   contactAttemptDuration: 1.1
   contactAttemptWindUpDuration: 0.65
-  contactAttemptSpeedMultiplier: 1.25
+  contactAttemptSpeedMultiplier: 1.5
   contactAttemptSeparationWeight: 0.35
   preferredMinimumDistance: 8
   preferredMaximumDistance: 12

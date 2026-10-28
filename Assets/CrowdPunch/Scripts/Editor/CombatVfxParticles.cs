@@ -6,6 +6,31 @@ namespace CrowdPunch.Editor
 {
     internal static class CombatVfxParticles
     {
+        internal static ParticleSystem Splash(Material flash, Material ring, Material droplet)
+        {
+            var root = new GameObject("ArcaneImpact");
+            try
+            {
+                var core = Particle(root, flash, new Color(.65f, .98f, 1), 1, .16f, 1.35f, 0);
+                var shape = core.shape; shape.enabled = false;
+                var rim = Child(root, "Expanding splash ring", ring, new Color(.18f, .8f, 1, .85f), 1, .32f, 1.8f, 0);
+                shape = rim.shape; shape.enabled = false;
+                rim.GetComponent<ParticleSystemRenderer>().alignment = ParticleSystemRenderSpace.Local;
+                var size = rim.sizeOverLifetime;
+                size.size = new ParticleSystem.MinMaxCurve(1, AnimationCurve.EaseInOut(0, .15f, 1, 1.4f));
+                var drops = Child(root, "Chunky cyan droplets", droplet, new Color(.22f, .88f, 1), 10, .38f, .24f, 3.8f);
+                shape = drops.shape; shape.shapeType = ParticleSystemShapeType.Cone; shape.angle = 72; shape.radius = .08f;
+                var main = drops.main; main.gravityModifier = .8f;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(.24f, .42f);
+                main.startRotation = new ParticleSystem.MinMaxCurve(0, Mathf.PI * 2);
+                size = drops.sizeOverLifetime;
+                size.size = new ParticleSystem.MinMaxCurve(1, new AnimationCurve(new Keyframe(0, .5f),
+                    new Keyframe(.18f, 1.2f), new Keyframe(1, 0)));
+                Child(root, "White splash flecks", droplet, new Color(.9f, 1, 1), 5, .22f, .12f, 4.5f);
+                return Save(root);
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
         internal static ParticleSystem Charge(Material glow, Material ring)
         {
             var root = new GameObject("ArcaneCharge");

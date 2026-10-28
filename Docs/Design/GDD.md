@@ -816,6 +816,8 @@ Status: Must
 
 The ranged projectile follows a readable arc over the crowd at a consistent configured horizontal speed and continues along the same trajectory after crossing its sampled aim point until impact or cleanup below a provisional minimum altitude. It passes through ordinary enemies without damaging, pushing, launching, or otherwise affecting them, and damages the player at most once through the normal player damage and invulnerability rules. The player avoids the shot by moving out of its fixed trajectory after it is fired. Projectile speed, arc height, minimum altitude, collision radius, damage, and lifetime are provisional.
 
+Ground and player impacts consume the ranged projectile and produce a brief cartoony cyan splash at the contact surface. Expiry and minimum-altitude fallback cleanup do not create an impact splash.
+
 ### ENEMY-004 — Ranged Enemy Baseline Rules
 
 Status: Must

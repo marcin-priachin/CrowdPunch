@@ -3544,6 +3544,14 @@ VISION-005/006, ENEMY-003, CHICKEN-003/004/007 and WIZARD-006: the current effec
 `Resources/CombatVfxLibrary.asset` plus the existing `CombatFeedbackSettings.asset`.
 This supersedes the earlier sphere explosion and violet Wizard zone appearance described above.
 The enemy named Wizard is the Bud plant: green-gold spore mist/pollen replaces its violet disk styling.
+ENEMY-003, VISION-006: ranged projectile ground contact is swept against `ArenaGroundPlane`
+with projectile radius clearance. The earliest player/ground contact consumes the shot;
+the splash position is clamped to the contact surface, including fast downward steps.
+`ArcaneImpact.prefab` supplies a cyan splat, expanding surface ring and chunky outward
+droplets through the existing 12-slot impact pool and eight-bursts-per-frame limit.
+Minimum-altitude fallback and lifetime cleanup are silent. Player collision-layer and
+invulnerability handling remain in their existing damage path.
+
 Ranged wizard comets are cyan; the larger wizard boss orbs are violet/gold, with an orange return
 accent that continues to communicate danger to the player.
 
