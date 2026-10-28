@@ -40,6 +40,17 @@ MonoBehaviour:
   CameraMotionScale: 0.75
   ReduceFlashes: 0
   ComicImpactScale: 0.65
+  LaunchDeparturePuff: 1
+  LaunchDepartureDuration: 0.18
+  LaunchDepartureScale: 0.8
+  LaunchSpeedLineBoost: 1
+  LaunchSpeedLineBoostDuration: 0.13
+  LaunchSpeedLineOpacityMultiplier: 2
+  LaunchSpeedLineBrightnessMultiplier: 1.5
+  LaunchBodySnap: 1
+  LaunchBodySnapDuration: 0.18
+  LaunchBodyCompression: 0.22
+  LaunchBodyStretch: 0.38
   PunchParticles: {fileID: 2141078951841302086, guid: 5cef06f455b59ee4a8dd6ed9d387e08d, type: 3}
   EnemyParticles: {fileID: 351161093424361992, guid: 4fe2bb625908e514699bc3213fefb61b, type: 3}
   PlayerDamageParticles: {fileID: 4069455409671823905, guid: 1429ce8b8f059da489da5380d0b2cda6, type: 3}

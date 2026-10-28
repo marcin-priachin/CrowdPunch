@@ -42,6 +42,18 @@ namespace CrowdPunch.Mono.Player
         }
         private static float Evaluate(AnimationCurve curve, float t)
             => Mathf.Clamp(curve != null && curve.length > 0 ? curve.Evaluate(t) : 1, 0, 4);
+        internal void Apply(TrailRenderer trail, CombatFeedbackSettings settings, float launchAge)
+        {
+            float boost = settings.LaunchSpeedLineBoost
+                ? 1f - Mathf.Clamp01(launchAge / Mathf.Max(.01f, settings.LaunchSpeedLineBoostDuration)) : 0f;
+            boost = boost * boost * (3f - 2f * boost);
+            Properties.SetFloat(OpacityId, Mathf.Clamp01(settings.TrailLineOpacity
+                * Mathf.Lerp(1f, settings.LaunchSpeedLineOpacityMultiplier, boost)));
+            Properties.SetFloat(BrightnessId, Mathf.Max(0, settings.TrailLineBrightness
+                * Mathf.Lerp(1f, settings.LaunchSpeedLineBrightnessMultiplier, boost)));
+            // SetPropertyBlock copies values; slots share one profile texture, never a material instance.
+            trail.SetPropertyBlock(Properties);
+        }
         public void Dispose()
         {
             if (profiles == null) return;

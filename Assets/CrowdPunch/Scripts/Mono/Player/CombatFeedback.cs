@@ -20,6 +20,7 @@ namespace CrowdPunch.Mono.Player
         private CombatCameraFeedback cameraFeedback;
         private ImpactParticlePool particles;
         private ComicImpactPool comicImpacts;
+        private LaunchDeparturePool launchDepartures;
         private UnityEngine.Camera feedbackCamera;
         private DasherTelegraphParticlePool dasherTelegraphs;
         private LaunchedTrailPool trails;
@@ -58,10 +59,12 @@ namespace CrowdPunch.Mono.Player
             flashMaterial = new Material(Resources.Load<Shader>("Shaders/ExplosionFeedback"));
             particles = new ImpactParticlePool(poolRoot, settings, particleMaterial);
             comicImpacts = new ComicImpactPool(poolRoot, settings, particleMaterial);
+            launchDepartures = new LaunchDeparturePool(poolRoot, settings, particleMaterial);
             dasherTelegraphs = new DasherTelegraphParticlePool(poolRoot, settings, particleMaterial);
             trails = new LaunchedTrailPool(poolRoot, settings, particleMaterial);
             flash = new PlayerDamageFlash(player.transform, flashMaterial);
             bridge.ImpactReceived += OnImpact;
+            bridge.LaunchReceived += OnLaunch;
             bridge.PunchResolved += OnPunchResolved;
             bridge.TrailsBegan += trails.Begin;
             bridge.TrailReceived += trails.Show;
@@ -106,6 +109,11 @@ namespace CrowdPunch.Mono.Player
                 cameraFeedback.Impulse(message.Direction, settings.CollisionKick * message.Intensity * attenuation, message.Intensity * attenuation);
             else return;
             nextCameraTime = Time.unscaledTimeAsDouble + settings.CollisionCameraInterval;
+        }
+        private void OnLaunch(Vector3 position, Vector3 direction, Vector3 size)
+        {
+            if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
+            launchDepartures?.Show(position, direction, size);
         }
         private void OnDamage(Vector3 impulse)
         {
@@ -160,6 +168,7 @@ namespace CrowdPunch.Mono.Player
         {
             if (!bound) return;
             comicImpacts?.Tick(Time.unscaledDeltaTime, feedbackCamera);
+            launchDepartures?.Tick(Time.unscaledDeltaTime, feedbackCamera);
             if (bridge == null || !bridge.gameObject.activeInHierarchy || FeedbackTimeController.IsSuspended) return;
             if (dashEndPending)
             {
@@ -187,6 +196,7 @@ namespace CrowdPunch.Mono.Player
             dashDirection = Vector3.zero;
             nextCameraTime = nextExceptionalTime = nextDamageTime = 0;
             particles?.Clear(); comicImpacts?.Clear(); trails?.Clear(); dasherTelegraphs?.Clear(); flash?.Clear();
+            launchDepartures?.Clear();
             if (cameraFeedback != null) cameraFeedback.ResetFeedback();
             FeedbackTimeController.CancelEffects();
         }
@@ -205,6 +215,7 @@ namespace CrowdPunch.Mono.Player
             {
                 bridge.FeedbackSettings = settings;
                 if (comicImpacts == null) comicImpacts = new ComicImpactPool(poolRoot, settings, particleMaterial);
+                if (launchDepartures == null) launchDepartures = new LaunchDeparturePool(poolRoot, settings, particleMaterial);
             }
         }
         private void OnDisable()
@@ -213,6 +224,8 @@ namespace CrowdPunch.Mono.Player
             ResetFeedback();
             comicImpacts?.Dispose();
             comicImpacts = null;
+            launchDepartures?.Dispose();
+            launchDepartures = null;
         }
         private void OnDestroy()
         {
@@ -220,6 +233,7 @@ namespace CrowdPunch.Mono.Player
             if (bridge != null)
             {
                 bridge.ImpactReceived -= OnImpact;
+                bridge.LaunchReceived -= OnLaunch;
                 bridge.PunchResolved -= OnPunchResolved;
                 if (trails != null) { bridge.TrailsBegan -= trails.Begin; bridge.TrailReceived -= trails.Show; bridge.TrailsEnded -= trails.End; }
                 if (dasherTelegraphs != null)
@@ -236,6 +250,7 @@ namespace CrowdPunch.Mono.Player
             if (particleMaterial != null) Destroy(particleMaterial);
             if (flashMaterial != null) Destroy(flashMaterial);
             comicImpacts?.Dispose();
+            launchDepartures?.Dispose();
             if (poolRoot != null) Destroy(poolRoot.gameObject);
             trails?.Dispose();
         }

@@ -1,5 +1,38 @@
 # Crowd Punch â€” Current Architecture
 
+## Launch accents (2026-10-28, VISION-004/005/006)
+
+`CombatFeedbackBridgeSystem` observes `EnemyLaunchState` phase/sequence independently of
+the throttled impact mailbox. New flights and re-punches reset presentation age and cache
+departure direction; repeated contacts do not. `EnemyImpactFeedback` stores this observation
+and copied snap tuning. Age advances on unscaled time, including punch hit-stop. Pooling
+clears it; suspension consumes the current launch identity so resume cannot replay an accent.
+Existing launch sources share the presentation path without changing their gameplay rules.
+
+`PlayerEcsBridge.LaunchReceived` copies position, direction and dimensions to `CombatFeedback`.
+Its `LaunchDeparturePool` draws five cream-white puff lobes and three backward strokes in
+one bounded mesh (24 slots by default, 48 maximum). At most MaximumImpactsPerFrame new
+departures are published per presentation update. Saturation drops decoration. The puff
+stays at departure rather than following the body. This replaces trail-slot acquisition dust;
+trail starvation/reacquisition cannot replay a departure. Disable, reset and transition clear
+the pool; re-enable recreates disposed presentation resources.
+
+The trail bridge additionally copies launch age. `LaunchTrailStyle` applies a per-slot
+opacity/brightness envelope through the existing reusable MaterialPropertyBlock and shared
+profile texture. Material assets, profiles, tint, width and spatial length remain designer-owned.
+`EnemyImpactVisualSystem` composes a volume-preserving directional compression/stretch onto
+the current render matrix. This launch-only opt-in also affects animation-driven enemies;
+their other procedural tint, flash and gait accents remain bypassed. All pieces share the
+current skin-probed centre when available, otherwise the physics centre. Authored transforms,
+skin matrices, collision dimensions and velocities retain their existing owners. Exact matrix
+restoration prevents accumulated scale on repeated updates or live disable.
+
+`Resources/CombatFeedbackSettings.asset` enables LaunchDeparturePuff, LaunchSpeedLineBoost
+and LaunchBodySnap independently. Defaults: 180 ms departure at scale 0.8; 130 ms line boost
+with 2x opacity (clamped) and 1.5x brightness; 180 ms body snap with 22% compression and 38%
+stretch. Timings/strengths are Inspector tuning. Existing trail settings are preserved.
+See [launch accent verification](../Verification/LaunchAccents.md).
+
 ## Enemy defeat frame skip (2026-10-27, INFO-004)
 
 Every EnemySpawnSettings exposes Defeat Animation Frames To Skip (default 0).

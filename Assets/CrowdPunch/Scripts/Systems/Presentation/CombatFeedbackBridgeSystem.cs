@@ -77,6 +77,7 @@ namespace CrowdPunch.Systems.Presentation
             }
             float dt = UnityEngine.Time.unscaledDeltaTime;
             int emitted = 0;
+            int departures = 0;
             int trails = 0;
             bridge?.BeginTrails();
             foreach (var (feedback, launch, transform, velocity, entity) in
@@ -87,7 +88,12 @@ namespace CrowdPunch.Systems.Presentation
                     && SystemAPI.IsComponentEnabled<RespawnRequest>(entity);
                 if (reset || pooled)
                 {
-                    feedback.ValueRW = default;
+                    feedback.ValueRW = pooled ? default : new EnemyImpactFeedback
+                    {
+                        ObservedLaunchSequence = launch.ValueRO.LaunchSequence,
+                        WasLaunched = (byte)(launch.ValueRO.Phase == EnemyLaunchPhase.Launched ? 1 : 0),
+                        LaunchAge = float.MaxValue
+                    };
                     continue;
                 }
                 ref var f = ref feedback.ValueRW;
@@ -118,11 +124,18 @@ namespace CrowdPunch.Systems.Presentation
                     }
                 }
                 float speed = math.length(velocity.ValueRO.Linear);
-                if (launch.ValueRO.Phase == EnemyLaunchPhase.Launched && speed >= settings.TrailMinimumSpeed
-                    && trails++ < settings.MaximumTrails)
+                bool launched = launch.ValueRO.Phase == EnemyLaunchPhase.Launched;
+                bool newLaunch = launched && (f.WasLaunched == 0 || f.ObservedLaunchSequence != launch.ValueRO.LaunchSequence);
+                f.LaunchAge = newLaunch ? 0f : f.LaunchAge + dt;
+                f.WasLaunched = (byte)(launched ? 1 : 0);
+                f.ObservedLaunchSequence = launch.ValueRO.LaunchSequence;
+                f.LaunchSnapDuration = launched && settings.LaunchBodySnap ? math.max(.06f, settings.LaunchBodySnapDuration) : 0f;
+                f.LaunchCompression = settings.LaunchBodyCompression;
+                f.LaunchStretch = settings.LaunchBodyStretch;
+                if (newLaunch) f.LaunchDirection = math.normalizesafe(velocity.ValueRO.Linear, new float3(0, 0, 1));
+                float3 centre = transform.ValueRO.Position, size = new float3(1);
+                if (launched)
                 {
-                    ulong id = ((ulong)(uint)entity.Version << 32) | (uint)entity.Index;
-                    float3 centre = transform.ValueRO.Position, size = new float3(1);
                     float3 forward = math.normalizesafe(velocity.ValueRO.Linear * new float3(1, 0, 1), new float3(0, 0, 1));
                     float3 right = new float3(forward.z, 0, -forward.x);
                     if (poseBounds.TryGetValue(entity, out var pose))
@@ -136,8 +149,18 @@ namespace CrowdPunch.Systems.Presentation
                         size = new float3(math.dot(math.abs(right), bounds.Extents), bounds.Extents.y,
                             math.dot(math.abs(forward), bounds.Extents)) * 2;
                     }
+                    // Outside the bounded skin-probe budget, avoid using the oversized
+                    // animation-culling envelope as the snap pivot.
+                    f.LaunchPivot = poseBounds.ContainsKey(entity) ? centre : transform.ValueRO.Position;
+                    if (newLaunch && settings.LaunchDeparturePuff && departures++ < settings.MaximumImpactsPerFrame)
+                        bridge.ReceiveLaunch(centre, f.LaunchDirection, size);
+                }
+                if (launch.ValueRO.Phase == EnemyLaunchPhase.Launched && speed >= settings.TrailMinimumSpeed
+                    && trails++ < settings.MaximumTrails)
+                {
+                    ulong id = ((ulong)(uint)entity.Version << 32) | (uint)entity.Index;
                     bridge.ReceiveTrail(id, launch.ValueRO.LaunchSequence, centre, speed,
-                        launch.ValueRO.Owner == EnemyLaunchOwner.Player ? launch.ValueRO.FeedbackChainDepth : 0, size);
+                        launch.ValueRO.Owner == EnemyLaunchOwner.Player ? launch.ValueRO.FeedbackChainDepth : 0, size, f.LaunchAge);
                 }
             }
             bridge?.EndTrails();

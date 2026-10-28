@@ -16,14 +16,12 @@ namespace CrowdPunch.Mono.Player
         private readonly Slot[] slots;
         private readonly Dictionary<ulong, int> assigned;
         private readonly CombatFeedbackSettings settings;
-        private readonly ParticleBurstPool dust;
         private readonly LaunchTrailStyle style = new LaunchTrailStyle();
         public LaunchedTrailPool(Transform parent, CombatFeedbackSettings settings, Material material)
         {
             this.settings = settings;
             style.Refresh(settings);
             var library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
-            dust = new ParticleBurstPool(parent, library != null ? library.LaunchDust : null, 8);
             slots = new Slot[Mathf.Clamp(settings.MaximumTrails, 0, 256)];
             assigned = new Dictionary<ulong, int>(slots.Length);
             for (int i = 0; i < slots.Length; i++)
@@ -54,7 +52,7 @@ namespace CrowdPunch.Mono.Player
                 if (changed) slot.Trail.SetPropertyBlock(style.Properties);
             }
         }
-        public void Show(ulong id, uint sequence, Vector3 position, float speed, int depth, Vector3 modelSize = default)
+        public void Show(ulong id, uint sequence, Vector3 position, float speed, int depth, Vector3 modelSize = default, float launchAge = float.MaxValue)
         {
             if (speed < settings.TrailMinimumSpeed) return;
             if (!assigned.TryGetValue(id, out int index))
@@ -67,11 +65,11 @@ namespace CrowdPunch.Mono.Player
                 fresh.Active = true; fresh.Id = id; fresh.Sequence = sequence;
                 fresh.Trail.transform.position = position;
                 fresh.Trail.Clear();
-                dust.Show(position + Vector3.up * .06f, Vector3.up, .7f);
             }
             var slot = slots[index];
             if (slot.Sequence != sequence) { slot.Trail.Clear(); slot.Sequence = sequence; }
             slot.Seen = true;
+            style.Apply(slot.Trail, settings, launchAge);
             slot.Trail.transform.position = position;
             float width = Mathf.Max(.1f, modelSize.x);
             float length = Mathf.Max(width, Mathf.Max(modelSize.y, modelSize.z));
@@ -92,7 +90,7 @@ namespace CrowdPunch.Mono.Player
                 slot.Trail.Clear();
             }
         }
-        public void Clear() { Begin(); End(); dust.Clear(); }
+        public void Clear() { Begin(); End(); }
         public void Dispose() => style.Dispose();
     }
 }

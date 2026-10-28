@@ -15,6 +15,193 @@ namespace CrowdPunch.Tests
 {
     public sealed class CombatFeedbackTests
     {
+        [TestCase(EnemyLaunchCause.PlayerPunch)]
+        [TestCase(EnemyLaunchCause.EnemyCollision)]
+        public void Vision005LaunchAccentsObserveLaunchesRatherThanContactMailboxOrTrailCapacity(EnemyLaunchCause cause)
+        {
+            using var world = new World("launch accent identity test");
+            var em = world.EntityManager;
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            settings.MaximumTrails = 0;
+            var go = new GameObject("launch accent bridge");
+            var bridge = go.AddComponent<PlayerEcsBridge>();
+            bridge.FeedbackSettings = settings;
+            PlayerBridgeRegistry.TryGetBridge(out var previousBridge);
+            PlayerBridgeRegistry.Register(bridge);
+            int departures = 0;
+            Vector3 direction = default;
+            bridge.LaunchReceived += (_, flight, __) => { departures++; direction = flight; };
+            try
+            {
+                var enemy = em.CreateEntity(typeof(EnemyImpactFeedback), typeof(EnemyLaunchState),
+                    typeof(LocalTransform), typeof(Unity.Physics.PhysicsVelocity), typeof(RespawnRequest));
+                em.SetComponentEnabled<RespawnRequest>(enemy, false);
+                em.SetComponentData(enemy, LocalTransform.Identity);
+                em.SetComponentData(enemy, new Unity.Physics.PhysicsVelocity { Linear = new float3(9, 0, 0) });
+                var system = world.GetOrCreateSystem<CombatFeedbackBridgeSystem>();
+                system.Update(world.Unmanaged);
+                Assert.That(departures, Is.Zero, "An active enemy must not have a departure accent.");
+                var launch = new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1, LastCause = cause };
+                em.SetComponentData(enemy, launch);
+                system.Update(world.Unmanaged);
+                Assert.That(departures, Is.EqualTo(1));
+                Assert.That(direction, Is.EqualTo(Vector3.right));
+                Assert.That(em.GetComponentData<EnemyImpactFeedback>(enemy).LaunchAge, Is.Zero);
+                system.Update(world.Unmanaged);
+                Assert.That(departures, Is.EqualTo(1), "Continuous contact and trail starvation cannot replay launch effects.");
+                launch.LaunchSequence++;
+                em.SetComponentData(enemy, launch);
+                system.Update(world.Unmanaged);
+                Assert.That(departures, Is.EqualTo(2), "Re-punching a flying body starts another departure.");
+                bridge.FeedbackSettings = null;
+                system.Update(world.Unmanaged);
+                bridge.FeedbackSettings = settings;
+                system.Update(world.Unmanaged);
+                Assert.That(departures, Is.EqualTo(2), "Restoring presentation must not replay a pre-suspension launch.");
+                settings.LaunchDeparturePuff = settings.LaunchBodySnap = false;
+                launch.LaunchSequence++;
+                em.SetComponentData(enemy, launch);
+                system.Update(world.Unmanaged);
+                Assert.That(departures, Is.EqualTo(2));
+                Assert.That(em.GetComponentData<EnemyImpactFeedback>(enemy).LaunchSnapDuration, Is.Zero);
+                settings.LaunchDeparturePuff = true;
+                system.Update(world.Unmanaged);
+                Assert.That(departures, Is.EqualTo(2), "Enabling a decoration must not manufacture another launch.");
+                launch.Phase = EnemyLaunchPhase.Recovering;
+                em.SetComponentData(enemy, launch);
+                system.Update(world.Unmanaged);
+                Assert.That(em.GetComponentData<EnemyImpactFeedback>(enemy).WasLaunched, Is.Zero);
+                launch.Phase = EnemyLaunchPhase.Launched;
+                em.SetComponentData(enemy, launch);
+                system.Update(world.Unmanaged);
+                Assert.That(departures, Is.EqualTo(3));
+                em.SetComponentEnabled<RespawnRequest>(enemy, true);
+                system.Update(world.Unmanaged);
+                Assert.That(em.GetComponentData<EnemyImpactFeedback>(enemy).WasLaunched, Is.Zero);
+            }
+            finally
+            {
+                PlayerBridgeRegistry.Unregister(bridge);
+                if (previousBridge != null) PlayerBridgeRegistry.Register(previousBridge);
+                Object.DestroyImmediate(go); Object.DestroyImmediate(settings);
+            }
+        }
+
+        [Test]
+        public void Vision005LaunchLineBoostExpiresAndLiveTogglePreservesMaterialProfilesAndWidth()
+        {
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            settings.MaximumTrails = 1;
+            settings.TrailLineOpacity = .3f;
+            var go = new GameObject("launch line boost test");
+            var material = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            using var pool = new LaunchedTrailPool(go.transform, settings, material);
+            try
+            {
+                pool.Begin(); pool.Show(1, 1, Vector3.zero, 10, 1, Vector3.one, 0); pool.End();
+                var trail = go.GetComponentInChildren<TrailRenderer>();
+                var originalMaterial = trail.sharedMaterial;
+                var block = new MaterialPropertyBlock();
+                trail.GetPropertyBlock(block);
+                var profiles = block.GetTexture("_LineProfiles");
+                Assert.That(block.GetFloat("_LineOpacity"), Is.EqualTo(.6f).Within(.001));
+                Assert.That(block.GetFloat("_LineBrightness"), Is.EqualTo(1.5f).Within(.001));
+                float width = trail.widthMultiplier, lifetime = trail.time;
+                pool.Begin(); pool.Show(1, 1, Vector3.forward, 10, 1, Vector3.one, .2f); pool.End();
+                trail.GetPropertyBlock(block);
+                Assert.That(block.GetFloat("_LineOpacity"), Is.EqualTo(.3f).Within(.001));
+                settings.LaunchSpeedLineBoost = false;
+                pool.Begin(); pool.Show(1, 2, Vector3.forward, 10, 1, Vector3.one, 0); pool.End();
+                trail.GetPropertyBlock(block);
+                Assert.That(block.GetFloat("_LineBrightness"), Is.EqualTo(1));
+                Assert.That(block.GetTexture("_LineProfiles"), Is.SameAs(profiles));
+                Assert.That(trail.sharedMaterial, Is.SameAs(originalMaterial));
+                Assert.That(trail.widthMultiplier, Is.EqualTo(width));
+                Assert.That(trail.time, Is.EqualTo(lifetime));
+            }
+            finally { Object.DestroyImmediate(go); Object.DestroyImmediate(material); Object.DestroyImmediate(settings); }
+        }
+
+        [Test]
+        public void Vision004LaunchSnapIncludesAnimatedModelsRestoresExactlyAndPreservesPhysics()
+        {
+            using var world = new World("animated launch snap test");
+            var em = world.EntityManager;
+            Entity owner = em.CreateEntity(typeof(EnemyImpactFeedback), typeof(LocalTransform), typeof(Unity.Physics.PhysicsVelocity));
+            var physics = LocalTransform.FromPosition(new float3(3, 2, 1));
+            var velocity = new Unity.Physics.PhysicsVelocity { Linear = new float3(10, 1, 0) };
+            em.SetComponentData(owner, physics); em.SetComponentData(owner, velocity);
+            Entity visual = em.CreateEntity(typeof(EnemyVisualOwner), typeof(EnemyVisualDeformation),
+                typeof(LocalToWorld), typeof(URPMaterialPropertyBaseColor));
+            em.SetComponentData(visual, new EnemyVisualOwner { Value = owner, AnimationDriven = 1, UsesAtlas = 1 });
+            var authored = float4x4.TRS(new float3(3, 2, 1), quaternion.identity, new float3(.8f, 1.4f, .6f));
+            em.SetComponentData(visual, new LocalToWorld { Value = authored });
+            var feedback = new EnemyImpactFeedback { WasLaunched = 1, LaunchSnapDuration = .18f,
+                LaunchCompression = .22f, LaunchStretch = .38f, LaunchDirection = math.right(), LaunchPivot = authored.c3.xyz };
+            var system = world.GetOrCreateSystem<EnemyImpactVisualSystem>();
+            foreach (float age in new[] { 0f, .05f, .1f, .18f })
+            {
+                feedback.LaunchAge = age;
+                em.SetComponentData(owner, feedback);
+                system.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+                var result = em.GetComponentData<LocalToWorld>(visual).Value;
+                float x = math.length(result.c0.xyz);
+                if (age == 0) Assert.That(x, Is.LessThan(.8f));
+                else if (age < .18f) Assert.That(x, Is.GreaterThan(.8f));
+                else Assert.That(result, Is.EqualTo(authored));
+                Assert.That(math.determinant(new float3x3(result)), Is.EqualTo(.8f * 1.4f * .6f).Within(.0001f));
+                for (int frame = 0; frame < 10; frame++) { system.Update(world.Unmanaged); em.CompleteAllTrackedJobs(); }
+                Assert.That(em.GetComponentData<LocalToWorld>(visual).Value, Is.EqualTo(result), "The snap must not accumulate scale.");
+            }
+            feedback.LaunchAge = .04f;
+            feedback.LaunchSnapDuration = 0;
+            em.SetComponentData(owner, feedback);
+            system.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            Assert.That(em.GetComponentData<LocalToWorld>(visual).Value, Is.EqualTo(authored));
+            Assert.That(em.GetComponentData<LocalTransform>(owner), Is.EqualTo(physics));
+            Assert.That(em.GetComponentData<Unity.Physics.PhysicsVelocity>(owner), Is.EqualTo(velocity));
+        }
+
+        [Test]
+        public void Vision005DeparturePoolIsBoundedExpiresDuringHitStopAndClearsWhenDisabled()
+        {
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            var go = new GameObject("departure pool test");
+            var view = new GameObject("departure camera").AddComponent<UnityEngine.Camera>();
+            var material = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            float originalTimeScale = Time.timeScale;
+            using var pool = new LaunchDeparturePool(go.transform, settings, material);
+            try
+            {
+                Time.timeScale = 0;
+                for (int i = 0; i < 200; i++) pool.Show(Vector3.zero, Vector3.right, Vector3.one);
+                Assert.That(pool.ActiveCount, Is.EqualTo(pool.Capacity));
+                pool.Tick(.04f, view);
+                var mesh = go.GetComponentInChildren<MeshFilter>().sharedMesh;
+                Assert.That(mesh.vertexCount, Is.GreaterThan(0));
+                Assert.That(go.GetComponentsInChildren<MeshRenderer>().Length, Is.EqualTo(1));
+                pool.Tick(.2f, view);
+                Assert.That(pool.ActiveCount, Is.Zero);
+                pool.Show(Vector3.zero, Vector3.left, Vector3.one);
+                settings.LaunchDeparturePuff = false;
+                pool.Tick(0, view);
+                Assert.That(mesh.vertexCount, Is.Zero);
+                Assert.That(pool.ActiveCount, Is.Zero);
+                pool.Show(Vector3.zero, Vector3.right, Vector3.one);
+                Assert.That(pool.ActiveCount, Is.Zero);
+                settings.LaunchDeparturePuff = true;
+                pool.Show(Vector3.one, Vector3.forward, Vector3.one);
+                pool.Clear();
+                Assert.That(pool.ActiveCount, Is.Zero);
+            }
+            finally
+            {
+                Time.timeScale = originalTimeScale;
+                Object.DestroyImmediate(go); Object.DestroyImmediate(view.gameObject);
+                Object.DestroyImmediate(material); Object.DestroyImmediate(settings);
+            }
+        }
+
         [Test]
         public void Vision005TrailStyleEditsUpdateActiveLinesAndLengthProfilesWithoutReplacingMaterials()
         {

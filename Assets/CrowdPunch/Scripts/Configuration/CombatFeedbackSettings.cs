@@ -41,6 +41,21 @@ namespace CrowdPunch.Configuration
         [Header("Comic impact accents")]
         [Tooltip("Contact starbursts, expanding rings and tumbling stars. Zero disables this layer.")]
         [Range(0f, 2f)] public float ComicImpactScale = 1f;
+        [Header("Launch accents")]
+        [Tooltip("A cream-white departure puff and curved strokes at each new launch or re-punch.")]
+        public bool LaunchDeparturePuff = true;
+        [Min(.01f)] public float LaunchDepartureDuration = .18f;
+        [Range(.1f, 2f)] public float LaunchDepartureScale = .8f;
+        [Tooltip("Briefly brighten the existing parallel speed lines at the beginning of a launch.")]
+        public bool LaunchSpeedLineBoost = true;
+        [Min(.01f)] public float LaunchSpeedLineBoostDuration = .13f;
+        [Range(1f, 4f)] public float LaunchSpeedLineOpacityMultiplier = 2f;
+        [Range(1f, 3f)] public float LaunchSpeedLineBrightnessMultiplier = 1.5f;
+        [Tooltip("Visual-only compression then stretch along flight, including animation-driven enemies.")]
+        public bool LaunchBodySnap = true;
+        [Min(.06f)] public float LaunchBodySnapDuration = .18f;
+        [Range(0f, .45f)] public float LaunchBodyCompression = .22f;
+        [Range(0f, .65f)] public float LaunchBodyStretch = .38f;
         [Header("Particles (optional prefabs; built-in placeholders when empty)")]
         public ParticleSystem PunchParticles, EnemyParticles, PlayerDamageParticles, EnvironmentParticles;
         public ParticleSystem DashStartParticles, DashMovementParticles, DashEndParticles;

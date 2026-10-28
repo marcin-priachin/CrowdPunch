@@ -16,5 +16,10 @@ namespace CrowdPunch.Components
         public byte Pending, PlayerOwned;
         public float VisualRemaining, VisualDuration, FlashRemaining, FlashDuration, Intensity, Squash, Flash;
         public float3 VisualDirection;
+        // Presentation observes launch identity independently of the throttled contact mailbox.
+        public uint ObservedLaunchSequence;
+        public byte WasLaunched;
+        public float LaunchAge, LaunchSnapDuration, LaunchCompression, LaunchStretch;
+        public float3 LaunchDirection, LaunchPivot;
     }
 }

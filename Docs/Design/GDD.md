@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-27
+Last updated: 2026-10-28
 
 ## How To Read This Document
 
@@ -53,6 +53,15 @@ along the whole trail, following the supplied Asterix visual references. Do not 
 Expose line opacity, thickness, blur, spacing, count, brightness and tint, including editable
 opacity/thickness/blur/spacing curves and a tint gradient along the trail. Profiles default to
 flat multipliers so the default strokes remain uniform; designers may deliberately vary them.
+
+Accentuate new launches and re-punches with a short cream-white departure puff and curved
+backward speed strokes, a temporary opacity/brightness boost to the existing speed lines,
+and a visual-only compression-to-stretch body snap along the launch direction. Apply the
+same launch language to direct punches and enemies launched by other bodies. Each of the
+three effects has an independent setting, enabled by default. The body snap may briefly
+deform animation-driven models while retaining their authored poses, colours and proportions
+at rest. Ordinary non-launching contacts do not trigger these departure effects. Preserve
+physics, hit timing, trail shape, and the existing hierarchy of contact/camera feedback.
 
 ### VISION-006 — Full Cel Art Direction
 
