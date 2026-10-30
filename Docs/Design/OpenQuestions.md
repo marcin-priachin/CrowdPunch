@@ -62,6 +62,15 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-30 - Falling armor pieces
+
+Decision: Lost Armored helmet and shield pieces fall while blinking before disappearing,
+instead of vanishing immediately. This is cosmetic feedback for the existing stage loss.
+
+Rationale: Make equipment loss visible while preserving immediate armor gameplay changes.
+
+GDD rules: ENEMY-014
+
 ### 2026-10-30 - Timed range for direct contact pursuers
 
 Decision: Add an inclusive Baseline count range and a duration after which a new amount is

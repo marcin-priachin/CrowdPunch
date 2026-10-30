@@ -168,11 +168,21 @@ namespace CrowdPunch.Bakers
                 });
             }
             if (authoring.ArmorStagesRequired > 0 && owner != null)
+            {
                 AddComponent(entity, new EnemyArmorVisual
                 {
                     Owner = GetEntity(owner, TransformUsageFlags.Dynamic),
+                    Animation = entity,
                     StagesRequired = authoring.ArmorStagesRequired
                 });
+                if (bones != 1)
+                    throw new System.InvalidOperationException("Removable armor requires a single-bone equipment renderer.");
+                AddComponent(entity, new EnemyArmorDebris
+                {
+                    Root = GetEntity(animator, TransformUsageFlags.Dynamic),
+                    MeshBounds = new AABB { Center = renderer.sharedMesh.bounds.center, Extents = renderer.sharedMesh.bounds.extents }
+                });
+            }
             if (chicken != null || dino != null || gatekeeper != null)
             {
                 if (chicken != null) DependsOn(chicken.settings);

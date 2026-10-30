@@ -89,6 +89,23 @@ Those remain follow-up profiling/balance work; unrelated design questions remain
 
 ## Reproduction
 
+### 2026-10-30 falling equipment amendment (ENEMY-014)
+
+Lost equipment now falls, tumbles and blinks for 1.6 seconds using the existing skinned
+render entities. `dotnet build Assembly-CSharp.csproj --no-restore` passed with existing
+package/deprecation warnings; Unity compilation also passed. All 20 `ArmoredEnemyTests`
+and both equipment lifecycle tests in `ArmoredGoblinPresentationTests` passed. The existing
+`Info004ArmoredKeepsAuthoredScalesTexturedCelAndGroundSpawn` assertion fails because the
+unchanged prefab uses 1.3 scale where the test expects 1.0; no prefab scales were edited.
+
+A temporary isolated bake of ArmoredEnemy.prefab verified two one-bone equipment sources,
+two detached pieces, valid render bounds and synchronized blink-off rendering. The
+presentation system averaged 0.722 ms over 60 warmed updates with 400 cosmetic pieces in
+an isolated Editor world. This is synthetic CPU evidence, not whole-frame/rendering FPS.
+The lifecycle test checks falling, world-space independence when the owner moves, blink
+off/on across disabled-render frames, expiry, pooled reuse and pooling cleanup. In-game
+visual appearance has not been playtested for this amendment.
+
 Run `CrowdPunch.Tests.ArmoredTestRunner.Run()` in the Editor for the regression suite.
 Run `CrowdPunch.Editor.ArmoredEncounterPlayCheck.Start()` outside Play Mode for the controlled
 scene check. It stops paused after the boss-to-12 transition. Let the new scene finish spawning,

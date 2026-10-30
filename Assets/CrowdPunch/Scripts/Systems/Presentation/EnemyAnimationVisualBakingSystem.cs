@@ -56,8 +56,13 @@ namespace CrowdPunch.Systems.Presentation
                             Animation = animationEntity,
                             Original = SystemAPI.GetComponent<RenderBounds>(entity).Value
                         });
-                    if (entity != animationEntity && SystemAPI.HasComponent<EnemyArmorVisual>(animationEntity))
-                        commands.AddComponent(entity, SystemAPI.GetComponent<EnemyArmorVisual>(animationEntity));
+                    if (SystemAPI.HasComponent<EnemyArmorVisual>(animationEntity))
+                    {
+                        var armorVisual = SystemAPI.GetComponent<EnemyArmorVisual>(animationEntity);
+                        armorVisual.AuthoredBounds = SystemAPI.GetComponent<RenderBounds>(entity).Value;
+                        if (entity == animationEntity) commands.SetComponent(entity, armorVisual);
+                        else commands.AddComponent(entity, armorVisual);
+                    }
                     if (gatekeeper) commands.AddComponent(entity, new BossVisualOwner { Value = animation.ValueRO.Owner, Color = new float4(1) });
                     else if (dino) commands.AddComponent(entity, new DinoVisualOwner { Value = animation.ValueRO.Owner });
                     else if (rolling) continue; // Spike uses authored animation and its constant source palette.

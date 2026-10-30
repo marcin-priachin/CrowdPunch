@@ -281,9 +281,16 @@ shield loss. Spawn From Ground is enabled and uses the authored Spawn duration.
 
 Rigid equipment becomes one-bone sampled skins. `EnemyAnimationAuthoring.ArmorStagesRequired`
 bakes `EnemyArmorVisual` onto the animation source and additional submesh render entities.
-`EnemyArmorVisualSystem` toggles `MaterialMeshInfo` without structural changes: Helmet 05
-requires two stages and Shield 01 one. Disabled-render queries still see broken equipment,
-so fresh armor restores both on pooling/restart. Dedicated GoblinArmored materials retain
+`EnemyArmorVisualSystem` runs after animation playback. Helmet 05 requires two stages and
+Shield 01 one. Baked `EnemyArmorDebris` on each one-bone equipment source captures the
+world-space skin pose when its stage is lost, then applies cosmetic gravity, outward motion
+and tumbling for 1.6 seconds. `SkinMatrix` compensates for subsequent model-root motion;
+render bounds follow the detached mesh. `EnemyArmorVisual.Animation` shares that source
+state with all additional submesh render entities. `MaterialMeshInfo` blinks at 0.13-second
+intervals after 0.25 seconds, then stays disabled at expiry. No debris physics bodies or
+runtime structural changes are added. Disabled-render queries still see broken equipment;
+pooling/lifetime changes clear debris and fresh armor restores both on reuse/restart.
+Dedicated GoblinArmored materials retain
 the pack texture under Full Cel and are protected from monster-atlas refresh. The
 animation-driven flag suppresses tint, flash and procedural deformation. The health
 canvas no longer creates or publishes shield indicators; Armored remains excluded from
@@ -2578,8 +2585,9 @@ for Armored without allocating pressure slots. Navigation remains the path owner
 MoveSpeed * ChargeSpeedMultiplier; stagger never lets normal movement overwrite recoil velocity.
 EnemyArmoredPrefabBuilder generates the supplied Goblin Trooper Armored visual, authored
 animations and directional jog legs. The GoblinArmored profile suppresses procedural tint,
-flash, shake and scaling. Helmet 05 disappears after the first armor reduction; Shield 01
-after the second. See the Goblin Trooper Armored presentation section above.
+flash, shake and scaling. Helmet 05 falls and blinks after the first armor reduction;
+Shield 01 after the second, before each disappears. See the Goblin Trooper Armored
+presentation section above.
 
 Wave settings optionally reference a Baseline armoredAmmunitionProfile. Its baked profile is used
 only after the wave's original pending spawn queue drains. ArmoredAmmunitionSupply checks owned
