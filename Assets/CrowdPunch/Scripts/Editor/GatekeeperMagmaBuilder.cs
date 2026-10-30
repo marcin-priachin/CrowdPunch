@@ -93,6 +93,7 @@ namespace CrowdPunch.Editor
             PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
             PrefabUtility.RecordPrefabInstancePropertyModifications(animator);
             PrefabUtility.RecordPrefabInstancePropertyModifications(visual.transform);
+            GatekeeperEffectsBuilder.ConfigureAmbient(root);
         }
 
         private static Material Material(Material source)

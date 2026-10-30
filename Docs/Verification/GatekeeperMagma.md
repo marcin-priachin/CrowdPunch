@@ -120,3 +120,44 @@ were not established.
 ![Magma Gatekeeper idle](Images/GatekeeperMagma/Opening.png)
 
 ![Authored transition](Images/GatekeeperMagma/Transition.png)
+
+## Cartoon attack effects (2026-10-30)
+
+Requirements: BOSS-002/008, VISION-005/006. Campaign 10/50 and the shared legacy
+Gatekeeper now use filled amber-to-coral attack areas, dark ink borders and cream
+direction cues. The original circle, straight lane and curved sweep footprints
+are retained. Dedicated cream Cartoon FX smoke, golden strokes and existing comic
+impact accents replace generic boss contact particles and accent completed strikes.
+Moving lunges/sweeps leave short dust puffs. This pass changes presentation only.
+
+- Unity compilation passed; no new compiler warnings were reported.
+- Final `dotnet build Assembly-CSharp.csproj --no-restore -v:q` passed with zero
+  errors and 318 existing package/reference/deprecation warnings.
+- Controlled Editor preview observed real slam, lunge and sweep anticipation in
+  both campaign encounters, and live pooled particles on slam recovery. Campaign
+  10 screenshots were visually reviewed for all three shapes and the impact.
+- Campaign 50 loaded six dedicated smoke/stroke instances with the existing
+  Cartoon FX smoke material. Pausing cleared all markers and live dust. Switching
+  to campaign level 1 left zero boss entities, visible markers or live boss dust.
+- Enemy health, boss settings, colliders, source models, authored scenes and shared
+  ordinary-enemy feedback assets were not edited. The Editor preview restored
+  player health during inspection and did not write campaign progress. Play mode
+  was stopped and the original Campaign 09 scene restored afterward.
+- No gameplay errors appeared during the completed probes. Editor startup still
+  logged the existing Sidekick Tool Downloader window error, and the automation
+  connection logged timeouts while entering Play mode. These are distinct from
+  gameplay/compilation results. This was presentation inspection, not a balance,
+  standalone-build or target-device performance test.
+
+The follow-up also replaces the model's original red `FX Square` ambient particles.
+Scene-instance overrides give both palms small cream/gold Cartoon FX puffs and the
+head emitter warm star sparks, fading and drifting upward with a 12-particle cap
+per emitter. Original emitter activation is preserved (the head emitter is inactive
+in the current encounters). The model rebuild recipe reapplies these overrides.
+Both campaign 10 and 50 were inspected in Play mode: their two live companion
+emitters used the smoke atlas and emitted textured puffs; no `FX Square` material
+remained on any of the three model emitters. The head replacement and legacy 11
+were checked in the serialized authoring setup. A scene comparison confirmed only
+particle prefab overrides changed, preserving model scale and combat components.
+Unity compilation and the follow-up C# build passed (zero errors; existing package
+warnings). No gameplay errors appeared during the completed runtime checks.

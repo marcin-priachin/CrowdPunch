@@ -655,6 +655,29 @@ The primitive hand renderers are removed; invisible ECS hand owners keep collisi
 committed attacks. Whole-arena skin bounds cover their travel. `BossPresentationSystem`
 retains world telegraphs and combat feedback but no longer changes Gatekeeper material colors.
 
+`BossAttackTelegraphs` renders the Gatekeeper's committed slam, lunge and sweep footprints
+as filled amber/coral meshes with dark borders and cream direction cues (BOSS-002/008,
+VISION-006). Two reusable draw slots replace the thin line outlines. Ground height comes
+from `ArenaGroundPlane`; target positions, footprint dimensions and anticipation clocks
+remain ECS-owned. `BossPresentationSystem` copies hand phase, attack sequence and position
+to this presentation endpoint. `GatekeeperAttackParticles` uses six prewarmed instances of
+`Resources/GatekeeperImpact.prefab`, reusing the installed Cartoon FX smoke atlas and combat
+stroke material, plus the existing comic impact mesh accents. Moving lunges/sweeps leave
+short dust puffs; Active-to-Recovery produces a landing accent once per hand attack.
+Accepted head/hand impacts use the same dedicated pool. There are no enemy queries in
+MonoBehaviours and no writes to physics, damage, attack timing or crowd ownership.
+`GatekeeperEffectsBuilder` rebuilds the owned prefab without changing pack assets or
+shared ordinary-enemy effects. Bootstrap's existing endpoint serves campaign 10/50 and
+legacy Gauntlet 11; pause, restart and encounter cancellation clear presentation state.
+
+The Magma model's three native ambient emitters also have scene-owned overrides:
+both palms use small cream/gold Cartoon FX smoke puffs and the head uses fading warm
+star sparks, replacing the pack's solid `FX Square` particles. Each emitter is capped
+at 12 particles, with upward drift and no gravity, collision, lights or cast shadows.
+`GatekeeperEffectsBuilder.ApplyAmbient` updates only those emitters in campaign 10/50
+and legacy 11; `GatekeeperMagmaBuilder` reapplies the same style on future model rebuilds.
+Source pack materials/prefabs, model transforms and all combat geometry remain intact.
+
 `GatekeeperRigAuthoring.leftFistScale/rightFistScale` are independent constant visual multipliers
 (default 1). The rig baker records them; skinning applies them without changing collider sizes,
 damage or attack clocks. `GatekeeperHandFootprintBakingSystem` records matching conservative
