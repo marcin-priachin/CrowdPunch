@@ -55,6 +55,22 @@ namespace CrowdPunch.Configuration
         [Min(0)] public float returnedBossDamage = 75;
         [Min(0)] public float bodyDamageMultiplier = 1;
 
+        [Header("Standing turn animation")]
+        [Min(0)] public float minimumTurnAngle = 10f;
+        [Min(0)] public float minimumTurnSpeed = 15f;
+        [Min(0)] public float turnBlendInDuration = .2f;
+        [Min(0)] public float turnBlendOutDuration = .08f;
+        [Min(0)] public float turnStopDelay = .06f;
+
+        public ChickenAnimationTuning BakeAnimation() => new ChickenAnimationTuning
+        {
+            MinimumTurnAngle = math.radians(math.max(0, minimumTurnAngle)),
+            MinimumTurnSpeed = math.radians(math.max(0, minimumTurnSpeed)),
+            BlendInDuration = math.max(0, turnBlendInDuration),
+            BlendOutDuration = math.max(0, turnBlendOutDuration),
+            StopDelay = math.max(0, turnStopDelay)
+        };
+
         public ChickenTuning Bake() => new ChickenTuning {
             Health=math.max(1,health), StageTwoThreshold=math.clamp(stageTwoThreshold,.02f,.99f),
             StageThreeThreshold=math.clamp(stageThreeThreshold,.01f,math.max(.01f,stageTwoThreshold-.01f)),

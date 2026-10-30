@@ -42,7 +42,7 @@ namespace CrowdPunch.Systems.Presentation
         }
 
         internal static void IdleWithTurnLegs(ref EnemyAnimationSamples samples,ref EnemyJogSamples mask,
-            ref DynamicBuffer<SkinMatrix> skin,int motion,float turnPhase,float idlePhase,float blend)
+            ref DynamicBuffer<SkinMatrix> skin,int motion,float turnPhase,float idlePhase,float weight,float blend)
         {
             if(mask.BoneCount!=skin.Length) return;
             var idleHip=math.mul(ToMatrix(Bone(ref samples,0,idlePhase,true,mask.HipBoneIndex)),mask.HipBindInverse);
@@ -58,9 +58,22 @@ namespace CrowdPunch.Systems.Presentation
                     // Retain the Idle pelvis and compose the turn below it, as with directional jog legs.
                     var relative=math.mul(toIdleHip,ToMatrix(pose));
                     pose=new float3x4(relative.c0.xyz,relative.c1.xyz,relative.c2.xyz,relative.c3.xyz);
+                    // The explicit entry/exit clock owns leg blending, including the final
+                    // zero-weight frame. Exponential smoothing here would delay idle again.
+                    pose=Blend(Bone(ref samples,0,idlePhase,true,bone),pose,weight);
                 }
-                skin[bone]=new SkinMatrix { Value=Blend(skin[bone].Value,pose,blend) };
+                skin[bone]=new SkinMatrix { Value=leg?pose:Blend(skin[bone].Value,pose,blend) };
             }
+        }
+
+        internal static float2 BlendMovement(float2 current, float2 target, float blend)
+        {
+            float currentSpeed = math.length(current), targetSpeed = math.length(target);
+            if (currentSpeed < .0001f) return target * blend;
+            if (targetSpeed < .0001f) return current * (1 - blend);
+            float from = math.atan2(current.x, current.y), to = math.atan2(target.x, target.y);
+            float angle = from + math.atan2(math.sin(to - from), math.cos(to - from)) * blend;
+            return new float2(math.sin(angle), math.cos(angle)) * math.lerp(currentSpeed, targetSpeed, blend);
         }
 
         private static float3x4 Bone(ref EnemyAnimationSamples samples,int motion,float phase,bool loop,int bone)

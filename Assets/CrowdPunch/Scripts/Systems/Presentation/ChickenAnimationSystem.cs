@@ -16,11 +16,49 @@ namespace CrowdPunch.Systems.Presentation
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            float delta = math.max(0, SystemAPI.Time.DeltaTime);
+            // CHICKEN-007: one presentation clock per boss keeps body and equipment in sync.
+            foreach (var (boss, turn, tuning, playback) in SystemAPI.Query<RefRO<ChickenBoss>,
+                RefRO<ChickenTurnState>, RefRO<ChickenAnimationTuning>, RefRW<ChickenTurnPlayback>>())
+            {
+                ref var pose = ref playback.ValueRW;
+                if (boss.ValueRO.Phase != ChickenPhase.Pause)
+                {
+                    pose = default;
+                    continue;
+                }
+                var settings = tuning.ValueRO;
+                float yawRate = turn.ValueRO.YawRate;
+                bool rotating = math.abs(yawRate) >= settings.MinimumTurnSpeed && math.abs(yawRate) > .0001f;
+                if (rotating)
+                {
+                    if (math.sign(pose.AccumulatedYaw) != math.sign(yawRate)) pose.AccumulatedYaw = 0;
+                    pose.AccumulatedYaw += yawRate * delta;
+                    pose.StoppedTime = 0;
+                }
+                else
+                {
+                    pose.AccumulatedYaw = 0;
+                    pose.StoppedTime += delta;
+                }
+                int requested = rotating && math.abs(pose.AccumulatedYaw) >= settings.MinimumTurnAngle
+                    ? (yawRate < 0 ? 6 : 7) : 0;
+                if (requested != 0 && requested != pose.Motion)
+                {
+                    pose.Motion = requested;
+                    pose.AccumulatedYaw = 0;
+                }
+                bool active = pose.Motion != 0 && (rotating || pose.StoppedTime < settings.StopDelay);
+                float duration = active ? settings.BlendInDuration : settings.BlendOutDuration;
+                float step = duration > 0 ? delta / duration : 1;
+                pose.Weight = active ? math.min(1, pose.Weight + step) : math.max(0, pose.Weight - step);
+                if (!active && pose.Weight == 0) pose.Motion = 0;
+            }
             state.Dependency = new Animate {
                 Bosses = SystemAPI.GetComponentLookup<ChickenBoss>(true),
                 Tuning = SystemAPI.GetComponentLookup<ChickenTuning>(true),
                 CastTuning = SystemAPI.GetComponentLookup<ChickenCastTuning>(true),
-                Turns = SystemAPI.GetComponentLookup<ChickenTurnState>(true),
+                Turns = SystemAPI.GetComponentLookup<ChickenTurnPlayback>(true),
                 Velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true),
                 Transforms = SystemAPI.GetComponentLookup<LocalTransform>(true),
                 Elapsed = SystemAPI.Time.ElapsedTime,
@@ -34,7 +72,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<ChickenBoss> Bosses;
             [ReadOnly] public ComponentLookup<ChickenTuning> Tuning;
             [ReadOnly] public ComponentLookup<ChickenCastTuning> CastTuning;
-            [ReadOnly] public ComponentLookup<ChickenTurnState> Turns;
+            [ReadOnly] public ComponentLookup<ChickenTurnPlayback> Turns;
             [ReadOnly] public ComponentLookup<PhysicsVelocity> Velocities;
             [ReadOnly] public ComponentLookup<LocalTransform> Transforms;
             public float Delta;
@@ -50,11 +88,9 @@ namespace CrowdPunch.Systems.Presentation
                     playback = default;
                 // Release commits the rush immediately; keep the rest of the Sweep on the upper body.
                 bool followThrough = boss.ShotSequence != 0 && boss.SinceShot < tuning.WindUp * (1 - tuning.ShotReleasePhase);
-                float yawRate=Turns.HasComponent(animation.Owner)?Turns[animation.Owner].YawRate:0;
-                int requestedTurn=yawRate<-.02f?6:yawRate>.02f?7:0;
+                var turn = Turns.HasComponent(animation.Owner) ? Turns[animation.Owner] : default;
                 int previousMotion=playback.Initialized-1;
-                bool finishingTurn=(previousMotion==6 || previousMotion==7) && playback.Phase<1;
-                int idleMotion=requestedTurn!=0?requestedTurn:finishingTurn?previousMotion:0;
+                int idleMotion = turn.Motion;
                 int motion = boss.Phase == ChickenPhase.Defeated ? 4 : boss.Phase == ChickenPhase.Stagger ? 3
                     : boss.Phase == ChickenPhase.Cast ? 5
                     : boss.Phase == ChickenPhase.WindUp || followThrough ? 2 : boss.Phase == ChickenPhase.Rush ? 1
@@ -84,10 +120,12 @@ namespace CrowdPunch.Systems.Presentation
                 if (animation.BlendResponse <= 0) blend = 1;
                 // Do not ease the firing pose behind the authoritative release frame.
                 if (motion == 2 || motion == 5) blend = 1;
-                if(turning)
+                bool leavingTurn = motion == 0 && (previousMotion == 6 || previousMotion == 7);
+                if(turning || leavingTurn)
                 {
                     if(animation.JogSamples.IsCreated)
-                        ChickenSkinPose.IdleWithTurnLegs(ref samples,ref animation.JogSamples.Value,ref skin,motion,phase,idlePhase,blend);
+                        ChickenSkinPose.IdleWithTurnLegs(ref samples,ref animation.JogSamples.Value,ref skin,
+                            turning ? motion : previousMotion,phase,idlePhase,turn.Weight,blend);
                     else
                         // Head/hand equipment follows the same Idle upper-body clock as the body.
                         ChickenSkinPose.Sample(ref samples,ref skin,0,idlePhase,true,blend);
@@ -103,7 +141,7 @@ namespace CrowdPunch.Systems.Presentation
                     float3 local = math.rotate(math.inverse(Transforms[animation.Owner].Rotation), Velocities[animation.Owner].Linear);
                     float2 movement = local.xz / math.max(.01f, tuning.RushSpeed * (boss.Stage == 3 ? tuning.FinalRushMultiplier : 1));
                     movement /= math.max(1, math.length(movement));
-                    playback.Movement = math.lerp(playback.Movement, movement, blend);
+                    playback.Movement = ChickenSkinPose.BlendMovement(playback.Movement, movement, blend);
                     ChickenSkinPose.Jog(ref animation.JogSamples.Value, ref skin, ref playback, Delta);
                 }
                 else { playback.Movement = 0; playback.JogPhase = 0; }

@@ -18,6 +18,29 @@ namespace CrowdPunch.Editor
         public const string ControllerPath = "Assets/CrowdPunch/Data/ChickenBoss/Chicken.controller";
         public const string AnimationFolder = "Assets/Goblin Trooper Giant Evolution Modular Pack Cute Series/Goblin Giant Modular Pack Cute Series/Animations";
 
+        [MenuItem("Crowd Punch/Bosses/Apply Player Standing Turns To Chicken")]
+        public static void ApplyPlayerStandingTurns()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Sample Chicken turns outside Play Mode.");
+            var clips = GetClips();
+            var controller = ConfigureController(clips);
+            AssetDatabase.SaveAssetIfDirty(controller);
+            // All three Chicken encounters share these sample assets. Resample the
+            // existing rig in a preview scene without rebuilding or saving any scene.
+            var scene = EditorSceneManager.OpenPreviewScene(
+                "Assets/CrowdPunch/Scenes/Campaign/Campaign_20/Campaign_20 Sub Scene.unity");
+            try
+            {
+                var boss = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<ChickenBossAuthoring>()).Single();
+                foreach (var animation in boss.GetComponentsInChildren<EnemyAnimationAuthoring>())
+                    GauntletProgressionBuilder.WriteBossSamples(animation.GetComponentInParent<Animator>(),
+                        animation.GetComponent<SkinnedMeshRenderer>(), clips, AssetDatabase.GetAssetPath(animation.Samples),
+                        ControllerPath, humanoid: true, inPlaceTurns: true);
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
         [MenuItem("Crowd Punch/Bosses/Apply Goblin Chicken Model")]
         public static void Apply()
         {
@@ -58,23 +81,8 @@ namespace CrowdPunch.Editor
             var animator = visual.GetComponent<Animator>();
             if (animator == null || animator.avatar == null || !animator.avatar.isHuman)
                 throw new InvalidOperationException("The supplied wizard needs its Humanoid avatar.");
-            string[] names = { "Idle", "Run Forward In Place", "Sweep Attack", "Take Damage", "Die", "Cast Spell", "Turn Left", "Turn Right" };
-            var clips = names.Select(FindClip).ToArray();
-            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath)
-                ?? AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
-            var machine = controller.layers[0].stateMachine;
-            // Keep controller identity and dependencies stable across each scene migration.
-            if (machine.states.Length != clips.Length || machine.states.Where((s, i) =>
-                s.state.name != "Motion" + i || s.state.motion != clips[i]).Any())
-            {
-                foreach (var state in machine.states) machine.RemoveState(state.state);
-                for (int i = 0; i < clips.Length; i++)
-                {
-                    var state = machine.AddState("Motion" + i); state.motion = clips[i];
-                    if (i == 0) machine.defaultState = state;
-                }
-                EditorUtility.SetDirty(controller);
-            }
+            var clips = GetClips();
+            var controller = ConfigureController(clips);
             animator.runtimeAnimatorController = controller;
             animator.applyRootMotion = false;
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
@@ -106,6 +114,40 @@ namespace CrowdPunch.Editor
             settings.firingAnimationLastFrame = lastFrame;
             settings.castDuration = clips[5].length;
             EditorUtility.SetDirty(settings);
+        }
+
+        private static AnimationClip[] GetClips()
+        {
+            var clips = new[] { "Idle", "Run Forward In Place", "Sweep Attack", "Take Damage", "Die", "Cast Spell" }
+                .Select(FindClip).ToList();
+            foreach (string direction in new[] { "Left", "Right" })
+            {
+                var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>($"Assets/CrowdPunch/Animation/Player{direction}Turn.anim");
+                if (clip == null || !clip.humanMotion)
+                    throw new InvalidOperationException("Apply the player's humanoid standing-turn clips first.");
+                clips.Add(clip);
+            }
+            return clips.ToArray();
+        }
+
+        private static AnimatorController ConfigureController(AnimationClip[] clips)
+        {
+            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath)
+                ?? AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
+            var machine = controller.layers[0].stateMachine;
+            for (int i = 0; i < clips.Length; i++)
+            {
+                var state = machine.states.Select(s => s.state).FirstOrDefault(s => s.name == "Motion" + i)
+                    ?? machine.AddState("Motion" + i);
+                if (state.motion != clips[i])
+                {
+                    state.motion = clips[i];
+                    EditorUtility.SetDirty(state);
+                    EditorUtility.SetDirty(controller);
+                }
+                if (i == 0) machine.defaultState = state;
+            }
+            return controller;
         }
 
         private static AnimationClip FindClip(string name) => AssetDatabase.LoadAllAssetsAtPath($"{AnimationFolder}/Char@{name}.FBX")

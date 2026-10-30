@@ -34,6 +34,8 @@ namespace CrowdPunch.Tests
             em.SetComponentData(boss,t); em.SetComponentData(boss,LocalTransform.FromPosition(new float3(0,.7f,10)));
             em.AddComponentData(boss,new ChickenCastTuning { Duration=1 });
             em.AddComponent<ChickenTurnState>(boss);
+            em.AddComponentData(boss,ChickenAnimationTuning.Default);
+            em.AddComponent<ChickenTurnPlayback>(boss);
             em.SetComponentData(boss,new ChickenBoss { Stage=1,Phase=ChickenPhase.Pause,Facing=quaternion.identity });
             em.SetComponentData(boss,new Health { Current=t.Health,Max=t.Health }); em.AddBuffer<ChickenHit>(boss); em.AddBuffer<ChickenHitHistory>(boss);
             player=em.CreateEntity(typeof(PlayerSnapshot)); em.SetComponentData(player,new PlayerSnapshot { Position=new float3(0,.5f,-10),IsAvailable=true,Radius=.5f });
@@ -363,8 +365,11 @@ namespace CrowdPunch.Tests
             em.SetComponentData(visual,new EnemyAnimation { Owner=boss });
             em.SetComponentData(visual,new EnemyAnimationPlayback { Initialized=7,Phase=.5f });
             em.SetComponentData(boss,new ChickenTurnState { YawRate=1 });
+            em.SetComponentData(boss,new ChickenTurnPlayback { Motion=6,Weight=1,AccumulatedYaw=.2f });
             ChickenEncounterReset.Reset(em); b=em.GetComponentData<ChickenBoss>(boss);
             Assert.AreEqual(0,em.GetComponentData<ChickenTurnState>(boss).YawRate);
+            Assert.AreEqual(0,em.GetComponentData<ChickenTurnPlayback>(boss).Motion);
+            Assert.AreEqual(0,em.GetComponentData<ChickenTurnPlayback>(boss).Weight);
             Assert.AreEqual(0,em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized);
             Assert.AreEqual(ChickenPhase.Pause,b.Phase); Assert.AreEqual(1,b.Stage); Assert.AreEqual(0,b.AcceptedHits);
             Assert.AreEqual(t.Health,em.GetComponentData<Health>(boss).Current); Assert.AreEqual(0,em.GetBuffer<ChickenHitHistory>(boss).Length);

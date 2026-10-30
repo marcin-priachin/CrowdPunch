@@ -20,6 +20,8 @@ namespace CrowdPunch.Bakers
             AddComponent(e,t);
             AddComponent(e,new ChickenCastTuning { Duration=math.max(.05f,a.settings.castDuration) });
             AddComponent<ChickenTurnState>(e);
+            AddComponent(e,a.settings.BakeAnimation());
+            AddComponent<ChickenTurnPlayback>(e);
             AddComponent(e,new ChickenBoss { Stage=1, Phase=ChickenPhase.Pause, Remaining=t.OpeningPause,
                 PreviousPosition=t.InitialPosition, Destination=t.InitialPosition, Facing=t.InitialRotation });
             AddComponent(e,new Health { Current=t.Health,Max=t.Health });

@@ -21,6 +21,20 @@ namespace CrowdPunch.Tests
 {
     public sealed class ChickenGoblinPresentationTests
     {
+        [Test]
+        public void Chicken007_StandingTurnsUseTheSameClipsAsThePlayer()
+        {
+            var chicken = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>(ChickenModelBuilder.ControllerPath);
+            var player = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>("Assets/CrowdPunch/Animation/PlayerMovement.controller");
+            foreach (var direction in new[] { (motion: "Motion6", state: "Left Turn"), (motion: "Motion7", state: "Right Turn") })
+            {
+                var chickenClip = chicken.layers[0].stateMachine.states.Single(s => s.state.name == direction.motion).state.motion;
+                var playerClip = player.layers[0].stateMachine.states.Single(s => s.state.name == direction.state).state.motion;
+                Assert.AreSame(playerClip, chickenClip, direction.state + " must share the player's exact animation asset");
+                Assert.IsTrue(((AnimationClip)chickenClip).humanMotion);
+            }
+        }
+
         [TestCase("Campaign", 20)] [TestCase("Campaign", 60)] [TestCase("Gauntlets", 20)]
         public void Chicken007_SavedWizardPreservesPrefabScalesAndValidSamples(string folder, int level)
         {
@@ -29,6 +43,12 @@ namespace CrowdPunch.Tests
             try
             {
                 var boss = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<ChickenBossAuthoring>()).Single();
+                var timing = boss.settings.BakeAnimation();
+                Assert.AreEqual(math.radians(10f),timing.MinimumTurnAngle,.0001f);
+                Assert.AreEqual(math.radians(15f),timing.MinimumTurnSpeed,.0001f);
+                Assert.AreEqual(.2f,timing.BlendInDuration,.0001f);
+                Assert.AreEqual(.08f,timing.BlendOutDuration,.0001f);
+                Assert.AreEqual(.06f,timing.StopDelay,.0001f);
                 var visual = boss.transform.Find("Chicken Model");
                 var source = AssetDatabase.LoadAssetAtPath<GameObject>(ChickenModelBuilder.ModelPath);
                 Assert.AreEqual(source.transform.localScale, visual.localScale);
@@ -57,7 +77,10 @@ namespace CrowdPunch.Tests
                     {
                         int bones=reader.ReadInt32(), frames=reader.ReadInt32();
                         for(int i=0;i<bones;i++)reader.ReadString();
-                        for(int i=0;i<EnemyAnimationSamples.MotionCount;i++)reader.ReadSingle();
+                        var durations = new float[EnemyAnimationSamples.MotionCount];
+                        for(int i=0;i<durations.Length;i++)durations[i]=reader.ReadSingle();
+                        Assert.AreEqual(AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/CrowdPunch/Animation/PlayerLeftTurn.anim").length,durations[6],.0001f);
+                        Assert.AreEqual(AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/CrowdPunch/Animation/PlayerRightTurn.anim").length,durations[7],.0001f);
                         long dataStart=reader.BaseStream.Position;
                         foreach(int motion in new[] { 6,7 })
                         {
@@ -131,12 +154,14 @@ namespace CrowdPunch.Tests
         }
 
         [TestCase(-1f,6)] [TestCase(1f,7)]
-        public void Chicken007_IdleUsesDirectionalTurnFinishesAndReturnsToIdle(float rate,int motion)
+        public void Chicken007_IdleTurnRequiresDeliberateYawAndReturnsPromptly(float rate,int motion)
         {
             using var world=new World("Chicken idle turning");var em=world.EntityManager;
             var owner=em.CreateEntity(typeof(ChickenBoss),typeof(ChickenTuning),typeof(ChickenTurnState));
             em.SetComponentData(owner,new ChickenBoss { Phase=ChickenPhase.Pause });
             em.SetComponentData(owner,new ChickenTurnState { YawRate=rate });
+            em.AddComponentData(owner,ChickenAnimationTuning.Default);
+            em.AddComponent<ChickenTurnPlayback>(owner);
             using var builder=new BlobBuilder(Allocator.Temp);
             ref var data=ref builder.ConstructRoot<EnemyAnimationSamples>();data.BoneCount=1;data.FrameCount=2;
             var durations=builder.Allocate(ref data.Durations,11);var poses=builder.Allocate(ref data.Matrices,22);
@@ -147,14 +172,14 @@ namespace CrowdPunch.Tests
             em.AddComponentData(visual,new EnemyAnimation { Owner=owner,Samples=samples });
             em.AddBuffer<SkinMatrix>(visual).Add(new SkinMatrix { Value=identity });
             var system=world.GetOrCreateSystem<ChickenAnimationSystem>();
+            Update(.1f); Assert.AreEqual(1,em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized,"Small yaw must stay idle.");
             Update(.1f); Assert.AreEqual(motion+1,em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized);
             Assert.AreEqual(0,em.GetBuffer<SkinMatrix>(visual)[0].Value.c3.x,"Unmasked upper-body/equipment bones must use Idle.");
             em.SetComponentData(owner,new ChickenTurnState());
-            Update(.1f); Assert.AreEqual(motion+1,em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized);
-            Update(1f); Assert.AreEqual(1,em.GetComponentData<EnemyAnimationPlayback>(visual).Phase);
+            Update(.04f); Assert.AreEqual(motion+1,em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized);
             Update(.1f); Assert.AreEqual(1,em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized);
             em.SetComponentData(owner,new ChickenTurnState { YawRate=-rate });
-            Update(.1f); Assert.AreEqual((motion==6?7:6)+1,em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized);
+            Update(.1f); Update(.1f); Assert.AreEqual((motion==6?7:6)+1,em.GetComponentData<EnemyAnimationPlayback>(visual).Initialized);
             Update(1f);Update(.1f);Assert.AreEqual(.1f,em.GetComponentData<EnemyAnimationPlayback>(visual).Phase,.0001f);
             void Update(float delta){world.SetTime(new TimeData(world.Time.ElapsedTime+delta,delta));system.Update(world.Unmanaged);em.CompleteAllTrackedJobs();}
         }
@@ -166,6 +191,10 @@ namespace CrowdPunch.Tests
             var owner=em.CreateEntity(typeof(ChickenBoss),typeof(ChickenTuning),typeof(ChickenTurnState));
             em.SetComponentData(owner,new ChickenBoss { Phase=ChickenPhase.Pause });
             em.SetComponentData(owner,new ChickenTurnState { YawRate=rate });
+            var timing=ChickenAnimationTuning.Default;
+            timing.MinimumTurnAngle=0; timing.BlendInDuration=0;
+            em.AddComponentData(owner,timing);
+            em.AddComponent<ChickenTurnPlayback>(owner);
             using var builder=new BlobBuilder(Allocator.Temp);
             ref var data=ref builder.ConstructRoot<EnemyAnimationSamples>();data.BoneCount=3;data.FrameCount=2;
             var durations=builder.Allocate(ref data.Durations,11);var poses=builder.Allocate(ref data.Matrices,66);

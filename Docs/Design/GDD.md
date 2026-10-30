@@ -1,7 +1,7 @@
 # Crowd Punch — Codex Game Design Document
 
 Status: Working design baseline  
-Last updated: 2026-10-28
+Last updated: 2026-10-30
 
 ## How To Read This Document
 
@@ -1416,7 +1416,9 @@ Use `Assets/CrowdPunch/Prefabs/Enemies/Goblin Giant Wizard Variant.prefab` at it
 with animations from the Goblin Giant Modular Pack Cute Series animation folder and Full Cel shading.
 Use blended directional jogs from `Assets/CrowdPunch/Animation/` on the legs while retaining the
 pack animation on the upper body. Fire with Sweep Attack and expose its zero-based projectile
-release frame in the dedicated settings. Use authored animation for boss feedback rather than
+release frame in the dedicated settings. Standing turns use the same Left Turn and Right Turn
+clips as the player, retargeted to the Chicken rig and applied only to its lower body.
+Use authored animation for boss feedback rather than
 scripted tint, shaking or squash. Ranged-enemy and boss projectiles share an arcane visual family
 to match their wizard models: compact cyan comets for ranged enemies, larger violet/gold orbiting
 orbs for this boss. A returned boss orb gains a warm danger accent and remains harmful to the player.

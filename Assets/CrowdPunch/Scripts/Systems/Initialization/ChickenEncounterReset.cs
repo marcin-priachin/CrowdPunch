@@ -21,6 +21,7 @@ namespace CrowdPunch.Systems.Initialization
                 em.SetComponentData(e,LocalTransform.FromPositionRotation(t.InitialPosition,t.InitialRotation));
                 em.SetComponentData(e,new PhysicsVelocity());
                 if(em.HasComponent<ChickenTurnState>(e)) em.SetComponentData(e,new ChickenTurnState());
+                if(em.HasComponent<ChickenTurnPlayback>(e)) em.SetComponentData(e,new ChickenTurnPlayback());
                 em.GetBuffer<ChickenHit>(e).Clear(); em.GetBuffer<ChickenHitHistory>(e).Clear();
             }
             using var animations=em.CreateEntityQuery(typeof(EnemyAnimation),typeof(EnemyAnimationPlayback));

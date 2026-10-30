@@ -1,5 +1,45 @@
 # Goblin Chicken boss presentation
 
+## 2026-10-30 - Shared player standing-turn clips
+
+CHICKEN-007 now uses the exact player `PlayerLeftTurn.anim` and `PlayerRightTurn.anim`
+assets in Chicken motion slots 6/7. They are retargeted through the Giant avatar and
+resampled into all five shared body/equipment sample assets. The ECS leg mask, upper-body
+Idle clock and turn timing remain as above. The new focused builder works in a preview
+scene and preserves model/scene identities and saved scene transforms.
+
+- Shared asset identity and sampled clip durations pass for Campaign 20/60 and legacy Chicken.
+- Both campaign levels pass isolated baking and actual sampled ECS turn playback checks.
+- All five saved render bounds contain the actual leg-only ECS poses throughout both clips;
+  no scene bounds or model alignment change is required. Unity compilation and the C# build pass.
+- 73 direct Editor checks pass. The same two floor-clearance checks still fail, with
+  level 20's recomputed minimum -1.69485474 (required -1.625); level 10 is unchanged.
+
+## 2026-10-30 - Turn responsiveness in Campaign 20/60
+
+CHICKEN-007: small idle yaw is filtered by a 10-degree accumulated angle and a
+15-degree/second rate threshold. Leg weight enters over 0.2 seconds; after a
+0.06-second rotation pause it exits over 0.08 seconds, without waiting for the
+turn clip to finish. Full-speed direction changes retain jog weight instead of
+blending through idle. The existing idle pelvis, upper-body/equipment clock,
+authored scales, attack release timing and physics ownership are preserved.
+
+- Saved L20/L60 settings explicitly serialize these values. The boss baker adds
+  separate animation tuning and per-boss turn playback; encounter reset clears it.
+- Unity compilation and `dotnet build Assembly-CSharp.csproj --no-restore` passed.
+  The build reported 318 existing package/reference/deprecation warnings and zero errors.
+- Direct Editor invocation of Chicken presentation, transition, combat and boss
+  appearance checks passed 72 cases. Two unchanged asset-only floor checks failed:
+  level 10 minimum -3.61194491 versus required -1.92499995, and level 20 minimum
+  -1.6948545 versus required -1.625. This change modifies no model, sample or floor alignment.
+- Both saved Campaign 20/60 boss roots were independently baked in preview scenes.
+  Each produced its turn tuning/state and five skinned renderers. Their actual
+  sampled ECS playback passed turn entry and prompt return to idle checks.
+- Verification used temporary ECS worlds and preview scenes. The user's active
+  scene was neither saved nor switched; a full combat playthrough remains a visual tuning check.
+
+## Original model migration
+
 Verified 2026-10-24 in the Agent A Unity 6000.3.10f1 Editor.
 Requirements: CHICKEN-001/002/006/007, INFO-004, VISION-006.
 

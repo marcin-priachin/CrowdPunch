@@ -122,7 +122,7 @@ namespace CrowdPunch.Editor
                     var correction=Matrix4x4.identity;
                     if(inPlaceTurns && (motion==6 || motion==7))
                     {
-                        // The clips author 90-degree root turns. Physics owns facing; retain only the turn steps.
+                        // Remove authored body-yaw change; physics owns facing. Retain only the turn steps.
                         Vector3 forward=Quaternion.Inverse(animator.transform.rotation)*animator.bodyRotation*Vector3.forward;
                         float yaw=Mathf.Atan2(forward.x,forward.z)*Mathf.Rad2Deg;
                         if(frame==0) initialYaw=yaw;

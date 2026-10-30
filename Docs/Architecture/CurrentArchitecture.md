@@ -362,13 +362,23 @@ zero-based projectile release frame; `ShotSequence` preserves upper-body follow-
 the immediate rush. Rush facing follows the current player independently of the committed
 destination; the existing physics angular velocity applies yaw and the jog layer supplies backward
 or sideways steps. Pause and Cast track current player facing too. During Pause, the movement
-system writes signed idle yaw rate to `ChickenTurnState`; presentation selects leg-only Turn
-Left/Right (samples 6/7), finishes the step before returning to idle, and repeats for continuing
-turns. The existing jog leg mask selects the bones; turn legs are composed under the Idle pelvis.
+system writes signed idle yaw rate to `ChickenTurnState`. The baker adds presentation-only
+`ChickenAnimationTuning` and `ChickenTurnPlayback` to each boss. A single per-boss clock filters
+small yaw before selecting leg-only Turn Left/Right (samples 6/7), and feeds identical turn
+direction/weight to every body/equipment renderer. Campaign 20/60 serialize a 10-degree trigger,
+15-degree/second minimum rate, 0.2-second entry, 0.06-second stop delay and 0.08-second exit.
+Returning to idle does not wait for a complete turn clip or an additional exponential blend tail.
+The existing jog leg mask selects the bones; turn legs are composed under the Idle pelvis.
+Turn sample slots 6/7 share the player's `PlayerLeftTurn.anim` and `PlayerRightTurn.anim`
+assets, retargeted through the Giant's Humanoid avatar. `ApplyPlayerStandingTurns` updates
+the shared Chicken controller and body/equipment samples in a preview scene, so Campaign
+20/60 and legacy Chicken inherit the clips without replacing models or saving scene state.
+Jog direction and magnitude blend separately, so movement reversals retain their stride weight
+instead of briefly pulling the legs toward idle. This shared path also applies to legacy Chicken.
 Upper-body and equipment skin matrices share a continuous Idle clock, including on direction
-changes and turn restarts. Cast/Sweep override idle turning. Export removes the clips' authored 90-degree body yaw
+changes and turn restarts. Cast/Sweep override idle turning. Export removes residual authored body yaw
 relative to frame zero, preventing a second rotation on top of physics facing. Reset clears turn
-state and sampled playback. Paired releases retain minimum spacing, and hit/defeat cancel the Sweep.
+state, turn weight and sampled playback. Paired releases retain minimum spacing, and hit/defeat cancel the Sweep.
 Model alignment uses translation only. See `ChickenBoss.md` and `../Verification/GoblinChicken.md`.
 
 ## Goblin Minion Dasher Presentation (2026-10-23, ENEMY-005..008, INFO-004, VISION-006)
