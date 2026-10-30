@@ -27,6 +27,8 @@ namespace CrowdPunch.Mono.Player
 
         private Animator animator;
         private bool wasDashing;
+        private float movementAngle;
+        private float movementMagnitude;
 
         private void Awake()
         {
@@ -57,8 +59,7 @@ namespace CrowdPunch.Mono.Player
                     movement / Mathf.Max(0.001f, playerController.MovementSettings.MoveSpeed), 1f);
             }
 
-            animator.SetFloat(MoveX, movement.x, blendDamping, Time.deltaTime);
-            animator.SetFloat(MoveZ, movement.z, blendDamping, Time.deltaTime);
+            SetLocomotionBlend(movement, Time.deltaTime);
 
             // PLAYER-002/005: only the base pose follows the committed dash;
             // the existing upper-body layer keeps punches independent of travel.
@@ -82,6 +83,24 @@ namespace CrowdPunch.Mono.Player
             wasDashing = dashing;
         }
 
+        private void SetLocomotionBlend(Vector3 movement, float deltaTime)
+        {
+            float targetMagnitude = movement.magnitude;
+            float damping = blendDamping <= 0f ? 1f : 1f - Mathf.Exp(-deltaTime / blendDamping);
+            if (targetMagnitude > 0.001f)
+            {
+                float targetAngle = Mathf.Atan2(movement.x, movement.z) * Mathf.Rad2Deg;
+                movementAngle = movementMagnitude < 0.001f
+                    ? targetAngle : Mathf.LerpAngle(movementAngle, targetAngle, damping);
+            }
+            // PLAYER-002: a change of direction must not pass through the idle stance.
+            // Damp direction and speed separately, keeping full-speed turns on the walk ring.
+            movementMagnitude = Mathf.Lerp(movementMagnitude, targetMagnitude, damping);
+            float angle = movementAngle * Mathf.Deg2Rad;
+            animator.SetFloat(MoveX, Mathf.Sin(angle) * movementMagnitude);
+            animator.SetFloat(MoveZ, Mathf.Cos(angle) * movementMagnitude);
+        }
+
         private void OnDisable()
         {
             if (animator == null || animator.runtimeAnimatorController == null)
@@ -91,6 +110,8 @@ namespace CrowdPunch.Mono.Player
 
             animator.SetFloat(MoveX, 0f);
             animator.SetFloat(MoveZ, 0f);
+            movementMagnitude = 0f;
+            movementAngle = 0f;
             if (wasDashing)
                 animator.Play(LocomotionState, 0, 0f);
             wasDashing = false;

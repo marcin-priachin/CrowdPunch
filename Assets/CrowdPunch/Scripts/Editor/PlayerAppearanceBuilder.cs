@@ -90,6 +90,7 @@ namespace CrowdPunch.Editor
             finally { PrefabUtility.UnloadPrefabContents(root); }
             AssetDatabase.SaveAssets();
             PlayerDashAnimationBuilder.Apply();
+            PlayerTurnAnimationBuilder.Apply();
         }
 
         private static AnimationClip CopyClip(string name, bool loop)

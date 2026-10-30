@@ -1601,7 +1601,9 @@ texture and animation binaries and animation importers remain unchanged.
 `PlayerController.LocomotionVelocity` publishes only
 commanded movement (including the committed dash displacement), excluding external knockback.
 The presentation component reads it relative to player facing, normalizes by authored move
-speed, clamps to the jog blend radius, and damps the Animator parameters. Disable and player
+speed and clamps to the jog blend radius. Direction and magnitude are damped separately;
+full-speed direction changes follow the walking ring instead of passing through the idle
+pelvis/foot stance. Disable and player
 reset clear the published velocity. The model discovers its parent controller at runtime,
 so the Bootstrap prefab instance inherits animation support without additional scene wiring.
 This preserves PLAYER-002 camera-forward facing and PLAYER-005 independent dash/punch timing.
@@ -1615,6 +1617,19 @@ humanoid clips with extracted horizontal/root rotation travel; root motion stays
 Dash end, interruption and presentation disable restore locomotion. The existing upper-body
 punch layer and torso correction remain independent of dash direction and timing (PLAYER-002/005).
 `PlayerDashAnimationBuilder` applies this setup and is also called by the appearance rebuild.
+`PlayerTurnAnimation` observes signed player-facing yaw while stationary and plays the supplied
+Left/Right Turn clips as non-looping steps on the base layer. A ten-degree
+accumulated turn above 15 degrees/second suppresses idle jitter; sustained turns repeat steps,
+reversals select the opposite clip, and starting locomotion or a dash interrupts the step.
+Entry blends over 0.2 seconds. After 0.06 seconds without qualifying rotation, the
+pose returns to idle over 0.08 seconds rather than waiting for the clip to finish.
+Entry, exit, stop delay and activation thresholds are independently serialized on the visual prefab.
+The complete source pelvis, legs and foot IK reference are evaluated together; a leg-only
+override over idle would retain idle's turned/lowered pelvis and force IK to distort the knees.
+The existing upper-body layers and spine correction keep torso/punch orientation independent.
+Root motion remains disabled and punch/hit layers retain priority (PLAYER-002/005).
+`PlayerTurnAnimationBuilder` imports humanoid turn sources, creates project-owned clips and
+wires the existing player visual prefab; the appearance rebuild reapplies this setup.
 Animation follows movement intent, so pressing against a blocking wall still plays locomotion.
 `PlayerIdleFootPlanting` stabilizes the project-owned Idle clip's body reference and both
 humanoid foot IK targets at the first idle pose, while preserving other animation curves.

@@ -1067,6 +1067,7 @@ GameObject:
   - component: {fileID: 3514464193119615747}
   - component: {fileID: 4079932248896526748}
   - component: {fileID: 8526188379045474934}
+  - component: {fileID: 4992588072731595167}
   m_Layer: 0
   m_Name: PlayerModel
   m_TagString: Untagged
@@ -1194,6 +1195,24 @@ MonoBehaviour:
   - {x: -0.06694763, y: -0.4502379, z: -0.023661053, w: -0.8900809}
   - {x: -0.0663994, y: -0.45696935, z: -0.022598557, w: -0.8867126}
   - {x: -0.065921865, y: -0.46342322, z: -0.02158549, w: -0.88341796}
+--- !u!114 &4992588072731595167
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5074557555704684006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2795b195034ce0b40b65d59057e1c36b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.PlayerTurnAnimation
+  playerController: {fileID: 0}
+  minimumTurnAngle: 10
+  minimumTurnSpeed: 15
+  blendInDuration: 0.2
+  blendOutDuration: 0.08
+  stopDelay: 0.06
 --- !u!1 &5396158925348938473
 GameObject:
   m_ObjectHideFlags: 0
