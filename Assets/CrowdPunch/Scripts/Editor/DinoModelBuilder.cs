@@ -108,6 +108,7 @@ namespace CrowdPunch.Editor
             BossAppearanceBuilder.VisitSamples(visual, p => lowest = Mathf.Min(lowest, visual.transform.TransformPoint(p).y), EnemyAnimationSamples.MotionCount);
             visual.transform.position += Vector3.up * (root.transform.position.y - settings.bodyHeight * .5f + .08f - lowest);
             GoblinJogSampling.Configure(root, "DinoBoss");
+            StandingTurnSampling.Configure(root, "DinoBoss");
         }
 
         private static AnimationClip FindClip(string name) => AssetDatabase.LoadAllAssetsAtPath($"{AnimationFolder}/Char@{name}.FBX")

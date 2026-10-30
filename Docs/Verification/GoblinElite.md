@@ -1,5 +1,18 @@
 # Goblin Giant Elite verification
 
+The 2026-10-30 moving-leg crossing correction, Giant stance retargeting and 12,288-pose
+verification are recorded in [the shared Elite/Dino verification](GoblinDino.md#2026-10-30---moving-leg-crossing-correction).
+
+## 2026-10-30 - Standing-turn lower body
+
+The saved Elite body now shares the player's Left/Right Turn clips through pelvis-relative
+leg samples, with a 10-degree trigger, 0.2-second entry and prompt 0.08-second exit after a
+0.06-second pause. The authored pelvis, upper body and equipment remain independent.
+Moving, committed Sweep, hit reactions, spawning, launch/recovery, pooling and defeat keep
+their existing pose ownership. Actual prefab baking/playback, bounds, physics preservation,
+regressions and the targeted crowd-query measurement are recorded in
+[the shared Elite/Dino verification](GoblinDino.md#2026-10-30---shared-lower-body-standing-turns).
+
 Date: 2026-10-24. Workspace: Agent B, Unity 6000.3.10f1.
 Requirements: ENEMY-009, INFO-004/006, VISION-006.
 

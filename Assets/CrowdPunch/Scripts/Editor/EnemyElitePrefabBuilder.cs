@@ -86,6 +86,7 @@ namespace CrowdPunch.Editor
                 animator.Play("Motion0", 0, 0);
                 animator.Update(0f);
                 GoblinJogSampling.Configure(root, "EnemyElite");
+                StandingTurnSampling.Configure(root, "EnemyElite");
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally

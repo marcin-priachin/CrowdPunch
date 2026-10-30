@@ -150,7 +150,12 @@ namespace CrowdPunch.Tests
             em.GetBuffer<PillarFallHit>(pillar).Add(new PillarFallHit { Target=body });
             Assert.IsFalse(PunchAimAssist.IsValidTarget(em,body,pillar));
             em.SetComponentData(boss,new DinoBoss { Phase=DinoPhase.Defeated,SuccessfulHits=3,NextPlayerContact=99 });
+            var visual=em.CreateEntity(typeof(EnemyAnimation),typeof(EnemyAnimationPlayback),typeof(StandingTurnPlayback));
+            em.SetComponentData(visual,new EnemyAnimation { Owner=boss });
+            em.SetComponentData(visual,new StandingTurnPlayback { Direction=1,Weight=1,Initialized=1 });
             DinoEncounterReset.Reset(em);
+            Assert.AreEqual(0,em.GetComponentData<StandingTurnPlayback>(visual).Weight);
+            Assert.AreEqual(0,em.GetComponentData<StandingTurnPlayback>(visual).Initialized);
             Assert.AreEqual(DinoPhase.Chase,em.GetComponentData<DinoBoss>(boss).Phase);
             Assert.AreEqual(3,em.GetComponentData<Health>(boss).Current); Assert.AreEqual(0,em.GetComponentData<DinoBoss>(boss).NextPlayerContact);
             Assert.AreEqual(PillarPhase.Upright,em.GetComponentData<FallingPillar>(pillar).Phase);

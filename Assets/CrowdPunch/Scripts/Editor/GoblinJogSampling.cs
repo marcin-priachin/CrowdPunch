@@ -16,6 +16,24 @@ namespace CrowdPunch.Editor
         public const string ControllerPath = "Assets/CrowdPunch/Animation/EnemyMovement.controller";
         private const int FrameCount = 32;
 
+        [MenuItem("Crowd Punch/Animation/Fix Elite And Dino Jog Pelvis")]
+        public static void ApplyEliteAndDinoPelvis()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Sample jogs outside Play Mode.");
+            var root = PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EliteEnemy.prefab");
+            try { Configure(root, "EnemyElite"); }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+            // Existing sample references/stride settings remain valid. Only shared blob assets change.
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/CrowdPunch/Scenes/Campaign/Campaign_40/Campaign_40 Sub Scene.unity");
+            try
+            {
+                var boss = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<DinoBossAuthoring>()).Single();
+                Configure(boss.gameObject, "DinoBoss");
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
         [MenuItem("Crowd Punch/Animation/Apply Goblin Jog Legs")]
         public static void Apply()
         {
@@ -67,7 +85,8 @@ namespace CrowdPunch.Editor
                     int hipIndex = Array.IndexOf(sampled.bones, hip);
                     if (hipIndex < 0) throw new InvalidOperationException("Goblin body must include its pelvis bone.");
                     string path = $"Assets/CrowdPunch/Animation/{samplePrefix}JogLegs.bytes";
-                    Sample(path, source, renderer, sampled, animator, hip, hipIndex, legs);
+                    Sample(path, source, renderer, sampled, animator, hip, hipIndex, legs,
+                        samplePrefix == "EnemyElite" || samplePrefix == "DinoBoss");
                     source.JogSamples = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
                     EditorUtility.SetDirty(source);
                 }
@@ -80,9 +99,10 @@ namespace CrowdPunch.Editor
         }
 
         private static void Sample(string path, EnemyAnimationAuthoring source, SkinnedMeshRenderer renderer,
-            SkinnedMeshRenderer sampled, Animator animator, Transform hip, int hipIndex, int[] legs)
+            SkinnedMeshRenderer sampled, Animator animator, Transform hip, int hipIndex, int[] legs, bool samplePelvis)
         {
             var matrices = new Matrix4x4[EnemyJogSamples.DirectionCount * FrameCount * legs.Length];
+            var hips = samplePelvis ? new Matrix4x4[EnemyJogSamples.DirectionCount * FrameCount] : Array.Empty<Matrix4x4>();
             var durations = new float[EnemyJogSamples.DirectionCount];
             var bindposes = sampled.sharedMesh.bindposes;
             var vertices = sampled.sharedMesh.vertices;
@@ -92,6 +112,10 @@ namespace CrowdPunch.Editor
             var pose = new Matrix4x4[sampled.bones.Length];
             Transform leftFoot = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
             Transform rightFoot = animator.GetBoneTransform(HumanBodyBones.RightFoot);
+            using var wideRig = samplePelvis ? new HumanPoseHandler(animator.avatar, animator.transform) : null;
+            var widePose = new HumanPose();
+            int leftSide = Array.IndexOf(HumanTrait.MuscleName, "Left Upper Leg In-Out");
+            int rightSide = Array.IndexOf(HumanTrait.MuscleName, "Right Upper Leg In-Out");
             source.JogCycleDistances = new float[EnemyJogSamples.DirectionCount];
             float radius = 0;
             for (int direction = 0; direction < EnemyJogSamples.DirectionCount; direction++)
@@ -106,6 +130,16 @@ namespace CrowdPunch.Editor
                 {
                     animator.Play("Base Layer.Locomotion", 0, frame / (float)FrameCount);
                     animator.Update(0);
+                    if (wideRig != null)
+                    {
+                        // Human jog adduction puts this wide Giant's boots under the
+                        // opposite thigh. Keep neutral/outward hip swing while retaining
+                        // forward/back stride, knee motion and the rig's bone lengths.
+                        wideRig.GetHumanPose(ref widePose);
+                        widePose.muscles[leftSide] = Mathf.Max(0, widePose.muscles[leftSide]);
+                        widePose.muscles[rightSide] = Mathf.Max(0, widePose.muscles[rightSide]);
+                        wideRig.SetHumanPose(ref widePose);
+                    }
                     // Each planted foot travels along the step for half a cycle.
                     // Measure every direction at the supplied rig's authored scale.
                     Vector2 travel = new Vector2(Vector3.Dot(leftFoot.position - hip.position, travelDirection),
@@ -115,6 +149,7 @@ namespace CrowdPunch.Editor
                     durations[direction] = animator.GetCurrentAnimatorStateInfo(0).length;
                     if (durations[direction] <= 0) throw new InvalidOperationException("Jog controller did not evaluate.");
                     Matrix4x4 inverseHip = hip.worldToLocalMatrix;
+                    if (samplePelvis) hips[direction * FrameCount + frame] = animator.transform.worldToLocalMatrix * hip.localToWorldMatrix;
                     for (int bone = 0; bone < pose.Length; bone++)
                         pose[bone] = inverseHip * sampled.bones[bone].localToWorldMatrix * bindposes[bone];
                     for (int leg = 0; leg < legs.Length; leg++)
@@ -140,7 +175,7 @@ namespace CrowdPunch.Editor
                 + AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(animator.avatar));
             using (var writer = new BinaryWriter(File.Create(path)))
             {
-                writer.Write(0x43504A31);
+                writer.Write(samplePelvis ? 0x43504A32 : 0x43504A31);
                 writer.Write(hash);
                 writer.Write(sampled.bones.Length);
                 writer.Write(FrameCount);
@@ -154,6 +189,10 @@ namespace CrowdPunch.Editor
                 foreach (var matrix in matrices)
                     for (int column = 0; column < 4; column++)
                         for (int row = 0; row < 3; row++) writer.Write(matrix[row, column]);
+                foreach (var hipPose in hips)
+                    for (int column = 0; column < 4; column++)
+                        for (int row = 0; row < 3; row++) writer.Write(hipPose[row, column]);
+                if (samplePelvis) foreach (float stride in source.JogCycleDistances) writer.Write(stride);
             }
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
             ExpandBounds(source, renderer, bindposes[hipIndex].inverse, hipIndex, radius);

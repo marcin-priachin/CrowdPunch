@@ -249,7 +249,7 @@ namespace CrowdPunch.Tests
                         Assert.That(distance, Is.GreaterThan(.01f).And.LessThan(10));
                 }
                 using var reader = new BinaryReader(new MemoryStream(authoring.JogSamples.bytes));
-                Assert.That(reader.ReadInt32(), Is.EqualTo(0x43504A31));
+                Assert.That(reader.ReadInt32(), Is.EqualTo(kind == "Elite" ? 0x43504A32 : 0x43504A31));
                 reader.ReadString();
                 Assert.That(reader.ReadInt32(), Is.EqualTo(renderer.bones.Length));
                 Assert.That(reader.ReadInt32(), Is.EqualTo(32));

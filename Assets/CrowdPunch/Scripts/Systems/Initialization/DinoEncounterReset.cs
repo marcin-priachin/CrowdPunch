@@ -32,7 +32,11 @@ namespace CrowdPunch.Systems.Initialization
             using var animations=em.CreateEntityQuery(typeof(EnemyAnimation),typeof(EnemyAnimationPlayback));
             using var renderers=animations.ToEntityArray(Allocator.Temp);
             foreach(var e in renderers)
-                if(em.HasComponent<DinoBoss>(em.GetComponentData<EnemyAnimation>(e).Owner)) em.SetComponentData(e,new EnemyAnimationPlayback());
+                if(em.HasComponent<DinoBoss>(em.GetComponentData<EnemyAnimation>(e).Owner))
+                {
+                    em.SetComponentData(e,new EnemyAnimationPlayback());
+                    if(em.HasComponent<StandingTurnPlayback>(e)) em.SetComponentData(e,new StandingTurnPlayback());
+                }
         }
     }
 }

@@ -86,11 +86,14 @@ namespace CrowdPunch.Components
         public int FrameCount;
         public int HipBoneIndex;
         public float4x4 HipBindInverse;
+        public float4x4 HipBind;
         public BlobArray<int> LegBones;
         public BlobArray<float> Durations;
         // World-space stride per complete cycle, eight clockwise directions.
         public BlobArray<float> CycleDistances;
         // Eight clockwise directions, frames, then leg bones; matrices are relative to hips.
         public BlobArray<float3x4> Matrices;
+        // Optional CPJ2 bone poses in model space. Elite/Dino locomotion owns hip orientation.
+        public BlobArray<float3x4> HipMatrices;
     }
 }

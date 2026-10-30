@@ -1169,9 +1169,7 @@ namespace CrowdPunch.Systems.Presentation
                 float frame = playback.JogPhase * samples.FrameCount;
                 int a = (int)frame, b = (a + 1) % samples.FrameCount;
                 float between = math.frac(frame);
-                var originalHip = skin[samples.HipBoneIndex].Value;
-                var hip = math.mul(new float4x4(new float4(originalHip.c0, 0), new float4(originalHip.c1, 0),
-                    new float4(originalHip.c2, 0), new float4(originalHip.c3, 1)), samples.HipBindInverse);
+                var hip = ChickenSkinPose.JogHip(ref samples, ref skin, first, second, turn, a, b, between, amount);
                 int count = samples.LegBones.Length;
                 for (int leg = 0; leg < count; leg++)
                 {

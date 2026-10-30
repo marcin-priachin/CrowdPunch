@@ -1756,7 +1756,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 54a4c6b7e93ab83438fab97de4d5fc11, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 4900000, guid: 816414d995ad004429e504ece5d27b3c, type: 3}
+  StandingTurnSamples: {fileID: 4900000, guid: 41a8a490758c0a9448426d04f4fd90e2, type: 3}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
   MaxLegAnimationSpeed: 1.5
   JogCycleDistances:
   - 1.4222145
@@ -1768,6 +1775,8 @@ MonoBehaviour:
   - 1.1813426
   - 1.46124
   Profile: 10
+  GroundClearance: 0.1
+  ArmorStagesRequired: 0
   SpawnMotion: 7
   RotateLaunchAroundOwner: 1
   LaunchPivotHeight: 0

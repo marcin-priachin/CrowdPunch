@@ -266,6 +266,35 @@ equipment and bone scale. Boss tint pulses and procedural squash/stretch are rem
 `DinoPresentationSystem` retains pillar impact/regeneration colors only. Collision, pursuit,
 stage timings, pillar damage, supporting waves, health UI and resets remain ECS-owned.
 
+The Elite and Dino moving leg assets use CPJ2, extending CPJ1 with sampled model-space pelvis
+poses and embedded measured stride distances. `GoblinJogSampling` removes inward upper-leg
+adduction from the human jog retarget for these wide Giant rigs, preserving forward/backward
+stride and knee motion. Source FBXs, player clips and other archetype jog assets are unchanged.
+During locomotion, `ChickenSkinPose.JogHip` uses the jog pelvis orientation while retaining
+the current action pelvis position and scale. The same resolved frame drives the full leg chain;
+upper-body/equipment matrices remain authored. This prevents moving Sweep/Block pelvis twist
+from crossing or narrowing the feet. Old CPJ1 assets retain their original pelvis behavior.
+The focused `Fix Elite And Dino Jog Pelvis` action updates shared samples through preview
+objects without saving scenes/prefabs; embedded strides keep distance-based gait in sync.
+
+## Elite And Dino Standing Turns (2026-10-30, INFO-004, ENEMY-009, PILLAR-006)
+
+The Elite prefab and Campaign 40/80 Dino bodies opt into `EnemyAnimationAuthoring.StandingTurnSamples`.
+`StandingTurnSampling` retargets the exact player Left/Right Turn clips to each Humanoid rig,
+storing only complete leg chains relative to their source pelvis in CPT1 sample assets. Existing
+CPA3 combat/locomotion and CPJ1 jog data remain unchanged. The Elite/Dino rebuilders reapply this setup.
+`StandingTurnBaker` validates clip/mesh/avatar dependencies and bone order, then adds immutable
+`StandingTurnAnimation` data and separate `StandingTurnPlayback` only to the opted-in body entity.
+
+`StandingTurnAnimationSystem` runs after Enemy/Dino animation, before GPU deformation. Actual
+owner yaw selects left/right while resolved planar speed is at most 0.03 m/s. Defaults match
+the player: 10-degree accumulated yaw, 15 degrees/second, 0.2-second entry, 0.06-second stop
+delay and 0.08-second exit. Leg samples compose below the current authored pelvis; upper-body,
+pelvis and equipment matrices are untouched. Resampling the base leg pose prevents a second
+exponential exit tail. Locomotion, Elite Sweep/hit/lifecycle states, and Dino stagger/defeat
+clear the overlay. Pooled yaw cannot carry into reuse, and Dino reset clears the extra playback.
+No runtime structural change, Mono-to-ECS query or gameplay/physics write is introduced.
+
 ## Goblin Trooper Armored (2026-10-24, ENEMY-014, INFO-004/006, VISION-006)
 
 `EnemyArmoredPrefabBuilder` retains ArmoredEnemy.prefab and its original physics root,

@@ -1175,6 +1175,11 @@ braking. Requested movement alone must not leave a moving Elite with idle or wro
 directed legs, or make a blocked Elite jog in place. Preserve the supplied upper-body
 animation, prefab scale and gameplay movement.
 
+While turning in place, the Elite uses the player's shared Left Turn and Right Turn clips
+on its lower body. Filter small aim changes, blend into footwork gradually and return
+promptly when turning stops. Keep the authored upper body and equipment independent;
+committed Sweep, hit reactions, spawning, launch, recovery, pooling and defeat retain priority.
+
 ### INFO-005 — Trajectory Scope
 
 Status: Must
@@ -1566,7 +1571,10 @@ previews. Exclude the immune boss and unavailable pillars from targeting. Use
 `Assets/CrowdPunch/Prefabs/Enemies/Goblin Giant Armored Variant.prefab` at its authored scale,
 with the Giant pack's authored animations and directional jog legs from `Assets/CrowdPunch/Animation/`.
 Use Block for upper-body locomotion and animation cues instead of boss color flashes or scripted
-shaking/squash/stretch. Preserve the source palette with Full Cel shading. Retain one existing
+shaking/squash/stretch. Preserve the source palette with Full Cel shading. Standing turns use
+the player's shared Left Turn and Right Turn clips on the lower body, with the same small-turn
+filtering and entry/exit treatment as the player and Chicken. Preserve the authored upper body,
+equipment, movement, warning timing, stagger and defeat poses. Retain one existing
 upper-center boss health bar per INFO-007 and a brief opening hint. Show readable warning, burst, stagger, pillar
 impact and regeneration feedback in-world. A dedicated settings asset owns stage movement,
 turning, cycle/stagger/contact timing, pillar geometry/fall/regeneration and damage/push/launch

@@ -1514,10 +1514,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 64e939c7e95eb0a47a5f0f0c9b9ee89d, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
   MaxLegAnimationSpeed: 2
   JogCycleDistances: []
   Profile: 10
+  GroundClearance: 0.1
   ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0
@@ -1892,10 +1900,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 33ef5a877527266469a8066bbd236b63, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
   MaxLegAnimationSpeed: 2
   JogCycleDistances: []
   Profile: 10
+  GroundClearance: 0.1
   ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0
@@ -2134,10 +2150,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: f20d5a67539aaf34ebb08c0f08ab16e8, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
   MaxLegAnimationSpeed: 2
   JogCycleDistances: []
   Profile: 10
+  GroundClearance: 0.1
   ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0
@@ -4256,10 +4280,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: ca20e75055b059745b7dd3f189aceaf1, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
   MaxLegAnimationSpeed: 2
   JogCycleDistances: []
   Profile: 10
+  GroundClearance: 0.1
   ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0
@@ -4339,10 +4371,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: aa3f210e95551b4459dcdfc69564ef92, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
   MaxLegAnimationSpeed: 2
   JogCycleDistances: []
   Profile: 10
+  GroundClearance: 0.1
   ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0
@@ -4422,7 +4462,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: c8b836c97f3154d4a8136b346a6d5ac0, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 4900000, guid: 555ab990bbed55f458d27029a31738aa, type: 3}
+  StandingTurnSamples: {fileID: 4900000, guid: d04b43b7dfa683540a90c606ab349b74, type: 3}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
   MaxLegAnimationSpeed: 2
   JogCycleDistances:
   - 2.1333218
@@ -4434,6 +4481,7 @@ MonoBehaviour:
   - 1.7720144
   - 2.1918597
   Profile: 10
+  GroundClearance: 0.1
   ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0

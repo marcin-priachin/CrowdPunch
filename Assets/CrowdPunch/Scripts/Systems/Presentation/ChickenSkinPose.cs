@@ -76,7 +76,7 @@ namespace CrowdPunch.Systems.Presentation
             return new float2(math.sin(angle), math.cos(angle)) * math.lerp(currentSpeed, targetSpeed, blend);
         }
 
-        private static float3x4 Bone(ref EnemyAnimationSamples samples,int motion,float phase,bool loop,int bone)
+        internal static float3x4 Bone(ref EnemyAnimationSamples samples,int motion,float phase,bool loop,int bone)
         {
             float frame=phase*(loop?samples.FrameCount:samples.FrameCount-1);
             int a=math.min((int)frame,samples.FrameCount-1);
@@ -104,8 +104,7 @@ namespace CrowdPunch.Systems.Presentation
             playback.JogPhase = math.frac(playback.JogPhase + delta * rate);
             float frame = playback.JogPhase * samples.FrameCount;
             int a = (int)frame, b = (a + 1) % samples.FrameCount;
-            var originalHip = skin[samples.HipBoneIndex].Value;
-            var hip = math.mul(ToMatrix(originalHip), samples.HipBindInverse);
+            var hip = JogHip(ref samples, ref skin, first, second, turn, a, b, math.frac(frame), amount);
             int count = samples.LegBones.Length;
             for (int leg = 0; leg < count; leg++)
             {
@@ -118,6 +117,25 @@ namespace CrowdPunch.Systems.Presentation
                 skin[bone] = new SkinMatrix { Value = Blend(skin[bone].Value,
                     new float3x4(pose.c0.xyz, pose.c1.xyz, pose.c2.xyz, pose.c3.xyz), amount) };
             }
+        }
+
+        internal static float4x4 JogHip(ref EnemyJogSamples samples, ref DynamicBuffer<SkinMatrix> skin,
+            int first, int second, float directionBlend, int from, int to, float frameBlend, float amount)
+        {
+            var original = math.mul(ToMatrix(skin[samples.HipBoneIndex].Value), samples.HipBindInverse);
+            if (samples.HipMatrices.Length != EnemyJogSamples.DirectionCount * samples.FrameCount) return original;
+            var left = Blend(samples.HipMatrices[first * samples.FrameCount + from], samples.HipMatrices[first * samples.FrameCount + to], frameBlend);
+            var right = Blend(samples.HipMatrices[second * samples.FrameCount + from], samples.HipMatrices[second * samples.FrameCount + to], frameBlend);
+            var source = Blend(left, right, directionBlend);
+            // The action pelvis can twist across the stride (Sweep) or narrow the stance
+            // (Block). Keep its origin/scale, while the complete moving lower body owns rotation.
+            float3 scale = new float3(math.length(original.c0.xyz), math.length(original.c1.xyz), math.length(original.c2.xyz));
+            var target = new float3x4(math.normalizesafe(source.c0) * scale.x,
+                math.normalizesafe(source.c1) * scale.y, math.normalizesafe(source.c2) * scale.z, original.c3.xyz);
+            var resolved = ToMatrix(Blend(new float3x4(original.c0.xyz, original.c1.xyz, original.c2.xyz, original.c3.xyz), target, amount));
+            var skinPose = math.mul(resolved, samples.HipBind);
+            skin[samples.HipBoneIndex] = new SkinMatrix { Value = new float3x4(skinPose.c0.xyz, skinPose.c1.xyz, skinPose.c2.xyz, skinPose.c3.xyz) };
+            return resolved;
         }
 
         private static float4x4 ToMatrix(float3x4 matrix) => new float4x4(new float4(matrix.c0, 0),

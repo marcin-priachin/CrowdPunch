@@ -200,7 +200,8 @@ namespace CrowdPunch.Bakers
             if (authoring.JogSamples == null) return default;
             DependsOn(authoring.JogSamples);
             using var reader = new BinaryReader(new MemoryStream(authoring.JogSamples.bytes));
-            if (reader.ReadInt32() != 0x43504A31) throw new InvalidDataException("Unsupported Goblin jog samples.");
+            int version = reader.ReadInt32();
+            if (version != 0x43504A31 && version != 0x43504A32) throw new InvalidDataException("Unsupported Goblin jog samples.");
             string hash = reader.ReadString();
 #if UNITY_EDITOR
             var controller = UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
@@ -223,6 +224,7 @@ namespace CrowdPunch.Bakers
             data.HipBindInverse = new float4x4(new float4(ReadColumn(reader), reader.ReadSingle()),
                 new float4(ReadColumn(reader), reader.ReadSingle()), new float4(ReadColumn(reader), reader.ReadSingle()),
                 new float4(ReadColumn(reader), reader.ReadSingle()));
+            data.HipBind = renderer.sharedMesh.bindposes[data.HipBoneIndex];
             var legs = builder.Allocate(ref data.LegBones, legCount);
             for (int i = 0; i < legCount; i++)
             {
@@ -238,6 +240,15 @@ namespace CrowdPunch.Bakers
                     ? math.max(.01f, authoring.JogCycleDistances[i]) : 2f;
             var matrices = builder.Allocate(ref data.Matrices, EnemyJogSamples.DirectionCount * data.FrameCount * legCount);
             for (int i = 0; i < matrices.Length; i++) matrices[i] = new float3x4(ReadColumn(reader), ReadColumn(reader), ReadColumn(reader), ReadColumn(reader));
+            if (version == 0x43504A32)
+            {
+                var hips = builder.Allocate(ref data.HipMatrices, EnemyJogSamples.DirectionCount * data.FrameCount);
+                for (int i = 0; i < hips.Length; i++) hips[i] = new float3x4(ReadColumn(reader), ReadColumn(reader), ReadColumn(reader), ReadColumn(reader));
+                // CPJ2 embeds its measured stride so shared preview-scene resampling
+                // updates gait cadence without rewriting every saved encounter.
+                if (reader.BaseStream.Length - reader.BaseStream.Position >= 8 * sizeof(float))
+                    for (int i = 0; i < distances.Length; i++) distances[i] = math.max(.01f, reader.ReadSingle());
+            }
             return builder.CreateBlobAssetReference<EnemyJogSamples>(Allocator.Persistent);
         }
 

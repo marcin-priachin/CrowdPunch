@@ -11,6 +11,13 @@ namespace CrowdPunch.Authoring
         public Transform ProjectileOrigin;
         [Tooltip("Optional directional jog samples applied only to leg bones during active movement.")]
         public TextAsset JogSamples;
+        [Header("Standing turns (optional lower body)")]
+        public TextAsset StandingTurnSamples;
+        [Min(0f)] public float StandingTurnMinimumAngle = 10f;
+        [Min(0f)] public float StandingTurnMinimumSpeed = 15f;
+        [Min(0f)] public float StandingTurnBlendInDuration = .2f;
+        [Min(0f)] public float StandingTurnBlendOutDuration = .08f;
+        [Min(0f)] public float StandingTurnStopDelay = .06f;
         [Tooltip("Maximum leg-animation playback multiplier: 1 = original jog speed, 2 = double speed. Zero removes the cap. Gameplay movement and upper-body playback are unaffected.")]
         [Min(0f)] public float MaxLegAnimationSpeed = 2f;
         [HideInInspector] public float[] JogCycleDistances;
