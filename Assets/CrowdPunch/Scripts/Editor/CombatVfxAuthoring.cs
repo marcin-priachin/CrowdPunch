@@ -46,6 +46,7 @@ namespace CrowdPunch.Editor
             library.DragonFlame.SetFloat("_Glow",1.25f);
             library.Shockwave=Sprite("BlastShockwave",null);
             var smoke=NovaSmoke();
+            ApplyDasher();
             var spark=Sprite("ImpactSplinters",Kenney+"spark_05.png");
             var flash=Sprite("ImpactFlash","Assets/Travis Game Assets/Hit Impact Effects/Textures/HIE_Hit_01_Flash_01.tga");
             var ring=Sprite("ArcaneOrbit",Kenney+"circle_02.png");
@@ -81,6 +82,14 @@ namespace CrowdPunch.Editor
             }
             finally { UnityEngine.Object.DestroyImmediate(library);UnityEngine.Object.DestroyImmediate(settings); }
         }
+        [MenuItem("Crowd Punch/Art Direction/Apply Dasher VFX")]
+        public static void ApplyDasher()
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Stop play mode before authoring VFX.");
+            CombatVfxParticles.Dasher(NovaSmoke(), Sprite("DasherSpeedStrokes", Kenney + "spark_05.png"));
+            AssetDatabase.SaveAssets();
+        }
+
         internal static T Load<T>(string path) where T: UnityEngine.Object
             => AssetDatabase.LoadAssetAtPath<T>(path) ?? throw new InvalidOperationException("Missing VFX source: "+path);
         private static Material Sprite(string name,string texture,bool red=false)

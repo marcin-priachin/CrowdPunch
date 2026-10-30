@@ -12,6 +12,8 @@ namespace CrowdPunch.Mono.Player
         {
             public ulong Id;
             public ParticleSystem Effect;
+            public ParticleSystem[] Layers;
+            public float[] Rates;
             public bool Seen;
         }
 
@@ -27,6 +29,10 @@ namespace CrowdPunch.Mono.Player
                 effect.name = $"Dasher telegraph {index + 1:00}";
                 effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 entries[index].Effect = effect;
+                entries[index].Layers = effect.GetComponentsInChildren<ParticleSystem>(true);
+                entries[index].Rates = new float[entries[index].Layers.Length];
+                for (int layer = 0; layer < entries[index].Layers.Length; layer++)
+                    entries[index].Rates[layer] = entries[index].Layers[layer].emission.rateOverTimeMultiplier;
             }
         }
 
@@ -44,9 +50,15 @@ namespace CrowdPunch.Mono.Player
             entry.Id = id;
             entry.Seen = true;
             Vector3 forward = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
-            entry.Effect.transform.SetPositionAndRotation(position + Vector3.up * 0.06f,
+            // Physics roots sit one capsule half-height above the floor.
+            entry.Effect.transform.SetPositionAndRotation(position + Vector3.down * 0.9f,
                 Quaternion.LookRotation(forward, Vector3.up));
-            entry.Effect.transform.localScale = Vector3.one * Mathf.Lerp(0.82f, 1.18f, Mathf.Clamp01(progress));
+            entry.Effect.transform.localScale = Vector3.one;
+            for (int layer = 0; layer < entry.Layers.Length; layer++)
+            {
+                var emission = entry.Layers[layer].emission;
+                emission.rateOverTimeMultiplier = entry.Rates[layer] * Mathf.Lerp(.45f, 1f, Mathf.Clamp01(progress));
+            }
             if (!entry.Effect.isPlaying) entry.Effect.Play(true);
         }
 
@@ -86,15 +98,16 @@ namespace CrowdPunch.Mono.Player
             main.loop = true;
             main.playOnAwake = false;
             main.startLifetime = 0.28f;
-            main.startSpeed = -1.4f;
-            main.startSize = 0.08f;
-            main.startColor = new Color(1f, 0.2f, 0.03f, 0.8f);
-            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.startSpeed = 0.8f;
+            main.startSize = 0.18f;
+            main.startColor = new Color(1f, 0.95f, 0.82f, 0.8f);
+            main.maxParticles = 24;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
             ParticleSystem.EmissionModule emission = effect.emission;
-            emission.rateOverTime = 30f;
+            emission.rateOverTime = 12f;
             ParticleSystem.ShapeModule shape = effect.shape;
             shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = 1f;
+            shape.radius = .4f;
             shape.rotation = new Vector3(90f, 0f, 0f);
             gameObject.GetComponent<ParticleSystemRenderer>().sharedMaterial = material;
             return effect;

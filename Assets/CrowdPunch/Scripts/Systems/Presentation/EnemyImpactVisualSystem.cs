@@ -46,7 +46,9 @@ namespace CrowdPunch.Systems.Presentation
             {
                 if (!Feedback.HasComponent(owner.Value)) return;
                 var f = Feedback[owner.Value];
-                bool snapActive = f.WasLaunched != 0 && f.LaunchSnapDuration > 0f && f.LaunchAge < f.LaunchSnapDuration;
+                // INFO-004: Dasher proportions stay authored even during launch feedback.
+                bool snapActive = !Dashers.HasComponent(owner.Value)
+                    && f.WasLaunched != 0 && f.LaunchSnapDuration > 0f && f.LaunchAge < f.LaunchSnapDuration;
                 if (owner.AnimationDriven != 0 && !snapActive)
                 {
                     // Most authored crowd models need no work here. Restore only if transforms

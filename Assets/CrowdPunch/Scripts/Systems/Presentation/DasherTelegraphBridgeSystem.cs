@@ -26,12 +26,13 @@ namespace CrowdPunch.Systems.Presentation
                          SystemAPI.Query<RefRO<DasherState>, RefRO<DasherSettings>, RefRO<EnemyLaunchState>, RefRO<LocalTransform>>()
                              .WithAll<Enemy>().WithNone<RespawnRequest>().WithEntityAccess())
                 {
-                    if (dash.ValueRO.Phase != DasherPhase.Preparing
+                    if ((dash.ValueRO.Phase != DasherPhase.Preparing && dash.ValueRO.Phase != DasherPhase.Dashing)
                         || launch.ValueRO.Phase != EnemyLaunchPhase.Active)
                         continue;
                     ulong id = ((ulong)(uint)entity.Version << 32) | (uint)entity.Index;
                     float duration = math.max(0.0001f, settings.ValueRO.TelegraphDuration);
-                    float progress = math.saturate(1f - dash.ValueRO.SecondsRemaining / duration);
+                    float progress = dash.ValueRO.Phase == DasherPhase.Dashing ? 1f
+                        : math.saturate(1f - dash.ValueRO.SecondsRemaining / duration);
                     bridge.ReceiveDasherTelegraph(id, transform.ValueRO.Position,
                         math.normalizesafe(dash.ValueRO.LockedDirection, math.forward()), progress);
                 }

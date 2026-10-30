@@ -348,8 +348,8 @@ namespace CrowdPunch.Systems.Presentation
             }
 
             // ENEMY-005..008 / INFO-004: animation follows gameplay clocks and never writes
-            // owner transforms, scale, material colour or physics. Roll Forward In Place plays once per
-            // charge/dash; a launched Dasher loops the same authored motion language.
+            // owner transforms, scale, material colour or physics. Roll Forward In Place accelerates
+            // through preparation and retains its phase and full speed throughout the dash.
             private void AnimateGoblinDasher(Entity owner, ref EnemyAnimationPlayback playback,
                 ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
             {
@@ -358,6 +358,7 @@ namespace CrowdPunch.Systems.Presentation
                 var tuning = DasherTuning.HasComponent(owner) ? DasherTuning[owner] : default;
                 int motion;
                 float progress = -1f;
+                float rollSpeed = 1f;
                 bool restart = false;
                 bool hit = false;
                 if (Health.HasComponent(owner))
@@ -387,12 +388,13 @@ namespace CrowdPunch.Systems.Presentation
                 else if (dash.Phase == DasherPhase.Preparing)
                 {
                     motion = prepareMotion;
-                    progress = math.saturate(1 - dash.SecondsRemaining / math.max(.001f, tuning.TelegraphDuration));
+                    float charge = math.saturate(1 - dash.SecondsRemaining / math.max(.001f, tuning.TelegraphDuration));
+                    rollSpeed = math.lerp(1f, 3f, charge);
                 }
                 else if (dash.Phase == DasherPhase.Dashing)
                 {
                     motion = dashMotion;
-                    progress = math.saturate(dash.DashDistanceTravelled / math.max(.001f, tuning.MaximumDistance));
+                    rollSpeed = 3f;
                 }
                 else if (dash.Phase == DasherPhase.Recovering)
                 {
@@ -413,9 +415,11 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 playback.WasRecovering = (byte)(launch.Phase == EnemyLaunchPhase.Recovering ? 1 : 0);
                 if (launch.Phase != EnemyLaunchPhase.Launched) playback.WasLaunched = 0;
-                bool loop = motion == 0 || motion == 1 || motion == 2 || motion == EnemyAnimationSamples.FlyingMotion;
-                if (restart || motion != playback.GoblinMotion) playback.Phase = 0;
-                else playback.Phase += DeltaTime / math.max(.001f, samples.Durations[motion]);
+                bool loop = motion == 0 || motion == 1 || motion == 2 || motion == prepareMotion
+                    || motion == dashMotion || motion == EnemyAnimationSamples.FlyingMotion;
+                bool continuingRoll = motion == dashMotion && playback.GoblinMotion == prepareMotion;
+                if (restart || motion != playback.GoblinMotion && !continuingRoll) playback.Phase = 0;
+                else playback.Phase += DeltaTime * rollSpeed / math.max(.001f, samples.Durations[motion]);
                 playback.Phase = loop ? math.frac(playback.Phase) : math.saturate(playback.Phase);
                 playback.GoblinMotion = (byte)motion;
                 if (progress < 0) progress = playback.Phase;

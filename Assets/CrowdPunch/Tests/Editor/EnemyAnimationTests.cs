@@ -864,7 +864,7 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Enemy005DasherRollTracksChargeAndDashThenRecoversWithoutPhysicsWrites()
+        public void Enemy005DasherRollAcceleratesThroughChargeAndKeepsSpeedAndPhaseDuringDash()
         {
             var em = world.EntityManager;
             EnemyAnimation animation = em.GetComponentData<EnemyAnimation>(visual);
@@ -880,19 +880,30 @@ namespace CrowdPunch.Tests
             Tick();
             Assert.That(Pose.x, Is.EqualTo(2f), "Run Forward In Place should drive fast movement.");
 
-            em.SetComponentData(owner, new DasherState { Phase = DasherPhase.Preparing, SecondsRemaining = 1 });
+            em.SetComponentData(owner, new DasherState { Phase = DasherPhase.Preparing, SecondsRemaining = 2 });
             Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(3, .5f, 0)), "Roll Forward In Place follows the telegraph clock.");
+            Assert.That(Pose.x, Is.EqualTo(3));
+            Tick(.05f);
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Phase, Is.EqualTo(.05f).Within(.0001f));
+            em.SetComponentData(owner, new DasherState { Phase = DasherPhase.Preparing, SecondsRemaining = 1 });
+            Tick(.05f);
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Phase, Is.EqualTo(.15f).Within(.0001f));
+            em.SetComponentData(owner, new DasherState { Phase = DasherPhase.Preparing });
+            Tick(.05f);
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Phase, Is.EqualTo(.3f).Within(.0001f));
             var dash = new DasherState { Phase = DasherPhase.Dashing, DashDistanceTravelled = 10 };
             em.SetComponentData(owner, dash);
-            Tick();
-            Assert.That(Pose, Is.EqualTo(new float3(4, .5f, 0)), "Roll Forward In Place spans the committed dash distance.");
-            Tick(.07f);
-            Assert.That(Pose.y, Is.EqualTo(.5f), "Animation cannot run ahead of the gameplay dash.");
+            Tick(.05f);
+            Assert.That(Pose.x, Is.EqualTo(4));
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Phase, Is.EqualTo(.45f).Within(.0001f),
+                "Dash keeps the charge phase and its final 3x playback speed.");
+            Tick(.05f);
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Phase, Is.EqualTo(.6f).Within(.0001f));
             dash.DashDistanceTravelled = 20;
             em.SetComponentData(owner, dash);
-            Tick();
-            Assert.That(Pose.y, Is.EqualTo(1f), "Roll Forward In Place holds its final sample instead of looping.");
+            Tick(.2f);
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(visual).Phase, Is.EqualTo(.2f).Within(.0001f),
+                "The roll loops at full speed even at maximum distance until gameplay ends the dash.");
             em.SetComponentData(owner, new DasherState { Phase = DasherPhase.Recovering, SecondsRemaining = .5f });
             Tick();
             Assert.That(Pose, Is.EqualTo(new float3(8, .5f, 0)), "Look Around communicates dash recovery.");
@@ -1287,7 +1298,9 @@ namespace CrowdPunch.Tests
             em.SetComponentData(visual, new EnemyAnimation { Owner = owner, Samples = samples, Profile = (byte)EnemyAnimationProfile.Dasher });
             em.AddComponentData(owner, new DasherSettings { TelegraphDuration = 2, MaximumDistance = 20 });
             em.AddComponentData(owner, new DasherState { Phase = phase, SecondsRemaining = 1, DashDistanceTravelled = 10 });
-            Tick();
+            em.SetComponentData(visual, new EnemyAnimationPlayback { Initialized = 1,
+                GoblinMotion = (byte)(phase == DasherPhase.Preparing ? 3 : 4), Phase = .25f });
+            Tick(0);
             var pose = em.GetBuffer<SkinMatrix>(visual)[0].Value;
             Assert.That(math.length(pose.c0), Is.EqualTo(1).Within(.0001f));
             Assert.That(math.length(pose.c1), Is.EqualTo(1).Within(.0001f), "Roll interpolation must not squash the bone.");
@@ -1305,11 +1318,15 @@ namespace CrowdPunch.Tests
             {
                 var animator = root.GetComponentInChildren<UnityEngine.Animator>();
                 var source = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(CrowdPunch.Editor.EnemyDasherPrefabBuilder.ModelPath);
-                Assert.That(animator.transform.localScale, Is.EqualTo(source.transform.localScale));
+                var scale = animator.transform.localScale;
+                Assert.That(scale.x, Is.GreaterThan(0));
+                Assert.That(scale.y, Is.EqualTo(scale.x).Within(.0001f));
+                Assert.That(scale.z, Is.EqualTo(scale.x).Within(.0001f), "Artist-authored uniform sizing must preserve proportions.");
                 Assert.That(root.transform.localScale, Is.EqualTo(UnityEngine.Vector3.one));
                 foreach (var transform in animator.GetComponentsInChildren<UnityEngine.Transform>(true))
                 {
                     string path = UnityEditor.AnimationUtility.CalculateTransformPath(transform, animator.transform);
+                    if (string.IsNullOrEmpty(path)) continue; // The game prefab owns its uniform visual size.
                     var original = string.IsNullOrEmpty(path) ? source.transform : source.transform.Find(path);
                     Assert.That(original, Is.Not.Null, path);
                     Assert.That(UnityEngine.Vector3.Distance(transform.localScale, original.localScale),

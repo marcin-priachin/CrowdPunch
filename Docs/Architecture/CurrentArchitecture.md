@@ -377,14 +377,17 @@ Model alignment uses translation only. See `ChickenBoss.md` and `../Verification
 existing Dasher physics root, preserving authored scale and the shared prefab GUID.
 Its 11-motion samples use Idle, Walk Forward In Place, Run Forward In Place, Roll Forward In Place
 twice (preparation/dash), Take Damage, reverse Die (rise), Spawn, Look Around (dash
-recovery), Roll Forward In Place (launched) and Die. Preparation follows the telegraph clock;
-the dash plays once across travelled/max distance, including obstruction redirects.
+recovery), Roll Forward In Place (launched) and Die. Preparation loops with playback increasing
+from 1x to 3x through the telegraph clock; the committed dash keeps the continuous roll phase
+and 3x speed, including obstruction redirects. These are presentation rates only.
 Launch loops Roll Forward In Place and repunch restarts it. Shared recovery uses Die then rise.
 Animation writes only skin matrices. Dasher pose interpolation uses quaternion slerp
 and retains the sampled bone scales, avoiding the shrinking caused by linearly
-blending rotated matrix axes. Root and descendant scales match the supplied prefab.
+blending rotated matrix axes. Runtime spawning preserves the game prefab's authored proportions,
+including uniform artist sizing; it does not add an archetype-specific PostTransformMatrix.
 `EnemyVisualOwner.AnimationDriven` suppresses
-body tints, flashes, bobbing, shaking and squash. The obsolete grey-box
+body tints, flashes, bobbing, shaking and squash. Dasher also bypasses the shared launch body snap,
+keeping its prefab scale throughout flight. The obsolete grey-box
 `DasherPresentationSystem` was removed; its bridge/impact ordering now follows
 `EnemyReadabilitySystem`. Dedicated materials retain the pack texture with the
 production `CrowdPunch/Cel/Enemy` shader and are protected from monster-atlas refreshes.
@@ -1511,11 +1514,12 @@ their existing ECS owners (ENEMY-005/007/008). The generated `EnemyDasherMovemen
 controller, prefab, and skinning material can be rebuilt with **Crowd Punch > Enemies > Rebuild
 Dasher Prefab**. `EnemyDasherSpawnSettings` references that prefab directly.
 
-`DasherTelegraphBridgeSystem` publishes each preparing Dasher's presentation ID, position,
+`DasherTelegraphBridgeSystem` publishes each preparing or dashing Dasher's presentation ID, position,
 locked aim, and normalized preparation progress through `PlayerEcsBridge`. `CombatFeedback`
 owns a bounded `DasherTelegraphParticlePool` of the generated `Prefabs/Feedback/DasherTelegraph`
-effect. Each active effect follows its preparing Dasher and scales toward dash commitment;
-leaving `Preparing`, interruption, pooling, restart, or suspended feedback clears it without
+effect. Cream puffs and white speed accents follow the unchanged body scale, with emission
+building through preparation and held at full rate during dash. World-space puffs leave a short
+wake. Leaving both phases, interruption, pooling, restart, or suspended feedback clears it without
 changing gameplay state or storing an ECS entity in a MonoBehaviour (ENEMY-005).
 
 Physics transforms and velocities are read-only to animation. Launched bodies play Flying

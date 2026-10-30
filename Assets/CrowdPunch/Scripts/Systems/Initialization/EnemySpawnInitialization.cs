@@ -234,10 +234,6 @@ namespace CrowdPunch.Systems.Initialization
                 commandBuffer.AddComponent(enemy, new DasherState { Phase = DasherPhase.Positioning });
                 commandBuffer.AddComponent<DasherColliderState>(enemy);
                 commandBuffer.AddBuffer<DasherHitHistory>(enemy);
-                commandBuffer.AddComponent(enemy, new PostTransformMatrix
-                {
-                    Value = float4x4.Scale(new float3(0.8f, 1.15f, 1.45f))
-                });
                 commandBuffer.AddComponent(enemy, new URPMaterialPropertyBaseColor
                 {
                     Value = new float4(0.38f, 0.38f, 0.42f, 1f)

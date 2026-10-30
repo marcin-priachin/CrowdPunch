@@ -216,6 +216,8 @@ namespace CrowdPunch.Tests
         [TestCase(true, EnemyArchetypeKind.Explosive)]
         [TestCase(false, EnemyArchetypeKind.Elite)]
         [TestCase(true, EnemyArchetypeKind.Elite)]
+        [TestCase(false, EnemyArchetypeKind.Dasher)]
+        [TestCase(true, EnemyArchetypeKind.Dasher)]
         public void Info004SpawnPreservesAuthoredProportions(bool authoredScale, EnemyArchetypeKind archetype)
         {
             var em = world.EntityManager;
@@ -241,7 +243,8 @@ namespace CrowdPunch.Tests
             using var query = em.CreateEntityQuery(new EntityQueryDesc
             {
                 All = new[] { archetype == EnemyArchetypeKind.Elite ? ComponentType.ReadOnly<ElitePunchState>() : archetype == EnemyArchetypeKind.Ranged
-                    ? ComponentType.ReadOnly<RangedAttackState>() : ComponentType.ReadOnly<ExplosiveEnemyState>() },
+                    ? ComponentType.ReadOnly<RangedAttackState>() : archetype == EnemyArchetypeKind.Dasher
+                    ? ComponentType.ReadOnly<DasherState>() : ComponentType.ReadOnly<ExplosiveEnemyState>() },
                 Options = EntityQueryOptions.IncludeDisabledEntities
             });
             var spawned = query.GetSingletonEntity();

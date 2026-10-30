@@ -1113,11 +1113,14 @@ Enemies in `Active` or `Recovering` face the player's current horizontal positio
 Entering `Launched` does not change an enemy's archetype body color. Launch readability comes from movement, the Flying animation, and existing silhouette behavior. Other authored feedback, including damage flashes, attack telegraphs and recovery dimming, remains profile-specific.
 
 The Dasher uses `Assets/Goblin Trooper Giant Evolution Modular Pack Cute Series/Goblin Minion Cute Series/Prefabs/Goblin Minion.prefab`
-and authored animations from that pack's `FBX` folder. Use Roll Forward In Place for both dash
-preparation and the committed dash, following the existing gameplay timing and distance.
+and authored animations from that pack's `FBX` folder. Loop Roll Forward In Place during dash
+preparation, increasing playback speed through the charge, and retain that increased speed
+and continuous roll phase throughout the committed dash. Animation does not change gameplay timing or distance.
 Use the supplied locomotion, damage, recovery and defeat animations for readability
 with stable textured Full Cel shading. Preserve the prefab's authored scale; scripts
-must not resize, stretch, shake or recolor its body for phase feedback. Dash commitment,
+must not resize, stretch, shake or recolor its body for phase feedback, including the shared
+launch body snap. Use cream cartoon dust puffs and white speed accents during preparation
+and dash, building emission through the charge. Dash commitment,
 contacts, launch and recovery gameplay retain ENEMY-005..008.
 
 The Baseline uses `Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Variant.prefab`

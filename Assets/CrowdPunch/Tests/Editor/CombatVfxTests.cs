@@ -1,12 +1,96 @@
 using CrowdPunch.Configuration;
+using CrowdPunch.Components;
 using CrowdPunch.Mono.Player;
+using CrowdPunch.Systems.Presentation;
 using NUnit.Framework;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 
 namespace CrowdPunch.Tests
 {
     public sealed class CombatVfxTests
     {
+        [Test]
+        public void Info004DasherBridgeKeepsEffectsThroughDashAndStopsOnRecoveryOrLaunch()
+        {
+            using var world = new World("Dasher effect phases");
+            var em = world.EntityManager;
+            var go = new GameObject("Dasher effect bridge");
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            var bridge = go.AddComponent<PlayerEcsBridge>(); bridge.FeedbackSettings = settings;
+            PlayerBridgeRegistry.TryGetBridge(out var previous);
+            PlayerBridgeRegistry.Register(bridge);
+            int samples = 0; float progress = -1;
+            bridge.DasherTelegraphReceived += (_, __, ___, value) => { samples++; progress = value; };
+            try
+            {
+                var enemy = em.CreateEntity(typeof(Enemy), typeof(DasherState), typeof(DasherSettings),
+                    typeof(EnemyLaunchState), typeof(LocalTransform), typeof(RespawnRequest));
+                em.SetComponentEnabled<RespawnRequest>(enemy, false);
+                em.SetComponentData(enemy, LocalTransform.Identity);
+                em.SetComponentData(enemy, new DasherSettings { TelegraphDuration = 2 });
+                var system = world.GetOrCreateSystem<DasherTelegraphBridgeSystem>();
+                foreach (var phase in new[] { DasherPhase.Preparing, DasherPhase.Dashing, DasherPhase.Recovering })
+                {
+                    em.SetComponentData(enemy, new DasherState { Phase = phase, SecondsRemaining = 1, LockedDirection = math.forward() });
+                    system.Update(world.Unmanaged);
+                    if (phase == DasherPhase.Preparing) { Assert.That(samples, Is.EqualTo(1)); Assert.That(progress, Is.EqualTo(.5f)); }
+                    else if (phase == DasherPhase.Dashing) { Assert.That(samples, Is.EqualTo(2)); Assert.That(progress, Is.EqualTo(1)); }
+                    else Assert.That(samples, Is.EqualTo(2));
+                }
+                em.SetComponentData(enemy, new DasherState { Phase = DasherPhase.Dashing });
+                em.SetComponentData(enemy, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+                system.Update(world.Unmanaged);
+                Assert.That(samples, Is.EqualTo(2), "Shared launch effects take over on interruption.");
+            }
+            finally
+            {
+                PlayerBridgeRegistry.Unregister(bridge);
+                if (previous != null) PlayerBridgeRegistry.Register(previous);
+                Object.DestroyImmediate(go); Object.DestroyImmediate(settings);
+            }
+        }
+
+        [Test]
+        public void Info004DasherCartoonEffectsRampFollowDashAndClearBeforePoolReuse()
+        {
+            var settings = Object.Instantiate(Resources.Load<CombatFeedbackSettings>("CombatFeedbackSettings"));
+            settings.ParticlePoolSizePerEffect = 1;
+            var go = new GameObject("Dasher particles test");
+            try
+            {
+                Assert.That(settings.DasherTelegraphParticles, Is.Not.Null);
+                var pool = new DasherTelegraphParticlePool(go.transform, settings, null);
+                pool.Begin(); pool.Show(1, Vector3.up, Vector3.forward, 0); pool.End();
+                var effect = go.GetComponentInChildren<ParticleSystem>();
+                var layers = effect.GetComponentsInChildren<ParticleSystem>();
+                Assert.That(layers.Length, Is.EqualTo(2));
+                float initialRate = effect.emission.rateOverTimeMultiplier;
+                pool.Begin(); pool.Show(1, new Vector3(4, 1, 2), Vector3.right, 1); pool.End();
+                Assert.That(effect.emission.rateOverTimeMultiplier, Is.GreaterThan(initialRate));
+                Assert.That(Vector3.Distance(effect.transform.position, new Vector3(4, .1f, 2)), Is.LessThan(.0001f));
+                Assert.That(effect.transform.localScale, Is.EqualTo(Vector3.one));
+                foreach (var layer in layers)
+                {
+                    Assert.That(layer.isPlaying, Is.True);
+                    Assert.That(layer.main.loop, Is.True);
+                    Assert.That(layer.main.maxParticles, Is.LessThanOrEqualTo(24));
+                    Assert.That(layer.main.simulationSpace, Is.EqualTo(ParticleSystemSimulationSpace.World));
+                    Assert.That(layer.GetComponent<ParticleSystemRenderer>().sharedMaterial, Is.Not.Null);
+                }
+                pool.Begin(); pool.End();
+                Assert.That(effect.IsAlive(true), Is.False, "Recovery or interruption clears every layer.");
+                pool.Begin(); pool.Show(2, Vector3.up, Vector3.forward, 0); pool.End();
+                Assert.That(go.transform.childCount, Is.EqualTo(1));
+                Assert.That(effect.emission.rateOverTimeMultiplier, Is.EqualTo(initialRate));
+                pool.Clear();
+                Assert.That(effect.IsAlive(true), Is.False);
+            }
+            finally { Object.DestroyImmediate(go); Object.DestroyImmediate(settings); }
+        }
+
         [Test]
         public void Vision005ProjectileSaturationRetainsBossBudgetAndReusesAfterDespawn()
         {

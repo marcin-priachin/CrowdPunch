@@ -122,8 +122,9 @@ namespace CrowdPunch.Tests
             finally { Object.DestroyImmediate(go); Object.DestroyImmediate(material); Object.DestroyImmediate(settings); }
         }
 
-        [Test]
-        public void Vision004LaunchSnapIncludesAnimatedModelsRestoresExactlyAndPreservesPhysics()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Vision004LaunchSnapRestoresAnimatedModelsAndPreservesDasherScale(bool dasher)
         {
             using var world = new World("animated launch snap test");
             var em = world.EntityManager;
@@ -131,6 +132,7 @@ namespace CrowdPunch.Tests
             var physics = LocalTransform.FromPosition(new float3(3, 2, 1));
             var velocity = new Unity.Physics.PhysicsVelocity { Linear = new float3(10, 1, 0) };
             em.SetComponentData(owner, physics); em.SetComponentData(owner, velocity);
+            if (dasher) em.AddComponentData(owner, new DasherState());
             Entity visual = em.CreateEntity(typeof(EnemyVisualOwner), typeof(EnemyVisualDeformation),
                 typeof(LocalToWorld), typeof(URPMaterialPropertyBaseColor));
             em.SetComponentData(visual, new EnemyVisualOwner { Value = owner, AnimationDriven = 1, UsesAtlas = 1 });
@@ -146,7 +148,8 @@ namespace CrowdPunch.Tests
                 system.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
                 var result = em.GetComponentData<LocalToWorld>(visual).Value;
                 float x = math.length(result.c0.xyz);
-                if (age == 0) Assert.That(x, Is.LessThan(.8f));
+                if (dasher) Assert.That(result, Is.EqualTo(authored), "Dasher retains prefab scale even during a launch snap.");
+                else if (age == 0) Assert.That(x, Is.LessThan(.8f));
                 else if (age < .18f) Assert.That(x, Is.GreaterThan(.8f));
                 else Assert.That(result, Is.EqualTo(authored));
                 Assert.That(math.determinant(new float3x3(result)), Is.EqualTo(.8f * 1.4f * .6f).Within(.0001f));

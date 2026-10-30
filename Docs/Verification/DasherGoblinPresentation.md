@@ -1,5 +1,41 @@
 # Goblin Minion Dasher presentation
 
+## Scale, rolling speed and cartoon particles - 2026-10-30
+
+Requirements: ENEMY-005..008, INFO-004, VISION-005/006.
+
+- Removed the spawn-time `(0.8, 1.15, 1.45)` PostTransformMatrix that distorted the
+  authored model. Existing prefab transforms, including its uniform 1.3 visual size,
+  remain unchanged. Dasher also bypasses the shared launch body snap.
+- Charge now loops Roll Forward In Place from 1x to 3x playback speed. Committed dash
+  preserves the roll phase and holds 3x speed independently of distance and redirects.
+  Gameplay timers, physics, contacts and recovery remain ECS-owned.
+- Reauthored the existing DasherTelegraph prefab with cream cartoon puffs and white
+  speed accents using the shared Nova smoke and Combat Sprite materials. Emission
+  builds through charge and stays at full intensity during dash. World-space puffs
+  leave a brief wake. Recovery, interruption and suspension clear both layers.
+  Regenerate only this effect with Crowd Punch > Art Direction > Apply Dasher VFX.
+
+Verification in Unity 6000.3.10f1:
+
+- Unity compilation passed. `dotnet build Assembly-CSharp.csproj --no-restore -v:q`
+  passed with 0 errors and 318 existing project/package warnings.
+- All 35 Dasher-filtered cases, 117 EnemyAnimationTests, 16 EnemyGroundSpawnTests
+  and 4 CombatVfxTests passed (these filters overlap). Coverage includes unchanged
+  prefab proportions with/without authored PostTransformMatrix, launch-snap exemption,
+  accelerating/continuous roll playback, bridge phase filtering and particle reuse/cleanup.
+- Rendered and inspected the saved prefab with production particles in an isolated
+  Unity preview scene. No campaign scene or prefab scale was changed. This is a
+  synthetic visual check, not a full encounter playthrough or player-build test.
+- Synthetic bounded-load check: 20 warmup and 120 measured updates, 32 pooled effects,
+  including particle simulation. 256 samples: 0.2910 ms/update; 512: 0.3428 ms/update;
+  zero calling-thread managed allocation, 224 live particles. This checks pool overload
+  behavior on this Editor machine, not GPU cost or target-device frame rate.
+- Ignored local artifacts: `Temp/DasherPolish/preview.png`, `performance.txt`, and
+  the reproducible preview/profile scripts in the same folder.
+
+## Original presentation verification
+
 Verified 2026-10-23 in the Agent B Unity 6000.3.10f1 Editor.
 Requirements: ENEMY-005..008, INFO-004, VISION-006.
 
