@@ -20,5 +20,10 @@ namespace CrowdPunch.Components
         public int ReserveGroupCount;
         public int MinimumInterceptionGroupSize;
         public int MaximumApproachingExplosives;
+        public float SurroundReassignmentSeconds;
+        public float SurroundMovementRefreshDistance;
+        public int MinimumDirectContactPursuers;
+        public int MaximumDirectContactPursuers;
+        public float DirectContactPursuerResampleSeconds;
     }
 }

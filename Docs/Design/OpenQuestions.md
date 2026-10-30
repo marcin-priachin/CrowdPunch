@@ -62,6 +62,43 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-30 - Timed range for direct contact pursuers
+
+Decision: Add an inclusive Baseline count range and a duration after which a new amount is
+picked. The selected subset pursues contact directly between normal attacks. Select the closest eligible
+members continuously as distances change, up to the sampled target, without resampling early.
+The count is capped to available Baselines. Initial implementation tuning is 2-4 every 3 s.
+
+Rationale: Provide a configurable floor of direct contact pressure alongside the existing
+surround/interception behavior. This does not impose a limit on ordinary contact attempts.
+
+GDD rules: COMBAT-016, ENEMY-012
+
+### 2026-10-30 - Relaxed Baseline contact eligibility
+
+Decision: Relax Baseline contact eligibility throughout the game. Pursuers can start their
+ordinary wind-up within the authored contact-attempt distance even when queued behind
+other enemies or travelling to a surround position. Clear lanes remain preferred positions,
+while contact cadence, readable wind-up, committed direction and physical collisions remain.
+
+Rationale: Arrival and empty-lane prerequisites made the crowd too passive and strengthened
+corner camping. Surround geometry should guide movement without vetoing in-range attacks.
+
+GDD rules: COMBAT-016, ENEMY-012, VISION-002
+
+### 2026-10-29 - Even surround and nearest open positions
+
+Decision: Baselines closing in should distribute evenly around the player. A body blocked
+by a crowded approach seeks the nearest free surround position, using a route around the
+crowd. Reserve/interception roles remain in place for approach. New contact attempts need
+an unobstructed lane and an arrived position; existing committed attacks continue.
+
+Rationale: Increasing spacing alone did not give enemies awareness of which approaches
+were already occupied. Shared reservations make available sides usable without every
+body repeatedly trying to charge through the same queue.
+
+GDD rules: COMBAT-016, ENEMY-012, VISION-002
+
 ### 2026-10-28 - Baseline pursuit and interception
 
 Decision: Replace the Baseline closest-attacker cap and thin uniform reserve coverage with

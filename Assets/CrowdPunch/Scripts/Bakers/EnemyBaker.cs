@@ -38,6 +38,9 @@ namespace CrowdPunch.Bakers
             });
             AddComponent<WanderDestination>(entity);
             AddComponent<EnemyCrowdAssignment>(entity);
+            AddComponent<EnemySurroundAssignment>(entity);
+            AddComponent<DirectContactPursuit>(entity);
+            SetComponentEnabled<DirectContactPursuit>(entity, false);
             AddComponent<Health>(entity);
             AddComponent(entity, new HealthBar
             {

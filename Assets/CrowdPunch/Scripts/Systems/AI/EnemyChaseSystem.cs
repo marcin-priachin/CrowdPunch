@@ -137,6 +137,8 @@ namespace CrowdPunch.Systems.AI
                 Owners = owners,
                 Rooms = rooms,
                 CrowdOrders = SystemAPI.GetComponentLookup<EnemyCrowdAssignment>(true),
+                SurroundOrders = SystemAPI.GetComponentLookup<EnemySurroundAssignment>(true),
+                DirectPursuers = SystemAPI.GetComponentLookup<DirectContactPursuit>(true),
                 ClosestExplosive = closestExplosive,
                 Defending = defending,
                 Objective = objective,
@@ -214,6 +216,8 @@ namespace CrowdPunch.Systems.AI
             [ReadOnly] public ComponentLookup<EnemyWaveOwnership> Owners;
             [ReadOnly] public ComponentLookup<BarricadeRoom> Rooms;
             [ReadOnly] public ComponentLookup<EnemyCrowdAssignment> CrowdOrders;
+            [ReadOnly] public ComponentLookup<EnemySurroundAssignment> SurroundOrders;
+            [ReadOnly] public ComponentLookup<DirectContactPursuit> DirectPursuers;
             public double Now;
             public PlayerSnapshot PlayerSnapshot;
             public ArenaBounds ArenaBounds;
@@ -294,7 +298,9 @@ namespace CrowdPunch.Systems.AI
                 bool baseline = archetype.Value == EnemyArchetypeKind.Baseline;
                 var order = CrowdOrders.HasComponent(entity) ? CrowdOrders[entity] : default;
                 bool groupOrders = baseline && !Defending && playerInRoom && order.Initialized != 0;
-                if (groupOrders && order.Role == EnemyCrowdRole.Interception && !committed)
+                bool directContact = baseline && !Defending && playerInRoom
+                    && DirectPursuers.HasComponent(entity) && DirectPursuers.IsComponentEnabled(entity);
+                if (groupOrders && order.Role == EnemyCrowdRole.Interception && !committed && !directContact)
                 {
                     EnemyContactCommitment.Cancel(entity, contactSettings, ref contactAttempt);
                     float3 destination = order.Destination;
@@ -310,10 +316,14 @@ namespace CrowdPunch.Systems.AI
                     return;
                 }
                 if (IsPressureEnemy(entity) || explosiveInContactRange || Defending && committed
-                    || groupOrders && (order.Role == EnemyCrowdRole.Pursuit || committed))
+                    || groupOrders && (order.Role == EnemyCrowdRole.Pursuit || committed) || directContact)
                 {
+                    var surround = SurroundOrders.HasComponent(entity) ? SurroundOrders[entity] : default;
+                    bool usesSurround = groupOrders && order.Role == EnemyCrowdRole.Pursuit
+                        && surround.Assigned != 0 && !directContact;
                     bool usesCommitment = archetype.Value == EnemyArchetypeKind.Baseline
                         && contactSettings.AttemptWindUpDuration > 0f;
+                    // COMBAT-016: placement/lane quality steers pursuit, but never vetoes an in-range contact attempt.
                     if (usesCommitment)
                         EnemyContactCommitment.Tick(entity, distanceToPlayer, toPlayer, DeltaTime,
                             contactSettings, ref contactAttempt);
@@ -325,8 +335,11 @@ namespace CrowdPunch.Systems.AI
                         desiredMovement = default;
                         return;
                     }
-                    float3 target = explosiveInContactRange || contactAttempt.IsAttempting != 0
+                    float3 target = directContact || explosiveInContactRange || contactAttempt.IsAttempting != 0
                         ? new float3(PlayerSnapshot.Position.x, transform.Position.y, PlayerSnapshot.Position.z)
+                        : usesSurround
+                        ? EnemySurroundRouting.Destination(transform.Position, PlayerSnapshot.Position, surround.Offset,
+                            math.max(1f, movementSettings.SeparationDistanceMin), movementBounds)
                         : GetArenaRelativeSurroundTarget(
                             entity.Index,
                             PlayerSnapshot.Position,

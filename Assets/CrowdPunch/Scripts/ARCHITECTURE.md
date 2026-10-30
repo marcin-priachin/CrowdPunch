@@ -1,5 +1,18 @@
 # CrowdPunch ECS Skeleton
 
+`DirectContactPursuitSystem` now runs between crowd tactics and surround allocation. It
+samples an inclusive count range on a configurable timer and enables DirectContactPursuit
+on that many eligible Baselines. Selected members directly chase the player between normal
+contact attempts; other tactics and special encounter rules retain their owners. See
+`Docs/Verification/DirectContactPursuit.md` for defaults, behavior and verification.
+
+Baseline closing pressure now passes through `EnemySurroundSystem` between tactics and chase
+(COMBAT-016). `EnemySurroundAssignment` reserves distinct player-relative positions, fills
+inner angular rings before outer rings, and prefers clear approaches while positioning.
+Congested bodies seek free sides through `EnemySurroundRouting` arc waypoints. Interception,
+reserve and special-archetype orders retain their owners; navigation and physics retain all
+normal movement writes. See `Docs/Architecture/CurrentArchitecture.md` for the current flow.
+
 ## Folder Structure
 
 ```text

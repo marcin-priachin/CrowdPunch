@@ -33,6 +33,18 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(1)] private int reserveGroupCount = 6;
         [Tooltip("Smaller populations pursue together instead of producing ineffective interception groups.")]
         [SerializeField, Min(1)] private int minimumInterceptionGroupSize = 4;
+        [Header("Baseline Direct Contact Pursuit")]
+        [Tooltip("Inclusive minimum/maximum number of Baselines that pursue the player directly between contact attempts. Set both to zero to disable this extra pressure.")]
+        [SerializeField, Min(0)] private int minimumDirectContactPursuers = 2;
+        [SerializeField, Min(0)] private int maximumDirectContactPursuers = 4;
+        [Tooltip("Seconds between drawing a new count from the inclusive range. The closest eligible Baselines are selected continuously; distance changes and vacancies do not reroll the count.")]
+        [SerializeField, Min(.1f)] private float directContactPursuerResampleSeconds = 3f;
+        [Header("Baseline Surround Positions")]
+        [Tooltip("Seconds between occupancy checks. Player movement and territory changes can refresh positions sooner.")]
+        [SerializeField, Min(0.1f)] private float surroundReassignmentSeconds = .5f;
+        [FormerlySerializedAs("surroundArrivalDistance")]
+        [Tooltip("Player movement in metres that refreshes surround occupancy before the normal reassignment interval. This does not restrict contact attempts.")]
+        [SerializeField, Min(0.1f)] private float surroundMovementRefreshDistance = 1.25f;
         [Header("Explosive Pressure (Provisional)")]
         [FormerlySerializedAs("maximumApproachingEnemies")]
         [Tooltip("Existing Explosive pressure limit outside contact range. Baselines do not use this cap.")]
@@ -74,7 +86,12 @@ namespace CrowdPunch.Configuration
             GroupRadius = Mathf.Max(0f, crowdGroupRadius),
             ReserveGroupCount = Mathf.Clamp(reserveGroupCount, 1, 32),
             MinimumInterceptionGroupSize = Mathf.Max(1, minimumInterceptionGroupSize),
-            MaximumApproachingExplosives = Mathf.Max(0, maximumApproachingExplosives)
+            MaximumApproachingExplosives = Mathf.Max(0, maximumApproachingExplosives),
+            SurroundReassignmentSeconds = Mathf.Max(.1f, surroundReassignmentSeconds),
+            SurroundMovementRefreshDistance = Mathf.Max(.1f, surroundMovementRefreshDistance),
+            MinimumDirectContactPursuers = Mathf.Max(0, minimumDirectContactPursuers),
+            MaximumDirectContactPursuers = Mathf.Max(0, maximumDirectContactPursuers),
+            DirectContactPursuerResampleSeconds = Mathf.Max(.1f, directContactPursuerResampleSeconds)
         };
         public float MinimumPropagationImpulse => minimumPropagationImpulse;
         public float PropagationAimCorrectionRadius => propagationAimCorrectionRadius;

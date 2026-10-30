@@ -2,6 +2,77 @@
 
 ## Baseline pursuit and interception (2026-10-28, COMBAT-016, ENEMY-012)
 
+### Timed direct-contact subset (2026-10-30, COMBAT-016, ENEMY-012)
+
+Game Runtime Settings exposes Minimum Direct Contact Pursuers (2), Maximum Direct Contact
+Pursuers (4) and Direct Contact Pursuer Resample Seconds (3). GameSettingsBaker copies them
+through CrowdPressure. DirectContactPursuit is an enableable tag on baked enemy roots,
+initially disabled. DirectContactPursuitSystem runs after tactics and before surround/chase.
+It samples an inclusive count immediately when eligible enemies exist, then once per
+configured interval using deterministic Unity.Mathematics.Random state. The sampled count
+may repeat. Reversed endpoints are normalized, negatives clamp to zero, and 0..0 disables
+this additional subset. The actual count is capped to the eligible population.
+
+Assignments continuously use the closest active Baselines in the player's territory, by
+horizontal distance and entity-index tie break. Player/enemy movement, newly eligible
+bodies and vacancies update membership immediately without drawing a new count. The
+selector avoids sorting while the farthest selected member still ranks ahead of the
+nearest unselected member and the selected count matches its target. When membership
+changes, farther members return to ordinary tactics;
+ongoing contact commitments still finish. Selected enemies bypass reserve/interception
+and surround destinations, targeting the player's current position between contact attempts.
+This subset applies in both Regional and Whole Arena modes. It retains normal navigation,
+separation, contact range/cooldown/wind-up, committed charge direction and physics. Other
+enemies retain their existing tactic allocation; the sampled number is not a global limit
+on ordinary contact attacks.
+
+The selection excludes pooled/launched/recovering/defeated bodies, other archetypes, Snakes,
+off-room enemies and still-bound pillar groups. Protected-point selection remains authoritative;
+an unavailable player clears the subset and resets its sampling interval. Pooling disables
+the tag. Empty populations defer the next draw until enemies become eligible again. No
+MonoBehaviour stores enemy entities. See Docs/Verification/DirectContactPursuit.md.
+
+### Occupancy-aware surround (2026-10-29)
+
+`EnemyBaker` now also establishes `EnemySurroundAssignment`. `EnemySurroundSystem` runs
+between `EnemyCrowdTacticsSystem` and `EnemyChaseSystem`. It owns player-relative surround
+reservations for active pursuing Baselines, rather than the former entity-index angle.
+Nearest bodies get priority; complete angular inner rings are filled before outer rings.
+Valid reservations persist, while outer bodies may move into newly freed inner positions.
+An otherwise valid position is reconsidered if its approach lane becomes blocked;
+clear lanes take precedence over blocked lanes within the same ring, then nearest travel
+distance breaks ties. A completely occupied inner ring still leaves outer waiting positions.
+Radii respect each profile's Surround Distance. Slot/ring clearance is at least the
+leading Baseline profile's Separation Distance Min and body diameter; authored Surround
+Ring Spacing can widen the rings further. Small crowds use a full-circle angular layout.
+
+Occupancy refresh defaults to 0.5 s, sooner after substantial player movement. A spatial
+hash of active/recovering enemy bodies rejects occupied points and blocked contact lanes.
+Navigation-grid clearance/connected-region checks reject obstacle or unreachable targets;
+positions outside arena/room clearance are skipped rather than clamped onto shared edge
+points. Pending geometry uses bounded ring/candidate counts. Failed allocations hold the
+body's current relative position and retry; contact eligibility is independently governed
+by the enemy's authored range and cadence, even when no surround position is available.
+
+`EnemyChaseSystem` reads the separate surround assignment only during pursuit. Contact
+eligibility was relaxed on 2026-10-30: pursuing Baselines advance their ordinary contact
+cadence whenever in Contact Attempt Distance, irrespective of surround arrival or other
+enemies in the lane. `EnemyContactCommitment` still owns cooldown, wind-up, direction lock
+and duration. Surround positions and clear-lane preferences steer movement between attacks;
+`EnemySurroundAssignment` contains no attack-eligibility flag. Existing wind-ups/charges
+retain priority and committed directions. `EnemySurroundRouting` supplies
+short arc waypoints toward a different side so a rear body does not aim through the player.
+The existing navigation and movement systems still own obstacle routes and physics.
+Reserve and interception orders, protected-point rules and active local pillar groups
+retain their dedicated behavior. Unavailable/ineligible bodies clear their surround state;
+pooling explicitly resets it. No additional Mono/ECS bridge or HUD was added.
+
+Game Runtime Settings exposes Surround Reassignment Seconds (0.5) and Surround Movement
+Refresh Distance (1.25 m). The latter replaces the misleading Surround Arrival Distance
+name, preserving serialized values via FormerlySerializedAs; it triggers early occupancy
+refresh after player movement and has no attack-eligibility role. Existing tuning and Whole Arena selection are preserved. Settings
+are baked and require rebaking/restart as before. See `Docs/Verification/EnemySurround.md`.
+
 `GameRuntimeSettings.CrowdPressure` bakes into `EnemyCrowdPressureSettings`. The Baseline
 attacker cap is replaced by Regional/Whole Arena participation, a 60% pursuit share and
 two interception groups. `EnemyBaker` establishes `EnemyCrowdAssignment` on prefab roots.

@@ -45,6 +45,9 @@ namespace CrowdPunch.Tests
                 typeof(WanderDestination), typeof(EnemyMovementSettings), typeof(EnemyContactDamageSettings),
                 typeof(EnemySeparationDistance), typeof(EnemyArchetypeSeparationDistances));
             em.SetComponentEnabled<RespawnRequest>(enemy, false);
+            em.AddComponent<EnemySurroundAssignment>(enemy);
+            em.AddComponent<DirectContactPursuit>(enemy);
+            em.SetComponentEnabled<DirectContactPursuit>(enemy, false);
             em.SetComponentData(enemy, LocalTransform.FromPosition(position));
             em.SetComponentData(enemy, new EnemyArchetype { Value = kind });
             em.SetComponentData(enemy, new EnemyMovementSettings { MoveSpeed = 8, ChargeSpeedMultiplier = 1.25f,
@@ -68,6 +71,8 @@ namespace CrowdPunch.Tests
         {
             world.SetTime(new TimeData(time, .02f));
             world.GetOrCreateSystem<EnemyCrowdTacticsSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<DirectContactPursuitSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<EnemySurroundSystem>().Update(world.Unmanaged);
             world.GetOrCreateSystem<EnemyChaseSystem>().Update(world.Unmanaged);
             em.CompleteAllTrackedJobs();
         }
@@ -80,10 +85,18 @@ namespace CrowdPunch.Tests
 
         [Test] public void Combat016_DefaultAssetExposesBothModesAndSixtyFortySplit()
         {
-            var asset = AssetDatabase.LoadAssetAtPath<GameRuntimeSettings>("Assets/CrowdPunch/Data/Settings/GameRuntimeSettings.asset");
-            Assert.That(asset.CrowdPressure.Participation, Is.EqualTo(CrowdParticipation.Regional));
-            Assert.That(asset.CrowdPressure.PursuitShare, Is.EqualTo(.6f));
-            Assert.That(asset.CrowdPressure.EngagementRadius, Is.EqualTo(45f));
+            var defaults = UnityEngine.ScriptableObject.CreateInstance<GameRuntimeSettings>();
+            try
+            {
+                Assert.That(defaults.CrowdPressure.Participation, Is.EqualTo(CrowdParticipation.Regional));
+                Assert.That(defaults.CrowdPressure.PursuitShare, Is.EqualTo(.6f));
+                Assert.That(defaults.CrowdPressure.MinimumDirectContactPursuers, Is.EqualTo(2));
+                Assert.That(defaults.CrowdPressure.MaximumDirectContactPursuers, Is.EqualTo(4));
+                Assert.That(defaults.CrowdPressure.DirectContactPursuerResampleSeconds, Is.EqualTo(3));
+                Assert.That(defaults.CrowdPressure.EngagementRadius, Is.EqualTo(45f));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(defaults); }
+            Assert.That(AssetDatabase.LoadAssetAtPath<GameRuntimeSettings>("Assets/CrowdPunch/Data/Settings/GameRuntimeSettings.asset"), Is.Not.Null);
             Assert.That(System.Enum.GetValues(typeof(CrowdParticipation)).Length, Is.EqualTo(2));
         }
 

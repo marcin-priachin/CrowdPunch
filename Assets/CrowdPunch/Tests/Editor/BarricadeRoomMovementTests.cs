@@ -43,6 +43,9 @@ namespace CrowdPunch.Tests
                 typeof(EnemyArchetypeSeparationDistances), typeof(PhysicsVelocity), typeof(PhysicsMass), typeof(EnemyWaveOwnership));
             em.SetComponentEnabled<RespawnRequest>(e, false);
             em.AddComponent<EnemyCrowdAssignment>(e);
+            em.AddComponent<EnemySurroundAssignment>(e);
+            em.AddComponent<DirectContactPursuit>(e);
+            em.SetComponentEnabled<DirectContactPursuit>(e, false);
             em.SetComponentData(e, LocalTransform.FromPosition(position));
             em.SetComponentData(e, new EnemyWaveOwnership { Sequence = sequence });
             em.SetComponentData(e, new EnemyArchetype { Value = kind });
@@ -56,6 +59,8 @@ namespace CrowdPunch.Tests
         private void Chase()
         {
             world.GetOrCreateSystem<EnemyCrowdTacticsSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<DirectContactPursuitSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<EnemySurroundSystem>().Update(world.Unmanaged);
             world.GetOrCreateSystem<EnemyChaseSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs();
         }
         private void Move()

@@ -15,17 +15,22 @@ MonoBehaviour:
   startRunning: 1
   startWithAllLevelsUnlocked: 1
   crowdParticipation: 1
-  pursuitShare: 0.6
+  pursuitShare: 1
   crowdEngagementRadius: 45
   crowdDisengagementMargin: 10
   interceptionPredictionSeconds: 1.25
   maximumInterceptionPredictionDistance: 16
-  interceptionFlankDistance: 18
+  interceptionFlankDistance: 24
   interceptionCommitmentSeconds: 4
   interceptionCloseInSeconds: 2
-  crowdGroupRadius: 8
+  crowdGroupRadius: 32
   reserveGroupCount: 6
   minimumInterceptionGroupSize: 4
+  minimumDirectContactPursuers: 2
+  maximumDirectContactPursuers: 4
+  directContactPursuerResampleSeconds: 3
+  surroundReassignmentSeconds: 0.5
+  surroundMovementRefreshDistance: 3
   maximumApproachingExplosives: 30
   minimumPropagationImpulse: 1.5
   propagationAimCorrectionRadius: 0
