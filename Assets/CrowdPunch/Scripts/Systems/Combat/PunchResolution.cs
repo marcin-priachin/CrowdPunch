@@ -25,6 +25,20 @@ namespace CrowdPunch.Systems.Combat
 
     internal static class PunchResolution
     {
+        public static bool Contains(EntityManager manager, Entity target, float3 position, in PunchSpecification punch)
+        {
+            if (punch.Cause == EnemyLaunchCause.PlayerPunch
+                && math.abs(position.y - punch.Origin.y) > math.max(0f, punch.Radius)
+                && manager.HasComponent<SnakeSegment>(target))
+            {
+                // SNAKE-006: authored low tail centres can sit below the punch's vertical band.
+                // Admit overlap with the sphere's height without expanding horizontal reach.
+                float radius = math.max(0f, manager.GetComponentData<SnakeSegment>(target).Radius);
+                position.y += math.clamp(punch.Origin.y - position.y, -radius, radius);
+            }
+            return Contains(position, punch);
+        }
+
         public static bool Contains(float3 position, in PunchSpecification punch)
         {
             float3 direction = math.normalizesafe(punch.Direction);
@@ -66,7 +80,7 @@ namespace CrowdPunch.Systems.Combat
             // punched into another live phase without cancelling the committed launch.
             bool committed = punch.Cause == EnemyLaunchCause.ElitePunch && punch.CommittedEliteTarget == target;
             if (committed ? launch.Phase == EnemyLaunchPhase.Defeated || health.Current <= 0f && launch.Phase != EnemyLaunchPhase.Launched
-                : !IsEligible(launch, health, punch) || !Contains(position, punch)) return false;
+                : !IsEligible(launch, health, punch) || !Contains(manager, target, position, punch)) return false;
             if (ArmorHitResolution.IsProtected(manager, target)) return false;
             bool paired = LinkedPairLaunchResolution.TryGet(manager, target, out var pairEntity, out var pair);
             bool repeatPairPunch = paired && punch.Cause == EnemyLaunchCause.PlayerPunch && pair.LastPunchAt == punch.EventTime;

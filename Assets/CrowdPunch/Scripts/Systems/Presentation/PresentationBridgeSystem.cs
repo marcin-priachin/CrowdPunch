@@ -77,7 +77,7 @@ namespace CrowdPunch.Systems.Presentation
                          .WithEntityAccess())
             {
                 float3 enemyPosition = transform.ValueRO.Position;
-                if (!PunchResolution.Contains(enemyPosition, volume)) continue;
+                if (!PunchResolution.Contains(state.EntityManager, enemy, enemyPosition, volume)) continue;
                 if (ArmorHitResolution.IsProtected(state.EntityManager, enemy)
                     || !EnemyLaunchTransition.IsLaunchable(tier.ValueRO)
                     || !EnemyLaunchTransition.CanReceivePlayerPunch(launchState.ValueRO, health.ValueRO))

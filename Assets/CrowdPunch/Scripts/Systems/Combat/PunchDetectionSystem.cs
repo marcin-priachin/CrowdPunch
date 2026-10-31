@@ -57,12 +57,12 @@ namespace CrowdPunch.Systems.Combat
                 if (ArmorHitResolution.IsProtected(state.EntityManager, enemy))
                 {
                     punchRequest.HitEnemy |= PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, punch)
-                        && PunchResolution.Contains(transform.ValueRO.Position, punch);
+                        && PunchResolution.Contains(state.EntityManager, enemy, transform.ValueRO.Position, punch);
                     continue;
                 }
                 PunchSpecification targetPunch = punch;
                 if (PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, punch)
-                    && PunchResolution.Contains(transform.ValueRO.Position, punch))
+                    && PunchResolution.Contains(state.EntityManager, enemy, transform.ValueRO.Position, punch))
                 {
                     bool committed = PunchAimAssist.TryGetCommittedDirection(state.EntityManager, enemy,
                         punchRequest.AimRevision, out float3 assistedDirection, out Entity committedTarget);

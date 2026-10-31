@@ -1099,6 +1099,12 @@ punch footprint (contact-radius fallback for colliderless fixtures), transformin
 current head position/rotation/scale. Player punch resolution, live aim-source eligibility
 and presentation previews share this check, including detached repunches. Moving around
 the head restores eligibility without stale collision-world positions.
+`PunchResolution.Contains(EntityManager, Entity, ...)` also admits Snake sphere overlap
+with the punch's vertical band, using `SnakeSegment.Radius`. The authored head Y=0,
+tail offset -0.7m and player origin Y=0.5m place the tip centre 1.2m away, just outside
+the saved 1.15m tolerance. Aim-source selection, preview and punch resolution share
+this target-aware check; horizontal width/range, head occlusion, protected inner parts
+and ordinary-enemy centre membership remain unchanged (SNAKE-002/006, PLAYER-003/004).
 Ordinary solver propagation, ownership, feedback and launched-player danger remain
 shared. Recovery defeats detached orbs at launch end; `SnakeOrbCleanupSystem`
 destroys them and stale/ownerless attached pieces. Restart destroys every orb before

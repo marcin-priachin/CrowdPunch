@@ -47,7 +47,7 @@ namespace CrowdPunch.Systems.Combat
                 SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>, RefRW<PunchAimAssistTarget>>()
                     .WithAll<Enemy>().WithEntityAccess())
             {
-                if (!available || !PunchResolution.Contains(pose.ValueRO.Position, volume)
+                if (!available || !PunchResolution.Contains(em, source, pose.ValueRO.Position, volume)
                     || !PunchResolution.IsEligible(launch.ValueRO, health.ValueRO, volume)
                     || ArmorHitResolution.IsProtected(em, source)
                     || em.HasComponent<RespawnRequest>(source) && em.IsComponentEnabled<RespawnRequest>(source)

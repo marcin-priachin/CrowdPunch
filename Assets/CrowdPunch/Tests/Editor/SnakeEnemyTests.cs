@@ -483,6 +483,87 @@ namespace CrowdPunch.Tests
                 UnityEngine.Object.DestroyImmediate(root);
             }
         }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Snake006_AuthoredLowTipHeightSharesPreviewAimAndPunchEligibility(bool behindHead)
+        {
+            // Production Bootstrap origin is Y=.5; the head grounds at zero and tail offset is -.7.
+            // The .8m sphere overlaps the punch height even though its centre misses by .05m.
+            for (int i = 0; i < orbs.Length; i++)
+            {
+                var pose = em.GetComponentData<LocalTransform>(orbs[i]); pose.Position.y = -.7f; pose.Scale = .8f;
+                em.SetComponentData(orbs[i], pose);
+                var segment = em.GetComponentData<SnakeSegment>(orbs[i]); segment.Radius = .8f;
+                em.SetComponentData(orbs[i], segment);
+            }
+            Entity tip = orbs[5], destination = Body(new float3(0, -.7f, 15));
+            em.AddComponent<PunchAimAssistTarget>(tip);
+            using var playerQuery = em.CreateEntityQuery(typeof(PlayerSnapshot));
+            Entity player = playerQuery.GetSingletonEntity();
+            em.AddComponent<PlayerHealthSnapshot>(player); em.AddComponent<PunchRequest>(player);
+            em.SetComponentEnabled<PunchRequest>(player, false);
+            var physics = new PhysicsWorld(0, 0, 0);
+            physics.CollisionWorld.BuildBroadphase(ref physics, .02f, float3.zero, true);
+            em.AddComponentData(em.CreateEntity(), new PhysicsWorldSingleton { PhysicsWorld = physics });
+            PlayerBridgeRegistry.TryGetBridge(out var previous);
+            var root = new UnityEngine.GameObject("Authored low Snake tip regression");
+            var bridge = root.AddComponent<PlayerEcsBridge>();
+            var origin = new UnityEngine.Vector3(0, .5f, behindHead ? -1 : 7);
+            try
+            {
+                PlayerBridgeRegistry.Register(bridge);
+                bridge.PublishPunchPreview(origin, UnityEngine.Vector3.forward, 1.15f, 12, 5, 0, 22, 12, 0, 0, 90, 16, .12f, .35f);
+                world.GetOrCreateSystem<PunchAimAssistSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<PresentationBridgeSystem>().Update(world.Unmanaged);
+                Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.EqualTo(behindHead ? 0 : 1));
+                Assert.That(em.GetComponentData<PunchAimAssistTarget>(tip).Target,
+                    Is.EqualTo(behindHead ? Entity.Null : destination));
+                bridge.PublishPunch(origin, UnityEngine.Vector3.forward, 1.15f, 12, 90, .1f, 10, 0);
+                world.GetOrCreateSystem<CrowdPunch.Systems.InputBridge.PlayerBridgeSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<PunchDetectionSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<SnakePunchSeverSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<ApplyImpulseSystem>().Update(world.Unmanaged);
+                Assert.That(em.GetComponentData<SnakeHead>(head).AttachedCount, Is.EqualTo(behindHead ? 6 : 5));
+                Assert.That(em.GetComponentData<SnakeSegment>(tip).Detached, Is.EqualTo(behindHead ? 0 : 1));
+                for (int i = 0; i < 5; i++)
+                    Assert.That(em.GetComponentData<EnemyLaunchState>(orbs[i]).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+                if (!behindHead)
+                {
+                    Assert.That(em.GetComponentData<PhysicsVelocity>(tip).Linear.z, Is.EqualTo(90));
+                    world.GetOrCreateSystem<PresentationBridgeSystem>().Update(world.Unmanaged);
+                    bool predecessorShown = false;
+                    foreach (var segment in bridge.TrajectoryPreviewSegments)
+                        predecessorShown |= math.distance(segment.Start,
+                            em.GetComponentData<LocalTransform>(orbs[4]).Position) < .001f;
+                    Assert.That(predecessorShown, Is.True);
+                }
+            }
+            finally
+            {
+                PlayerBridgeRegistry.Unregister(bridge);
+                if (previous != null) PlayerBridgeRegistry.Register(previous);
+                UnityEngine.Object.DestroyImmediate(root); physics.Dispose();
+            }
+        }
+
+        [TestCase(-.7f, 0f, 9f, true)]
+        [TestCase(-1.5f, 0f, 9f, false)]
+        [TestCase(2.5f, 0f, 9f, false)]
+        [TestCase(-.7f, 1.16f, 9f, false)]
+        [TestCase(-.7f, 0f, 19.01f, false)]
+        [TestCase(-.7f, 0f, 6.99f, false)]
+        public void Snake006_VerticalOverlapPreservesPunchHeightAndHorizontalLimits(float y, float x, float z, bool eligible)
+        {
+            var segment = em.GetComponentData<SnakeSegment>(orbs[5]); segment.Radius = .8f;
+            em.SetComponentData(orbs[5], segment);
+            var punch = new PunchSpecification { Origin = new float3(0, .5f, 7), Direction = math.forward(),
+                Range = 12, Radius = 1.15f, Cause = EnemyLaunchCause.PlayerPunch };
+            var position = new float3(x, y, z);
+            Assert.That(PunchResolution.Contains(em, orbs[5], position, punch), Is.EqualTo(eligible));
+            Assert.That(PunchResolution.Contains(em, head, position, punch), Is.False,
+                "Ordinary body/head centre membership remains unchanged.");
+        }
         [Test] public void Snake006_BlockedTipClearsAimLockAndHidesArrowThenReappearsFromTailSide()
         {
             PlayerBridgeRegistry.TryGetBridge(out var previous);
