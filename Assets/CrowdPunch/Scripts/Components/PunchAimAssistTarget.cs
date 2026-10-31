@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
@@ -6,6 +7,14 @@ namespace CrowdPunch.Components
     public struct PunchAimAssistTarget : IComponentData
     {
         public Entity Target;
+        public Entity Challenger;
+        public double ChallengerSince;
+        public float LaunchSpeed, LeadSeconds, LeadMaximumDistance;
+        public float3 Facing;
+        public float DirectionLimitDegrees;
+        public float3 PreviewDirection;
+        public Entity PreviewTarget;
+        public uint PreviewRevision;
         public byte IsAiming;
     }
 }

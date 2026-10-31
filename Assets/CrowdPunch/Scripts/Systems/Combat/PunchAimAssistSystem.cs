@@ -10,7 +10,6 @@ using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Combat
 {
-    /// <summary>Maintains ray-selected launch targets while enemies remain in the live punch volume.</summary>
     [UpdateInGroup(typeof(GamePrePhysicsGroup))]
     [UpdateAfter(typeof(PlayerBridgeSystem))]
     [UpdateBefore(typeof(PunchDetectionSystem))]
@@ -27,114 +26,126 @@ namespace CrowdPunch.Systems.Combat
 
         public void OnUpdate(ref SystemState state)
         {
-            bool hasPreview = PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge)
-                && bridge.IsPunchPreviewAvailable
+            bool available = PlayerBridgeRegistry.TryGetBridge(out var bridge) && bridge.IsPunchPreviewAvailable
                 && bridge.PunchPreviewAimAssistRange > 0f;
-            float3 direction = hasPreview ? bridge.PunchPreviewDirection : default;
-            direction.y = 0f;
-            direction = math.normalizesafe(direction);
-            PunchSpecification volume = hasPreview
-                ? new PunchSpecification
-                {
-                    Origin = bridge.PunchPreviewOrigin,
-                    Direction = direction,
-                    Radius = bridge.PunchPreviewRadius,
-                    Range = bridge.PunchPreviewRange,
-                    Cause = EnemyLaunchCause.PlayerPunch,
-                    AffectActive = 1,
-                    AffectRecovering = 1,
-                    AffectLaunched = 1
-                }
-                : default;
-
-            using NativeArray<Entity> allCandidates = candidates.ToEntityArray(Allocator.Temp);
-            NativeList<RaycastHit> hits = new NativeList<RaycastHit>(Allocator.Temp);
-            CollisionWorld collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
-
-            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState,
-                         RefRO<Health> health, RefRW<PunchAimAssistTarget> aimTarget, Entity source) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>,
-                             RefRW<PunchAimAssistTarget>>()
-                         .WithAll<Enemy>()
-                         .WithEntityAccess())
+            var volume = available ? new PunchSpecification {
+                Origin = bridge.PunchPreviewOrigin, Direction = bridge.PunchPreviewDirection,
+                Radius = bridge.PunchPreviewRadius, Range = bridge.PunchPreviewRange,
+                Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1, AffectRecovering = 1, AffectLaunched = 1
+            } : default;
+            SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var tuning);
+            using var entities = candidates.ToEntityArray(Allocator.Temp);
+            using var poses = candidates.ToComponentDataArray<LocalTransform>(Allocator.Temp);
+            using var hits = new NativeList<RaycastHit>(Allocator.Temp);
+            var collision = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
+            var visibility = new LaunchObstructionCollector { Enemies = SystemAPI.GetComponentLookup<Enemy>(true),
+                Covers = SystemAPI.GetComponentLookup<RotatingCover>(true),
+                Enclosures = SystemAPI.GetComponentLookup<CoverEnclosure>(true), IgnoreMovingCovers = true };
+            var em = state.EntityManager;
+            double now = SystemAPI.Time.ElapsedTime;
+            foreach (var (pose, launch, health, aim, source) in
+                SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>, RefRW<PunchAimAssistTarget>>()
+                    .WithAll<Enemy>().WithEntityAccess())
             {
-                bool isInPunchVolume = hasPreview
-                    && !ArmorHitResolution.IsProtected(state.EntityManager, source)
-                    && PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, volume)
-                    && PunchResolution.Contains(transform.ValueRO.Position, volume)
-                    && SnakePunchOcclusion.CanReach(state.EntityManager, source, volume.Origin);
-                if (!isInPunchVolume)
-                {
-                    aimTarget.ValueRW = default;
-                    continue;
-                }
-
-                Entity rayTarget = RaycastTarget(state.EntityManager, collisionWorld, source, transform.ValueRO.Position, direction,
-                    bridge.PunchPreviewAimAssistRange, ref hits);
-                if (PunchAimAssist.IsValidTarget(state.EntityManager, source, rayTarget)
-                    && PunchAimAssist.IsWithinAssistLimits(state.EntityManager, rayTarget,
-                        transform.ValueRO.Position, direction, bridge.PunchPreviewAimAssistRange,
-                        bridge.PunchPreviewAimAssistMaximumAngleDegrees))
-                {
-                    aimTarget.ValueRW.Target = rayTarget;
-                }
-                else if (aimTarget.ValueRO.IsAiming == 0
-                    || !PunchAimAssist.IsValidTarget(state.EntityManager, source, aimTarget.ValueRO.Target)
-                    || !PunchAimAssist.IsWithinAssistLimits(state.EntityManager, aimTarget.ValueRO.Target,
-                        transform.ValueRO.Position, direction, bridge.PunchPreviewAimAssistRange,
-                        bridge.PunchPreviewAimAssistMaximumAngleDegrees))
-                {
-                    PunchAimAssist.TryGetFallbackTarget(state.EntityManager, source, transform.ValueRO.Position,
-                        direction, bridge.PunchPreviewAimAssistRange,
-                        bridge.PunchPreviewAimAssistMaximumAngleDegrees, allCandidates, out Entity fallback);
-                    aimTarget.ValueRW.Target = fallback;
-                }
-                aimTarget.ValueRW.IsAiming = 1;
+                if (!available || !PunchResolution.Contains(pose.ValueRO.Position, volume)
+                    || !PunchResolution.IsEligible(launch.ValueRO, health.ValueRO, volume)
+                    || ArmorHitResolution.IsProtected(em, source)
+                    || em.HasComponent<RespawnRequest>(source) && em.IsComponentEnabled<RespawnRequest>(source)
+                    || !SnakePunchOcclusion.CanReach(em, source, volume.Origin))
+                { aim.ValueRW = default; continue; }
+                float speed = em.HasComponent<DasherSettings>(source)
+                    ? em.GetComponentData<DasherSettings>(source).DashSpeed : bridge.PunchPreviewStrength;
+                UpdateAim(em, collision, visibility, source, pose.ValueRO.Position, bridge,
+                    entities, poses, hits, tuning, now, speed, ref aim.ValueRW);
             }
-            foreach (var (pose, aim, source) in SystemAPI.Query<RefRO<LocalTransform>, RefRW<PunchAimAssistTarget>>()
-                .WithAll<ChickenProjectile>().WithEntityAccess())
+            foreach (var (pose, projectile, aim, source) in
+                SystemAPI.Query<RefRO<LocalTransform>, RefRO<ChickenProjectile>, RefRW<PunchAimAssistTarget>>().WithEntityAccess())
             {
-                if (!hasPreview || !PunchResolution.Contains(pose.ValueRO.Position, volume)) { aim.ValueRW = default; continue; }
-                var ray = RaycastTarget(state.EntityManager, collisionWorld, source, pose.ValueRO.Position, direction,
-                    bridge.PunchPreviewAimAssistRange, ref hits);
-                if (PunchAimAssist.IsValidTarget(state.EntityManager, source, ray)
-                    && PunchAimAssist.IsWithinAssistLimits(state.EntityManager, ray, pose.ValueRO.Position, direction,
-                        bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewAimAssistMaximumAngleDegrees)) aim.ValueRW.Target = ray;
-                else if (aim.ValueRO.IsAiming == 0 || !PunchAimAssist.IsValidTarget(state.EntityManager, source, aim.ValueRO.Target)
-                    || !PunchAimAssist.IsWithinAssistLimits(state.EntityManager, aim.ValueRO.Target, pose.ValueRO.Position, direction,
-                        bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewAimAssistMaximumAngleDegrees))
-                {
-                    PunchAimAssist.TryGetFallbackTarget(state.EntityManager, source, pose.ValueRO.Position, direction,
-                        bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewAimAssistMaximumAngleDegrees, allCandidates, out var fallback);
-                    aim.ValueRW.Target = fallback;
-                }
-                aim.ValueRW.IsAiming = 1;
+                if (!available || !PunchResolution.Contains(pose.ValueRO.Position, volume))
+                { aim.ValueRW = default; continue; }
+                float speed = em.HasComponent<ChickenTuning>(projectile.ValueRO.Boss)
+                    ? em.GetComponentData<ChickenTuning>(projectile.ValueRO.Boss).ReturnSpeed : bridge.PunchPreviewStrength;
+                UpdateAim(em, collision, visibility, source, pose.ValueRO.Position, bridge,
+                    entities, poses, hits, tuning, now, speed, ref aim.ValueRW);
             }
-            hits.Dispose();
         }
 
-        private static Entity RaycastTarget(EntityManager em, CollisionWorld world, Entity source, float3 start, float3 direction,
-            float range, ref NativeList<RaycastHit> hits)
+        private static void UpdateAim(EntityManager em, CollisionWorld world, LaunchObstructionCollector visibility,
+            Entity source, float3 position, PlayerEcsBridge bridge, NativeArray<Entity> entities,
+            NativeArray<LocalTransform> poses, NativeList<RaycastHit> hits, in EnemyLaunchSettings tuning,
+            double now, float speed, ref PunchAimAssistTarget aim)
+        {
+            float3 facing = math.normalizesafe(new float3(bridge.PunchPreviewDirection.x, 0, bridge.PunchPreviewDirection.z));
+            bool retain = PunchAimAssist.IsValidTarget(em, source, aim.Target)
+                && PunchAimAssist.IsWithinAssistLimits(em, aim.Target, position, facing,
+                    bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewReleaseAngleDegrees)
+                && Clear(em, world, visibility, source, aim.Target, position);
+            Entity preferred = RayTarget(em, world, source, position, facing, bridge.PunchPreviewAimAssistRange, hits);
+            if (!PunchAimAssist.IsValidTarget(em, source, preferred)
+                || !PunchAimAssist.IsWithinAssistLimits(em, preferred, position, facing,
+                    bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewAimAssistMaximumAngleDegrees)
+                || !Clear(em, world, visibility, source, preferred, position))
+                preferred = Fallback(em, world, visibility, source, position, facing, bridge, entities, poses);
+            LaunchAimPrediction.UpdateLock(ref aim, preferred, retain, now, bridge.PunchPreviewSwitchDelay);
+            aim.Facing = facing;
+            aim.LaunchSpeed = speed;
+            aim.LeadSeconds = tuning.AimLeadSeconds;
+            aim.LeadMaximumDistance = tuning.AimLeadMaximumDistance;
+            aim.DirectionLimitDegrees = bridge.PunchPreviewReleaseAngleDegrees;
+        }
+
+        private static Entity Fallback(EntityManager em, CollisionWorld world, LaunchObstructionCollector visibility,
+            Entity source, float3 position, float3 facing, PlayerEcsBridge bridge,
+            NativeArray<Entity> entities, NativeArray<LocalTransform> poses)
+        {
+            Entity best = Entity.Null;
+            float bestScore = float.MaxValue, bestDistance = float.MaxValue;
+            float range = bridge.PunchPreviewAimAssistRange;
+            float angleLimit = math.radians(bridge.PunchPreviewAimAssistMaximumAngleDegrees);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                float2 offset = poses[i].Position.xz - position.xz;
+                float distanceSq = math.lengthsq(offset);
+                if (distanceSq <= .000001f || distanceSq > range * range) continue;
+                float distance = math.sqrt(distanceSq);
+                float angle = math.acos(math.clamp(math.dot(facing.xz, offset / distance), -1f, 1f));
+                if (angle > angleLimit + .000001f) continue;
+                float score = angle / math.max(.0001f, angleLimit)
+                    + distance / range * bridge.PunchPreviewDistanceWeight;
+                Entity candidate = entities[i];
+                if (score > bestScore || score == bestScore && distance > bestDistance
+                    || score == bestScore && distance == bestDistance && best != Entity.Null && candidate.Index >= best.Index
+                    || !PunchAimAssist.IsValidTarget(em, source, candidate)
+                    || !Clear(em, world, visibility, source, candidate, position)) continue;
+                best = candidate; bestScore = score; bestDistance = distance;
+            }
+            return best;
+        }
+
+        private static bool Clear(EntityManager em, CollisionWorld world, LaunchObstructionCollector visibility,
+            Entity source, Entity target, float3 start)
+        {
+            if (target == Entity.Null || !em.HasComponent<LocalTransform>(target)) return false;
+            var collector = visibility; collector.Source = source; collector.Target = target;
+            return !world.CastRay(new RaycastInput { Start = start,
+                End = em.GetComponentData<LocalTransform>(target).Position, Filter = CollisionFilter.Default }, ref collector);
+        }
+
+        private static Entity RayTarget(EntityManager em, CollisionWorld world, Entity source, float3 start,
+            float3 direction, float range, NativeList<RaycastHit> hits)
         {
             hits.Clear();
-            RaycastInput input = new RaycastInput
-            {
-                Start = start,
-                End = start + direction * math.max(0f, range),
-                Filter = CollisionFilter.Default
-            };
-            if (!world.CastRay(input, ref hits)) return Entity.Null;
-
+            world.CastRay(new RaycastInput { Start = start, End = start + direction * range,
+                Filter = CollisionFilter.Default }, ref hits);
             Entity closest = Entity.Null;
-            float closestFraction = float.MaxValue;
-            for (int i = 0; i < hits.Length; i++)
+            float fraction = float.MaxValue;
+            foreach (var hit in hits)
             {
-                RaycastHit hit = hits[i];
-                if (em.HasComponent<RotatingCover>(hit.Entity) || em.HasComponent<CoverEnclosure>(hit.Entity)) continue;
-                if (SnakeHitRules.Protected(em, hit.Entity)) continue;
-                if (hit.Entity == source || hit.Fraction >= closestFraction) continue;
-                closest = hit.Entity;
-                closestFraction = hit.Fraction;
+                if (hit.Entity == source || em.HasComponent<RotatingCover>(hit.Entity) || em.HasComponent<CoverEnclosure>(hit.Entity) || hit.Fraction >= fraction
+                    || hit.Material.CollisionResponse == CollisionResponsePolicy.RaiseTriggerEvents
+                    || hit.Material.CollisionResponse == CollisionResponsePolicy.None
+                    || SnakeProjectileCollision.IgnoresOwner(em, source, hit.Entity)) continue;
+                closest = hit.Entity; fraction = hit.Fraction;
             }
             return closest;
         }

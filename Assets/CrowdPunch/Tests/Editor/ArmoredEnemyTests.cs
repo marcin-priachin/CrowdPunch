@@ -169,12 +169,14 @@ namespace CrowdPunch.Tests
         public void Enemy014_LaunchedDasherStripsArmorRegardlessOfOwner(EnemyLaunchOwner owner)
         {
             var source = Enemy(float3.zero);
-            em.SetComponentData(source, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1, Owner = owner });
+            em.SetComponentData(source, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1, Owner = owner,
+                HomingTarget = armored, HomingSecondsRemaining = .25f });
             em.AddComponentData(source, new DasherSettings { LaunchedEnemyDamage = 15, LaunchedEnemyKnockback = 18 });
             em.AddComponentData(source, new DasherState { PreviousPosition = new float3(0, 0, 2), PreservedLaunchedVelocity = new float3(0, 0, 18) });
             em.AddBuffer<DasherHitHistory>(source);
             world.GetOrCreateSystem<DasherEnemyImpactSystem>().Update(world.Unmanaged); Damage();
             Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(1));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(source).HomingTarget, Is.EqualTo(Entity.Null));
             Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(100));
             Time(2); world.GetOrCreateSystem<DasherEnemyImpactSystem>().Update(world.Unmanaged);
             Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(1));

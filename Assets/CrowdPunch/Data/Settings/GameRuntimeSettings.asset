@@ -33,8 +33,13 @@ MonoBehaviour:
   surroundMovementRefreshDistance: 3
   maximumApproachingExplosives: 30
   minimumPropagationImpulse: 1.5
-  propagationAimCorrectionRadius: 0
-  launchHomingDegreesPerSecond: 0
+  propagationAimCorrectionRadius: 6
+  propagationAimMaximumAngleDegrees: 20
+  launchHomingDegreesPerSecond: 45
+  launchHomingDuration: 0.25
+  launchHomingMaximumAngleDegrees: 20
+  aimLeadSeconds: 0.2
+  aimLeadMaximumDistance: 2
   minimumDamageImpulse: 2
   baseCollisionDamageMultiplier: 0.5
   damageMultiplierPerExcessImpulse: 0.2

@@ -35,6 +35,7 @@ namespace CrowdPunch.Systems.Combat
             }
 
             PunchRequest punchRequest = SystemAPI.GetComponent<PunchRequest>(punchEntity);
+            SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var launchSettings);
             PunchSpecification punch = new PunchSpecification
             {
                 Origin = punchRequest.Origin, Direction = punchRequest.Direction, Range = punchRequest.Range,
@@ -44,6 +45,8 @@ namespace CrowdPunch.Systems.Combat
                 EventTime = SystemAPI.Time.ElapsedTime,
                 AffectLaunched = 1, ApplyDamage = 1
             };
+            punch.AimRevision = punchRequest.AimRevision;
+            punch.HomingDuration = launchSettings.LaunchHomingDuration;
             foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState,
                          RefRO<Health> health, RefRO<EnemyTier> tier, Entity enemy) in
                      SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>, RefRO<EnemyTier>>()
@@ -59,13 +62,18 @@ namespace CrowdPunch.Systems.Combat
                 }
                 PunchSpecification targetPunch = punch;
                 if (PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, punch)
-                    && PunchResolution.Contains(transform.ValueRO.Position, punch)
-                    && PunchAimAssist.TryGetLockedDirection(
-                        state.EntityManager, enemy, transform.ValueRO.Position, out float3 assistedDirection))
+                    && PunchResolution.Contains(transform.ValueRO.Position, punch))
                 {
-                    targetPunch.AssistedLaunchDirection = assistedDirection;
-                    targetPunch.AssistedLaunchTarget = SystemAPI.GetComponent<PunchAimAssistTarget>(enemy).Target;
-                    targetPunch.HasAssistedLaunchDirection = 1;
+                    bool committed = PunchAimAssist.TryGetCommittedDirection(state.EntityManager, enemy,
+                        punchRequest.AimRevision, out float3 assistedDirection, out Entity committedTarget);
+                    if (committed || PunchAimAssist.TryGetLockedDirection(
+                            state.EntityManager, enemy, transform.ValueRO.Position, out assistedDirection))
+                    {
+                        targetPunch.AssistedLaunchDirection = assistedDirection;
+                        targetPunch.AssistedLaunchTarget = committed ? committedTarget
+                            : SystemAPI.GetComponent<PunchAimAssistTarget>(enemy).Target;
+                        targetPunch.HasAssistedLaunchDirection = 1;
+                    }
                 }
                 if (tier.ValueRO.Value == EnemyCombatTier.Elite)
                     targetPunch.Strength *= math.max(0f, punchRequest.EliteKnockbackMultiplier);

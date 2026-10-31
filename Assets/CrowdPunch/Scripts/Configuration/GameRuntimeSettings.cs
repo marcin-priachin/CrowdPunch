@@ -53,9 +53,19 @@ namespace CrowdPunch.Configuration
         [Tooltip("Minimum solver-estimated contact impulse required for a launched enemy to launch another enemy.")]
         [SerializeField, Min(0f)] private float minimumPropagationImpulse = 1.5f;
         [Tooltip("Radius around a newly propagated enemy searched for the smallest-angle follow-up target. Set to 0 to preserve its solver-produced direction.")]
-        [SerializeField, Min(0f)] private float propagationAimCorrectionRadius = 8f;
+        [SerializeField, Min(0f)] private float propagationAimCorrectionRadius = 6f;
         [Tooltip("Maximum horizontal homing turn rate, in degrees per second, while a launched enemy has an aim-assist or propagation target. Set to 0 to disable homing.")]
-        [SerializeField, Min(0f)] private float launchHomingDegreesPerSecond = 30f;
+        [SerializeField, Min(0f)] private float launchHomingDegreesPerSecond = 45f;
+        [SerializeField, Range(0f, 180f), Tooltip("Maximum angle from solver direction for a chain target. Zero disables correction.")]
+        private float propagationAimMaximumAngleDegrees = 20f;
+        [SerializeField, Min(0f), Tooltip("Maximum homing seconds per launch. Contact or obstruction ends it sooner. Zero disables homing.")]
+        private float launchHomingDuration = 0.25f;
+        [SerializeField, Range(0f, 180f), Tooltip("Drop homing when the target leaves this cone around current flight.")]
+        private float launchHomingMaximumAngleDegrees = 20f;
+        [SerializeField, Min(0f), Tooltip("Maximum movement prediction seconds for punch aim, homing and collision arrows. Zero disables lead.")]
+        private float aimLeadSeconds = 0.2f;
+        [SerializeField, Min(0f), Tooltip("Maximum predicted target displacement in world metres.")]
+        private float aimLeadMaximumDistance = 2f;
         [Tooltip("Minimum solver-estimated contact impulse required for a launched enemy to damage another enemy.")]
         [SerializeField, Min(0f)] private float minimumDamageImpulse = 2f;
         [Tooltip("Fraction of the originating punch damage dealt at the minimum damaging impulse.")]
@@ -96,6 +106,11 @@ namespace CrowdPunch.Configuration
         public float MinimumPropagationImpulse => minimumPropagationImpulse;
         public float PropagationAimCorrectionRadius => propagationAimCorrectionRadius;
         public float LaunchHomingDegreesPerSecond => launchHomingDegreesPerSecond;
+        public float PropagationAimMaximumAngleDegrees => propagationAimMaximumAngleDegrees;
+        public float LaunchHomingDuration => launchHomingDuration;
+        public float LaunchHomingMaximumAngleDegrees => launchHomingMaximumAngleDegrees;
+        public float AimLeadSeconds => aimLeadSeconds;
+        public float AimLeadMaximumDistance => aimLeadMaximumDistance;
         public float MinimumDamageImpulse => minimumDamageImpulse;
         public float BaseCollisionDamageMultiplier => baseCollisionDamageMultiplier;
         public float DamageMultiplierPerExcessImpulse => damageMultiplierPerExcessImpulse;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CrowdPunch.Configuration;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -6,20 +7,27 @@ using UnityEngine.Rendering;
 namespace CrowdPunch.Mono.Player
 {
     /// <summary>
-    /// Renders the short, presentation-only initial trajectory supplied by ECS.
+    /// Renders direct and predicted collision launch segments supplied by ECS.
     /// </summary>
     [RequireComponent(typeof(PlayerEcsBridge))]
     public sealed class PunchTrajectoryPreview : MonoBehaviour
     {
-        [SerializeField] private float lineLength = 3f;
-        [SerializeField, Min(0.01f)] private float lineWidth = 0.36f;
+        // Keep serialized dimensions as a fallback for older standalone preview scenes.
+        [SerializeField, HideInInspector] private float lineLength = 3f;
+        [SerializeField, HideInInspector] private float lineWidth = 0.36f;
         [SerializeField] private float verticalOffset = 0.15f;
 
-        public float LineLength => Mathf.Max(0f, lineLength);
+        public float LineLength => settings != null ? settings.LaunchArrowLength : Mathf.Max(0f, lineLength);
 
+        private PlayerPunchSettings settings;
         private PlayerEcsBridge ecsBridge;
         private Material lineMaterial;
         private Mesh arrowMesh;
+        private Mesh collisionArrowMesh;
+        private readonly Color[] vertexColors = new Color[9];
+        private Color directColor, collisionColor;
+
+        public void Initialize(PlayerPunchSettings punchSettings) => settings = punchSettings;
 
         private void Awake()
         {
@@ -32,6 +40,9 @@ namespace CrowdPunch.Mono.Player
                     name = "Punch Trajectory Preview Material"
                 };
                 arrowMesh = CreateArrowMesh();
+                collisionArrowMesh = CreateArrowMesh();
+                collisionArrowMesh.name = "Predicted Collision Arrow";
+                directColor = collisionColor = new Color(1f, 1f, 1f, 0.5f);
             }
         }
 
@@ -42,6 +53,8 @@ namespace CrowdPunch.Mono.Player
                 return;
             }
 
+            UpdateColor(arrowMesh, settings != null ? settings.LaunchArrowColor : new Color(1f, 1f, 1f, 0.5f), ref directColor);
+            UpdateColor(collisionArrowMesh, settings != null ? settings.CollisionArrowColor : new Color(1f, 0.7f, 0.15f, 0.5f), ref collisionColor);
             IReadOnlyList<PlayerEcsBridge.TrajectoryPreviewSegment> segments = ecsBridge.TrajectoryPreviewSegments;
             for (int i = 0; i < segments.Count; i++)
             {
@@ -56,12 +69,15 @@ namespace CrowdPunch.Mono.Player
                 direction /= length;
                 Vector3 up = Mathf.Abs(Vector3.Dot(direction, Vector3.up)) > 0.99f
                     ? Vector3.forward : Vector3.up;
+                float width = settings != null
+                    ? segment.IsCollision ? settings.CollisionArrowWidth : settings.LaunchArrowWidth
+                    : lineWidth;
                 // World-space matrices keep the arrow independent of the giant player's scale.
                 Matrix4x4 matrix = Matrix4x4.TRS(
                     ToVector3(segment.Start) + Vector3.up * verticalOffset,
                     Quaternion.LookRotation(direction, up),
-                    new Vector3(Mathf.Max(0.01f, lineWidth), 1f, length));
-                Graphics.DrawMesh(arrowMesh, matrix, lineMaterial, gameObject.layer, null, 0, null,
+                    new Vector3(Mathf.Max(0.01f, width), 1f, length));
+                Graphics.DrawMesh(segment.IsCollision ? collisionArrowMesh : arrowMesh, matrix, lineMaterial, gameObject.layer, null, 0, null,
                     ShadowCastingMode.Off, false, null, LightProbeUsage.Off);
             }
         }
@@ -76,6 +92,15 @@ namespace CrowdPunch.Mono.Player
             {
                 Destroy(arrowMesh);
             }
+            if (collisionArrowMesh != null) Destroy(collisionArrowMesh);
+        }
+
+        private void UpdateColor(Mesh mesh, Color color, ref Color previous)
+        {
+            if (color == previous) return;
+            for (int i = 0; i < vertexColors.Length; i++) vertexColors[i] = color;
+            mesh.colors = vertexColors;
+            previous = color;
         }
 
         private static Mesh CreateArrowMesh()
@@ -101,7 +126,7 @@ namespace CrowdPunch.Mono.Player
                 colors[i] = new Color(1f, 1f, 1f, 0.5f);
             mesh.colors = colors;
             mesh.RecalculateBounds();
-            mesh.UploadMeshData(true);
+            mesh.UploadMeshData(false);
             return mesh;
         }
 

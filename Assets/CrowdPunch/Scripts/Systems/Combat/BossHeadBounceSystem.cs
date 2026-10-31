@@ -61,7 +61,7 @@ namespace CrowdPunch.Systems.Combat
             // Clear the boss lock so homing cannot undo the solver-contact deflection next step.
             if (launch.HomingTarget == boss)
             {
-                launch.HomingTarget = Entity.Null;
+                LaunchAimPrediction.StopHoming(ref launch);
                 em.SetComponentData(body, launch);
             }
 

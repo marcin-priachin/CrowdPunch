@@ -46,7 +46,7 @@ namespace CrowdPunch.Systems.Physics
                     }
                     SystemAPI.SetComponent(contact.Source, velocity);
                     SnakeProjectileCollision.RecordRebound(state.EntityManager,contact.Source,contact.IncomingVelocity,contact.Normal);
-                    launch.HomingTarget = Entity.Null;
+                    LaunchAimPrediction.StopHoming(ref launch);
                     launch.BelowUsefulMomentumSeconds = 0;
                     SystemAPI.SetComponent(contact.Source, launch);
                 }

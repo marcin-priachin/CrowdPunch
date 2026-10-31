@@ -232,8 +232,8 @@ namespace CrowdPunch.Tests
             var b=em.GetComponentData<RollingBoss>(boss); b.Phase=RollingPhase.Roll; em.SetComponentData(boss,b);
             em.AddComponent<Enemy>(body);
             var settings=em.CreateEntity(typeof(EnemyLaunchSettings));
-            em.SetComponentData(settings,new EnemyLaunchSettings { LaunchHomingDegreesPerSecond=90 });
-            em.SetComponentData(body,new EnemyLaunchState { Phase=EnemyLaunchPhase.Launched,HomingTarget=boss });
+            em.SetComponentData(settings,new EnemyLaunchSettings { LaunchHomingDegreesPerSecond=90, LaunchHomingMaximumAngleDegrees=180 });
+            em.SetComponentData(body,new EnemyLaunchState { Phase=EnemyLaunchPhase.Launched,HomingTarget=boss,HomingSecondsRemaining=1 });
             em.SetComponentData(body,new PhysicsVelocity { Linear=new float3(10,3,0) });
             world.GetOrCreateSystem<CrowdPunch.Systems.Physics.EnemyLaunchHomingSystem>().Update(world.Unmanaged);
             var velocity=em.GetComponentData<PhysicsVelocity>(body).Linear;

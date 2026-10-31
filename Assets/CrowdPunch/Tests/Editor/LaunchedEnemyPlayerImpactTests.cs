@@ -123,6 +123,7 @@ namespace CrowdPunch.Tests
                 Assert.That(hits, Is.EqualTo(1));
                 Assert.That(em.GetComponentData<EnemyLaunchState>(playerBody).PlayerImpactLaunchSequence, Is.EqualTo(1));
                 Assert.That(em.GetComponentData<EnemyLaunchState>(bossBody).PlayerImpactLaunchSequence, Is.EqualTo(1));
+                Assert.That(em.GetComponentData<EnemyLaunchState>(bossBody).HomingTarget, Is.EqualTo(Entity.Null));
                 system.Update();
                 Assert.That(hits, Is.EqualTo(1));
 
@@ -147,7 +148,8 @@ namespace CrowdPunch.Tests
                 em.SetComponentData(entity, new PhysicsVelocity { Linear = new float3(12f, 0f, 0f) });
                 em.SetComponentData(entity, new PhysicsMass { InverseMass = 1f });
                 em.SetComponentData(entity, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched,
-                    Owner = owner, LaunchDamage = damage, LaunchSequence = 1 });
+                    Owner = owner, LaunchDamage = damage, LaunchSequence = 1,
+                    HomingTarget = player, HomingSecondsRemaining = .25f });
                 return entity;
             }
         }

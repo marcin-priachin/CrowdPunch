@@ -53,7 +53,8 @@ namespace CrowdPunch.Systems.InputBridge
                     EliteKnockbackMultiplier = bridge.PunchEliteKnockbackMultiplier,
                     Damage = bridge.PunchDamage,
                     PushDirectionPositionWeight = bridge.PunchPushDirectionPositionWeight,
-                    Sequence = bridge.PunchSequence
+                    Sequence = bridge.PunchSequence,
+                    AimRevision = bridge.PunchAimRevision
                 });
                 SystemAPI.SetComponentEnabled<PunchRequest>(playerStateEntity, true);
                 bridge.ClearPunch();

@@ -1854,6 +1854,43 @@ Ordering between systems that share only a group should be made explicit when co
 - `DefeatedEnemyLifecycleSystem` converts the one-shot defeat marker into the existing respawn request.
 - `EnemyRespawnSystem` brakes, pools, resets, and respawns defeated or otherwise invalid enemies.
 
+### Stable launch aiming (2026-10-31)
+
+PLAYER-003/004, COMBAT-003/012/014: `PlayerPunchSettings` owns finite assist range,
+acquisition/release cones, challenger persistence and fallback distance scoring.
+`PunchAimAssistSystem` keeps target/challenger state in `PunchAimAssistTarget`,
+checks the live punch volume and existing protection gates, and reads bounded lead
+tuning from baked `EnemyLaunchSettings`. Snapshot positions limit expensive
+candidate checks. Rotating cover/enclosures retain their established selection
+exception; ordinary walls reject acquisition/retention. No entities cross into Mono.
+
+`PresentationBridgeSystem` saves displayed direction, target and revision on the
+source's `PunchAimAssistTarget`. `PlayerEcsBridge` passes only the revision with a
+click; `PlayerBridgeSystem` copies it into `PunchRequest`. `PunchDetectionSystem`
+validates and consumes the matching ECS snapshot using current eligibility and hit
+volume; absent/invalid snapshots fall back to current aim. A pending click preserves
+the snapshot until the fixed step consumes it. Clearing previews invalidates the
+revision. A hidden direct arrow does not commit an undisplayed direction.
+
+`LaunchAimPrediction` shares horizontal travel-time lead, maximum displacement and
+angle rules. `EnemyLaunchState.HomingSecondsRemaining` budgets each launch.
+Homing preserves speed/Y velocity and ends on timeout, invalid target, cone departure
+or obstruction. `EnemyLaunchCollisionSystem` clears incoming guidance on meaningful
+horizontal solver contacts before propagation, then gives the newly launched body
+its own bounded forward correction and assistance budget. Existing cover/barricade/
+boss deflections clear the budget too. Re-punch resets it. Returned Chicken
+projectiles share bounded lead/commitment and stop assistance at first body contact
+or wall bounce, retaining their pass-through/damage rules.
+
+`GameRuntimeSettings` bakes lead, turn rate/duration/cone and propagation radius/cone.
+Saved defaults: 0.2s/2m lead, 45 degrees/s, 0.25s homing, 20 degree flight cone,
+6m/20 degree propagation correction. `LaunchImpactPrediction` uses expanded
+broadphase bounds and relative collider sweeps for nearby enemies, moving them for
+the bounded extrapolation then holding projected positions. Fixed geometry retains
+the collision-world cast. Duplicate victims skip repeated direction correction.
+This remains a local straight-path estimate rather than a curved multi-contact
+simulation. Verification: `Docs/Verification/StableLaunchAiming.md`.
+
 ### Presentation
 
 `GamePresentationGroup` runs in Unity's presentation phase:
@@ -1862,7 +1899,8 @@ Ordering between systems that share only a group should be made explicit when co
 - `EnemyHealthBarBridgeSystem` publishes living normal enemy health while post-damage visibility is enabled, and elite health while alive. Gatekeeper, Chicken, Rolling and Dino boss queries publish only normalized health via `EnemyHealthBarCanvasRegistry.PublishBoss`; their positions and entity identities do not cross this UI boundary. `EnemyHealthBarCanvas` lazily owns one `BossHealthBar` using the final boss's 900 x 14 reference-pixel bar, centered 60 pixels below the top on a 1920 x 1080 scaling canvas (INFO-007). A frame without a living boss hides this bar, including defeat, unload and ordinary encounters. Boss health bypasses the normal-enemy bar option and camera projection; pause/failure/completion visibility matches the finale.
 - `EnemyReadabilitySystem` maps archetype and non-launch gameplay feedback to body color through baked renderer ownership. Entering `Launched` preserves the archetype body color; movement and animation communicate launch state. Dasher presentation remains specialized and keeps its launched shape override without a launched color override.
 - `PresentationBridgeSystem` is the explicit ECS presentation bridge point.
-- `PresentationBridgeSystem` selects enemies currently inside the live punch volume, reads the same ECS-owned aim-assist target lock used by punch detection, and publishes their initial launch segments through `PlayerEcsBridge`; `PunchTrajectoryPreview` draws each segment as a filled white world-space arrow at 50% opacity (PLAYER-003/004, INFO-005). All arrows reuse one mesh and the existing unlit transparent `CombatFeedback` shader, with a chunky shaft, clipped tail and broad head. Non-overlapping mesh triangles keep opacity uniform; world-space draw matrices preserve segment endpoints independently of player scale. The preview owns and disposes its mesh/material and creates no per-enemy GameObjects.
+- `PresentationBridgeSystem` selects enemies currently inside the live punch volume, reads the same ECS-owned aim-assist target lock used by punch detection, and publishes their initial launch segments through `PlayerEcsBridge` (PLAYER-003/004, INFO-005). `LaunchImpactPrediction` sweeps each source's scaled, rotated physics collider along that direction to the first blocking contact. It estimates frictionless momentum transfer, gates propagation by the configured impulse threshold and target eligibility, then applies the ordinary smallest-angle propagation correction to the estimated outgoing velocity. Walls and protected/non-launchable bodies stop the prediction; triggers, self and Snake owner exclusions do not. Simultaneously punched bodies cannot receive collision-launch arrows or become correction targets. One collision arrow per struck enemy is published; predictions never mutate physics, health, locks or lifecycle. Only the first collision is estimated, with bounded target extrapolation but without gravity, curved homing paths, linked-pair swing, solver multi-contact distribution or rebound prediction. Prediction distance defaults to 18m, independently of assist range and arrow lengths. Candidate collection and hit storage are shared across sources for the frame; broadphase collider sweeps avoid all-pairs impact searches. OQ-001's final hardware/crowd budgets remain unresolved.
+- `PunchTrajectoryPreview` draws copied segments as filled world-space arrows, with one reusable mesh per style and the existing unlit transparent `CombatFeedback` shader. `PlayerPunchSettings` exposes direct and collision arrow length, shaft width and RGBA colour separately; the saved defaults are 5m/0.36m/white at 50% alpha and 3m/0.3m/amber at 50% alpha. Zero length hides that type independently. `PlayerPunch` supplies the settings to the renderer and publishes prediction distance, collision length and launch strength through the bridge. Legacy component dimensions remain fallbacks for scenes without initialization. Vertex colours update only when their style changes, including Play Mode tuning. A chunky shaft, clipped tail, broad head and non-overlapping triangles retain uniform opacity; world-space draw matrices preserve dimensions independently of player scale. The preview owns and disposes its meshes/material and creates no per-enemy GameObjects. See `Docs/Verification/LaunchImpactPreview.md` for validation and limits.
 
 Normal-enemy health bars are transient damage feedback only. The bridge no longer publishes normal launch/recovery labels or exhausted-health normal bars. `EnemyHealthBarCanvas` retains pooled views and never queries or stores enemy entities. The legacy state-label rendering option remains available in the canvas, but receives no normal labels from this iteration's bridge.
 

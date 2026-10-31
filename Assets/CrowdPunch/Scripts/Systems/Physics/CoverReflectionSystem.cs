@@ -30,7 +30,7 @@ namespace CrowdPunch.Systems.Physics
                     SystemAPI.SetComponent(contact.Source, velocity);
                     SnakeProjectileCollision.RecordRebound(state.EntityManager,contact.Source,contact.IncomingVelocity,contact.Normal);
                     // Keep sequence, ownership, damage deduplication and recovery timers intact.
-                    launch.HomingTarget = Entity.Null;
+                    LaunchAimPrediction.StopHoming(ref launch);
                     SystemAPI.SetComponent(contact.Source, launch);
                 }
                 contacts.Clear();

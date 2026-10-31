@@ -20,16 +20,30 @@ namespace CrowdPunch.Systems.Combat
             var em=state.EntityManager; float dt=SystemAPI.Time.DeltaTime;
             var player=SystemAPI.HasSingleton<PlayerSnapshot>()?SystemAPI.GetSingleton<PlayerSnapshot>():default;
             var commands=new EntityCommandBuffer(Allocator.Temp);
-            float homing=SystemAPI.HasSingleton<EnemyLaunchSettings>()?SystemAPI.GetSingleton<EnemyLaunchSettings>().LaunchHomingDegreesPerSecond:0;
+            SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var launchTuning);
             foreach(var (projectile,pose,history,entity) in SystemAPI.Query<RefRW<ChickenProjectile>,RefRW<LocalTransform>,DynamicBuffer<ChickenProjectileHit>>().WithEntityAccess())
             {
                 ref var p=ref projectile.ValueRW;
                 if(!em.HasComponent<ChickenBoss>(p.Boss) || em.GetComponentData<ChickenBoss>(p.Boss).Phase==ChickenPhase.Defeated)
                 { commands.DestroyEntity(entity); continue; }
                 var t=em.GetComponentData<ChickenTuning>(p.Boss);
-                if(p.Redirected!=0 && PunchAimAssist.IsValidTarget(em,entity,p.HomingTarget))
+                if(p.Redirected!=0 && p.HomingTarget!=Entity.Null)
+                {
+                    if(p.HomingSecondsRemaining<=0 || !PunchAimAssist.IsValidTarget(em,entity,p.HomingTarget)
+                        || !LaunchAimPrediction.WithinAngle(p.Velocity,
+                            em.GetComponentData<LocalTransform>(p.HomingTarget).Position-pose.ValueRO.Position,launchTuning.LaunchHomingMaximumAngleDegrees))
+                    { p.HomingTarget=Entity.Null;p.HomingSecondsRemaining=0; }
+                    else
+                    {
+                        var velocity=em.HasComponent<PhysicsVelocity>(p.HomingTarget)?em.GetComponentData<PhysicsVelocity>(p.HomingTarget).Linear:float3.zero;
+                        float3 point=LaunchAimPrediction.Point(pose.ValueRO.Position,em.GetComponentData<LocalTransform>(p.HomingTarget).Position,
+                            velocity,math.length(p.Velocity.xz),launchTuning.AimLeadSeconds,launchTuning.AimLeadMaximumDistance);
                     p.Velocity=EnemyLaunchHoming.RotateHorizontalVelocity(p.Velocity,
-                        em.GetComponentData<LocalTransform>(p.HomingTarget).Position-pose.ValueRO.Position,math.radians(homing)*dt);
+                            point-pose.ValueRO.Position,math.radians(launchTuning.LaunchHomingDegreesPerSecond)*math.min(dt,p.HomingSecondsRemaining));
+                        p.HomingSecondsRemaining=math.max(0,p.HomingSecondsRemaining-dt);
+                        if(p.HomingSecondsRemaining<=0)p.HomingTarget=Entity.Null;
+                    }
+                }
                 float remaining=math.min(dt,math.max(0,t.Lifetime-p.Age)); p.Age+=dt;
                 bool destroy=false; float3 position=pose.ValueRO.Position;
                 bool hasVfxBridge = PlayerBridgeRegistry.TryGetBridge(out var vfxBridge);
@@ -56,6 +70,7 @@ namespace CrowdPunch.Systems.Combat
                         bool seen=false; foreach(var hit in history) if(hit.Target==enemy && hit.Lifetime==lifetime) { seen=true; break; }
                         if(seen) continue;
                         history.Add(new ChickenProjectileHit { Target=enemy,Lifetime=lifetime });
+                        p.HomingTarget=Entity.Null;p.HomingSecondsRemaining=0;
                         HitEnemy(em,enemy,entity,p,t,SystemAPI.Time.ElapsedTime);
                     }
                     position=end;
@@ -85,7 +100,7 @@ namespace CrowdPunch.Systems.Combat
         }
 
         internal static void Reflect(ref ChickenProjectile p,float3 normal)
-        { p.Velocity=math.reflect(p.Velocity,normal); p.Bounces++; p.HomingTarget=Entity.Null; }
+        { p.Velocity=math.reflect(p.Velocity,normal); p.Bounces++; p.HomingTarget=Entity.Null;p.HomingSecondsRemaining=0; }
 
         internal static float WallFraction(float3 start,float3 displacement,in ChickenTuning t,out float3 normal)
         {

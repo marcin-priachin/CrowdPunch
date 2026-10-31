@@ -8,6 +8,7 @@ namespace CrowdPunch.Components
         public Entity Boss, HomingTarget;
         public float3 Velocity;
         public float Age;
+        public float HomingSecondsRemaining;
         public int Bounces;
         public uint Launch;
         public byte Redirected;

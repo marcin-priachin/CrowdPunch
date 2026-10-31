@@ -16,6 +16,8 @@ namespace CrowdPunch.Systems.Combat
         public Entity AssistedLaunchTarget;
         public Entity CommittedEliteTarget;
         public float Range, Radius, Strength, Damage, PositionWeight;
+        public float HomingDuration;
+        public uint AimRevision;
         public EnemyLaunchCause Cause;
         public double EventTime;
         public byte AffectActive, AffectRecovering, AffectLaunched, ApplyDamage, HasAssistedLaunchDirection;
@@ -118,6 +120,7 @@ namespace CrowdPunch.Systems.Combat
                 launch.HomingTarget = punch.HasAssistedLaunchDirection != 0
                     ? punch.AssistedLaunchTarget
                     : Entity.Null;
+                launch.HomingSecondsRemaining = launch.HomingTarget != Entity.Null ? punch.HomingDuration : 0f;
                 manager.SetComponentData(target, launch);
                 if (paired) {
                     pair.LastPunchAt = punch.EventTime; manager.SetComponentData(pairEntity, pair);

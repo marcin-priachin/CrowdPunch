@@ -77,14 +77,16 @@ namespace CrowdPunch.Mono.Player
 
         public readonly struct TrajectoryPreviewSegment
         {
-            public TrajectoryPreviewSegment(float3 start, float3 end)
+            public TrajectoryPreviewSegment(float3 start, float3 end, bool isCollision = false)
             {
                 Start = start;
                 End = end;
+                IsCollision = isCollision;
             }
 
             public float3 Start { get; }
             public float3 End { get; }
+            public bool IsCollision { get; }
         }
 
         private readonly List<TrajectoryPreviewSegment> trajectoryPreviewSegments = new List<TrajectoryPreviewSegment>();
@@ -137,6 +139,9 @@ namespace CrowdPunch.Mono.Player
         public float PunchPreviewRadius { get; private set; }
         public float PunchPreviewRange { get; private set; }
         public float PunchPreviewLength { get; private set; }
+        public float CollisionPreviewLength { get; private set; }
+        public float CollisionPredictionDistance { get; private set; }
+        public float PunchPreviewStrength { get; private set; }
         public float PunchPreviewPositionWeight { get; private set; }
         public float PunchPreviewAimAssistRange { get; private set; }
         public float PunchPreviewAimAssistMaximumAngleDegrees { get; private set; }
@@ -144,6 +149,11 @@ namespace CrowdPunch.Mono.Player
 
         /// <summary>Monotonic request id used to distinguish repeated punches.</summary>
         public uint PunchSequence { get; private set; }
+        public uint PunchAimRevision { get; private set; }
+        public uint TrajectoryPreviewRevision { get; private set; }
+        public float PunchPreviewReleaseAngleDegrees { get; private set; }
+        public float PunchPreviewSwitchDelay { get; private set; }
+        public float PunchPreviewDistanceWeight { get; private set; }
 
         /// <summary>Latest punch origin.</summary>
         public float3 PunchOrigin { get; private set; }
@@ -257,6 +267,7 @@ namespace CrowdPunch.Mono.Player
             PunchDamage = Mathf.Max(0f, damage);
             PunchPushDirectionPositionWeight = Mathf.Clamp01(pushDirectionPositionWeight);
             PunchSequence++;
+            PunchAimRevision = TrajectoryPreviewRevision;
             HasPendingPunch = true;
         }
 
@@ -268,13 +279,25 @@ namespace CrowdPunch.Mono.Player
             float previewLength,
             float pushDirectionPositionWeight,
             float aimAssistRange,
-            float aimAssistMaximumAngleDegrees)
+            float aimAssistMaximumAngleDegrees,
+            float collisionPreviewLength = 0f,
+            float collisionPredictionDistance = 0f,
+            float previewStrength = 0f,
+            float releaseAngleDegrees = 0f,
+            float switchDelay = 0f,
+            float distanceWeight = 0f)
         {
             PunchPreviewOrigin = new float3(origin.x, origin.y, origin.z);
             PunchPreviewDirection = new float3(direction.x, direction.y, direction.z);
             PunchPreviewRadius = Mathf.Max(0f, radius);
             PunchPreviewRange = Mathf.Max(0f, range);
             PunchPreviewLength = Mathf.Max(0f, previewLength);
+            CollisionPreviewLength = Mathf.Max(0f, collisionPreviewLength);
+            CollisionPredictionDistance = Mathf.Max(0f, collisionPredictionDistance);
+            PunchPreviewStrength = Mathf.Max(0f, previewStrength);
+            PunchPreviewReleaseAngleDegrees = Mathf.Max(aimAssistMaximumAngleDegrees, releaseAngleDegrees);
+            PunchPreviewSwitchDelay = Mathf.Max(0f, switchDelay);
+            PunchPreviewDistanceWeight = Mathf.Clamp01(distanceWeight);
             PunchPreviewPositionWeight = Mathf.Clamp01(pushDirectionPositionWeight);
             PunchPreviewAimAssistRange = Mathf.Max(0f, aimAssistRange);
             PunchPreviewAimAssistMaximumAngleDegrees = Mathf.Clamp(aimAssistMaximumAngleDegrees, 0f, 180f);
@@ -284,17 +307,19 @@ namespace CrowdPunch.Mono.Player
         public void ClearPunchPreview()
         {
             IsPunchPreviewAvailable = false;
-            trajectoryPreviewSegments.Clear();
+            BeginTrajectoryPreview();
         }
 
         public void BeginTrajectoryPreview()
         {
+            TrajectoryPreviewRevision++;
+            if (TrajectoryPreviewRevision == 0) TrajectoryPreviewRevision++;
             trajectoryPreviewSegments.Clear();
         }
 
-        public void AddTrajectoryPreview(float3 start, float3 end)
+        public void AddTrajectoryPreview(float3 start, float3 end, bool isCollision = false)
         {
-            trajectoryPreviewSegments.Add(new TrajectoryPreviewSegment(start, end));
+            trajectoryPreviewSegments.Add(new TrajectoryPreviewSegment(start, end, isCollision));
         }
 
         /// <summary>

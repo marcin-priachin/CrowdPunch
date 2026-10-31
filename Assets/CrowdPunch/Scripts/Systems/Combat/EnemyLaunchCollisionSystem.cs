@@ -65,6 +65,10 @@ namespace CrowdPunch.Systems.Combat
                 World = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
                 MinimumPropagationImpulse = math.max(0f, settings.MinimumPropagationImpulse),
                 PropagationAimCorrectionRadius = math.max(0f, settings.PropagationAimCorrectionRadius),
+                PropagationAimMaximumAngleDegrees = settings.PropagationAimMaximumAngleDegrees,
+                HomingDuration = settings.LaunchHomingDuration,
+                LeadSeconds = settings.AimLeadSeconds,
+                LeadMaximumDistance = settings.AimLeadMaximumDistance,
                 MinimumDamageImpulse = math.max(0f, settings.MinimumDamageImpulse),
                 BaseDamageMultiplier = math.max(0f, settings.BaseCollisionDamageMultiplier),
                 DamageMultiplierPerExcessImpulse = math.max(0f, settings.DamageMultiplierPerExcessImpulse),
@@ -104,6 +108,7 @@ namespace CrowdPunch.Systems.Combat
             [ReadOnly] public PhysicsWorld World;
             public float MinimumPropagationImpulse;
             public float PropagationAimCorrectionRadius;
+            public float PropagationAimMaximumAngleDegrees, HomingDuration, LeadSeconds, LeadMaximumDistance;
             public float MinimumDamageImpulse;
             public float BaseDamageMultiplier;
             public float DamageMultiplierPerExcessImpulse;
@@ -113,6 +118,8 @@ namespace CrowdPunch.Systems.Combat
             {
                 Entity entityA = collisionEvent.EntityA;
                 Entity entityB = collisionEvent.EntityB;
+                StopHomingOnImpact(collisionEvent, entityA);
+                StopHomingOnImpact(collisionEvent, entityB);
 
                 RecordSnakeBounce(collisionEvent, entityA, entityB);
                 RecordSnakeBounce(collisionEvent, entityB, entityA);
@@ -167,6 +174,17 @@ namespace CrowdPunch.Systems.Combat
             private bool IsUnavailable(Entity entity)
             {
                 return RespawnLookup.HasComponent(entity) && RespawnLookup.IsComponentEnabled(entity);
+            }
+
+            private void StopHomingOnImpact(CollisionEvent collision, Entity entity)
+            {
+                if (!LaunchStateLookup.HasComponent(entity) || math.abs(collision.Normal.y) > .7f) return;
+                var launch = LaunchStateLookup[entity];
+                if (launch.Phase != EnemyLaunchPhase.Launched || launch.HomingTarget == Entity.Null) return;
+                var details = collision.CalculateDetails(ref World);
+                if (details.EstimatedImpulse < math.max(.01f, MinimumPropagationImpulse)) return;
+                LaunchAimPrediction.StopHoming(ref launch);
+                LaunchStateLookup[entity] = launch;
             }
 
             private void RecordSnakeBounce(CollisionEvent collision, Entity source, Entity other)
@@ -293,7 +311,7 @@ namespace CrowdPunch.Systems.Combat
 
             private void CorrectPropagatedDirection(Entity source, Entity launchedTarget)
             {
-                if (PropagationAimCorrectionRadius <= 0f
+                if (PropagationAimCorrectionRadius <= 0f || PropagationAimMaximumAngleDegrees <= 0f
                     || !VelocityLookup.HasComponent(launchedTarget)
                     || !TransformLookup.HasComponent(launchedTarget)) return;
 
@@ -311,6 +329,16 @@ namespace CrowdPunch.Systems.Combat
                 for (int i = 0; i < CorrectionCandidates.Length; i++)
                 {
                     Entity candidate = CorrectionCandidates[i];
+                    if (candidate == source || candidate == launchedTarget || !TransformLookup.HasComponent(candidate)) continue;
+                    float3 offset = TransformLookup[candidate].Position - launchedPosition;
+                    offset.y = 0f;
+                    float distanceSq = math.lengthsq(offset);
+                    if (distanceSq <= .000001f || distanceSq > radiusSq) continue;
+                    float dot = math.dot(initialDirection, offset * math.rsqrt(distanceSq));
+                    if (dot < math.cos(math.radians(PropagationAimMaximumAngleDegrees))) continue;
+                    bool improves = dot > bestDot || dot == bestDot && distanceSq < bestDistanceSq
+                        || dot == bestDot && distanceSq == bestDistanceSq && (best == Entity.Null || candidate.Index < best.Index);
+                    if (!improves) continue;
                     if (SnakeSegments.HasComponent(launchedTarget))
                     {
                         var segment = SnakeSegments[launchedTarget];
@@ -320,9 +348,7 @@ namespace CrowdPunch.Systems.Combat
                     }
                     if (SnakeHitRules.Protected(candidate, SnakeHeads, SnakeSegments)) continue;
                     bool wall = Barricades.HasComponent(candidate) && Barricades[candidate].HitsRemaining > 0;
-                    if (candidate == source || candidate == launchedTarget
-                        || IsUnavailable(candidate)
-                        || !TransformLookup.HasComponent(candidate)
+                    if (IsUnavailable(candidate)
                         || !wall && (!LaunchStateLookup.HasComponent(candidate) || !HealthLookup.HasComponent(candidate))) continue;
 
                     EnemyLaunchState candidateLaunch = wall ? default : LaunchStateLookup[candidate];
@@ -330,30 +356,25 @@ namespace CrowdPunch.Systems.Combat
                          && candidateLaunch.Phase != EnemyLaunchPhase.Recovering)
                         || HealthLookup[candidate].Current <= 0f)) continue;
 
-                    float3 offset = TransformLookup[candidate].Position - launchedPosition;
-                    offset.y = 0f;
-                    float distanceSq = math.lengthsq(offset);
-                    if (distanceSq <= 0.000001f || distanceSq > radiusSq) continue;
-
-                    float dot = math.dot(initialDirection, offset * math.rsqrt(distanceSq));
-                    if (dot > bestDot
-                        || dot == bestDot && distanceSq < bestDistanceSq
-                        || dot == bestDot && distanceSq == bestDistanceSq
-                        && (best == Entity.Null || candidate.Index < best.Index))
-                    {
-                        best = candidate;
-                        bestDot = dot;
-                        bestDistanceSq = distanceSq;
-                    }
+                    var obstruction = new LaunchObstructionCollector { Source = launchedTarget, Target = candidate, Enemies = EnemyLookup };
+                    if (World.CollisionWorld.CastRay(new RaycastInput { Start = launchedPosition,
+                        End = TransformLookup[candidate].Position, Filter = CollisionFilter.Default }, ref obstruction)) continue;
+                    best = candidate;
+                    bestDot = dot;
+                    bestDistanceSq = distanceSq;
                 }
 
                 if (best == Entity.Null) return;
                 EnemyLaunchState launchedState = LaunchStateLookup[launchedTarget];
                 launchedState.HomingTarget = best;
+                launchedState.HomingSecondsRemaining = HomingDuration;
                 LaunchStateLookup[launchedTarget] = launchedState;
-                float3 correctedDirection = TransformLookup[best].Position - launchedPosition;
+                float3 targetVelocity = VelocityLookup.HasComponent(best) ? VelocityLookup[best].Linear : float3.zero;
+                float3 correctedDirection = LaunchAimPrediction.Point(launchedPosition, TransformLookup[best].Position,
+                    targetVelocity, horizontalSpeed, LeadSeconds, LeadMaximumDistance) - launchedPosition;
                 correctedDirection.y = 0f;
-                correctedDirection = math.normalizesafe(correctedDirection, initialDirection);
+                correctedDirection = CrowdPunch.Systems.Physics.EnemyLaunchHoming.RotateHorizontalVelocity(
+                    initialDirection, correctedDirection, math.radians(PropagationAimMaximumAngleDegrees));
                 velocity.Linear.xz = correctedDirection.xz * horizontalSpeed;
                 VelocityLookup[launchedTarget] = velocity;
             }

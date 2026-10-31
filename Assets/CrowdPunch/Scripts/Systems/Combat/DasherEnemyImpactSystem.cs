@@ -100,6 +100,12 @@ namespace CrowdPunch.Systems.Combat
             for (int i = 0; i < history.Length; i++)
                 if (history[i].Target == target && history[i].Sequence == sequence && history[i].ActionKind == actionKind) return;
             history.Add(new DasherHitHistory { Target = target, Sequence = sequence, ActionKind = actionKind });
+            if (math.length(dash.PreservedLaunchedVelocity) >= math.max(.01f, launchSettings.UsefulMomentumSpeed))
+            {
+                var incomingLaunch = launches[source];
+                LaunchAimPrediction.StopHoming(ref incomingLaunch);
+                launches[source] = incomingLaunch;
+            }
 
             if (explosiveStates.HasComponent(target)
                 && explosiveStates[target].HasExploded == 0

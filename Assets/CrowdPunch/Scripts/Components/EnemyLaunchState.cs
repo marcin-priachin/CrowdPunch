@@ -49,5 +49,6 @@ namespace CrowdPunch.Components
         public float LastPropagationImpulse;
         public uint PlayerImpactLaunchSequence;
         public Entity HomingTarget;
+        public float HomingSecondsRemaining;
     }
 }

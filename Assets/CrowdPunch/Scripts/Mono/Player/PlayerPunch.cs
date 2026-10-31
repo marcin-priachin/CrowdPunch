@@ -58,6 +58,7 @@ namespace CrowdPunch.Mono.Player
             {
                 trajectoryPreview = gameObject.AddComponent<PunchTrajectoryPreview>();
             }
+            trajectoryPreview.Initialize(settings);
 
             cooldownFeedback = GetComponent<PlayerPunchCooldownFeedback>();
             if (cooldownFeedback == null)
@@ -112,7 +113,13 @@ namespace CrowdPunch.Mono.Player
                 trajectoryPreview.LineLength,
                 settings.DirectionPositionWeight,
                 settings.AimAssistRange,
-                settings.AimAssistMaximumAngleDegrees);
+                settings.AimAssistMaximumAngleDegrees,
+                settings.CollisionArrowLength,
+                settings.CollisionPredictionDistance,
+                settings.Strength,
+                settings.AimAssistReleaseAngleDegrees,
+                settings.AimAssistSwitchDelay,
+                settings.AimAssistDistanceWeight);
         }
 
         private void UpdateCooldownFeedback()

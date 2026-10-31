@@ -21,9 +21,30 @@ namespace CrowdPunch.Configuration
         private float missCooldown = 0.25f;
         [SerializeField, Range(0f, 1f)] private float directionPositionWeight = 1f;
         [SerializeField, Min(0f), Tooltip("Maximum distance from a punched enemy to another enemy that aim assist can target. Set to 0 to disable aim assist.")]
-        private float aimAssistRange = 8f;
+        private float aimAssistRange = 22f;
         [SerializeField, Range(0f, 180f), Tooltip("Maximum horizontal angle in degrees from player facing to an aim-assist target.")]
-        private float aimAssistMaximumAngleDegrees = 45f;
+        private float aimAssistMaximumAngleDegrees = 12f;
+        [SerializeField, Range(0f, 180f), Tooltip("Retain a valid lock within this wider cone to avoid boundary flicker.")]
+        private float aimAssistReleaseAngleDegrees = 16f;
+        [SerializeField, Min(0f), Tooltip("Seconds a challenger must stay preferred before replacing a valid lock.")]
+        private float aimAssistSwitchDelay = 0.12f;
+        [SerializeField, Range(0f, 1f), Tooltip("Distance penalty relative to angle in fallback selection. Zero selects by alignment alone.")]
+        private float aimAssistDistanceWeight = 0.35f;
+
+        [Header("Direct Launch Arrow")]
+        [SerializeField, Min(0f), Tooltip("Arrow length in world metres. Zero hides this arrow type.")]
+        private float launchArrowLength = 5f;
+        [SerializeField, Min(0.01f), Tooltip("Shaft width in world metres; the head scales with it.")]
+        private float launchArrowWidth = 0.36f;
+        [SerializeField] private Color launchArrowColor = new Color(1f, 1f, 1f, 0.5f);
+
+        [Header("Predicted Collision Arrow")]
+        [SerializeField, Min(0f), Tooltip("Arrow length in world metres at the first enemy hit by a launched body. Zero hides this arrow type.")]
+        private float collisionArrowLength = 3f;
+        [SerializeField, Min(0.01f)] private float collisionArrowWidth = 0.3f;
+        [SerializeField] private Color collisionArrowColor = new Color(1f, 0.7f, 0.15f, 0.5f);
+        [SerializeField, Min(0f), Tooltip("How far to sweep each punched body's collider, in world metres. Independent of arrow size and aim-assist range. Predicts the first collision only; moving crowds can change the outcome.")]
+        private float collisionPredictionDistance = 18f;
 
         [Header("Cooldown Feedback")]
         [SerializeField, Tooltip("Name of the player-model bone that carries punch cooldown feedback.")]
@@ -73,6 +94,16 @@ namespace CrowdPunch.Configuration
         public float DirectionPositionWeight => directionPositionWeight;
         public float AimAssistRange => aimAssistRange;
         public float AimAssistMaximumAngleDegrees => aimAssistMaximumAngleDegrees;
+        public float AimAssistReleaseAngleDegrees => Mathf.Max(aimAssistMaximumAngleDegrees, aimAssistReleaseAngleDegrees);
+        public float AimAssistSwitchDelay => Mathf.Max(0f, aimAssistSwitchDelay);
+        public float AimAssistDistanceWeight => aimAssistDistanceWeight;
+        public float LaunchArrowLength => Mathf.Max(0f, launchArrowLength);
+        public float LaunchArrowWidth => Mathf.Max(0.01f, launchArrowWidth);
+        public Color LaunchArrowColor => launchArrowColor;
+        public float CollisionArrowLength => Mathf.Max(0f, collisionArrowLength);
+        public float CollisionArrowWidth => Mathf.Max(0.01f, collisionArrowWidth);
+        public Color CollisionArrowColor => collisionArrowColor;
+        public float CollisionPredictionDistance => Mathf.Max(0f, collisionPredictionDistance);
         public string CooldownHandBoneName => cooldownHandBoneName;
         public float CooldownHandScale => cooldownHandScale;
         public float ReadyHandScale => readyHandScale;

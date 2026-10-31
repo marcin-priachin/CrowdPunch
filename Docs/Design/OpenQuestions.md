@@ -62,6 +62,18 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-31 - Stable targeting with modest moving-target assistance
+
+Decision: Implement option 2 from the launch aiming review: stable target selection and displayed-direction commitment, short movement lead, gentle time-limited homing ending at contact/obstruction/invalidity, and forward-cone-limited propagation correction. Keep physics-driven collision speed, damage, ownership, armor and recovery. No collision-direction bias from option 3 is added. Numeric defaults are exposed tuning: 22m range, 12/16 degree acquire/release cones, 0.12s switch delay, 0.35 fallback distance weight, 0.2s/2m lead, 45 degrees/s for up to 0.25s with a 20 degree homing cone, and 6m/20 degree propagation correction. Both input schemes share these settings; OQ-017 remains unresolved.
+
+GDD rules: PLAYER-003/004, COMBAT-003/012/014, INFO-005.
+
+### 2026-10-31 - Launch indication for predicted enemy impacts
+
+Decision: Extend launch indication to enemies predicted to be hit by punched bodies, showing their estimated outgoing launch direction. Expose independent size/length, width and colour with transparency for direct and collision arrows. This amends PLAYER-003's previous direct-only preview restriction. The local first-impact estimate and its 18m search distance are implementation defaults; full chain simulation and environmental rebound prediction remain outside this slice.
+
+GDD rules: PLAYER-003, PLAYER-004, COMBAT-003, INFO-005.
+
 ### 2026-10-30 - Falling armor pieces
 
 Decision: Lost Armored helmet and shield pieces fall while blinking before disappearing,

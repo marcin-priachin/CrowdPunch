@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using Unity.Physics;
 
 namespace CrowdPunch.Systems.Combat
 {
@@ -53,12 +54,34 @@ namespace CrowdPunch.Systems.Combat
         {
             direction = default;
             if (!manager.HasComponent<PunchAimAssistTarget>(source)) return false;
-            Entity target = manager.GetComponentData<PunchAimAssistTarget>(source).Target;
+            var aim = manager.GetComponentData<PunchAimAssistTarget>(source);
+            Entity target = aim.Target;
             if (!IsValidTarget(manager, source, target)) return false;
-            float3 offset = manager.GetComponentData<LocalTransform>(target).Position - sourcePosition;
+            float3 targetPosition = manager.GetComponentData<LocalTransform>(target).Position;
+            float3 velocity = manager.HasComponent<PhysicsVelocity>(target)
+                ? manager.GetComponentData<PhysicsVelocity>(target).Linear : float3.zero;
+            float3 offset = LaunchAimPrediction.Point(sourcePosition, targetPosition, velocity,
+                aim.LaunchSpeed, aim.LeadSeconds, aim.LeadMaximumDistance) - sourcePosition;
             offset.y = 0f;
             direction = math.normalizesafe(offset);
+            if (aim.DirectionLimitDegrees > 0f && math.lengthsq(aim.Facing.xz) > 0f)
+                direction = CrowdPunch.Systems.Physics.EnemyLaunchHoming.RotateHorizontalVelocity(
+                    math.normalizesafe(new float3(aim.Facing.x, 0, aim.Facing.z)), direction,
+                    math.radians(aim.DirectionLimitDegrees));
             return math.lengthsq(direction) > 0f;
+        }
+
+        public static bool TryGetCommittedDirection(EntityManager em, Entity source, uint revision,
+            out float3 direction, out Entity target)
+        {
+            direction = default; target = Entity.Null;
+            if (revision == 0 || !em.HasComponent<PunchAimAssistTarget>(source)) return false;
+            var aim = em.GetComponentData<PunchAimAssistTarget>(source);
+            if (aim.PreviewRevision != revision || math.lengthsq(aim.PreviewDirection) < .001f
+                || aim.PreviewTarget != Entity.Null && !IsValidTarget(em, source, aim.PreviewTarget)) return false;
+            direction = aim.PreviewDirection;
+            target = aim.PreviewTarget;
+            return true;
         }
 
         public static bool IsValidTarget(EntityManager manager, Entity source, Entity target)

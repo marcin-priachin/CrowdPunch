@@ -7,6 +7,7 @@ namespace CrowdPunch.Systems.Combat
     {
         internal static float3 Direction(EntityManager em,Entity shot,float3 position,in PunchSpecification punch)
         {
+            if(PunchAimAssist.TryGetCommittedDirection(em,shot,punch.AimRevision,out var committed,out _)) return committed;
             if(PunchAimAssist.TryGetLockedDirection(em,shot,position,out var assisted)) return assisted;
             float3 forward=math.normalizesafe(new float3(punch.Direction.x,0,punch.Direction.z),new float3(0,0,1));
             float3 radial=math.normalizesafe(new float3(position.x-punch.Origin.x,0,position.z-punch.Origin.z),forward);
@@ -15,7 +16,9 @@ namespace CrowdPunch.Systems.Combat
         internal static void Redirect(EntityManager em,Entity shot,ref ChickenProjectile p,float3 position,in PunchSpecification punch,in ChickenTuning t)
         {
             p.Velocity=Direction(em,shot,position,punch)*t.ReturnSpeed;
-            p.HomingTarget=em.GetComponentData<PunchAimAssistTarget>(shot).Target;
+            p.HomingTarget=PunchAimAssist.TryGetCommittedDirection(em,shot,punch.AimRevision,out _,out var target)
+                ? target : em.GetComponentData<PunchAimAssistTarget>(shot).Target;
+            p.HomingSecondsRemaining=p.HomingTarget!=Entity.Null?punch.HomingDuration:0;
             p.Redirected=1; p.Age=0; p.Bounces=0; p.Launch++;
             em.GetBuffer<ChickenProjectileHit>(shot).Clear();
         }

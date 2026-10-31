@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Entities;
@@ -12,6 +13,7 @@ namespace CrowdPunch.Systems.Physics
     [BurstCompile]
     [UpdateInGroup(typeof(GamePrePhysicsGroup))]
     [UpdateAfter(typeof(ApplyImpulseSystem))]
+    [UpdateAfter(typeof(DasherVelocityCaptureSystem))]
     public partial struct EnemyLaunchHomingSystem : ISystem
     {
         [BurstCompile]
@@ -23,10 +25,12 @@ namespace CrowdPunch.Systems.Physics
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            float maximumRadians = math.radians(math.max(0f,
-                SystemAPI.GetSingleton<EnemyLaunchSettings>().LaunchHomingDegreesPerSecond))
-                * SystemAPI.Time.DeltaTime;
-            if (maximumRadians <= 0f) return;
+            var settings = SystemAPI.GetSingleton<EnemyLaunchSettings>();
+            float dt = SystemAPI.Time.DeltaTime;
+            SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physics);
+            bool hasPhysics = SystemAPI.HasSingleton<PhysicsWorldSingleton>();
+            var enemies = SystemAPI.GetComponentLookup<Enemy>(true);
+            var velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true);
 
             ComponentLookup<LocalTransform> transforms = SystemAPI.GetComponentLookup<LocalTransform>(true);
             ComponentLookup<EnemyLaunchState> launchStates = SystemAPI.GetComponentLookup<EnemyLaunchState>(true);
@@ -34,15 +38,19 @@ namespace CrowdPunch.Systems.Physics
             ComponentLookup<RespawnRequest> respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true);
             var segments = SystemAPI.GetComponentLookup<SnakeSegment>(true);
 
-            foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launch,
+            foreach ((RefRO<LocalTransform> transform, RefRW<EnemyLaunchState> launch,
                          RefRW<PhysicsVelocity> velocity, Entity source) in
-                     SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRW<PhysicsVelocity>>()
+                     SystemAPI.Query<RefRO<LocalTransform>, RefRW<EnemyLaunchState>, RefRW<PhysicsVelocity>>()
                          .WithAll<Enemy>().WithEntityAccess())
             {
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Launched) continue;
                 Entity target = launch.ValueRO.HomingTarget;
-                if (segments.HasComponent(source) && SnakeContactSystem.Excludes(segments[source], target, segments)) continue;
-                if (Combat.SnakeHitRules.Protected(state.EntityManager, target)) continue;
+                if (target == Entity.Null) continue;
+                if (launch.ValueRO.HomingSecondsRemaining <= 0f || settings.LaunchHomingDegreesPerSecond <= 0f
+                    || !transforms.HasComponent(target)
+                    || segments.HasComponent(source) && SnakeContactSystem.Excludes(segments[source], target, segments)
+                    || Combat.SnakeHitRules.Protected(state.EntityManager, target))
+                { LaunchAimPrediction.StopHoming(ref launch.ValueRW); continue; }
                 bool livingBoss = SystemAPI.HasComponent<BossEncounter>(target)
                     && SystemAPI.GetComponent<BossEncounter>(target).Cycle != BossCycle.Defeated;
                 livingBoss |= SystemAPI.HasComponent<ChickenBoss>(target)
@@ -53,12 +61,31 @@ namespace CrowdPunch.Systems.Physics
                     && Combat.RollingDamageResolution.CanTarget(SystemAPI.GetComponent<RollingBoss>(target),SystemAPI.GetComponent<RollingTuning>(target));
                 bool uprightPillar = SystemAPI.HasComponent<FallingPillar>(target)
                     && SystemAPI.GetComponent<FallingPillar>(target).Phase == PillarPhase.Upright;
-                if (!livingBoss && !intactBarricade && !uprightPillar && !IsValidTarget(target, transforms, launchStates, health, respawns)) continue;
+                if (!livingBoss && !intactBarricade && !uprightPillar && !IsValidTarget(target, transforms, launchStates, health, respawns))
+                { LaunchAimPrediction.StopHoming(ref launch.ValueRW); continue; }
+
+                float3 offset = transforms[target].Position - transform.ValueRO.Position;
+                if (!LaunchAimPrediction.WithinAngle(velocity.ValueRO.Linear, offset, settings.LaunchHomingMaximumAngleDegrees))
+                { LaunchAimPrediction.StopHoming(ref launch.ValueRW); continue; }
+                if (hasPhysics)
+                {
+                    var collector = new LaunchObstructionCollector { Source = source, Target = target, Enemies = enemies };
+                    if (physics.CollisionWorld.CastRay(new RaycastInput { Start = transform.ValueRO.Position,
+                        End = transforms[target].Position, Filter = CollisionFilter.Default }, ref collector))
+                    { LaunchAimPrediction.StopHoming(ref launch.ValueRW); continue; }
+                }
+
+                float activeTime = math.min(dt, launch.ValueRO.HomingSecondsRemaining);
+                float3 targetVelocity = velocities.HasComponent(target) ? velocities[target].Linear : float3.zero;
+                float3 targetPoint = LaunchAimPrediction.Point(transform.ValueRO.Position, transforms[target].Position,
+                    targetVelocity, math.length(velocity.ValueRO.Linear.xz), settings.AimLeadSeconds, settings.AimLeadMaximumDistance);
 
                 velocity.ValueRW.Linear = EnemyLaunchHoming.RotateHorizontalVelocity(
                     velocity.ValueRO.Linear,
-                    transforms[target].Position - transform.ValueRO.Position,
-                    maximumRadians);
+                    targetPoint - transform.ValueRO.Position,
+                    math.radians(settings.LaunchHomingDegreesPerSecond) * activeTime);
+                launch.ValueRW.HomingSecondsRemaining = math.max(0f, launch.ValueRO.HomingSecondsRemaining - dt);
+                if (launch.ValueRO.HomingSecondsRemaining <= 0f) LaunchAimPrediction.StopHoming(ref launch.ValueRW);
             }
         }
 

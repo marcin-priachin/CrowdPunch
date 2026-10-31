@@ -68,6 +68,7 @@ namespace CrowdPunch.Systems.Combat
                     launchState.ValueRO,
                     estimatedImpulse,
                     settings);
+                LaunchAimPrediction.StopHoming(ref launchState.ValueRW);
                 if (damage <= 0f)
                 {
                     continue;
