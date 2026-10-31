@@ -4,6 +4,7 @@ using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.Presentation;
 using NUnit.Framework;
 using Unity.Collections;
+using Unity.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -76,6 +77,178 @@ namespace CrowdPunch.Tests
                 candidates, poses, distance, strength, settings, 0, hits, out Entity hit, out direction);
             if (result) Assert.That(hit, Is.EqualTo(target));
             return result;
+        }
+
+        private bool Forecast(PhysicsWorld physics, CollisionPreviewSettings tuning, out LaunchImpactForecast result, float strength = 12)
+        {
+            using var punched = new NativeArray<LaunchPreviewSource>(new[] {
+                new LaunchPreviewSource { Entity = source, Direction = math.forward() } }, Allocator.Temp);
+            using var query = em.CreateEntityQuery(typeof(LocalTransform));
+            using var candidates = query.ToEntityArray(Allocator.Temp);
+            using var poses = query.ToComponentDataArray<LocalTransform>(Allocator.Temp);
+            using var hits = new NativeList<ColliderCastHit>(Allocator.Temp);
+            return LaunchImpactPrediction.TryForecast(em, physics.CollisionWorld, punched[0], punched, candidates,
+                poses, 18, strength, settings, 0, hits, tuning, out result);
+        }
+
+        [Test]
+        public void Player003_ForecastBudgetLimitsTimeAndStepCount()
+        {
+            using var physics = Physics(source, target);
+            Assert.That(Forecast(physics, new CollisionPreviewSettings { ForecastSeconds = .1f, ForecastSteps = 6 }, out _), Is.False);
+            Assert.That(Forecast(physics, new CollisionPreviewSettings { ForecastSeconds = .5f, ForecastSteps = 6 }, out var result), Is.True);
+            Assert.That(result.ArrivalSeconds, Is.LessThanOrEqualTo(.5f));
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(0, 0, 12)));
+            Assert.That(Forecast(physics, new CollisionPreviewSettings { ForecastSeconds = 10, ForecastSteps = 1000 }, out _), Is.False);
+        }
+
+        [Test]
+        public void Player003_ShortStepsFollowExistingHomingInsteadOfAFalseStraightMiss()
+        {
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(2, 0, 4)));
+            em.AddComponentData(source, new PunchAimAssistTarget { Target = target });
+            settings.LaunchHomingDuration = .3f; settings.LaunchHomingDegreesPerSecond = 120;
+            settings.LaunchHomingMaximumAngleDegrees = 45;
+            var tuning = new CollisionPreviewSettings { ForecastSeconds = .5f, ForecastSteps = 12 };
+            using var physics = Physics(source, target);
+            Assert.That(Forecast(physics, tuning, out var result), Is.True);
+            Assert.That(result.Victim, Is.EqualTo(target));
+            settings.LaunchHomingDegreesPerSecond = 0;
+            Assert.That(Forecast(physics, tuning, out _), Is.False);
+        }
+
+        [Test]
+        public void Player003_FollowupSelectionUsesPositionsAtImpactTime()
+        {
+            Entity next = Body(new float3(2, 0, 10));
+            em.SetComponentData(next, new PhysicsVelocity { Linear = new float3(-12, 0, 0) });
+            settings.AimLeadSeconds = .2f; settings.AimLeadMaximumDistance = 2;
+            settings.PropagationAimCorrectionRadius = 6; settings.PropagationAimMaximumAngleDegrees = 20;
+            using var physics = Physics(source, target, next);
+            Assert.That(Forecast(physics, new CollisionPreviewSettings { ForecastSeconds = .25f, ForecastSteps = 6 }, out var result, 90), Is.True);
+            Assert.That(result.Followup, Is.EqualTo(next), "The follow-up moves into the correction cone before impact.");
+            Assert.That(math.degrees(math.acos(math.clamp(math.dot(result.Direction, math.forward()), -1, 1))), Is.LessThanOrEqualTo(20.001f));
+        }
+
+        [Test]
+        public void Player003_ForecastRespectsExistingGroundLocksWithoutChangingSimulation()
+        {
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(0, .5f, 6)));
+            using var physics = Physics(source, target);
+            var tuning = new CollisionPreviewSettings { ForecastSeconds = .5f, ForecastSteps = 6 };
+            Assert.That(Forecast(physics, tuning, out var free), Is.True);
+            Assert.That(free.Direction.y, Is.GreaterThan(.3f));
+            em.AddComponentData(target, new EnemyGroundConstraint { HasGround = 1, IsLocked = 1, Height = .5f });
+            Assert.That(Forecast(physics, tuning, out var locked), Is.True);
+            Assert.That(locked.Direction.y, Is.Zero);
+            Assert.That(em.GetComponentData<PhysicsVelocity>(target).Linear, Is.EqualTo(float3.zero));
+            Assert.That(em.GetComponentData<LocalTransform>(target).Position, Is.EqualTo(new float3(0, .5f, 6)));
+        }
+
+        [Test]
+        public void Player003_ArmorProtectionIsEvaluatedAtPredictedImpactTime()
+        {
+            em.AddComponentData(target, new EnemyArmor { ProtectedUntil = .04 });
+            using var physics = Physics(source, target);
+            var tuning = new CollisionPreviewSettings { ForecastSeconds = .25f, ForecastSteps = 6 };
+            Assert.That(Forecast(physics, tuning, out _, 90), Is.True);
+            em.SetComponentData(target, new EnemyArmor { ProtectedUntil = .2 });
+            Assert.That(Forecast(physics, tuning, out _, 90), Is.False);
+        }
+
+        [Test]
+        public void Player003_SystemConfirmsThenImmediatelyHidesInvalidAndClearedPredictions()
+        {
+            using var physics = Physics(source, target);
+            em.AddComponentData(em.CreateEntity(), new PlayerSnapshot());
+            em.AddComponentData(em.CreateEntity(), settings);
+            em.AddComponentData(em.CreateEntity(), new PhysicsWorldSingleton { PhysicsWorld = physics });
+            em.AddComponent<EnemyArmor>(target);
+            PlayerBridgeRegistry.TryGetBridge(out var previous);
+            var root = new GameObject("Stable collision preview integration"); var bridge = root.AddComponent<PlayerEcsBridge>();
+            try
+            {
+                PlayerBridgeRegistry.Register(bridge);
+                bridge.ConfigureCollisionPreview(new CollisionPreviewSettings {
+                    ConfirmationTime = .1f, StableAngleDegrees = 8, ForecastSeconds = .25f, ForecastSteps = 6 });
+                Publish();
+                var system = world.GetOrCreateSystem<PresentationBridgeSystem>();
+                Tick(0); Assert.That(Count(), Is.Zero);
+                Tick(.05); Assert.That(Count(), Is.Zero);
+                Tick(.11); Assert.That(Count(), Is.EqualTo(1));
+                em.SetComponentData(target, new EnemyArmor { Stages = 2 });
+                Tick(.12); Assert.That(Count(), Is.Zero, "Invalid predictions must not fade or retain an old arrow.");
+                em.SetComponentData(target, new EnemyArmor());
+                Tick(.14); Assert.That(Count(), Is.Zero);
+                Tick(.25); Assert.That(Count(), Is.EqualTo(1));
+                bridge.ClearPunchPreview(); Publish();
+                Tick(.26); Assert.That(Count(), Is.Zero, "A clear/resume must restart confirmation.");
+                Tick(.37); Assert.That(Count(), Is.EqualTo(1));
+                em.SetComponentData(source, LocalTransform.FromPosition(new float3(10, 0, 0)));
+                Tick(.38); Assert.That(Count(), Is.Zero);
+                em.SetComponentData(source, LocalTransform.Identity);
+                Tick(.4); Assert.That(Count(), Is.Zero);
+                Tick(.51); Assert.That(Count(), Is.EqualTo(1));
+                using var playerQuery = em.CreateEntityQuery(typeof(PlayerSnapshot));
+                Entity player = playerQuery.GetSingletonEntity();
+                em.RemoveComponent<PlayerSnapshot>(player);
+                Tick(.52); Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.Zero, "Loading must clear even when the player singleton disappears.");
+                em.AddComponent<PlayerSnapshot>(player);
+                Tick(.54); Assert.That(Count(), Is.Zero);
+                Tick(.65); Assert.That(Count(), Is.EqualTo(1));
+
+                void Publish() => bridge.PublishPunchPreview(Vector3.back, Vector3.forward, 2, 2, 5, 0, 0, 0, 3, 18, 90);
+                void Tick(double time) { world.SetTime(new TimeData(time, .02f)); system.Update(world.Unmanaged); }
+                int Count() { int count = 0; foreach (var s in bridge.TrajectoryPreviewSegments) if (s.IsCollision) count++; return count; }
+            }
+            finally
+            {
+                PlayerBridgeRegistry.Unregister(bridge); if (previous != null) PlayerBridgeRegistry.Register(previous);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void Player003_CompetingSourcesAreOrderIndependentAndConflictsHideImmediately()
+        {
+            em.SetComponentData(source, LocalTransform.FromPosition(new float3(-7, 0, 0)));
+            Entity other = Body(new float3(7, 0, 0));
+            em.AddComponentData(source, new PunchAimAssistTarget { Target = target });
+            em.AddComponentData(other, new PunchAimAssistTarget { Target = target });
+            using var physics = Physics(source, target, other);
+            em.AddComponentData(em.CreateEntity(), new PlayerSnapshot());
+            em.AddComponentData(em.CreateEntity(), settings);
+            em.AddComponentData(em.CreateEntity(), new PhysicsWorldSingleton { PhysicsWorld = physics });
+            PlayerBridgeRegistry.TryGetBridge(out var previous);
+            var root = new GameObject("Competing collision sources"); var bridge = root.AddComponent<PlayerEcsBridge>();
+            try
+            {
+                PlayerBridgeRegistry.Register(bridge);
+                var tuning = new CollisionPreviewSettings { ForecastSeconds = .25f, ForecastSteps = 6,
+                    CompetitionWindow = .025f, ConflictAngleDegrees = 180, StableAngleDegrees = 180 };
+                bridge.ConfigureCollisionPreview(tuning);
+                bridge.PublishPunchPreview(Vector3.back, Vector3.forward, 8, 2, 5, 0, 22, 90, 3, 18, 90);
+                var system = world.GetOrCreateSystem<PresentationBridgeSystem>(); system.Update(world.Unmanaged);
+                var original = CollisionDirection();
+                em.AddComponent<EnemyLifetime>(source); // Move the source into a different query archetype.
+                system.Update(world.Unmanaged);
+                Assert.That(math.distance(original, CollisionDirection()), Is.LessThan(.0001f));
+                tuning.ConflictAngleDegrees = 20; bridge.ConfigureCollisionPreview(tuning);
+                system.Update(world.Unmanaged);
+                foreach (var segment in bridge.TrajectoryPreviewSegments) Assert.That(segment.IsCollision, Is.False);
+
+                float3 CollisionDirection()
+                {
+                    foreach (var segment in bridge.TrajectoryPreviewSegments)
+                        if (segment.IsCollision) return math.normalize(segment.End - segment.Start);
+                    Assert.Fail("Expected one resolved collision arrow."); return default;
+                }
+            }
+            finally
+            {
+                PlayerBridgeRegistry.Unregister(bridge); if (previous != null) PlayerBridgeRegistry.Register(previous);
+                Object.DestroyImmediate(root);
+            }
         }
 
         [Test]
@@ -239,6 +412,51 @@ namespace CrowdPunch.Tests
             finally { Object.DestroyImmediate(asset); }
         }
 
+        [Test]
+        public void Player003_StabilityAndForecastSettingsAreExposedAndCopiedLive()
+        {
+            var asset = ScriptableObject.CreateInstance<PlayerPunchSettings>();
+            var root = new GameObject("Live collision preview tuning");
+            try
+            {
+                var serialized = new UnityEditor.SerializedObject(asset);
+                serialized.FindProperty("collisionArrowConfirmationTime").floatValue = .23f;
+                serialized.FindProperty("collisionArrowStableAngleDegrees").floatValue = 11;
+                serialized.FindProperty("collisionArrowSmoothingTime").floatValue = .2f;
+                serialized.FindProperty("collisionArrowFadeInTime").floatValue = .03f;
+                serialized.FindProperty("collisionArrowFadeOutTime").floatValue = .05f;
+                serialized.FindProperty("collisionArrowMinimumOpacity").floatValue = .4f;
+                serialized.FindProperty("collisionForecastSeconds").floatValue = .3f;
+                serialized.FindProperty("collisionForecastSteps").intValue = 4;
+                serialized.FindProperty("collisionCompetitionWindow").floatValue = .02f;
+                serialized.FindProperty("collisionConflictAngleDegrees").floatValue = 14;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                var bridge = root.AddComponent<PlayerEcsBridge>(); bridge.ConfigureCollisionPreview(asset.CollisionPreview);
+                var copied = bridge.CollisionPreviewTuning;
+                Assert.That(copied.ConfirmationTime, Is.EqualTo(.23f)); Assert.That(copied.StableAngleDegrees, Is.EqualTo(11));
+                Assert.That(copied.SmoothingTime, Is.EqualTo(.2f)); Assert.That(copied.FadeInTime, Is.EqualTo(.03f));
+                Assert.That(copied.FadeOutTime, Is.EqualTo(.05f)); Assert.That(copied.MinimumOpacity, Is.EqualTo(.4f));
+                Assert.That(copied.ForecastSeconds, Is.EqualTo(.3f)); Assert.That(copied.ForecastSteps, Is.EqualTo(4));
+                Assert.That(copied.CompetitionWindow, Is.EqualTo(.02f)); Assert.That(copied.ConflictAngleDegrees, Is.EqualTo(14));
+                serialized.FindProperty("collisionArrowConfirmationTime").floatValue = 0;
+                serialized.ApplyModifiedPropertiesWithoutUndo(); bridge.ConfigureCollisionPreview(asset.CollisionPreview);
+                Assert.That(bridge.CollisionPreviewTuning.ConfirmationTime, Is.Zero);
+            }
+            finally { Object.DestroyImmediate(root); Object.DestroyImmediate(asset); }
+        }
+
+        [Test]
+        public void Player003_DefaultOpacityPreservesOtherFeedbackAndDirectArrows()
+        {
+            var material = new UnityEngine.Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            try
+            {
+                Assert.That(material.GetFloat("_Opacity"), Is.EqualTo(1f));
+                Assert.That(new PlayerEcsBridge.TrajectoryPreviewSegment(float3.zero, math.forward()).Opacity, Is.EqualTo(1));
+            }
+            finally { Object.DestroyImmediate(material); }
+        }
+
         [TestCase(100)]
         [TestCase(1000)]
         public void Player003_CrowdPreviewDeduplicatesTargetsAndMeasuresPresentationCost(int crowdSize)
@@ -271,6 +489,8 @@ namespace CrowdPunch.Tests
             {
                 PlayerBridgeRegistry.Register(bridge);
                 bridge.PublishPunchPreview(Vector3.back, Vector3.forward, 8, 2, 5, 0, 18, 12, 3, 18, 90);
+                bridge.ConfigureCollisionPreview(new CollisionPreviewSettings {
+                    ForecastSeconds = .25f, ForecastSteps = 6, StableAngleDegrees = 8 });
                 var system = world.GetOrCreateSystem<PresentationBridgeSystem>();
                 for (int i = 0; i < 5; i++) system.Update(world.Unmanaged);
                 var timer = System.Diagnostics.Stopwatch.StartNew();

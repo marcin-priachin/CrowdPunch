@@ -46,6 +46,28 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f), Tooltip("How far to sweep each punched body's collider, in world metres. Independent of arrow size and aim-assist range. Predicts the first collision only; moving crowds can change the outcome.")]
         private float collisionPredictionDistance = 18f;
 
+        [Header("Collision Arrow Stability")]
+        [SerializeField, Min(0f), Tooltip("Seconds the same victim and similar direction must persist before a collision arrow appears. Zero disables the confirmation delay.")]
+        private float collisionArrowConfirmationTime = 0.1f;
+        [SerializeField, Range(0f, 90f), Tooltip("Allowed direction change in degrees. Larger changes fade out and require confirmation again.")]
+        private float collisionArrowStableAngleDegrees = 8f;
+        [SerializeField, Min(0f), Tooltip("Seconds to smooth small angular jitter. Zero follows the current direction immediately.")]
+        private float collisionArrowSmoothingTime = 0.06f;
+        [SerializeField, Min(0f)] private float collisionArrowFadeInTime = 0.06f;
+        [SerializeField, Min(0f), Tooltip("Fade-out seconds for a major direction change. Invalid or missing predictions hide immediately.")]
+        private float collisionArrowFadeOutTime = 0.04f;
+        [SerializeField, Range(0f, 1f), Tooltip("Opacity multiplier at lowest confidence, in addition to the arrow colour's alpha. Certain predictions use 1.")]
+        private float collisionArrowMinimumOpacity = 0.35f;
+
+        [Header("Collision Forecast Budget")]
+        [SerializeField, Range(0.02f, 0.5f), Tooltip("Maximum forecast duration in seconds; prediction distance also limits travel.")]
+        private float collisionForecastSeconds = 0.25f;
+        [SerializeField, Range(1, 12), Tooltip("Maximum short homing/movement steps per source. More steps cost more CPU time.")]
+        private int collisionForecastSteps = 6;
+        [SerializeField, Range(0f, 0.1f), Tooltip("Contacts this close in time compete for a victim. Conflicting directions suppress its arrow. Zero disables conflict suppression.")]
+        private float collisionCompetitionWindow = 0.025f;
+        [SerializeField, Range(0f, 180f)] private float collisionConflictAngleDegrees = 20f;
+
         [Header("Cooldown Feedback")]
         [SerializeField, Tooltip("Name of the player-model bone that carries punch cooldown feedback.")]
         private string cooldownHandBoneName = "hand_r";
@@ -104,6 +126,17 @@ namespace CrowdPunch.Configuration
         public float CollisionArrowWidth => Mathf.Max(0.01f, collisionArrowWidth);
         public Color CollisionArrowColor => collisionArrowColor;
         public float CollisionPredictionDistance => Mathf.Max(0f, collisionPredictionDistance);
+        public CrowdPunch.Components.CollisionPreviewSettings CollisionPreview => new CrowdPunch.Components.CollisionPreviewSettings
+        {
+            ConfirmationTime = Mathf.Max(0f, collisionArrowConfirmationTime),
+            StableAngleDegrees = Mathf.Clamp(collisionArrowStableAngleDegrees, 0f, 90f),
+            SmoothingTime = Mathf.Max(0f, collisionArrowSmoothingTime),
+            FadeInTime = Mathf.Max(0f, collisionArrowFadeInTime), FadeOutTime = Mathf.Max(0f, collisionArrowFadeOutTime),
+            MinimumOpacity = Mathf.Clamp01(collisionArrowMinimumOpacity),
+            ForecastSeconds = Mathf.Clamp(collisionForecastSeconds, .02f, .5f), ForecastSteps = Mathf.Clamp(collisionForecastSteps, 1, 12),
+            CompetitionWindow = Mathf.Clamp(collisionCompetitionWindow, 0f, .1f),
+            ConflictAngleDegrees = Mathf.Clamp(collisionConflictAngleDegrees, 0f, 180f)
+        };
         public string CooldownHandBoneName => cooldownHandBoneName;
         public float CooldownHandScale => cooldownHandScale;
         public float ReadyHandScale => readyHandScale;

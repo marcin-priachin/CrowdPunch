@@ -62,6 +62,21 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-10-31 - Stable secondary arrows and bounded first-impact forecast
+
+Decision: Implement option 1 plus the bounded version of option 2 from the secondary
+arrow review. Confirm persistent predictions, smooth small jitter, fade/reconfirm major
+changes and hide invalid or conflicting predictions. Forecast short homing/movement
+steps, evaluate follow-up positions at predicted impact time and choose competing
+sources consistently. Do not introduce the option-3 committed chain plan or change
+gameplay outcomes. Expose stability, opacity, forecast budget and conflict controls in
+the shared punch asset. Starting implementation tuning: 0.1s confirmation, 8 degree
+tolerance, 0.06s smoothing/fade-in, 0.04s fade-out, 0.35 minimum opacity multiplier,
+0.25s/six-step budget, and 0.025s/20 degree competition tolerances.
+
+GDD rules: PLAYER-003/004, COMBAT-003/004, INFO-005. OQ-001 remains open for final
+target-hardware performance acceptance.
+
 ### 2026-10-31 - Stable targeting with modest moving-target assistance
 
 Decision: Implement option 2 from the launch aiming review: stable target selection and displayed-direction commitment, short movement lead, gentle time-limited homing ending at contact/obstruction/invalidity, and forward-cone-limited propagation correction. Keep physics-driven collision speed, damage, ownership, armor and recovery. No collision-direction bias from option 3 is added. Numeric defaults are exposed tuning: 22m range, 12/16 degree acquire/release cones, 0.12s switch delay, 0.35 fallback distance weight, 0.2s/2m lead, 45 degrees/s for up to 0.25s with a 20 degree homing cone, and 6m/20 degree propagation correction. Both input schemes share these settings; OQ-017 remains unresolved.

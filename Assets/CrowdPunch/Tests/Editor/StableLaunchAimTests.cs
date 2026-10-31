@@ -272,6 +272,8 @@ namespace CrowdPunch.Tests
                     WorldFromBody = new RigidTransform(poses[i].Rotation, poses[i].Position), Scale = 1 };
             physics.CollisionWorld.BuildBroadphase(ref physics, .02f, float3.zero, true);
             em.SetComponentData(physicsEntity, new PhysicsWorldSingleton { PhysicsWorld = physics });
+            bridge.ConfigureCollisionPreview(UnityEditor.AssetDatabase.LoadAssetAtPath<CrowdPunch.Configuration.PlayerPunchSettings>(
+                "Assets/CrowdPunch/Data/Settings/PlayerPunchSettings.asset").CollisionPreview);
             bridge.PublishPunchPreview(Vector3.back, Vector3.forward, 5, 2, 5, 0, 22, 12, 3, 18, 90, 16, .12f, .35f);
             var aim = world.GetOrCreateSystem<PunchAimAssistSystem>();
             var presentation = world.GetOrCreateSystem<PresentationBridgeSystem>();

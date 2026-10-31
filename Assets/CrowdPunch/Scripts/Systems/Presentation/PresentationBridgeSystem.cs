@@ -18,23 +18,47 @@ namespace CrowdPunch.Systems.Presentation
     public partial struct PresentationBridgeSystem : ISystem
     {
         private EntityQuery correctionCandidates;
+        private NativeHashMap<Entity, CollisionPreviewState> collisionStates;
+        private uint collisionFrame, resetSequence;
+        private double lastPreviewTime;
+        private int bridgeInstance;
+        private Entity observedPlayer;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<PlayerSnapshot>();
+            collisionStates = new NativeHashMap<Entity, CollisionPreviewState>(32, Allocator.Persistent);
             correctionCandidates = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<LocalTransform>().WithAny<Enemy, Barricade>().Build(ref state);
+        }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            if (collisionStates.IsCreated) collisionStates.Dispose();
         }
 
         public void OnUpdate(ref SystemState state)
         {
             if (!PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
             {
+                collisionStates.Clear();
                 return;
             }
 
-            Entity playerEntity = SystemAPI.GetSingletonEntity<PlayerSnapshot>();
+            if (!SystemAPI.TryGetSingletonEntity<PlayerSnapshot>(out Entity playerEntity))
+            {
+                collisionStates.Clear();
+                bridge.BeginTrajectoryPreview();
+                return;
+            }
+            double now = SystemAPI.Time.ElapsedTime;
+            float previewDelta = (float)math.max(0d, now - lastPreviewTime);
+            if (observedPlayer != playerEntity || bridgeInstance != bridge.GetInstanceID()
+                || resetSequence != bridge.CollisionPreviewResetSequence || now < lastPreviewTime
+                || previewDelta > math.max(.25f, bridge.CollisionPreviewTuning.ConfirmationTime * 2f))
+                collisionStates.Clear();
+            observedPlayer = playerEntity; bridgeInstance = bridge.GetInstanceID();
+            resetSequence = bridge.CollisionPreviewResetSequence;
             if (SystemAPI.HasComponent<PunchRequest>(playerEntity))
             {
                 PunchRequest punch = SystemAPI.GetComponent<PunchRequest>(playerEntity);
@@ -48,11 +72,13 @@ namespace CrowdPunch.Systems.Presentation
 
             // Preserve the displayed ECS snapshot until the next fixed step consumes the click.
             if (bridge.HasPendingPunch) return;
+            lastPreviewTime = now;
             bridge.BeginTrajectoryPreview();
 
             if (!bridge.IsPunchPreviewAvailable
                 || bridge.PunchPreviewLength <= 0f && bridge.CollisionPreviewLength <= 0f)
             {
+                collisionStates.Clear();
                 return;
             }
 
@@ -99,7 +125,9 @@ namespace CrowdPunch.Systems.Presentation
                     launchDirection = math.normalizesafe(
                         math.lerp(punchDirection, positionDirection, positionWeight), positionDirection);
                 }
-                sources.Add(new LaunchPreviewSource { Entity = enemy, Direction = launchDirection });
+                sources.Add(new LaunchPreviewSource { Entity = enemy, Direction = launchDirection,
+                    Speed = SystemAPI.HasComponent<DasherSettings>(enemy)
+                        ? SystemAPI.GetComponent<DasherSettings>(enemy).DashSpeed : bridge.PunchPreviewStrength });
                 if (bridge.PunchPreviewLength > 0f && SystemAPI.HasComponent<PunchAimAssistTarget>(enemy))
                 {
                     var aim = SystemAPI.GetComponent<PunchAimAssistTarget>(enemy);
@@ -131,20 +159,52 @@ namespace CrowdPunch.Systems.Presentation
             if (sources.Length == 0 || bridge.CollisionPreviewLength <= 0f
                 || bridge.CollisionPredictionDistance <= 0f
                 || !SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physics)
-                || !SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var settings)) return;
+                || !SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var settings))
+            { collisionStates.Clear(); return; }
 
             using var candidates = correctionCandidates.ToEntityArray(Allocator.Temp);
             using var candidateTransforms = correctionCandidates.ToComponentDataArray<LocalTransform>(Allocator.Temp);
             using var hits = new NativeList<ColliderCastHit>(Allocator.Temp);
-            using var shown = new NativeHashSet<Entity>(sources.Length, Allocator.Temp);
+            using var forecasts = new NativeList<LaunchImpactForecast>(Allocator.Temp);
+            using var choicesOwner = new NativeHashMap<Entity, int>(math.max(1, sources.Length), Allocator.Temp);
+            var choices = choicesOwner;
+            var tuning = bridge.CollisionPreviewTuning;
             foreach (var source in sources)
             {
-                if (!LaunchImpactPrediction.TryPredict(state.EntityManager, physics.CollisionWorld,
+                if (!LaunchImpactPrediction.TryForecast(state.EntityManager, physics.CollisionWorld,
                         source, sources.AsArray(), candidates, candidateTransforms, bridge.CollisionPredictionDistance,
-                        bridge.PunchPreviewStrength, settings, SystemAPI.Time.ElapsedTime,
-                        hits, out Entity target, out float3 direction, shown) || !shown.Add(target)) continue;
-                float3 position = state.EntityManager.GetComponentData<LocalTransform>(target).Position;
-                bridge.AddTrajectoryPreview(position, position + direction * bridge.CollisionPreviewLength, true);
+                        bridge.PunchPreviewStrength, settings, now, hits, tuning, out var forecast)) continue;
+                int index = forecasts.Length;
+                forecasts.Add(forecast);
+                if (!choices.TryGetValue(forecast.Victim, out int previous)
+                    || CollisionPreviewStability.Earlier(forecast, forecasts[previous])) choices[forecast.Victim] = index;
+            }
+            collisionFrame++;
+            if (collisionFrame == 0) { collisionStates.Clear(); collisionFrame++; }
+            using var victims = choices.GetKeyArray(Allocator.Temp);
+            foreach (Entity victim in victims)
+            {
+                var forecast = forecasts[choices[victim]];
+                bool conflicting = false;
+                foreach (var other in forecasts)
+                    conflicting |= CollisionPreviewStability.Conflicts(forecast, other, tuning);
+                if (conflicting) continue;
+                collisionStates.TryGetValue(victim, out var stable);
+                bool previousStillValid = stable.Seen == 0;
+                foreach (var other in forecasts)
+                    previousStillValid |= other.Source == stable.Source && other.Victim == victim;
+                if (!previousStillValid) stable = default;
+                bool visible = CollisionPreviewStability.Update(ref stable, forecast, tuning, now, previewDelta, collisionFrame, out float opacity);
+                collisionStates[victim] = stable;
+                if (!visible) continue;
+                float3 position = state.EntityManager.GetComponentData<LocalTransform>(victim).Position;
+                bridge.AddTrajectoryPreview(position, position + stable.DisplayedDirection * bridge.CollisionPreviewLength, true, opacity);
+            }
+            using var remembered = collisionStates.GetKeyArray(Allocator.Temp);
+            foreach (Entity victim in remembered)
+            {
+                // Missing, blocked, protected, reused or ambiguous predictions never retain an old arrow.
+                if (collisionStates[victim].Seen != collisionFrame) collisionStates.Remove(victim);
             }
         }
     }

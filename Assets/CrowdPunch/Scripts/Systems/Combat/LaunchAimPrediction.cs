@@ -63,6 +63,27 @@ namespace CrowdPunch.Systems.Combat
             launch.HomingTarget = Entity.Null;
             launch.HomingSecondsRemaining = 0f;
         }
+
+        public static bool BetterCorrection(float3 direction, float3 offset, float radius, float angleDegrees,
+            int candidateIndex, int bestIndex, float bestDot, float bestDistanceSq, out float dot, out float distanceSq)
+        {
+            offset.y = 0f;
+            distanceSq = math.lengthsq(offset); dot = -1f;
+            if (radius <= 0f || angleDegrees <= 0f || distanceSq <= .000001f || distanceSq > radius * radius) return false;
+            dot = math.dot(math.normalizesafe(new float3(direction.x, 0, direction.z)), offset * math.rsqrt(distanceSq));
+            if (dot < math.cos(math.radians(angleDegrees))) return false;
+            return dot > bestDot || dot == bestDot && distanceSq < bestDistanceSq
+                || dot == bestDot && distanceSq == bestDistanceSq && candidateIndex < bestIndex;
+        }
+
+        public static float3 CorrectVelocity(float3 velocity, float3 position, float3 target, float3 targetVelocity,
+            float angleDegrees, float leadSeconds, float leadDistance)
+        {
+            if (angleDegrees <= 0f) return velocity;
+            float3 point = Point(position, target, targetVelocity, math.length(velocity.xz), leadSeconds, leadDistance);
+            return CrowdPunch.Systems.Physics.EnemyLaunchHoming.RotateHorizontalVelocity(velocity,
+                point - position, math.radians(angleDegrees));
+        }
     }
 
     // Other crowd bodies remain real collisions; fixed cover must not attract steering through itself.

@@ -26,12 +26,15 @@ namespace CrowdPunch.Mono.Player
         private Mesh collisionArrowMesh;
         private readonly Color[] vertexColors = new Color[9];
         private Color directColor, collisionColor;
+        private MaterialPropertyBlock arrowProperties;
+        private static readonly int OpacityProperty = Shader.PropertyToID("_Opacity");
 
         public void Initialize(PlayerPunchSettings punchSettings) => settings = punchSettings;
 
         private void Awake()
         {
             ecsBridge = GetComponent<PlayerEcsBridge>();
+            arrowProperties = new MaterialPropertyBlock();
             Shader shader = Resources.Load<Shader>("Shaders/CombatFeedback");
             if (shader != null)
             {
@@ -77,7 +80,8 @@ namespace CrowdPunch.Mono.Player
                     ToVector3(segment.Start) + Vector3.up * verticalOffset,
                     Quaternion.LookRotation(direction, up),
                     new Vector3(Mathf.Max(0.01f, width), 1f, length));
-                Graphics.DrawMesh(segment.IsCollision ? collisionArrowMesh : arrowMesh, matrix, lineMaterial, gameObject.layer, null, 0, null,
+                arrowProperties.SetFloat(OpacityProperty, segment.Opacity);
+                Graphics.DrawMesh(segment.IsCollision ? collisionArrowMesh : arrowMesh, matrix, lineMaterial, gameObject.layer, null, 0, arrowProperties,
                     ShadowCastingMode.Off, false, null, LightProbeUsage.Off);
             }
         }

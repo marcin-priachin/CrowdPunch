@@ -215,6 +215,19 @@ Status: Must
 
 Before an attack, when an enemy the player can launch is inside the player's punch volume, show a short arrow from that enemy along its initial post-hit trajectory. Use a filled, chunky silhouette consistent with the established cartoony style. This includes living enemies in `Active`, `Launched`, or `Recovering`; the indication must not depend on the enemy being `Active`. Show one arrow per enemy that the punch would affect. Extend the indication to the first enemy each launched body is predicted to hit, showing that enemy's estimated outgoing launch direction, including ordinary propagation aim correction. Do not advertise a propagated launch through blocking geometry or from a target whose protection or lifecycle prevents it. These local estimates use the current crowd arrangement; later motion and real solver contacts can change the outcome. Do not recursively predict the full collision chain or environmental rebounds. Expose separate world-space length, width and colour (including alpha) for direct-launch and predicted-collision arrows. Direct arrows default to white at 50% opacity; collision arrows use a distinct configurable colour. Prediction distance is independent of displayed arrow size.
 
+Secondary-arrow amendment (2026-10-31): Confirm a consistent predicted victim and
+similar outgoing direction for a configurable interval before showing its arrow.
+Smooth small angular jitter; a major direction change fades out and must confirm
+again before fading in. Missing, invalid or ambiguous predictions hide immediately.
+Confidence may reduce secondary opacity in addition to its authored colour alpha.
+Expose confirmation time, stable-angle tolerance, smoothing, both fades and minimum
+confidence opacity. Use a bounded short-step first-impact forecast incorporating
+existing homing, target motion and follow-up positions at impact time. Resolve
+competing sources by earliest predicted impact with deterministic ties; suppress
+near-simultaneous conflicting directions. Expose time/step budgets and competition
+tolerances. These are presentation estimates and must not commit a chain plan or
+alter combat, movement or collision outcomes.
+
 ### PLAYER-004 — Directional Certainty
 
 Status: Must

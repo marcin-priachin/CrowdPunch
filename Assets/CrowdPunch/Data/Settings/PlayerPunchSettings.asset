@@ -34,6 +34,16 @@ MonoBehaviour:
   collisionArrowWidth: 0.3
   collisionArrowColor: {r: 1, g: 1, b: 1, a: 0.5019608}
   collisionPredictionDistance: 18
+  collisionArrowConfirmationTime: 0.1
+  collisionArrowStableAngleDegrees: 8
+  collisionArrowSmoothingTime: 0.06
+  collisionArrowFadeInTime: 0.06
+  collisionArrowFadeOutTime: 0.04
+  collisionArrowMinimumOpacity: 0.35
+  collisionForecastSeconds: 0.25
+  collisionForecastSteps: 6
+  collisionCompetitionWindow: 0.025
+  collisionConflictAngleDegrees: 20
   cooldownHandBoneName: hand_r
   cooldownHandScale: 1.2
   readyHandScale: 1

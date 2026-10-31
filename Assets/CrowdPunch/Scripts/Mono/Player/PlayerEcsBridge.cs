@@ -77,19 +77,24 @@ namespace CrowdPunch.Mono.Player
 
         public readonly struct TrajectoryPreviewSegment
         {
-            public TrajectoryPreviewSegment(float3 start, float3 end, bool isCollision = false)
+            public TrajectoryPreviewSegment(float3 start, float3 end, bool isCollision = false, float opacity = 1f)
             {
                 Start = start;
                 End = end;
                 IsCollision = isCollision;
+                Opacity = opacity;
             }
 
             public float3 Start { get; }
             public float3 End { get; }
             public bool IsCollision { get; }
+            public float Opacity { get; }
         }
 
         private readonly List<TrajectoryPreviewSegment> trajectoryPreviewSegments = new List<TrajectoryPreviewSegment>();
+        public CrowdPunch.Components.CollisionPreviewSettings CollisionPreviewTuning { get; private set; }
+        public uint CollisionPreviewResetSequence { get; private set; }
+        public void ConfigureCollisionPreview(CrowdPunch.Components.CollisionPreviewSettings tuning) => CollisionPreviewTuning = tuning;
 
         public event Action<float, float, Vector3> EnemyContactHitReceived;
         public event Action<Vector3, float, float, float> ExplosionReceived;
@@ -306,6 +311,7 @@ namespace CrowdPunch.Mono.Player
 
         public void ClearPunchPreview()
         {
+            CollisionPreviewResetSequence++;
             IsPunchPreviewAvailable = false;
             BeginTrajectoryPreview();
         }
@@ -317,9 +323,9 @@ namespace CrowdPunch.Mono.Player
             trajectoryPreviewSegments.Clear();
         }
 
-        public void AddTrajectoryPreview(float3 start, float3 end, bool isCollision = false)
+        public void AddTrajectoryPreview(float3 start, float3 end, bool isCollision = false, float opacity = 1f)
         {
-            trajectoryPreviewSegments.Add(new TrajectoryPreviewSegment(start, end, isCollision));
+            trajectoryPreviewSegments.Add(new TrajectoryPreviewSegment(start, end, isCollision, Mathf.Clamp01(opacity)));
         }
 
         /// <summary>

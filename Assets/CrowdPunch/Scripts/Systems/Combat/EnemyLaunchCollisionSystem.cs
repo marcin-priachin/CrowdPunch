@@ -321,7 +321,6 @@ namespace CrowdPunch.Systems.Combat
 
                 float3 initialDirection = new float3(velocity.Linear.x, 0f, velocity.Linear.z) / horizontalSpeed;
                 float3 launchedPosition = TransformLookup[launchedTarget].Position;
-                float radiusSq = PropagationAimCorrectionRadius * PropagationAimCorrectionRadius;
                 Entity best = Entity.Null;
                 float bestDot = float.MinValue;
                 float bestDistanceSq = float.MaxValue;
@@ -331,14 +330,9 @@ namespace CrowdPunch.Systems.Combat
                     Entity candidate = CorrectionCandidates[i];
                     if (candidate == source || candidate == launchedTarget || !TransformLookup.HasComponent(candidate)) continue;
                     float3 offset = TransformLookup[candidate].Position - launchedPosition;
-                    offset.y = 0f;
-                    float distanceSq = math.lengthsq(offset);
-                    if (distanceSq <= .000001f || distanceSq > radiusSq) continue;
-                    float dot = math.dot(initialDirection, offset * math.rsqrt(distanceSq));
-                    if (dot < math.cos(math.radians(PropagationAimMaximumAngleDegrees))) continue;
-                    bool improves = dot > bestDot || dot == bestDot && distanceSq < bestDistanceSq
-                        || dot == bestDot && distanceSq == bestDistanceSq && (best == Entity.Null || candidate.Index < best.Index);
-                    if (!improves) continue;
+                    if (!LaunchAimPrediction.BetterCorrection(initialDirection, offset, PropagationAimCorrectionRadius,
+                            PropagationAimMaximumAngleDegrees, candidate.Index, best == Entity.Null ? int.MaxValue : best.Index,
+                            bestDot, bestDistanceSq, out float dot, out float distanceSq)) continue;
                     if (SnakeSegments.HasComponent(launchedTarget))
                     {
                         var segment = SnakeSegments[launchedTarget];
@@ -370,12 +364,8 @@ namespace CrowdPunch.Systems.Combat
                 launchedState.HomingSecondsRemaining = HomingDuration;
                 LaunchStateLookup[launchedTarget] = launchedState;
                 float3 targetVelocity = VelocityLookup.HasComponent(best) ? VelocityLookup[best].Linear : float3.zero;
-                float3 correctedDirection = LaunchAimPrediction.Point(launchedPosition, TransformLookup[best].Position,
-                    targetVelocity, horizontalSpeed, LeadSeconds, LeadMaximumDistance) - launchedPosition;
-                correctedDirection.y = 0f;
-                correctedDirection = CrowdPunch.Systems.Physics.EnemyLaunchHoming.RotateHorizontalVelocity(
-                    initialDirection, correctedDirection, math.radians(PropagationAimMaximumAngleDegrees));
-                velocity.Linear.xz = correctedDirection.xz * horizontalSpeed;
+                velocity.Linear = LaunchAimPrediction.CorrectVelocity(velocity.Linear, launchedPosition, TransformLookup[best].Position,
+                    targetVelocity, PropagationAimMaximumAngleDegrees, LeadSeconds, LeadMaximumDistance);
                 VelocityLookup[launchedTarget] = velocity;
             }
 

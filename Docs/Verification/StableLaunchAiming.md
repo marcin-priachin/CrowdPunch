@@ -106,6 +106,10 @@ diagnostic measurements, not target-hardware frame-rate acceptance under OQ-001.
 
 ## Remaining limits
 
+The later [secondary arrow stability pass](SecondaryArrowStability.md) supersedes the
+straight-path preview limits and profile measurements below with a bounded short-step
+homing forecast. This document records the earlier aiming implementation.
+
 No manual campaign playthrough or target-hardware player build was performed. The
 settings are conservative starting points for a gameplay feel check. The second
 arrow remains an estimate: it does not simulate curved homing, future AI decisions,

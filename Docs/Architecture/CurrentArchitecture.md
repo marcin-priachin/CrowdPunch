@@ -1894,8 +1894,42 @@ Saved defaults: 0.2s/2m lead, 45 degrees/s, 0.25s homing, 20 degree flight cone,
 broadphase bounds and relative collider sweeps for nearby enemies, moving them for
 the bounded extrapolation then holding projected positions. Fixed geometry retains
 the collision-world cast. Duplicate victims skip repeated direction correction.
-This remains a local straight-path estimate rather than a curved multi-contact
-simulation. Verification: `Docs/Verification/StableLaunchAiming.md`.
+The later secondary-arrow forecast below supersedes this one-step estimate. Verification: `Docs/Verification/StableLaunchAiming.md`.
+
+### Secondary arrow stability and short forecast (2026-10-31)
+
+PLAYER-003/004, COMBAT-003/004, INFO-005: `PlayerPunchSettings` owns live secondary
+confirmation, angular tolerance, smoothing, fade-in/out, confidence opacity, forecast
+duration/steps and competing-contact tolerances. `PlayerPunch` copies these values
+through `PlayerEcsBridge.CollisionPreviewTuning`; no enemy identities enter Mono.
+
+`LaunchImpactPrediction.TryForecast` runs at most twelve local collider-cast steps
+(six by default) over at most 0.5 seconds (0.25 by default), additionally limited by
+display-independent prediction distance. Steps follow existing limited homing,
+ordinary target extrapolation, co-punched replacement velocities, damping and known
+ground locks. The first blocking contact ends the forecast. Follow-up selection uses
+extrapolated impact-time positions and current eligibility, including timed armor
+protection at arrival. `LaunchAimPrediction.BetterCorrection`/`CorrectVelocity` share
+angle, tie-breaking and lead math with runtime propagation; the gameplay rule is
+unchanged. No recursive chain, cloned solver world or secondary gameplay commitment
+is introduced.
+
+`PresentationBridgeSystem` collects `LaunchImpactForecast` data for every source
+before resolving victims. Earliest contact wins; impulse and entity identity break
+exact ties. Near-time directions outside the conflict tolerance suppress the arrow.
+Its persistent native map holds `CollisionPreviewState` by victim, including source,
+follow-up and lifetime/launch identity. `CollisionPreviewStability` confirms against
+a fixed angular anchor, smooths only small changes and fades major changes through
+reconfirmation. Missing/invalid/conflicting predictions are removed that update.
+Pooling, repunch, bridge/player replacement, reset, long sample gaps and missing
+player singletons invalidate state. The system continues during singleton absence
+only to clear copied preview output; native state is disposed with the system.
+
+Bridge segments carry copied opacity as well as endpoints/type. `PunchTrajectoryPreview`
+uses one reusable property block for per-draw `_Opacity`, multiplying the saved RGBA
+colour. `CombatFeedback` defaults this shader property to one for existing effects
+and primary arrows. Meshes/materials remain shared per player, without enemy objects.
+Verification and exact limits: `Docs/Verification/SecondaryArrowStability.md`.
 
 ### Presentation
 
@@ -1905,7 +1939,7 @@ simulation. Verification: `Docs/Verification/StableLaunchAiming.md`.
 - `EnemyHealthBarBridgeSystem` publishes living normal enemy health while post-damage visibility is enabled, and elite health while alive. Gatekeeper, Chicken, Rolling and Dino boss queries publish only normalized health via `EnemyHealthBarCanvasRegistry.PublishBoss`; their positions and entity identities do not cross this UI boundary. `EnemyHealthBarCanvas` lazily owns one `BossHealthBar` using the final boss's 900 x 14 reference-pixel bar, centered 60 pixels below the top on a 1920 x 1080 scaling canvas (INFO-007). A frame without a living boss hides this bar, including defeat, unload and ordinary encounters. Boss health bypasses the normal-enemy bar option and camera projection; pause/failure/completion visibility matches the finale.
 - `EnemyReadabilitySystem` maps archetype and non-launch gameplay feedback to body color through baked renderer ownership. Entering `Launched` preserves the archetype body color; movement and animation communicate launch state. Dasher presentation remains specialized and keeps its launched shape override without a launched color override.
 - `PresentationBridgeSystem` is the explicit ECS presentation bridge point.
-- `PresentationBridgeSystem` selects enemies currently inside the live punch volume, reads the same ECS-owned aim-assist target lock used by punch detection, and publishes their initial launch segments through `PlayerEcsBridge` (PLAYER-003/004, INFO-005). `LaunchImpactPrediction` sweeps each source's scaled, rotated physics collider along that direction to the first blocking contact. It estimates frictionless momentum transfer, gates propagation by the configured impulse threshold and target eligibility, then applies the ordinary smallest-angle propagation correction to the estimated outgoing velocity. Walls and protected/non-launchable bodies stop the prediction; triggers, self and Snake owner exclusions do not. Simultaneously punched bodies cannot receive collision-launch arrows or become correction targets. One collision arrow per struck enemy is published; predictions never mutate physics, health, locks or lifecycle. Only the first collision is estimated, with bounded target extrapolation but without gravity, curved homing paths, linked-pair swing, solver multi-contact distribution or rebound prediction. Prediction distance defaults to 18m, independently of assist range and arrow lengths. Candidate collection and hit storage are shared across sources for the frame; broadphase collider sweeps avoid all-pairs impact searches. OQ-001's final hardware/crowd budgets remain unresolved.
+- `PresentationBridgeSystem` selects enemies currently inside the live punch volume, reads the same ECS-owned aim-assist target lock used by punch detection, and publishes their initial launch segments through `PlayerEcsBridge` (PLAYER-003/004, INFO-005). `LaunchImpactPrediction` sweeps each source's scaled, rotated physics collider along that direction to the first blocking contact. It estimates frictionless momentum transfer, gates propagation by the configured impulse threshold and target eligibility, then applies the ordinary smallest-angle propagation correction to the estimated outgoing velocity. Walls and protected/non-launchable bodies stop the prediction; triggers, self and Snake owner exclusions do not. Simultaneously punched bodies cannot receive collision-launch arrows or become correction targets. One collision arrow per struck enemy is published; predictions never mutate physics, health, locks or lifecycle. Only the first collision is estimated, with bounded target extrapolation but without a full solver, linked-pair swing, multi-contact distribution or rebound prediction. Prediction distance defaults to 18m, independently of assist range and arrow lengths. Candidate collection and hit storage are shared across sources for the frame; broadphase collider sweeps avoid all-pairs impact searches. OQ-001's final hardware/crowd budgets remain unresolved.
 - `PunchTrajectoryPreview` draws copied segments as filled world-space arrows, with one reusable mesh per style and the existing unlit transparent `CombatFeedback` shader. `PlayerPunchSettings` exposes direct and collision arrow length, shaft width and RGBA colour separately; the saved defaults are 5m/0.36m/white at 50% alpha and 3m/0.3m/amber at 50% alpha. Zero length hides that type independently. `PlayerPunch` supplies the settings to the renderer and publishes prediction distance, collision length and launch strength through the bridge. Legacy component dimensions remain fallbacks for scenes without initialization. Vertex colours update only when their style changes, including Play Mode tuning. A chunky shaft, clipped tail, broad head and non-overlapping triangles retain uniform opacity; world-space draw matrices preserve dimensions independently of player scale. The preview owns and disposes its meshes/material and creates no per-enemy GameObjects. See `Docs/Verification/LaunchImpactPreview.md` for validation and limits.
 
 Normal-enemy health bars are transient damage feedback only. The bridge no longer publishes normal launch/recovery labels or exhausted-health normal bars. `EnemyHealthBarCanvas` retains pooled views and never queries or stores enemy entities. The legacy state-label rendering option remains available in the canvas, but receives no normal labels from this iteration's bridge.

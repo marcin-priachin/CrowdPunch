@@ -104,6 +104,7 @@ namespace CrowdPunch.Mono.Player
 
         private void PublishPunchPreview()
         {
+            ecsBridge.ConfigureCollisionPreview(settings.CollisionPreview);
             Transform originTransform = punchOrigin != null ? punchOrigin : transform;
             ecsBridge.PublishPunchPreview(
                 originTransform.position,
