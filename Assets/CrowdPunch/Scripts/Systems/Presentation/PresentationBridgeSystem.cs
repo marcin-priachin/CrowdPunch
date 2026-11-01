@@ -76,7 +76,7 @@ namespace CrowdPunch.Systems.Presentation
             bridge.BeginTrajectoryPreview();
 
             if (!bridge.IsPunchPreviewAvailable
-                || bridge.PunchPreviewLength <= 0f && bridge.CollisionPreviewLength <= 0f)
+                || !bridge.UseDottedTrajectory && bridge.PunchPreviewLength <= 0f && bridge.CollisionPreviewLength <= 0f)
             {
                 collisionStates.Clear();
                 return;
@@ -104,7 +104,7 @@ namespace CrowdPunch.Systems.Presentation
             {
                 float3 enemyPosition = transform.ValueRO.Position;
                 if (!PunchResolution.Contains(state.EntityManager, enemy, enemyPosition, volume)) continue;
-                if (ArmorHitResolution.IsProtected(state.EntityManager, enemy)
+                if (SystemAPI.HasComponent<BossPart>(enemy) || ArmorHitResolution.IsProtected(state.EntityManager, enemy)
                     || !EnemyLaunchTransition.IsLaunchable(tier.ValueRO)
                     || !EnemyLaunchTransition.CanReceivePlayerPunch(launchState.ValueRO, health.ValueRO))
                 {
@@ -128,7 +128,7 @@ namespace CrowdPunch.Systems.Presentation
                 sources.Add(new LaunchPreviewSource { Entity = enemy, Direction = launchDirection,
                     Speed = SystemAPI.HasComponent<DasherSettings>(enemy)
                         ? SystemAPI.GetComponent<DasherSettings>(enemy).DashSpeed : bridge.PunchPreviewStrength });
-                if (bridge.PunchPreviewLength > 0f && SystemAPI.HasComponent<PunchAimAssistTarget>(enemy))
+                if ((bridge.UseDottedTrajectory || bridge.PunchPreviewLength > 0f) && SystemAPI.HasComponent<PunchAimAssistTarget>(enemy))
                 {
                     var aim = SystemAPI.GetComponent<PunchAimAssistTarget>(enemy);
                     aim.PreviewDirection = launchDirection;
@@ -136,12 +136,13 @@ namespace CrowdPunch.Systems.Presentation
                     aim.PreviewRevision = bridge.TrajectoryPreviewRevision;
                     SystemAPI.SetComponent(enemy, aim);
                 }
-                if (bridge.PunchPreviewLength > 0f)
+                if (!bridge.UseDottedTrajectory && bridge.PunchPreviewLength > 0f)
                     bridge.AddTrajectoryPreview(enemyPosition,
                         enemyPosition + launchDirection * bridge.PunchPreviewLength);
             }
             foreach (var (pose, shot) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<ChickenProjectile>().WithEntityAccess())
             {
+                if (bridge.UseDottedTrajectory) continue;
                 if (!PunchResolution.Contains(pose.ValueRO.Position, volume)) continue;
                 volume.PositionWeight = positionWeight;
                 var direction = ChickenProjectilePunch.Direction(state.EntityManager, shot, pose.ValueRO.Position, volume);
@@ -154,6 +155,28 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 if (bridge.PunchPreviewLength > 0f)
                     bridge.AddTrajectoryPreview(pose.ValueRO.Position, pose.ValueRO.Position + direction * bridge.PunchPreviewLength);
+            }
+
+            if (bridge.UseDottedTrajectory)
+            {
+                collisionStates.Clear();
+                if (sources.Length == 0 || !SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var trajectoryPhysics)
+                    || !SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var trajectorySettings)) return;
+                using var points = new NativeList<float3>(Allocator.Temp);
+                using var impacts = new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+                float3 gravity = SystemAPI.TryGetSingleton<PhysicsStep>(out var step) ? step.Gravity : PhysicsStep.Default.Gravity;
+                EnemyDefeatBounds? defeatBounds = SystemAPI.TryGetSingleton<EnemyDefeatBounds>(out var bounds) ? bounds : null;
+                foreach (var source in sources)
+                {
+                    DirectLaunchTrajectoryPrediction.Trace(state.EntityManager, trajectoryPhysics.CollisionWorld,
+                        source, sources.AsArray(), trajectorySettings, bridge.TrajectoryMaximumSeconds,
+                        bridge.TrajectorySteps, points, gravity, defeatBounds, impacts);
+                    for (int i = 1; i < points.Length; i++)
+                        bridge.AddDottedTrajectory(points[i - 1], points[i], i == 1);
+                    foreach (var impact in impacts)
+                        bridge.AddTrajectoryImpact(impact.Position, impact.Direction);
+                }
+                return;
             }
 
             if (sources.Length == 0 || bridge.CollisionPreviewLength <= 0f

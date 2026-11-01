@@ -213,7 +213,7 @@ The player can move freely and use a directional dash for rapid repositioning. D
 
 Status: Must
 
-Before an attack, when an enemy the player can launch is inside the player's punch volume, show a short arrow from that enemy along its initial post-hit trajectory. Use a filled, chunky silhouette consistent with the established cartoony style. This includes living enemies in `Active`, `Launched`, or `Recovering`; the indication must not depend on the enemy being `Active`. Show one arrow per enemy that the punch would affect. Extend the indication to the first enemy each launched body is predicted to hit, showing that enemy's estimated outgoing launch direction, including ordinary propagation aim correction. Do not advertise a propagated launch through blocking geometry or from a target whose protection or lifecycle prevents it. These local estimates use the current crowd arrangement; later motion and real solver contacts can change the outcome. Do not recursively predict the full collision chain or environmental rebounds. Expose separate world-space length, width and colour (including alpha) for direct-launch and predicted-collision arrows. Direct arrows default to white at 50% opacity; collision arrows use a distinct configurable colour. Prediction distance is independent of displayed arrow size.
+Before an attack, when an enemy the player can launch is inside the player's punch volume, show a short arrow from that enemy along its initial post-hit trajectory. Use a filled, chunky silhouette consistent with the established cartoony style. This includes living enemies in `Active`, `Launched`, or `Recovering`; the indication must not depend on the enemy being `Active`. Show one arrow per enemy that the punch would affect. Extend the indication to the first enemy each launched body is predicted to hit, showing that enemy's estimated outgoing launch direction, including ordinary propagation aim correction. Do not advertise a propagated launch through blocking geometry or from a target whose protection or lifecycle prevents it. These local estimates use the current crowd arrangement; later motion and real solver contacts can change the outcome. In arrow mode, do not recursively predict the full collision chain or environmental rebounds. Expose separate world-space length, width and colour (including alpha) for direct-launch and predicted-collision arrows. Direct arrows default to white at 50% opacity; collision arrows use a distinct configurable colour. Prediction distance is independent of displayed arrow size.
 
 Secondary-arrow amendment (2026-10-31): Confirm a consistent predicted victim and
 similar outgoing direction for a configurable interval before showing its arrow.
@@ -227,6 +227,18 @@ competing sources by earliest predicted impact with deterministic ties; suppress
 near-simultaneous conflicting directions. Expose time/step budgets and competition
 tolerances. These are presentation estimates and must not commit a chain plan or
 alter combat, movement or collision outcomes.
+
+Dotted-trajectory option (2026-11-01): Expose a hit-indication mode in the shared
+player punch settings. Keep the existing direct/collision arrows as the default;
+the alternative replaces both arrow types with dotted lines for directly punched,
+launchable enemies only. Estimate each source body's complete launch flight until
+loss of useful momentum/recovery or defeat bounds, with an exposed maximum forecast
+duration and step budget. Include initial aim, existing time-limited homing, damping,
+ground constraints and approximate momentum transfer/deflection at contacts. Do not
+draw paths originating from enemies only struck indirectly. Expose dot diameter,
+spacing and RGBA colour. Mark predicted enemy/objective contacts on the dotted
+trajectory with a flat cartoony impact accent in the same RGBA colour. The forecast is advisory: future crowd movement, contacts
+and specialized mechanics can change the actual result.
 
 ### PLAYER-004 — Directional Certainty
 
@@ -1197,7 +1209,7 @@ committed Sweep, hit reactions, spawning, launch, recovery, pooling and defeat r
 
 Status: Must
 
-Trajectory UI predicts the attack's initial direction only. It should not draw a complete future ricochet path or pretend to predict chaotic downstream collisions.
+Default arrow mode predicts initial launch directions and the bounded first enemy impact (PLAYER-003). The optional dotted mode estimates the full travel of directly punched enemies, including approximate deflections, within an exposed time/step budget. Neither mode promises chaotic downstream collision outcomes or displays full trajectories for indirectly launched enemies.
 
 ### INFO-006 - Enemy Spawn Warning
 

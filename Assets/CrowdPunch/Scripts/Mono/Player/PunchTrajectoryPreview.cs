@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 namespace CrowdPunch.Mono.Player
 {
     /// <summary>
-    /// Renders direct and predicted collision launch segments supplied by ECS.
+    /// Renders launch arrows or dotted direct-body trajectories supplied by ECS.
     /// </summary>
     [RequireComponent(typeof(PlayerEcsBridge))]
     public sealed class PunchTrajectoryPreview : MonoBehaviour
@@ -24,6 +24,11 @@ namespace CrowdPunch.Mono.Player
         private Material lineMaterial;
         private Mesh arrowMesh;
         private Mesh collisionArrowMesh;
+        private Mesh dottedMesh;
+        private readonly List<Vector3> dotVertices = new List<Vector3>();
+        private readonly List<int> dotTriangles = new List<int>();
+        private readonly List<Color> dotColors = new List<Color>();
+        private static readonly Vector3[] DotRim = CreateDotRim();
         private readonly Color[] vertexColors = new Color[9];
         private Color directColor, collisionColor;
         private MaterialPropertyBlock arrowProperties;
@@ -45,6 +50,8 @@ namespace CrowdPunch.Mono.Player
                 arrowMesh = CreateArrowMesh();
                 collisionArrowMesh = CreateArrowMesh();
                 collisionArrowMesh.name = "Predicted Collision Arrow";
+                dottedMesh = new Mesh { name = "Dotted Punch Trajectories", indexFormat = IndexFormat.UInt32 };
+                dottedMesh.MarkDynamic();
                 directColor = collisionColor = new Color(1f, 1f, 1f, 0.5f);
             }
         }
@@ -59,9 +66,11 @@ namespace CrowdPunch.Mono.Player
             UpdateColor(arrowMesh, settings != null ? settings.LaunchArrowColor : new Color(1f, 1f, 1f, 0.5f), ref directColor);
             UpdateColor(collisionArrowMesh, settings != null ? settings.CollisionArrowColor : new Color(1f, 0.7f, 0.15f, 0.5f), ref collisionColor);
             IReadOnlyList<PlayerEcsBridge.TrajectoryPreviewSegment> segments = ecsBridge.TrajectoryPreviewSegments;
+            DrawDottedTrajectories(segments);
             for (int i = 0; i < segments.Count; i++)
             {
                 PlayerEcsBridge.TrajectoryPreviewSegment segment = segments[i];
+                if (segment.IsDotted) continue;
                 Vector3 direction = ToVector3(segment.End - segment.Start);
                 float length = direction.magnitude;
                 if (length < 0.001f)
@@ -97,6 +106,103 @@ namespace CrowdPunch.Mono.Player
                 Destroy(arrowMesh);
             }
             if (collisionArrowMesh != null) Destroy(collisionArrowMesh);
+            if (dottedMesh != null) Destroy(dottedMesh);
+        }
+
+        private void DrawDottedTrajectories(IReadOnlyList<PlayerEcsBridge.TrajectoryPreviewSegment> segments)
+        {
+            dotVertices.Clear(); dotTriangles.Clear(); dotColors.Clear();
+            float diameter = settings != null ? settings.TrajectoryDotDiameter : .22f;
+            float spacing = settings != null ? settings.TrajectoryDotSpacing : .65f;
+            Color color = settings != null ? settings.TrajectoryDotColor : new Color(1, 1, 1, .5f);
+            float impactRadius = (settings != null ? settings.TrajectoryImpactDiameter : 1.1f) * .5f;
+            var impacts = ecsBridge.TrajectoryPreviewImpacts;
+            float totalLength = 0f;
+            foreach (var segment in segments)
+                if (segment.IsDotted) totalLength += math.distance(segment.Start, segment.End);
+            // Preserve the whole path at extreme tuning/crowd sizes by reducing dot density.
+            spacing = Mathf.Max(spacing, totalLength / 16000f);
+            float nextDot = 0f;
+            foreach (var segment in segments)
+            {
+                if (!segment.IsDotted) continue;
+                if (segment.StartsPath) nextDot = 0f;
+                Vector3 delta = ToVector3(segment.End - segment.Start);
+                float length = delta.magnitude;
+                if (length <= .00001f) continue;
+                Vector3 direction = delta / length;
+                // Carry spacing through bends and time steps instead of bunching dots at every vertex.
+                while (nextDot <= length)
+                {
+                    Vector3 position = ToVector3(segment.Start) + direction * nextDot;
+                    bool insideAccent = false;
+                    foreach (var impact in impacts)
+                        insideAccent |= math.distancesq(impact.Position, (float3)position)
+                            < (impactRadius + diameter * .5f) * (impactRadius + diameter * .5f) && impactRadius > 0f;
+                    if (!insideAccent) AddDot(position + Vector3.up * verticalOffset, diameter * .5f, color);
+                    nextDot += spacing;
+                }
+                nextDot -= length;
+            }
+            if (impactRadius > 0f)
+                foreach (var impact in impacts)
+                    AddImpactAccent(ToVector3(impact.Position) + Vector3.up * verticalOffset,
+                        ToVector3(impact.Direction), impactRadius, color);
+            dottedMesh.Clear();
+            if (dotVertices.Count == 0) return;
+            dottedMesh.SetVertices(dotVertices);
+            dottedMesh.SetColors(dotColors);
+            dottedMesh.SetTriangles(dotTriangles, 0);
+            dottedMesh.RecalculateBounds();
+            arrowProperties.SetFloat(OpacityProperty, 1f);
+            Graphics.DrawMesh(dottedMesh, Matrix4x4.identity, lineMaterial, gameObject.layer, null, 0, arrowProperties,
+                ShadowCastingMode.Off, false, null, LightProbeUsage.Off);
+        }
+
+        private void AddImpactAccent(Vector3 center, Vector3 direction, float radius, Color color)
+        {
+            direction.y = 0f;
+            Vector3 forward = direction.sqrMagnitude > .0001f ? direction.normalized : Vector3.forward;
+            Vector3 right = new Vector3(forward.z, 0f, -forward.x);
+            int start = dotVertices.Count;
+            const int corners = 16;
+            for (int i = 0; i < corners; i++)
+            {
+                float angle = i * Mathf.PI * 2f / corners;
+                Vector3 radial = forward * Mathf.Cos(angle) + right * Mathf.Sin(angle);
+                // Four broad primary spikes and four shorter diagonals form a hollow comic pop.
+                float outer = i % 2 != 0 ? .42f : i % 4 == 0 ? 1f : .74f;
+                dotVertices.Add(center + radial * (radius * outer)); dotColors.Add(color);
+                dotVertices.Add(center + radial * (radius * .2f)); dotColors.Add(color);
+                int current = start + i * 2;
+                int next = start + (i + 1) % corners * 2;
+                dotTriangles.Add(current); dotTriangles.Add(next); dotTriangles.Add(current + 1);
+                dotTriangles.Add(current + 1); dotTriangles.Add(next); dotTriangles.Add(next + 1);
+            }
+        }
+
+        private void AddDot(Vector3 center, float radius, Color color)
+        {
+            int start = dotVertices.Count;
+            dotVertices.Add(center); dotColors.Add(color);
+            for (int i = 0; i < DotRim.Length; i++)
+            {
+                dotVertices.Add(center + DotRim[i] * radius); dotColors.Add(color);
+                dotTriangles.Add(start);
+                dotTriangles.Add(start + i + 1);
+                dotTriangles.Add(start + (i + 1) % DotRim.Length + 1);
+            }
+        }
+
+        private static Vector3[] CreateDotRim()
+        {
+            var rim = new Vector3[8];
+            for (int i = 0; i < rim.Length; i++)
+            {
+                float angle = i * Mathf.PI * 2f / rim.Length;
+                rim[i] = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+            }
+            return rim;
         }
 
         private void UpdateColor(Mesh mesh, Color color, ref Color previous)

@@ -77,21 +77,36 @@ namespace CrowdPunch.Mono.Player
 
         public readonly struct TrajectoryPreviewSegment
         {
-            public TrajectoryPreviewSegment(float3 start, float3 end, bool isCollision = false, float opacity = 1f)
+            public TrajectoryPreviewSegment(float3 start, float3 end, bool isCollision = false, float opacity = 1f,
+                bool isDotted = false, bool startsPath = false)
             {
                 Start = start;
                 End = end;
                 IsCollision = isCollision;
                 Opacity = opacity;
+                IsDotted = isDotted;
+                StartsPath = startsPath;
             }
 
             public float3 Start { get; }
             public float3 End { get; }
             public bool IsCollision { get; }
             public float Opacity { get; }
+            public bool IsDotted { get; }
+            public bool StartsPath { get; }
         }
 
         private readonly List<TrajectoryPreviewSegment> trajectoryPreviewSegments = new List<TrajectoryPreviewSegment>();
+        public readonly struct TrajectoryPreviewImpact
+        {
+            public TrajectoryPreviewImpact(float3 position, float3 direction)
+            { Position = position; Direction = direction; }
+            public float3 Position { get; }
+            public float3 Direction { get; }
+        }
+
+        private readonly List<TrajectoryPreviewImpact> trajectoryPreviewImpacts = new List<TrajectoryPreviewImpact>();
+        public IReadOnlyList<TrajectoryPreviewImpact> TrajectoryPreviewImpacts => trajectoryPreviewImpacts;
         public CrowdPunch.Components.CollisionPreviewSettings CollisionPreviewTuning { get; private set; }
         public uint CollisionPreviewResetSequence { get; private set; }
         public void ConfigureCollisionPreview(CrowdPunch.Components.CollisionPreviewSettings tuning) => CollisionPreviewTuning = tuning;
@@ -147,6 +162,9 @@ namespace CrowdPunch.Mono.Player
         public float CollisionPreviewLength { get; private set; }
         public float CollisionPredictionDistance { get; private set; }
         public float PunchPreviewStrength { get; private set; }
+        public bool UseDottedTrajectory { get; private set; }
+        public float TrajectoryMaximumSeconds { get; private set; }
+        public int TrajectorySteps { get; private set; }
         public float PunchPreviewPositionWeight { get; private set; }
         public float PunchPreviewAimAssistRange { get; private set; }
         public float PunchPreviewAimAssistMaximumAngleDegrees { get; private set; }
@@ -290,7 +308,10 @@ namespace CrowdPunch.Mono.Player
             float previewStrength = 0f,
             float releaseAngleDegrees = 0f,
             float switchDelay = 0f,
-            float distanceWeight = 0f)
+            float distanceWeight = 0f,
+            bool useDottedTrajectory = false,
+            float trajectoryMaximumSeconds = 8f,
+            int trajectorySteps = 160)
         {
             PunchPreviewOrigin = new float3(origin.x, origin.y, origin.z);
             PunchPreviewDirection = new float3(direction.x, direction.y, direction.z);
@@ -300,6 +321,9 @@ namespace CrowdPunch.Mono.Player
             CollisionPreviewLength = Mathf.Max(0f, collisionPreviewLength);
             CollisionPredictionDistance = Mathf.Max(0f, collisionPredictionDistance);
             PunchPreviewStrength = Mathf.Max(0f, previewStrength);
+            UseDottedTrajectory = useDottedTrajectory;
+            TrajectoryMaximumSeconds = Mathf.Clamp(trajectoryMaximumSeconds, .5f, 20f);
+            TrajectorySteps = Mathf.Clamp(trajectorySteps, 16, 400);
             PunchPreviewReleaseAngleDegrees = Mathf.Max(aimAssistMaximumAngleDegrees, releaseAngleDegrees);
             PunchPreviewSwitchDelay = Mathf.Max(0f, switchDelay);
             PunchPreviewDistanceWeight = Mathf.Clamp01(distanceWeight);
@@ -321,11 +345,25 @@ namespace CrowdPunch.Mono.Player
             TrajectoryPreviewRevision++;
             if (TrajectoryPreviewRevision == 0) TrajectoryPreviewRevision++;
             trajectoryPreviewSegments.Clear();
+            trajectoryPreviewImpacts.Clear();
         }
 
         public void AddTrajectoryPreview(float3 start, float3 end, bool isCollision = false, float opacity = 1f)
         {
             trajectoryPreviewSegments.Add(new TrajectoryPreviewSegment(start, end, isCollision, Mathf.Clamp01(opacity)));
+        }
+
+        public void AddDottedTrajectory(float3 start, float3 end, bool startsPath)
+        {
+            trajectoryPreviewSegments.Add(new TrajectoryPreviewSegment(start, end, isDotted: true, startsPath: startsPath));
+        }
+
+        public void AddTrajectoryImpact(float3 position, float3 direction)
+        {
+            // Co-punched sources can converge on the same contact. Keep its opacity uniform.
+            foreach (var impact in trajectoryPreviewImpacts)
+                if (math.distancesq(impact.Position, position) < .01f) return;
+            trajectoryPreviewImpacts.Add(new TrajectoryPreviewImpact(position, direction));
         }
 
         /// <summary>

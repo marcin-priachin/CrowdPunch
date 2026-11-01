@@ -1931,6 +1931,47 @@ colour. `CombatFeedback` defaults this shader property to one for existing effec
 and primary arrows. Meshes/materials remain shared per player, without enemy objects.
 Verification and exact limits: `Docs/Verification/SecondaryArrowStability.md`.
 
+### Optional dotted direct-launch preview (2026-11-01)
+
+`PlayerPunchSettings.HitIndication` selects `Arrows` (new-asset default) or
+`DottedTrajectory`. `PlayerPunch` publishes this choice and a separate 8-second /
+160-step default flight budget through `PlayerEcsBridge`. Dotted mode is independent
+of either arrow's displayed length and first-impact distance. Direct eligibility,
+lock selection and displayed-direction commitment remain ECS-owned; protected,
+non-launchable and out-of-volume enemies do not originate paths. Chicken projectile
+arrows are also suppressed in this mode because the option covers enemy bodies.
+
+`PresentationBridgeSystem` bypasses and clears secondary-arrow stability in dotted
+mode. `DirectLaunchTrajectoryPrediction` traces only the collected direct sources,
+sharing `LaunchImpactPrediction.CastStep` collider sweeps and existing bounded
+moving-target extrapolation. It estimates time-limited homing, ground snap, gravity
+for unconstrained bodies, linear damping, mass/restitution/friction contact response,
+Dasher pass-through against ordinary enemies, recovery and defeat-bound exits.
+At most four contacts are processed per time step. Struck crowd bodies are treated
+as departing after transfer rather than repeatedly colliding at their original
+snapshot positions. No victim flight, propagated chain, damage, solver world or
+lifecycle changes are simulated or committed. Linked-pair swings, special boss
+redirection/destructible changes, angular contact response and later recollisions
+with struck bodies remain approximations. The time cap truncates bodies that would
+continue flying; final target-hardware budgets remain open under OQ-001.
+
+The bridge copies line segments with dotted/path-start flags and no entity identity.
+`PunchTrajectoryPreview` draws filled circular dots in a reusable dynamic mesh and
+one draw call per player, carrying world-space spacing across segment boundaries.
+The shared asset exposes 0.22m diameter, 0.65m spacing and white/50%-alpha colour.
+At extreme path lengths it lowers density to bound geometry near 16,000 dots while
+preserving path coverage. It allocates no per-enemy GameObjects and disposes its mesh.
+Enemy/objective contacts also produce `LaunchTrajectoryImpact` samples during the
+same sweep, copied through the bridge as position/direction only. Contact accents
+include enemy/boss bodies, intact barricades (including shell/track objectives) and
+upright falling pillars; scenery and triggers have none. Each source marks a target
+once, and coincident copied contacts are deduplicated. The renderer adds hollow,
+eight-spike comic bursts to the same flat mesh, using the exact trajectory RGBA.
+Dots leave a small gap around each burst to avoid overlapping transparent geometry.
+`TrajectoryImpactDiameter` defaults to 1.1m; zero hides accents. Every new preview
+clears contact samples alongside segments, including switching back to arrows.
+See `Docs/Verification/DottedLaunchTrajectory.md` for checks and limitations.
+
 ### Presentation
 
 `GamePresentationGroup` runs in Unity's presentation phase:

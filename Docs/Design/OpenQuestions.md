@@ -62,6 +62,27 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-11-01 - Dotted trajectory contact accents
+
+Decision: Add a flat cartoony accent on the dotted trajectory at predicted contacts
+with enemies or objectives, sharing the trajectory colour and opacity. Use a hollow
+comic impact burst with configurable diameter. These contacts are advisory and do
+not alter collision, damage or objective behavior.
+
+GDD rules: PLAYER-003, INFO-005.
+
+### 2026-11-01 - Optional dotted direct-launch trajectories
+
+Decision: Add an exposed player hit-indication choice replacing direct and secondary
+arrows with dotted lines showing the estimated full launch travel of only directly
+punched enemies. Preserve arrows as the default. Dot appearance and the forecast
+budget are editable in PlayerPunchSettings. This amends the earlier initial-only
+restriction for the optional direct-body preview; it does not authorize a committed
+chain plan or changes to launch physics. Forecasts remain estimates of the current
+scene. OQ-001 remains unresolved for final hardware/crowd performance acceptance.
+
+GDD rules: PLAYER-003/004, INFO-005.
+
 ### 2026-10-31 - Stable secondary arrows and bounded first-impact forecast
 
 Decision: Implement option 1 plus the bounded version of option 2 from the secondary

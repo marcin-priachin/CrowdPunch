@@ -120,7 +120,10 @@ namespace CrowdPunch.Mono.Player
                 settings.Strength,
                 settings.AimAssistReleaseAngleDegrees,
                 settings.AimAssistSwitchDelay,
-                settings.AimAssistDistanceWeight);
+                settings.AimAssistDistanceWeight,
+                settings.HitIndication == PunchHitIndication.DottedTrajectory,
+                settings.TrajectoryMaximumSeconds,
+                settings.TrajectorySteps);
         }
 
         private void UpdateCooldownFeedback()

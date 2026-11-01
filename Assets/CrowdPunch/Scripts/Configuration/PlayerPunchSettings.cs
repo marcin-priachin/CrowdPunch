@@ -3,6 +3,12 @@ using UnityEngine.InputSystem;
 
 namespace CrowdPunch.Configuration
 {
+    public enum PunchHitIndication
+    {
+        Arrows,
+        DottedTrajectory
+    }
+
     [CreateAssetMenu(fileName = "PlayerPunchSettings", menuName = "Crowd Punch/Player Punch Settings")]
     public sealed class PlayerPunchSettings : ScriptableObject
     {
@@ -30,6 +36,21 @@ namespace CrowdPunch.Configuration
         private float aimAssistSwitchDelay = 0.12f;
         [SerializeField, Range(0f, 1f), Tooltip("Distance penalty relative to angle in fallback selection. Zero selects by alignment alone.")]
         private float aimAssistDistanceWeight = 0.35f;
+
+        [Header("Hit Indication")]
+        [SerializeField, Tooltip("Arrows shows direct and first-collision arrows. Dotted Trajectory estimates the whole flight of directly punched enemies only.")]
+        private PunchHitIndication hitIndication = PunchHitIndication.Arrows;
+
+        [Header("Dotted Launch Trajectory")]
+        [SerializeField, Min(0.02f)] private float trajectoryDotDiameter = 0.22f;
+        [SerializeField, Min(0.05f)] private float trajectoryDotSpacing = 0.65f;
+        [SerializeField] private Color trajectoryDotColor = new Color(1f, 1f, 1f, 0.5f);
+        [SerializeField, Min(0f), Tooltip("Diameter of flat comic impact accents at predicted enemy/objective contacts. Uses the trajectory colour. Zero hides accents.")]
+        private float trajectoryImpactDiameter = 1.1f;
+        [SerializeField, Range(0.5f, 20f), Tooltip("Estimate until launch recovery, up to this many seconds. This is an estimate of the current scene, not a committed outcome.")]
+        private float trajectoryMaximumSeconds = 8f;
+        [SerializeField, Range(16, 400), Tooltip("Maximum time steps per directly punched enemy. More steps improve curves and contacts at additional CPU cost.")]
+        private int trajectorySteps = 160;
 
         [Header("Direct Launch Arrow")]
         [SerializeField, Min(0f), Tooltip("Arrow length in world metres. Zero hides this arrow type.")]
@@ -119,6 +140,13 @@ namespace CrowdPunch.Configuration
         public float AimAssistReleaseAngleDegrees => Mathf.Max(aimAssistMaximumAngleDegrees, aimAssistReleaseAngleDegrees);
         public float AimAssistSwitchDelay => Mathf.Max(0f, aimAssistSwitchDelay);
         public float AimAssistDistanceWeight => aimAssistDistanceWeight;
+        public PunchHitIndication HitIndication => hitIndication;
+        public float TrajectoryDotDiameter => Mathf.Max(0.02f, trajectoryDotDiameter);
+        public float TrajectoryDotSpacing => Mathf.Max(TrajectoryDotDiameter * 1.25f, trajectoryDotSpacing);
+        public Color TrajectoryDotColor => trajectoryDotColor;
+        public float TrajectoryImpactDiameter => Mathf.Max(0f, trajectoryImpactDiameter);
+        public float TrajectoryMaximumSeconds => Mathf.Clamp(trajectoryMaximumSeconds, 0.5f, 20f);
+        public int TrajectorySteps => Mathf.Clamp(trajectorySteps, 16, 400);
         public float LaunchArrowLength => Mathf.Max(0f, launchArrowLength);
         public float LaunchArrowWidth => Mathf.Max(0.01f, launchArrowWidth);
         public Color LaunchArrowColor => launchArrowColor;

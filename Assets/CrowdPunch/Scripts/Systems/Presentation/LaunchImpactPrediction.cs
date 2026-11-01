@@ -84,38 +84,8 @@ namespace CrowdPunch.Systems.Presentation
                     remainingHoming = math.max(0f, remainingHoming - dt);
                 }
                 float3 end = pose.Position + velocity * dt;
-                hits.Clear();
-                world.CastCollider(new ColliderCastInput(collider, pose.Position, end, pose.Rotation, pose.Scale), ref hits);
-                // Fixed geometry keeps the world cast. Crowd colliders move relative to this short flight step.
-                for (int i = hits.Length - 1; i >= 0; i--)
-                    if (em.HasComponent<Enemy>(hits[i].Entity)) hits.RemoveAtSwapBack(i);
-                var bounds = collider.Value.CalculateAabb(new RigidTransform(pose.Rotation, pose.Position), pose.Scale);
-                float3 travel = end - pose.Position;
-                nearby.Clear();
-                world.OverlapAabb(new OverlapAabbInput { Filter = collider.Value.GetCollisionFilter(), Aabb = new Aabb {
-                    Min = math.min(bounds.Min, bounds.Min + travel) - math.max(0f, settings.AimLeadMaximumDistance),
-                    Max = math.max(bounds.Max, bounds.Max + travel) + math.max(0f, settings.AimLeadMaximumDistance) } }, ref nearby);
-                foreach (int index in nearby)
-                {
-                    var body = world.Bodies[index];
-                    Entity candidate = body.Entity;
-                    if (candidate == source.Entity || !em.HasComponent<Enemy>(candidate)
-                        || !em.HasComponent<LocalTransform>(candidate) || !body.Collider.IsCreated || Punched(candidate, punched)) continue;
-                    var targetPose = em.GetComponentData<LocalTransform>(candidate);
-                    body.WorldFromBody = new RigidTransform(targetPose.Rotation, targetPose.Position); body.Scale = targetPose.Scale;
-                    CastMovingBody(em, body, collider, pose, velocity, elapsed, dt, punched, strength, settings, ref hits);
-                }
-                // Co-punched bodies depart at replacement velocity, rather than remaining at their initial positions.
-                foreach (var other in punched)
-                {
-                    if (other.Entity == source.Entity || !em.HasComponent<PhysicsCollider>(other.Entity)) continue;
-                    var targetCollider = em.GetComponentData<PhysicsCollider>(other.Entity).Value;
-                    if (!targetCollider.IsCreated) continue;
-                    var targetPose = em.GetComponentData<LocalTransform>(other.Entity);
-                    var body = new RigidBody { Entity = other.Entity, Collider = targetCollider, Scale = targetPose.Scale,
-                        WorldFromBody = new RigidTransform(targetPose.Rotation, targetPose.Position) };
-                    CastMovingBody(em, body, collider, pose, velocity, elapsed, dt, punched, strength, settings, ref hits);
-                }
+                CastStep(em, world, source, punched, collider, pose, velocity, elapsed, dt, strength, settings,
+                    ref hits, ref nearby);
                 ColliderCastHit closest = default;
                 float fraction = float.MaxValue;
                 foreach (var hit in hits)
@@ -171,6 +141,46 @@ namespace CrowdPunch.Systems.Presentation
             return false;
         }
 
+        internal static void CastStep(EntityManager em, CollisionWorld world, LaunchPreviewSource source,
+            NativeArray<LaunchPreviewSource> punched, BlobAssetReference<Collider> collider, LocalTransform pose,
+            float3 velocity, float elapsed, float dt, float strength, in EnemyLaunchSettings settings,
+            ref NativeList<ColliderCastHit> hits, ref NativeList<int> nearby)
+        {
+            float3 end = pose.Position + velocity * dt;
+            hits.Clear();
+            world.CastCollider(new ColliderCastInput(collider, pose.Position, end, pose.Rotation, pose.Scale), ref hits);
+            // Fixed geometry keeps the world cast. Crowd colliders move relative to this short flight step.
+            for (int i = hits.Length - 1; i >= 0; i--)
+                if (em.HasComponent<Enemy>(hits[i].Entity)) hits.RemoveAtSwapBack(i);
+            var bounds = collider.Value.CalculateAabb(new RigidTransform(pose.Rotation, pose.Position), pose.Scale);
+            float3 travel = end - pose.Position;
+            nearby.Clear();
+            world.OverlapAabb(new OverlapAabbInput { Filter = collider.Value.GetCollisionFilter(), Aabb = new Aabb {
+                Min = math.min(bounds.Min, bounds.Min + travel) - math.max(0f, settings.AimLeadMaximumDistance),
+                Max = math.max(bounds.Max, bounds.Max + travel) + math.max(0f, settings.AimLeadMaximumDistance) } }, ref nearby);
+            foreach (int index in nearby)
+            {
+                var body = world.Bodies[index];
+                Entity candidate = body.Entity;
+                if (candidate == source.Entity || !em.HasComponent<Enemy>(candidate)
+                    || !em.HasComponent<LocalTransform>(candidate) || !body.Collider.IsCreated || Punched(candidate, punched)) continue;
+                var targetPose = em.GetComponentData<LocalTransform>(candidate);
+                body.WorldFromBody = new RigidTransform(targetPose.Rotation, targetPose.Position); body.Scale = targetPose.Scale;
+                CastMovingBody(em, body, collider, pose, velocity, elapsed, dt, punched, strength, settings, ref hits);
+            }
+            // Co-punched bodies depart at replacement velocity, rather than remaining at their initial positions.
+            foreach (var other in punched)
+            {
+                if (other.Entity == source.Entity || !em.HasComponent<PhysicsCollider>(other.Entity)) continue;
+                var targetCollider = em.GetComponentData<PhysicsCollider>(other.Entity).Value;
+                if (!targetCollider.IsCreated) continue;
+                var targetPose = em.GetComponentData<LocalTransform>(other.Entity);
+                var body = new RigidBody { Entity = other.Entity, Collider = targetCollider, Scale = targetPose.Scale,
+                    WorldFromBody = new RigidTransform(targetPose.Rotation, targetPose.Position) };
+                CastMovingBody(em, body, collider, pose, velocity, elapsed, dt, punched, strength, settings, ref hits);
+            }
+        }
+
         private static void CastMovingBody(EntityManager em, RigidBody body, BlobAssetReference<Collider> collider,
             LocalTransform pose, float3 velocity, float elapsed, float dt, NativeArray<LaunchPreviewSource> punched,
             float strength, in EnemyLaunchSettings settings, ref NativeList<ColliderCastHit> hits)
@@ -201,7 +211,7 @@ namespace CrowdPunch.Systems.Presentation
             }
         }
 
-        private static float3 Velocity(EntityManager em, Entity target, NativeArray<LaunchPreviewSource> punched, float strength)
+        internal static float3 Velocity(EntityManager em, Entity target, NativeArray<LaunchPreviewSource> punched, float strength)
         {
             foreach (var source in punched) if (source.Entity == target)
                 return source.Direction * (source.Speed > 0f ? source.Speed : strength);
@@ -212,7 +222,7 @@ namespace CrowdPunch.Systems.Presentation
         private static bool Punched(Entity target, NativeArray<LaunchPreviewSource> punched)
         { foreach (var source in punched) if (source.Entity == target) return true; return false; }
 
-        private static float3 PositionAt(EntityManager em, Entity entity, float3 position, float time,
+        internal static float3 PositionAt(EntityManager em, Entity entity, float3 position, float time,
             NativeArray<LaunchPreviewSource> punched, float strength, in EnemyLaunchSettings settings)
         {
             float3 velocity = Velocity(em, entity, punched, strength);
@@ -223,7 +233,7 @@ namespace CrowdPunch.Systems.Presentation
         private static uint Lifetime(EntityManager em, Entity entity) => em.HasComponent<EnemyLifetime>(entity)
             ? em.GetComponentData<EnemyLifetime>(entity).Generation : 0;
 
-        private static bool GuidanceTarget(EntityManager em, Entity source, Entity target)
+        internal static bool GuidanceTarget(EntityManager em, Entity source, Entity target)
         {
             if (!PunchAimAssist.IsValidTarget(em, source, target)) return false;
             if (!em.HasComponent<EnemyLaunchState>(target)) return true;
@@ -279,7 +289,7 @@ namespace CrowdPunch.Systems.Presentation
                 Velocity(em, best, punched, strength), settings.PropagationAimMaximumAngleDegrees, settings.AimLeadSeconds, settings.AimLeadMaximumDistance);
         }
 
-        private static bool Obstructed(EntityManager em, CollisionWorld world, Entity source, Entity target,
+        internal static bool Obstructed(EntityManager em, CollisionWorld world, Entity source, Entity target,
             float3 start, float3 end, ref NativeList<RaycastHit> rays)
         {
             rays.Clear();
