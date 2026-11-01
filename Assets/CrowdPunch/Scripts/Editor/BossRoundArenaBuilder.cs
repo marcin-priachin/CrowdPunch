@@ -98,10 +98,7 @@ namespace CrowdPunch.Editor
                 wall.transform.position = radial * wallRadius;
                 wall.transform.rotation = Quaternion.LookRotation(new Vector3(radial.z, 0, -radial.x));
                 wall.transform.localScale = new Vector3(thickness, 2, length);
-                var collider = wall.AddComponent<BoxCollider>();
-                // Match the earlier gauntlets' elevated player sweep; no gap above low visual rocks.
-                collider.center = new Vector3(0, 1, 0);
-                collider.size = new Vector3(1, 3, 1);
+                ObstacleColliderAlignment.MatchRenderedMesh(wall);
             }
             var ground = SaveMesh("Gauntlet_11_Backdrop", GauntletNatureEnvironment.TileModel("ground_grass", 1, 1, out _));
             var backdrop = Visual("Presentation Backdrop", root, ground, new[] { materials["Backdrop"] });

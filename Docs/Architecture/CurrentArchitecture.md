@@ -1,5 +1,33 @@
 # Crowd Punch â€” Current Architecture
 
+## Static obstacle surface collision (2026-11-01, VISION-004/005/006)
+
+`SolidObstacleBaker` builds a static Unity Physics triangle mesh from enabled, visible
+child MeshFilters through `SolidObstacleGeometry`. Child translation, rotation and
+nonuniform/mirrored scale are baked into obstacle-local vertices. Concave notches and
+spaces between separate visible parts remain open; bounding boxes and convex hulls
+are no longer substituted for their surfaces. Renderer, mesh and transform dependencies
+are registered for rebaking. Missing visible geometry is an authoring error.
+
+`SolidObstacleAuthoring` retains its axis-aligned placement/navigation footprint and
+greybox height. The orange gizmo represents that conservative navigation envelope;
+it is not the physical collision shape. Navigation/spawn planning continues to use
+the existing rectangles. No obstacle placement, arena bounds, routes, objective
+settings, render meshes or baked lighting was changed by this collision correction.
+
+Saved campaign and legacy-gauntlet perimeters use nonconvex MeshColliders referencing
+their rendered MeshFilter meshes. `ObstacleColliderAlignment` also keeps level and
+nature-environment builders consistent when regenerating them. Floors retain their
+separate convex collision surfaces (COMBAT-018).
+
+`PlayerObstacleCollisionSystem` anchors its horizontal sphere sweep to
+`ArenaGroundPlane.SurfaceHeight`, independently of the elevated player visual root.
+The resolved root Y remains player-owned. Low rocks therefore block the actual
+grounded body without requiring invisible collision walls above their visible tops.
+The Mono/ECS bridge and movement-resolution ordering remain unchanged.
+
+See `Docs/Verification/ObstacleGeometry.md` and `ObstacleGeometryTests`.
+
 ## Baseline pursuit and interception (2026-10-28, COMBAT-016, ENEMY-012)
 
 ### Timed direct-contact subset (2026-10-30, COMBAT-016, ENEMY-012)

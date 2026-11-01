@@ -90,7 +90,7 @@ namespace CrowdPunch.Editor
                 var center = (a + b) * .5f + new Vector2(edge.y, -edge.x).normalized * .75f;
                 var wall = Box($"Perimeter {i+1:00}", layout, new Vector3(center.x,-.25f,center.y), new Vector3(1.5f,1.5f,edge.magnitude+1.5f), wallMaterial, true);
                 wall.transform.rotation = Quaternion.LookRotation(new Vector3(edge.x,0,edge.y));
-                wall.GetComponent<BoxCollider>().center = new Vector3(0,.5f,0); wall.GetComponent<BoxCollider>().size = new Vector3(1,2,1);
+                ObstacleColliderAlignment.MatchRenderedMesh(wall);
             }
             var bounds = new SerializedObject(arena);
             bounds.FindProperty("spacingSize").vector3Value = new Vector3(width-4,16,depth-4);

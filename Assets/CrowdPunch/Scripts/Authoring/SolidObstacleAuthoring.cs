@@ -5,9 +5,9 @@ namespace CrowdPunch.Authoring
     {
         [Min(.25f), Tooltip("Placement unit in metres, independent from navigation cell size.")]
         public float placementUnit = 1f;
-        [Tooltip("Rectangle dimensions in placement units. Axis-aligned world XZ footprint.")]
+        [Tooltip("Conservative navigation rectangle in placement units. Collision uses visible child meshes.")]
         public Vector2Int footprint = new Vector2Int(2, 2);
-        [Min(.25f), Tooltip("Solid height above this transform's Y; visual mesh should match this silhouette.")]
+        [Min(.25f), Tooltip("Greybox height above this transform's Y. Collision uses visible child meshes.")]
         public float height = 2f;
         public Vector2 Size => new Vector2(footprint.x, footprint.y) * placementUnit;
         [ContextMenu("Snap footprint to placement grid")]
@@ -24,6 +24,7 @@ namespace CrowdPunch.Authoring
         private void OnValidate() { placementUnit = Mathf.Max(.25f, placementUnit); footprint = Vector2Int.Max(Vector2Int.one, footprint); height = Mathf.Max(.25f, height); }
         private void OnDrawGizmos()
         {
+            // Orange is the conservative navigation envelope, not a collision-shape preview.
             Gizmos.color = new Color(1, .55f, .15f, .65f);
             Gizmos.DrawWireCube(transform.position + Vector3.up * height * .5f, new Vector3(Size.x, height, Size.y));
         }

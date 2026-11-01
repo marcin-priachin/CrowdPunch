@@ -299,10 +299,7 @@ namespace CrowdPunch.Editor
                 Vector2 center=(a+b)*0.5f+outward*0.75f;
                 GameObject rail=Box($"Perimeter {i+1:00}",layout,new Vector3(center.x,-0.25f,center.y),new Vector3(1.5f,1.5f,edge.magnitude+1.5f),wall,true);
                 rail.transform.rotation=Quaternion.LookRotation(new Vector3(edge.x,0,edge.y));
-                // The hybrid player's cast is centred above its transform. A low visible rail
-                // needs a taller collision face to contain both that cast and launched capsules.
-                rail.GetComponent<BoxCollider>().center=new Vector3(0,0.5f,0);
-                rail.GetComponent<BoxCollider>().size=new Vector3(1,2,1);
+                ObstacleColliderAlignment.MatchRenderedMesh(rail);
             }
             foreach(Vector4 lane in design.Lanes)
                 Box("Launch Lane",layout,new Vector3(lane.x,-0.985f,lane.y),new Vector3(lane.z,0.015f,lane.w),stripe,false);

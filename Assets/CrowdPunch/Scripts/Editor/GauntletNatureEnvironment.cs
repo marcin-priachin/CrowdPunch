@@ -95,6 +95,7 @@ namespace CrowdPunch.Editor
                         if (saved == null) { AssetDatabase.CreateAsset(mesh, path); saved = mesh; }
                         else { EditorUtility.CopySerialized(mesh, saved); UnityEngine.Object.DestroyImmediate(mesh); }
                         filter.sharedMesh = saved;
+                        if (anchor.name.StartsWith("Perimeter ")) ObstacleColliderAlignment.MatchRenderedMesh(anchor.gameObject);
                         renderer.sharedMaterials = slots;
                         EditorUtility.SetDirty(filter);
                         EditorUtility.SetDirty(renderer);

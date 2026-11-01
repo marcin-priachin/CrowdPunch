@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 171884519}
   - component: {fileID: 171884522}
   - component: {fileID: 171884521}
-  - component: {fileID: 171884520}
+  - component: {fileID: 171884523}
   m_Layer: 0
   m_Name: Perimeter Rock 01
   m_TagString: Untagged
@@ -153,8 +153,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &171884520
-BoxCollider:
+--- !u!64 &171884523
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -171,9 +171,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &171884521
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -243,7 +244,7 @@ GameObject:
   - component: {fileID: 194399818}
   - component: {fileID: 194399821}
   - component: {fileID: 194399820}
-  - component: {fileID: 194399819}
+  - component: {fileID: 194399822}
   m_Layer: 0
   m_Name: Perimeter Rock 04
   m_TagString: Untagged
@@ -266,8 +267,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &194399819
-BoxCollider:
+--- !u!64 &194399822
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -284,9 +285,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &194399820
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -411,7 +413,7 @@ GameObject:
   - component: {fileID: 221871855}
   - component: {fileID: 221871858}
   - component: {fileID: 221871857}
-  - component: {fileID: 221871856}
+  - component: {fileID: 221871859}
   m_Layer: 0
   m_Name: Perimeter Rock 47
   m_TagString: Untagged
@@ -434,8 +436,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &221871856
-BoxCollider:
+--- !u!64 &221871859
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -452,9 +454,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &221871857
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -524,7 +527,7 @@ GameObject:
   - component: {fileID: 252117088}
   - component: {fileID: 252117091}
   - component: {fileID: 252117090}
-  - component: {fileID: 252117089}
+  - component: {fileID: 252117092}
   m_Layer: 0
   m_Name: Perimeter Rock 40
   m_TagString: Untagged
@@ -547,8 +550,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &252117089
-BoxCollider:
+--- !u!64 &252117092
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -565,9 +568,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &252117090
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -637,7 +641,7 @@ GameObject:
   - component: {fileID: 253902709}
   - component: {fileID: 253902712}
   - component: {fileID: 253902711}
-  - component: {fileID: 253902710}
+  - component: {fileID: 253902713}
   m_Layer: 0
   m_Name: Perimeter Rock 46
   m_TagString: Untagged
@@ -660,8 +664,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &253902710
-BoxCollider:
+--- !u!64 &253902713
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -678,9 +682,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &253902711
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -750,7 +755,7 @@ GameObject:
   - component: {fileID: 322339710}
   - component: {fileID: 322339713}
   - component: {fileID: 322339712}
-  - component: {fileID: 322339711}
+  - component: {fileID: 322339714}
   m_Layer: 0
   m_Name: Perimeter Rock 23
   m_TagString: Untagged
@@ -773,8 +778,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &322339711
-BoxCollider:
+--- !u!64 &322339714
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -791,9 +796,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &322339712
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -863,7 +869,7 @@ GameObject:
   - component: {fileID: 347082303}
   - component: {fileID: 347082306}
   - component: {fileID: 347082305}
-  - component: {fileID: 347082304}
+  - component: {fileID: 347082307}
   m_Layer: 0
   m_Name: Perimeter Rock 10
   m_TagString: Untagged
@@ -886,8 +892,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &347082304
-BoxCollider:
+--- !u!64 &347082307
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -904,9 +910,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &347082305
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -976,7 +983,7 @@ GameObject:
   - component: {fileID: 356135552}
   - component: {fileID: 356135555}
   - component: {fileID: 356135554}
-  - component: {fileID: 356135553}
+  - component: {fileID: 356135556}
   m_Layer: 0
   m_Name: Perimeter Rock 55
   m_TagString: Untagged
@@ -999,8 +1006,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &356135553
-BoxCollider:
+--- !u!64 &356135556
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1017,9 +1024,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &356135554
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1089,7 +1097,7 @@ GameObject:
   - component: {fileID: 357755253}
   - component: {fileID: 357755256}
   - component: {fileID: 357755255}
-  - component: {fileID: 357755254}
+  - component: {fileID: 357755257}
   m_Layer: 0
   m_Name: Perimeter Rock 50
   m_TagString: Untagged
@@ -1112,8 +1120,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &357755254
-BoxCollider:
+--- !u!64 &357755257
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1130,9 +1138,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &357755255
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1202,7 +1211,7 @@ GameObject:
   - component: {fileID: 390042288}
   - component: {fileID: 390042291}
   - component: {fileID: 390042290}
-  - component: {fileID: 390042289}
+  - component: {fileID: 390042292}
   m_Layer: 0
   m_Name: Perimeter Rock 56
   m_TagString: Untagged
@@ -1225,8 +1234,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &390042289
-BoxCollider:
+--- !u!64 &390042292
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1243,9 +1252,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &390042290
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1315,7 +1325,7 @@ GameObject:
   - component: {fileID: 468267114}
   - component: {fileID: 468267117}
   - component: {fileID: 468267116}
-  - component: {fileID: 468267115}
+  - component: {fileID: 468267118}
   m_Layer: 0
   m_Name: Perimeter Rock 28
   m_TagString: Untagged
@@ -1338,8 +1348,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &468267115
-BoxCollider:
+--- !u!64 &468267118
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1356,9 +1366,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &468267116
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1428,7 +1439,7 @@ GameObject:
   - component: {fileID: 505661081}
   - component: {fileID: 505661084}
   - component: {fileID: 505661083}
-  - component: {fileID: 505661082}
+  - component: {fileID: 505661085}
   m_Layer: 0
   m_Name: Perimeter Rock 25
   m_TagString: Untagged
@@ -1451,8 +1462,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &505661082
-BoxCollider:
+--- !u!64 &505661085
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1469,9 +1480,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &505661083
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1541,7 +1553,7 @@ GameObject:
   - component: {fileID: 583928382}
   - component: {fileID: 583928385}
   - component: {fileID: 583928384}
-  - component: {fileID: 583928383}
+  - component: {fileID: 583928386}
   m_Layer: 0
   m_Name: Perimeter Rock 49
   m_TagString: Untagged
@@ -1564,8 +1576,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &583928383
-BoxCollider:
+--- !u!64 &583928386
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1582,9 +1594,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &583928384
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1654,7 +1667,7 @@ GameObject:
   - component: {fileID: 589821480}
   - component: {fileID: 589821483}
   - component: {fileID: 589821482}
-  - component: {fileID: 589821481}
+  - component: {fileID: 589821484}
   m_Layer: 0
   m_Name: Perimeter Rock 57
   m_TagString: Untagged
@@ -1677,8 +1690,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &589821481
-BoxCollider:
+--- !u!64 &589821484
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1695,9 +1708,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &589821482
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3634,7 +3648,7 @@ GameObject:
   - component: {fileID: 667408129}
   - component: {fileID: 667408132}
   - component: {fileID: 667408131}
-  - component: {fileID: 667408130}
+  - component: {fileID: 667408133}
   m_Layer: 0
   m_Name: Perimeter Rock 16
   m_TagString: Untagged
@@ -3657,8 +3671,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &667408130
-BoxCollider:
+--- !u!64 &667408133
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3675,9 +3689,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &667408131
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3747,7 +3762,7 @@ GameObject:
   - component: {fileID: 679463580}
   - component: {fileID: 679463583}
   - component: {fileID: 679463582}
-  - component: {fileID: 679463581}
+  - component: {fileID: 679463584}
   m_Layer: 0
   m_Name: Perimeter Rock 52
   m_TagString: Untagged
@@ -3770,8 +3785,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &679463581
-BoxCollider:
+--- !u!64 &679463584
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3788,9 +3803,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &679463582
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3860,7 +3876,7 @@ GameObject:
   - component: {fileID: 686354433}
   - component: {fileID: 686354436}
   - component: {fileID: 686354435}
-  - component: {fileID: 686354434}
+  - component: {fileID: 686354437}
   m_Layer: 0
   m_Name: Perimeter Rock 29
   m_TagString: Untagged
@@ -3883,8 +3899,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &686354434
-BoxCollider:
+--- !u!64 &686354437
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3901,9 +3917,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &686354435
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3973,7 +3990,7 @@ GameObject:
   - component: {fileID: 692951351}
   - component: {fileID: 692951354}
   - component: {fileID: 692951353}
-  - component: {fileID: 692951352}
+  - component: {fileID: 692951355}
   m_Layer: 0
   m_Name: Perimeter Rock 18
   m_TagString: Untagged
@@ -3996,8 +4013,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &692951352
-BoxCollider:
+--- !u!64 &692951355
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4014,9 +4031,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &692951353
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4086,7 +4104,7 @@ GameObject:
   - component: {fileID: 697229213}
   - component: {fileID: 697229216}
   - component: {fileID: 697229215}
-  - component: {fileID: 697229214}
+  - component: {fileID: 697229217}
   m_Layer: 0
   m_Name: Perimeter Rock 27
   m_TagString: Untagged
@@ -4109,8 +4127,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &697229214
-BoxCollider:
+--- !u!64 &697229217
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4127,9 +4145,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &697229215
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4199,7 +4218,7 @@ GameObject:
   - component: {fileID: 718249149}
   - component: {fileID: 718249152}
   - component: {fileID: 718249151}
-  - component: {fileID: 718249150}
+  - component: {fileID: 718249153}
   m_Layer: 0
   m_Name: Perimeter Rock 09
   m_TagString: Untagged
@@ -4222,8 +4241,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &718249150
-BoxCollider:
+--- !u!64 &718249153
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4240,9 +4259,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &718249151
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4312,7 +4332,7 @@ GameObject:
   - component: {fileID: 723885666}
   - component: {fileID: 723885669}
   - component: {fileID: 723885668}
-  - component: {fileID: 723885667}
+  - component: {fileID: 723885670}
   m_Layer: 0
   m_Name: Perimeter Rock 38
   m_TagString: Untagged
@@ -4335,8 +4355,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &723885667
-BoxCollider:
+--- !u!64 &723885670
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4353,9 +4373,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &723885668
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4425,7 +4446,7 @@ GameObject:
   - component: {fileID: 772070150}
   - component: {fileID: 772070153}
   - component: {fileID: 772070152}
-  - component: {fileID: 772070151}
+  - component: {fileID: 772070154}
   m_Layer: 0
   m_Name: Perimeter Rock 06
   m_TagString: Untagged
@@ -4448,8 +4469,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &772070151
-BoxCollider:
+--- !u!64 &772070154
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4466,9 +4487,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &772070152
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4538,7 +4560,7 @@ GameObject:
   - component: {fileID: 814619457}
   - component: {fileID: 814619460}
   - component: {fileID: 814619459}
-  - component: {fileID: 814619458}
+  - component: {fileID: 814619461}
   m_Layer: 0
   m_Name: Perimeter Rock 44
   m_TagString: Untagged
@@ -4561,8 +4583,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &814619458
-BoxCollider:
+--- !u!64 &814619461
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4579,9 +4601,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &814619459
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4651,7 +4674,7 @@ GameObject:
   - component: {fileID: 862149871}
   - component: {fileID: 862149874}
   - component: {fileID: 862149873}
-  - component: {fileID: 862149872}
+  - component: {fileID: 862149875}
   m_Layer: 0
   m_Name: Perimeter Rock 00
   m_TagString: Untagged
@@ -4674,8 +4697,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &862149872
-BoxCollider:
+--- !u!64 &862149875
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4692,9 +4715,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &862149873
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4813,7 +4837,7 @@ GameObject:
   - component: {fileID: 918167941}
   - component: {fileID: 918167944}
   - component: {fileID: 918167943}
-  - component: {fileID: 918167942}
+  - component: {fileID: 918167945}
   m_Layer: 0
   m_Name: Perimeter Rock 02
   m_TagString: Untagged
@@ -4836,8 +4860,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &918167942
-BoxCollider:
+--- !u!64 &918167945
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4854,9 +4878,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &918167943
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4926,7 +4951,7 @@ GameObject:
   - component: {fileID: 940289682}
   - component: {fileID: 940289685}
   - component: {fileID: 940289684}
-  - component: {fileID: 940289683}
+  - component: {fileID: 940289686}
   m_Layer: 0
   m_Name: Perimeter Rock 33
   m_TagString: Untagged
@@ -4949,8 +4974,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &940289683
-BoxCollider:
+--- !u!64 &940289686
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4967,9 +4992,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &940289684
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5039,7 +5065,7 @@ GameObject:
   - component: {fileID: 949179624}
   - component: {fileID: 949179627}
   - component: {fileID: 949179626}
-  - component: {fileID: 949179625}
+  - component: {fileID: 949179628}
   m_Layer: 0
   m_Name: Perimeter Rock 15
   m_TagString: Untagged
@@ -5062,8 +5088,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &949179625
-BoxCollider:
+--- !u!64 &949179628
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5080,9 +5106,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &949179626
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5152,7 +5179,7 @@ GameObject:
   - component: {fileID: 955874456}
   - component: {fileID: 955874459}
   - component: {fileID: 955874458}
-  - component: {fileID: 955874457}
+  - component: {fileID: 955874460}
   m_Layer: 0
   m_Name: Perimeter Rock 08
   m_TagString: Untagged
@@ -5175,8 +5202,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &955874457
-BoxCollider:
+--- !u!64 &955874460
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5193,9 +5220,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &955874458
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5265,7 +5293,7 @@ GameObject:
   - component: {fileID: 959348044}
   - component: {fileID: 959348047}
   - component: {fileID: 959348046}
-  - component: {fileID: 959348045}
+  - component: {fileID: 959348048}
   m_Layer: 0
   m_Name: Perimeter Rock 58
   m_TagString: Untagged
@@ -5288,8 +5316,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &959348045
-BoxCollider:
+--- !u!64 &959348048
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5306,9 +5334,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &959348046
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5444,7 +5473,7 @@ GameObject:
   - component: {fileID: 986837920}
   - component: {fileID: 986837923}
   - component: {fileID: 986837922}
-  - component: {fileID: 986837921}
+  - component: {fileID: 986837924}
   m_Layer: 0
   m_Name: Perimeter Rock 07
   m_TagString: Untagged
@@ -5467,8 +5496,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &986837921
-BoxCollider:
+--- !u!64 &986837924
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5485,9 +5514,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &986837922
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5638,7 +5668,7 @@ GameObject:
   - component: {fileID: 1055787440}
   - component: {fileID: 1055787443}
   - component: {fileID: 1055787442}
-  - component: {fileID: 1055787441}
+  - component: {fileID: 1055787444}
   m_Layer: 0
   m_Name: Perimeter Rock 03
   m_TagString: Untagged
@@ -5661,8 +5691,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1055787441
-BoxCollider:
+--- !u!64 &1055787444
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5679,9 +5709,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1055787442
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5800,7 +5831,7 @@ GameObject:
   - component: {fileID: 1078167528}
   - component: {fileID: 1078167531}
   - component: {fileID: 1078167530}
-  - component: {fileID: 1078167529}
+  - component: {fileID: 1078167532}
   m_Layer: 0
   m_Name: Perimeter Rock 22
   m_TagString: Untagged
@@ -5823,8 +5854,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1078167529
-BoxCollider:
+--- !u!64 &1078167532
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5841,9 +5872,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1078167530
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5913,7 +5945,7 @@ GameObject:
   - component: {fileID: 1079283314}
   - component: {fileID: 1079283317}
   - component: {fileID: 1079283316}
-  - component: {fileID: 1079283315}
+  - component: {fileID: 1079283318}
   m_Layer: 0
   m_Name: Perimeter Rock 21
   m_TagString: Untagged
@@ -5936,8 +5968,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1079283315
-BoxCollider:
+--- !u!64 &1079283318
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5954,9 +5986,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1079283316
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6026,7 +6059,7 @@ GameObject:
   - component: {fileID: 1087274900}
   - component: {fileID: 1087274903}
   - component: {fileID: 1087274902}
-  - component: {fileID: 1087274901}
+  - component: {fileID: 1087274904}
   m_Layer: 0
   m_Name: Perimeter Rock 32
   m_TagString: Untagged
@@ -6049,8 +6082,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1087274901
-BoxCollider:
+--- !u!64 &1087274904
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6067,9 +6100,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1087274902
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6236,7 +6270,7 @@ GameObject:
   - component: {fileID: 1128174266}
   - component: {fileID: 1128174269}
   - component: {fileID: 1128174268}
-  - component: {fileID: 1128174267}
+  - component: {fileID: 1128174270}
   m_Layer: 0
   m_Name: Perimeter Rock 53
   m_TagString: Untagged
@@ -6259,8 +6293,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1128174267
-BoxCollider:
+--- !u!64 &1128174270
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6277,9 +6311,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1128174268
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6349,7 +6384,7 @@ GameObject:
   - component: {fileID: 1158638038}
   - component: {fileID: 1158638041}
   - component: {fileID: 1158638040}
-  - component: {fileID: 1158638039}
+  - component: {fileID: 1158638042}
   m_Layer: 0
   m_Name: Perimeter Rock 13
   m_TagString: Untagged
@@ -6372,8 +6407,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1158638039
-BoxCollider:
+--- !u!64 &1158638042
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6390,9 +6425,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1158638040
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6462,7 +6498,7 @@ GameObject:
   - component: {fileID: 1239821161}
   - component: {fileID: 1239821164}
   - component: {fileID: 1239821163}
-  - component: {fileID: 1239821162}
+  - component: {fileID: 1239821165}
   m_Layer: 0
   m_Name: Perimeter Rock 36
   m_TagString: Untagged
@@ -6485,8 +6521,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1239821162
-BoxCollider:
+--- !u!64 &1239821165
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6503,9 +6539,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1239821163
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6575,7 +6612,7 @@ GameObject:
   - component: {fileID: 1285281614}
   - component: {fileID: 1285281617}
   - component: {fileID: 1285281616}
-  - component: {fileID: 1285281615}
+  - component: {fileID: 1285281618}
   m_Layer: 0
   m_Name: Perimeter Rock 24
   m_TagString: Untagged
@@ -6598,8 +6635,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1285281615
-BoxCollider:
+--- !u!64 &1285281618
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6616,9 +6653,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1285281616
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6688,7 +6726,7 @@ GameObject:
   - component: {fileID: 1292807529}
   - component: {fileID: 1292807532}
   - component: {fileID: 1292807531}
-  - component: {fileID: 1292807530}
+  - component: {fileID: 1292807533}
   m_Layer: 0
   m_Name: Perimeter Rock 17
   m_TagString: Untagged
@@ -6711,8 +6749,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1292807530
-BoxCollider:
+--- !u!64 &1292807533
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6729,9 +6767,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1292807531
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6801,7 +6840,7 @@ GameObject:
   - component: {fileID: 1307750410}
   - component: {fileID: 1307750413}
   - component: {fileID: 1307750412}
-  - component: {fileID: 1307750411}
+  - component: {fileID: 1307750414}
   m_Layer: 0
   m_Name: Perimeter Rock 30
   m_TagString: Untagged
@@ -6824,8 +6863,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1307750411
-BoxCollider:
+--- !u!64 &1307750414
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6842,9 +6881,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1307750412
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6914,7 +6954,7 @@ GameObject:
   - component: {fileID: 1335052023}
   - component: {fileID: 1335052026}
   - component: {fileID: 1335052025}
-  - component: {fileID: 1335052024}
+  - component: {fileID: 1335052027}
   m_Layer: 0
   m_Name: Perimeter Rock 41
   m_TagString: Untagged
@@ -6937,8 +6977,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1335052024
-BoxCollider:
+--- !u!64 &1335052027
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6955,9 +6995,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1335052025
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -7027,7 +7068,7 @@ GameObject:
   - component: {fileID: 1336688460}
   - component: {fileID: 1336688463}
   - component: {fileID: 1336688462}
-  - component: {fileID: 1336688461}
+  - component: {fileID: 1336688464}
   m_Layer: 0
   m_Name: Perimeter Rock 39
   m_TagString: Untagged
@@ -7050,8 +7091,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1336688461
-BoxCollider:
+--- !u!64 &1336688464
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7068,9 +7109,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1336688462
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -7140,7 +7182,7 @@ GameObject:
   - component: {fileID: 1382484106}
   - component: {fileID: 1382484109}
   - component: {fileID: 1382484108}
-  - component: {fileID: 1382484107}
+  - component: {fileID: 1382484110}
   m_Layer: 0
   m_Name: Perimeter Rock 20
   m_TagString: Untagged
@@ -7163,8 +7205,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1382484107
-BoxCollider:
+--- !u!64 &1382484110
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7181,9 +7223,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1382484108
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -7253,7 +7296,7 @@ GameObject:
   - component: {fileID: 1465688354}
   - component: {fileID: 1465688357}
   - component: {fileID: 1465688356}
-  - component: {fileID: 1465688355}
+  - component: {fileID: 1465688358}
   m_Layer: 0
   m_Name: Perimeter Rock 31
   m_TagString: Untagged
@@ -7276,8 +7319,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1465688355
-BoxCollider:
+--- !u!64 &1465688358
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7294,9 +7337,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1465688356
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -7397,7 +7441,7 @@ GameObject:
   - component: {fileID: 1550436772}
   - component: {fileID: 1550436775}
   - component: {fileID: 1550436774}
-  - component: {fileID: 1550436773}
+  - component: {fileID: 1550436776}
   m_Layer: 0
   m_Name: Perimeter Rock 12
   m_TagString: Untagged
@@ -7420,8 +7464,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1550436773
-BoxCollider:
+--- !u!64 &1550436776
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7438,9 +7482,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1550436774
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -7510,7 +7555,7 @@ GameObject:
   - component: {fileID: 1567576912}
   - component: {fileID: 1567576915}
   - component: {fileID: 1567576914}
-  - component: {fileID: 1567576913}
+  - component: {fileID: 1567576916}
   m_Layer: 0
   m_Name: Perimeter Rock 45
   m_TagString: Untagged
@@ -7533,8 +7578,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1567576913
-BoxCollider:
+--- !u!64 &1567576916
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7551,9 +7596,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1567576914
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -7713,7 +7759,7 @@ GameObject:
   - component: {fileID: 1582128177}
   - component: {fileID: 1582128180}
   - component: {fileID: 1582128179}
-  - component: {fileID: 1582128178}
+  - component: {fileID: 1582128181}
   m_Layer: 0
   m_Name: Perimeter Rock 60
   m_TagString: Untagged
@@ -7736,8 +7782,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1582128178
-BoxCollider:
+--- !u!64 &1582128181
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7754,9 +7800,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1582128179
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -7826,7 +7873,7 @@ GameObject:
   - component: {fileID: 1597292983}
   - component: {fileID: 1597292986}
   - component: {fileID: 1597292985}
-  - component: {fileID: 1597292984}
+  - component: {fileID: 1597292987}
   m_Layer: 0
   m_Name: Perimeter Rock 54
   m_TagString: Untagged
@@ -7849,8 +7896,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1597292984
-BoxCollider:
+--- !u!64 &1597292987
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7867,9 +7914,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1597292985
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -7939,7 +7987,7 @@ GameObject:
   - component: {fileID: 1615814525}
   - component: {fileID: 1615814528}
   - component: {fileID: 1615814527}
-  - component: {fileID: 1615814526}
+  - component: {fileID: 1615814529}
   m_Layer: 0
   m_Name: Perimeter Rock 34
   m_TagString: Untagged
@@ -7962,8 +8010,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1615814526
-BoxCollider:
+--- !u!64 &1615814529
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7980,9 +8028,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1615814527
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -8052,7 +8101,7 @@ GameObject:
   - component: {fileID: 1738412921}
   - component: {fileID: 1738412924}
   - component: {fileID: 1738412923}
-  - component: {fileID: 1738412922}
+  - component: {fileID: 1738412925}
   m_Layer: 0
   m_Name: Perimeter Rock 35
   m_TagString: Untagged
@@ -8075,8 +8124,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1738412922
-BoxCollider:
+--- !u!64 &1738412925
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -8093,9 +8142,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1738412923
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -8165,7 +8215,7 @@ GameObject:
   - component: {fileID: 1749128603}
   - component: {fileID: 1749128606}
   - component: {fileID: 1749128605}
-  - component: {fileID: 1749128604}
+  - component: {fileID: 1749128607}
   m_Layer: 0
   m_Name: Perimeter Rock 42
   m_TagString: Untagged
@@ -8188,8 +8238,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1749128604
-BoxCollider:
+--- !u!64 &1749128607
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -8206,9 +8256,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1749128605
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -8278,7 +8329,7 @@ GameObject:
   - component: {fileID: 1783193947}
   - component: {fileID: 1783193950}
   - component: {fileID: 1783193949}
-  - component: {fileID: 1783193948}
+  - component: {fileID: 1783193951}
   m_Layer: 0
   m_Name: Perimeter Rock 63
   m_TagString: Untagged
@@ -8301,8 +8352,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1783193948
-BoxCollider:
+--- !u!64 &1783193951
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -8319,9 +8370,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1783193949
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -8391,7 +8443,7 @@ GameObject:
   - component: {fileID: 1821551650}
   - component: {fileID: 1821551653}
   - component: {fileID: 1821551652}
-  - component: {fileID: 1821551651}
+  - component: {fileID: 1821551654}
   m_Layer: 0
   m_Name: Perimeter Rock 51
   m_TagString: Untagged
@@ -8414,8 +8466,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1821551651
-BoxCollider:
+--- !u!64 &1821551654
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -8432,9 +8484,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1821551652
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -8504,7 +8557,7 @@ GameObject:
   - component: {fileID: 1906589789}
   - component: {fileID: 1906589792}
   - component: {fileID: 1906589791}
-  - component: {fileID: 1906589790}
+  - component: {fileID: 1906589793}
   m_Layer: 0
   m_Name: Perimeter Rock 26
   m_TagString: Untagged
@@ -8527,8 +8580,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1906589790
-BoxCollider:
+--- !u!64 &1906589793
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -8545,9 +8598,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1906589791
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -8617,7 +8671,7 @@ GameObject:
   - component: {fileID: 1908863021}
   - component: {fileID: 1908863024}
   - component: {fileID: 1908863023}
-  - component: {fileID: 1908863022}
+  - component: {fileID: 1908863025}
   m_Layer: 0
   m_Name: Perimeter Rock 62
   m_TagString: Untagged
@@ -8640,8 +8694,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1908863022
-BoxCollider:
+--- !u!64 &1908863025
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -8658,9 +8712,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1908863023
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -8775,7 +8830,7 @@ GameObject:
   - component: {fileID: 1949509614}
   - component: {fileID: 1949509617}
   - component: {fileID: 1949509616}
-  - component: {fileID: 1949509615}
+  - component: {fileID: 1949509618}
   m_Layer: 0
   m_Name: Perimeter Rock 48
   m_TagString: Untagged
@@ -8798,8 +8853,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1949509615
-BoxCollider:
+--- !u!64 &1949509618
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -8816,9 +8871,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1949509616
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -8888,7 +8944,7 @@ GameObject:
   - component: {fileID: 1978488020}
   - component: {fileID: 1978488023}
   - component: {fileID: 1978488022}
-  - component: {fileID: 1978488021}
+  - component: {fileID: 1978488024}
   m_Layer: 0
   m_Name: Perimeter Rock 19
   m_TagString: Untagged
@@ -8911,8 +8967,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1978488021
-BoxCollider:
+--- !u!64 &1978488024
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -8929,9 +8985,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1978488022
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -9001,7 +9058,7 @@ GameObject:
   - component: {fileID: 1980157362}
   - component: {fileID: 1980157365}
   - component: {fileID: 1980157364}
-  - component: {fileID: 1980157363}
+  - component: {fileID: 1980157366}
   m_Layer: 0
   m_Name: Perimeter Rock 43
   m_TagString: Untagged
@@ -9024,8 +9081,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1980157363
-BoxCollider:
+--- !u!64 &1980157366
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -9042,9 +9099,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &1980157364
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -9114,7 +9172,7 @@ GameObject:
   - component: {fileID: 2012069831}
   - component: {fileID: 2012069834}
   - component: {fileID: 2012069833}
-  - component: {fileID: 2012069832}
+  - component: {fileID: 2012069835}
   m_Layer: 0
   m_Name: Perimeter Rock 61
   m_TagString: Untagged
@@ -9137,8 +9195,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &2012069832
-BoxCollider:
+--- !u!64 &2012069835
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -9155,9 +9213,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &2012069833
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -9227,7 +9286,7 @@ GameObject:
   - component: {fileID: 2029557766}
   - component: {fileID: 2029557769}
   - component: {fileID: 2029557768}
-  - component: {fileID: 2029557767}
+  - component: {fileID: 2029557770}
   m_Layer: 0
   m_Name: Perimeter Rock 05
   m_TagString: Untagged
@@ -9250,8 +9309,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &2029557767
-BoxCollider:
+--- !u!64 &2029557770
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -9268,9 +9327,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &2029557768
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -9454,7 +9514,7 @@ GameObject:
   - component: {fileID: 2110979819}
   - component: {fileID: 2110979822}
   - component: {fileID: 2110979821}
-  - component: {fileID: 2110979820}
+  - component: {fileID: 2110979823}
   m_Layer: 0
   m_Name: Perimeter Rock 14
   m_TagString: Untagged
@@ -9477,8 +9537,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &2110979820
-BoxCollider:
+--- !u!64 &2110979823
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -9495,9 +9555,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &2110979821
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -9567,7 +9628,7 @@ GameObject:
   - component: {fileID: 2119485702}
   - component: {fileID: 2119485705}
   - component: {fileID: 2119485704}
-  - component: {fileID: 2119485703}
+  - component: {fileID: 2119485706}
   m_Layer: 0
   m_Name: Perimeter Rock 37
   m_TagString: Untagged
@@ -9590,8 +9651,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &2119485703
-BoxCollider:
+--- !u!64 &2119485706
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -9608,9 +9669,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &2119485704
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -9680,7 +9742,7 @@ GameObject:
   - component: {fileID: 2130680486}
   - component: {fileID: 2130680489}
   - component: {fileID: 2130680488}
-  - component: {fileID: 2130680487}
+  - component: {fileID: 2130680490}
   m_Layer: 0
   m_Name: Perimeter Rock 11
   m_TagString: Untagged
@@ -9703,8 +9765,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &2130680487
-BoxCollider:
+--- !u!64 &2130680490
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -9721,9 +9783,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &2130680488
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -9793,7 +9856,7 @@ GameObject:
   - component: {fileID: 2133832979}
   - component: {fileID: 2133832982}
   - component: {fileID: 2133832981}
-  - component: {fileID: 2133832980}
+  - component: {fileID: 2133832983}
   m_Layer: 0
   m_Name: Perimeter Rock 59
   m_TagString: Untagged
@@ -9816,8 +9879,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1120443583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &2133832980
-BoxCollider:
+--- !u!64 &2133832983
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -9834,9 +9897,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 02ee6b2ced20ab149b29053eeec29d79, type: 2}
 --- !u!23 &2133832981
 MeshRenderer:
   m_ObjectHideFlags: 0

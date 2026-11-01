@@ -503,7 +503,7 @@ GameObject:
   m_Component:
   - component: {fileID: 239934154}
   - component: {fileID: 239934157}
-  - component: {fileID: 239934156}
+  - component: {fileID: 239934158}
   - component: {fileID: 239934155}
   m_Layer: 0
   m_Name: Perimeter 05
@@ -577,8 +577,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &239934156
-BoxCollider:
+--- !u!64 &239934158
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -595,9 +595,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 647a16c45bb26c9479492fbb08af92a3, type: 2}
 --- !u!33 &239934157
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1008,7 +1009,7 @@ GameObject:
   m_Component:
   - component: {fileID: 527536486}
   - component: {fileID: 527536489}
-  - component: {fileID: 527536488}
+  - component: {fileID: 527536490}
   - component: {fileID: 527536487}
   m_Layer: 0
   m_Name: Perimeter 03
@@ -1082,8 +1083,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &527536488
-BoxCollider:
+--- !u!64 &527536490
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1100,9 +1101,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: df313efe50481aa468fc8f2a54580fc3, type: 2}
 --- !u!33 &527536489
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1604,7 +1606,7 @@ GameObject:
   m_Component:
   - component: {fileID: 903998046}
   - component: {fileID: 903998049}
-  - component: {fileID: 903998048}
+  - component: {fileID: 903998050}
   - component: {fileID: 903998047}
   m_Layer: 0
   m_Name: Perimeter 02
@@ -1678,8 +1680,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &903998048
-BoxCollider:
+--- !u!64 &903998050
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1696,9 +1698,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 9eecc5acacd44064aae68920bb6c4956, type: 2}
 --- !u!33 &903998049
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -2438,7 +2441,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1216631481}
   - component: {fileID: 1216631484}
-  - component: {fileID: 1216631483}
+  - component: {fileID: 1216631485}
   - component: {fileID: 1216631482}
   m_Layer: 0
   m_Name: Perimeter 07
@@ -2512,8 +2515,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &1216631483
-BoxCollider:
+--- !u!64 &1216631485
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2530,9 +2533,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: fc337f621c0ea6f41a711d83560daab8, type: 2}
 --- !u!33 &1216631484
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -2641,7 +2645,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1394357627}
   - component: {fileID: 1394357630}
-  - component: {fileID: 1394357629}
+  - component: {fileID: 1394357631}
   - component: {fileID: 1394357628}
   m_Layer: 0
   m_Name: Perimeter 01
@@ -2715,8 +2719,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &1394357629
-BoxCollider:
+--- !u!64 &1394357631
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2733,9 +2737,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 03f6c91e44bcc8d43bb0738e074e906b, type: 2}
 --- !u!33 &1394357630
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -3024,7 +3029,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1563353749}
   - component: {fileID: 1563353752}
-  - component: {fileID: 1563353751}
+  - component: {fileID: 1563353753}
   - component: {fileID: 1563353750}
   m_Layer: 0
   m_Name: Perimeter 06
@@ -3098,8 +3103,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &1563353751
-BoxCollider:
+--- !u!64 &1563353753
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3116,9 +3121,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 933129b4550520a46aeec9aefc8c906e, type: 2}
 --- !u!33 &1563353752
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -3906,7 +3912,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1864532950}
   - component: {fileID: 1864532953}
-  - component: {fileID: 1864532952}
+  - component: {fileID: 1864532954}
   - component: {fileID: 1864532951}
   m_Layer: 0
   m_Name: Perimeter 08
@@ -3980,8 +3986,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &1864532952
-BoxCollider:
+--- !u!64 &1864532954
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3998,9 +4004,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 94f5741a836c8464dbeb1f19523ceafb, type: 2}
 --- !u!33 &1864532953
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -4019,7 +4026,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1971981567}
   - component: {fileID: 1971981570}
-  - component: {fileID: 1971981569}
+  - component: {fileID: 1971981571}
   - component: {fileID: 1971981568}
   m_Layer: 0
   m_Name: Perimeter 04
@@ -4093,8 +4100,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &1971981569
-BoxCollider:
+--- !u!64 &1971981571
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4111,9 +4118,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: fe9673e8abe73594cacd718e4b30fbe4, type: 2}
 --- !u!33 &1971981570
 MeshFilter:
   m_ObjectHideFlags: 0
