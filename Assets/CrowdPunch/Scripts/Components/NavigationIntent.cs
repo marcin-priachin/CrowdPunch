@@ -30,6 +30,9 @@ namespace CrowdPunch.Components
     public struct NavigationPathState : IComponentData
     {
         public float2 RequestedGoal, ResolvedGoal, ProgressPosition, LastPosition;
+        public float2 EscapeGoal;
+        public double NextEscapeSearchAt;
+        public byte Escaping;
         public uint Version, PathVersion;
         public float RequestOffset;
         public int Waypoint;

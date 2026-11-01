@@ -6,6 +6,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using Unity.Physics;
 using Unity.Profiling;
 
 namespace CrowdPunch.Systems.AI
@@ -61,9 +62,9 @@ namespace CrowdPunch.Systems.AI
                 ref var n = ref nav.ValueRW;
                 bool active = launch.ValueRO.Phase == EnemyLaunchPhase.Active && !SystemAPI.IsComponentEnabled<RespawnRequest>(enemy);
                 if (changed || !active || settings.Enabled == 0)
-                { if (n.Initialized != 0 || n.Pending != 0 || path.Length > 0) { n.Reset(); path.Clear(); } if (!active || settings.Enabled == 0) continue; }
+                { if (n.Initialized != 0 || n.Pending != 0 || n.NextEscapeSearchAt != 0 || path.Length > 0) { n.Reset(); path.Clear(); } if (!active || settings.Enabled == 0) continue; }
                 if (SystemAPI.HasComponent<DasherState>(enemy) && SystemAPI.GetComponent<DasherState>(enemy).Phase != DasherPhase.Positioning)
-                { if (n.Initialized != 0) { n.Reset(); path.Clear(); } continue; }
+                { if (n.Initialized != 0 || n.NextEscapeSearchAt != 0) { n.Reset(); path.Clear(); } continue; }
                 var goal = intent.ValueRO;
                 float2 goalMinimum = g.Minimum, goalMaximum = g.Maximum;
                 bool hasRoom = BarricadeRoomMovement.TryGetRoom(enemy, owners, rooms, out var room);
@@ -75,7 +76,7 @@ namespace CrowdPunch.Systems.AI
                 }
                 if (goal.Mode != NavigationMode.Travel)
                 {
-                    if (n.Initialized != 0) { n.Reset(); path.Clear(); }
+                    if (n.Initialized != 0 || n.NextEscapeSearchAt != 0) { n.Reset(); path.Clear(); }
                     // Hold retains authored separation only; committed attacks keep their existing direction.
                     if (goal.Mode == NavigationMode.Hold)
                         movement.ValueRW = SafeMovement(ref g, transform.ValueRO.Position.xz, movement.ValueRO.Direction, movement.ValueRO.Speed,
@@ -90,7 +91,7 @@ namespace CrowdPunch.Systems.AI
                     && TryGetOutOfGridDirectMovement(ref g, position, goal, radius,
                         SystemAPI.GetComponent<EnemyMovementSettings>(enemy).BrakingAcceleration, out DesiredMovement directMovement))
                 {
-                    if (n.Initialized != 0) { n.Reset(); path.Clear(); }
+                    if (n.Initialized != 0 || n.NextEscapeSearchAt != 0) { n.Reset(); path.Clear(); }
                     movement.ValueRW = directMovement;
                     diagnostics.Direct++;
                     continue;
@@ -99,7 +100,24 @@ namespace CrowdPunch.Systems.AI
                 {
                     // Physics crowd compression may push an active body inside the navigation margin.
                     // Escape uses actual collider clearance, only toward a class-valid nearby centre.
-                    if (NavigationGeometry.TryEscape(ref g, position, agent.ValueRO.Radius, cls, out var escape))
+                    bool escaped = NavigationGeometry.TryEscape(ref g, position, agent.ValueRO.Radius, cls, out var escape);
+                    if (!escaped && SystemAPI.HasSingleton<PhysicsWorldSingleton>() && SystemAPI.HasComponent<PhysicsCollider>(enemy))
+                    {
+                        var world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
+                        var collider = SystemAPI.GetComponent<PhysicsCollider>(enemy);
+                        var enemies = SystemAPI.GetComponentLookup<Enemy>(true);
+                        if (n.Escaping != 0 && now < n.NextEscapeSearchAt
+                            && NavigationGeometry.Anchor(ref g, n.EscapeGoal, cls) >= 0
+                            && NavigationPhysicalEscape.Clear(world, enemy, transform.ValueRO, collider, enemies, n.EscapeGoal))
+                        { escape = n.EscapeGoal; escaped = true; }
+                        else if (now >= n.NextEscapeSearchAt)
+                        {
+                            escaped = NavigationPhysicalEscape.TryFind(ref g, world, enemy, transform.ValueRO, collider, enemies, cls, out escape);
+                            n.EscapeGoal = escape; n.Escaping = (byte)(escaped ? 1 : 0); n.NextEscapeSearchAt = now + .25;
+                            n.Version++; n.Pending = 0; path.Clear(); n.Waypoint = 0;
+                        }
+                    }
+                    if (escaped)
                     {
                         var direction = math.normalizesafe(escape - position);
                         // TryEscape validates the complete ingress segment, including obstacle clearance.
@@ -113,6 +131,7 @@ namespace CrowdPunch.Systems.AI
                     else movement.ValueRW = default;
                     diagnostics.Waiting++; continue;
                 }
+                if (n.Escaping != 0) { n.Reset(); path.Clear(); }
                 if (n.Initialized == 0)
                 {
                     n.Reset(); n.Initialized = 1; n.RequestedGoal = goal.Destination.xz; n.Kind = goal.Kind;

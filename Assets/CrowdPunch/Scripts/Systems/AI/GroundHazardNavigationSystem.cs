@@ -173,8 +173,14 @@ namespace CrowdPunch.Systems.AI
                     // Safe() uses class inflation and would reject this same starting position.
                     // Check hazards on the complete escape segment without repeating that rejection.
                     r.Version++; r.Pending = 0; r.Failed = 0; path.Clear();
+                    // The terrain router may have verified a real collider sweep through a
+                    // visible cutout which the conservative rectangle cannot represent.
+                    bool physicalEscape = movement.Speed > 0 && terrainRoutes.HasComponent(entity)
+                        && terrainRoutes[entity].Escaping != 0;
+                    bool canEscape = NavigationGeometry.TryEscape(ref g, position, agent.Radius, cls, out float2 entry);
+                    if (!canEscape && physicalEscape) { entry = terrainRoutes[entity].EscapeGoal; canEscape = true; }
                     movement = default;
-                    if (NavigationGeometry.TryEscape(ref g, position, agent.Radius, cls, out float2 entry)
+                    if (canEscape
                         && GroundHazardGeometry.Clear(patches, position, entry, radius))
                     {
                         float2 direction = math.normalizesafe(entry - position);

@@ -7,10 +7,107 @@ using Unity.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using Unity.Physics;
 namespace CrowdPunch.Tests
 {
     public sealed class NavigationSystemTests
     {
+        [TestCase(EnemyLaunchPhase.Launched, NavigationMode.Travel)]
+        [TestCase(EnemyLaunchPhase.Active, NavigationMode.Committed)]
+        public void Vision004_PhysicalEscapeCacheClearsWhenVoluntaryTravelStops(EnemyLaunchPhase phase, NavigationMode mode)
+        {
+            using var blob = MakeGrid(); using var world = new World("Escape ownership transition");
+            var em = world.EntityManager; Arena(em, blob); var enemy = Enemy(em);
+            var system = world.GetOrCreateSystem<EnemyNavigationSystem>(); Tick(world, system, 0);
+            em.SetComponentData(enemy, new NavigationPathState { Escaping = 1, NextEscapeSearchAt = 1, EscapeGoal = new float2(-7, 0) });
+            em.SetComponentData(enemy, new EnemyLaunchState { Phase = phase });
+            var intent = em.GetComponentData<NavigationIntent>(enemy); intent.Mode = mode; em.SetComponentData(enemy, intent);
+            var movement = new DesiredMovement { Direction = new float3(0, 0, 1), Speed = 3 }; em.SetComponentData(enemy, movement);
+            Tick(world, system, .1);
+            Assert.That(em.GetComponentData<NavigationPathState>(enemy).Escaping, Is.Zero);
+            Assert.That(em.GetComponentData<NavigationPathState>(enemy).NextEscapeSearchAt, Is.Zero);
+            Assert.That(em.GetComponentData<DesiredMovement>(enemy).Speed, Is.EqualTo(3));
+        }
+
+        [TestCase(false, false)] [TestCase(true, false)] [TestCase(false, true)]
+        public void Vision004_PhysicalCutoutReentryRespectsCrowdAndHazards(bool crowdInExit, bool hazardBlocked)
+        {
+            using var obstacles = new NativeArray<NavigationRectangle>(new[] { new NavigationRectangle
+                { Minimum = new float2(-6), Maximum = new float2(6) } }, Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-12), new float2(12), 1,
+                new float3(.62f, .97f, 1.62f), obstacles, Allocator.Persistent);
+            using var world = new World("Physical cutout reentry"); var em = world.EntityManager;
+            Arena(em, blob); var enemy = Enemy(em);
+            using var body = Unity.Physics.CapsuleCollider.Create(new CapsuleGeometry
+                { Radius = .5f, Vertex0 = new float3(0, -.5f, 0), Vertex1 = new float3(0, .5f, 0) });
+            using var rock = Unity.Physics.BoxCollider.Create(new BoxGeometry
+                { Center = float3.zero, Size = new float3(2), Orientation = quaternion.identity });
+            using var physicsOwner = new PhysicsWorld(crowdInExit ? 2 : 1, 0, 0); var physics = physicsOwner;
+            var bodies = physics.StaticBodies;
+            bodies[0] = new RigidBody { Collider = rock, WorldFromBody = RigidTransform.identity, Scale = 1 };
+            if (crowdInExit)
+            {
+                var other = em.CreateEntity(typeof(Enemy));
+                bodies[1] = new RigidBody { Entity = other, Collider = body,
+                    WorldFromBody = new RigidTransform(quaternion.identity, new float3(5.3f, 0, 0)), Scale = 1 };
+            }
+            physics.CollisionWorld.BuildBroadphase(ref physics, .02f, float3.zero, true);
+            em.AddComponentData(em.CreateEntity(), new PhysicsWorldSingleton { PhysicsWorld = physics });
+            em.AddComponentData(enemy, new PhysicsCollider { Value = body });
+            em.SetComponentData(enemy, new NavigationAgent { Radius = .5f });
+            em.SetComponentData(enemy, LocalTransform.FromPosition(new float3(4, 0, 0)));
+            em.SetComponentData(enemy, NavigationIntent.Travel(new float3(9, 0, 0), 2, .2f, float3.zero));
+            Assert.False(NavigationGeometry.TryEscape(ref blob.Value, new float2(4, 0), .5f, 0, out _), "Reproduces the old rectangular escape rejection.");
+            var system = world.GetOrCreateSystem<EnemyNavigationSystem>();
+            Tick(world, system, 0);
+            Assert.Greater(em.GetComponentData<DesiredMovement>(enemy).Speed, 0);
+            Assert.AreEqual(new float3(4, 0, 0), em.GetComponentData<LocalTransform>(enemy).Position, "Navigation cannot teleport the body.");
+            em.AddComponent<GroundHazardRoute>(enemy); em.AddBuffer<GroundHazardWaypoint>(enemy);
+            em.AddComponent<GroundHazardPolicy>(em.CreateEntity());
+            var patch = em.CreateEntity(typeof(GroundHazard), typeof(GroundHazardState));
+            var escape = em.GetComponentData<NavigationPathState>(enemy).EscapeGoal;
+            em.SetComponentData(patch, new GroundHazard { Position = hazardBlocked ? new float3(escape.x, 0, escape.y) : new float3(-9, 0, -9), HalfSize = new float2(.2f) });
+            em.SetComponentData(patch, new GroundHazardState { Introduced = 1, Phase = GroundHazardPhase.Active });
+            var hazards = world.GetOrCreateSystem<GroundHazardNavigationSystem>();
+            hazards.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+            if (hazardBlocked) { Assert.That(em.GetComponentData<DesiredMovement>(enemy).Speed, Is.Zero); return; }
+            Assert.That(em.GetComponentData<DesiredMovement>(enemy).Speed, Is.GreaterThan(0));
+            for (int frame = 1; frame <= 400; frame++)
+            {
+                Tick(world, system, frame * .02);
+                hazards.Update(world.Unmanaged); em.CompleteAllTrackedJobs();
+                var movement = em.GetComponentData<DesiredMovement>(enemy);
+                var pose = em.GetComponentData<LocalTransform>(enemy);
+                pose.Position += movement.Direction * movement.Speed * .02f;
+                em.SetComponentData(enemy, pose);
+            }
+            Assert.That(em.GetComponentData<LocalTransform>(enemy).Position.x, Is.GreaterThan(8.7f));
+            Assert.That(em.GetComponentData<NavigationPathState>(enemy).Escaping, Is.Zero);
+        }
+
+        [Test]
+        public void Vision004_PhysicalEscapeCannotCrossAnEnclosingSolid()
+        {
+            using var obstacles = new NativeArray<NavigationRectangle>(new[] { new NavigationRectangle
+                { Minimum = new float2(-6), Maximum = new float2(6) } }, Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-12), new float2(12), 1,
+                new float3(.62f, .97f, 1.62f), obstacles, Allocator.Persistent);
+            using var world = new World("Physical escape solid containment"); var em = world.EntityManager;
+            var enemy = em.CreateEntity(typeof(Enemy));
+            using var body = Unity.Physics.SphereCollider.Create(new SphereGeometry { Radius = .5f });
+            using var wall = Unity.Physics.BoxCollider.Create(new BoxGeometry
+                { Size = new float3(1, 4, 10), Orientation = quaternion.identity });
+            using var physicsOwner = new PhysicsWorld(4, 0, 0); var physics = physicsOwner;
+            var bodies = physics.StaticBodies;
+            for (int i = 0; i < 4; i++) bodies[i] = new RigidBody { Collider = wall, Scale = 1,
+                WorldFromBody = new RigidTransform(quaternion.RotateY(i * math.PI / 2),
+                    math.rotate(quaternion.RotateY(i * math.PI / 2), new float3(3, 0, 0))) };
+            physics.CollisionWorld.BuildBroadphase(ref physics, .02f, float3.zero, true);
+            var navigation = world.GetOrCreateSystem<EnemyNavigationSystem>();
+            Assert.False(NavigationPhysicalEscape.TryFind(ref blob.Value, physics.CollisionWorld, enemy, LocalTransform.Identity,
+                new PhysicsCollider { Value = body }, world.Unmanaged.ResolveSystemStateRef(navigation).GetComponentLookup<Enemy>(true), 0, out _));
+        }
+
         [Test]
         public void Enemy009_PausedGauntlet07ProjectileEscapesConservativeObstacleCorner()
         {

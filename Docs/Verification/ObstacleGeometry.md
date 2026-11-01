@@ -62,3 +62,53 @@ route-planning approximations, distinct from the now surface-matched physical
 colliders. Decorative scenery remains noncolliding. Moving/destructible objective
 and character collision rules were not changed. This pass includes automated scene
 coverage and a focused live check, not a manual playthrough of every encounter.
+
+## Follow-up: enemies freezing around obstacles
+
+The original pass exposed a navigation mismatch: physically clear cutouts remain
+inside conservative navigation rectangles. A body entering one loses its grid anchor,
+while the old rectangle-based escape check rejects its starting position. Its movement
+intent stays zero indefinitely. At Level 8's left rock, world XZ (-15, 2) reproduces
+that rejection with the actual saved rock mesh.
+
+`NavigationPhysicalEscape` now checks candidate reentry paths with the enemy's full
+scaled and rotated physics collider. It ignores crowd entities and triggers, but
+rejects intervening terrain and objective solids. Resting contacts permit outward
+and tangent motion. `EnemyNavigationSystem` caches destinations and throttles searches
+to 0.25 seconds; movement remains velocity-driven and returns to ordinary navigation
+after reentry. Hazard avoidance retains only physically verified escape intent whose
+whole segment also clears damaging patches. Elite staging shares the same fallback.
+Snake head/tail guards allow physically clear escape steps rather than cancelling
+them solely because the current point is inside a conservative rectangle.
+
+Navigation baking also expands undersized authored rectangles to include low mesh
+protrusions. Triangle edges are clipped to the authored height band, excluding overhead
+canopies. Disabled/inactive and shadow-only renderers are excluded consistently from
+collision and navigation geometry. Scene placement, rendered geometry and lighting
+are unchanged; the affected baking code automatically regenerates navigation blobs.
+
+Follow-up validation:
+
+- Unity compilation passed.
+- `NavigationSystemTests`: 19/19 passed, including movement out of an envelope and
+  back onto a normal route, crowd filtering, hazard blocking and solid enclosure.
+- `ObstacleGeometryTests`: 236/236 passed, including the actual Level 8 cutout and
+  low protrusion/overhead canopy tests.
+- `GroundHazardNavigationTests`: 16/16 passed.
+- `SnakeEnemyTests`: 52/52 passed.
+- `ElitePunchGeometryTests`: 33/33 passed.
+- The broader `Navigation` filter passed 56/59 checks. Three existing chapter
+  checks fail at `CampaignBarricadeRoomTests.AssertRooms` line 29: the assertion
+  expects four required hits while existing gate settings specify three. Neither
+  that assertion nor those gate settings were changed in this follow-up.
+- The .NET build again exited 1 with zero compiler diagnostics; Unity compilation
+  and focused tests provide compilation/behavior evidence.
+- Live Campaign 8 check with 270 enemies: a body placed at (-15, 0, 2) spent 68
+  observed frames using physical escape, then resumed normal routing. After 300
+  advancing frames it was at (-20.82409, 0, 8.575907), with escape mode cleared.
+  Runtime contact attempts/damage were temporarily suppressed to isolate voluntary
+  navigation. No teleport or source asset edit was used. The 240 timing samples
+  reported CPU median 16.273 ms / p95 38.161 ms; this crowded Editor snapshot is
+  not a controlled performance comparison or target-hardware acceptance.
+- Play mode was stopped and `New Scene 1` restored, discarding the temporary
+  population and contact overrides.

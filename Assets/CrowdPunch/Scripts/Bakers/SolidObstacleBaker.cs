@@ -20,7 +20,7 @@ namespace CrowdPunch.Bakers
                 var renderer = GetComponent<MeshRenderer>(filter);
                 if (renderer == null) continue;
                 DependsOn(renderer);
-                if (!renderer.enabled || renderer.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly) continue;
+                if (!IsActiveAndEnabled(renderer) || renderer.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly) continue;
                 DependsOn(filter);
                 DependsOn(filter.transform);
                 DependsOn(filter.sharedMesh);

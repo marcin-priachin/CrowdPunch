@@ -48,7 +48,16 @@ namespace CrowdPunch.Systems.Movement
                 if (grid.Data.IsCreated && SystemAPI.HasComponent<NavigationAgent>(entity))
                 {
                     var headVelocity = SystemAPI.GetComponent<PhysicsVelocity>(entity);
-                    headVelocity.Linear.xz = SnakeHeadMovement.LimitStep(ref grid.Data.Value, pose.ValueRO.Position.xz,
+                    bool physicalEscape = SystemAPI.HasComponent<NavigationPathState>(entity)
+                        && SystemAPI.GetComponent<NavigationPathState>(entity).Escaping != 0
+                        && SystemAPI.HasSingleton<PhysicsWorldSingleton>() && SystemAPI.HasComponent<PhysicsCollider>(entity);
+                    if (physicalEscape)
+                    {
+                        if (!NavigationPhysicalEscape.Clear(SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld,
+                            entity, pose.ValueRO, SystemAPI.GetComponent<PhysicsCollider>(entity), SystemAPI.GetComponentLookup<Enemy>(true),
+                            pose.ValueRO.Position.xz + headVelocity.Linear.xz * dt)) headVelocity.Linear.xz = float2.zero;
+                    }
+                    else headVelocity.Linear.xz = SnakeHeadMovement.LimitStep(ref grid.Data.Value, pose.ValueRO.Position.xz,
                         headVelocity.Linear.xz, SystemAPI.GetComponent<NavigationAgent>(entity).Radius, dt);
                     SystemAPI.SetComponent(entity, headVelocity);
                 }
@@ -77,6 +86,12 @@ namespace CrowdPunch.Systems.Movement
                         amplitude *= .5f; desired = center + side * amplitude;
                         clear = NavigationGeometry.Segment(ref grid.Data.Value, p.Position.xz, desired.xz, t.OrbRadius);
                     }
+                    if (!clear && NavigationGeometry.Anchor(ref grid.Data.Value, p.Position.xz,
+                        NavigationGeometry.ClearanceClass(ref grid.Data.Value, t.OrbRadius)) < 0
+                        && NavigationGeometry.Cell(ref grid.Data.Value, desired.xz) >= 0
+                        && SystemAPI.HasSingleton<PhysicsWorldSingleton>() && SystemAPI.HasComponent<PhysicsCollider>(orb))
+                        clear = NavigationPhysicalEscape.Clear(SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld,
+                            orb, p, SystemAPI.GetComponent<PhysicsCollider>(orb), SystemAPI.GetComponentLookup<Enemy>(true), desired.xz);
                     var velocity = SystemAPI.GetComponent<PhysicsVelocity>(orb);
                     float2 target = clear ? (desired.xz - p.Position.xz) / dt : float2.zero;
                     float maximum = math.max(8, t.PursuitSpeed * 3);
