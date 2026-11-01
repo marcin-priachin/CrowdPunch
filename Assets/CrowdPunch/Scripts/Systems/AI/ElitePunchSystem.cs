@@ -260,8 +260,13 @@ namespace CrowdPunch.Systems.AI
             ref NavigationGridBlob geometry = ref grid.Data.Value;
             float radius = EntityManager.GetComponentData<NavigationAgent>(elite).Radius;
             int clearance = NavigationGeometry.ClearanceClass(ref geometry, radius);
-            if (clearance < 0 || NavigationGeometry.Anchor(ref geometry, position.xz, clearance) >= 0
-                || !NavigationGeometry.TryEscape(ref geometry, position.xz, radius, clearance, out float2 entry)) return false;
+            if (clearance < 0 || NavigationGeometry.Anchor(ref geometry, position.xz, clearance) >= 0) return false;
+            bool escaped = NavigationGeometry.TryEscape(ref geometry, position.xz, radius, clearance, out float2 entry);
+            if (!escaped && SystemAPI.HasSingleton<PhysicsWorldSingleton>() && EntityManager.HasComponent<PhysicsCollider>(elite))
+                escaped = NavigationPhysicalEscape.TryFind(ref geometry, SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld,
+                    elite, EntityManager.GetComponentData<LocalTransform>(elite), EntityManager.GetComponentData<PhysicsCollider>(elite),
+                    GetComponentLookup<Enemy>(true), clearance, out entry);
+            if (!escaped) return false;
             destination = new float3(entry.x, position.y, entry.y);
             return true;
         }

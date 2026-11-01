@@ -9,11 +9,25 @@ spaces between separate visible parts remain open; bounding boxes and convex hul
 are no longer substituted for their surfaces. Renderer, mesh and transform dependencies
 are registered for rebaking. Missing visible geometry is an authoring error.
 
-`SolidObstacleAuthoring` retains its axis-aligned placement/navigation footprint and
-greybox height. The orange gizmo represents that conservative navigation envelope;
-it is not the physical collision shape. Navigation/spawn planning continues to use
-the existing rectangles. No obstacle placement, arena bounds, routes, objective
-settings, render meshes or baked lighting was changed by this collision correction.
+`SolidObstacleAuthoring` retains its axis-aligned placement footprint and greybox
+height. The orange gizmo represents the authored navigation envelope, not the
+physical collision shape. `NavigationArenaBaker` expands each rectangle when visible
+geometry protrudes beyond it within the authored height band. Triangle edges are
+clipped to that band, so overhead tree canopies do not close ground routes. Mesh,
+renderer and transform dependencies trigger rebaking of those footprints. No obstacle
+placement, arena bounds, objective settings, render meshes or baked lighting changed.
+
+An active body can occupy a physically clear rock cutout inside a conservative
+navigation rectangle. If the usual geometric reentry fails, `EnemyNavigationSystem`
+uses `NavigationPhysicalEscape` to sweep its actual scaled/rotated collider toward
+nearby class-valid grid cells. Terrain and objective solids block these sweeps;
+crowd entities and triggers do not. Resting contact permits tangent/outward motion.
+The bounded search reaches up to 16 cell rings, caches the escape destination in
+`NavigationPathState`, retries searches at 0.25-second intervals, and rechecks the
+cached sweep each update. Old searches are invalidated. Escape writes movement
+intent only; physics still moves the enemy. Normal pathfinding resumes after reentry.
+Elite setup uses the same physical fallback, while the hazard overlay preserves
+terrain-validated escape intent only if its complete segment also avoids hazards.
 
 Saved campaign and legacy-gauntlet perimeters use nonconvex MeshColliders referencing
 their rendered MeshFilter meshes. `ObstacleColliderAlignment` also keeps level and

@@ -22,6 +22,18 @@ namespace CrowdPunch.Bakers
                 float2 p = new float2(obstacle.transform.position.x, obstacle.transform.position.z);
                 float2 half = new float2(obstacle.Size.x, obstacle.Size.y) * .5f;
                 rectangles[i] = new NavigationRectangle { Minimum = p - half, Maximum = p + half };
+                foreach (var filter in GetComponentsInChildren<UnityEngine.MeshFilter>(obstacle))
+                {
+                    var renderer = GetComponent<UnityEngine.MeshRenderer>(filter);
+                    if (renderer == null) continue;
+                    DependsOn(renderer);
+                    if (!IsActiveAndEnabled(renderer) || renderer.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly || filter.sharedMesh == null) continue;
+                    DependsOn(filter); DependsOn(filter.transform); DependsOn(filter.sharedMesh);
+                    // Include protruding low geometry without allowing an overhead tree canopy
+                    // to close a ground-level route. The authored footprint remains the minimum.
+                    rectangles[i] = SolidObstacleGeometry.ExpandNavigationFootprint(rectangles[i], filter,
+                        obstacle.transform.position.y, obstacle.transform.position.y + obstacle.height);
+                }
             }
             for (int i = 0; i < covers.Length; i++)
             {

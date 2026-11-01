@@ -5,11 +5,13 @@ using CrowdPunch.Authoring;
 using CrowdPunch.Components;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.InputBridge;
+using CrowdPunch.Systems.AI;
 using CrowdPunch.Utilities;
 using NUnit.Framework;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Transforms;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -21,6 +23,58 @@ namespace CrowdPunch.Tests
     {
         private static IEnumerable<string> Scenes() => AssetDatabase.FindAssets("t:Scene", new[] { "Assets/CrowdPunch/Scenes" })
             .Select(AssetDatabase.GUIDToAssetPath).OrderBy(p => p);
+
+        [Test]
+        public void Vision004_NavigationCoversLowProtrusionsWithoutBlockingOnOverheadCanopy()
+        {
+            var low = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var canopy = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            try
+            {
+                low.transform.position = new Vector3(2, .5f, 0); low.transform.localScale = new Vector3(2, 1, 2);
+                canopy.transform.position = new Vector3(0, 6, 0); canopy.transform.localScale = new Vector3(20, 2, 20);
+                var footprint = new NavigationRectangle { Minimum = new float2(-1), Maximum = new float2(1) };
+                footprint = SolidObstacleGeometry.ExpandNavigationFootprint(footprint, low.GetComponent<MeshFilter>(), 0, 2);
+                footprint = SolidObstacleGeometry.ExpandNavigationFootprint(footprint, canopy.GetComponent<MeshFilter>(), 0, 2);
+                Assert.That(footprint.Minimum, Is.EqualTo(new float2(-1)));
+                Assert.That(footprint.Maximum, Is.EqualTo(new float2(3, 1)));
+            }
+            finally { Object.DestroyImmediate(low); Object.DestroyImmediate(canopy); }
+        }
+
+        [Test]
+        public void Vision004_LevelEightRockCutoutHasAPhysicalNavigationExit()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/CrowdPunch/Scenes/Campaign/Campaign_08/Campaign_08 Sub Scene.unity");
+            try
+            {
+                var solid = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<SolidObstacleAuthoring>())
+                    .Single(o => o.transform.position.x < 0);
+                using var rock = SolidObstacleGeometry.CreateCollider(solid.transform, solid.GetComponentsInChildren<MeshFilter>());
+                using var body = Unity.Physics.CapsuleCollider.Create(new CapsuleGeometry
+                    { Radius = .5f, Vertex0 = new float3(0, -.5f, 0), Vertex1 = new float3(0, .5f, 0) });
+                using var rectangles = new Unity.Collections.NativeArray<NavigationRectangle>(new[] { new NavigationRectangle
+                    { Minimum = new float2(-16, 0), Maximum = new float2(-8, 12) } }, Unity.Collections.Allocator.Temp);
+                using var grid = NavigationGridConstruction.Build(new float2(-50), new float2(50), 1,
+                    new float3(.62f, .97f, 1.62f), rectangles, Unity.Collections.Allocator.Persistent);
+                using var physicsOwner = new PhysicsWorld(1, 0, 0); var physics = physicsOwner;
+                var bodies = physics.StaticBodies;
+                bodies[0] = new RigidBody { Collider = rock,
+                    WorldFromBody = new RigidTransform(quaternion.identity, solid.transform.position), Scale = 1 };
+                physics.CollisionWorld.BuildBroadphase(ref physics, .02f, float3.zero, true);
+                using var world = new World("Level eight physical cutout");
+                var enemy = world.EntityManager.CreateEntity(typeof(Enemy));
+                var system = world.GetOrCreateSystem<EnemyNavigationSystem>();
+                var enemies = world.Unmanaged.ResolveSystemStateRef(system).GetComponentLookup<Enemy>(true);
+                var pose = LocalTransform.FromPosition(new float3(-15, 0, 2));
+                Assert.That(NavigationGeometry.Anchor(ref grid.Value, pose.Position.xz, 0), Is.LessThan(0));
+                Assert.False(NavigationGeometry.TryEscape(ref grid.Value, pose.Position.xz, .5f, 0, out _));
+                Assert.True(NavigationPhysicalEscape.TryFind(ref grid.Value, physics.CollisionWorld, enemy, pose,
+                    new PhysicsCollider { Value = body }, enemies, 0, out float2 exit));
+                Assert.That(NavigationGeometry.Anchor(ref grid.Value, exit, 0), Is.GreaterThanOrEqualTo(0));
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
 
         [TestCaseSource(nameof(Scenes))]
         public void Vision004_SavedObstacleSurfacesAndPerimeterContainment(string path)

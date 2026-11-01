@@ -4,12 +4,45 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using UnityEngine;
+using CrowdPunch.Components;
 
 namespace CrowdPunch.Utilities
 {
     /// <summary>Builds static collision surfaces from an obstacle's rendered child meshes.</summary>
     public static class SolidObstacleGeometry
     {
+        public static NavigationRectangle ExpandNavigationFootprint(NavigationRectangle footprint, MeshFilter surface, float minimumY, float maximumY)
+        {
+            var vertices = surface.sharedMesh.vertices;
+            var indices = surface.sharedMesh.triangles;
+            var matrix = surface.transform.localToWorldMatrix;
+            for (int i = 0; i < indices.Length; i += 3)
+            {
+                float3 a = matrix.MultiplyPoint3x4(vertices[indices[i]]);
+                float3 b = matrix.MultiplyPoint3x4(vertices[indices[i + 1]]);
+                float3 c = matrix.MultiplyPoint3x4(vertices[indices[i + 2]]);
+                IncludeEdge(a, b, minimumY, maximumY, ref footprint);
+                IncludeEdge(b, c, minimumY, maximumY, ref footprint);
+                IncludeEdge(c, a, minimumY, maximumY, ref footprint);
+            }
+            return footprint;
+        }
+
+        private static void IncludeEdge(float3 a, float3 b, float low, float high, ref NavigationRectangle footprint)
+        {
+            float from = 0, to = 1, dy = b.y - a.y;
+            if (math.abs(dy) < 1e-6f) { if (a.y < low || a.y > high) return; }
+            else
+            {
+                float t0 = (low - a.y) / dy, t1 = (high - a.y) / dy;
+                from = math.max(0, math.min(t0, t1)); to = math.min(1, math.max(t0, t1));
+                if (from > to) return;
+            }
+            float2 p = math.lerp(a, b, from).xz, q = math.lerp(a, b, to).xz;
+            footprint.Minimum = math.min(footprint.Minimum, math.min(p, q));
+            footprint.Maximum = math.max(footprint.Maximum, math.max(p, q));
+        }
+
         public static BlobAssetReference<Unity.Physics.Collider> CreateCollider(Transform root, MeshFilter[] surfaces)
         {
             using var vertices = new NativeList<float3>(Allocator.Temp);
