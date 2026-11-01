@@ -237,7 +237,9 @@ duration and step budget. Include initial aim, existing time-limited homing, dam
 ground constraints and approximate momentum transfer/deflection at contacts. Do not
 draw paths originating from enemies only struck indirectly. Expose dot diameter,
 spacing and RGBA colour. Mark predicted enemy/objective contacts on the dotted
-trajectory with a flat cartoony impact accent in the same RGBA colour. The forecast is advisory: future crowd movement, contacts
+trajectory with a flat cartoony impact accent in the same RGBA colour. Display
+trajectory indicators and their accents on the arena floor with normal scene-depth
+occlusion so characters and objects cover them. The forecast is advisory: future crowd movement, contacts
 and specialized mechanics can change the actual result.
 
 ### PLAYER-004 — Directional Certainty

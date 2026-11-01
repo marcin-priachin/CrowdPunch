@@ -275,6 +275,7 @@ namespace CrowdPunch.Tests
             em.AddComponentData(source, new PunchAimAssistTarget());
             em.AddComponentData(source, new EnemyGroundConstraint { HasGround = 1 });
             em.AddComponentData(em.CreateEntity(), new PlayerSnapshot());
+            em.AddComponentData(em.CreateEntity(), new ArenaGroundPlane { SurfaceHeight = -.75f });
             em.AddComponentData(em.CreateEntity(), settings);
             using var physics = Physics(source, victim, protectedEnemy);
             em.AddComponentData(em.CreateEntity(), new PhysicsWorldSingleton { PhysicsWorld = physics });
@@ -289,6 +290,9 @@ namespace CrowdPunch.Tests
                 var system = world.GetOrCreateSystem<PresentationBridgeSystem>();
                 system.Update(world.Unmanaged);
                 Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.GreaterThan(1));
+                Assert.That(bridge.TrajectoryGroundHeight, Is.EqualTo(-.75f));
+                Assert.That(bridge.TrajectoryPreviewSegments[0].Start.y, Is.EqualTo(0f),
+                    "Ground projection must not change the body-height forecast used for collisions.");
                 Assert.That(bridge.TrajectoryPreviewSegments.All(s => s.IsDotted && !s.IsCollision), Is.True);
                 Assert.That(bridge.TrajectoryPreviewSegments.Count(s => s.StartsPath), Is.EqualTo(1));
                 Assert.That(bridge.TrajectoryPreviewImpacts.Count, Is.EqualTo(1));

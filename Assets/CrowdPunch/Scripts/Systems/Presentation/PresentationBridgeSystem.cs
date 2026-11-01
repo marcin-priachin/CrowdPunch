@@ -73,7 +73,8 @@ namespace CrowdPunch.Systems.Presentation
             // Preserve the displayed ECS snapshot until the next fixed step consumes the click.
             if (bridge.HasPendingPunch) return;
             lastPreviewTime = now;
-            bridge.BeginTrajectoryPreview();
+            bridge.BeginTrajectoryPreview(SystemAPI.TryGetSingleton<ArenaGroundPlane>(out var previewGround)
+                ? previewGround.SurfaceHeight : 0f);
 
             if (!bridge.IsPunchPreviewAvailable
                 || !bridge.UseDottedTrajectory && bridge.PunchPreviewLength <= 0f && bridge.CollisionPreviewLength <= 0f)

@@ -62,6 +62,15 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-11-01 - Grounded trajectory indication
+
+Decision: Display trajectory indicators and contact accents on the ground so they
+do not obscure characters or objects. Copy the authored arena floor height through
+the presentation bridge, project the visuals onto it, and retain normal depth
+occlusion. Forecasts continue to use the original body-height collision geometry.
+
+GDD rules: PLAYER-003/004, INFO-005.
+
 ### 2026-11-01 - Dotted trajectory contact accents
 
 Decision: Add a flat cartoony accent on the dotted trajectory at predicted contacts

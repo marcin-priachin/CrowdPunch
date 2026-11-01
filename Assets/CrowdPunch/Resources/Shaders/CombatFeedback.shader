@@ -8,6 +8,7 @@ Shader "CrowdPunch/CombatFeedback"
         {
             Blend SrcAlpha OneMinusSrcAlpha
             ZWrite Off
+            ZTest LEqual
             Cull Off
             HLSLPROGRAM
             #pragma vertex Vert

@@ -1998,6 +1998,13 @@ eight-spike comic bursts to the same flat mesh, using the exact trajectory RGBA.
 Dots leave a small gap around each burst to avoid overlapping transparent geometry.
 `TrajectoryImpactDiameter` defaults to 1.1m; zero hides accents. Every new preview
 clears contact samples alongside segments, including switching back to arrows.
+`PresentationBridgeSystem` also copies `ArenaGroundPlane.SurfaceHeight` through
+`PlayerEcsBridge.TrajectoryGroundHeight` (0m fallback for standalone scenes).
+The renderer projects dots, accents and arrow segments onto that plane with 0.015m
+clearance to avoid floor z-fighting. Dot spacing and accent gaps use horizontal
+travel. The shared shader explicitly uses `ZTest LEqual`, so opaque characters and
+objects occlude indicators normally. Only the drawing is projected: forecast
+endpoints/contact samples remain at body height for collision and aim commitment.
 See `Docs/Verification/DottedLaunchTrajectory.md` for checks and limitations.
 
 ### Presentation

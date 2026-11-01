@@ -15,7 +15,7 @@ namespace CrowdPunch.Mono.Player
         // Keep serialized dimensions as a fallback for older standalone preview scenes.
         [SerializeField, HideInInspector] private float lineLength = 3f;
         [SerializeField, HideInInspector] private float lineWidth = 0.36f;
-        [SerializeField] private float verticalOffset = 0.15f;
+        private const float GroundClearance = 0.015f;
 
         public float LineLength => settings != null ? settings.LaunchArrowLength : Mathf.Max(0f, lineLength);
 
@@ -72,6 +72,7 @@ namespace CrowdPunch.Mono.Player
                 PlayerEcsBridge.TrajectoryPreviewSegment segment = segments[i];
                 if (segment.IsDotted) continue;
                 Vector3 direction = ToVector3(segment.End - segment.Start);
+                direction.y = 0f;
                 float length = direction.magnitude;
                 if (length < 0.001f)
                 {
@@ -86,7 +87,7 @@ namespace CrowdPunch.Mono.Player
                     : lineWidth;
                 // World-space matrices keep the arrow independent of the giant player's scale.
                 Matrix4x4 matrix = Matrix4x4.TRS(
-                    ToVector3(segment.Start) + Vector3.up * verticalOffset,
+                    GroundPosition(segment.Start),
                     Quaternion.LookRotation(direction, up),
                     new Vector3(Mathf.Max(0.01f, width), 1f, length));
                 arrowProperties.SetFloat(OpacityProperty, segment.Opacity);
@@ -119,7 +120,7 @@ namespace CrowdPunch.Mono.Player
             var impacts = ecsBridge.TrajectoryPreviewImpacts;
             float totalLength = 0f;
             foreach (var segment in segments)
-                if (segment.IsDotted) totalLength += math.distance(segment.Start, segment.End);
+                if (segment.IsDotted) totalLength += math.distance(segment.Start.xz, segment.End.xz);
             // Preserve the whole path at extreme tuning/crowd sizes by reducing dot density.
             spacing = Mathf.Max(spacing, totalLength / 16000f);
             float nextDot = 0f;
@@ -127,26 +128,27 @@ namespace CrowdPunch.Mono.Player
             {
                 if (!segment.IsDotted) continue;
                 if (segment.StartsPath) nextDot = 0f;
-                Vector3 delta = ToVector3(segment.End - segment.Start);
+                Vector3 start = GroundPosition(segment.Start);
+                Vector3 delta = GroundPosition(segment.End) - start;
                 float length = delta.magnitude;
                 if (length <= .00001f) continue;
                 Vector3 direction = delta / length;
                 // Carry spacing through bends and time steps instead of bunching dots at every vertex.
                 while (nextDot <= length)
                 {
-                    Vector3 position = ToVector3(segment.Start) + direction * nextDot;
+                    Vector3 position = start + direction * nextDot;
                     bool insideAccent = false;
                     foreach (var impact in impacts)
-                        insideAccent |= math.distancesq(impact.Position, (float3)position)
+                        insideAccent |= math.distancesq(impact.Position.xz, new float2(position.x, position.z))
                             < (impactRadius + diameter * .5f) * (impactRadius + diameter * .5f) && impactRadius > 0f;
-                    if (!insideAccent) AddDot(position + Vector3.up * verticalOffset, diameter * .5f, color);
+                    if (!insideAccent) AddDot(position, diameter * .5f, color);
                     nextDot += spacing;
                 }
                 nextDot -= length;
             }
             if (impactRadius > 0f)
                 foreach (var impact in impacts)
-                    AddImpactAccent(ToVector3(impact.Position) + Vector3.up * verticalOffset,
+                    AddImpactAccent(GroundPosition(impact.Position),
                         ToVector3(impact.Direction), impactRadius, color);
             dottedMesh.Clear();
             if (dotVertices.Count == 0) return;
@@ -157,6 +159,11 @@ namespace CrowdPunch.Mono.Player
             arrowProperties.SetFloat(OpacityProperty, 1f);
             Graphics.DrawMesh(dottedMesh, Matrix4x4.identity, lineMaterial, gameObject.layer, null, 0, arrowProperties,
                 ShadowCastingMode.Off, false, null, LightProbeUsage.Off);
+        }
+
+        private Vector3 GroundPosition(float3 position)
+        {
+            return new Vector3(position.x, ecsBridge.TrajectoryGroundHeight + GroundClearance, position.z);
         }
 
         private void AddImpactAccent(Vector3 center, Vector3 direction, float radius, Color color)

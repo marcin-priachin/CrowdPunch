@@ -69,6 +69,23 @@ Trajectory selection.
 The transient scene was discarded on exiting Play Mode. No trajectory, physics,
 damage or objective response is changed by adding the accents.
 
+## Ground projection and occlusion (2026-11-01)
+
+Trajectory dots, contact bursts and arrows now project onto the authored arena
+floor (`ArenaGroundPlane.SurfaceHeight`), with 0.015m clearance to avoid z-fighting.
+The shader uses normal `ZTest LEqual` occlusion, allowing opaque characters and
+objects to cover the indicators. Body-height samples remain unchanged for launch
+forecasting and direction commitment; spacing and accent gaps use XZ distances.
+Standalone scenes without an authored ground singleton use a 0m floor fallback.
+
+Unity compilation and all 17 trajectory tests passed. The bridge integration check
+used a -0.75m floor with source samples still at 0m. A controlled Play Mode render
+used a -1m floor and original source samples at +0.5m: every one of the 604 dotted
+mesh vertices, including the two impact bursts, lay at -0.985m. A Game View capture
+was visually inspected with an opaque block and capsule placed across the paths;
+both covered the paths, with no dots drawn over their surfaces. Play Mode was
+stopped and scratch capture assets were removed.
+
 ## Forecast limits
 
 This is an advisory direct-body estimate, not a cloned Unity Physics solver or a
