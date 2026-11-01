@@ -76,7 +76,7 @@ namespace CrowdPunch.Editor
                 var p=(a+b)*.5f+new Vector2(delta.y,-delta.x).normalized*.75f;
                 var edge=Box($"Perimeter {i+1:00}",layout,new Vector3(p.x,-.25f,p.y),new Vector3(1.5f,1.5f,delta.magnitude+1.5f),MaterialAsset("GauntletWalls",Color.gray),true);
                 edge.transform.rotation=Quaternion.LookRotation(new Vector3(delta.x,0,delta.y));
-                edge.GetComponent<BoxCollider>().center=new Vector3(0,.5f,0);edge.GetComponent<BoxCollider>().size=new Vector3(1,2,1);
+                ObstacleColliderAlignment.MatchRenderedMesh(edge);
             }
             var bounds=new SerializedObject(arena);
             // Odd width aligns navigation cell centres with each integer-x, 2m gate opening.

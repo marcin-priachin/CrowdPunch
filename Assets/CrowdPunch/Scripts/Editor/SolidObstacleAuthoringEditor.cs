@@ -9,7 +9,7 @@ namespace CrowdPunch.Editor
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
-            EditorGUILayout.HelpBox("Place under the Navigation Arena root. Footprints are world-axis aligned. Keep the visible child mesh silhouette within the orange collision preview; no extra collider is needed.", MessageType.Info);
+            EditorGUILayout.HelpBox("Place under the Navigation Arena root. The orange box is the conservative navigation footprint. Static collision follows enabled, visible child meshes, including their cutouts; no extra collider is needed.", MessageType.Info);
             if (GUILayout.Button("Snap footprint and resize greybox silhouette")) foreach (var item in targets)
                 {
                     var obstacle = (SolidObstacleAuthoring)item; Undo.RecordObject(obstacle.transform, "Snap solid obstacle"); obstacle.Snap();

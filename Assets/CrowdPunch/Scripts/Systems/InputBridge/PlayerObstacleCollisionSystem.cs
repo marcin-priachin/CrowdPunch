@@ -1,4 +1,5 @@
 using CrowdPunch.Mono.Player;
+using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -53,7 +54,11 @@ namespace CrowdPunch.Systems.InputBridge
 
             EnsureSphere(radius, bridge.CollisionLayer);
 
-            float3 castOffset = new float3(0f, radius + Skin, 0f);
+            // The visual/player root can be above the floor. Sweep at the actual grounded
+            // body height so low visible rocks block movement without invisible tall walls.
+            float groundHeight = SystemAPI.TryGetSingleton<ArenaGroundPlane>(out var ground)
+                ? ground.SurfaceHeight : start.y;
+            float3 castOffset = new float3(0f, groundHeight - start.y + radius + Skin, 0f);
             CollisionWorld world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
             start = Depenetrate(world, sphere, start, castOffset);
             if (math.lengthsq(displacement) <= 1e-8f)

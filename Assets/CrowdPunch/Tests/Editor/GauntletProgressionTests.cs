@@ -110,7 +110,8 @@ namespace CrowdPunch.Tests
                 var arena = Find<ArenaAuthoring>(sub);
                 var authorings = sub.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<EnemyWaveSequenceAuthoring>()).ToArray();
                 Assert.That(authorings.Length, Is.EqualTo(number == 16 || number == 29 ? 2 : 1));
-                var floor = Find<MeshCollider>(sub);
+                var floor = sub.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<MeshCollider>())
+                    .Single(c => c.name == "Continuous Convex Floor" || c.name == "Continuous Round Floor");
                 Assert.That(floor.sharedMesh, Is.Not.Null);
                 Assert.That(floor.convex, Is.True,
                     "VISION-004 / COMBAT-018: floor collision must not expose internal triangle edges");
@@ -119,8 +120,8 @@ namespace CrowdPunch.Tests
                     .Select(v => new Vector2(v.x, v.z)).ToArray();
                 AssertInside(outline, marker.PlayerEntryPoint.position, 0.6f);
                 Assert.That(marker.PlayerEntryPoint.position.y, Is.EqualTo(0.5f));
-                foreach (BoxCollider rail in sub.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<BoxCollider>()))
-                    Assert.That(rail.bounds.max.y, Is.GreaterThan(marker.PlayerEntryPoint.position.y + 1.02f), "Perimeter must intercept the elevated player sphere cast");
+                foreach (var rail in sub.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<MeshCollider>()).Where(c => c.name.StartsWith("Perimeter ")))
+                    Assert.That(rail.sharedMesh, Is.SameAs(rail.GetComponent<MeshFilter>().sharedMesh), "VISION-004: perimeter collision follows the visible rocks; player sweeps are floor anchored.");
                 Assert.That(arena.DefeatSize.x, Is.GreaterThan(arena.SpacingSize.x));
                 Assert.That(arena.DefeatSize.z, Is.GreaterThan(arena.SpacingSize.z));
                 for (int x = -1; x <= 1; x += 2)
