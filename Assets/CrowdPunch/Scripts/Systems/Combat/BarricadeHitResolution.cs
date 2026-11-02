@@ -8,6 +8,16 @@ namespace CrowdPunch.Systems.Combat
 {
     internal static class BarricadeHitResolution
     {
+        public static int RemainingAfterHit(int remaining, bool accepted, bool alreadyRecorded)
+            => remaining > 0 && accepted && !alreadyRecorded ? remaining - 1 : remaining;
+
+        public static bool Recorded(DynamicBuffer<BarricadeHitHistory> history, Entity source, uint sequence)
+        {
+            foreach (var hit in history)
+                if (hit.Source == source && hit.LaunchSequence == sequence) return true;
+            return false;
+        }
+
         public static bool AllowsExplosion(EntityManager em, in Barricade wall, Entity source, float3 center)
         {
             if (wall.Cover == Entity.Null) return true;
@@ -35,10 +45,9 @@ namespace CrowdPunch.Systems.Combat
             var wall = em.GetComponentData<Barricade>(target);
             if (wall.HitsRemaining <= 0) return false;
             var history = em.GetBuffer<BarricadeHitHistory>(target);
-            for (int i = 0; i < history.Length; i++)
-                if (history[i].Source == source && history[i].LaunchSequence == sequence) return false;
+            if (Recorded(history, source, sequence)) return false;
             history.Add(new BarricadeHitHistory { Source = source, LaunchSequence = sequence });
-            wall.HitsRemaining--;
+            wall.HitsRemaining = RemainingAfterHit(wall.HitsRemaining, true, false);
             wall.HitSequence++;
             wall.LastHitTime = now;
             wall.LastHitPosition = position;

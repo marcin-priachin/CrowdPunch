@@ -37,6 +37,7 @@ namespace CrowdPunch.Systems.Combat
             EnemyCollisionJob job = new EnemyCollisionJob
             {
                 SnakeHeads = SystemAPI.GetComponentLookup<SnakeHead>(true),
+                Commitments = SystemAPI.GetComponentLookup<CommittedLaunchFlight>(),
                 PairEndpoints = SystemAPI.GetComponentLookup<LinkedPairEndpoint>(true),
                 Pairs = SystemAPI.GetComponentLookup<LinkedPair>(),
                 PairTuning = SystemAPI.GetComponentLookup<LinkedPairTuning>(true),
@@ -81,6 +82,7 @@ namespace CrowdPunch.Systems.Combat
         [BurstCompile]
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
+            public ComponentLookup<CommittedLaunchFlight> Commitments;
             [ReadOnly] public ComponentLookup<SnakeHead> SnakeHeads;
             [ReadOnly] public ComponentLookup<LinkedPairEndpoint> PairEndpoints;
             public ComponentLookup<LinkedPair> Pairs;
@@ -118,6 +120,8 @@ namespace CrowdPunch.Systems.Combat
             {
                 Entity entityA = collisionEvent.EntityA;
                 Entity entityB = collisionEvent.EntityB;
+                RecordCommittedContact(collisionEvent, entityA, entityB, collisionEvent.Normal);
+                RecordCommittedContact(collisionEvent, entityB, entityA, -collisionEvent.Normal);
                 StopHomingOnImpact(collisionEvent, entityA);
                 StopHomingOnImpact(collisionEvent, entityB);
 
@@ -129,6 +133,24 @@ namespace CrowdPunch.Systems.Combat
                 if (enemyA != enemyB)
                 {
                     Entity body = enemyA ? entityA : entityB;
+                    Entity surface = enemyA ? entityB : entityA;
+                    if (!IsUnavailable(body) && LaunchStateLookup.HasComponent(body)
+                        && math.abs(collisionEvent.Normal.y) < .7f)
+                    {
+                        var launch = LaunchStateLookup[body];
+                        if (launch.Phase == EnemyLaunchPhase.Launched
+                            && launch.Owner == EnemyLaunchOwner.Player
+                            && PropagationAimCorrectionRadius > 0f && PropagationAimMaximumAngleDegrees > 0f)
+                        {
+                            var details = collisionEvent.CalculateDetails(ref World);
+                            if (LaunchContactResponse.Meaningful(collisionEvent.Normal, details.EstimatedImpulse, MinimumPropagationImpulse))
+                            {
+                                launch.RicochetSurface = surface;
+                                launch.RicochetNormal = enemyA ? collisionEvent.Normal : -collisionEvent.Normal;
+                                LaunchStateLookup[body] = launch;
+                            }
+                        }
+                    }
                     if (!IsUnavailable(body) && LaunchStateLookup.HasComponent(body)
                         && LaunchStateLookup[body].Phase == EnemyLaunchPhase.Launched && FeedbackLookup.HasComponent(body))
                     {
@@ -176,13 +198,27 @@ namespace CrowdPunch.Systems.Combat
                 return RespawnLookup.HasComponent(entity) && RespawnLookup.IsComponentEnabled(entity);
             }
 
+            private void RecordCommittedContact(CollisionEvent collision, Entity source, Entity other, float3 normal)
+            {
+                if (!Commitments.HasComponent(source) || !Commitments.IsComponentEnabled(source)
+                    || !LaunchStateLookup.HasComponent(source)) return;
+                var flight = Commitments[source];
+                var launch = LaunchStateLookup[source];
+                if (flight.LaunchSequence != launch.LaunchSequence || flight.Cancelled != 0
+                    || launch.Phase != EnemyLaunchPhase.Launched || math.abs(normal.y) > .7f) return;
+                var details = collision.CalculateDetails(ref World);
+                if (!LaunchContactResponse.Meaningful(normal, details.EstimatedImpulse, MinimumPropagationImpulse)) return;
+                CommittedLaunchPlan.RecordContact(ref flight, other, normal);
+                Commitments[source] = flight;
+            }
+
             private void StopHomingOnImpact(CollisionEvent collision, Entity entity)
             {
                 if (!LaunchStateLookup.HasComponent(entity) || math.abs(collision.Normal.y) > .7f) return;
                 var launch = LaunchStateLookup[entity];
                 if (launch.Phase != EnemyLaunchPhase.Launched || launch.HomingTarget == Entity.Null) return;
                 var details = collision.CalculateDetails(ref World);
-                if (details.EstimatedImpulse < math.max(.01f, MinimumPropagationImpulse)) return;
+                if (!LaunchContactResponse.Meaningful(collision.Normal, details.EstimatedImpulse, MinimumPropagationImpulse)) return;
                 LaunchAimPrediction.StopHoming(ref launch);
                 LaunchStateLookup[entity] = launch;
             }

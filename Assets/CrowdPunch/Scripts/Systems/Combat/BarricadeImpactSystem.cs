@@ -70,53 +70,66 @@ namespace CrowdPunch.Systems.Combat
             {
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Launched || !collider.ValueRO.Value.IsCreated) continue;
                 float3 incoming = velocity.ValueRO.Linear;
-                if (math.lengthsq(incoming.xz) < .0001f) continue;
-                float3 displacement = incoming * SystemAPI.Time.DeltaTime;
-                var bounds = collider.ValueRO.Value.Value.CalculateAabb(
-                    new RigidTransform(transform.ValueRO.Rotation, transform.ValueRO.Position), transform.ValueRO.Scale);
-                bounds.Min = math.min(bounds.Min, bounds.Min + displacement);
-                bounds.Max = math.max(bounds.Max, bounds.Max + displacement);
-                bool nearWall = false;
-                foreach (var wallAabb in wallBounds) nearWall |= bounds.Overlaps(wallAabb);
-                if (!nearWall) continue;
-                hits.Clear();
-                var input = new ColliderCastInput(collider.ValueRO.Value, transform.ValueRO.Position,
-                    transform.ValueRO.Position + displacement, transform.ValueRO.Rotation, transform.ValueRO.Scale);
-                world.CastCollider(input, ref hits);
-                // The broadphase still contains the previous step's rotating pose. Query the
-                // current authored shield pose directly, keeping nearer ordinary bodies authoritative.
-                for (int i = hits.Length - 1; i >= 0; i--)
-                    if (em.HasComponent<CoverEnclosure>(hits[i].Entity) || em.HasComponent<RotatingCover>(hits[i].Entity)
-                        || em.HasComponent<TrackObject>(hits[i].Entity))
-                        hits.RemoveAtSwapBack(i);
-                foreach (var coverBody in covers)
-                {
-                    float3 trackDelta = TrackDisplacement(em, coverBody.Entity, SystemAPI.Time.DeltaTime);
-                    var relativeInput = new ColliderCastInput(collider.ValueRO.Value, transform.ValueRO.Position,
-                        transform.ValueRO.Position + displacement - trackDelta, transform.ValueRO.Rotation, transform.ValueRO.Scale);
-                    int first = hits.Length;
-                    coverBody.CastCollider(relativeInput, ref hits);
-                    for (int i = first; i < hits.Length; i++)
-                    {
-                        var hit = hits[i]; hit.Position += trackDelta * hit.Fraction; hits[i] = hit;
-                    }
-                }
                 ColliderCastHit closest = default;
-                float fraction = float.MaxValue;
-                foreach (var hit in hits)
+                float3 contactCenter;
+                if (AuthoritativeLaunchPlan.Owns(em, source, launch.ValueRO))
                 {
-                    if (hit.Entity == source || math.abs(hit.SurfaceNormal.y) > .7f || hit.Fraction >= fraction) continue;
-                    if (SnakeProjectileCollision.IgnoresOwner(em,source,hit.Entity)) continue;
-                    if (em.HasComponent<Barricade>(hit.Entity) && em.GetComponentData<Barricade>(hit.Entity).HitsRemaining <= 0) continue;
-                    float3 relativeIncoming = incoming - TrackDisplacement(em, hit.Entity, SystemAPI.Time.DeltaTime)
-                        / math.max(.0001f, SystemAPI.Time.DeltaTime);
-                    if (math.dot(relativeIncoming, hit.SurfaceNormal) >= -.001f) continue;
-                    closest = hit; fraction = hit.Fraction;
+                    var path = em.GetComponentData<AuthoritativeLaunchPath>(source);
+                    if (path.Contact == Entity.Null || math.abs(path.ContactNormal.y) > .7f
+                        || math.dot(path.IncomingVelocity, path.ContactNormal) >= -.001f) continue;
+                    closest = new ColliderCastHit { Entity = path.Contact, Position = path.ContactPoint, SurfaceNormal = path.ContactNormal };
+                    incoming = path.IncomingVelocity;
+                    contactCenter = path.ScheduledPosition;
                 }
-                if (fraction == float.MaxValue) continue;
+                else
+                {
+                    if (math.lengthsq(incoming.xz) < .0001f) continue;
+                    float3 displacement = incoming * SystemAPI.Time.DeltaTime;
+                    var bounds = collider.ValueRO.Value.Value.CalculateAabb(
+                        new RigidTransform(transform.ValueRO.Rotation, transform.ValueRO.Position), transform.ValueRO.Scale);
+                    bounds.Min = math.min(bounds.Min, bounds.Min + displacement);
+                    bounds.Max = math.max(bounds.Max, bounds.Max + displacement);
+                    bool nearWall = false;
+                    foreach (var wallAabb in wallBounds) nearWall |= bounds.Overlaps(wallAabb);
+                    if (!nearWall) continue;
+                    hits.Clear();
+                    var input = new ColliderCastInput(collider.ValueRO.Value, transform.ValueRO.Position,
+                        transform.ValueRO.Position + displacement, transform.ValueRO.Rotation, transform.ValueRO.Scale);
+                    world.CastCollider(input, ref hits);
+                    // The broadphase still contains the previous step's rotating pose. Query the
+                    // current authored shield pose directly, keeping nearer ordinary bodies authoritative.
+                    for (int i = hits.Length - 1; i >= 0; i--)
+                        if (em.HasComponent<CoverEnclosure>(hits[i].Entity) || em.HasComponent<RotatingCover>(hits[i].Entity)
+                            || em.HasComponent<TrackObject>(hits[i].Entity))
+                            hits.RemoveAtSwapBack(i);
+                    foreach (var coverBody in covers)
+                    {
+                        float3 trackDelta = TrackDisplacement(em, coverBody.Entity, SystemAPI.Time.DeltaTime);
+                        var relativeInput = new ColliderCastInput(collider.ValueRO.Value, transform.ValueRO.Position,
+                            transform.ValueRO.Position + displacement - trackDelta, transform.ValueRO.Rotation, transform.ValueRO.Scale);
+                        int first = hits.Length;
+                        coverBody.CastCollider(relativeInput, ref hits);
+                        for (int i = first; i < hits.Length; i++)
+                        {
+                            var hit = hits[i]; hit.Position += trackDelta * hit.Fraction; hits[i] = hit;
+                        }
+                    }
+                    float fraction = float.MaxValue;
+                    foreach (var hit in hits)
+                    {
+                        if (hit.Entity == source || math.abs(hit.SurfaceNormal.y) > .7f || hit.Fraction >= fraction) continue;
+                        if (SnakeProjectileCollision.IgnoresOwner(em,source,hit.Entity)) continue;
+                        if (em.HasComponent<Barricade>(hit.Entity) && em.GetComponentData<Barricade>(hit.Entity).HitsRemaining <= 0) continue;
+                        float3 relativeIncoming = incoming - TrackDisplacement(em, hit.Entity, SystemAPI.Time.DeltaTime)
+                            / math.max(.0001f, SystemAPI.Time.DeltaTime);
+                        if (math.dot(relativeIncoming, hit.SurfaceNormal) >= -.001f) continue;
+                        closest = hit; fraction = hit.Fraction;
+                    }
+                    if (fraction == float.MaxValue) continue;
+                    contactCenter = transform.ValueRO.Position + displacement * closest.Fraction;
+                }
                 if (em.HasComponent<RotatingCover>(closest.Entity))
                 {
-                    float3 contactCenter = transform.ValueRO.Position + displacement * closest.Fraction;
                     var player = SystemAPI.HasSingleton<PlayerSnapshot>() ? SystemAPI.GetSingleton<PlayerSnapshot>() : default;
                     em.GetBuffer<CoverReflection>(closest.Entity).Add(new CoverReflection {
                         Source = source, LaunchSequence = launch.ValueRO.LaunchSequence,
@@ -158,7 +171,7 @@ namespace CrowdPunch.Systems.Combat
                     float3 normal = math.normalizesafe(new float3(closest.SurfaceNormal.x, 0, closest.SurfaceNormal.z));
                     em.GetBuffer<BarricadeRebound>(closest.Entity).Add(new BarricadeRebound {
                         Source = source, LaunchSequence = launch.ValueRO.LaunchSequence,
-                        ContactCenter = transform.ValueRO.Position + displacement * closest.Fraction,
+                        ContactCenter = contactCenter,
                         Normal = normal, IncomingVelocity = incoming });
                 }
             }

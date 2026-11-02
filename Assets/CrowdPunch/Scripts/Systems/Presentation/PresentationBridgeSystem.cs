@@ -126,7 +126,11 @@ namespace CrowdPunch.Systems.Presentation
                     launchDirection = math.normalizesafe(
                         math.lerp(punchDirection, positionDirection, positionWeight), positionDirection);
                 }
+                bool hasPoint = PunchAimAssist.TryGetLockedPoint(state.EntityManager, enemy, enemyPosition, out float3 aimPoint);
+                Entity aimTarget = hasPoint ? SystemAPI.GetComponent<PunchAimAssistTarget>(enemy).Target : Entity.Null;
                 sources.Add(new LaunchPreviewSource { Entity = enemy, Direction = launchDirection,
+                    HasAimPoint = hasPoint ? (byte)1 : (byte)0, AimPoint = aimPoint, AimTarget = aimTarget,
+                    Damage = bridge.PunchPreviewDamage,
                     Speed = SystemAPI.HasComponent<DasherSettings>(enemy)
                         ? SystemAPI.GetComponent<DasherSettings>(enemy).DashSpeed : bridge.PunchPreviewStrength });
                 if ((bridge.UseDottedTrajectory || bridge.PunchPreviewLength > 0f) && SystemAPI.HasComponent<PunchAimAssistTarget>(enemy))
@@ -135,6 +139,15 @@ namespace CrowdPunch.Systems.Presentation
                     aim.PreviewDirection = launchDirection;
                     aim.PreviewTarget = PunchAimAssist.IsValidTarget(state.EntityManager, enemy, aim.Target) ? aim.Target : Entity.Null;
                     aim.PreviewRevision = bridge.TrajectoryPreviewRevision;
+                    aim.PreviewAimPoint = aimPoint;
+                    aim.PreviewHasAimPoint = hasPoint ? (byte)1 : (byte)0;
+                    aim.PreviewTargetGeneration = CommittedLaunchPlan.Generation(state.EntityManager, aimTarget);
+                    aim.PreviewPlanSeconds = 0f;
+                    aim.PreviewHasAuthoritativePath = 0;
+                    if (SystemAPI.HasBuffer<DisplayedLaunchRebound>(enemy))
+                        SystemAPI.GetBuffer<DisplayedLaunchRebound>(enemy).Clear();
+                    if (SystemAPI.HasBuffer<DisplayedLaunchPathPoint>(enemy))
+                        SystemAPI.GetBuffer<DisplayedLaunchPathPoint>(enemy).Clear();
                     SystemAPI.SetComponent(enemy, aim);
                 }
                 if (!bridge.UseDottedTrajectory && bridge.PunchPreviewLength > 0f)
@@ -151,6 +164,7 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     var aim = SystemAPI.GetComponent<PunchAimAssistTarget>(shot);
                     aim.PreviewDirection = direction; aim.PreviewTarget = aim.Target;
+                    aim.PreviewTargetGeneration = CommittedLaunchPlan.Generation(state.EntityManager, aim.Target);
                     aim.PreviewRevision = bridge.TrajectoryPreviewRevision;
                     SystemAPI.SetComponent(shot, aim);
                 }
@@ -165,13 +179,40 @@ namespace CrowdPunch.Systems.Presentation
                     || !SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var trajectorySettings)) return;
                 using var points = new NativeList<float3>(Allocator.Temp);
                 using var impacts = new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+                using var rebounds = new NativeList<LaunchReboundPlan>(Allocator.Temp);
+                using var path = new NativeList<LaunchPathPoint>(Allocator.Temp);
                 float3 gravity = SystemAPI.TryGetSingleton<PhysicsStep>(out var step) ? step.Gravity : PhysicsStep.Default.Gravity;
                 EnemyDefeatBounds? defeatBounds = SystemAPI.TryGetSingleton<EnemyDefeatBounds>(out var bounds) ? bounds : null;
+                float fixedTimestep = state.World.GetExistingSystemManaged<FixedStepSimulationSystemGroup>()?.Timestep
+                    ?? DirectLaunchTrajectoryPrediction.DefaultTimestep;
                 foreach (var source in sources)
                 {
                     DirectLaunchTrajectoryPrediction.Trace(state.EntityManager, trajectoryPhysics.CollisionWorld,
                         source, sources.AsArray(), trajectorySettings, bridge.TrajectoryMaximumSeconds,
-                        bridge.TrajectorySteps, points, gravity, defeatBounds, impacts);
+                        bridge.TrajectorySteps, points, gravity, defeatBounds, impacts,
+                        SystemAPI.GetComponent<PlayerSnapshot>(playerEntity), fixedTimestep, rebounds: rebounds, path: path);
+                    if (SystemAPI.HasBuffer<DisplayedLaunchPathPoint>(source.Entity))
+                    {
+                        var displayedPath = SystemAPI.GetBuffer<DisplayedLaunchPathPoint>(source.Entity);
+                        displayedPath.Clear();
+                        foreach (var point in path) displayedPath.Add(new DisplayedLaunchPathPoint { Value = point });
+                    }
+                    if (SystemAPI.HasBuffer<DisplayedLaunchRebound>(source.Entity))
+                    {
+                        var displayed = SystemAPI.GetBuffer<DisplayedLaunchRebound>(source.Entity);
+                        displayed.Clear();
+                        foreach (var rebound in rebounds) displayed.Add(new DisplayedLaunchRebound { Value = rebound });
+                    }
+                    if (SystemAPI.HasComponent<PunchAimAssistTarget>(source.Entity))
+                    {
+                        var aim = SystemAPI.GetComponent<PunchAimAssistTarget>(source.Entity);
+                        aim.PreviewPlanSeconds = math.min(bridge.TrajectoryMaximumSeconds,
+                            bridge.TrajectorySteps * fixedTimestep);
+                        aim.PreviewHasAuthoritativePath = path.Length > 1 && SystemAPI.HasBuffer<DisplayedLaunchPathPoint>(source.Entity)
+                            && SystemAPI.HasComponent<AuthoritativeLaunchPath>(source.Entity) && SystemAPI.HasComponent<PhysicsMassOverride>(source.Entity)
+                            ? (byte)1 : (byte)0;
+                        SystemAPI.SetComponent(source.Entity, aim);
+                    }
                     for (int i = 1; i < points.Length; i++)
                         bridge.AddDottedTrajectory(points[i - 1], points[i], i == 1);
                     foreach (var impact in impacts)

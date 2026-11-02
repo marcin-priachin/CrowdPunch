@@ -242,6 +242,62 @@ trajectory indicators and their accents on the arena floor with normal scene-dep
 occlusion so characters and objects cover them. The forecast is advisory: future crowd movement, contacts
 and specialized mechanics can change the actual result.
 
+Ricochet assistance amendment (2026-11-02): The dotted trajectory includes the same
+bounded outgoing target correction and renewed guidance used by player-owned enemy
+bodies after a ricochet (COMBAT-012). Direct launch direction and commitment continue
+to use the shared player aim solution (PLAYER-004).
+
+Forecast consistency amendment (2026-11-02): Advance the dotted forecast using the
+current ECS physics fixed timestep. Duration and step count are separate upper
+bounds; exhausting the step budget truncates the horizon instead of enlarging the
+timestep. Apply rebound correction/guidance at the post-physics step boundary and
+share applicable impact thresholds, barricade destruction/pass-through and boss
+safety decisions with runtime. Retain an advisory estimate of ordinary solver
+contacts and the existing moving-crowd limits. Compare frozen pre-punch forecasts
+against real physics samples, contact timing and outgoing directions in regression
+checks; this does not make bodies follow a predetermined path.
+
+Committed aim/rebound amendment (2026-11-02): A player punch with a valid displayed
+snapshot commits that source body's world-space aim point and, in dotted mode, a
+bounded sequence of displayed expected rebound surfaces, normals and outgoing
+directions. Limited homing steers toward the saved point rather than chasing later
+target motion. After actual contact with the expected surface and a compatible
+normal, bounded correction aligns outgoing velocity with the displayed direction,
+preserving actual horizontal speed and vertical velocity. Capture the last shown
+snapshot at the click; later previews cannot overwrite the active plan.
+Unexpected meaningful contacts, conflicting simultaneous surfaces, invalid/reused
+targets, blocked routes, expired plans or incompatible corrections cancel the
+remaining commitment without reacquiring another target during that launch.
+Re-punch replaces it. Never steer into the contacted solid or override boss safety.
+This supersedes advisory-only launch intent for directly punched bodies; contact
+positions, crowd reactions and later motion remain physical estimates. Do not
+follow the complete dotted path or commit indirectly launched collision chains.
+
+Authoritative-path amendment (2026-11-02): Supersede the preceding limited-commitment
+restriction for a directly punched body with a valid displayed dotted path. Copy
+the complete saved body-height polyline at the click and drive that source through
+its vertices in order using a temporary ECS kinematic velocity motor. Preserve the
+displayed geometry rather than chasing targets or accepting crowd-induced source
+deflection. Targets may move away or disappear; damage and propagation require real
+contacts and are never awarded from a prediction. Crowd bodies remain in Unity
+Physics and receive physical impacts from the motor-driven source.
+
+Unexpected solid geometry interrupts the motor without crossing the obstacle.
+Expected live surface contacts permit the saved turn. Current rotating cover
+and track geometry participate in obstruction checks. Confirmed live surface contacts
+feed the existing objective and boss impact rules using incoming flight speed and
+original gameplay mass, including when a partial contact step has a smaller motor
+velocity. Expected boss contacts permit the saved turn, while boss protection,
+active-hand/rolling ownership changes, safety, tether and ground rules retain priority.
+Unexpected contacts resolve the hit before releasing the motor. No transform teleport
+or second physics world is used. Visit bends at fixed-step boundaries, allowing
+contact timing to quantize rather than cutting a corner. At the captured path's end,
+stop the source's launch velocity and resume normal recovery/deferred defeat; the
+visible endpoint must also end a budget-limited launch rather than allow unindicated
+coasting. Re-punch,
+reset, respawn and launch replacement release the old motor. Arrow mode retains
+its previous initial-point guidance; indirectly launched bodies stay dynamic.
+
 ### PLAYER-004 — Directional Certainty
 
 Status: Must
@@ -372,6 +428,33 @@ A sufficiently forceful collision from one `Launched` enemy into an `Active` or 
 When an enemy becomes `Launched` through ordinary enemy-to-enemy propagation, use its solver-produced horizontal velocity as the initial direction and search within the configured propagation aim-correction radius and maximum forward angle for a living `Active` or `Recovering` enemy or an intact eligible barricade. Select the smallest planar angle, breaking ties by distance and entity index. Reject obstructed targets, the collision source and the newly launched enemy. Apply the same bounded movement lead and cap correction to the configured angle, preserving horizontal speed and vertical velocity. A radius or maximum angle of zero disables correction.
 
 While a launched enemy has a target selected either by player aim assistance or propagated-launch aim correction, its horizontal velocity can gently home toward the bounded predicted target point at the configured maximum degrees per second, for a short configurable duration per launch. Preserve horizontal speed and vertical velocity. End assistance on its first meaningful horizontal collision, obstruction, expired duration, invalid target or target leaving the configured flight cone. Ordinary contacts remain physical and misses remain possible. A zero turn rate or duration disables homing. A re-punch starts a fresh assistance window.
+
+After a player-owned enemy body ricochets from solid geometry, an intact barricade
+or rotating cover, clear the incoming target and seek an eligible target along the
+outgoing velocity using the existing propagation correction range, angle and bounded
+movement lead. Preserve horizontal speed, vertical velocity, ownership and launch
+identity. Do not correct back into the contacted surface or through blocking solids.
+A successful correction starts a fresh short homing window; no valid target retains
+the physical rebound. Preserve specialized boss safety deflections. This supersedes
+the previous absence of assistance after a rebound, not the physical collision rules.
+
+For a directly punched body with the committed displayed snapshot from PLAYER-003/004,
+use its saved aim points and expected rebound directions instead of selecting new
+targets during flight. The existing homing turn rate/duration/cone and propagation
+correction limits still apply. Cancellation suppresses reacquisition for the rest
+of that source launch. Uncommitted and indirectly propagated bodies retain the
+ordinary bounded live-target correction rules. Damage, ownership, launch identity,
+propagation, armor and recovery rules remain unchanged.
+
+The authoritative dotted source from PLAYER-003 is an explicit source-motion
+exception: Unity Physics treats it as kinematic while the motor follows the saved
+path. Its original mass component remains available for gameplay calculations and
+is restored as the solver's mass behavior when the motor releases. Live crowd
+contacts still use the shared collision pipeline, ownership, damage history and
+propagation rules. Their actual impulses can differ from a finite-mass source;
+the source follows its saved bends/speed profile instead of losing additional
+momentum to those contacts. Ordinary non-authoritative bodies retain solver-led
+motion and existing assistance.
 
 ### COMBAT-013 — Active Enemy Separation
 
@@ -1211,7 +1294,7 @@ committed Sweep, hit reactions, spawning, launch, recovery, pooling and defeat r
 
 Status: Must
 
-Default arrow mode predicts initial launch directions and the bounded first enemy impact (PLAYER-003). The optional dotted mode estimates the full travel of directly punched enemies, including approximate deflections, within an exposed time/step budget. Neither mode promises chaotic downstream collision outcomes or displays full trajectories for indirectly launched enemies.
+Default arrow mode predicts initial launch directions and the bounded first enemy impact (PLAYER-003). The optional dotted mode estimates the full travel of directly punched enemies, including approximate deflections, within an exposed time/step budget. Neither mode promises chaotic downstream collision outcomes or displays full trajectories for indirectly launched enemies. For a directly punched body using an authoritative dotted snapshot, its visible endpoint also ends the launch, including when the forecast budget is exhausted; do not continue the same launch beyond the indication.
 
 ### INFO-006 - Enemy Spawn Warning
 

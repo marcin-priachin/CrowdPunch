@@ -163,6 +163,7 @@ namespace CrowdPunch.Mono.Player
         public float CollisionPreviewLength { get; private set; }
         public float CollisionPredictionDistance { get; private set; }
         public float PunchPreviewStrength { get; private set; }
+        public float PunchPreviewDamage { get; private set; }
         public bool UseDottedTrajectory { get; private set; }
         public float TrajectoryMaximumSeconds { get; private set; }
         public int TrajectorySteps { get; private set; }
@@ -312,7 +313,8 @@ namespace CrowdPunch.Mono.Player
             float distanceWeight = 0f,
             bool useDottedTrajectory = false,
             float trajectoryMaximumSeconds = 8f,
-            int trajectorySteps = 160)
+            int trajectorySteps = 160,
+            float previewDamage = 0f)
         {
             PunchPreviewOrigin = new float3(origin.x, origin.y, origin.z);
             PunchPreviewDirection = new float3(direction.x, direction.y, direction.z);
@@ -322,6 +324,7 @@ namespace CrowdPunch.Mono.Player
             CollisionPreviewLength = Mathf.Max(0f, collisionPreviewLength);
             CollisionPredictionDistance = Mathf.Max(0f, collisionPredictionDistance);
             PunchPreviewStrength = Mathf.Max(0f, previewStrength);
+            PunchPreviewDamage = Mathf.Max(0f, previewDamage);
             UseDottedTrajectory = useDottedTrajectory;
             TrajectoryMaximumSeconds = Mathf.Clamp(trajectoryMaximumSeconds, .5f, 20f);
             TrajectorySteps = Mathf.Clamp(trajectorySteps, 16, 400);

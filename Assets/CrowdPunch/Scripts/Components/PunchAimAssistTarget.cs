@@ -15,6 +15,11 @@ namespace CrowdPunch.Components
         public float3 PreviewDirection;
         public Entity PreviewTarget;
         public uint PreviewRevision;
+        public float3 PreviewAimPoint;
+        public float PreviewPlanSeconds;
+        public byte PreviewHasAimPoint;
+        public uint PreviewTargetGeneration;
+        public byte PreviewHasAuthoritativePath;
         public byte IsAiming;
     }
 }

@@ -31,6 +31,7 @@ namespace CrowdPunch.Systems.Physics
             bool hasPhysics = SystemAPI.HasSingleton<PhysicsWorldSingleton>();
             var enemies = SystemAPI.GetComponentLookup<Enemy>(true);
             var velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true);
+            var commitments = SystemAPI.GetComponentLookup<CommittedLaunchFlight>(true);
 
             ComponentLookup<LocalTransform> transforms = SystemAPI.GetComponentLookup<LocalTransform>(true);
             ComponentLookup<EnemyLaunchState> launchStates = SystemAPI.GetComponentLookup<EnemyLaunchState>(true);
@@ -44,6 +45,11 @@ namespace CrowdPunch.Systems.Physics
                          .WithAll<Enemy>().WithEntityAccess())
             {
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Launched) continue;
+                bool committed = commitments.HasComponent(source) && commitments.IsComponentEnabled(source)
+                    && commitments[source].LaunchSequence == launch.ValueRO.LaunchSequence;
+                var flight = committed ? commitments[source] : default;
+                if (committed && (flight.Cancelled != 0 || flight.HasAimPoint == 0))
+                { LaunchAimPrediction.StopHoming(ref launch.ValueRW); continue; }
                 Entity target = launch.ValueRO.HomingTarget;
                 if (target == Entity.Null) continue;
                 if (launch.ValueRO.HomingSecondsRemaining <= 0f || settings.LaunchHomingDegreesPerSecond <= 0f
@@ -64,20 +70,20 @@ namespace CrowdPunch.Systems.Physics
                 if (!livingBoss && !intactBarricade && !uprightPillar && !IsValidTarget(target, transforms, launchStates, health, respawns))
                 { LaunchAimPrediction.StopHoming(ref launch.ValueRW); continue; }
 
-                float3 offset = transforms[target].Position - transform.ValueRO.Position;
+                float3 offset = (committed ? flight.AimPoint : transforms[target].Position) - transform.ValueRO.Position;
                 if (!LaunchAimPrediction.WithinAngle(velocity.ValueRO.Linear, offset, settings.LaunchHomingMaximumAngleDegrees))
                 { LaunchAimPrediction.StopHoming(ref launch.ValueRW); continue; }
-                if (hasPhysics)
+                if (hasPhysics && !committed)
                 {
                     var collector = new LaunchObstructionCollector { Source = source, Target = target, Enemies = enemies };
                     if (physics.CollisionWorld.CastRay(new RaycastInput { Start = transform.ValueRO.Position,
-                        End = transforms[target].Position, Filter = CollisionFilter.Default }, ref collector))
+                        End = committed ? flight.AimPoint : transforms[target].Position, Filter = CollisionFilter.Default }, ref collector))
                     { LaunchAimPrediction.StopHoming(ref launch.ValueRW); continue; }
                 }
 
                 float activeTime = math.min(dt, launch.ValueRO.HomingSecondsRemaining);
                 float3 targetVelocity = velocities.HasComponent(target) ? velocities[target].Linear : float3.zero;
-                float3 targetPoint = LaunchAimPrediction.Point(transform.ValueRO.Position, transforms[target].Position,
+                float3 targetPoint = committed ? flight.AimPoint : LaunchAimPrediction.Point(transform.ValueRO.Position, transforms[target].Position,
                     targetVelocity, math.length(velocity.ValueRO.Linear.xz), settings.AimLeadSeconds, settings.AimLeadMaximumDistance);
 
                 velocity.ValueRW.Linear = EnemyLaunchHoming.RotateHorizontalVelocity(

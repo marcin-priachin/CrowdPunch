@@ -1,5 +1,19 @@
 # Dotted direct-launch trajectory preview
 
+Current full-path behavior: [Authoritative launch path](AuthoritativeLaunchPath.md).
+Directly punched bodies now follow the captured dotted geometry, with solid,
+boss and physical-constraint interruption rules and dynamic release at the end.
+
+Current commitment rules: [Committed launch guidance](CommittedLaunchGuidance.md).
+The dots now supply fixed aiming intent and conditional expected rebounds when a
+valid displayed snapshot is punched; they do not become a full path-following motor.
+
+2026-11-02 amendment: [Launch trajectory consistency](LaunchTrajectoryConsistency.md)
+supersedes the original step timing and contact-response limits below. The forecast
+now uses the world's ECS fixed timestep, with duration and step budget as separate
+caps (160 steps cover about 2.667s at 60Hz). It shares destruction/pass-through and
+post-step rebound rules with runtime. Earlier verification below remains historical.
+
 Requirements: PLAYER-003/004, INFO-005. Verified 2026-11-01 in the Agent B
 worktree with Unity 6000.3.10f1.
 

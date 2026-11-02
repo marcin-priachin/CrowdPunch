@@ -35,6 +35,7 @@ namespace CrowdPunch.Systems.Combat
             var armorSettings = SystemAPI.GetComponentLookup<EnemyArmorSettings>(true);
             var armorHistory = SystemAPI.GetBufferLookup<ArmorHitHistory>();
             var velocities = SystemAPI.GetComponentLookup<Unity.Physics.PhysicsVelocity>();
+            var commitments = SystemAPI.GetComponentLookup<CommittedLaunchFlight>();
             var launchSettings = SystemAPI.HasSingleton<EnemyLaunchSettings>() ? SystemAPI.GetSingleton<EnemyLaunchSettings>() : default;
             var feedbacks = SystemAPI.GetComponentLookup<EnemyImpactFeedback>();
             double elapsed = SystemAPI.Time.ElapsedTime;
@@ -74,7 +75,7 @@ namespace CrowdPunch.Systems.Combat
                         transforms[target].Position, dash.ValueRO, settings.ValueRO, history,
                         ref launches, ref tiers, ref enemyTiers, ref damageRequests, ref impulses,
                         ref explosiveStates, ref detonationRequests, ref feedbacks, elapsed,
-                        ref armors, ref armorSettings, ref armorHistory, ref velocities, launchSettings);
+                        ref armors, ref armorSettings, ref armorHistory, ref velocities, launchSettings, ref commitments);
                 }
             }
             targets.Dispose();
@@ -91,7 +92,8 @@ namespace CrowdPunch.Systems.Combat
             ref ComponentLookup<EnemyImpactFeedback> feedbacks, double elapsed,
             ref ComponentLookup<EnemyArmor> armors, ref ComponentLookup<EnemyArmorSettings> armorSettings,
             ref BufferLookup<ArmorHitHistory> armorHistory,
-            ref ComponentLookup<Unity.Physics.PhysicsVelocity> velocities, EnemyLaunchSettings launchSettings)
+            ref ComponentLookup<Unity.Physics.PhysicsVelocity> velocities, EnemyLaunchSettings launchSettings,
+            ref ComponentLookup<CommittedLaunchFlight> commitments)
         {
             EnemyLaunchState targetLaunch = launches[target];
             if (targetLaunch.Phase != EnemyLaunchPhase.Active && targetLaunch.Phase != EnemyLaunchPhase.Recovering) return;
@@ -104,6 +106,13 @@ namespace CrowdPunch.Systems.Combat
             {
                 var incomingLaunch = launches[source];
                 LaunchAimPrediction.StopHoming(ref incomingLaunch);
+                if (commitments.HasComponent(source) && commitments.IsComponentEnabled(source)
+                    && commitments[source].LaunchSequence == incomingLaunch.LaunchSequence)
+                {
+                    var flight = commitments[source];
+                    CommittedLaunchPlan.Cancel(ref flight, ref incomingLaunch);
+                    commitments[source] = flight;
+                }
                 launches[source] = incomingLaunch;
             }
 

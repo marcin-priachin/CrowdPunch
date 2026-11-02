@@ -52,13 +52,13 @@ namespace CrowdPunch.Configuration
         [Header("Enemy Launch (Provisional)")]
         [Tooltip("Minimum solver-estimated contact impulse required for a launched enemy to launch another enemy.")]
         [SerializeField, Min(0f)] private float minimumPropagationImpulse = 1.5f;
-        [Tooltip("Radius around a newly propagated enemy searched for the smallest-angle follow-up target. Set to 0 to preserve its solver-produced direction.")]
+        [Tooltip("Search radius for follow-up targets after propagation or a player-owned ricochet. Set to 0 to preserve the physical outgoing direction.")]
         [SerializeField, Min(0f)] private float propagationAimCorrectionRadius = 6f;
         [Tooltip("Maximum horizontal homing turn rate, in degrees per second, while a launched enemy has an aim-assist or propagation target. Set to 0 to disable homing.")]
         [SerializeField, Min(0f)] private float launchHomingDegreesPerSecond = 45f;
-        [SerializeField, Range(0f, 180f), Tooltip("Maximum angle from solver direction for a chain target. Zero disables correction.")]
+        [SerializeField, Range(0f, 180f), Tooltip("Maximum correction from the outgoing direction for a chain or ricochet target. Zero disables correction.")]
         private float propagationAimMaximumAngleDegrees = 20f;
-        [SerializeField, Min(0f), Tooltip("Maximum homing seconds per launch. Contact or obstruction ends it sooner. Zero disables homing.")]
+        [SerializeField, Min(0f), Tooltip("Maximum homing seconds per launch or assisted ricochet. Contact or obstruction ends the current window sooner. Zero disables homing.")]
         private float launchHomingDuration = 0.25f;
         [SerializeField, Range(0f, 180f), Tooltip("Drop homing when the target leaves this cone around current flight.")]
         private float launchHomingMaximumAngleDegrees = 20f;

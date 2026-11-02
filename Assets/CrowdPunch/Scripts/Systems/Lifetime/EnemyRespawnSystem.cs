@@ -134,6 +134,7 @@ namespace CrowdPunch.Systems.Lifetime
                     }
                     if (SystemAPI.HasComponent<EnemyImpactFeedback>(enemy))
                         SystemAPI.SetComponent(enemy, new EnemyImpactFeedback());
+                    Combat.CommittedLaunchPlan.Reset(state.EntityManager, enemy);
                     if (SystemAPI.HasComponent<EnemyLaunchState>(enemy))
                     {
                         uint continuousFlight = SystemAPI.GetComponent<EnemyLaunchState>(enemy).ContinuousFlight;

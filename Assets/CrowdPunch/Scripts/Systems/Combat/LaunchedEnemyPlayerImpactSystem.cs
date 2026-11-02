@@ -38,11 +38,11 @@ namespace CrowdPunch.Systems.Combat
 
             foreach ((RefRO<LocalTransform> transform, RefRO<PhysicsVelocity> velocity,
                          RefRO<PhysicsMass> mass, RefRO<EnemyContactDamageSettings> contactSettings,
-                         RefRW<EnemyLaunchState> launchState) in
+                         RefRW<EnemyLaunchState> launchState, Entity source) in
                      SystemAPI.Query<RefRO<LocalTransform>, RefRO<PhysicsVelocity>, RefRO<PhysicsMass>,
                              RefRO<EnemyContactDamageSettings>, RefRW<EnemyLaunchState>>()
                          .WithAll<Enemy>()
-                         .WithNone<RespawnRequest>())
+                         .WithNone<RespawnRequest>().WithEntityAccess())
             {
                 if (!CanDamagePlayer(launchState.ValueRO))
                 {
@@ -69,6 +69,7 @@ namespace CrowdPunch.Systems.Combat
                     estimatedImpulse,
                     settings);
                 LaunchAimPrediction.StopHoming(ref launchState.ValueRW);
+                CommittedLaunchPlan.Cancel(EntityManager, source, ref launchState.ValueRW);
                 if (damage <= 0f)
                 {
                     continue;

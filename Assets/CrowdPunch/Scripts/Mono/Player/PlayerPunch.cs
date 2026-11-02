@@ -123,7 +123,8 @@ namespace CrowdPunch.Mono.Player
                 settings.AimAssistDistanceWeight,
                 settings.HitIndication == PunchHitIndication.DottedTrajectory,
                 settings.TrajectoryMaximumSeconds,
-                settings.TrajectorySteps);
+                settings.TrajectorySteps,
+                settings.Damage);
         }
 
         private void UpdateCooldownFeedback()

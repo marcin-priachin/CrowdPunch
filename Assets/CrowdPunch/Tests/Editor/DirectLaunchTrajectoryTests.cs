@@ -60,7 +60,7 @@ namespace CrowdPunch.Tests
             return physics;
         }
 
-        private float3[] Trace(PhysicsWorld physics, float speed = 12, float seconds = 8, int steps = 160,
+        private float3[] Trace(PhysicsWorld physics, float speed = 12, float seconds = 8, int steps = 400,
             bool bothPunched = false, Entity other = default)
         {
             var first = new LaunchPreviewSource { Entity = source, Direction = math.forward(), Speed = speed };
@@ -182,7 +182,7 @@ namespace CrowdPunch.Tests
             var points = Trace(physics);
             Assert.That(points.Last().z, Is.GreaterThan(20));
             Assert.That(points.Last().z, Is.LessThan(24));
-            Assert.That(points.Length, Is.LessThan(161), "Recovery must end the path before the time cap.");
+            Assert.That(points.Length, Is.LessThan(401), "Recovery must end the path before the step cap.");
             Assert.That(points.All(p => math.all(math.isfinite(p))), Is.True);
         }
 
@@ -210,7 +210,7 @@ namespace CrowdPunch.Tests
             em.SetComponentData(wall, new PhysicsMass());
             em.SetComponentData(wall, new PhysicsCollider { Value = bounce });
             using var physics = Physics(source, wall);
-            var points = Trace(physics, seconds: 2, steps: 40);
+            var points = Trace(physics, seconds: 2, steps: 120);
             Assert.That(points.Max(p => p.z), Is.EqualTo(5).Within(.02f));
             Assert.That(points.Last().z, Is.LessThan(0));
         }
@@ -220,7 +220,7 @@ namespace CrowdPunch.Tests
         {
             Entity target = Body(new float3(0, 0, 6));
             using var physics = Physics(source, target);
-            var points = Trace(physics, seconds: 1, steps: 40);
+            var points = Trace(physics, seconds: 1, steps: 60);
             Assert.That(points.Last().z, Is.EqualTo(8.5f).Within(.1f));
             Assert.That(em.GetComponentData<PhysicsVelocity>(target).Linear, Is.EqualTo(float3.zero));
             Assert.That(em.GetComponentData<EnemyLaunchState>(target).Phase, Is.EqualTo(EnemyLaunchPhase.Active));

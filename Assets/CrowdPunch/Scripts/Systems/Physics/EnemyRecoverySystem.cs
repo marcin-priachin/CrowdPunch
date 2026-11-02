@@ -27,6 +27,7 @@ namespace CrowdPunch.Systems.Physics
         {
             float deltaTime = SystemAPI.Time.DeltaTime;
             EnemyLaunchSettings settings = SystemAPI.GetSingleton<EnemyLaunchSettings>();
+            var paths = SystemAPI.GetComponentLookup<AuthoritativeLaunchPath>(true);
 
             foreach ((RefRW<EnemyLaunchState> launchState,
                          RefRO<PhysicsVelocity> velocity,
@@ -51,6 +52,8 @@ namespace CrowdPunch.Systems.Physics
 
                 if (launchState.ValueRO.Phase == EnemyLaunchPhase.Launched)
                 {
+                    if (paths.HasComponent(enemy) && paths.IsComponentEnabled(enemy)
+                        && paths[enemy].LaunchSequence == launchState.ValueRO.LaunchSequence) continue;
                     float horizontalSpeed = math.length(velocity.ValueRO.Linear.xz);
                     if (horizontalSpeed >= math.max(0f, settings.UsefulMomentumSpeed))
                     {

@@ -8,6 +8,7 @@ using Unity.Transforms;
 namespace CrowdPunch.Systems.Combat
 {
     [UpdateInGroup(typeof(GamePrePhysicsGroup),OrderLast=true)]
+    [UpdateAfter(typeof(Physics.AuthoritativeLaunchMotorSystem))]
     [UpdateAfter(typeof(Physics.EnemyLaunchHomingSystem)),UpdateAfter(typeof(Physics.EnemyGroundConstraintSystem))]
     public partial struct PillarToppleSystem : ISystem
     {
@@ -20,6 +21,13 @@ namespace CrowdPunch.Systems.Combat
                 SystemAPI.Query<RefRO<LocalTransform>,RefRO<PhysicsCollider>,RefRO<EnemyLaunchState>,RefRO<PhysicsVelocity>>()
                     .WithAll<Enemy>().WithNone<RespawnRequest>().WithEntityAccess())
             {
+                if (AuthoritativeLaunchPlan.Owns(em, source, launch.ValueRO))
+                {
+                    var path = em.GetComponentData<AuthoritativeLaunchPath>(source);
+                    if (em.HasComponent<FallingPillar>(path.Contact) && math.abs(path.ContactNormal.y) < .7f)
+                        TryTopple(em, path.Contact, launch.ValueRO, path.IncomingVelocity, SystemAPI.Time.ElapsedTime, source);
+                    continue;
+                }
                 if(!Eligible(launch.ValueRO) || math.lengthsq(velocity.ValueRO.Linear.xz)<.0001f) continue;
                 var input=new ColliderCastInput(collider.ValueRO.Value,pose.ValueRO.Position,
                     pose.ValueRO.Position+velocity.ValueRO.Linear*SystemAPI.Time.DeltaTime,pose.ValueRO.Rotation,pose.ValueRO.Scale);
@@ -36,11 +44,17 @@ namespace CrowdPunch.Systems.Combat
             hits.Dispose();
         }
         internal static bool Eligible(in EnemyLaunchState launch) => launch.Phase==EnemyLaunchPhase.Launched && launch.Owner==EnemyLaunchOwner.Player;
+        internal static bool CanTopple(EntityManager em, Entity entity)
+        {
+            if (!em.HasComponent<FallingPillar>(entity)) return false;
+            var pillar = em.GetComponentData<FallingPillar>(entity);
+            return pillar.Phase == PillarPhase.Upright && em.HasComponent<DinoBoss>(pillar.Boss)
+                && em.GetComponentData<DinoBoss>(pillar.Boss).Phase != DinoPhase.Defeated;
+        }
         internal static bool TryTopple(EntityManager em,Entity entity,in EnemyLaunchState launch,float3 incoming,double now,Entity source=default)
         {
             var p=em.GetComponentData<FallingPillar>(entity); var t=em.GetComponentData<PillarTuning>(entity);
-            if(p.Phase!=PillarPhase.Upright || !Eligible(launch) || !em.HasComponent<DinoBoss>(p.Boss)
-                || em.GetComponentData<DinoBoss>(p.Boss).Phase==DinoPhase.Defeated) return false;
+            if(!Eligible(launch) || !CanTopple(em, entity)) return false;
             float3 offset=t.FallDirection==PillarFallDirection.TowardBoss
                 ? em.GetComponentData<LocalTransform>(p.Boss).Position-t.InitialPosition : incoming;
             p.Direction=math.normalizesafe(new float3(offset.x,0,offset.z),math.normalizesafe(new float3(incoming.x,0,incoming.z),new float3(0,0,1)));

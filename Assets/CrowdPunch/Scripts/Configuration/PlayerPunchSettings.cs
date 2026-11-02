@@ -49,7 +49,7 @@ namespace CrowdPunch.Configuration
         private float trajectoryImpactDiameter = 1.1f;
         [SerializeField, Range(0.5f, 20f), Tooltip("Estimate until launch recovery, up to this many seconds. This is an estimate of the current scene, not a committed outcome.")]
         private float trajectoryMaximumSeconds = 8f;
-        [SerializeField, Range(16, 400), Tooltip("Maximum time steps per directly punched enemy. More steps improve curves and contacts at additional CPU cost.")]
+        [SerializeField, Range(16, 400), Tooltip("Maximum ECS fixed steps per directly punched enemy. The forecast ends when this budget or Maximum Seconds is reached; steps never stretch to cover the duration.")]
         private int trajectorySteps = 160;
 
         [Header("Direct Launch Arrow")]

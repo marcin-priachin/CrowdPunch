@@ -71,21 +71,36 @@ namespace CrowdPunch.Systems.Combat
             return math.lengthsq(direction) > 0f;
         }
 
+        public static bool TryGetLockedPoint(EntityManager em, Entity source, float3 position, out float3 point)
+        {
+            point = default;
+            if (!em.HasComponent<PunchAimAssistTarget>(source)) return false;
+            var aim = em.GetComponentData<PunchAimAssistTarget>(source);
+            if (!IsValidTarget(em, source, aim.Target)) return false;
+            float3 velocity = em.HasComponent<PhysicsVelocity>(aim.Target) ? em.GetComponentData<PhysicsVelocity>(aim.Target).Linear : default;
+            point = LaunchAimPrediction.Point(position, em.GetComponentData<LocalTransform>(aim.Target).Position,
+                velocity, aim.LaunchSpeed, aim.LeadSeconds, aim.LeadMaximumDistance);
+            return true;
+        }
+
         public static bool TryGetCommittedDirection(EntityManager em, Entity source, uint revision,
             out float3 direction, out Entity target)
         {
             direction = default; target = Entity.Null;
             if (revision == 0 || !em.HasComponent<PunchAimAssistTarget>(source)) return false;
             var aim = em.GetComponentData<PunchAimAssistTarget>(source);
+            bool hasPath = aim.PreviewHasAuthoritativePath != 0;
             if (aim.PreviewRevision != revision || math.lengthsq(aim.PreviewDirection) < .001f
-                || aim.PreviewTarget != Entity.Null && !IsValidTarget(em, source, aim.PreviewTarget)) return false;
+                || !hasPath && aim.PreviewTarget != Entity.Null && (!IsValidTarget(em, source, aim.PreviewTarget)
+                    || CommittedLaunchPlan.Generation(em, aim.PreviewTarget) != aim.PreviewTargetGeneration)) return false;
             direction = aim.PreviewDirection;
-            target = aim.PreviewTarget;
+            target = IsValidTarget(em, source, aim.PreviewTarget) ? aim.PreviewTarget : Entity.Null;
             return true;
         }
 
         public static bool IsValidTarget(EntityManager manager, Entity source, Entity target)
         {
+            if (target == Entity.Null || !manager.Exists(target)) return false;
             if (SnakeProjectileCollision.IgnoresOwner(manager,source,target)) return false;
             if (target != Entity.Null && manager.HasComponent<DinoBoss>(target)) return false;
             if (target != Entity.Null && manager.HasComponent<FallingPillar>(target))

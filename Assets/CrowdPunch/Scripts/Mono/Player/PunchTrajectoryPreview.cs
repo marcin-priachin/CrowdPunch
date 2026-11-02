@@ -124,9 +124,12 @@ namespace CrowdPunch.Mono.Player
             // Preserve the whole path at extreme tuning/crowd sizes by reducing dot density.
             spacing = Mathf.Max(spacing, totalLength / 16000f);
             float nextDot = 0f;
-            foreach (var segment in segments)
+            for (int segmentIndex = 0; segmentIndex < segments.Count; segmentIndex++)
             {
+                var segment = segments[segmentIndex];
                 if (!segment.IsDotted) continue;
+                bool endpoint = segmentIndex == segments.Count - 1 || segments[segmentIndex + 1].StartsPath
+                    || !segments[segmentIndex + 1].IsDotted;
                 if (segment.StartsPath) nextDot = 0f;
                 Vector3 start = GroundPosition(segment.Start);
                 Vector3 delta = GroundPosition(segment.End) - start;
@@ -134,7 +137,7 @@ namespace CrowdPunch.Mono.Player
                 if (length <= .00001f) continue;
                 Vector3 direction = delta / length;
                 // Carry spacing through bends and time steps instead of bunching dots at every vertex.
-                while (nextDot <= length)
+                while (nextDot <= length && (!endpoint || nextDot < length - diameter))
                 {
                     Vector3 position = start + direction * nextDot;
                     bool insideAccent = false;
@@ -145,6 +148,15 @@ namespace CrowdPunch.Mono.Player
                     nextDot += spacing;
                 }
                 nextDot -= length;
+                if (endpoint)
+                {
+                    Vector3 end = GroundPosition(segment.End);
+                    bool insideAccent = false;
+                    foreach (var impact in impacts)
+                        insideAccent |= math.distancesq(impact.Position.xz, new float2(end.x, end.z))
+                            < (impactRadius + diameter * .5f) * (impactRadius + diameter * .5f) && impactRadius > 0f;
+                    if (!insideAccent) AddDot(end, diameter * .5f, color);
+                }
             }
             if (impactRadius > 0f)
                 foreach (var impact in impacts)

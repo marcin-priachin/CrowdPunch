@@ -21,6 +21,7 @@ namespace CrowdPunch.Systems.Combat
         public EnemyLaunchCause Cause;
         public double EventTime;
         public byte AffectActive, AffectRecovering, AffectLaunched, ApplyDamage, HasAssistedLaunchDirection;
+        public byte CommitDisplayedPlan;
     }
 
     internal static class PunchResolution
@@ -136,6 +137,7 @@ namespace CrowdPunch.Systems.Combat
                     : Entity.Null;
                 launch.HomingSecondsRemaining = launch.HomingTarget != Entity.Null ? punch.HomingDuration : 0f;
                 manager.SetComponentData(target, launch);
+                CommittedLaunchPlan.Begin(manager, target, punch, launch);
                 if (paired) {
                     pair.LastPunchAt = punch.EventTime; manager.SetComponentData(pairEntity, pair);
                     LinkedPairLaunchResolution.Begin(manager, target, launch, impulseDirection * math.max(0, punch.Strength));

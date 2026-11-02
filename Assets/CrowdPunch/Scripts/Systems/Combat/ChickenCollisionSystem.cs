@@ -21,6 +21,17 @@ namespace CrowdPunch.Systems.Combat
                 Contacts=contacts }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(),state.Dependency);
             state.Dependency.Complete();
             var em=state.EntityManager; var settings=SystemAPI.GetSingleton<EnemyLaunchSettings>();
+            // Kinematic/static solver contacts have no useful impulse. Use the motor's live sweep
+            // and original gameplay mass, replacing any event for the same pair in this step.
+            foreach (var (path, launch, body) in SystemAPI.Query<RefRO<AuthoritativeLaunchPath>, RefRO<EnemyLaunchState>>().WithEntityAccess())
+            {
+                Entity surface = path.ValueRO.Contact;
+                if (!AuthoritativeLaunchPlan.Owns(em, body, launch.ValueRO) || !em.HasComponent<ChickenBoss>(surface)
+                    || math.abs(path.ValueRO.ContactNormal.y) > .7f) continue;
+                for (int i=contacts.Length-1;i>=0;i--)
+                    if (contacts[i].Body==body && contacts[i].Boss==surface) contacts.RemoveAtSwapBack(i);
+                contacts.Add(new Contact { Boss=surface, Body=body, Impulse=path.ValueRO.ContactImpulse });
+            }
             foreach(var c in contacts)
             {
                 if(!em.HasComponent<EnemyLaunchState>(c.Body) || em.IsComponentEnabled<RespawnRequest>(c.Body)) continue;

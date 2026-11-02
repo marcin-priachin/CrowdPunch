@@ -14,6 +14,10 @@ namespace CrowdPunch.Systems.Presentation
         public Entity Entity;
         public float3 Direction;
         public float Speed;
+        public float Damage;
+        public float3 AimPoint;
+        public Entity AimTarget;
+        public byte HasAimPoint;
     }
 
     // PLAYER-003/004: bounded local forecast. It never writes gameplay state or simulates a chain.
@@ -149,9 +153,10 @@ namespace CrowdPunch.Systems.Presentation
             float3 end = pose.Position + velocity * dt;
             hits.Clear();
             world.CastCollider(new ColliderCastInput(collider, pose.Position, end, pose.Rotation, pose.Scale), ref hits);
-            // Fixed geometry keeps the world cast. Crowd colliders move relative to this short flight step.
+            // Launched bodies ignore the walking enclosure just as the solver contact filter does.
+            // Crowd colliders move relative to this short flight step.
             for (int i = hits.Length - 1; i >= 0; i--)
-                if (em.HasComponent<Enemy>(hits[i].Entity)) hits.RemoveAtSwapBack(i);
+                if (em.HasComponent<Enemy>(hits[i].Entity) || em.HasComponent<CoverEnclosure>(hits[i].Entity)) hits.RemoveAtSwapBack(i);
             var bounds = collider.Value.CalculateAabb(new RigidTransform(pose.Rotation, pose.Position), pose.Scale);
             float3 travel = end - pose.Position;
             nearby.Clear();
@@ -290,12 +295,13 @@ namespace CrowdPunch.Systems.Presentation
         }
 
         internal static bool Obstructed(EntityManager em, CollisionWorld world, Entity source, Entity target,
-            float3 start, float3 end, ref NativeList<RaycastHit> rays)
+            float3 start, float3 end, ref NativeList<RaycastHit> rays, NativeHashSet<Entity> removed = default)
         {
             rays.Clear();
             world.CastRay(new RaycastInput { Start = start, End = end, Filter = CollisionFilter.Default }, ref rays);
             foreach (var hit in rays)
                 if (hit.Entity != source && hit.Entity != target && !em.HasComponent<Enemy>(hit.Entity)
+                    && (!removed.IsCreated || !removed.Contains(hit.Entity))
                     && hit.Material.CollisionResponse != CollisionResponsePolicy.RaiseTriggerEvents
                     && hit.Material.CollisionResponse != CollisionResponsePolicy.None) return true;
             return false;

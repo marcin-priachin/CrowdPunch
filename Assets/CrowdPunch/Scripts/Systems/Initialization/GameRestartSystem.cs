@@ -193,6 +193,7 @@ namespace CrowdPunch.Systems.Initialization
                 SystemAPI.SetComponent(enemy, new DesiredMovement());
                 SystemAPI.SetComponent(enemy, new WanderDestination());
                 SystemAPI.SetComponent(enemy, new PunchAimAssistTarget());
+                Combat.CommittedLaunchPlan.Reset(EntityManager, enemy);
                 if (SystemAPI.HasComponent<EnemyContactAttemptState>(enemy))
                 {
                     SystemAPI.SetComponent(enemy, new EnemyContactAttemptState());

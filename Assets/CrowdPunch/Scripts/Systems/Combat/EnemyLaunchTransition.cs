@@ -43,6 +43,8 @@ namespace CrowdPunch.Systems.Combat
             state.LastPropagationImpulse = 0f;
             state.HomingTarget = default;
             state.HomingSecondsRemaining = 0f;
+            state.RicochetSurface = default;
+            state.RicochetNormal = default;
         }
     }
 }

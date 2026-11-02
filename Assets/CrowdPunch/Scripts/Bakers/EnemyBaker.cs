@@ -32,6 +32,15 @@ namespace CrowdPunch.Bakers
             AddComponent<GroundHazardRoute>(entity);
             AddBuffer<GroundHazardWaypoint>(entity);
             AddComponent<PunchAimAssistTarget>(entity);
+            AddComponent<CommittedLaunchFlight>(entity);
+            SetComponentEnabled<CommittedLaunchFlight>(entity, false);
+            AddBuffer<DisplayedLaunchRebound>(entity);
+            AddBuffer<CommittedLaunchRebound>(entity);
+            AddComponent<AuthoritativeLaunchPath>(entity);
+            SetComponentEnabled<AuthoritativeLaunchPath>(entity, false);
+            AddComponent<Unity.Physics.PhysicsMassOverride>(entity);
+            AddBuffer<DisplayedLaunchPathPoint>(entity);
+            AddBuffer<CommittedLaunchPathPoint>(entity);
             AddComponent(entity, new EnemyLaunchState
             {
                 Phase = EnemyLaunchPhase.Active

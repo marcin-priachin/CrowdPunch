@@ -14,7 +14,7 @@ namespace CrowdPunch.Systems.Physics
     {
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var (cover, contacts) in SystemAPI.Query<RefRO<RotatingCover>, DynamicBuffer<CoverReflection>>())
+            foreach (var (cover, contacts, surface) in SystemAPI.Query<RefRO<RotatingCover>, DynamicBuffer<CoverReflection>>().WithEntityAccess())
             {
                 foreach (var contact in contacts)
                 {
@@ -22,8 +22,7 @@ namespace CrowdPunch.Systems.Physics
                     var launch = SystemAPI.GetComponent<EnemyLaunchState>(contact.Source);
                     if (launch.Phase != EnemyLaunchPhase.Launched || launch.LaunchSequence != contact.LaunchSequence) continue;
                     var transform = SystemAPI.GetComponent<LocalTransform>(contact.Source);
-                    float penetration = math.dot(transform.Position - contact.ContactCenter, contact.Normal);
-                    if (penetration < 0) transform.Position -= contact.Normal * penetration;
+                    transform.Position = LaunchContactResponse.OutsideSurface(transform.Position, contact.ContactCenter, contact.Normal);
                     SystemAPI.SetComponent(contact.Source, transform);
                     var velocity = SystemAPI.GetComponent<PhysicsVelocity>(contact.Source);
                     velocity.Linear.xz = ReflectedVelocity(contact, cover.ValueRO.ReflectionMultiplier);
@@ -31,6 +30,9 @@ namespace CrowdPunch.Systems.Physics
                     SnakeProjectileCollision.RecordRebound(state.EntityManager,contact.Source,contact.IncomingVelocity,contact.Normal);
                     // Keep sequence, ownership, damage deduplication and recovery timers intact.
                     LaunchAimPrediction.StopHoming(ref launch);
+                    launch.RicochetSurface = surface;
+                    launch.RicochetNormal = contact.Normal;
+                    CommittedLaunchPlan.Contact(state.EntityManager, contact.Source, launch, surface, contact.Normal);
                     SystemAPI.SetComponent(contact.Source, launch);
                 }
                 contacts.Clear();

@@ -1904,6 +1904,110 @@ Ordering between systems that share only a group should be made explicit when co
 
 ### Stable launch aiming (2026-10-31)
 
+Authoritative dotted-path amendment (2026-11-02): `EnemyBaker` now adds disabled
+`AuthoritativeLaunchPath`, default `PhysicsMassOverride`, and empty displayed/active
+path-point buffers. `DirectLaunchTrajectoryPrediction` optionally emits body-height
+`LaunchPathPoint` data alongside the same points used for drawing: forecast time,
+position, exit velocity and contact surface/normal. There are at most 2,001 points
+(four contacts and an endpoint per forecast step, plus the initial point), bounded
+by the existing 400-step hard cap. Presentation copies the displayed buffer and a
+scalar authoritative-path flag/revision into the existing aim snapshot. No entities
+are passed into Mono. Target removal no longer invalidates a saved full-path click;
+the point/arrow fallback still validates target identity/generation.
+
+`AuthoritativeLaunchPlan.Begin` copies the frozen buffer after the ordinary punch
+transition and releases any previous override. The older commitment stays enabled
+as a cancelled latch, suppressing live homing/rebound reacquisition while the path
+owns motion. Arrow-only/no-path snapshots retain their previous behavior.
+`AuthoritativeLaunchMotorSystem` runs after homing, linked-pair constraints and
+rotating-cover pose updates, before ground constraint and authored impact sweeps.
+It drives `PhysicsVelocity` to the next saved vertex, temporarily setting
+`PhysicsMassOverride.IsKinematic` without changing the original `PhysicsMass` data.
+Unity Physics integrates the actual transform and pushes dynamic crowd bodies.
+Gravity/damping already represented by the saved geometry/profile do not act again
+on the motor body. Crowd collision interpretation/damage/ownership remain ECS-owned.
+
+The motor collider-casts each segment against live solids. Current cover/track
+poses are recast because the collision world can contain the prior pose. Boss parts,
+Chicken, Rolling, Dino and Finale bodies are also recast at their current transform
+with relative linear travel; moving away can invalidate a live hit without changing
+the saved path. Expected
+contacts at the saved vertex permit a bend, including boss surfaces. The live sweep
+includes a 2mm endpoint margin so touching contacts are retained. It writes a one-step
+contact mailbox (entity, point, normal, incoming flight velocity and mass-based
+impulse) into the enabled path state. BarricadeImpactSystem and PillarToppleSystem
+consume it before physics; BossCollisionSystem, ChickenCollisionSystem and
+RollingCollisionSystem merge it with solver contacts, replacing the same source/target
+pair for that tick. Kinematic/static solver contacts alone cannot provide useful
+impact impulse. Boss safety checks use saved outgoing velocity rather than deriving
+it from the small geometric contact-separation offset. Existing hit histories, damage curves, shell exposure, track pushes,
+Finale windows, hand scatter, rolling protection and explosive requests are reused.
+No contact is awarded from a forecast. Upright toppleable pillars are forecast as
+pass-through, matching the real source-preserving toppling rule.
+
+Unexpected solids clip travel to the actual contact, resolve its normal gameplay
+hit, then release control after contact interpretation. Linked-pair reach constraints
+also release. The motor visits each vertex rather than cutting a bend within one
+physics step; short contact intervals can therefore consume an extra fixed step.
+
+`AuthoritativeLaunchFinishSystem` runs after contact/rebound interpretation and
+before recovery. It supplies the saved outgoing velocity for recovery/presentation,
+advances vertices, verifies actual integration reached the scheduled position and
+releases at the last point. It never writes `LocalTransform.Position`. Original
+mass-override state is restored on interruption, lifecycle/launch replacement,
+re-punch, reset and respawn. At every displayed endpoint, including a budget-truncated
+horizon, linear/angular launch velocity and Dasher preserved velocity are zeroed.
+EnemyRecoverySystem defers its low-momentum lifecycle while the motor owns the body,
+then uses ordinary recovery/deferred defeat after release. This prevents either early
+recovery or unindicated coasting. The dotted renderer includes the terminal point
+instead of truncating at the last regular dot interval (an overlapping contact accent
+can represent it). Snapshot targets can escape; hits are never synthesized.
+
+This intentionally supersedes the earlier direction-only commitment for full
+dotted snapshots. Read `Docs/Verification/AuthoritativeLaunchPath.md` for tests,
+measurements and the remaining scene/playtest gap.
+
+Committed direct-body intent amendment (2026-11-02): `EnemyBaker` adds disabled
+`CommittedLaunchFlight` and empty `DisplayedLaunchRebound` / `CommittedLaunchRebound`
+buffers to enemy prefabs. `PresentationBridgeSystem` saves the displayed fixed aim
+point, target generation and revision on `PunchAimAssistTarget`. Dotted forecasting
+records at most eight expected rebounds (surface, normal, outgoing direction,
+fixed follow-up point and target generation), using body-height geometry.
+Arrow mode commits only the initial point and does not create an invisible rebound
+plan. No enemy identities cross the existing scalar/revision Mono bridge.
+
+`PunchDetectionSystem` marks a matching displayed snapshot in `PunchSpecification`.
+After the ordinary launch transition, `CommittedLaunchPlan.Begin` copies it into
+separate flight state/buffer keyed by launch sequence. A pending click preserves
+the displayed snapshot. Later previews, including previews of a flying body for
+re-punch, cannot mutate active flight data. `EnemyLaunchHomingSystem` uses a saved
+world-space point for these launches, retaining its original speed/Y-preserving
+turn rate and guidance budget. Uncommitted/propagated guidance remains live-target.
+
+`CommittedLaunchValidationSystem` runs after impulses and before homing. It validates
+lifecycle/ownership, target generation/eligibility, point route, expected surface
+and forecast time budget. `EnemyLaunchCollisionSystem` records meaningful actual
+contacts; authored cover/barricade rebounds also report their swept contacts.
+`CommittedLaunchReboundSystem` runs after collision interpretation, Dasher swept
+impacts and boss safety, before ordinary ricochet assistance/recovery. Only the next
+saved surface/normal can align the solved outgoing direction. It preserves actual
+horizontal speed/Y velocity, enforces outward travel and the existing propagation
+angle cap, and rejects any direction that would undo current boss safety.
+
+Normal compatibility is a named 20-degree limit; the forecast stores at most eight
+rebounds and is bounded by its existing duration/step budget. Zero propagation
+radius/angle disables rebound alignment. Invalid points, obstruction, expiry,
+unexpected contacts or multiple distinct contact surfaces cancel the plan. The
+enableable flight component stays enabled with a cancelled flag for that launch:
+this latch prevents `EnemyRicochetAimSystem` from silently acquiring a new target.
+Player impacts and qualifying Dasher swept impacts cancel too. Lifecycle/sequence
+changes disable stale flights; re-punch replaces them. Restart/respawn explicitly
+clear both buffers and disable the component through `CommittedLaunchPlan.Reset`.
+
+This commits direct-body aiming intent rather than body positions or the full
+collision chain. No path-following motor, teleport, speed restoration or second
+physics world is introduced. See `Docs/Verification/CommittedLaunchGuidance.md`.
+
 PLAYER-003/004, COMBAT-003/012/014: `PlayerPunchSettings` owns finite assist range,
 acquisition/release cones, challenger persistence and fallback distance scoring.
 `PunchAimAssistSystem` keeps target/challenger state in `PunchAimAssistTarget`,
@@ -1974,6 +2078,54 @@ and primary arrows. Meshes/materials remain shared per player, without enemy obj
 Verification and exact limits: `Docs/Verification/SecondaryArrowStability.md`.
 
 ### Optional dotted direct-launch preview (2026-11-01)
+
+Forecast/runtime consistency amendment (2026-11-02), PLAYER-003/004, COMBAT-012:
+`PresentationBridgeSystem` reads this world's `FixedStepSimulationSystemGroup.Timestep`
+and passes it to `DirectLaunchTrajectoryPrediction`. Isolated callers default to the
+Entities 1/60s timestep. A forecast uses whole fixed steps until either authored
+duration or work budget is exhausted; the saved 160 steps cover about 2.667s at the
+default rate, with 8 seconds still the upper duration bound. No physics timestep or
+saved tuning changes were made. Rebound guidance is applied after step integration
+and damping, taking effect on the next step; authored rebound overrides use captured
+incoming velocity just as the runtime post-physics systems do.
+
+`LaunchContactResponse` shares meaningful horizontal-contact thresholds, barricade
+reflection, penetration correction and Finale rebound safety. Boss head deflection
+and rotating-cover reflection reuse their existing runtime functions. Ordinary
+contact impulses/friction remain estimates of the Unity Physics solver.
+`BarricadeHitResolution` shares hit-count/deduplication decisions and
+`ShellHitResolution` shares exposed-core impact damage. Per-source temporary forecast
+state marks destroying hits as pass-through and excludes their virtual solids from
+later casts, obstruction checks and guidance acquisition without modifying ECS.
+Track docking, future motion, simultaneous sources and explosions are not simulated.
+
+`PlayerPunch` now includes punch damage in the scalar preview bridge data;
+`LaunchPreviewSource.Damage` allows prediction of an exposed shell core's destroying
+impact. No enemy identities cross the Mono boundary. Optional ECS-only
+`LaunchTrajectorySample` records fixed-step positions, post-step velocities, first
+contact and guidance state for comparison tests; ordinary presentation does not
+allocate these samples. `LaunchTrajectoryComparisonTests` freezes a pre-punch
+forecast, executes the actual punch/physics/post-contact pipeline, then checks
+time-matched positions, first-contact identity/timing and outgoing angle.
+See `Docs/Verification/LaunchTrajectoryConsistency.md` for measured errors and limits.
+
+Ricochet amendment (2026-11-02), PLAYER-003/004 and COMBAT-012:
+`EnemyLaunchCollisionSystem`, `BarricadeReboundSystem` and `CoverReflectionSystem`
+record a contacted surface/normal in the source's `EnemyLaunchState`.
+`EnemyRicochetAimSystem` consumes that one-step mailbox after solver/contact and
+boss safety resolution, before recovery. Only player-owned launched bodies acquire
+new guidance. `RicochetAimCorrection` queries a local physics broadphase region,
+rejects invalid/occluded candidates and selects by outgoing angle, distance and
+entity index. Existing propagation radius/cone, lead and homing duration apply.
+It preserves speed/Y velocity and flight identity and never turns into the surface.
+Special boss safety rebounds remain authoritative. New launches clear pending
+ricochet state. No entity identity crosses into Mono.
+
+`DirectLaunchTrajectoryPrediction` shares that correction after estimated rebounds,
+excludes co-punched/departed bodies from acquisition, renews bounded guidance and
+uses authored barricade/rotating-cover reflection settings. Thus dotted bends and
+contact accents include the assisted outgoing path. Arrow scope is unchanged.
+The forecast retains its existing moving-crowd and special-mechanic approximations.
 
 `PlayerPunchSettings.HitIndication` selects `Arrows` (new-asset default) or
 `DottedTrajectory`. `PlayerPunch` publishes this choice and a separate 8-second /
@@ -2934,6 +3086,20 @@ contacts only for `Launched` bodies. Walking/recovering bodies and the player re
 ordinary enemy-enemy contacts and the shield/target colliders are unaffected. Navigation bakes
 a conservative square footprint around the enclosure through the existing grid baker, so walking
 routes and safe wave placement do not enter it. The low plinth marks the walking exclusion.
+
+Authoritative-path integration correction (2026-11-02, COVER-001/003/004):
+LaunchImpactPrediction.CastStep removes the CoverEnclosure cylinder from flight
+queries, and AuthoritativeLaunchMotorSystem ignores it in live obstruction checks,
+matching CoverEnclosureContactSystem's solver policy. The physical shield panels and
+central target remain solid and keep their normal reflection/hit rules. This fixes
+open-window shots being stopped by an invisible walking barrier. At an expected
+shield hit, AuthoritativeLaunchFinishSystem releases the saved path if the actual
+CoverReflection return velocity differs from the stored outgoing velocity. The
+player position sampled at impact therefore retains priority when the player moves;
+matching returns can continue along the saved path. Launch identity/mass restoration,
+core hit deduplication, outside-blast rejection and no shield detonation remain intact.
+AuthoritativeLaunchTests now constructs the full 36-panel compound, central target
+and walking cylinder using the baker's geometry, rather than only a flat shield.
 
 `BarricadeImpactSystem` includes cover bounds in its existing broadphase rejection and queries
 the current cover pose directly, since the collision world available before physics contains

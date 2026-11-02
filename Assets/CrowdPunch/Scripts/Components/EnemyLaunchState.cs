@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
@@ -50,5 +51,7 @@ namespace CrowdPunch.Components
         public uint PlayerImpactLaunchSequence;
         public Entity HomingTarget;
         public float HomingSecondsRemaining;
+        public Entity RicochetSurface;
+        public float3 RicochetNormal;
     }
 }

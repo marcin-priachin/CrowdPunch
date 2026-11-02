@@ -26,6 +26,18 @@ namespace CrowdPunch.Systems.Combat
             state.Dependency=job.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(),state.Dependency); state.Dependency.Complete();
             var em=state.EntityManager; double now=SystemAPI.Time.ElapsedTime;
             var settings=SystemAPI.GetSingleton<EnemyLaunchSettings>();
+            // Kinematic/static solver contacts have no useful impulse. Use the motor's live sweep
+            // and original gameplay mass, replacing any event for the same pair in this step.
+            foreach (var (path, launch, body) in SystemAPI.Query<RefRO<AuthoritativeLaunchPath>, RefRO<EnemyLaunchState>>().WithEntityAccess())
+            {
+                Entity surface = path.ValueRO.Contact;
+                if (!AuthoritativeLaunchPlan.Owns(em, body, launch.ValueRO) || !em.HasComponent<BossPart>(surface)
+                    || math.abs(path.ValueRO.ContactNormal.y) > .7f) continue;
+                for (int i=contacts.Length-1;i>=0;i--)
+                    if (contacts[i].Body==body && contacts[i].Part==surface) contacts.RemoveAtSwapBack(i);
+                contacts.Add(new Contact { Part=surface, Body=body, Impulse=path.ValueRO.ContactImpulse, Point=path.ValueRO.ContactPoint, Normal=path.ValueRO.ContactNormal,
+                    ActiveHand=(byte)(em.HasComponent<BossHand>(surface)&&em.GetComponentData<BossHand>(surface).Phase==BossHandPhase.Active?1:0) });
+            }
             // Resolve incoming stagger before an active strike deliberately takes ownership.
             foreach(var c in contacts) if(em.GetComponentData<BossPart>(c.Part).Kind!=BossPartKind.Head) Hit(em,c,settings,now);
             foreach(var c in contacts) if(c.ActiveHand!=0) Scatter(em,c);

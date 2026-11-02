@@ -7,6 +7,10 @@ namespace CrowdPunch.Systems.Combat
 {
     internal static class ShellHitResolution
     {
+        public static float CoreAfterImpact(in ShellTarget shell, float damage, bool allowed, bool recorded)
+            => allowed && !recorded && shell.ExplosionsRemaining <= 0 && damage > 0
+                ? math.max(0, shell.CoreHealth - damage) : shell.CoreHealth;
+
         public static void Punch(EntityManager em, Entity target, float damage, double now, float3 point)
         {
             if (!FinaleHitResolution.Active(em, target)) return;
@@ -42,7 +46,7 @@ namespace CrowdPunch.Systems.Combat
             foreach (var hit in history)
                 if (hit.Source == source && hit.LaunchSequence == sequence) return false;
             history.Add(new BarricadeHitHistory { Source = source, LaunchSequence = sequence });
-            shell.CoreHealth = math.max(0, shell.CoreHealth - damage);
+            shell.CoreHealth = CoreAfterImpact(shell, damage, true, false);
             Record(em, target, ref shell, now, point, false);
             return true;
         }

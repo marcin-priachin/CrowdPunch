@@ -62,6 +62,58 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 ## Resolved Decisions
 
+### 2026-11-02 - Authoritative dotted launch path
+
+Decision: Make the displayed dotted path authoritative for its directly punched
+body, superseding the limited committed-point/rebound approach. Use a temporary
+kinematic velocity motor within the existing Unity Physics world, visiting saved
+body-height vertices without transform teleportation or corner cutting. Moving or
+vanished targets do not invalidate the path; only real contacts deal damage or
+propagate launches. Unexpected solids interrupt, and boss/tether/ground rules retain
+priority. Endpoint/contact correction: stop launch velocity at the displayed end,
+including a budget-limited horizon, so travel and indication have the same extent.
+Feed real swept contacts into ordinary gate, objective and boss rules with incoming
+flight speed/original mass rather than the shortened contact-step motor velocity.
+Expected boss contacts may follow the saved turn; their protection, ownership and
+safety rules still take priority. Keep indirect bodies dynamic and preserve the
+simpler arrow mode. Existing forecast work limits remain.
+
+GDD rules: PLAYER-003/004, COMBAT-012/014, INFO-005. OQ-001/017 remain unresolved.
+
+### 2026-11-02 - Commit displayed aim points and expected rebounds
+
+Decision: Apply the recommended combination from the launch-consistency review:
+freeze directly punched bodies' displayed aim points and expected rebound intent
+at the click. Use bounded velocity steering and align a rebound only after contact
+with its expected surface/compatible normal. Preserve actual speed/Y velocity and
+boss safety. Unexpected contacts, invalid targets and blocked routes cancel the
+remaining plan; do not silently retarget. Re-punch replaces the plan. Do not add
+full-path/corridor following or a committed indirect collision chain.
+
+GDD rules: PLAYER-003/004, COMBAT-012/014, INFO-005. OQ-001 and OQ-017 remain open.
+
+### 2026-11-02 - Forecast and runtime consistency
+
+Decision: Apply the accepted review items 1-3 with comparison checks from item 6:
+use the ECS fixed timestep within the existing forecast work budget, defer ricochet
+correction to the runtime-equivalent boundary, and share contact decisions where
+practical. Compare frozen forecast positions, first contact and outgoing direction
+against actual ECS/Unity Physics. Future target/environment motion prediction and
+simulation of struck bodies (items 4-5) remain outside this slice. Preserve physical
+collision ownership and advisory preview behavior.
+
+GDD rules: PLAYER-003/004, COMBAT-012, INFO-005. OQ-001 remains unresolved.
+
+### 2026-11-02 - Aim assistance after ricochet
+
+Decision: Preserve assisted direct launches and extend assistance to player-owned
+enemy-body ricochets, with the dotted trajectory reflecting the assisted outgoing
+path. Reuse existing bounded propagation correction and short guidance settings;
+do not change speed, damage, launch identity or specialized boss safety deflections.
+Input-specific tuning and final target-hardware acceptance remain open.
+
+GDD rules: PLAYER-003/004, COMBAT-012, INFO-005.
+
 ### 2026-11-01 - Grounded trajectory indication
 
 Decision: Display trajectory indicators and contact accents on the ground so they

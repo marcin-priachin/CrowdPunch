@@ -73,6 +73,7 @@ namespace CrowdPunch.Systems.Combat
                         targetPunch.AssistedLaunchTarget = committed ? committedTarget
                             : SystemAPI.GetComponent<PunchAimAssistTarget>(enemy).Target;
                         targetPunch.HasAssistedLaunchDirection = 1;
+                        targetPunch.CommitDisplayedPlan = committed ? (byte)1 : (byte)0;
                     }
                 }
                 if (tier.ValueRO.Value == EnemyCombatTier.Elite)
