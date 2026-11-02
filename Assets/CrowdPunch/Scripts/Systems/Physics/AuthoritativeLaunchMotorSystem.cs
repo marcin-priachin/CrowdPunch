@@ -131,7 +131,13 @@ namespace CrowdPunch.Systems.Physics
                     : (end.Position - start.Position) / math.max(.000001f, end.Seconds - start.Seconds);
                 velocity.ValueRW.Linear = (goal - pose.ValueRO.Position) / dt;
                 velocity.ValueRW.Angular = float3.zero;
-                path.ValueRW.IncomingVelocity = expected || blocked ? flightVelocity : velocity.ValueRO.Linear;
+                path.ValueRW.IncomingVelocity = flightVelocity;
+                // Discrete physics can first report a touching body on the step after the
+                // contact vertex. Keep that body's incoming speed through the remainder step.
+                bool crowdEnd = reached && AuthoritativeLaunchPlan.CrowdBody(em, end.Surface);
+                bool crowdStart = AuthoritativeLaunchPlan.CrowdBody(em, start.Surface);
+                path.ValueRW.CrowdSurface = crowdEnd ? end.Surface : crowdStart ? start.Surface : Entity.Null;
+                path.ValueRW.CrowdIncomingVelocity = crowdEnd ? end.Velocity : crowdStart ? start.Velocity : flightVelocity;
                 if (expected || blocked)
                 {
                     path.ValueRW.Contact = contact.Entity;

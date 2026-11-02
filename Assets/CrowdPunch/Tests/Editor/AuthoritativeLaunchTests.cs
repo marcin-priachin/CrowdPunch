@@ -40,6 +40,7 @@ namespace CrowdPunch.Tests
             foreach (var type in DefaultWorldInitialization.GetAllSystems(WorldSystemFilterFlags.Default))
                 if (type.Namespace == "Unity.Physics.Systems") types.Add(type);
             types.Add(typeof(CoverEnclosureContactSystem));
+            types.Add(typeof(AuthoritativeLaunchContactSystem));
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, types);
             var step = Unity.Physics.PhysicsStep.Default; step.Gravity = float3.zero;
             em.AddComponentData(em.CreateEntity(), step);
@@ -116,11 +117,11 @@ namespace CrowdPunch.Tests
             PhysicsStep(); world.GetOrCreateSystem<PresentationBridgeSystem>().Update(world.Unmanaged);
         }
 
-        private void Punch()
+        private void Punch(float strength = 12)
         {
             Assert.That(PunchAimAssist.TryGetCommittedDirection(em, source, bridge.TrajectoryPreviewRevision, out _, out _), Is.True,
                 "The displayed snapshot must remain consumable before input is bridged.");
-            bridge.PublishPunch(Vector3.back, Vector3.forward, 1, 2, 12, .1f, 10, 0);
+            bridge.PublishPunch(Vector3.back, Vector3.forward, 1, 2, strength, .1f, 10, 0);
             world.GetOrCreateSystem<PlayerBridgeSystem>().Update(world.Unmanaged);
             using var requestQuery = em.CreateEntityQuery(typeof(PlayerSnapshot));
             Assert.That(em.GetComponentData<PunchRequest>(requestQuery.GetSingletonEntity()).AimRevision, Is.EqualTo(bridge.PunchAimRevision));
@@ -190,6 +191,121 @@ namespace CrowdPunch.Tests
                     Assert.That(em.GetBuffer<CollisionDamageHistory>(victim).Length, Is.EqualTo(1));
                 }
             }
+        }
+
+        [TestCase(3.05f, 0f)]
+        [TestCase(3.5f, 0f)]
+        [TestCase(3.95f, 0f)]
+        [TestCase(4.45f, 0f)]
+        [TestCase(3.95f, .5f)]
+        [TestCase(3.95f, .8f)]
+        [TestCase(2.4f, 0f, 6f)]
+        public void Combat003_PropagatedMomentumDoesNotDependOnContactVertexTiming(float distance, float lateral, float strength = 90)
+        {
+            var material = Unity.Physics.Material.Default; material.Restitution = .75f; material.Friction = .05f;
+            material.RestitutionCombinePolicy = Unity.Physics.Material.CombinePolicy.Maximum;
+            material.FrictionCombinePolicy = Unity.Physics.Material.CombinePolicy.Minimum;
+            material.CollisionResponse = CollisionResponsePolicy.CollideRaiseCollisionEvents;
+            // Level 8 Baseline/Ranged prefabs: 1kg, 0 damping, 2m capsule, .75 bounce/.05 friction.
+            var shape = Unity.Physics.CapsuleCollider.Create(new CapsuleGeometry { Radius = .5f,
+                Vertex0 = new float3(0,-.5f,0), Vertex1 = new float3(0,.5f,0) }, CollisionFilter.Default, material);
+            colliders.Add(shape); em.SetComponentData(source, new PhysicsCollider { Value = shape });
+            Entity victim = Body(new float3(lateral,0,distance), shape, true);
+            var mass = em.GetComponentData<PhysicsMass>(victim); mass.InverseInertia.xz = float2.zero; em.SetComponentData(victim, mass);
+            using var query = em.CreateEntityQuery(typeof(EnemyLaunchSettings));
+            var settings = query.GetSingleton<EnemyLaunchSettings>(); settings.UsefulMomentumSpeed = 15;
+            settings.LowMomentumPeriod = .25f; settings.RecoveryDuration = .6f;
+            em.SetComponentData(query.GetSingletonEntity(), settings);
+            bridge.PublishPunchPreview(Vector3.back, Vector3.forward, 1, 2, 5, 0, 22, 12,
+                previewStrength: strength, releaseAngleDegrees: 16, useDottedTrajectory: true, trajectoryMaximumSeconds: 1);
+            Preview(); Punch(strength);
+            float firstSpeed = -1, maximumSpeed = 0, firstZ = 0;
+            int ticksLaunched = 0;
+            for (int i = 0; i < 60; i++)
+            {
+                Step(true);
+                var launch = em.GetComponentData<EnemyLaunchState>(victim);
+                float speed = math.length(em.GetComponentData<PhysicsVelocity>(victim).Linear.xz);
+                if (launch.Phase == EnemyLaunchPhase.Launched)
+                {
+                    if (firstSpeed < 0) { firstSpeed = speed; firstZ = em.GetComponentData<LocalTransform>(victim).Position.z; }
+                    maximumSpeed = math.max(maximumSpeed, speed); ticksLaunched++;
+                }
+            }
+            TestContext.WriteLine($"Contact z={distance:F2}, x={lateral:F2}: first={firstSpeed:F3}, max={maximumSpeed:F3}, launchedTicks={ticksLaunched}, distance={em.GetComponentData<LocalTransform>(victim).Position.z-firstZ:F3}");
+            if (strength > 15)
+                Assert.That(firstSpeed, Is.GreaterThan(15), "A strong isolated body hit must retain incoming momentum, not the shortened vertex motor speed.");
+            else
+                Assert.That(firstSpeed, Is.InRange(.1f, 10), "A genuinely weak hit must not gain an artificial minimum launch speed.");
+            if (lateral > .1f) Assert.That(firstSpeed, Is.LessThan(strength * .875f), "Glancing hits keep their weaker normal momentum.");
+            Assert.That(em.GetComponentData<EnemyLaunchState>(victim).Owner, Is.EqualTo(EnemyLaunchOwner.Player));
+            Assert.That(em.GetBuffer<CollisionDamageHistory>(victim).Length, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Combat003_RepairedContactContinuesThroughAnOrdinaryDynamicSecondGeneration()
+        {
+            Entity first = Body(new float3(0,0,3.95f), colliders[0], true);
+            Entity second = Body(new float3(0,0,10.5f), colliders[0], true);
+            bridge.PublishPunchPreview(Vector3.back, Vector3.forward, 1, 2, 5, 0, 22, 12,
+                previewStrength: 90, useDottedTrajectory: true, trajectoryMaximumSeconds: 1);
+            Preview(); Punch(90);
+            int steps = 0;
+            while (em.GetComponentData<EnemyLaunchState>(second).Phase != EnemyLaunchPhase.Launched && steps++ < 120) Step(true);
+            Assert.That(steps, Is.LessThan(120));
+            Assert.That(em.IsComponentEnabled<AuthoritativeLaunchPath>(first), Is.False);
+            Assert.That(em.IsComponentEnabled<AuthoritativeLaunchPath>(second), Is.False);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(second).Owner, Is.EqualTo(EnemyLaunchOwner.Player));
+            Assert.That(em.GetBuffer<CollisionDamageHistory>(second)[0].Source, Is.EqualTo(first));
+        }
+
+        [Test]
+        public void Combat004_OrdinaryDynamicContactsKeepTheirSolverMomentum()
+        {
+            Entity victim = Body(new float3(0,0,3.95f), colliders[0], true);
+            float withRepair = Run();
+            world.GetOrCreateSystemManaged<Unity.Physics.Systems.PhysicsSimulationGroup>()
+                .RemoveSystemFromUpdateList(world.GetOrCreateSystem<AuthoritativeLaunchContactSystem>());
+            em.GetBuffer<CollisionDamageHistory>(victim).Clear();
+            float withoutRepair = Run();
+            Assert.That(withRepair, Is.EqualTo(withoutRepair).Within(.0001f));
+            Assert.That(em.IsComponentEnabled<AuthoritativeLaunchPath>(source), Is.False);
+
+            float Run()
+            {
+                em.SetComponentData(source, LocalTransform.FromPosition(float3.zero));
+                em.SetComponentData(victim, LocalTransform.FromPosition(new float3(0,0,3.95f)));
+                em.SetComponentData(victim, new EnemyLaunchState()); em.SetComponentData(victim, new PhysicsVelocity());
+                var launch = em.GetComponentData<EnemyLaunchState>(source);
+                EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.PlayerPunch, 10); em.SetComponentData(source, launch);
+                em.SetComponentData(source, new PhysicsVelocity { Linear = new float3(0,0,12) });
+                int steps = 0;
+                while (em.GetComponentData<EnemyLaunchState>(victim).Phase != EnemyLaunchPhase.Launched && steps++ < 120) Step();
+                Assert.That(steps, Is.LessThan(120));
+                return em.GetComponentData<PhysicsVelocity>(victim).Linear.z;
+            }
+        }
+
+        [TestCase("armor")]
+        [TestCase("protection")]
+        [TestCase("elite")]
+        [TestCase("dashing")]
+        public void Combat003_ContactRepairDoesNotBoostProtectedOrUnlaunchableBodies(string kind)
+        {
+            Entity victim = Body(new float3(0,0,1), colliders[0], true);
+            if (kind == "armor") em.AddComponentData(victim, new EnemyArmor { Stages = 1 });
+            if (kind == "protection") em.AddComponentData(victim, new EnemyArmor { ProtectedUntil = 100 });
+            if (kind == "elite") em.SetComponentData(victim, new EnemyTier { Value = EnemyCombatTier.Elite });
+            if (kind == "dashing") em.AddComponentData(victim, new DasherState { Phase = DasherPhase.Dashing });
+            var launch = new EnemyLaunchState(); EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.PlayerPunch, 10);
+            em.SetComponentData(source, launch); em.SetComponentData(source, new PhysicsVelocity { Linear = new float3(0,0,3) });
+            em.SetComponentData(source, new PhysicsMassOverride { IsKinematic = 1 });
+            em.SetComponentData(source, new AuthoritativeLaunchPath { LaunchSequence = launch.LaunchSequence,
+                IncomingVelocity = new float3(0,0,90), CrowdSurface = victim, CrowdIncomingVelocity = new float3(0,0,90) });
+            em.SetComponentEnabled<AuthoritativeLaunchPath>(source, true);
+            PhysicsStep();
+            Assert.That(math.length(em.GetComponentData<PhysicsVelocity>(victim).Linear), Is.LessThan(10),
+                "Protected contacts retain their existing physical response instead of receiving a launch-momentum repair.");
         }
 
         private BlobAssetReference<Unity.Physics.Collider> EmptyCollider()
@@ -639,6 +755,18 @@ namespace CrowdPunch.Tests
 
         [TestCase(100)]
         [TestCase(1000)]
+        public void Combat003_ProfileContactRepairInATouchingCrowd(int count)
+        {
+            for (int i = 1; i < count; i++) Body(new float3(30 + i % 32 * .98f, 0, i / 32 * .98f), colliders[0], true);
+            Preview(); Punch(); Step();
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < 20; i++) Step();
+            timer.Stop();
+            TestContext.WriteLine($"Contact repair pipeline: {count} touching crowd bodies / one source, {timer.Elapsed.TotalMilliseconds / 20:F3} ms/update (warm Editor fixture, including real physics and assertions).");
+        }
+
+        [TestCase(100)]
+        [TestCase(1000)]
         public void Player003_ProfileAuthoritativePathAcrossCrowdSizes(int count)
         {
             for (int i = 1; i < count; i++) Body(new float3(30 + i % 32 * 2, 0, i / 32 * 2), colliders[0], true);
@@ -701,6 +829,13 @@ namespace CrowdPunch.Tests
             Assert.That(Index(after, rebound), Is.LessThan(Index(after, finish)));
             Assert.That(Index(after, fallback), Is.LessThan(Index(after, finish)));
             Assert.That(Index(after, finish), Is.LessThan(Index(after, recovery)));
+            var physics = world.GetOrCreateSystemManaged<Unity.Physics.Systems.PhysicsSimulationGroup>();
+            physics.SortSystems(); using var simulation = physics.GetAllSystems();
+            var contact = world.GetOrCreateSystem<AuthoritativeLaunchContactSystem>();
+            Assert.That(Index(simulation, world.GetOrCreateSystemManaged<Unity.Physics.Systems.PhysicsCreateJacobiansGroup>().SystemHandle),
+                Is.LessThan(Index(simulation, contact)));
+            Assert.That(Index(simulation, contact),
+                Is.LessThan(Index(simulation, world.GetOrCreateSystemManaged<Unity.Physics.Systems.PhysicsSolveAndIntegrateGroup>().SystemHandle)));
 
             int Index(NativeList<SystemHandle> systems, SystemHandle handle)
             {

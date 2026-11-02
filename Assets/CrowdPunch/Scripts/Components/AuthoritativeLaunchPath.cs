@@ -26,6 +26,8 @@ namespace CrowdPunch.Components
         public float Seconds;
         public PhysicsMassOverride SavedMassOverride;
         public float3 ScheduledPosition, ExitVelocity, IncomingVelocity;
+        public Entity CrowdSurface;
+        public float3 CrowdIncomingVelocity;
         // Confirmed by this tick's live collider sweep, never copied from the forecast.
         public Entity Contact;
         public float3 ContactPoint, ContactNormal;

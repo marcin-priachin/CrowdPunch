@@ -1927,6 +1927,23 @@ Unity Physics integrates the actual transform and pushes dynamic crowd bodies.
 Gravity/damping already represented by the saved geometry/profile do not act again
 on the motor body. Crowd collision interpretation/damage/ownership remain ECS-owned.
 
+Propagated-contact momentum correction (2026-11-02, COMBAT-003/004/012): the
+velocity needed to land on a partial contact vertex can be much smaller than the
+source's incoming flight velocity. The motor now retains full incoming velocity and
+the preceding crowd contact's velocity/identity through its remainder step.
+AuthoritativeLaunchContactSystem runs inside PhysicsSimulationGroup, after
+PhysicsCreateJacobiansGroup and before PhysicsSolveAndIntegrateGroup. Its Burst
+IJacobiansJob repairs a weakened normal contact-velocity constraint for a real,
+launch-eligible dynamic enemy using relative incoming speed, original gameplay
+masses and combined restitution. Stronger solver constraints remain intact.
+Unity Physics applies the impulse and the existing post-physics collision pipeline
+continues to own propagation, ownership, damage history and recovery. No predicted
+contact awards damage and no victim/source transform correction is added. Ordinary
+sources, launched victims, protected armor/Snake parts, unlaunchable tiers and active
+Dasher dashes keep their existing response. No minimum speed/range or recovery tuning
+is added. See Docs/Verification/PropagatedLaunchMomentum.md for the level-8 profile
+inspection, contact-timing reproduction, weak/glancing checks and crowd cost probes.
+
 The motor collider-casts each segment against live solids. Current cover/track
 poses are recast because the collision world can contain the prior pose. Boss parts,
 Chicken, Rolling, Dino and Finale bodies are also recast at their current transform
