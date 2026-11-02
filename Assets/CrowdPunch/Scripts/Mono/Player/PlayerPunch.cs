@@ -108,7 +108,7 @@ namespace CrowdPunch.Mono.Player
             Transform originTransform = punchOrigin != null ? punchOrigin : transform;
             ecsBridge.PublishPunchPreview(
                 originTransform.position,
-                originTransform.forward,
+                PunchDirection(originTransform),
                 settings.Radius,
                 settings.Range,
                 trajectoryPreview.LineLength,
@@ -162,7 +162,7 @@ namespace CrowdPunch.Mono.Player
         {
             Transform originTransform = punchOrigin != null ? punchOrigin : transform;
             Vector3 origin = originTransform.position;
-            Vector3 direction = originTransform.forward;
+            Vector3 direction = PunchDirection(originTransform);
 
             ecsBridge.PublishPunch(
                 origin,
@@ -177,6 +177,13 @@ namespace CrowdPunch.Mono.Player
             awaitingPunchResult = true;
             cooldownFeedback?.CancelReadyFeedback();
             PunchStarted?.Invoke();
+        }
+
+        private Vector3 PunchDirection(Transform originTransform)
+        {
+            return settings.UsePlayerDirectionOnly
+                ? Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized
+                : originTransform.forward;
         }
 
         private void OnPunchResolved(uint sequence, bool hitEnemy)

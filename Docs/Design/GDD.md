@@ -306,6 +306,15 @@ When an attack is committed, the player should not be uncertain about its initia
 
 Player punches use configurable range-based aim assistance limited by a configurable maximum horizontal acquisition angle from player facing. Use a wider release angle to retain a valid current lock near the acquisition boundary. A valid enemy hit by the facing ray is preferred; otherwise score eligible candidates by alignment with a configurable distance penalty. Ordinary solid obstructions reject targets, while rotating cover/enclosures retain their existing aim-selection exception. A new preferred candidate must persist for a configurable switch delay before replacing a valid lock; an invalid or out-of-range lock can be replaced immediately. Leaving the punch volume clears selection. Protected Armored enemies do not originate a launch preview, but remain valid targets for assistance from another body. An assist range of zero disables selection. Predict a target's horizontal movement for a short configurable time and maximum displacement, using launch speed to estimate travel time. Bound the resulting direction to the release cone. Preview and launch use the same solution; the punch commits the last displayed per-enemy direction/target when still eligible, rather than silently selecting a newer solution after the click. Aim assistance never expands or redirects the punch hit volume. Input-specific tuning remains unresolved under OQ-017.
 
+Facing-only option amendment (2026-11-02): expose `Use Player Direction Only` in
+`PlayerPunchSettings`, disabled by default. When enabled, directly punched bodies
+and redirected Chicken projectiles use only the player's horizontal facing for
+their initial direction, including during dash. Ignore positional blending and
+initial target selection/lead/homing. Preview and committed dotted travel use the
+same facing solution. Preserve the authored blend/assist values for switching back.
+Physical collisions, specialized rebound rules, ricochet assistance and propagated
+launch correction retain their existing behavior.
+
 ### PLAYER-005 — Consistent Punch During Dash
 
 Status: Must

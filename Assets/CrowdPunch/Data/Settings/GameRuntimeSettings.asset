@@ -34,8 +34,8 @@ MonoBehaviour:
   maximumApproachingExplosives: 30
   minimumPropagationImpulse: 1.5
   propagationAimCorrectionRadius: 6
-  propagationAimMaximumAngleDegrees: 20
   launchHomingDegreesPerSecond: 45
+  propagationAimMaximumAngleDegrees: 20
   launchHomingDuration: 0.25
   launchHomingMaximumAngleDegrees: 20
   aimLeadSeconds: 0.2
@@ -46,6 +46,6 @@ MonoBehaviour:
   maximumCollisionDamageMultiplier: 3
   playerOwnedLaunchDamageReduction: 0.8
   maximumPlayerImpactDamage: 25
-  usefulMomentumSpeed: 15
+  usefulMomentumSpeed: 25
   lowMomentumPeriod: 0.25
   recoveryDuration: 0.6

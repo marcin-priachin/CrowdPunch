@@ -25,7 +25,10 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f)] private float cooldown = 0.5f;
         [SerializeField, Min(0f), Tooltip("Cooldown after a punch misses every eligible enemy and intact barricade. Set to 0 for immediate retry.")]
         private float missCooldown = 0.25f;
-        [SerializeField, Range(0f, 1f)] private float directionPositionWeight = 1f;
+        [SerializeField, Tooltip("Launch directly along the player's horizontal facing. Ignores Direction Position Weight and initial aim assistance for both launch and indication. Collision rebounds and propagated launches keep their normal rules.")]
+        private bool usePlayerDirectionOnly;
+        [SerializeField, Range(0f, 1f), Tooltip("Blend from facing (0) to the direction from punch origin to enemy (1). Aim assistance can override this blend. Ignored when Use Player Direction Only is enabled.")]
+        private float directionPositionWeight = 1f;
         [SerializeField, Min(0f), Tooltip("Maximum distance from a punched enemy to another enemy that aim assist can target. Set to 0 to disable aim assist.")]
         private float aimAssistRange = 22f;
         [SerializeField, Range(0f, 180f), Tooltip("Maximum horizontal angle in degrees from player facing to an aim-assist target.")]
@@ -134,8 +137,9 @@ namespace CrowdPunch.Configuration
         public float Damage => damage;
         public float Cooldown => cooldown;
         public float MissCooldown => missCooldown;
-        public float DirectionPositionWeight => directionPositionWeight;
-        public float AimAssistRange => aimAssistRange;
+        public bool UsePlayerDirectionOnly => usePlayerDirectionOnly;
+        public float DirectionPositionWeight => usePlayerDirectionOnly ? 0f : directionPositionWeight;
+        public float AimAssistRange => usePlayerDirectionOnly ? 0f : aimAssistRange;
         public float AimAssistMaximumAngleDegrees => aimAssistMaximumAngleDegrees;
         public float AimAssistReleaseAngleDegrees => Mathf.Max(aimAssistMaximumAngleDegrees, aimAssistReleaseAngleDegrees);
         public float AimAssistSwitchDelay => Mathf.Max(0f, aimAssistSwitchDelay);

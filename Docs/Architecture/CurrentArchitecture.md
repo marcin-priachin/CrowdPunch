@@ -2190,6 +2190,17 @@ objects occlude indicators normally. Only the drawing is projected: forecast
 endpoints/contact samples remain at body height for collision and aim commitment.
 See `Docs/Verification/DottedLaunchTrajectory.md` for checks and limitations.
 
+`PlayerPunchSettings.UsePlayerDirectionOnly` provides the PLAYER-004 facing-only
+alternative (default off). It resolves positional weight and initial assist range
+to zero while retaining their serialized tuning. `PlayerPunch` publishes its own
+horizontal transform facing, using the optional punch origin only for position, to
+both preview and punch bridges. The existing ECS direction pipeline therefore uses
+the same unassisted direction for enemies and redirected Chicken projectiles.
+`PunchAimAssistSystem` clears live locks with assist disabled, rejects stale assisted
+snapshots, and preserves compatible unassisted preview snapshots so their dotted
+paths remain authoritative at the click. Collision, rebound and propagation rules
+are unchanged.
+
 ### Presentation
 
 `GamePresentationGroup` runs in Unity's presentation phase:

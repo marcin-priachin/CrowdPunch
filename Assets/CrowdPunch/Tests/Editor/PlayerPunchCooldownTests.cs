@@ -49,6 +49,35 @@ namespace CrowdPunch.Tests
             Object.DestroyImmediate(settings);
         }
 
+        [TestCase(0f)]
+        [TestCase(.5f)]
+        [TestCase(1f)]
+        public void Player004_DirectionOnlyPublishesPlayerFacingForPreviewAndPunch(float positionWeight)
+        {
+            Set(settings, "usePlayerDirectionOnly", true);
+            Set(settings, "directionPositionWeight", positionWeight);
+            Set(settings, "aimAssistRange", 22f);
+            root.transform.rotation = Quaternion.Euler(0, 37, 0);
+            var origin = new GameObject("Offset punch origin").transform;
+            origin.SetParent(root.transform, false);
+            origin.localPosition = new Vector3(1, 2, 0);
+            origin.localRotation = Quaternion.Euler(25, 70, 0);
+            Set(punch, "punchOrigin", origin);
+            var preview = root.AddComponent<PunchTrajectoryPreview>(); preview.Initialize(settings);
+            Set(punch, "trajectoryPreview", preview);
+            Call(punch, "PublishPunchPreview");
+            punch.RequestPunch();
+            var facing = (Unity.Mathematics.float3)root.transform.forward;
+            Assert.That(Unity.Mathematics.math.distance(bridge.PunchPreviewDirection, facing), Is.LessThan(.00001f));
+            Assert.That(Unity.Mathematics.math.distance(bridge.PunchDirection, facing), Is.LessThan(.00001f));
+            Assert.That(bridge.PunchPreviewPositionWeight, Is.Zero);
+            Assert.That(bridge.PunchPushDirectionPositionWeight, Is.Zero);
+            Assert.That(bridge.PunchPreviewAimAssistRange, Is.Zero);
+            Set(settings, "usePlayerDirectionOnly", false);
+            Assert.That(settings.DirectionPositionWeight, Is.EqualTo(positionWeight), "Toggling restores authored tuning.");
+            Assert.That(settings.AimAssistRange, Is.EqualTo(22));
+        }
+
         [Test]
         public void Player008_ReadyPopFiresOnceSettlesAndDoesNotAccumulateBoneScale()
         {

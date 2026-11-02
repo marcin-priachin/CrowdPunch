@@ -26,8 +26,7 @@ namespace CrowdPunch.Systems.Combat
 
         public void OnUpdate(ref SystemState state)
         {
-            bool available = PlayerBridgeRegistry.TryGetBridge(out var bridge) && bridge.IsPunchPreviewAvailable
-                && bridge.PunchPreviewAimAssistRange > 0f;
+            bool available = PlayerBridgeRegistry.TryGetBridge(out var bridge) && bridge.IsPunchPreviewAvailable;
             var volume = available ? new PunchSpecification {
                 Origin = bridge.PunchPreviewOrigin, Direction = bridge.PunchPreviewDirection,
                 Radius = bridge.PunchPreviewRadius, Range = bridge.PunchPreviewRange,
@@ -76,6 +75,19 @@ namespace CrowdPunch.Systems.Combat
             double now, float speed, ref PunchAimAssistTarget aim)
         {
             float3 facing = math.normalizesafe(new float3(bridge.PunchPreviewDirection.x, 0, bridge.PunchPreviewDirection.z));
+            if (bridge.PunchPreviewAimAssistRange <= 0f)
+            {
+                // PLAYER-004: keep an unassisted displayed path consumable at the click.
+                // Discard a previous assisted/positional snapshot when switching to facing only.
+                if (aim.PreviewTarget != Entity.Null || aim.PreviewHasAimPoint != 0
+                    || bridge.PunchPreviewPositionWeight <= 0f
+                    && math.dot(math.normalizesafe(aim.PreviewDirection), facing) < .999999f)
+                    aim = default;
+                aim.Target = Entity.Null;
+                aim.Challenger = Entity.Null;
+                aim.IsAiming = 0;
+                return;
+            }
             bool retain = PunchAimAssist.IsValidTarget(em, source, aim.Target)
                 && PunchAimAssist.IsWithinAssistLimits(em, aim.Target, position, facing,
                     bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewReleaseAngleDegrees)

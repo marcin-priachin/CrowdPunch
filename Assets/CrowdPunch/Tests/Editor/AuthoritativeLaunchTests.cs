@@ -164,6 +164,59 @@ namespace CrowdPunch.Tests
             return em.IsComponentEnabled<AuthoritativeLaunchPath>(source);
         }
 
+        [TestCase(-.75f, false)]
+        [TestCase(.75f, false)]
+        [TestCase(-.75f, true)]
+        [TestCase(.75f, true)]
+        public void Player004_DirectionOnlyIgnoresOffsetAndOldLockWhileKeepingDisplayedPath(float lateral, bool dotted)
+        {
+            em.SetComponentData(source, LocalTransform.FromPosition(new float3(lateral, 0, 0)));
+            Entity target = Body(new float3(lateral + 1, 0, 18), colliders[0], true);
+            em.SetComponentData(source, new PunchAimAssistTarget { Target = target });
+            Preview();
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).PreviewTarget, Is.EqualTo(target));
+            var settings = ScriptableObject.CreateInstance<CrowdPunch.Configuration.PlayerPunchSettings>();
+            try
+            {
+                var serialized = new UnityEditor.SerializedObject(settings);
+                serialized.FindProperty("usePlayerDirectionOnly").boolValue = true;
+                serialized.FindProperty("directionPositionWeight").floatValue = 1;
+                serialized.FindProperty("aimAssistRange").floatValue = 22;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                bridge.PublishPunchPreview(Vector3.back, Vector3.forward, 1, 2, 5,
+                    settings.DirectionPositionWeight, settings.AimAssistRange, 12,
+                    previewStrength: 12, useDottedTrajectory: dotted, trajectoryMaximumSeconds: 1);
+                var aimSystem = world.GetOrCreateSystem<PunchAimAssistSystem>();
+                aimSystem.Update(world.Unmanaged);
+                Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).PreviewRevision, Is.Zero,
+                    "Switching modes cannot consume an old assisted path.");
+                Preview();
+                foreach (var segment in bridge.TrajectoryPreviewSegments)
+                    Assert.That(math.distance(math.normalizesafe(segment.End - segment.Start), math.forward()), Is.LessThan(.0001f));
+                Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.GreaterThan(0));
+                // Match the real pre-physics order: aim update also runs between display and click resolution.
+                aimSystem.Update(world.Unmanaged);
+                bridge.PublishPunch(Vector3.back, Vector3.forward, 1, 2, 12, .1f, 10, settings.DirectionPositionWeight);
+                world.GetOrCreateSystem<PlayerBridgeSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<PunchDetectionSystem>().Update(world.Unmanaged);
+                Assert.That(math.distance(math.normalizesafe(em.GetComponentData<ExternalImpulse>(source).Value), math.forward()), Is.LessThan(.0001f));
+                Assert.That(em.GetComponentData<EnemyLaunchState>(source).HomingTarget, Is.EqualTo(Entity.Null));
+                Assert.That(em.IsComponentEnabled<AuthoritativeLaunchPath>(source), Is.EqualTo(dotted));
+                world.GetOrCreateSystem<ApplyImpulseSystem>().Update(world.Unmanaged);
+                if (dotted)
+                {
+                    var path = em.GetBuffer<CommittedLaunchPathPoint>(source);
+                    float3 end = path[path.Length - 1].Value.Position;
+                    int steps = 0;
+                    while (em.IsComponentEnabled<AuthoritativeLaunchPath>(source) && steps++ < 100) Step();
+                    Assert.That(steps, Is.LessThan(100));
+                    Assert.That(math.distance(em.GetComponentData<LocalTransform>(source).Position, end), Is.LessThan(.001f));
+                    Assert.That(end.x, Is.EqualTo(lateral).Within(.001f));
+                }
+            }
+            finally { UnityEngine.Object.DestroyImmediate(settings); }
+        }
+
         [TestCase("free")]
         [TestCase("bounce")]
         [TestCase("enemy")]
