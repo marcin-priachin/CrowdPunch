@@ -927,10 +927,10 @@ clocks. Generation changes reset records; surviving recovery starts a full coold
 using active eligible cones and lateral separation; launched/committed movement is skipped.
 
 After recovery and shared facing, `DragonFlameDamageSystem` resolves current-position
-XZ victim disks against the mouth sector and Unity Physics solid-cover rays. It builds
+XZ victim disks against the mouth sector and Unity Physics solid-cover sweeps. It builds
 one 4m spatial index of enemy candidates per step; source clocks are source/victim
-lifetime keyed and retained through reentry/state transitions. Ray collectors ignore
-enemy bodies, triggers and floor faces. Ground projection is explicitly authored
+lifetime keyed and retained through reentry/state transitions. Cover collectors ignore
+enemy bodies and triggers. Sweeps start above the authored arena floor. Ground projection is explicitly authored
 (`groundY = -1` in this encounter), independent of arena-volume center or flight altitude.
 Intact armor/protection, bosses and protected Snake parts are filtered through existing
 rules. Damage uses `EnemyDamageResolution` with emitter attribution. Normal bursts
@@ -940,9 +940,23 @@ ExternalImpulse, launch propagation or Exploder detonation request. `DragonPlaye
 publishes dedicated damage/push through `PlayerEcsBridge.DragonFlameReceived`, handled by
 Mono-owned player health without ordinary invulnerability gates.
 
-`DragonFlamePresentationSystem` draws a pooled aggregate vertex-color mesh for moving
-warnings, mouth wind-up and active flames, clipping radial boundaries with the same
-solid-cover query. `EnemyAnimationSystem` samples supplied Flying_Idle/Fast_Flying/
+`DragonFlamePresentationSystem` draws an aggregate vertex-color mesh for moving
+warnings/active ground footprints and sparse mouth/ember sprites. For DRAGON-001/002/006,
+`DragonFlameStreamMesh` batches connected upper/lower flame surfaces from the sampled
+mouth, using 80 angular strips and 16 fixed distance intervals. Each strip and its
+ground footprint stop at the shortest of three solid-cover sweeps (161 shared samples
+per source, read-only `DragonFlameCoverSamplingJob`); enemy bodies remain non-blocking.
+The vertical sweep spans the obstacle faces above the arena floor, so sloped rocks
+cast a shared flame shadow for presentation, damage and avoidance.
+Cover sampling and stream vertex generation run through Burst jobs with reused native
+buffers; the mesh caches its triangle topology. Full-length UVs preserve outward flow
+when cover cuts a stream. Vertical rolling motion never displaces its XZ boundary.
+The dedicated Resources `DragonFlameStream` material/shader samples the installed
+Vefects Stylized Fire Perlin/swirl textures for broad flowing shapes, a cream/yellow
+core and orange edges. Visible surfaces write depth so the rear shell cannot paint
+over the front; transparent cutouts discard before depth writes. Reusable mesh buffers
+clear each update, with no emitters, lingering trails or gameplay-state writes.
+`EnemyAnimationSystem` samples supplied Flying_Idle/Fast_Flying/
 Headbutt/Death poses using the same fixed-step phase as the head attachment. Headbutt
 is a delegated warning pose; no authored breath animation is supplied. Prefab builder
 calibrates and samples the supplied Head bone. Presentation does not modify physics.
@@ -969,6 +983,14 @@ positioning 0.0068ms, cycle/head samples 0.0037ms, avoidance 0.0748ms, damage wi
 ticks/spatial indexing 0.3396ms; zero calling-thread managed bytes in each loop.
 Measurements freeze physics and advance synthetic tick clocks, excluding GPU/FPS,
 so they do not settle OQ-001. Human balance/readability playtesting remains necessary.
+
+Connected stream verification (2026-11-03): all 47 Dragon EditMode cases passed,
+including mouth tracking, emission states, angled wall silhouettes, moving geometry
+and Vefects material binding. A controlled Flame Front preview showed the stream
+stopping at central cover while its exposed sides continued. With 250 baked enemies
+and ten emitting Dragons, 120 warmed presentation updates averaged 2.95 ms with zero
+managed bytes allocated on the calling thread. This includes cover rays, mesh upload
+and draw submission, and excludes GPU rendering and total frame time.
 Unity compilation and serial `dotnet build Assembly-CSharp.csproj --no-restore -m:1`
 pass; existing package/deprecated-aspect warnings remain. The parallel MSBuild attempt
 failed silently at project-reference evaluation; serial execution resolves it.

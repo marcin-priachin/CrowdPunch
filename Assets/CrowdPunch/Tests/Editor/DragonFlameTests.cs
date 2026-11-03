@@ -3,6 +3,8 @@ using CrowdPunch.Configuration;
 using CrowdPunch.Systems.AI;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Physics;
+using CrowdPunch.Systems.Presentation;
+using System.Reflection;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Core;
@@ -172,18 +174,134 @@ namespace CrowdPunch.Tests
             Assert.That(DragonFlameGeometry.Overlaps(cone, new float3(0, 900, tuning.Launched.Length + .6f), .5f), Is.False);
             Assert.That(DragonFlameGeometry.Overlaps(cone, new float3(0, 0, -1), .5f), Is.False);
         }
-        private void Wall(bool enemyBody)
+        private void Wall(bool enemyBody, float x = 0, float z = 2, float yaw = 0, float heightAboveGround = .6f)
         {
             physics.Dispose(); physics = new PhysicsWorld(1, 0, 0);
             solid = Unity.Physics.BoxCollider.Create(new BoxGeometry { Size = new float3(3, 2, .5f), Orientation = quaternion.identity }, CollisionFilter.Default);
             var wall = enemyBody ? Enemy(new float3(0, 0, 2)) : em.CreateEntity();
             var bodies = physics.Bodies;
-            bodies[0] = new RigidBody { Collider = solid, Entity = wall, WorldFromBody = new RigidTransform(quaternion.identity, new float3(0, tuning.GroundY + .6f, 2)), Scale = 1 };
+            bodies[0] = new RigidBody { Collider = solid, Entity = wall, WorldFromBody = new RigidTransform(quaternion.RotateY(math.radians(yaw)), new float3(x, tuning.GroundY + heightAboveGround, z)), Scale = 1 };
             physics.CollisionWorld.BuildBroadphase(ref physics, .05f, float3.zero, true);
             using var q = em.CreateEntityQuery(typeof(PhysicsWorldSingleton)); em.SetComponentData(q.GetSingletonEntity(), new PhysicsWorldSingleton { PhysicsWorld = physics });
         }
         [TestCase(false, false)] [TestCase(true, true)] public void Dragon002_SolidCoverBlocksAndBodiesDoNot(bool enemyBody, bool damage)
         { Wall(enemyBody); Damage(); Assert.That(Hp < 100, Is.EqualTo(damage)); }
+
+        [Test]
+        public void Dragon002_CoverAboveFloorProbeStopsDamageAndStream()
+        {
+            Wall(false, heightAboveGround: 1.6f);
+            Damage();
+            Assert.That(Hp, Is.EqualTo(100));
+            var stream = PresentStream();
+            Assert.That(stream.vertexCount, Is.GreaterThan(0));
+            Assert.That(stream.bounds.max.z, Is.LessThan(1.75f));
+        }
+
+        private UnityEngine.Mesh PresentStream()
+        {
+            var presentation = world.GetOrCreateSystemManaged<DragonFlamePresentationSystem>();
+            presentation.Update();
+            var stream = typeof(DragonFlamePresentationSystem).GetField("stream", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(presentation);
+            return (UnityEngine.Mesh)stream.GetType().GetField("mesh", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stream);
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void Dragon002_ConnectedStreamUsesCoverAndUncompressedFlowCoordinates(bool enemyBody)
+        {
+            Wall(enemyBody);
+            var mesh = PresentStream();
+            var points = mesh.vertices; var uv = mesh.uv;
+            Assert.That(points.Length, Is.GreaterThan(0));
+            float furthest = 0;
+            bool mouthJoined = false;
+            for (int i = 0; i < points.Length; i++)
+            {
+                float distance = math.length(new float2(points[i].x, points[i].z));
+                mouthJoined |= distance < .0001f && math.abs(points[i].y) < .0001f;
+                furthest = math.max(furthest, distance);
+                Assert.That(uv[i].y, Is.EqualTo(distance / tuning.Launched.Length).Within(.0001f),
+                    "Clipping must cut flowing fire, never compress its UVs into a smaller cone.");
+                if (!enemyBody) Assert.That(points[i].z, Is.LessThan(1.75f), "Fire crossed the front of solid cover.");
+            }
+            Assert.That(mouthJoined, Is.True, "The connected stream starts at the sampled mouth.");
+            Assert.That(furthest, enemyBody ? Is.GreaterThan(tuning.Launched.Length - .05f) : Is.LessThan(2.1f));
+        }
+
+        [TestCase(0f)] [TestCase(35f)] [TestCase(-35f)]
+        public void Dragon002_ConnectedStreamTrianglesStayInFrontOfPartialCover(float yaw)
+        {
+            Wall(false, 1.5f, 3, yaw);
+            var mesh = PresentStream(); var points = mesh.vertices; var indices = mesh.triangles;
+            float furthest = 0;
+            foreach (var point in points) furthest = math.max(furthest, math.length(new float2(point.x, point.z)));
+            Assert.That(furthest, Is.GreaterThan(tuning.Launched.Length - .05f), "The open side still reaches full length.");
+            for (int i = 0; i < indices.Length; i += 3)
+            {
+                var a = points[indices[i]]; var b = points[indices[i + 1]]; var c = points[indices[i + 2]];
+                // Check triangle interiors and edges, not only vertices, at the gameplay cover plane.
+                for (int u = 0; u <= 3; u++)
+                for (int v = 0; v <= 3 - u; v++)
+                {
+                    var point = a + (b - a) * (u / 3f) + (c - a) * (v / 3f);
+                    bool blocked = physics.CollisionWorld.CastRay(new RaycastInput {
+                        Start = new float3(0, tuning.GroundY + .25f, 0),
+                        End = new float3(point.x, tuning.GroundY + .25f, point.z), Filter = CollisionFilter.Default });
+                    Assert.That(blocked, Is.False, "A stream triangle bridged the wall silhouette.");
+                }
+            }
+        }
+
+        [Test]
+        public void Dragon001_ConnectedStreamFollowsMouthAndClearsBetweenEmissionStates()
+        {
+            tuning.MouthOffset = new float3(0, 1, .5f); em.SetComponentData(source, tuning);
+            SourceLaunch(EnemyLaunchPhase.Active, EnemyLaunchOwner.None);
+            var mesh = PresentStream(); Assert.That(mesh.vertexCount, Is.GreaterThan(0));
+            em.SetComponentData(source, LocalTransform.FromPositionRotation(new float3(8, 2, -3), quaternion.RotateY(math.PI * .5f)));
+            mesh = PresentStream();
+            var mouth = new UnityEngine.Vector3(8.5f, 3, -3);
+            Assert.That(UnityEngine.Vector3.Distance(mesh.vertices[0], mouth), Is.LessThan(.0001f));
+            foreach (var point in mesh.vertices) Assert.That(point.x, Is.GreaterThanOrEqualTo(mouth.x - .0001f));
+            em.SetComponentData(source, new DragonFlameState { Phase = DragonFlamePhase.Warning });
+            Assert.That(PresentStream().vertexCount, Is.Zero, "Warnings have no damaging-looking stream.");
+            SourceLaunch(EnemyLaunchPhase.Launched, EnemyLaunchOwner.Player);
+            Assert.That(PresentStream().vertexCount, Is.GreaterThan(0), "Launch overrides warning with continuous flame.");
+            SourceLaunch(EnemyLaunchPhase.Recovering, EnemyLaunchOwner.Player);
+            Assert.That(PresentStream().vertexCount, Is.Zero, "Recovery clears emitted geometry immediately.");
+            SourceLaunch(EnemyLaunchPhase.Launched, EnemyLaunchOwner.Player);
+            PresentStream(); em.SetComponentEnabled<RespawnRequest>(source, true);
+            Assert.That(PresentStream().vertexCount, Is.Zero, "Pooling clears emitted geometry immediately.");
+        }
+
+        [Test]
+        public void Dragon002_StreamRollingMotionPreservesClippedFootprint()
+        {
+            Wall(false, 1.5f, 3, 35);
+            var first = PresentStream().vertices;
+            world.SetTime(new TimeData(.125, .05f));
+            var next = PresentStream().vertices;
+            Assert.That(next.Length, Is.EqualTo(first.Length));
+            bool rolled = false;
+            for (int i = 0; i < first.Length; i++)
+            {
+                Assert.That(next[i].x, Is.EqualTo(first[i].x));
+                Assert.That(next[i].z, Is.EqualTo(first[i].z));
+                rolled |= math.abs(next[i].y - first[i].y) > .01f;
+            }
+            Assert.That(rolled, Is.True, "The connected volume rolls while its cover-clipped XZ boundary stays fixed.");
+        }
+
+        [Test]
+        public void Dragon006_StreamMaterialReferencesInstalledVefectsTextures()
+        {
+            var material = UnityEngine.Resources.Load<UnityEngine.Material>("DragonFlameStream");
+            Assert.That(material, Is.Not.Null);
+            Assert.That(material.shader.isSupported, Is.True);
+            foreach (var property in new[] { "_NoiseMap", "_SwirlMap" })
+                Assert.That(AssetDatabase.GetAssetPath(material.GetTexture(property)), Does.StartWith("Assets/Vefects/Stylized Fire VFX URP/"));
+            Assert.That(UnityEditor.ShaderUtil.ShaderHasError(material.shader), Is.False);
+        }
         [Test] public void Dragon002_WarningCannotDamageOrPush()
         {
             tuning.EnemyMode = DragonEnemyFlameMode.BurstsAndLaunches; em.SetComponentData(source, tuning); SourceLaunch(EnemyLaunchPhase.Active, EnemyLaunchOwner.None);

@@ -100,21 +100,25 @@ namespace CrowdPunch.Systems.Combat
         {
             if (length <= .001f) return 0;
             var collector = new SolidCollector { Enemies = enemies, Source = source, MaxFraction = 1 };
-            world.CastRay(new RaycastInput { Start = new float3(origin.x, planeY, origin.y),
-                End = new float3(origin.x + direction.x * length, planeY, origin.y + direction.y * length), Filter = CollisionFilter.Default }, ref collector);
+            // Rock silhouettes widen above the old near-floor ray. Sweep the cover column
+            // so the visual, damage and avoidance all use the same horizontal shadow.
+            world.CapsuleCastCustom(new float3(origin.x, planeY - .15f, origin.y),
+                new float3(origin.x, planeY + 2.75f, origin.y), .025f,
+                new float3(direction.x, 0, direction.y), length, ref collector,
+                new CollisionFilter { BelongsTo = uint.MaxValue, CollidesWith = ~(1u << 7) });
             return length * collector.MaxFraction;
         }
 
-        private struct SolidCollector : ICollector<RaycastHit>
+        private struct SolidCollector : ICollector<ColliderCastHit>
         {
             public ComponentLookup<Enemy> Enemies;
             public Entity Source;
             public bool EarlyOutOnFirstHit => false;
             public float MaxFraction { get; set; }
             public int NumHits { get; private set; }
-            public bool AddHit(RaycastHit hit)
+            public bool AddHit(ColliderCastHit hit)
             {
-                if (hit.Entity == Source || Enemies.HasComponent(hit.Entity) || math.abs(hit.SurfaceNormal.y) > .8f ||
+                if (hit.Entity == Source || Enemies.HasComponent(hit.Entity) ||
                     hit.Material.CollisionResponse == CollisionResponsePolicy.RaiseTriggerEvents) return false;
                 MaxFraction = hit.Fraction; NumHits = 1; return true;
             }
