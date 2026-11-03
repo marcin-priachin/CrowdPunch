@@ -93,7 +93,9 @@ namespace CrowdPunch.Systems.Combat
         public ComponentLookup<Enemy> Enemies;
         public ComponentLookup<RotatingCover> Covers;
         public ComponentLookup<CoverEnclosure> Enclosures;
+        public ComponentLookup<BossPart> BossParts;
         public bool IgnoreMovingCovers;
+        public bool IgnoreTargetBossHands;
         public bool EarlyOutOnFirstHit => true;
         public float MaxFraction => 1f;
         public int NumHits { get; private set; }
@@ -101,6 +103,8 @@ namespace CrowdPunch.Systems.Combat
         {
             if (hit.Entity == Source || hit.Entity == Target || Enemies.HasComponent(hit.Entity)
                 || IgnoreMovingCovers && (Covers.HasComponent(hit.Entity) || Enclosures.HasComponent(hit.Entity))
+                || IgnoreTargetBossHands && BossParts.TryGetComponent(hit.Entity, out var part)
+                    && part.Kind != BossPartKind.Head && part.Encounter == Target
                 || hit.Material.CollisionResponse == CollisionResponsePolicy.RaiseTriggerEvents
                 || hit.Material.CollisionResponse == CollisionResponsePolicy.None) return false;
             NumHits = 1;

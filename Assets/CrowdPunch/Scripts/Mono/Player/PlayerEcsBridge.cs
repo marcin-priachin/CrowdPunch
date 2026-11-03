@@ -108,6 +108,10 @@ namespace CrowdPunch.Mono.Player
         private readonly List<TrajectoryPreviewImpact> trajectoryPreviewImpacts = new List<TrajectoryPreviewImpact>();
         public IReadOnlyList<TrajectoryPreviewImpact> TrajectoryPreviewImpacts => trajectoryPreviewImpacts;
         public float TrajectoryGroundHeight { get; private set; }
+        private readonly List<CrowdPunch.Components.TrajectoryPreviewSurface> trajectoryPreviewSurfaces = new List<CrowdPunch.Components.TrajectoryPreviewSurface>();
+        public IReadOnlyList<CrowdPunch.Components.TrajectoryPreviewSurface> TrajectoryPreviewSurfaces => trajectoryPreviewSurfaces;
+        public void AddTrajectoryPreviewSurface(CrowdPunch.Components.TrajectoryPreviewSurface surface)
+            => trajectoryPreviewSurfaces.Add(surface);
         public CrowdPunch.Components.CollisionPreviewSettings CollisionPreviewTuning { get; private set; }
         public uint CollisionPreviewResetSequence { get; private set; }
         public void ConfigureCollisionPreview(CrowdPunch.Components.CollisionPreviewSettings tuning) => CollisionPreviewTuning = tuning;
@@ -351,6 +355,7 @@ namespace CrowdPunch.Mono.Player
             if (TrajectoryPreviewRevision == 0) TrajectoryPreviewRevision++;
             trajectoryPreviewSegments.Clear();
             trajectoryPreviewImpacts.Clear();
+            trajectoryPreviewSurfaces.Clear();
         }
 
         public void AddTrajectoryPreview(float3 start, float3 end, bool isCollision = false, float opacity = 1f)

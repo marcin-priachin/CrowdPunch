@@ -87,7 +87,7 @@ namespace CrowdPunch.Mono.Player
                     : lineWidth;
                 // World-space matrices keep the arrow independent of the giant player's scale.
                 Matrix4x4 matrix = Matrix4x4.TRS(
-                    GroundPosition(segment.Start),
+                    ArrowGroundPosition(segment.Start, segment.End, width * 1.65f),
                     Quaternion.LookRotation(direction, up),
                     new Vector3(Mathf.Max(0.01f, width), 1f, length));
                 arrowProperties.SetFloat(OpacityProperty, segment.Opacity);
@@ -131,8 +131,10 @@ namespace CrowdPunch.Mono.Player
                 bool endpoint = segmentIndex == segments.Count - 1 || segments[segmentIndex + 1].StartsPath
                     || !segments[segmentIndex + 1].IsDotted;
                 if (segment.StartsPath) nextDot = 0f;
-                Vector3 start = GroundPosition(segment.Start);
-                Vector3 delta = GroundPosition(segment.End) - start;
+                Vector3 start = ToVector3(segment.Start);
+                start.y = 0f;
+                Vector3 delta = ToVector3(segment.End) - start;
+                delta.y = 0f;
                 float length = delta.magnitude;
                 if (length <= .00001f) continue;
                 Vector3 direction = delta / length;
@@ -144,13 +146,13 @@ namespace CrowdPunch.Mono.Player
                     foreach (var impact in impacts)
                         insideAccent |= math.distancesq(impact.Position.xz, new float2(position.x, position.z))
                             < (impactRadius + diameter * .5f) * (impactRadius + diameter * .5f) && impactRadius > 0f;
-                    if (!insideAccent) AddDot(position, diameter * .5f, color);
+                    if (!insideAccent) AddDot(GroundPosition(position, diameter * .5f), diameter * .5f, color);
                     nextDot += spacing;
                 }
                 nextDot -= length;
                 if (endpoint)
                 {
-                    Vector3 end = GroundPosition(segment.End);
+                    Vector3 end = GroundPosition(segment.End, diameter * .5f);
                     bool insideAccent = false;
                     foreach (var impact in impacts)
                         insideAccent |= math.distancesq(impact.Position.xz, new float2(end.x, end.z))
@@ -160,7 +162,7 @@ namespace CrowdPunch.Mono.Player
             }
             if (impactRadius > 0f)
                 foreach (var impact in impacts)
-                    AddImpactAccent(GroundPosition(impact.Position),
+                    AddImpactAccent(GroundPosition(impact.Position, impactRadius),
                         ToVector3(impact.Direction), impactRadius, color);
             dottedMesh.Clear();
             if (dotVertices.Count == 0) return;
@@ -173,9 +175,34 @@ namespace CrowdPunch.Mono.Player
                 ShadowCastingMode.Off, false, null, LightProbeUsage.Off);
         }
 
-        private Vector3 GroundPosition(float3 position)
+        private Vector3 GroundPosition(float3 position, float footprintRadius = 0f)
         {
-            return new Vector3(position.x, ecsBridge.TrajectoryGroundHeight + GroundClearance, position.z);
+            float height = ecsBridge.TrajectoryGroundHeight;
+            var surfaces = ecsBridge.TrajectoryPreviewSurfaces;
+            for (int i = 0; i < surfaces.Count; i++)
+            {
+                var surface = surfaces[i];
+                if (math.distancesq(position.xz, surface.Center) <= math.square(surface.Radius + footprintRadius))
+                    height = math.max(height, surface.Height);
+            }
+            return new Vector3(position.x, height + GroundClearance, position.z);
+        }
+
+        private Vector3 ArrowGroundPosition(float3 start, float3 end, float halfWidth)
+        {
+            float height = ecsBridge.TrajectoryGroundHeight;
+            float2 delta = end.xz - start.xz;
+            var surfaces = ecsBridge.TrajectoryPreviewSurfaces;
+            for (int i = 0; i < surfaces.Count; i++)
+            {
+                var surface = surfaces[i];
+                float fraction = math.saturate(math.dot(surface.Center - start.xz, delta)
+                    / math.max(math.lengthsq(delta), .00001f));
+                if (math.distancesq(start.xz + delta * fraction, surface.Center) <= math.square(surface.Radius + halfWidth))
+                    height = math.max(height, surface.Height);
+            }
+            // Keep each rigid arrow flat while clearing any floor crossed by its footprint.
+            return new Vector3(start.x, height + GroundClearance, start.z);
         }
 
         private void AddImpactAccent(Vector3 center, Vector3 direction, float radius, Color color)

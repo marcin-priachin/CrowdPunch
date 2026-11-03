@@ -16,12 +16,14 @@ namespace CrowdPunch.Systems.Combat
     public partial struct PunchAimAssistSystem : ISystem
     {
         private EntityQuery candidates;
+        private EntityQuery gatekeeperHeads;
 
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PhysicsWorldSingleton>();
             candidates = new EntityQueryBuilder(Allocator.Temp).WithAll<LocalTransform>()
                 .WithAny<Enemy, BossEncounter, Barricade, ChickenBoss, RollingBoss, FallingPillar>().Build(ref state);
+            gatekeeperHeads = new EntityQueryBuilder(Allocator.Temp).WithAll<LocalTransform, BossEncounter>().Build(ref state);
         }
 
         public void OnUpdate(ref SystemState state)
@@ -35,11 +37,14 @@ namespace CrowdPunch.Systems.Combat
             SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var tuning);
             using var entities = candidates.ToEntityArray(Allocator.Temp);
             using var poses = candidates.ToComponentDataArray<LocalTransform>(Allocator.Temp);
+            using var heads = gatekeeperHeads.ToEntityArray(Allocator.Temp);
+            using var headPoses = gatekeeperHeads.ToComponentDataArray<LocalTransform>(Allocator.Temp);
             using var hits = new NativeList<RaycastHit>(Allocator.Temp);
             var collision = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
             var visibility = new LaunchObstructionCollector { Enemies = SystemAPI.GetComponentLookup<Enemy>(true),
                 Covers = SystemAPI.GetComponentLookup<RotatingCover>(true),
-                Enclosures = SystemAPI.GetComponentLookup<CoverEnclosure>(true), IgnoreMovingCovers = true };
+                Enclosures = SystemAPI.GetComponentLookup<CoverEnclosure>(true), IgnoreMovingCovers = true,
+                BossParts = SystemAPI.GetComponentLookup<BossPart>(true), IgnoreTargetBossHands = true };
             var em = state.EntityManager;
             double now = SystemAPI.Time.ElapsedTime;
             foreach (var (pose, launch, health, aim, source) in
@@ -49,13 +54,14 @@ namespace CrowdPunch.Systems.Combat
                 if (!available || !PunchResolution.Contains(em, source, pose.ValueRO.Position, volume)
                     || !PunchResolution.IsEligible(launch.ValueRO, health.ValueRO, volume)
                     || ArmorHitResolution.IsProtected(em, source)
+                    || SnakeHitRules.Protected(em, source)
                     || em.HasComponent<RespawnRequest>(source) && em.IsComponentEnabled<RespawnRequest>(source)
                     || !SnakePunchOcclusion.CanReach(em, source, volume.Origin))
                 { aim.ValueRW = default; continue; }
                 float speed = em.HasComponent<DasherSettings>(source)
                     ? em.GetComponentData<DasherSettings>(source).DashSpeed : bridge.PunchPreviewStrength;
                 UpdateAim(em, collision, visibility, source, pose.ValueRO.Position, bridge,
-                    entities, poses, hits, tuning, now, speed, ref aim.ValueRW);
+                    entities, poses, heads, headPoses, hits, tuning, now, speed, ref aim.ValueRW);
             }
             foreach (var (pose, projectile, aim, source) in
                 SystemAPI.Query<RefRO<LocalTransform>, RefRO<ChickenProjectile>, RefRW<PunchAimAssistTarget>>().WithEntityAccess())
@@ -65,13 +71,14 @@ namespace CrowdPunch.Systems.Combat
                 float speed = em.HasComponent<ChickenTuning>(projectile.ValueRO.Boss)
                     ? em.GetComponentData<ChickenTuning>(projectile.ValueRO.Boss).ReturnSpeed : bridge.PunchPreviewStrength;
                 UpdateAim(em, collision, visibility, source, pose.ValueRO.Position, bridge,
-                    entities, poses, hits, tuning, now, speed, ref aim.ValueRW);
+                    entities, poses, heads, headPoses, hits, tuning, now, speed, ref aim.ValueRW);
             }
         }
 
         private static void UpdateAim(EntityManager em, CollisionWorld world, LaunchObstructionCollector visibility,
             Entity source, float3 position, PlayerEcsBridge bridge, NativeArray<Entity> entities,
-            NativeArray<LocalTransform> poses, NativeList<RaycastHit> hits, in EnemyLaunchSettings tuning,
+            NativeArray<LocalTransform> poses, NativeArray<Entity> heads, NativeArray<LocalTransform> headPoses,
+            NativeList<RaycastHit> hits, in EnemyLaunchSettings tuning,
             double now, float speed, ref PunchAimAssistTarget aim)
         {
             float3 facing = math.normalizesafe(new float3(bridge.PunchPreviewDirection.x, 0, bridge.PunchPreviewDirection.z));
@@ -92,12 +99,18 @@ namespace CrowdPunch.Systems.Combat
                 && PunchAimAssist.IsWithinAssistLimits(em, aim.Target, position, facing,
                     bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewReleaseAngleDegrees)
                 && Clear(em, world, visibility, source, aim.Target, position);
-            Entity preferred = RayTarget(em, world, source, position, facing, bridge.PunchPreviewAimAssistRange, hits);
-            if (!PunchAimAssist.IsValidTarget(em, source, preferred)
-                || !PunchAimAssist.IsWithinAssistLimits(em, preferred, position, facing,
-                    bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewAimAssistMaximumAngleDegrees)
-                || !Clear(em, world, visibility, source, preferred, position))
-                preferred = Fallback(em, world, visibility, source, position, facing, bridge, entities, poses);
+            // BOSS-001/002: prefer the weak spot; shielding hands still intercept the real flight.
+            Entity preferred = retain && em.HasComponent<BossEncounter>(aim.Target) ? aim.Target
+                : Fallback(em, world, visibility, source, position, facing, bridge, heads, headPoses);
+            if (preferred == Entity.Null)
+            {
+                preferred = RayTarget(em, world, source, position, facing, bridge.PunchPreviewAimAssistRange, hits);
+                if (!PunchAimAssist.IsValidTarget(em, source, preferred)
+                    || !PunchAimAssist.IsWithinAssistLimits(em, preferred, position, facing,
+                        bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewAimAssistMaximumAngleDegrees)
+                    || !Clear(em, world, visibility, source, preferred, position))
+                    preferred = Fallback(em, world, visibility, source, position, facing, bridge, entities, poses);
+            }
             LaunchAimPrediction.UpdateLock(ref aim, preferred, retain, now, bridge.PunchPreviewSwitchDelay);
             aim.Facing = facing;
             aim.LaunchSpeed = speed;
@@ -154,6 +167,7 @@ namespace CrowdPunch.Systems.Combat
             foreach (var hit in hits)
             {
                 if (hit.Entity == source || em.HasComponent<RotatingCover>(hit.Entity) || em.HasComponent<CoverEnclosure>(hit.Entity) || hit.Fraction >= fraction
+                    || SnakeHitRules.Protected(em, hit.Entity)
                     || hit.Material.CollisionResponse == CollisionResponsePolicy.RaiseTriggerEvents
                     || hit.Material.CollisionResponse == CollisionResponsePolicy.None
                     || SnakeProjectileCollision.IgnoresOwner(em, source, hit.Entity)) continue;

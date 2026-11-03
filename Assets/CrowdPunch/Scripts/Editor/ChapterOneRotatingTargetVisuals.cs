@@ -95,6 +95,9 @@ namespace CrowdPunch.Editor
             SceneManager.MoveGameObjectToScene(dais.gameObject,cover.gameObject.scene);
             dais.position=new Vector3(cover.transform.position.x,cover.transform.position.y-cover.settings.height*.5f,cover.transform.position.z);
             float radius=cover.settings.radius-cover.settings.thickness;
+            var previewSurface=dais.gameObject.AddComponent<TrajectoryPreviewSurfaceAuthoring>();
+            previewSurface.radius=radius+.025f;
+            previewSurface.heightOffset=.13f;
             FixedPiece(dais,"Stone walking exclusion base",new Vector3(0,.04f,0),new Vector3(radius*2,.065f,radius*2),stone,true);
             FixedPiece(dais,"Brass base rim",new Vector3(0,.085f,0),new Vector3(radius*2+.05f,.018f,radius*2+.05f),brass,true);
             FixedPiece(dais,"Inset blue turntable",new Vector3(0,.112f,0),new Vector3(radius*2-.27f,.018f,radius*2-.27f),blue,true);

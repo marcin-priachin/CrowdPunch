@@ -1103,6 +1103,12 @@ Pre-physics severing follows punches and precedes
 damage/impulses; post-physics severing follows collision/explosion/Wizard/pillar
 resolution and precedes recovery. Shared hit rules block protected-head damage,
 launch, recoil and previews, while player punch detection still confirms cooldown.
+
+SNAKE-006/PLAYER-004: aim-source selection and presentation explicitly reject
+protected Snake heads and inner segments through `SnakeHitRules.Protected`, clearing
+stale locks and previews. Facing-ray acquisition skips protected Snake parts before
+choosing an eligible target; ordinary physical collisions remain unchanged. Tail-tip
+and exposed-head eligibility follow the live attached count and generation.
 Attached-orb damage is ignored until detachment. Both explosion mode alternatives
 are baked from `Data/Settings/SnakeSettings.asset` and obey tip-only eligibility.
 `EnemyReadabilitySystem` applies that asset's gold vulnerable color only to the current
@@ -2033,6 +2039,14 @@ tuning from baked `EnemyLaunchSettings`. Snapshot positions limit expensive
 candidate checks. Rotating cover/enclosures retain their established selection
 exception; ordinary walls reject acquisition/retention. No entities cross into Mono.
 
+BOSS-001/002: a narrow `BossEncounter` query supplies Gatekeeper head candidates
+before ordinary ray/fallback selection in both campaign encounters (10/50). A
+retained head keeps priority inside the release cone. The acquisition collector
+ignores only hands whose `BossPart.Encounter` is the selected head; walls and
+unrelated boss parts still obstruct. This exception does not change flight sweeps,
+homing obstruction, boss collisions or stagger/damage rules. Challenger persistence
+and committed preview/launch data flow remain shared with ordinary assistance.
+
 `PresentationBridgeSystem` saves displayed direction, target and revision on the
 source's `PunchAimAssistTarget`. `PlayerEcsBridge` passes only the revision with a
 click; `PlayerBridgeSystem` copies it into `PunchRequest`. `PunchDetectionSystem`
@@ -2188,6 +2202,15 @@ clearance to avoid floor z-fighting. Dot spacing and accent gaps use horizontal
 travel. The shared shader explicitly uses `ZTest LEqual`, so opaque characters and
 objects occlude indicators normally. Only the drawing is projected: forecast
 endpoints/contact samples remain at body height for collision and aim commitment.
+Raised decorative floors can bake a circular `TrajectoryPreviewSurface` through
+`TrajectoryPreviewSurfaceAuthoring` and its baker (PLAYER-003, COVER-004).
+`PresentationBridgeSystem` copies these presentation-only regions alongside each
+preview and clears them on reset. The renderer places each dot/contact accent on
+the highest overlapping floor, allowing for its footprint; rigid arrows clear any
+floor crossed by their footprint. Chapter One's rotating target turntable declares
+its 0.13m floor offset in the saved scene and art recipe. The shared depth test
+still lets cover, targets, characters and raised trim occlude indicators normally.
+Body grounding, forecast samples and authoritative launch paths are unchanged.
 See `Docs/Verification/DottedLaunchTrajectory.md` for checks and limitations.
 
 `PlayerPunchSettings.UsePlayerDirectionOnly` provides the PLAYER-004 facing-only

@@ -1367,6 +1367,8 @@ Status: Must
 
 The boss consists of a head weak spot and two detached hands. Only player-owned launched enemy bodies, including propagated player launch chains, can damage the head. Direct punches, ordinary contact, ranged projectiles and explosion splash cannot. Each accepted hit starts configurable, clearly visible brief invulnerability while collision remains active. Suppress duplicate and sustained-contact damage within a source launch. The boss never enters the ordinary launch lifecycle. Openings emerge from physical shielding and hand behaviour, without scheduled vulnerability windows.
 
+In the Gatekeeper battles at campaign levels 10 and 50, player punch aim assistance prioritizes the living head within its configured acquisition range and cone. Its own hands do not obstruct head selection or retention; they still physically intercept launched bodies. Keep the normal release cone, target-switch delay, solid-wall obstruction and disabled-assistance behavior (PLAYER-004).
+
 ### BOSS-002 - Physical Hands And Committed Attacks
 
 Status: Must

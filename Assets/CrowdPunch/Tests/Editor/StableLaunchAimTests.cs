@@ -74,6 +74,120 @@ namespace CrowdPunch.Tests
             world.GetOrCreateSystem<PunchAimAssistSystem>().Update(world.Unmanaged);
         }
 
+        private Entity GatekeeperHead(float3 position)
+        {
+            Entity head = em.CreateEntity(typeof(BossEncounter), typeof(BossPart), typeof(LocalTransform),
+                typeof(PhysicsCollider), typeof(PhysicsVelocity));
+            em.SetComponentData(head, LocalTransform.FromPosition(position));
+            em.SetComponentData(head, new BossPart { Encounter = head, Kind = BossPartKind.Head });
+            em.SetComponentData(head, new PhysicsCollider { Value = sphere });
+            return head;
+        }
+
+        private Entity GatekeeperHand(Entity head, BossPartKind kind, float3 position)
+        {
+            Entity hand = em.CreateEntity(typeof(BossPart), typeof(LocalTransform), typeof(PhysicsCollider));
+            em.SetComponentData(hand, new BossPart { Encounter = head, Kind = kind });
+            em.SetComponentData(hand, LocalTransform.FromPosition(position));
+            em.SetComponentData(hand, new PhysicsCollider { Value = sphere });
+            return hand;
+        }
+
+        private void SetCollisionBodies(params Entity[] entities)
+        {
+            physics.Dispose(); physics = new PhysicsWorld(entities.Length, 0, 0);
+            var bodies = physics.Bodies;
+            for (int i = 0; i < entities.Length; i++)
+                bodies[i] = new RigidBody { Entity = entities[i], Collider = em.GetComponentData<PhysicsCollider>(entities[i]).Value,
+                    WorldFromBody = new RigidTransform(quaternion.identity, em.GetComponentData<LocalTransform>(entities[i]).Position), Scale = 1 };
+            physics.CollisionWorld.BuildBroadphase(ref physics, .02f, float3.zero, true);
+            em.SetComponentData(physicsEntity, new PhysicsWorldSingleton { PhysicsWorld = physics });
+        }
+
+        [TestCase(BossPartKind.LeftHand)]
+        [TestCase(BossPartKind.RightHand)]
+        public void Boss001_Player004_HeadWinsThroughOwnHandAndOverFacingRayEnemy(BossPartKind kind)
+        {
+            Entity head = GatekeeperHead(new float3(.8f, 0, 10));
+            Entity hand = GatekeeperHand(head, kind, new float3(.4f, 0, 5));
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(0, 0, 8)));
+            SetCollisionBodies(head, hand, target);
+            Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(head));
+
+            world.GetOrCreateSystem<PresentationBridgeSystem>().Update(world.Unmanaged);
+            bridge.PublishPunch(Vector3.back, Vector3.forward, 1, 2, 90, .1f, 10, 0);
+            world.GetOrCreateSystem<PlayerBridgeSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<PunchDetectionSystem>().Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(source).HomingTarget, Is.EqualTo(head));
+            float3 direction = math.normalize(em.GetComponentData<ExternalImpulse>(source).Value);
+            Assert.That(math.distance(direction, math.normalize(new float3(.8f, 0, 10))), Is.LessThan(.0001f));
+            Assert.That(physics.CollisionWorld.CastRay(new RaycastInput { Start = float3.zero,
+                End = new float3(.8f, 0, 10), Filter = CollisionFilter.Default }, out Unity.Physics.RaycastHit hit), Is.True);
+            Assert.That(hit.Entity, Is.EqualTo(hand), "BOSS-002: selection must preserve physical hand interception.");
+        }
+
+        [Test]
+        public void Boss001_Player004_HeadChallengerUsesNormalDelayAndRetainsReleaseConePriority()
+        {
+            Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            Entity head = GatekeeperHead(new float3(.8f, 0, 10));
+            Aim(.01); Aim(.1);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            Aim(.14);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(head));
+            em.SetComponentData(head, LocalTransform.FromPosition(new float3(math.tan(math.radians(14)) * 10, 0, 10)));
+            Aim(.2); Aim(.4);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(head));
+            em.SetComponentData(head, LocalTransform.FromPosition(new float3(math.tan(math.radians(17)) * 10, 0, 10)));
+            Aim(.42);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+        }
+
+        [TestCase(0f, 23f, BossCycle.Opening)]
+        [TestCase(4f, 10f, BossCycle.Opening)]
+        [TestCase(0f, 10f, BossCycle.Defeated)]
+        public void Boss001_Player004_IneligibleHeadFallsBackToOrdinaryTarget(float x, float z, BossCycle cycle)
+        {
+            Entity head = GatekeeperHead(new float3(x, 0, z));
+            em.SetComponentData(head, new BossEncounter { Cycle = cycle });
+            Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+        }
+
+        [Test]
+        public void Boss001_Player004_HeadPriorityDoesNotBypassWallsOrOtherEncountersHands()
+        {
+            Entity head = GatekeeperHead(new float3(.8f, 0, 10));
+            Entity hand = GatekeeperHand(head, BossPartKind.LeftHand, new float3(.4f, 0, 5));
+            using var wallCollider = Unity.Physics.BoxCollider.Create(new BoxGeometry {
+                Size = new float3(5, 5, .5f), Orientation = quaternion.identity });
+            Entity wall = em.CreateEntity(typeof(LocalTransform), typeof(PhysicsCollider));
+            em.SetComponentData(wall, LocalTransform.FromPosition(new float3(0, 0, 7)));
+            em.SetComponentData(wall, new PhysicsCollider { Value = wallCollider });
+            SetCollisionBodies(head, hand, wall);
+            Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(Entity.Null));
+
+            var part = em.GetComponentData<BossPart>(hand); part.Encounter = em.CreateEntity();
+            em.SetComponentData(hand, part);
+            SetCollisionBodies(head, hand);
+            Aim(.1);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.Not.EqualTo(head));
+        }
+
+        [Test]
+        public void Boss001_Player004_ZeroAssistRangeClearsHeadSelection()
+        {
+            Entity head = GatekeeperHead(new float3(.8f, 0, 10));
+            Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(head));
+            bridge.PublishPunchPreview(Vector3.back, Vector3.forward, 1, 2, 5, 0, 0, 12, 3, 18, 90, 16, .12f, .35f);
+            Aim(.02);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(Entity.Null));
+        }
+
         [Test]
         public void Player004_ChallengerMustPersistAndJitterRestartsItsDelay()
         {
@@ -87,6 +201,44 @@ namespace CrowdPunch.Tests
             Assert.That(aim.Target, Is.EqualTo(target));
             LaunchAimPrediction.UpdateLock(ref aim, other, true, 1.24, .12f);
             Assert.That(aim.Target, Is.EqualTo(other));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Snake006_ProtectedPartsClearLocksAndPublishNoLaunchPreview(bool isHead)
+        {
+            Entity head = em.CreateEntity(typeof(SnakeHead));
+            em.SetComponentData(head, new SnakeHead { AttachedCount = 2, Generation = 1 });
+            if (isHead) em.AddComponentData(source, new SnakeHead { AttachedCount = 2, Generation = 1 });
+            else em.AddComponentData(source, new SnakeSegment { Head = head, Index = 0, Generation = 1 });
+            em.SetComponentData(source, new PunchAimAssistTarget { Target = target, IsAiming = 1 });
+            Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(Entity.Null));
+            world.GetOrCreateSystem<PresentationBridgeSystem>().Update(world.Unmanaged);
+            Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.Zero);
+
+            if (isHead) em.SetComponentData(source, new SnakeHead { AttachedCount = 0, Generation = 1 });
+            else em.SetComponentData(head, new SnakeHead { AttachedCount = 1, Generation = 1 });
+            Aim(.02);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            world.GetOrCreateSystem<PresentationBridgeSystem>().Update(world.Unmanaged);
+            Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void Snake006_ProtectedSegmentDoesNotMaskEligibleFacingRayTarget()
+        {
+            Entity head = em.CreateEntity(typeof(SnakeHead));
+            em.SetComponentData(head, new SnakeHead { AttachedCount = 2, Generation = 1 });
+            Entity protectedSegment = Body(new float3(0, 0, 4));
+            em.AddComponentData(protectedSegment, new SnakeSegment { Head = head, Index = 0, Generation = 1 });
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(.2f, 0, 6)));
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(0, 0, 18)));
+            SetCollisionBodies(protectedSegment, other);
+            Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(other),
+                "The valid facing-ray hit takes priority over the nearer fallback after skipping protection.");
+            Assert.That(PunchAimAssist.IsValidTarget(em, source, protectedSegment), Is.False);
         }
 
         [Test]

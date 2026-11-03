@@ -267,6 +267,63 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Player003_DotsAndAccentsClearRaisedFloorsWithoutMovingForecastSamples()
+        {
+            var root = new GameObject("Raised floor preview");
+            var bridge = root.AddComponent<PlayerEcsBridge>();
+            var preview = root.AddComponent<PunchTrajectoryPreview>();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            var type = typeof(PunchTrajectoryPreview);
+            try
+            {
+                type.GetMethod("Awake", flags).Invoke(preview, null);
+                bridge.BeginTrajectoryPreview(-1f);
+                bridge.AddTrajectoryPreviewSurface(new TrajectoryPreviewSurface
+                    { Center = float2.zero, Radius = 2f, Height = -.87f });
+                bridge.AddDottedTrajectory(new float3(-4, 3, 0), new float3(4, 3, 0), true);
+                type.GetMethod("DrawDottedTrajectories", flags).Invoke(preview,
+                    new object[] { bridge.TrajectoryPreviewSegments });
+                var mesh = (Mesh)type.GetField("dottedMesh", flags).GetValue(preview);
+                var vertices = mesh.vertices;
+                Assert.That(vertices.Length, Is.GreaterThan(0));
+                bool raised = false, baseFloor = false;
+                for (int i = 0; i < vertices.Length; i += 9)
+                {
+                    bool onPlatform = Mathf.Abs(vertices[i].x) <= 2f + .11f;
+                    Assert.That(vertices[i].y, Is.EqualTo(onPlatform ? -.855f : -.985f).Within(.0001f));
+                    raised |= onPlatform; baseFloor |= !onPlatform;
+                }
+                Assert.That(raised && baseFloor, Is.True, "The path enters and exits the raised floor.");
+                Assert.That(bridge.TrajectoryPreviewSegments[0].Start.y, Is.EqualTo(3f));
+                Assert.That(bridge.TrajectoryPreviewSegments[0].End.y, Is.EqualTo(3f));
+                var arrowStart = (Vector3)type.GetMethod("ArrowGroundPosition", flags).Invoke(preview,
+                    new object[] { new float3(-4, 3, 0), new float3(4, 3, 0), .6f });
+                Assert.That(arrowStart.y, Is.EqualTo(-.855f).Within(.0001f));
+
+                bridge.BeginTrajectoryPreview(-1f);
+                bridge.AddTrajectoryPreviewSurface(new TrajectoryPreviewSurface
+                    { Center = float2.zero, Radius = 2f, Height = -.87f });
+                bridge.AddTrajectoryImpact(new float3(0, 3, 0), math.forward());
+                type.GetMethod("DrawDottedTrajectories", flags).Invoke(preview,
+                    new object[] { bridge.TrajectoryPreviewSegments });
+                Assert.That(mesh.vertices.All(p => math.abs(p.y + .855f) < .0001f), Is.True);
+
+                bridge.ClearPunchPreview();
+                Assert.That(bridge.TrajectoryPreviewSurfaces.Count, Is.Zero);
+            }
+            finally
+            {
+                foreach (string name in new[] { "lineMaterial", "arrowMesh", "collisionArrowMesh", "dottedMesh" })
+                {
+                    var field = type.GetField(name, flags);
+                    Object.DestroyImmediate((Object)field.GetValue(preview));
+                    field.SetValue(preview, null);
+                }
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void Player003_DottedModeOnlyPublishesDirectEnemiesAndSwitchesBackToArrows()
         {
             Entity victim = Body(new float3(0, 0, 6));
@@ -276,6 +333,9 @@ namespace CrowdPunch.Tests
             em.AddComponentData(source, new EnemyGroundConstraint { HasGround = 1 });
             em.AddComponentData(em.CreateEntity(), new PlayerSnapshot());
             em.AddComponentData(em.CreateEntity(), new ArenaGroundPlane { SurfaceHeight = -.75f });
+            Entity surface = em.CreateEntity(typeof(TrajectoryPreviewSurface));
+            em.SetComponentData(surface, new TrajectoryPreviewSurface
+                { Center = float2.zero, Radius = 5f, Height = -.62f });
             em.AddComponentData(em.CreateEntity(), settings);
             using var physics = Physics(source, victim, protectedEnemy);
             em.AddComponentData(em.CreateEntity(), new PhysicsWorldSingleton { PhysicsWorld = physics });
@@ -290,6 +350,11 @@ namespace CrowdPunch.Tests
                 var system = world.GetOrCreateSystem<PresentationBridgeSystem>();
                 system.Update(world.Unmanaged);
                 Assert.That(bridge.TrajectoryPreviewSegments.Count, Is.GreaterThan(1));
+                Assert.That(bridge.TrajectoryPreviewSurfaces.Count, Is.EqualTo(1));
+                Assert.That(bridge.TrajectoryPreviewSurfaces[0].Height, Is.EqualTo(-.62f));
+                em.DestroyEntity(surface);
+                system.Update(world.Unmanaged);
+                Assert.That(bridge.TrajectoryPreviewSurfaces.Count, Is.Zero);
                 Assert.That(bridge.TrajectoryGroundHeight, Is.EqualTo(-.75f));
                 Assert.That(bridge.TrajectoryPreviewSegments[0].Start.y, Is.EqualTo(0f),
                     "Ground projection must not change the body-height forecast used for collisions.");

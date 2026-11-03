@@ -100,6 +100,23 @@ was visually inspected with an opaque block and capsule placed across the paths;
 both covered the paths, with no dots drawn over their surfaces. Play Mode was
 stopped and scratch capture assets were removed.
 
+## Raised rotating-objective floor (2026-11-03, PLAYER-003, COVER-004)
+
+The saved Campaign_07 turntable and its art recipe now declare a circular,
+presentation-only floor surface at 0.13m above the arena plane. The ECS presentation
+bridge copies this region without entity identities. Dots and contact accents
+clear its top within their footprints; rigid arrows clear crossed floor regions.
+Indicators outside it retain the base arena height. Scene-depth occlusion and
+body-height forecast/committed path samples remain unchanged.
+
+Unity compilation and all 18 `DirectLaunchTrajectoryTests` passed. Regression
+checks cover entering/leaving the raised region, contact accents, crossing arrows,
+unmodified forecast heights, bridge copying, surface removal and preview reset.
+The C# build passed with existing package/reference and deprecated-API warnings.
+A controlled before/after camera render reproduced hidden dots on a raised blue
+disc, then showed dots and the contact burst above it while an opaque block still
+occluded the path. This was a controlled rendering check, not a campaign playtest.
+
 ## Forecast limits
 
 This is an advisory direct-body estimate, not a cloned Unity Physics solver or a

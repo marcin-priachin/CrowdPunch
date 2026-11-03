@@ -75,6 +75,8 @@ namespace CrowdPunch.Systems.Presentation
             lastPreviewTime = now;
             bridge.BeginTrajectoryPreview(SystemAPI.TryGetSingleton<ArenaGroundPlane>(out var previewGround)
                 ? previewGround.SurfaceHeight : 0f);
+            foreach (var surface in SystemAPI.Query<RefRO<TrajectoryPreviewSurface>>())
+                bridge.AddTrajectoryPreviewSurface(surface.ValueRO);
 
             if (!bridge.IsPunchPreviewAvailable
                 || !bridge.UseDottedTrajectory && bridge.PunchPreviewLength <= 0f && bridge.CollisionPreviewLength <= 0f)
@@ -106,6 +108,7 @@ namespace CrowdPunch.Systems.Presentation
                 float3 enemyPosition = transform.ValueRO.Position;
                 if (!PunchResolution.Contains(state.EntityManager, enemy, enemyPosition, volume)) continue;
                 if (SystemAPI.HasComponent<BossPart>(enemy) || ArmorHitResolution.IsProtected(state.EntityManager, enemy)
+                    || SnakeHitRules.Protected(state.EntityManager, enemy)
                     || !EnemyLaunchTransition.IsLaunchable(tier.ValueRO)
                     || !EnemyLaunchTransition.CanReceivePlayerPunch(launchState.ValueRO, health.ValueRO))
                 {
