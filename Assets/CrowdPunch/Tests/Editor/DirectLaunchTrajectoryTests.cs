@@ -356,6 +356,41 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Player003_AllSavedRotatingObjectiveFloorsHavePreviewSurfaces()
+        {
+            string coverGuid = UnityEditor.AssetDatabase.AssetPathToGUID(
+                "Assets/CrowdPunch/Scripts/Authoring/RotatingCoverAuthoring.cs");
+            int checkedFloors = 0;
+            foreach (string guid in UnityEditor.AssetDatabase.FindAssets("t:Scene", new[] { "Assets/CrowdPunch/Scenes" }))
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                if (!System.IO.File.ReadAllText(path).Contains(coverGuid)) continue;
+                var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenPreviewScene(path);
+                try
+                {
+                    var floors = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<Transform>(true))
+                        .Where(t => t.name == "Central enclosure plinth" || t.name == "Village training turntable");
+                    foreach (var floor in floors)
+                    {
+                        var surface = floor.GetComponent<CrowdPunch.Authoring.TrajectoryPreviewSurfaceAuthoring>();
+                        Assert.That(surface, Is.Not.Null, path + ": " + floor.name);
+                        float top = floor.TransformPoint(Vector3.up * surface.heightOffset).y;
+                        float radius = surface.radius * Mathf.Max(Mathf.Abs(floor.lossyScale.x), Mathf.Abs(floor.lossyScale.z));
+                        var renderer = floor.GetComponent<MeshRenderer>();
+                        if (renderer == null)
+                            renderer = floor.GetComponentsInChildren<MeshRenderer>().Single(r => r.name == "Inset blue turntable");
+                        Assert.That(top, Is.EqualTo(renderer.bounds.max.y).Within(.0001f), path + ": floor top");
+                        Assert.That(radius, Is.GreaterThanOrEqualTo(Mathf.Max(renderer.bounds.extents.x,
+                            renderer.bounds.extents.z) - .0001f), path + ": floor footprint");
+                        checkedFloors++;
+                    }
+                }
+                finally { UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene); }
+            }
+            Assert.That(checkedFloors, Is.GreaterThanOrEqualTo(10), "Check campaign and legacy rotating floors.");
+        }
+
+        [Test]
         public void Player003_DotsAndAccentsClearRaisedFloorsWithoutMovingForecastSamples()
         {
             var root = new GameObject("Raised floor preview");

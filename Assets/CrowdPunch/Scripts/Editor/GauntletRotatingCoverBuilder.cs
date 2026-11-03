@@ -87,6 +87,8 @@ namespace CrowdPunch.Editor
                 plinth.transform.localScale = new Vector3((tuning.radius - tuning.thickness) * 2, .25f, (tuning.radius - tuning.thickness) * 2);
                 UnityEngine.Object.DestroyImmediate(plinth.GetComponent<Collider>());
                 plinth.GetComponent<Renderer>().sharedMaterial = metal;
+                var previewSurface = plinth.AddComponent<TrajectoryPreviewSurfaceAuthoring>();
+                previewSurface.radius = .5f; previewSurface.heightOffset = 1f;
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
                 var main = EditorSceneManager.OpenScene(Scenes + "Gauntlet_14.unity", OpenSceneMode.Single);
                 var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());

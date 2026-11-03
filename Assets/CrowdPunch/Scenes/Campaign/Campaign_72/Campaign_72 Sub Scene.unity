@@ -4005,6 +4005,7 @@ GameObject:
   - component: {fileID: 1056927487}
   - component: {fileID: 1056927486}
   - component: {fileID: 1056927485}
+  - component: {fileID: 1056927488}
   m_Layer: 0
   m_Name: Central enclosure plinth
   m_TagString: Untagged
@@ -4084,6 +4085,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1056927488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1056927484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8068bb54f3ccaa14c9c3e6c15c5fd251, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.TrajectoryPreviewSurfaceAuthoring
+  radius: 0.5000001
+  heightOffset: 1
 --- !u!1 &1084054206
 GameObject:
   m_ObjectHideFlags: 0

@@ -135,6 +135,14 @@ A controlled before/after camera render reproduced hidden dots on a raised blue
 disc, then showed dots and the contact burst above it while an opaque block still
 occluded the path. This was a controlled rendering check, not a campaign playtest.
 
+Follow-up: audited every saved scene containing rotating-cover authoring. Added
+floor regions to campaign 17/29/35/44/53/66/72 and legacy gauntlets 14/30; campaign
+7 already had one, and finale 81 has no raised plinth. The generic campaign and
+legacy cover builders now author the regions on creation. A saved-scene regression
+opens every rotating-objective scene in isolation and checks all ten floor regions
+against their actual mesh heights and footprints. Unity compilation and all 37
+current trajectory cases passed, including this inventory check.
+
 ## Forecast limits
 
 This is an advisory direct-body estimate, not a cloned Unity Physics solver or a

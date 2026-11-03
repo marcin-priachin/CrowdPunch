@@ -2212,7 +2212,11 @@ Raised decorative floors can bake a circular `TrajectoryPreviewSurface` through
 preview and clears them on reset. The renderer places each dot/contact accent on
 the highest overlapping floor, allowing for its footprint; rigid arrows clear any
 floor crossed by their footprint. Chapter One's rotating target turntable declares
-its 0.13m floor offset in the saved scene and art recipe. The shared depth test
+its 0.13m floor offset in the saved scene and art recipe. All other raised rotating
+plinths (campaign 17/29/35/44/53/66/72 and legacy gauntlets 14/30) also declare
+their cylinder's local radius and top, so baking follows its authored world scale
+and position. Both shared rotating-objective builders include this authoring;
+the finale's cover has no raised plinth and uses the arena plane. The shared depth test
 still lets cover, targets, characters and raised trim occlude indicators normally.
 Body grounding, forecast samples and authoritative launch paths are unchanged.
 See `Docs/Verification/DottedLaunchTrajectory.md` for checks and limitations.

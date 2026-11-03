@@ -242,6 +242,8 @@ namespace CrowdPunch.Editor
             plinth.name="Central enclosure plinth"; plinth.transform.position=new Vector3(0,-.75f,0);
             plinth.transform.localScale=new Vector3((tuning.radius-tuning.thickness)*2,.25f,(tuning.radius-tuning.thickness)*2);
             UnityEngine.Object.DestroyImmediate(plinth.GetComponent<Collider>()); plinth.GetComponent<Renderer>().sharedMaterial=metal;
+            var previewSurface=plinth.AddComponent<TrajectoryPreviewSurfaceAuthoring>();
+            previewSurface.radius=.5f; previewSurface.heightOffset=1f;
             if(number==7) ChapterOneRotatingTargetVisuals.Build(cover);
         }
 
