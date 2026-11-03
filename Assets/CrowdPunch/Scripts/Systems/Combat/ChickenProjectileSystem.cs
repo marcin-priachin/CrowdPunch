@@ -27,23 +27,7 @@ namespace CrowdPunch.Systems.Combat
                 if(!em.HasComponent<ChickenBoss>(p.Boss) || em.GetComponentData<ChickenBoss>(p.Boss).Phase==ChickenPhase.Defeated)
                 { commands.DestroyEntity(entity); continue; }
                 var t=em.GetComponentData<ChickenTuning>(p.Boss);
-                if(p.Redirected!=0 && p.HomingTarget!=Entity.Null)
-                {
-                    if(p.HomingSecondsRemaining<=0 || !PunchAimAssist.IsValidTarget(em,entity,p.HomingTarget)
-                        || !LaunchAimPrediction.WithinAngle(p.Velocity,
-                            em.GetComponentData<LocalTransform>(p.HomingTarget).Position-pose.ValueRO.Position,launchTuning.LaunchHomingMaximumAngleDegrees))
-                    { p.HomingTarget=Entity.Null;p.HomingSecondsRemaining=0; }
-                    else
-                    {
-                        var velocity=em.HasComponent<PhysicsVelocity>(p.HomingTarget)?em.GetComponentData<PhysicsVelocity>(p.HomingTarget).Linear:float3.zero;
-                        float3 point=LaunchAimPrediction.Point(pose.ValueRO.Position,em.GetComponentData<LocalTransform>(p.HomingTarget).Position,
-                            velocity,math.length(p.Velocity.xz),launchTuning.AimLeadSeconds,launchTuning.AimLeadMaximumDistance);
-                    p.Velocity=EnemyLaunchHoming.RotateHorizontalVelocity(p.Velocity,
-                            point-pose.ValueRO.Position,math.radians(launchTuning.LaunchHomingDegreesPerSecond)*math.min(dt,p.HomingSecondsRemaining));
-                        p.HomingSecondsRemaining=math.max(0,p.HomingSecondsRemaining-dt);
-                        if(p.HomingSecondsRemaining<=0)p.HomingTarget=Entity.Null;
-                    }
-                }
+                Guide(em,entity,ref p,pose.ValueRO.Position,launchTuning,dt);
                 float remaining=math.min(dt,math.max(0,t.Lifetime-p.Age)); p.Age+=dt;
                 bool destroy=false; float3 position=pose.ValueRO.Position;
                 bool hasVfxBridge = PlayerBridgeRegistry.TryGetBridge(out var vfxBridge);
@@ -97,6 +81,29 @@ namespace CrowdPunch.Systems.Combat
                 if(destroy || p.Age>=t.Lifetime) commands.DestroyEntity(entity);
             }
             commands.Playback(em); commands.Dispose();
+        }
+
+        // Shared return guidance keeps the dotted forecast and live shot turning rules aligned.
+        internal static void Guide(EntityManager em,Entity entity,ref ChickenProjectile p,float3 position,
+            in EnemyLaunchSettings tuning,float dt)
+        {
+            if(p.Redirected!=0 && p.HomingTarget!=Entity.Null)
+            {
+                if(p.HomingSecondsRemaining<=0 || !PunchAimAssist.IsValidTarget(em,entity,p.HomingTarget)
+                    || !LaunchAimPrediction.WithinAngle(p.Velocity,
+                        em.GetComponentData<LocalTransform>(p.HomingTarget).Position-position,tuning.LaunchHomingMaximumAngleDegrees))
+                { p.HomingTarget=Entity.Null;p.HomingSecondsRemaining=0; }
+                else
+                {
+                    var velocity=em.HasComponent<PhysicsVelocity>(p.HomingTarget)?em.GetComponentData<PhysicsVelocity>(p.HomingTarget).Linear:float3.zero;
+                    float3 point=LaunchAimPrediction.Point(position,em.GetComponentData<LocalTransform>(p.HomingTarget).Position,
+                        velocity,math.length(p.Velocity.xz),tuning.AimLeadSeconds,tuning.AimLeadMaximumDistance);
+                    p.Velocity=EnemyLaunchHoming.RotateHorizontalVelocity(p.Velocity,
+                        point-position,math.radians(tuning.LaunchHomingDegreesPerSecond)*math.min(dt,p.HomingSecondsRemaining));
+                    p.HomingSecondsRemaining=math.max(0,p.HomingSecondsRemaining-dt);
+                    if(p.HomingSecondsRemaining<=0)p.HomingTarget=Entity.Null;
+                }
+            }
         }
 
         internal static void Reflect(ref ChickenProjectile p,float3 normal)

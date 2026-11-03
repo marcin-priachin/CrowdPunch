@@ -9,6 +9,7 @@ using CrowdPunch.Systems.Movement;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.Presentation;
 using NUnit.Framework;
+using Unity.Collections;
 using Unity.Core;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -50,6 +51,112 @@ namespace CrowdPunch.Tests
             em.SetComponentData(s,new ChickenProjectile { Boss=boss,Velocity=velocity,Launch=1,Redirected=redirected }); return s;
         }
         private void Projectiles() => world.GetOrCreateSystem<ChickenProjectileSystem>().Update(world.Unmanaged);
+
+        [TestCase(20)] [TestCase(60)]
+        public void Player003_ChickenDottedPreviewPublishesWithoutEnemyPhysicsAndCommitsDirection(int level)
+        {
+            // Both campaign encounters share this projectile path; exercise each authored return speed.
+            var settings = UnityEditor.AssetDatabase.LoadAssetAtPath<ChickenBossSettings>(
+                $"Assets/CrowdPunch/Data/Campaign/Settings/L{level:00}_Chicken.asset");
+            Assert.IsNotNull(settings);
+            t.ReturnSpeed = settings.Bake().ReturnSpeed; em.SetComponentData(boss,t);
+            var shot = Shot(new float3(0,.7f,0),new float3(0,0,-2));
+            PlayerBridgeRegistry.TryGetBridge(out var previous);
+            var root = new GameObject("Chicken dotted preview");
+            var bridge = root.AddComponent<PlayerEcsBridge>();
+            try
+            {
+                PlayerBridgeRegistry.Register(bridge);
+                bridge.PublishPunchPreview(Vector3.back,Vector3.forward,2,2,0,0,0,0,
+                    useDottedTrajectory:true,trajectoryMaximumSeconds:1);
+                var system=world.GetOrCreateSystem<PresentationBridgeSystem>(); system.Update(world.Unmanaged);
+                Assert.Greater(bridge.TrajectoryPreviewSegments.Count,0);
+                Assert.IsTrue(bridge.TrajectoryPreviewSegments[0].IsDotted);
+                Assert.IsTrue(bridge.TrajectoryPreviewSegments[0].StartsPath);
+                Assert.AreEqual(bridge.TrajectoryPreviewRevision,em.GetComponentData<PunchAimAssistTarget>(shot).PreviewRevision);
+                uint revision=bridge.TrajectoryPreviewRevision;
+                bridge.PublishPunchPreview(Vector3.back,Vector3.right,2,2,5,0,0,0);
+                var p=em.GetComponentData<ChickenProjectile>(shot);
+                ChickenProjectilePunch.Redirect(em,shot,ref p,new float3(0,.7f,0),
+                    new PunchSpecification { Direction=new float3(1,0,0),AimRevision=revision },t);
+                Assert.Greater(p.Velocity.z,t.ReturnSpeed*.99f,"Click must retain the displayed direction.");
+                system.Update(world.Unmanaged);
+                Assert.AreEqual(1,bridge.TrajectoryPreviewSegments.Count);
+                Assert.IsFalse(bridge.TrajectoryPreviewSegments[0].IsDotted);
+                bridge.ClearPunchPreview(); system.Update(world.Unmanaged);
+                Assert.IsEmpty(bridge.TrajectoryPreviewSegments);
+            }
+            finally
+            {
+                PlayerBridgeRegistry.Unregister(bridge); if(previous!=null) PlayerBridgeRegistry.Register(previous);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void Chicken003_DottedForecastMatchesRuntimeReturnAndWallBounce(bool homing)
+        {
+            t.ReturnSpeed=20; t.Lifetime=5; t.BounceLimit=10; em.SetComponentData(boss,t);
+            var tuning=new EnemyLaunchSettings { LaunchHomingDuration=.25f,
+                LaunchHomingDegreesPerSecond=45,LaunchHomingMaximumAngleDegrees=30 };
+            em.AddComponentData(em.CreateEntity(),tuning);
+            var shot=Shot(new float3(16,.7f,0),new float3(1,0,0));
+            if(homing)
+            {
+                em.SetComponentData(boss,LocalTransform.FromPosition(new float3(17,.7f,10)));
+                em.SetComponentData(shot,new PunchAimAssistTarget { Target=boss });
+            }
+            using var points=new NativeList<float3>(Allocator.Temp);
+            using var impacts=new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+            var original=em.GetComponentData<ChickenProjectile>(shot);
+            ChickenProjectileTrajectoryPrediction.Trace(em,shot,new float3(16,.7f,0),new float3(1,0,0),
+                tuning,em.GetComponentData<PlayerSnapshot>(player),1,50,.02f,points,impacts);
+            Assert.AreEqual(original,em.GetComponentData<ChickenProjectile>(shot),"Forecast must leave combat unchanged.");
+            var p=original;
+            p.Velocity=new float3(t.ReturnSpeed,0,0); p.Redirected=1;
+            p.HomingTarget=homing?boss:Entity.Null; p.HomingSecondsRemaining=homing?.25f:0f;
+            em.SetComponentData(shot,p);
+            for(int i=0;i<50;i++) Projectiles();
+            Assert.Less(math.distance(points[points.Length-1],em.GetComponentData<LocalTransform>(shot).Position),.002f);
+            Assert.Greater(em.GetComponentData<ChickenProjectile>(shot).Bounces,0);
+            Assert.AreEqual(Entity.Null,em.GetComponentData<ChickenProjectile>(shot).HomingTarget);
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void Chicken004_DottedForecastEndsOnPlayerOrReturnedBoss(bool playerContact)
+        {
+            t.ReturnSpeed=20; t.Lifetime=5; em.SetComponentData(boss,t);
+            em.SetComponentData(player,new PlayerSnapshot { Position=new float3(0,.7f,5),Radius=.5f,IsAvailable=playerContact });
+            var shot=Shot(new float3(0,.7f,0),float3.zero);
+            using var points=new NativeList<float3>(Allocator.Temp);
+            using var impacts=new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+            ChickenProjectileTrajectoryPrediction.Trace(em,shot,new float3(0,.7f,0),new float3(0,0,1),default,
+                em.GetComponentData<PlayerSnapshot>(player),3,200,.02f,points,impacts);
+            float expected=playerContact?5-t.ProjectileRadius-.5f:10-t.ProjectileRadius-t.BodyRadius;
+            Assert.AreEqual(expected,points[points.Length-1].z,.001f);
+            Assert.AreEqual(playerContact?0:1,impacts.Length);
+        }
+
+        [Test]
+        public void Player003_ChickenForecastPassesThroughEnemiesAndHonorsStepBudget()
+        {
+            t.ReturnSpeed=10; t.Lifetime=5; em.SetComponentData(boss,t);
+            em.AddComponent<Enemy>(source); em.AddComponentData(source,new EnemyTier { Value=EnemyCombatTier.Normal });
+            em.AddComponentData(source,LocalTransform.FromPosition(new float3(2,.7f,0)));
+            em.AddComponentData(source,new EnemyContactDamageSettings { ContactRadius=.5f });
+            var shot=Shot(new float3(0,.7f,0),float3.zero);
+            using var points=new NativeList<float3>(Allocator.Temp);
+            using var impacts=new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+            ChickenProjectileTrajectoryPrediction.Trace(em,shot,new float3(0,.7f,0),new float3(1,0,0),default,
+                default,5,20,.02f,points,impacts);
+            Assert.AreEqual(4f,points[points.Length-1].x,.001f,"Step budget must truncate the horizon.");
+            Assert.AreEqual(1,impacts.Length,"Pass-through contact gets one accent per launch.");
+            Assert.AreEqual(EnemyLaunchPhase.Active,em.GetComponentData<EnemyLaunchState>(source).Phase);
+            t.Lifetime=.1f; em.SetComponentData(boss,t);
+            ChickenProjectileTrajectoryPrediction.Trace(em,shot,new float3(0,.7f,0),new float3(1,0,0),default,
+                default,5,200,.02f,points,impacts);
+            Assert.AreEqual(1f,points[points.Length-1].x,.001f);
+        }
         [TestCase(EnemyLaunchOwner.Player)] [TestCase(EnemyLaunchOwner.Boss)]
         public void Chicken004_BossContactDeflectsPlayerBoundBodyAndClearsBossHoming(EnemyLaunchOwner owner)
         {

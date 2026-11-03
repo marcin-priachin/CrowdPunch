@@ -2108,6 +2108,20 @@ colour. `CombatFeedback` defaults this shader property to one for existing effec
 and primary arrows. Meshes/materials remain shared per player, without enemy objects.
 Verification and exact limits: `Docs/Verification/SecondaryArrowStability.md`.
 
+### Chicken projectile dotted preview (2026-11-03)
+
+PLAYER-003/004, CHICKEN-003/004: `PresentationBridgeSystem` now includes punchable
+Chicken shots in dotted mode, including campaign levels 20 and 60. The ECS-only
+`ChickenProjectileTrajectoryPrediction` forecasts the returned shot using the boss's
+own tuning and the current fixed timestep within the shared duration/step budgets.
+It reuses live wall sweeps, reflection and return guidance, continues through ordinary
+enemies once per launch, and stops on player/boss contact, lifetime or bounce limit.
+Copied segments and contact accents use the existing bridge and pooled dotted renderer.
+The displayed initial direction/target is committed at the click in either indication
+mode. Projectile travel remains advisory and uses its existing swept simulation;
+the enemy-only authoritative path motor is unchanged. Future target motion can change
+contacts. No new MonoBehaviour enemy access or runtime component ownership is added.
+
 ### Optional dotted direct-launch preview (2026-11-01)
 
 Forecast/runtime consistency amendment (2026-11-02), PLAYER-003/004, COMBAT-012:

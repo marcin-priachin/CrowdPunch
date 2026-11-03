@@ -159,11 +159,14 @@ namespace CrowdPunch.Systems.Presentation
             }
             foreach (var (pose, shot) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<ChickenProjectile>().WithEntityAccess())
             {
-                if (bridge.UseDottedTrajectory) continue;
                 if (!PunchResolution.Contains(pose.ValueRO.Position, volume)) continue;
+                var projectile = SystemAPI.GetComponent<ChickenProjectile>(shot);
+                if (!SystemAPI.HasComponent<ChickenTuning>(projectile.Boss)
+                    || !SystemAPI.HasComponent<ChickenBoss>(projectile.Boss)
+                    || SystemAPI.GetComponent<ChickenBoss>(projectile.Boss).Phase == ChickenPhase.Defeated) continue;
                 volume.PositionWeight = positionWeight;
                 var direction = ChickenProjectilePunch.Direction(state.EntityManager, shot, pose.ValueRO.Position, volume);
-                if (bridge.PunchPreviewLength > 0f && SystemAPI.HasComponent<PunchAimAssistTarget>(shot))
+                if ((bridge.UseDottedTrajectory || bridge.PunchPreviewLength > 0f) && SystemAPI.HasComponent<PunchAimAssistTarget>(shot))
                 {
                     var aim = SystemAPI.GetComponent<PunchAimAssistTarget>(shot);
                     aim.PreviewDirection = direction; aim.PreviewTarget = aim.Target;
@@ -171,7 +174,22 @@ namespace CrowdPunch.Systems.Presentation
                     aim.PreviewRevision = bridge.TrajectoryPreviewRevision;
                     SystemAPI.SetComponent(shot, aim);
                 }
-                if (bridge.PunchPreviewLength > 0f)
+                if (bridge.UseDottedTrajectory)
+                {
+                    SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var projectileLaunchSettings);
+                    using var shotPoints = new NativeList<float3>(Allocator.Temp);
+                    using var shotImpacts = new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+                    ChickenProjectileTrajectoryPrediction.Trace(state.EntityManager, shot, pose.ValueRO.Position,
+                        direction, projectileLaunchSettings, SystemAPI.GetComponent<PlayerSnapshot>(playerEntity),
+                        bridge.TrajectoryMaximumSeconds, bridge.TrajectorySteps,
+                        state.World.GetExistingSystemManaged<FixedStepSimulationSystemGroup>()?.Timestep
+                            ?? DirectLaunchTrajectoryPrediction.DefaultTimestep, shotPoints, shotImpacts);
+                    for (int i = 1; i < shotPoints.Length; i++)
+                        bridge.AddDottedTrajectory(shotPoints[i - 1], shotPoints[i], i == 1);
+                    foreach (var impact in shotImpacts)
+                        bridge.AddTrajectoryImpact(impact.Position, impact.Direction);
+                }
+                else if (bridge.PunchPreviewLength > 0f)
                     bridge.AddTrajectoryPreview(pose.ValueRO.Position, pose.ValueRO.Position + direction * bridge.PunchPreviewLength);
             }
 

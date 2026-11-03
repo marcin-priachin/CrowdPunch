@@ -1503,7 +1503,12 @@ A configurable bounce limit and lifetime remove shots. Punches use the existing 
 eligibility, hit-confirmed cooldown and assisted target selection. A punch replaces velocity with
 a configurable return speed, resets lifetime and bounce count and begins a fresh launch. Returned
 shots home using existing launch homing; the first wall bounce clears the lock until another punch.
-Use the existing short initial-direction preview for shots in the punch volume.
+Use the selected punch indication for shots in the punch volume: the existing short
+initial-direction arrow, or a dotted forecast of the returned projectile in dotted mode
+(2026-11-03). The dotted forecast includes return speed, limited homing, pass-through enemy
+contacts, wall reflections and lifetime/bounce limits, and ends at predicted player or
+returned-boss contact. Reuse dot styling, contact accents and forecast budgets from PLAYER-003.
+Projectile forecasts remain advisory; they do not use the enemy body's authoritative path motor.
 
 ### CHICKEN-004 - Projectile Contacts And Persistent Player Danger
 
