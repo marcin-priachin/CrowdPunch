@@ -132,6 +132,95 @@ namespace CrowdPunch.Tests
             return impacts.AsArray().ToArray();
         }
 
+        [TestCase(3, false, false, 0)]
+        [TestCase(3, true, false, 1)]
+        [TestCase(3, true, true, 0)]
+        [TestCase(0, false, false, 1)]
+        [TestCase(0, true, false, 1)]
+        public void Player003_ShellAccentsRequireAnEffectiveSource(int shellHits, bool explosive, bool spent, int accents)
+        {
+            // SHELL-002/003: an intact shell needs a fresh blast; exposed cores accept ordinary bodies.
+            Entity target = Body(new float3(0, 0, 6));
+            em.RemoveComponent<Enemy>(target);
+            em.SetComponentData(target, new PhysicsMass());
+            em.AddComponentData(target, new Barricade { HitsRemaining = 1 });
+            em.AddComponentData(target, new ShellTarget { ExplosionsRemaining = shellHits, CoreHealth = 100 });
+            if (explosive) em.AddComponentData(source, new ExplosiveEnemyState { HasExploded = spent ? (byte)1 : (byte)0 });
+            using var physics = Physics(source, target);
+            Assert.That(TraceImpacts(physics).Length, Is.EqualTo(accents));
+            AssertContactStillBlocks(physics);
+            Assert.That(em.GetComponentData<ShellTarget>(target).ExplosionsRemaining, Is.EqualTo(shellHits));
+        }
+
+        [TestCase(RollingPhase.Pause, false, 1)]
+        [TestCase(RollingPhase.WindUp, false, 1)]
+        [TestCase(RollingPhase.Roll, false, 0)]
+        [TestCase(RollingPhase.Pause, true, 0)]
+        [TestCase(RollingPhase.WindUp, true, 0)]
+        [TestCase(RollingPhase.Defeated, false, 0)]
+        public void Player003_RollingAccentsFollowDamageProtection(RollingPhase phase, bool protectedHit, int accents)
+        {
+            // ROLL-001: both the committed roll and accepted-hit protection reject damage.
+            Entity target = Body(new float3(0, 0, 6));
+            em.RemoveComponent<Enemy>(target);
+            em.SetComponentData(target, new PhysicsMass());
+            em.AddComponentData(target, new RollingBoss { Phase = phase, InvulnerableUntil = protectedHit ? 10 : 0 });
+            using var physics = Physics(source, target);
+            Assert.That(TraceImpacts(physics).Length, Is.EqualTo(accents));
+            AssertContactStillBlocks(physics);
+            if (protectedHit)
+            {
+                world.SetTime(new Unity.Core.TimeData(10, .02f));
+                Assert.That(TraceImpacts(physics).Length, Is.EqualTo(1), "Accents return when hit protection expires.");
+            }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Player003_DinoHasNoBodyHitAccent(bool explosive)
+        {
+            // PILLAR-001: only falling pillars affect Dino, including when the body is explosive.
+            Entity target = Body(new float3(0, 0, 6));
+            em.RemoveComponent<Enemy>(target);
+            em.SetComponentData(target, new PhysicsMass());
+            em.AddComponent<DinoBoss>(target);
+            if (explosive) em.AddComponent<ExplosiveEnemyState>(source);
+            using var physics = Physics(source, target);
+            Assert.That(TraceImpacts(physics), Is.Empty);
+            AssertContactStillBlocks(physics);
+        }
+
+        [TestCase("inner", 0)]
+        [TestCase("tip", 1)]
+        [TestCase("protectedHead", 0)]
+        [TestCase("exposedHead", 1)]
+        [TestCase("detached", 1)]
+        public void Player003_SnakeAccentsFollowExposedPart(string part, int accents)
+        {
+            // SNAKE-002/004: peeling the tip transfers eligibility; detached foreign orbs remain eligible.
+            Entity target = Body(new float3(0, 0, 6));
+            Entity head = em.CreateEntity();
+            em.AddComponentData(head, new SnakeHead { AttachedCount = 3, Generation = 1 });
+            if (part == "protectedHead" || part == "exposedHead")
+                em.AddComponentData(target, new SnakeHead { AttachedCount = part == "protectedHead" ? 3 : 0 });
+            else em.AddComponentData(target, new SnakeSegment { Head = head, Generation = 1,
+                Index = part == "tip" ? 2 : 0, Detached = part == "detached" ? (byte)1 : (byte)0 });
+            using var physics = Physics(source, target);
+            Assert.That(TraceImpacts(physics).Length, Is.EqualTo(accents));
+            AssertContactStillBlocks(physics);
+            if (part == "inner")
+            {
+                em.SetComponentData(head, new SnakeHead { AttachedCount = 1, Generation = 1 });
+                Assert.That(TraceImpacts(physics).Length, Is.EqualTo(1), "The new tip must regain its accent.");
+            }
+        }
+
+        private void AssertContactStillBlocks(PhysicsWorld physics)
+        {
+            Assert.That(Trace(physics, seconds: 1, steps: 40).Any(p => math.abs(p.z - 5) < .02f), Is.True,
+                "Suppressing an accent must preserve the solid contact in the forecast path.");
+        }
+
         [Test]
         public void Player003_PathEndsAtAuthoredDefeatBounds()
         {

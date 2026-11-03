@@ -2189,8 +2189,12 @@ preserving path coverage. It allocates no per-enemy GameObjects and disposes its
 Enemy/objective contacts also produce `LaunchTrajectoryImpact` samples during the
 same sweep, copied through the bridge as position/direction only. Contact accents
 include enemy/boss bodies, intact barricades (including shell/track objectives) and
-upright falling pillars; scenery and triggers have none. Each source marks a target
-once, and coincident copied contacts are deduplicated. The renderer adds hollow,
+upright falling pillars; scenery and triggers have none. PLAYER-003 eligibility
+suppresses accents for Dino, protected Snake parts, Rolling during its roll or hit
+protection (using the shared damage gate), and intact shells hit by a non-explosive
+or already-spent Explosive. Exposed cores and vulnerable parts retain accents.
+These gates only filter contact samples; collision/path/rebound processing stays intact.
+Each source marks a target once, and coincident copied contacts are deduplicated. The renderer adds hollow,
 eight-spike comic bursts to the same flat mesh, using the exact trajectory RGBA.
 Dots leave a small gap around each burst to avoid overlapping transparent geometry.
 `TrajectoryImpactDiameter` defaults to 1.1m; zero hides accents. Every new preview

@@ -159,7 +159,7 @@ namespace CrowdPunch.Systems.Presentation
                     points.Add(pose.Position);
                     PathPoint(path, elapsed + dt - remaining + remaining * closest.Fraction,
                         pose.Position, velocity, closest.Entity, closest.SurfaceNormal);
-                    if (impacts.IsCreated && IsImpactTarget(em, closest.Entity) && markedTargets.Add(closest.Entity))
+                    if (impacts.IsCreated && IsImpactTarget(em, source.Entity, closest.Entity) && markedTargets.Add(closest.Entity))
                         impacts.Add(new LaunchTrajectoryImpact { Position = impact, Direction = math.normalizesafe(velocity) });
                     remaining *= 1f - closest.Fraction;
                     bool enemy = em.HasComponent<Enemy>(closest.Entity);
@@ -300,8 +300,20 @@ namespace CrowdPunch.Systems.Presentation
             return remaining <= 0;
         }
 
-        private static bool IsImpactTarget(EntityManager em, Entity target)
+        private static bool IsImpactTarget(EntityManager em, Entity source, Entity target)
         {
+            // PLAYER-003: solidity still bends the path, but immunity must not advertise an effective hit.
+            if (em.HasComponent<DinoBoss>(target) || SnakeHitRules.Protected(em, target)) return false;
+            if (em.HasComponent<RollingBoss>(target)
+                && !RollingDamageResolution.CanReceiveDamage(em.GetComponentData<RollingBoss>(target), em.World.Time.ElapsedTime))
+                return false;
+            if (em.HasComponent<ShellTarget>(target))
+            {
+                var shell = em.GetComponentData<ShellTarget>(target);
+                return shell.CoreHealth > 0 && (shell.ExplosionsRemaining <= 0
+                    || em.HasComponent<ExplosiveEnemyState>(source)
+                        && em.GetComponentData<ExplosiveEnemyState>(source).HasExploded == 0);
+            }
             return em.HasComponent<Enemy>(target) || em.HasComponent<Barricade>(target)
                 || em.HasComponent<TrackObject>(target) || em.HasComponent<BossEncounter>(target)
                 || em.HasComponent<ChickenBoss>(target) || em.HasComponent<RollingBoss>(target)

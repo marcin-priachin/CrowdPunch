@@ -237,8 +237,12 @@ duration and step budget. Include initial aim, existing time-limited homing, dam
 ground constraints and approximate momentum transfer/deflection at contacts. Do not
 draw paths originating from enemies only struck indirectly. Expose dot diameter,
 spacing and RGBA colour. Mark predicted enemy/objective contacts on the dotted
-trajectory with a flat cartoony impact accent in the same RGBA colour. Display
-trajectory indicators and their accents on the arena floor with normal scene-depth
+trajectory with a flat cartoony impact accent in the same RGBA colour. Suppress the
+accent when the target rejects the hit: an intact shell accepts only an unexploded
+Explosive source, Rolling rejects it while rolling or temporarily protected, Dino
+always rejects launched-body hits, and protected Snake parts reject it. Exposed
+shell cores, vulnerable Rolling states and the exposed Snake tip/head retain accents.
+Display trajectory indicators and their accents on the arena floor with normal scene-depth
 occlusion so characters and objects cover them. The forecast is advisory: future crowd movement, contacts
 and specialized mechanics can change the actual result.
 

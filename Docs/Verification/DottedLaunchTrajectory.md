@@ -17,6 +17,24 @@ post-step rebound rules with runtime. Earlier verification below remains histori
 Requirements: PLAYER-003/004, INFO-005. Verified 2026-11-01 in the Agent B
 worktree with Unity 6000.3.10f1.
 
+## Protected-target contact accents (2026-11-03)
+
+PLAYER-003 now suppresses ineffective contact accents for intact shells hit by
+ordinary/spent Explosive bodies (SHELL-002/003), rolling or temporarily protected
+Rolling bosses (ROLL-001), Dino (PILLAR-001), and protected Snake heads/inner
+segments (SNAKE-002/004). Fresh Explosives against shells, exposed cores, vulnerable
+Rolling states, exposed Snake tips/heads and detached foreign orbs retain accents.
+The gates read current target protection; they do not forecast future boss phases.
+Solid contacts remain in the forecast path even when their accent is suppressed.
+
+Unity 6000.3.10f1 compilation passed. Editor suites passed: 36/36
+`DirectLaunchTrajectoryTests` (including the 100/1,000-crowd cost probes) and 31/31
+`RollingBossTests`. New swept-contact regressions cover protection expiry and newly
+exposed Snake tips, and confirm the preview does not change shell durability.
+`dotnet build Assembly-CSharp.csproj --no-restore` was blocked by denied access to
+`AppData/Local/Microsoft SDKs`; Unity compilation is the compilation evidence.
+Campaign-level visual playtesting was not performed for this change.
+
 ## Configuration
 
 Open `Assets/CrowdPunch/Data/Settings/PlayerPunchSettings.asset` in the Inspector.

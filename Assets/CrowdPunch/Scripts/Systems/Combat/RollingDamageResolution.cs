@@ -9,6 +9,9 @@ namespace CrowdPunch.Systems.Combat
         internal static bool CanTarget(in RollingBoss b,in RollingTuning t) => b.Phase!=RollingPhase.Defeated
             && (t.Targeting==RollingTargeting.EveryLivingState || b.Phase!=RollingPhase.Roll);
 
+        internal static bool CanReceiveDamage(in RollingBoss b, double now) => b.Phase != RollingPhase.Roll
+            && b.Phase != RollingPhase.Defeated && now >= b.InvulnerableUntil;
+
         internal static void QueueBody(EntityManager em,Entity boss,Entity source,float impulse,in EnemyLaunchSettings settings)
         {
             var launch=em.GetComponentData<EnemyLaunchState>(source);
@@ -33,7 +36,7 @@ namespace CrowdPunch.Systems.Combat
 
         internal static bool Apply(ref RollingBoss b,ref Health h,in RollingTuning t,float damage,double now)
         {
-            if(b.Phase==RollingPhase.Roll || b.Phase==RollingPhase.Defeated || now<b.InvulnerableUntil || damage<=0) return false;
+            if(!CanReceiveDamage(b,now) || damage<=0) return false;
             float floor=b.Stage==1?h.Max*t.StageTwoThreshold:b.Stage==2?h.Max*t.StageThreeThreshold:0;
             h.Current=math.max(floor,h.Current-damage);
             if(b.Stage<3 && h.Current<=floor) b.Stage++;
