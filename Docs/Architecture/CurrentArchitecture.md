@@ -4201,8 +4201,16 @@ The Cartoon FX explosion accent is shorter and accompanied by a fading horizonta
 whose outer radius matches the event radius; the former transparent sphere is removed.
 
 WizardZonePresentationSystem keeps every authoritative ground boundary and decorates up to
-32 zones with 12 cloud quads and 24 pollen quads each. CombatSpriteMesh batches decoration;
+32 zones with 12 cloud quads each by default. Pollen count scales with each zone's area,
+from 24 quads at a 6 m radius to 96 at 12 m, with a per-zone cap of 128.
+CombatSpriteMesh batches decoration;
 the URP CombatSprite shader clips spore billboards to the world-space circular footprint.
+For WIZARD-006, cast pollen samples Bud's animated crown through a baked spore origin on
+the enemy root. Larger gold motes rise from the crown and reach the outer mist before fading.
+Detached impact zones keep ground-centered pollen.
+The Wizard sections of `Resources/CombatVfxLibrary.asset` control pollen spread and flight,
+warning and active fill and ring styling, and the ring's inward thickness as a fraction of
+the zone radius. The presentation system reads these settings for each draw.
 DragonFlamePresentationSystem reuses 81 cover-ray samples and emits 50 flowing textured tongues
 per active cone. Each angular cell uses its shortest sampled reach; tongue tips stay within that
 reach. GroundHazardParticlePresentationSystem reuses its existing bounded samples with textured

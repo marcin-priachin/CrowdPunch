@@ -75,6 +75,22 @@ namespace CrowdPunch.Bakers
                         + owner.transform.up * authoring.LaunchPivotHeight) : float3.zero
             });
             AddComponent<EnemyAnimationPlayback>(entity);
+            if (owner != null && authoring.Profile == EnemyAnimationProfile.Wizard)
+            {
+                // Bud's outlet sits just beyond the terminal cannon joint along its local -X axis.
+                int crown = System.Array.FindIndex(renderer.bones, bone => bone.name == "RigHeadCannon05");
+                if (crown >= 0)
+                {
+                    Vector3 outlet = Vector3.left * .08f;
+                    AddComponent(entity, new WizardSporeOrigin
+                    {
+                        Animation = entity,
+                        Root = GetEntity(animator, TransformUsageFlags.Dynamic),
+                        Bone = crown,
+                        BindPosition = renderer.sharedMesh.bindposes[crown].inverse.MultiplyPoint3x4(outlet)
+                    });
+                }
+            }
             if (authoring.ProjectileOrigin != null && owner != null)
             {
                 if (bones != 1)

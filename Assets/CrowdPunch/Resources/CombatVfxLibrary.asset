@@ -32,6 +32,18 @@ MonoBehaviour:
   Pollen: {fileID: 2100000, guid: 2b336680779b83947a1d77b8ebd40413, type: 2}
   DragonFlame: {fileID: 2100000, guid: d1b419d849f63394ebac4d3348359127, type: 2}
   Shockwave: {fileID: 2100000, guid: 6728ec255225ab54d8c7cbd7a5181fe3, type: 2}
-  CloudsPerZone: 12
-  SporesPerZone: 24
+  CloudsPerZone: 24
+  SporesPerZone: 48
+  SporeSpreadFraction: 0.96
+  SporeFlightSeconds: 1.35
+  SporeSpreadPhase: 0.62
   MaximumCloudZones: 32
+  WizardWarningIndicator:
+    FillColor: {r: 0.64, g: 0.76, b: 0.24, a: 0}
+    RingColor: {r: 0.64, g: 0.76, b: 0.24, a: 1}
+    RingOpacity: 0.3
+  WizardActiveIndicator:
+    FillColor: {r: 0.58, g: 0.7, b: 0.12, a: 0.2509804}
+    RingColor: {r: 0.58, g: 0.7, b: 0.12, a: 1}
+    RingOpacity: 0.3
+  WizardRingThickness: 0.02

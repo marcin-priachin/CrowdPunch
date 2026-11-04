@@ -20,6 +20,14 @@ namespace CrowdPunch.Components
         public float Radius => Kind == WizardZoneKind.Cast ? Settings.CastRadius : Settings.ImpactRadius;
     }
 
+    public struct WizardSporeOrigin : IComponentData
+    {
+        public Entity Animation;
+        public Entity Root;
+        public int Bone;
+        public float3 BindPosition;
+    }
+
     [InternalBufferCapacity(0)]
     public struct WizardZoneTarget : IBufferElementData
     {
