@@ -23,6 +23,7 @@ namespace CrowdPunch.Systems.Combat
         {
             if (!SystemAPI.HasSingleton<PhysicsWorldSingleton>()) return;
             var physics = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
+            float groundHeight = SystemAPI.TryGetSingleton<ArenaGroundPlane>(out var ground) ? ground.SurfaceHeight : -1f;
             double now = SystemAPI.Time.ElapsedTime;
             using var commands = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (settings, emitter, launch, pose, velocity, life, entity) in
@@ -69,7 +70,7 @@ namespace CrowdPunch.Systems.Combat
                 var section = new TrailSection
                 {
                     Record = e.Record, Source = entity, SourceLifetime = life.ValueRO.Generation,
-                    Start = Project(physics, e.Anchor), End = Project(physics, position),
+                    Start = Project(physics, e.Anchor, groundHeight), End = Project(physics, position, groundHeight),
                     CreatedAt = now, ExpiresAt = now + lifetime, Width = width,
                     Damage = math.max(0, launched ? s.LaunchedDamage : s.NormalDamage),
                     TickInterval = math.max(.01f, s.TickInterval), PlayerProtection = math.max(0, s.PlayerProtection),
@@ -88,7 +89,7 @@ namespace CrowdPunch.Systems.Combat
             commands.Playback(state.EntityManager);
         }
 
-        private static float3 Project(PhysicsWorldSingleton physics, float3 position)
+        private static float3 Project(PhysicsWorldSingleton physics, float3 position, float groundHeight)
         {
             var hits = new NativeList<Unity.Physics.RaycastHit>(Allocator.Temp);
             physics.CastRay(new RaycastInput { Start = position + new float3(0, 30, 0),
@@ -97,7 +98,7 @@ namespace CrowdPunch.Systems.Combat
             foreach (var hit in hits)
                 if (hit.RigidBodyIndex >= physics.NumDynamicBodies && hit.SurfaceNormal.y > .5f && hit.Position.y <= position.y)
                     height = math.max(height, hit.Position.y);
-            position.y = (height == float.MinValue ? -1 : height) + .035f;
+            position.y = (height == float.MinValue ? groundHeight : height) + .035f;
             hits.Dispose();
             return position;
         }

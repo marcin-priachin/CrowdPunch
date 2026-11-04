@@ -3608,7 +3608,8 @@ Post-physics `TrailExpirySystem` removes expired or unloaded encounter data. `Tr
 runs after ground reconciliation/explosions and before recovery. It samples actual horizontal
 travel in Active/Launched only, emits capsule sections using an ECB, and projects endpoints onto
 upward-facing static surfaces below the body. Section spacing is bounded by width to keep paths
-continuous. Stationary/recovering/defeated states break the emission anchor. Each section snapshots
+continuous. Projection falls back to the authored arena floor when it misses. Stationary,
+recovering and defeated states break the emission anchor. Each section snapshots
 width, damage, timing, color, immunity/avoidance, launch ownership and chain depth.
 
 All baked enemies have `EnemyLifetime`, incremented at pooling and restart. A detached `TrailSource`
@@ -3667,7 +3668,10 @@ pitch and recovery flips. Owned Full Cel materials retain the supplied white tex
 excluded from the old monster-atlas replacement command. Root motion is disabled; ECS still
 owns movement, trail emission, collision and lifetime. `TrailPresentationSystem` batches
 all ground capsules into one reusable mesh/draw, with green normal and orange launched colors.
-Each retains full width while alpha fades through the last 35% of its lifetime.
+The shader clips each strip to its full XZ damage capsule and shades it with a wet rim,
+flowing highlights and bubbles. Opacity fades to a visible minimum through the last 35% of
+the section's lifetime. Fixed-step expiry and encounter cleanup remove the visible footprint
+with the section (TRAIL-003/006).
 
 **Crowd Punch > Levels > Build Trail Gauntlet 19** authors only Slippery Circuit: an open 32 x 34m
 clipped court, 6 Baselines + 1 Trail then 12 Baselines + 2 Trails. Waves use guaranteed counts,
