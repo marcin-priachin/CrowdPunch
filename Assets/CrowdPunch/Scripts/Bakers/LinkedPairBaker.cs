@@ -12,6 +12,7 @@ namespace CrowdPunch.Bakers
             DependsOn(authoring.settings);
             var entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, authoring.settings.Tuning);
+            AddComponent(entity, authoring.settings.Appearance);
             AddComponent<LinkedPairEndpoint>(entity);
         }
     }

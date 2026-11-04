@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LinkedPairSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.LinkedPairSettings
   response: 0
-  maximumLength: 14
+  maximumLength: 28
   tension: 45
   radialDamping: 8
   maximumTensionAcceleration: 100
@@ -21,7 +21,7 @@ MonoBehaviour:
   straddleDistance: 6
   sweepSpeed: 1.6
   width: 0.45
-  playerDamage: 8
+  playerDamage: 16
   enemyDamage: 10
   tickInterval: 0.5
   launchSpeed: 15
@@ -31,3 +31,21 @@ MonoBehaviour:
   settlePeriod: 0.35
   recoveryDuration: 1.25
   snagBraking: 12
+  streamCount: 3
+  streamWidth: 0.03
+  streamSpread: 0.099
+  streamWavelength: 4.135
+  glowWidth: 4
+  groundFlowSpeed: 0.4
+  flightFlowSpeed: 0.73
+  groundCore: {r: 1, g: 0.79, b: 0.43, a: 1}
+  groundHighlight: {r: 1, g: 0.98, b: 0.86, a: 1}
+  groundGlow: {r: 1, g: 0.59, b: 0.16, a: 0.36}
+  flightCore: {r: 1, g: 0.58, b: 0.21, a: 1}
+  flightHighlight: {r: 1, g: 0.94, b: 0.73, a: 1}
+  flightGlow: {r: 1, g: 0.31, b: 0.045, a: 0.42}
+  sparkColor: {r: 1, g: 0.92, b: 0.64, a: 1}
+  sparkRate: 48
+  sparkLifetime: 0.32
+  sparkLength: 0.36
+  sparkTravel: 0.9
