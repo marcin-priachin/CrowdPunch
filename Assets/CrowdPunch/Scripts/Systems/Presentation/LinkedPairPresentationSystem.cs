@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CrowdPunch.Components;
+using CrowdPunch.Configuration;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
 using Unity.Entities;
@@ -16,6 +17,7 @@ namespace CrowdPunch.Systems.Presentation
     public partial class LinkedPairPresentationSystem : SystemBase
     {
         private Mesh mesh; private Material material;
+        private CombatVfxLibrary library;
         private readonly List<Vector3> vertices = new(); private readonly List<Color> colors = new(); private readonly List<int> indices = new();
         private readonly Dictionary<Entity, (float3 Left, float3 Right)> hands = new();
         protected override void OnCreate()
@@ -28,6 +30,7 @@ namespace CrowdPunch.Systems.Presentation
             Dependency.Complete();
             if (material == null) material = Resources.Load<Material>("LinkedPairTether");
             if (material == null) return;
+            if (library == null) library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
             vertices.Clear(); colors.Clear(); indices.Clear();
             hands.Clear();
             foreach (var (anchors, skin) in SystemAPI.Query<RefRO<LinkedPairHandAnchors>, DynamicBuffer<SkinMatrix>>())
@@ -52,8 +55,11 @@ namespace CrowdPunch.Systems.Presentation
                 float3 centerA = a, centerB = b;
                 a = FacingHand(ah.Left, ah.Right, centerB);
                 b = FacingHand(bh.Left, bh.Right, centerA);
-                DrawStreams(a, b, view, tuning.ValueRO.MaximumLength, appearance,
-                    p.Phase == EnemyLaunchPhase.Launched, time, p.A.Index);
+                bool launched = p.Phase == EnemyLaunchPhase.Launched;
+                var accent = launched
+                    ? CombatOwnershipTint.Accent(SystemAPI.GetComponent<EnemyLaunchState>(p.Leader).Owner, library)
+                    : Color.clear;
+                DrawStreams(a, b, view, tuning.ValueRO.MaximumLength, appearance, launched, accent, time, p.A.Index);
             }
             mesh.Clear(); if (vertices.Count == 0) return;
             mesh.SetVertices(vertices); mesh.SetColors(colors); mesh.SetTriangles(indices, 0); mesh.RecalculateBounds();
@@ -62,7 +68,7 @@ namespace CrowdPunch.Systems.Presentation
         protected override void OnDestroy() { if (mesh != null) Object.Destroy(mesh); }
 
         private void DrawStreams(float3 start, float3 end, float3 view, float maximumLength,
-            in LinkedPairAppearance appearance, bool launched, double time, int seed)
+            in LinkedPairAppearance appearance, bool launched, Color accent, double time, int seed)
         {
             float3 span = end - start;
             float length = math.length(span);
@@ -80,9 +86,9 @@ namespace CrowdPunch.Systems.Presentation
             float travel = (float)((time * flowSpeed) % 5) * fullTurn;
             float pairPhase = math.frac(seed * .618f) * fullTurn;
             float waveNumber = fullTurn / appearance.StreamWavelength;
-            Color baseColor = ToColor(launched ? appearance.FlightCore : appearance.GroundCore);
-            Color highlight = ToColor(launched ? appearance.FlightHighlight : appearance.GroundHighlight);
-            Color glow = ToColor(launched ? appearance.FlightGlow : appearance.GroundGlow);
+            Color baseColor = CombatOwnershipTint.Blend(ToColor(launched ? appearance.FlightCore : appearance.GroundCore), accent, .85f);
+            Color highlight = CombatOwnershipTint.Blend(ToColor(launched ? appearance.FlightHighlight : appearance.GroundHighlight), accent, .5f);
+            Color glow = CombatOwnershipTint.Blend(ToColor(launched ? appearance.FlightGlow : appearance.GroundGlow), accent, .9f);
             Color glowEdge = new(glow.r, glow.g, glow.b, 0);
             float glowShoulder = math.lerp(1, appearance.GlowWidth, .22f);
 

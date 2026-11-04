@@ -80,9 +80,12 @@ namespace CrowdPunch.Systems.Combat
                     cast.ImpactFlight = launch.ContinuousFlight;
                     SystemAPI.SetComponent(source, cast);
                 }
+                // Capture the trigger before ordinary collision handling can change launch ownership.
+                Entity trigger = hit.Incoming != Entity.Null ? hit.Incoming : source;
+                var owner = SystemAPI.GetComponent<EnemyLaunchState>(trigger).Owner;
                 WizardZoneCreation.Create(commands, state.EntityManager, source,
                     SystemAPI.GetComponent<LocalTransform>(source).Position, SystemAPI.GetComponent<WizardSettings>(source),
-                    SystemAPI.Time.ElapsedTime, false, true);
+                    SystemAPI.Time.ElapsedTime, false, true, owner);
             }
             commands.Playback(state.EntityManager);
         }

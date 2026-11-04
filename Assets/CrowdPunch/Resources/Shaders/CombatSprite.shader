@@ -14,6 +14,7 @@ Shader "CrowdPunch/VFX/Combat Sprite"
         _LineParameters("Count / thickness / blur / spacing", Vector) = (5,.0424,1,.92)
         _LineOpacity("Line opacity", Range(0,1)) = 1
         _LineBrightness("Line brightness", Range(0,2)) = 1
+        _OwnershipTint("Speed line ownership tint", Color) = (1,1,1,0)
     }
     SubShader
     {
@@ -33,6 +34,7 @@ Shader "CrowdPunch/VFX/Combat Sprite"
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST, _BaseColor, _MaskChannel, _Scroll;
                 float4 _LineParameters;
+                half4 _OwnershipTint;
                 float _Erosion, _Glow, _Ribbon, _LineOpacity, _LineBrightness;
             CBUFFER_END
             struct Attributes { float4 positionOS : POSITION; half4 color : COLOR; float2 uv : TEXCOORD0; float4 circle : TEXCOORD1; };
@@ -65,7 +67,8 @@ Shader "CrowdPunch/VFX/Combat Sprite"
                     float sigma = max(.00001,sqrt(pow(width*.4246609*blur,2) + pixelWidth*pixelWidth/12));
                     float edge = max(0,distance-width*.5*(1-blur));
                     float alpha = width > .00001 ? exp2(-.7213475*edge*edge/(sigma*sigma)) : 0;
-                    return half4(i.color.rgb * _Glow * _LineBrightness * tint.rgb,
+                    half3 ownership = lerp(1, _OwnershipTint.rgb, _OwnershipTint.a);
+                    return half4(i.color.rgb * _Glow * _LineBrightness * tint.rgb * ownership,
                         i.color.a * alpha * _LineOpacity * profile.g * tint.a);
                 }
                 float2 uv = i.uv * _BaseMap_ST.xy + _BaseMap_ST.zw + _Time.y * _Scroll.xy;

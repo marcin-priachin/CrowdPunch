@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CrowdPunch.Components;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -57,7 +58,7 @@ namespace CrowdPunch.Mono.Player
         public CrowdPunch.Configuration.CombatFeedbackSettings FeedbackSettings { get; set; }
         public event Action<CombatFeedbackMessage> ImpactReceived;
         public event Action TrailsBegan, TrailsEnded;
-        public event Action<ulong, uint, Vector3, float, int, Vector3, float> TrailReceived;
+        public event Action<ulong, uint, Vector3, float, int, Vector3, float, EnemyLaunchOwner> TrailReceived;
         public event Action<Vector3, Vector3, Vector3> LaunchReceived;
         public event Action DasherTelegraphsBegan, DasherTelegraphsEnded;
         public event Action<ulong, Vector3, Vector3, float> DasherTelegraphReceived;
@@ -66,8 +67,9 @@ namespace CrowdPunch.Mono.Player
         public void ReceiveImpact(CombatFeedbackMessage message) => ImpactReceived?.Invoke(message);
         public void BeginTrails() => TrailsBegan?.Invoke();
         public void EndTrails() => TrailsEnded?.Invoke();
-        public void ReceiveTrail(ulong id, uint sequence, Vector3 position, float speed, int depth, Vector3 modelSize, float launchAge = float.MaxValue)
-            => TrailReceived?.Invoke(id, sequence, position, speed, depth, modelSize, launchAge);
+        public void ReceiveTrail(ulong id, uint sequence, Vector3 position, float speed, int depth, Vector3 modelSize,
+            float launchAge = float.MaxValue, EnemyLaunchOwner owner = EnemyLaunchOwner.None)
+            => TrailReceived?.Invoke(id, sequence, position, speed, depth, modelSize, launchAge, owner);
         public void ReceiveLaunch(Vector3 position, Vector3 direction, Vector3 modelSize)
             => LaunchReceived?.Invoke(position, direction, modelSize);
         public void BeginDasherTelegraphs() => DasherTelegraphsBegan?.Invoke();

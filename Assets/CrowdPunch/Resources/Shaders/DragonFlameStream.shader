@@ -7,6 +7,8 @@ Shader "CrowdPunch/VFX/Dragon Flame Stream"
         _OuterColor("Orange edge", Color) = (1,.16,.015,1)
         _MiddleColor("Yellow flame", Color) = (1,.56,.035,1)
         _CoreColor("Hot cream core", Color) = (1,.91,.43,1)
+        _PlayerAccent("Player launch accent", Color) = (1,.55,.16,1)
+        _EnemyAccent("Enemy launch accent", Color) = (.78,.35,1,1)
         _FlowSpeed("Outward flow", Float) = 1.6
         _Brightness("Brightness", Range(0,2)) = 1.15
     }
@@ -26,11 +28,11 @@ Shader "CrowdPunch/VFX/Dragon Flame Stream"
             TEXTURE2D(_NoiseMap); SAMPLER(sampler_NoiseMap);
             TEXTURE2D(_SwirlMap); SAMPLER(sampler_SwirlMap);
             CBUFFER_START(UnityPerMaterial)
-                half4 _OuterColor, _MiddleColor, _CoreColor;
+                half4 _OuterColor, _MiddleColor, _CoreColor, _PlayerAccent, _EnemyAccent;
                 float _FlowSpeed, _Brightness;
             CBUFFER_END
-            struct Attributes { float4 positionOS : POSITION; float2 uv : TEXCOORD0; };
-            struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; float3 world : TEXCOORD1; };
+            struct Attributes { float4 positionOS : POSITION; float3 uv : TEXCOORD0; };
+            struct Varyings { float4 positionCS : SV_POSITION; float3 uv : TEXCOORD0; float3 world : TEXCOORD1; };
             Varyings Vert(Attributes i)
             {
                 Varyings o;
@@ -59,7 +61,11 @@ Shader "CrowdPunch/VFX/Dragon Flame Stream"
                 float tip = .88 + .12 * tipNoise;
                 float end = 1 - smoothstep(tip - .045, tip, i.uv.y);
                 float heat = 1 - lateral * .57 - i.uv.y * .36 + (noise - .5) * .13 + (swirl - .5) * .06;
-                half3 color = lerp(_OuterColor.rgb, _MiddleColor.rgb, smoothstep(.47, .51, heat));
+                half3 accent = lerp(_PlayerAccent.rgb, _EnemyAccent.rgb, step(1.5, i.uv.z));
+                half tint = step(.5, i.uv.z);
+                half3 outer = lerp(_OuterColor.rgb, accent * .7, tint * .85);
+                half3 middle = lerp(_MiddleColor.rgb, accent, tint * .55);
+                half3 color = lerp(outer, middle, smoothstep(.47, .51, heat));
                 color = lerp(color, _CoreColor.rgb, smoothstep(.77, .81, heat));
                 float alpha = outline * end * .94;
                 clip(alpha - .02);

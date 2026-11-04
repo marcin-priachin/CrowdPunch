@@ -48,11 +48,16 @@ Large crowds may make the screen chaotic, but the player's own action, launch di
 
 Launched-enemy trails span approximately the visible model's width, extend a couple of model
 lengths behind it (default 2.5), and follow the model's animated altitude rather than its physics root.
-Represent them as softly blurred white cartoon speed lines without outlines, with constant stroke thickness and bundle width
+Represent them as softly blurred cartoon speed lines without outlines, with constant stroke thickness and bundle width
 along the whole trail, following the supplied Asterix visual references. Do not taper them into a ribbon tip.
 Expose line opacity, thickness, blur, spacing, count, brightness and tint, including editable
 opacity/thickness/blur/spacing curves and a tint gradient along the trail. Profiles default to
 flat multipliers so the default strokes remain uniform; designers may deliberately vary them.
+Use a shared, configurable palette for launch ownership accents. The defaults match the Chicken
+shot, with amber for player ownership and violet for enemy or boss ownership. Apply ownership tint to every launch speed line
+and to existing layers of the affected enemy effects. Launches without player, enemy or boss
+ownership use the authored line color, which defaults to white.
+An ownership tint identifies origin and leaves player hazard eligibility to the combat rules.
 
 Accentuate new launches and re-punches with a short cream-white departure puff and curved
 backward speed strokes, a temporary opacity/brightness boost to the existing speed lines,
@@ -1201,7 +1206,7 @@ A dedicated settings asset exposes enemy damage from launched sections only or b
 
 Status: Must
 
-Both trail types share one visual style with distinct colors, show the full damaging width and fade toward expiry. Use `Assets/Squid Baby Cute Series/Prefabs/Squid Baby White.prefab` at its authored scale, with animations from that pack's FBX folder and the established Full Cel shading. Use authored animations for movement, damage, launch, recovery and defeat instead of scripted body tint, shaking or scale changes. Enable Spawn From Ground and use the supplied Spawn animation (model amendment requested 2026-10-25). Keep every animated pose, including Spawn, at least a configurable 0.1 metres above the ground at the current model scale, using visual translation only (clearance amendment requested 2026-10-25). Animation choices remain delegated. Add no individual normal-enemy health bars or other HUD elements.
+Both trail types share one visual style, show the full damaging width and fade toward expiry. Tint the fill and rim of normal sections with the enemy ownership color. Launched sections use the color of the stored launch owner, falling back to their authored color for neutral ownership. Use `Assets/Squid Baby Cute Series/Prefabs/Squid Baby White.prefab` at its authored scale, with animations from that pack's FBX folder and the established Full Cel shading. Use authored animations for movement, damage, launch, recovery and defeat instead of scripted body tint, shaking or scale changes. Enable Spawn From Ground and use the supplied Spawn animation (model amendment requested 2026-10-25). Keep every animated pose, including Spawn, at least a configurable 0.1 metres above the ground at the current model scale, using visual translation only (clearance amendment requested 2026-10-25). Animation choices remain delegated. Add no individual normal-enemy health bars or other HUD elements.
 
 ### TRAIL-007 - Gauntlet_19
 

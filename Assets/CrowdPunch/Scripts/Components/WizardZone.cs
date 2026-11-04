@@ -15,6 +15,7 @@ namespace CrowdPunch.Components
         public float3 Position;
         public WizardSettings Settings;
         public WizardZoneKind Kind;
+        public EnemyLaunchOwner TriggerOwner;
         public double ExpiresAt;
         public byte Follow, Active;
         public float Radius => Kind == WizardZoneKind.Cast ? Settings.CastRadius : Settings.ImpactRadius;

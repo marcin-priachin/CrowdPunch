@@ -275,7 +275,8 @@ namespace CrowdPunch.Tests
                 var enemy = em.CreateEntity(typeof(EnemyImpactFeedback), typeof(EnemyLaunchState),
                     typeof(LocalTransform), typeof(Unity.Physics.PhysicsVelocity));
                 em.SetComponentData(enemy, LocalTransform.FromPosition(new float3(3, .5f, 7)));
-                em.SetComponentData(enemy, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+                var flight = new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, Owner = EnemyLaunchOwner.Boss };
+                em.SetComponentData(enemy, flight);
                 em.SetComponentData(enemy, new Unity.Physics.PhysicsVelocity { Linear = new float3(0, 0, 10) });
                 var visual = em.CreateEntity(typeof(EnemyVisualOwner), typeof(RenderBounds), typeof(LocalToWorld));
                 em.SetComponentData(visual, new EnemyVisualOwner { Value = enemy });
@@ -285,6 +286,14 @@ namespace CrowdPunch.Tests
                 var system = world.GetOrCreateSystem<CombatFeedbackBridgeSystem>();
                 system.Update(world.Unmanaged);
                 var trail = go.GetComponentInChildren<TrailRenderer>();
+                var authoredTrailColor = trail.startColor;
+                var library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
+                var properties = new MaterialPropertyBlock();
+                var expected = new MaterialPropertyBlock();
+                int tint = Shader.PropertyToID("_OwnershipTint");
+                expected.SetColor(tint, CombatOwnershipTint.Accent(EnemyLaunchOwner.Boss, library));
+                trail.GetPropertyBlock(properties);
+                Assert.That(properties.GetColor(tint), Is.EqualTo(expected.GetColor(tint)));
                 Assert.That(trail.transform.position, Is.EqualTo(new Vector3(3, 7, 7)),
                     "A floating model's trail must follow its visible centre, not the capsule centre.");
                 Assert.That(trail.startWidth, Is.EqualTo(3).Within(.001f));
@@ -330,6 +339,21 @@ namespace CrowdPunch.Tests
                 Assert.That(trail.transform.position, Is.EqualTo(new Vector3(3, 8, 7)),
                     "The current skinned pose overrides the larger authored culling bounds.");
                 Assert.That(trail.startWidth, Is.EqualTo(2).Within(.001f));
+
+                EnemyLaunchTransition.Begin(ref flight, EnemyLaunchCause.PlayerPunch, 10);
+                em.SetComponentData(enemy, flight);
+                system.Update(world.Unmanaged);
+                trail.GetPropertyBlock(properties);
+                expected.SetColor(tint, CombatOwnershipTint.Accent(EnemyLaunchOwner.Player, library));
+                Assert.That(properties.GetColor(tint), Is.EqualTo(expected.GetColor(tint)),
+                    "Re-punching uses the current flight owner's configured color.");
+                Assert.That(trail.startColor, Is.EqualTo(authoredTrailColor));
+
+                EnemyLaunchTransition.Begin(ref flight, EnemyLaunchCause.EnvironmentImpact, 10);
+                em.SetComponentData(enemy, flight);
+                system.Update(world.Unmanaged);
+                trail.GetPropertyBlock(properties);
+                Assert.That(properties.GetColor(tint).a, Is.Zero, "A neutral flight clears the prior tint.");
             }
             finally
             {

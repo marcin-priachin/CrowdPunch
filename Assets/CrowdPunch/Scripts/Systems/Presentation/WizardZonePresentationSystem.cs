@@ -64,7 +64,8 @@ namespace CrowdPunch.Systems.Presentation
                 var fill = style.FillColor;
                 fill.a *= pulse;
                 properties.SetColor("_Color", fill);
-                properties.SetColor("_RingColor", style.RingColor);
+                var accent = CombatOwnershipTint.Accent(hazard.TriggerOwner, library);
+                properties.SetColor("_RingColor", CombatOwnershipTint.Blend(style.RingColor, accent, .9f));
                 properties.SetFloat("_Ring", math.saturate(style.RingOpacity));
                 var position = (Vector3)hazard.Position;
                 Graphics.DrawMesh(disc, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * hazard.Radius),

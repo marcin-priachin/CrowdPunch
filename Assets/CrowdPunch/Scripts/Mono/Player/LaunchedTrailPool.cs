@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using UnityEngine;
 
@@ -16,12 +17,13 @@ namespace CrowdPunch.Mono.Player
         private readonly Slot[] slots;
         private readonly Dictionary<ulong, int> assigned;
         private readonly CombatFeedbackSettings settings;
+        private readonly CombatVfxLibrary library;
         private readonly LaunchTrailStyle style = new LaunchTrailStyle();
         public LaunchedTrailPool(Transform parent, CombatFeedbackSettings settings, Material material)
         {
             this.settings = settings;
             style.Refresh(settings);
-            var library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
+            library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
             slots = new Slot[Mathf.Clamp(settings.MaximumTrails, 0, 256)];
             assigned = new Dictionary<ulong, int>(slots.Length);
             for (int i = 0; i < slots.Length; i++)
@@ -52,7 +54,8 @@ namespace CrowdPunch.Mono.Player
                 if (changed) slot.Trail.SetPropertyBlock(style.Properties);
             }
         }
-        public void Show(ulong id, uint sequence, Vector3 position, float speed, int depth, Vector3 modelSize = default, float launchAge = float.MaxValue)
+        public void Show(ulong id, uint sequence, Vector3 position, float speed, int depth, Vector3 modelSize = default, float launchAge = float.MaxValue,
+            EnemyLaunchOwner owner = EnemyLaunchOwner.None)
         {
             if (speed < settings.TrailMinimumSpeed) return;
             if (!assigned.TryGetValue(id, out int index))
@@ -69,7 +72,7 @@ namespace CrowdPunch.Mono.Player
             var slot = slots[index];
             if (slot.Sequence != sequence) { slot.Trail.Clear(); slot.Sequence = sequence; }
             slot.Seen = true;
-            style.Apply(slot.Trail, settings, launchAge);
+            style.Apply(slot.Trail, settings, launchAge, owner, library);
             slot.Trail.transform.position = position;
             float width = Mathf.Max(.1f, modelSize.x);
             float length = Mathf.Max(width, Mathf.Max(modelSize.y, modelSize.z));

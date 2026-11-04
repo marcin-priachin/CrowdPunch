@@ -184,7 +184,11 @@ namespace CrowdPunch.Tests
         }
         [Test] public void Wizard004_StrongForceLaunchesNormalsButPreservesExistingFlightAndOwner()
         {
-            Mode(WizardForceMode.StrongKnockback); Step(0);
+            Mode(WizardForceMode.StrongKnockback);
+            var impact = em.GetComponentData<WizardZone>(zone);
+            impact.TriggerOwner = EnemyLaunchOwner.Player;
+            em.SetComponentData(zone, impact);
+            Step(0);
             var launched = em.GetComponentData<EnemyLaunchState>(target);
             Assert.That(launched.Phase, Is.EqualTo(EnemyLaunchPhase.Launched)); Assert.That(launched.Owner, Is.EqualTo(EnemyLaunchOwner.Enemy));
             launched.Owner = EnemyLaunchOwner.Player; launched.HomingTarget = source; em.SetComponentData(target, launched);
@@ -218,9 +222,24 @@ namespace CrowdPunch.Tests
         }
         [Test] public void Wizard005_DetachedZoneSurvivesSourceDeathButNotEncounterUnload()
         {
-            var owner = em.CreateEntity(); var z = em.GetComponentData<WizardZone>(zone); z.SceneOwner = owner; em.SetComponentData(zone, z);
-            em.DestroyEntity(source); Step(0); Assert.That(Health(target), Is.EqualTo(92));
-            em.DestroyEntity(owner); Step(.1); Assert.That(em.Exists(zone), Is.False);
+            em.DestroyEntity(zone);
+            var owner = em.CreateEntity();
+            em.AddComponentData(source, new EnemyWaveOwnership { Sequence = owner });
+            using (var commands = new EntityCommandBuffer(Allocator.Temp))
+            {
+                WizardZoneCreation.Create(commands, em, source, float3.zero, settings, 0,
+                    follow: false, active: true, triggerOwner: EnemyLaunchOwner.Player);
+                commands.Playback(em);
+            }
+            using var query = em.CreateEntityQuery(typeof(WizardZone));
+            zone = query.GetSingletonEntity();
+            em.DestroyEntity(source);
+            Step(0);
+            Assert.That(Health(target), Is.EqualTo(92));
+            Assert.That(em.GetComponentData<WizardZone>(zone).TriggerOwner, Is.EqualTo(EnemyLaunchOwner.Player));
+            em.DestroyEntity(owner);
+            Step(.1);
+            Assert.That(em.Exists(zone), Is.False);
         }
         [Test] public void Wizard005_FollowZoneCancelsOnLaunchAndDetachedZoneExpires()
         {

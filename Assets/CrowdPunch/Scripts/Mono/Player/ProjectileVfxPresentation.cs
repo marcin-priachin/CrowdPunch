@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using CrowdPunch.Mono.UI;
+using CrowdPunch.Systems.Presentation;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -19,6 +21,7 @@ namespace CrowdPunch.Mono.Player
             public bool Active, Seen;
         }
         private Slot[] slots;
+        private CombatVfxLibrary library;
         private readonly Dictionary<ulong, Slot> assigned = new Dictionary<ulong, Slot>();
         private ParticleBurstPool[] bursts;
         private Transform root;
@@ -41,7 +44,7 @@ namespace CrowdPunch.Mono.Player
         {
             if (slots != null) return;
             if (root != null) Destroy(root.gameObject);
-            var library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
+            library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
             if (library == null) return;
             root = new GameObject("Arcane projectile VFX pool").transform;
             var prefabs = new[] { library.RangedFlight, library.BossFlight, library.SnakeFlight, library.RangedCharge };
@@ -118,7 +121,8 @@ namespace CrowdPunch.Mono.Player
                 if (newLaunch) slot.Trail.Clear();
                 slot.Trail.widthMultiplier = diameter * .65f;
                 Color color = sample.Kind == ProjectileVisualKind.Ranged ? new Color(.3f, .92f, 1, .85f)
-                    : sample.Redirected ? new Color(1, .55f, .16f, .95f) : new Color(.78f, .35f, 1, .9f);
+                    : CombatOwnershipTint.Accent(sample.Redirected ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Boss, library);
+                if (sample.Kind == ProjectileVisualKind.Boss) color.a = sample.Redirected ? .95f : .9f;
                 slot.Trail.startColor = color; color.a = 0; slot.Trail.endColor = color;
                 slot.Trail.emitting = true;
             }

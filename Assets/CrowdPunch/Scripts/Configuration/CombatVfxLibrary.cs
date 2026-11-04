@@ -15,6 +15,12 @@ namespace CrowdPunch.Configuration
         [Header("Crowd accents")]
         public ParticleSystem LaunchDust, NinjaSmoke;
         public Material LaunchTrail, ArcaneTrail, BossTrail;
+        [Header("Ownership Colors")]
+        [Tooltip("Accent for player-owned launches and effects triggered by the player.")]
+        [ColorUsage(false)] public Color PlayerOwnershipColor = DefaultPlayerOwnershipColor;
+        [Tooltip("Shared accent for enemy-owned and boss-owned launches and effects.")]
+        [ColorUsage(false)] public Color EnemyOwnershipColor = DefaultEnemyOwnershipColor;
+
         [Header("Batched hazard surfaces")]
         public Material SporeCloud, Pollen, DragonFlame, Shockwave;
 
@@ -35,6 +41,9 @@ namespace CrowdPunch.Configuration
         public WizardIndicatorStyle WizardActiveIndicator = WizardIndicatorStyle.Active;
         [Tooltip("Width measured inward from the attack boundary, as a fraction of the zone radius. Zero hides the ring.")]
         [Range(0f, 1f)] public float WizardRingThickness = DefaultWizardRingThickness;
+
+        internal static Color DefaultPlayerOwnershipColor => new(1f, .55f, .16f);
+        internal static Color DefaultEnemyOwnershipColor => new(.78f, .35f, 1f);
 
         internal const float DefaultWizardRingThickness = .06f;
     }

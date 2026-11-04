@@ -9,7 +9,8 @@ namespace CrowdPunch.Systems.Combat
     internal static class WizardZoneCreation
     {
         public static Entity Create(EntityCommandBuffer commands, EntityManager em, Entity source,
-            float3 position, WizardSettings settings, double now, bool follow, bool active)
+            float3 position, WizardSettings settings, double now, bool follow, bool active,
+            EnemyLaunchOwner triggerOwner = EnemyLaunchOwner.None)
         {
             using (var physicsQuery = em.CreateEntityQuery(ComponentType.ReadOnly<PhysicsWorldSingleton>()))
             {
@@ -27,7 +28,7 @@ namespace CrowdPunch.Systems.Combat
                 }
             }
             var zone = new WizardZone { Source = source, Position = position, Settings = settings,
-                Kind = follow ? WizardZoneKind.Cast : WizardZoneKind.Impact,
+                Kind = follow ? WizardZoneKind.Cast : WizardZoneKind.Impact, TriggerOwner = triggerOwner,
                 Follow = follow ? (byte)1 : (byte)0, Active = active ? (byte)1 : (byte)0,
                 ExpiresAt = now + (active ? math.max(0, settings.ActiveDuration) : math.max(0, settings.TelegraphDuration)) };
             // Keep independent zones alive after their source dies, but never after their encounter unloads.

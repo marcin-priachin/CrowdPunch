@@ -1,3 +1,4 @@
+using CrowdPunch.Configuration;
 using CrowdPunch.Systems.Combat;
 using Unity.Burst;
 using Unity.Collections;
@@ -15,7 +16,8 @@ namespace CrowdPunch.Systems.Presentation
         private const int LengthSteps = 16;
         private readonly Mesh mesh = new Mesh { name = "Connected cover-clipped dragon fire", indexFormat = IndexFormat.UInt32 };
         private NativeList<float3> vertices = new NativeList<float3>(8192, Allocator.Persistent);
-        private NativeList<float2> uv = new NativeList<float2>(8192, Allocator.Persistent);
+        private NativeList<float3> uv = new NativeList<float3>(8192, Allocator.Persistent);
+        private readonly MaterialPropertyBlock colors = new();
         private NativeList<int> triangles = new NativeList<int>(32768, Allocator.Persistent);
 
         internal DragonFlameStreamMesh() => mesh.MarkDynamic();
@@ -32,8 +34,10 @@ namespace CrowdPunch.Systems.Presentation
             int first = vertices.Length;
             int count = AngularSteps * 2 * (LengthSteps + 1) * 2;
             vertices.ResizeUninitialized(first + count); uv.ResizeUninitialized(first + count);
+            // Pack the owner per source into the existing UV stream to retain a single draw.
             new BuildStreamJob {
                 Cone = cone, Reaches = reaches, Directions = directions, Time = time, First = first,
+                Accent = CombatOwnershipTint.ShaderIndex(cone.Launch.Owner),
                 Vertices = vertices.AsArray(), Uv = uv.AsArray()
             }.Run();
         }
@@ -44,10 +48,10 @@ namespace CrowdPunch.Systems.Presentation
             public DragonCone Cone;
             [ReadOnly] public NativeArray<float> Reaches;
             [ReadOnly] public NativeArray<float2> Directions;
-            public float Time;
+            public float Time, Accent;
             public int First;
             public NativeArray<float3> Vertices;
-            public NativeArray<float2> Uv;
+            public NativeArray<float3> Uv;
 
             public void Execute()
             {
@@ -81,7 +85,7 @@ namespace CrowdPunch.Systems.Presentation
                                 float height = centre + thickness * (shell == 0 ? 1 : -.55f);
                                 float2 point = Cone.Mouth.xz + Directions[ray + side * 2] * distance;
                                 Vertices[vertex] = new float3(point.x, math.max(Cone.Tuning.GroundY + .06f, height), point.y);
-                                Uv[vertex++] = new float2(across, along);
+                                Uv[vertex++] = new float3(across, along, Accent);
                             }
                         }
                     }
@@ -89,7 +93,7 @@ namespace CrowdPunch.Systems.Presentation
             }
         }
 
-        internal void Draw(Material material)
+        internal void Draw(Material material, CombatVfxLibrary library)
         {
             if (vertices.Length == 0 || material == null) return;
             int stripVertices = (LengthSteps + 1) * 2;
@@ -113,7 +117,8 @@ namespace CrowdPunch.Systems.Presentation
             mesh.SetVertices(vertices.AsArray()); mesh.SetUVs(0, uv.AsArray());
             mesh.SetIndices(triangles.AsArray().GetSubArray(0, indexCount), MeshTopology.Triangles, 0, false);
             mesh.RecalculateBounds();
-            Graphics.DrawMesh(mesh, Matrix4x4.identity, material, 0, null, 0, null, ShadowCastingMode.Off, false);
+            CombatOwnershipTint.SetShaderPalette(colors, library);
+            Graphics.DrawMesh(mesh, Matrix4x4.identity, material, 0, null, 0, colors, ShadowCastingMode.Off, false);
         }
 
         private void AddQuad(int a, int b, int c, int d)

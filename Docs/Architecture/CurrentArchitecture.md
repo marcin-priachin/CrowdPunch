@@ -149,6 +149,25 @@ serialized migration preserves the previous cap (30 in the shared asset). These 
 are baked, so Inspector edits require SubScene rebaking/restart rather than live Mono reads.
 Verification is recorded in `Docs/Verification/BaselineCrowdTactics.md`.
 
+## Combat ownership tints (VISION-005, INFO-004, COMBAT-014/015)
+
+The `Ownership Colors` section of `CombatVfxLibrary.asset` supplies the player and
+enemy/boss palette to all owned effects. The defaults match the Chicken shot's amber and
+violet. Inspector edits take effect on the next presentation update. The
+combat feedback bridge passes the current ECS launch owner to the pooled trail property
+block. The shader tints every speed line while retaining its authored profiles. Dragon
+carries the launched owner in the existing flame stream UVs, and the
+flying Linked Pair reads its leader's current owner. The standard Dragon burst and the
+grounded tether use their authored colors.
+
+The Trail fill and rim use the launch owner stored at section emission. Normal Trail sections
+use the enemy color for presentation. A detached Wizard zone captures its
+triggering owner from the Wizard's flight or the incoming body. Its existing ring uses
+that tint while the green spore cloud and damage rules remain independent of the trigger.
+Unowned and environmental effects use the authored colors. All tints are applied through
+existing meshes, shader properties or renderers (DRAGON-003, LINK-002/003, TRAIL-002/006,
+WIZARD-005/006, CHICKEN-004/007).
+
 ## Launch accents (2026-10-28, VISION-004/005/006)
 
 `CombatFeedbackBridgeSystem` observes `EnemyLaunchState` phase/sequence independently of

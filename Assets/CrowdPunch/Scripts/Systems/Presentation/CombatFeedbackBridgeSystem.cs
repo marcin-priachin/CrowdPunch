@@ -160,7 +160,8 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     ulong id = ((ulong)(uint)entity.Version << 32) | (uint)entity.Index;
                     bridge.ReceiveTrail(id, launch.ValueRO.LaunchSequence, centre, speed,
-                        launch.ValueRO.Owner == EnemyLaunchOwner.Player ? launch.ValueRO.FeedbackChainDepth : 0, size, f.LaunchAge);
+                        launch.ValueRO.Owner == EnemyLaunchOwner.Player ? launch.ValueRO.FeedbackChainDepth : 0,
+                        size, f.LaunchAge, launch.ValueRO.Owner);
                 }
             }
             bridge?.EndTrails();

@@ -1,4 +1,6 @@
+using CrowdPunch.Components;
 using CrowdPunch.Configuration;
+using CrowdPunch.Systems.Presentation;
 using UnityEngine;
 
 namespace CrowdPunch.Mono.Player
@@ -11,6 +13,7 @@ namespace CrowdPunch.Mono.Player
         private static readonly int ParametersId = Shader.PropertyToID("_LineParameters");
         private static readonly int OpacityId = Shader.PropertyToID("_LineOpacity");
         private static readonly int BrightnessId = Shader.PropertyToID("_LineBrightness");
+        private static readonly int OwnershipTintId = Shader.PropertyToID("_OwnershipTint");
         private readonly Color[] pixels = new Color[Samples * 2];
         private readonly Texture2D profiles = new Texture2D(Samples, 2, TextureFormat.RGBAHalf, false, true)
         {
@@ -42,7 +45,8 @@ namespace CrowdPunch.Mono.Player
         }
         private static float Evaluate(AnimationCurve curve, float t)
             => Mathf.Clamp(curve != null && curve.length > 0 ? curve.Evaluate(t) : 1, 0, 4);
-        internal void Apply(TrailRenderer trail, CombatFeedbackSettings settings, float launchAge)
+        internal void Apply(TrailRenderer trail, CombatFeedbackSettings settings, float launchAge,
+            EnemyLaunchOwner owner, CombatVfxLibrary library)
         {
             float boost = settings.LaunchSpeedLineBoost
                 ? 1f - Mathf.Clamp01(launchAge / Mathf.Max(.01f, settings.LaunchSpeedLineBoostDuration)) : 0f;
@@ -51,6 +55,7 @@ namespace CrowdPunch.Mono.Player
                 * Mathf.Lerp(1f, settings.LaunchSpeedLineOpacityMultiplier, boost)));
             Properties.SetFloat(BrightnessId, Mathf.Max(0, settings.TrailLineBrightness
                 * Mathf.Lerp(1f, settings.LaunchSpeedLineBrightnessMultiplier, boost)));
+            Properties.SetColor(OwnershipTintId, CombatOwnershipTint.Accent(owner, library));
             // SetPropertyBlock copies values; slots share one profile texture, never a material instance.
             trail.SetPropertyBlock(Properties);
         }
