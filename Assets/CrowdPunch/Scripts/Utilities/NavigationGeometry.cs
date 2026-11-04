@@ -25,7 +25,11 @@ namespace CrowdPunch.Utilities
         public static bool ObstacleFreeSegment(ref NavigationGridBlob g, float2 a, float2 b, float radius)
         {
             for (int i = 0; i < g.Obstacles.Length; i++)
-                if (Intersects(a, b, g.Obstacles[i].Minimum - radius, g.Obstacles[i].Maximum + radius)) return false;
+            {
+                var obstacle = g.Obstacles[i];
+                if (Intersects(obstacle.Project(a), obstacle.Project(b), obstacle.Minimum - radius, obstacle.Maximum + radius))
+                    return false;
+            }
             return true;
         }
         // Slab test on the entire swept segment, not centre samples. Square Minkowski inflation
@@ -111,10 +115,12 @@ namespace CrowdPunch.Utilities
             // Permit entry to a clear interior point, but never cross inflated static geometry.
             if (math.any(end < g.Minimum + radius) || math.any(end > g.Maximum - radius)) return false;
             for (int i = 0; i < g.Obstacles.Length; i++)
-                if (SweptCircleIntersectsRectangle(start, end, radius,
-                        g.Obstacles[i].Minimum, g.Obstacles[i].Maximum)) return false;
+                if (SweptCircleIntersectsRectangle(start, end, radius, g.Obstacles[i])) return false;
             return true;
         }
+        public static bool SweptCircleIntersectsRectangle(float2 start, float2 end, float radius, NavigationRectangle obstacle)
+            => SweptCircleIntersectsRectangle(obstacle.Project(start), obstacle.Project(end), radius, obstacle.Minimum, obstacle.Maximum);
+
         public static bool SweptCircleIntersectsRectangle(float2 start, float2 end, float radius, float2 minimum, float2 maximum)
         {
             if (Intersects(start, end, minimum, maximum)) return true;

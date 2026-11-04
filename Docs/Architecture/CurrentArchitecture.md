@@ -3020,6 +3020,8 @@ The dedicated validation arena adds baked rectangular solids, class-based cleara
 
 Navigation participation anchors now default to the clearance-valid spacing-bounds centre (or nearest valid cell), with an optional explicit override for disconnected layouts. See [anchor selection](Navigation.md#spawning-and-lifecycle). This is baked configuration, not a per-frame search.
 
+Campaign level 41 includes its diagonal perimeter colliders in the baked navigation grid (LOOP-002, COMBAT-017). The wall-aligned footprints participate in spawn reachability, route clearance, and navigation escape checks. See [perimeter authoring](Navigation.md#authoring-and-data-ownership).
+
 
 ## Armored And Gauntlet_12 (ENEMY-014/015)
 

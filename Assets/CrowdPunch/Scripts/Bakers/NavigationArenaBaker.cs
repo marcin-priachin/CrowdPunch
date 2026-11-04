@@ -15,7 +15,11 @@ namespace CrowdPunch.Bakers
             var obstacles = GetComponentsInChildren<SolidObstacleAuthoring>();
             var covers = GetComponentsInChildren<RotatingCoverAuthoring>();
             var shells = GetComponentsInChildren<ShellTargetAuthoring>();
-            var rectangles = new NativeArray<NavigationRectangle>(obstacles.Length + covers.Length + shells.Length, Allocator.Temp);
+            var perimeter = authoring.perimeterColliders;
+            int perimeterStart = obstacles.Length + covers.Length + shells.Length;
+            using var rectangleStorage = new NativeList<NavigationRectangle>(perimeterStart + (perimeter?.Length ?? 0), Allocator.Temp);
+            var rectangles = rectangleStorage;
+            rectangles.ResizeUninitialized(perimeterStart);
             for (int i = 0; i < obstacles.Length; i++)
             {
                 var obstacle = obstacles[i]; DependsOn(obstacle); DependsOn(obstacle.transform);
@@ -52,12 +56,24 @@ namespace CrowdPunch.Bakers
                 float2 half = ((float3)solid.size).xz * .5f;
                 rectangles[obstacles.Length + covers.Length + i] = new NavigationRectangle { Minimum = p - half, Maximum = p + half };
             }
+            if (perimeter != null)
+            {
+                foreach (var collider in perimeter)
+                {
+                    if (collider == null) continue;
+                    DependsOn(collider);
+                    DependsOn(collider.transform);
+                    var mesh = collider.sharedMesh;
+                    if (!IsActiveAndEnabled(collider) || !collider.enabled || collider.isTrigger || mesh == null) continue;
+                    DependsOn(mesh);
+                    rectangles.Add(PerimeterFootprint(collider.transform, mesh.bounds));
+                }
+            }
             float2 center = new float2(authoring.transform.position.x, authoring.transform.position.z) + arena.SpacingCenterOffset.xz;
             float3 radii = (float3)authoring.settings.clearanceRadii + authoring.settings.clearanceMargin;
             var blob = NavigationGridConstruction.Build(center - arena.SpacingSize.xz * .5f, center + arena.SpacingSize.xz * .5f,
-                authoring.settings.cellSize, radii, rectangles, Allocator.Persistent);
+                authoring.settings.cellSize, radii, rectangles.AsArray(), Allocator.Persistent);
             blob.Value.Margin = authoring.settings.clearanceMargin;
-            rectangles.Dispose();
             bool anchorValid = NavigationGeometry.TryResolveParticipationAnchor(ref blob.Value,
                 authoring.overrideParticipationAnchor, authoring.participationAnchor, out float2 anchor);
             AddBlobAsset(ref blob, out _); var entity = GetEntity(TransformUsageFlags.WorldSpace);
@@ -67,6 +83,28 @@ namespace CrowdPunch.Bakers
                 UnityEngine.Debug.LogError(authoring.overrideParticipationAnchor
                     ? "Navigation participation anchor override is outside the spacing bounds or lacks clearance. Move it to open ground clear for every configured radius class, or disable the override."
                     : "Navigation spacing bounds contain no participation anchor clear for every configured radius class. Check obstacle footprints, bounds, cell size, and clearance settings.", authoring);
+        }
+
+        private static NavigationRectangle PerimeterFootprint(UnityEngine.Transform transform, UnityEngine.Bounds bounds)
+        {
+            // Project the collider mesh bounds in the wall's frame. A world AABB would
+            // cover usable floor on the inside of a long diagonal wall.
+            var footprint = new NavigationRectangle
+            {
+                Axis = math.normalizesafe(((float3)transform.right).xz, new float2(1f, 0f)),
+                Minimum = new float2(float.PositiveInfinity),
+                Maximum = new float2(float.NegativeInfinity)
+            };
+            for (int x = -1; x <= 1; x += 2)
+            for (int y = -1; y <= 1; y += 2)
+            for (int z = -1; z <= 1; z += 2)
+            {
+                var corner = bounds.center + UnityEngine.Vector3.Scale(bounds.extents, new UnityEngine.Vector3(x, y, z));
+                float2 projected = footprint.Project(((float3)transform.TransformPoint(corner)).xz);
+                footprint.Minimum = math.min(footprint.Minimum, projected);
+                footprint.Maximum = math.max(footprint.Maximum, projected);
+            }
+            return footprint;
         }
     }
 }

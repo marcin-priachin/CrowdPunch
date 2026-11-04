@@ -27,8 +27,7 @@ namespace CrowdPunch.Systems.Movement
                     : end[axis] < minimum[axis] || end[axis] > maximum[axis]) return float2.zero;
             }
             for (int i = 0; i < grid.Obstacles.Length; i++)
-                if (NavigationGeometry.SweptCircleIntersectsRectangle(position, end, radius,
-                    grid.Obstacles[i].Minimum, grid.Obstacles[i].Maximum)) return float2.zero;
+                if (NavigationGeometry.SweptCircleIntersectsRectangle(position, end, radius, grid.Obstacles[i])) return float2.zero;
             return velocity;
         }
     }

@@ -106,6 +106,12 @@ namespace CrowdPunch.Editor
             switch(number)
             {
                 case 41:
+                    var layout = sub.GetRootGameObjects().Single(root => root.name == "Layout - Back to Bodies").transform;
+                    navigation.perimeterColliders = new[]
+                    {
+                        layout.Find("Perimeter 03").GetComponent<MeshCollider>(),
+                        layout.Find("Perimeter 04").GetComponent<MeshCollider>()
+                    };
                     CampaignRock(arena,new Vector2(-12,-2),new Vector2Int(3,7));
                     CampaignRock(arena,new Vector2(-10,-7),new Vector2Int(5,3)); break;
                 case 42:

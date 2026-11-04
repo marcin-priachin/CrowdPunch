@@ -3,7 +3,16 @@ using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
-    public struct NavigationRectangle { public float2 Minimum, Maximum; }
+    public struct NavigationRectangle
+    {
+        public float2 Minimum, Maximum;
+        // Unit X axis of the footprint's frame. Zero keeps world XZ coordinates.
+        public float2 Axis;
+
+        public float2 Project(float2 position) => math.any(Axis != float2.zero)
+            ? new float2(math.dot(position, Axis), math.dot(position, new float2(-Axis.y, Axis.x)))
+            : position;
+    }
     public struct NavigationGridBlob
     {
         public float2 Minimum, Maximum;

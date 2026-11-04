@@ -16,6 +16,30 @@ namespace CrowdPunch.Tests
         }
         private static NavigationRectangle Box(float x0, float y0, float x1, float y1) => new NavigationRectangle { Minimum = new float2(x0, y0), Maximum = new float2(x1, y1) };
         [Test]
+        public void DiagonalPerimeterRejectsWallAndExteriorSpawns()
+        {
+            // LOOP-002, COMBAT-017: the rectangular spacing bounds can straddle a wall.
+            var axis = math.normalize(new float2(1, 1));
+            var wall = new NavigationRectangle
+            {
+                Axis = axis,
+                Minimum = new float2(4, -16),
+                Maximum = new float2(5, 16)
+            };
+            using var blob = Grid(wall);
+            var grid = new NavigationGrid { Data = blob, ParticipationAnchor = new float2(0, -2) };
+            var playable = new float2(0, 2);
+            var inWall = new float2(4, 2.5f);
+            var exterior = new float2(5, 5);
+
+            Assert.True(NavigationGeometry.SpawnAllowed(grid, playable, .5f));
+            Assert.False(NavigationGeometry.SpawnAllowed(grid, inWall, .5f));
+            Assert.False(NavigationGeometry.SpawnAllowed(grid, exterior, .5f));
+            Assert.False(NavigationGeometry.Segment(ref blob.Value, playable, exterior, .6f));
+            Assert.False(NavigationGeometry.TryEscape(ref blob.Value, inWall, .5f, 1, out _));
+        }
+
+        [Test]
         public void ParticipationAnchorUsesTranslatedSpacingCentreAndIgnoresDisabledOverride()
         {
             // COMBAT-017: translated, differently sized spacing bounds define the origin.
