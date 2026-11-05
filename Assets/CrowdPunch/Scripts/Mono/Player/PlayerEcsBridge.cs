@@ -57,6 +57,9 @@ namespace CrowdPunch.Mono.Player
             => ProjectileBurstReceived?.Invoke(kind, position, direction, scale);
         public CrowdPunch.Configuration.CombatFeedbackSettings FeedbackSettings { get; set; }
         public event Action<CombatFeedbackMessage> ImpactReceived;
+        public event Action<Vector3, Vector3, float, bool> PillarImpactReceived;
+        public void ReceivePillarImpact(Vector3 position, Vector3 direction, float width, bool bossHit)
+            => PillarImpactReceived?.Invoke(position, direction, width, bossHit);
         public event Action TrailsBegan, TrailsEnded;
         public event Action<ulong, uint, Vector3, float, int, Vector3, float, EnemyLaunchOwner> TrailReceived;
         public event Action<Vector3, Vector3, Vector3> LaunchReceived;

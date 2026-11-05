@@ -310,6 +310,19 @@ Unity: 6000.3.10f1
 
 This document describes what exists now. It is not a desired future architecture and does not make prototype behavior into a design requirement.
 
+## Pillar landing and boss-contact effects (2026-11-05, PILLAR-003/005/006, VISION-005/006)
+
+`FallingPillarBaker` supplies `PillarFeedbackState`, separate from damage/contact
+history. `PillarImpactEffectSystem` observes the authoritative fall sequence,
+ground angle and successful boss-contact flag in `GamePresentationGroup`. It
+publishes five ground dust positions and one projected boss contact per fall
+through `PlayerEcsBridge.PillarImpactReceived`. No enemy entities cross to Mono.
+`CombatFeedback` owns a bounded `PillarImpactParticles` pool, reusing the existing
+Gatekeeper cream dust prefab and a larger cream/amber `ComicImpactPool` accent.
+All pieces are world-anchored. Retry, disable, pause/transition and destruction
+use the existing feedback cleanup. Damage, fall motion, boss animation, collision
+and scene content remain unchanged.
+
 ## Goblin Giant Dino Presentation (2026-10-25, PILLAR-001/006, VISION-005/006)
 
 Campaign 40/80 pillars use fitted KayKit `pillar.fbx` geometry authored by

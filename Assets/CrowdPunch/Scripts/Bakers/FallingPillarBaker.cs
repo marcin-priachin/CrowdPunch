@@ -20,6 +20,7 @@ namespace CrowdPunch.Bakers
             t.UnavailableCollider=BoxCollider.Create(geometry,new CollisionFilter(),material);
             AddBlobAsset(ref t.UprightCollider,out _); AddBlobAsset(ref t.UnavailableCollider,out _);
             AddComponent(e,t); AddComponent(e,new FallingPillar { Boss=GetEntity(a.boss,TransformUsageFlags.Dynamic) });
+            AddComponent<PillarFeedbackState>(e);
             AddBuffer<PillarFallHit>(e); AddComponent(e,new PhysicsCollider { Value=t.UprightCollider });
             // Moving scripted geometry remains a static body; no normal enemy motor owns this transform.
             AddSharedComponent(e,new PhysicsWorldIndex());
