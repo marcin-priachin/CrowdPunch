@@ -3,6 +3,7 @@ using UnityEngine;
 namespace CrowdPunch.Mono.Player
 {
     // Narrow ECS-to-scene presentation endpoint; no entity identities cross this boundary.
+    [DefaultExecutionOrder(100)]
     public sealed class FinalePresentation : MonoBehaviour
     {
         public Configuration.FinaleSettings settings;
@@ -11,19 +12,24 @@ namespace CrowdPunch.Mono.Player
         public float groundHeight = 3;
         public float groundedModelOffset;
         private static FinalePresentation active;
-        private LineRenderer warning, tether, vulnerability;
+        private LineRenderer tether, vulnerability;
         private Mono.UI.BossHealthBar healthBar;
         private readonly LineRenderer[] anchors = new LineRenderer[4];
         private Material material;
-        private string animationState;
-        private int previousPhase = -1, previousAttack;
-        private float actionUntil, previousHealth = 1;
-        private string actionClip;
-        private const float AttackContact = .65f;
+        private int previousPhase = -1;
+        private float previousHealth = 1;
+        private uint resolvedSequence, restart;
+        private FinaleWraithAnimation wraithAnimation;
+        private FinaleAttackVisuals attacks;
+        private Transform attackOrigin;
         private Mono.Camera.CameraFollow cameraFollow;
         private void OnEnable() {
             active=this;
-            previousPhase=-1; previousAttack=0; animationState=null; actionUntil=0;
+            previousPhase=-1; resolvedSequence=0; restart=Mono.UI.GameRestartRegistry.Sequence;
+            wraithAnimation=new FinaleWraithAnimation(animator);
+            if(model!=null)
+                foreach(var bone in model.GetComponentsInChildren<Transform>(true))
+                    if(bone.name=="RigRibcage") { attackOrigin=bone; break; }
             previousHealth=1;
             healthBar=GetComponent<Mono.UI.BossHealthBar>();
             cameraFollow=FindFirstObjectByType<Mono.Camera.CameraFollow>();
@@ -32,40 +38,54 @@ namespace CrowdPunch.Mono.Player
                 if(cameraFollow!=null) cameraFollow.EncounterLookHeight=settings.cameraLookHeight;
             }
         }
-        private void OnDisable() { if(active==this) active=null; if(cameraFollow!=null) cameraFollow.EncounterLookHeight=0; }
-        private void OnDestroy() { if(material!=null) Destroy(material); }
+        private void OnDisable() { if(active==this) active=null; attacks?.Clear(); if(cameraFollow!=null) cameraFollow.EncounterLookHeight=0; }
+        private void OnDestroy() { attacks?.Dispose(); if(material!=null) Destroy(material); }
+        private void LateUpdate()
+        {
+            // Run after CameraFollow so flight always faces the viewer's current position.
+            if(model!=null && (previousPhase==0 || previousPhase==3)) FaceViewer();
+            if(FeedbackTimeController.IsSuspended) { attacks?.Clear(); return; }
+            attacks?.Tick();
+        }
+
+        private void FaceViewer()
+        {
+            var camera=UnityEngine.Camera.main;
+            if(camera==null) return;
+            Vector3 facing=camera.transform.position-model.position;
+            facing.y=0;
+            if(facing.sqrMagnitude>.001f) model.rotation=Quaternion.LookRotation(facing);
+        }
 
         public static void Publish(Vector3 position,Quaternion rotation,int phase,int attack,Vector3 center,Vector3 direction,
-            float length,float width,float progress,float health,Vector3 landing,float groundedWeight=0)
+            float length,float width,float progress,float health,Vector3 landing,float groundedWeight=0,
+            uint attackSequence=0,uint resolvedAttackSequence=0,int resolvedAttack=0)
         {
             if(active==null) return;
             var a=active;
-            if(a.previousPhase!=phase) {
-                a.actionUntil=0;
-                if(phase==2) a.React();
+            if(a.restart!=Mono.UI.GameRestartRegistry.Sequence || health>a.previousHealth) {
+                a.restart=Mono.UI.GameRestartRegistry.Sequence;
+                a.attacks?.Clear(); a.wraithAnimation=new FinaleWraithAnimation(a.animator); a.previousPhase=-1;
             }
-            bool released=a.previousPhase==phase && a.previousAttack!=0 && attack==0;
-            if(released && phase!=4) {
-                a.actionClip=AttackClip(a.previousAttack);
-                a.actionUntil=Time.time+a.ClipDuration(a.actionClip)*(1-AttackContact);
-            }
+            bool released=a.previousPhase>=0 && resolvedAttackSequence!=a.resolvedSequence && resolvedAttack!=0
+                && phase!=4 && (phase!=1 || resolvedAttack==5);
+            if(a.previousPhase!=phase && (phase==1 || phase==3 || phase==4)) a.attacks?.Clear();
             bool damaged=phase==2 && health<a.previousHealth;
-            if(damaged && attack==0 && !released) a.React();
-            string clip=phase==4?"Die":phase==1?"Take Damage":phase==3?"Fly Forward In Place":
-                attack!=0?AttackClip(attack):Time.time<a.actionUntil?a.actionClip:phase==2?"Idle":"Fly Forward In Place";
-            a.model.SetPositionAndRotation(position-Vector3.up*(a.groundHeight+a.groundedModelOffset*a.model.localScale.y*groundedWeight),rotation);
-            if(a.animator!=null) {
-                // Sample the authored windup up to its contact pose at the existing ECS impact time.
-                // The remainder then plays at authored speed without changing combat or model proportions.
-                bool warning=attack!=0 && phase!=1 && phase!=4;
-                a.animator.speed=warning?0:1;
-                if(warning) a.animator.Play(clip,0,Mathf.Clamp01(progress)*AttackContact);
-                else if(released) a.animator.Play(clip,0,AttackContact);
-                else if(clip!=a.animationState || damaged || a.previousPhase!=phase)
-                    a.animator.CrossFadeInFixedTime(clip,.1f,0,0);
-                a.animationState=clip;
+            a.wraithAnimation.Present(phase,attack,attackSequence,progress,released,resolvedAttack,damaged);
+            // Grounded attacks face their committed direction; flight faces the viewer in LateUpdate.
+            if(phase==2 && a.wraithAnimation.AttackPoseActive && direction.sqrMagnitude>.001f) {
+                direction.y=0;
+                rotation=Quaternion.LookRotation(direction.normalized);
             }
-            a.previousPhase=phase; a.previousAttack=attack; a.previousHealth=health;
+            a.model.SetPositionAndRotation(position-Vector3.up*(a.groundHeight+a.groundedModelOffset*a.model.localScale.y*groundedWeight),
+                Quaternion.RotateTowards(a.model.rotation,rotation,360*Time.deltaTime));
+            if(a.attacks==null) a.attacks=new FinaleAttackVisuals(a.transform);
+            if(!FeedbackTimeController.IsSuspended) {
+                a.attacks.Present(phase==4?0:attack,center,direction,length,width,progress,
+                    a.attackOrigin!=null?a.attackOrigin.position:a.model.position+Vector3.up*2);
+                if(released) a.attacks.Resolve(resolvedAttack);
+            }
+            a.previousPhase=phase; a.resolvedSequence=resolvedAttackSequence; a.previousHealth=health;
             bool vulnerable=phase==2;
             float pulse=.5f+.5f*Mathf.Sin(Time.time*5);
             if(a.healthBar!=null) a.healthBar.Present(health);
@@ -78,42 +98,10 @@ namespace CrowdPunch.Mono.Player
                 a.vulnerability.startColor=a.vulnerability.endColor=new Color(.1f,1,.9f);
                 a.vulnerability.startWidth=a.vulnerability.endWidth=.3f+pulse*.15f;
             }
-            a.Ensure(ref a.warning,"Finale ground warning");
-            a.warning.enabled=attack!=0 && phase!=4;
-            if(a.warning.enabled) {
-                a.warning.startColor=a.warning.endColor=Color.Lerp(Color.yellow,new Color(1,.15f,.03f),progress);
-                a.warning.startWidth=a.warning.endWidth=.18f+progress*.15f;
-                center.y=-.9f;
-                if(length<=0) Circle(a.warning,center,width);
-                else {
-                    a.warning.positionCount=4;
-                    Vector3 side=Vector3.Cross(Vector3.up,direction)*width*.5f;
-                    Vector3 from=center-(attack==2?direction*length*.5f:Vector3.zero);
-                    Vector3 to=from+direction*length;
-                    a.warning.SetPositions(new[]{from-side,to-side,to+side,from+side});
-                }
-            }
             a.Ensure(ref a.tether,"Anchor energy tether"); a.tether.enabled=phase==1;
             if(a.tether.enabled) { a.tether.loop=false; a.tether.positionCount=2; a.tether.SetPositions(new[]{landing,position});
                 a.tether.startColor=a.tether.endColor=Color.cyan; a.tether.startWidth=a.tether.endWidth=.3f; }
         }
-
-        private void React()
-        {
-            actionClip="Take Damage";
-            actionUntil=Time.time+ClipDuration(actionClip);
-        }
-
-        private float ClipDuration(string clip)
-        {
-            if(animator!=null && animator.runtimeAnimatorController!=null)
-                foreach(var motion in animator.runtimeAnimatorController.animationClips)
-                    if(motion.name==clip) return motion.length;
-            return .67f;
-        }
-
-        private static string AttackClip(int attack) => attack==2?"Spin Wing Slash Attack":
-            attack==3?"Wing Stab Attack":attack==4?"Cast Spell":"Projectile Attack";
 
         public static void Anchor(int index,Vector3 position,int status)
         {

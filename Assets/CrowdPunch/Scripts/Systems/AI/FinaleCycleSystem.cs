@@ -48,6 +48,7 @@ namespace CrowdPunch.Systems.AI
                     pose.ValueRW.Position = math.lerp(b.TransitionStart,b.Landing,math.smoothstep(0,1,1-b.Remaining/t.FallSeconds));
                     if (b.Remaining <= 0) {
                         FinaleAreaAttack.Resolve(state.EntityManager,entity,b,t,player);
+                        b.ResolvedAttack=b.Attack; b.ResolvedAttackSequence=b.AttackSequence;
                         b.Phase = FinalePhase.Downed; b.Remaining=t.DownedSeconds;
                         b.Attack=FinaleAttack.None; b.AttackRemaining=t.StunSeconds; b.GroundAttackIndex=0;
                         pose.ValueRW.Position=b.Landing;
@@ -77,6 +78,7 @@ namespace CrowdPunch.Systems.AI
                 if (b.AttackRemaining > 0 || !player.IsAvailable) continue;
                 if (b.Attack != FinaleAttack.None) {
                     FinaleAreaAttack.Resolve(state.EntityManager,entity,b,t,player);
+                    b.ResolvedAttack=b.Attack; b.ResolvedAttackSequence=b.AttackSequence;
                     b.Attack=FinaleAttack.None;
                     b.AttackRemaining=b.Phase==FinalePhase.Flying?t.AirIntervals[b.Stage-1]:t.GroundInterval;
                 }

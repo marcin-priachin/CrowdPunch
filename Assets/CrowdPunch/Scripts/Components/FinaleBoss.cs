@@ -14,6 +14,8 @@ namespace CrowdPunch.Components
         public float3 Landing, TransitionStart, WarningCenter, WarningDirection, TetherOrigin;
         public int Stage, SpentCount, AttackIndex, GroundAttackIndex;
         public uint AttackSequence;
+        public uint ResolvedAttackSequence;
+        public FinaleAttack ResolvedAttack;
         public byte Neutralized;
     }
 

@@ -172,6 +172,10 @@ Status: Must
 
 The immune flying boss smoothly follows above/ahead and uses telegraphed ground strikes and committed sweeping lanes. Its landing damages and pushes player/enemies, leaving anchors unaffected. Landing begins a fixed vulnerability window with an initial stun, then alternating telegraphed directional slams and radial shockwaves. Grounded boss remains stationary and unlaunchable. Takeoff is harmless and ends vulnerability. Three health-based stages increase airborne attack demands and specialist pressure without changing ordinary enemy stats.
 
+During flight, including airborne attacks and takeoff, the boss's visual facing stays
+toward the viewer while remaining upright. Its movement and attack direction remain
+independent of this visual facing.
+
 ### FINALE-004 - Anchor Ownership
 
 Status: Must

@@ -917,7 +917,32 @@ Initial boss settings: 6000 health, three stages at 67%/34%, 2.5s fall, 24s down
 
 The finale scene owns `BossHealthBar` (formerly `FinaleBossHealthBar`, retaining its script GUID), a noninteractive screen-space uGUI canvas shared with the other bosses (INFO-007, FINALE-007). `FinalePresentation` forwards health fraction through the same ECS presentation endpoint, without UI entity access. It displays a long red bar centered at the top with the player's fill thickness and top margin, without text or background. The pulsing cyan ground ring indicates vulnerability through grounded attacks and ends at takeoff. The opening hint sits below the bar. Pause/failure/completion screens and defeat hide the bar, and unloading the finale removes it.
 
-The 2026-10-25 finale presentation amendment uses the Wraith Cute Series prefab at its authored scale. `FinaleWraithBuilder` replaces only the main-scene model, creates a dedicated cel material retaining the Wraith texture and preserves the prefab's particle auras. Its controller references eight original FBX clips. `FinalePresentation` uses in-place flight, Idle, Take Damage and Die for the encounter phases. Projectile Attack, Spin Wing Slash Attack, Wing Stab Attack and Cast Spell cover the four attack types; their authored windup reaches 65% at the existing ECS warning resolution, then plays the remaining follow-through. Damage reactions never interrupt a committed warning. A fixed sampled grounding translation clears the complete clip envelope, including death. No runtime model scaling, scripted bone shaking or material-property feedback remains. The ECS encounter, collider, anchors and damage timing retain their existing ownership and data flow (FINALE-001/003/007).
+The 2026-10-25 finale presentation amendment uses the Wraith Cute Series prefab at its authored scale. `FinaleWraithBuilder` replaces only the main-scene model, creates a dedicated cel material retaining the Wraith texture and preserves the prefab's particle auras. Its controller references eight original FBX clips. `FinaleWraithAnimation` uses in-place flight, Idle, Take Damage and Die for the encounter phases. Projectile Attack, Spin Wing Slash Attack, Wing Stab Attack and Cast Spell cover the four attack types. Damage reactions never interrupt a committed warning. A fixed sampled grounding translation clears the complete clip envelope, including death. No runtime model scaling, scripted bone shaking or material-property feedback remains. The ECS encounter, collider, anchors and damage timing retain their existing ownership and data flow (FINALE-001/003/007).
+
+The 2026-11-05 attack presentation pass replaces the finale's thin warning lines with
+`FinaleAttackVisuals`: one reusable vertex-colour mesh using the existing CombatFeedback
+shader and twelve pooled cream dust effects. Constant damage footprints have translucent
+violet fills, inset plum/amber-to-coral borders, cream directional chevrons and radial
+countdown ticks. Strike, sweep, slam, shockwave and landing resolve into distinct brief
+bolts, lane strokes or radial bursts; their visual expansion does not move damage timing.
+`FinaleCycleSystem` records the last resolved attack kind and sequence only when it
+actually calls the area resolver. The presentation bridge copies these event values
+and retains the resolved shape during recovery. Cancellation emits no impact event.
+Phase changes, retry, pause and scene lifetime clear temporary effects.
+
+`FinaleWraithAnimation` samples each original attack clip through an eased gather,
+held anticipation and fast commitment, with separate contact frames and an authored
+follow-through before blending to idle/flight. During flight and takeoff the model
+always faces the viewer horizontally, updated after CameraFollow, including airborne
+attacks. Grounded attacks turn toward their committed direction throughout preparation
+and follow-through; the ECS solid remains stationary
+during downings. Charge accents originate at the animated ribcage. This changes visual
+orientation and animation pacing only: prefab scale, body materials, attack areas,
+damage, warning duration and vulnerability rules remain intact (VISION-005/006,
+FINALE-003/007).
+The saved grounding offset is -1.2274528 model units, measured across all eight clips
+at the prefab's authored scale; the previous offset let the stab/death envelope cross
+the floor. This is one fixed translation for grounded phases, not per-frame fitting.
 
 ## Four-Enemy Campaign Integration (LOOP-009)
 

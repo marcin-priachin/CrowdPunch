@@ -63,26 +63,37 @@ namespace CrowdPunch.Tests
                 Lifecycle(presentation, "OnEnable");
                 presentation.animator.Rebind();
                 presentation.animator.Update(0);
+                uint sequence = 0;
                 foreach (int phase in new[] { 0, 2 })
                     foreach (int attack in phase == 0 ? new[] { 1, 2 } : new[] { 3, 4 })
                     {
+                        sequence++;
                         for (int frame = 0; frame <= 30; frame++)
                         {
-                            Present(phase, attack, frame / 30f);
+                            Present(phase, attack, frame / 30f, 1, sequence);
                             presentation.animator.Update(0);
                             Assert.That(presentation.model.localScale, Is.EqualTo(scale));
                         }
                         float contact = presentation.animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
                         Assert.That(contact, Is.InRange(.1f, .95f), "The warning ends inside the authored attack, leaving a follow-through.");
-                        Present(phase, 0, 1);
+                        Present(phase, 0, 1, 1, sequence, sequence, attack);
                         presentation.animator.Update(0);
                         Assert.That(presentation.animator.GetCurrentAnimatorStateInfo(0).normalizedTime, Is.EqualTo(contact).Within(.001f));
                         Assert.That(presentation.animator.speed, Is.EqualTo(1));
+                        Lifecycle(presentation, "LateUpdate");
+                        var effect = root.transform.Find("Finale cartoon attack effects").GetComponent<MeshRenderer>();
+                        Assert.That(effect.enabled, Is.True, "A confirmed area resolution emits an impact.");
                         Present(3, 0, 0);
+                        Lifecycle(presentation, "LateUpdate");
                         presentation.animator.Update(.2f);
                         Assert.That(presentation.animator.GetCurrentAnimatorStateInfo(0).IsName("Fly Forward In Place"), Is.True);
-                        Assert.That(root.transform.Find("Finale ground warning").GetComponent<LineRenderer>().enabled, Is.False);
+                        Assert.That(effect.enabled, Is.False, "Takeoff clears warning and impact geometry.");
                     }
+                Present(0, 2, .8f, 1, ++sequence);
+                Present(1, 5, 0, 1, ++sequence);
+                var visuals = typeof(FinalePresentation).GetField("attacks", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(presentation);
+                Assert.That((float)visuals.GetType().GetField("hitTime", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(visuals),
+                    Is.LessThan(0), "Cancelling a sweep for landing never emits a sweep impact.");
                 foreach (int phase in new[] { 1, 2, 3, 4, 0 })
                 {
                     Present(phase, 0, 0, .4f);
@@ -135,9 +146,10 @@ namespace CrowdPunch.Tests
             finally { Object.DestroyImmediate(mesh); EditorSceneManager.ClosePreviewScene(scene); }
         }
 
-        private static void Present(int phase, int attack, float progress, float health = 1) => FinalePresentation.Publish(
+        private static void Present(int phase, int attack, float progress, float health = 1,
+            uint sequence = 0, uint resolvedSequence = 0, int resolvedAttack = 0) => FinalePresentation.Publish(
             new Vector3(0, 3, 0), Quaternion.identity, phase, attack, Vector3.zero, Vector3.forward, 12, 4, progress,
-            health, Vector3.zero, phase == 2 || phase == 4 ? 1 : 0);
+            health, Vector3.zero, phase == 2 || phase == 4 ? 1 : 0, sequence, resolvedSequence, resolvedAttack);
 
         private static Color[] ReadFeedbackColors(Renderer renderer)
         {

@@ -1,5 +1,49 @@
 # Final encounter verification
 
+## Cartoon attack presentation (2026-11-05)
+
+Requirements: FINALE-003/007, VISION-005/006. Level 81 now uses filled violet warning
+footprints with inset plum/warm borders, countdown ticks and cream chevrons. The
+Wraith faces the viewer throughout flight/takeoff and turns toward grounded attacks,
+using eased authored preparation,
+individual contact frames and full follow-through. Projectile bolts, lane slashes,
+radial impact rings and pooled cream dust replace warning-only attack feedback.
+Damage geometry, timings, health and vulnerability tuning are unchanged.
+
+- Unity compilation and `dotnet build Assembly-CSharp.csproj --no-restore` pass.
+  MSBuild reports 318 existing package/project warnings and zero errors.
+- The Unity Editor `Finale` test filter passes **23/23** tests. This includes scale,
+  materials, authored clips, contact/follow-through, cancellation, grounded bounds,
+  objective ownership, rebound, campaign and trajectory regressions.
+- A controlled baked-world probe injects all five attacks. Each warning appears,
+  each confirmed resolution emits the correct effect once, warnings clear at contact,
+  and impact geometry expires. Cancelling a sweep for an anchor landing emits no
+  sweep impact; retry clears attack sequences and effects. Player health is restored
+  during this probe; it is not a natural combat or balance playtest.
+- Game-camera captures of every warning/impact were visually inspected. Selected
+  images are in `Images/FinaleAttacks`. The fixed grounding offset was corrected from
+  -0.6337264 to -1.2274528 after the existing envelope test exposed floor penetration
+  during the stab/death clips. All eight clip envelopes now pass at authored scale.
+- At stage three the live probe observed all **66 physical enemy bodies**. A warmed
+  simultaneous circular warning and impact uses 2,376 vertices in one mesh and a
+  fixed twelve-effect dust pool. Across 200 direct presentation updates, CPU time
+  averages **0.509 ms**, with **zero managed bytes allocated**. A separate 166-frame
+  Editor sample averages 36.63 ms, p95 60.95 ms. These are local Editor/tool samples,
+  without a comparative baseline or standalone Player/GPU benchmark; OQ-001 remains
+  unresolved.
+- No new gameplay exceptions were logged. The Editor still logs its existing
+  `Synty.SidekickCharacters.ToolDownloader` window error on play-mode transitions.
+
+Ignored diagnostic outputs: `Temp/FinaleVisuals/probe.txt`, `profile.txt`,
+`dotnet-build.txt`, all ten warning/impact PNGs, and the injected probe scripts.
+Human playtesting should still assess warning overlap and readability while moving
+through the encounter; no full manual playthrough or standalone build is claimed.
+
+Viewer-facing follow-up: Unity compilation, C# build and all three Wraith presentation
+tests pass. Six direct facing checks across three camera positions in flight and
+takeoff confirm upright camera-facing orientation. The late presentation update runs
+after CameraFollow; attack geometry and movement remain ECS-owned.
+
 Date: 2026-10-14. Unity: 6000.3.10f1. Requirements: FINALE-001 through FINALE-007; LOOP-002/006.
 
 ## Playable content
