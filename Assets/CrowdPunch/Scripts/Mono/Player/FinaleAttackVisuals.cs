@@ -61,7 +61,7 @@ namespace CrowdPunch.Mono.Player
             // Retain the committed warning dimensions; the current frame may already be in recovery.
             hitAttack = resolvedAttack; hitCenter = center; hitDirection = direction;
             hitLength = length; hitWidth = width; hitOrigin = origin; hitTime = Time.time;
-            bool lane = hitAttack == 2 || hitAttack == 3;
+            bool lane = hitAttack == 2;
             int count = lane ? 7 : hitAttack == 1 ? 5 : 10;
             for (int i = 0; i < count; i++)
             {
@@ -131,7 +131,7 @@ namespace CrowdPunch.Mono.Player
                 for (int i = 0; i < 4; i++)
                 {
                     Vector3 axis = Quaternion.Euler(0, i * 90, 0) * Vector3.forward;
-                    Chevron(center + axis * width * .5f, attack == 4 ? axis : -axis, Mathf.Min(.8f, width * .16f), Cream);
+                    Chevron(center + axis * width * .5f, attack == 4 || attack == 3 ? axis : -axis, Mathf.Min(.8f, width * .16f), Cream);
                 }
                 // A chunky four-point spell/impact mark, consistent with the comic contact bursts.
                 Star(center, Mathf.Min(1.05f, width * .23f), Ink, .035f);
@@ -154,7 +154,7 @@ namespace CrowdPunch.Mono.Player
             Color cream = Cream; cream.a = fade;
             Color ink = Ink; ink.a *= fade;
             float pop = 1 - Mathf.Pow(1 - t, 3);
-            if (hitAttack == 2 || hitAttack == 3)
+            if (hitAttack == 2)
             {
                 Vector3 start = hitCenter - (hitAttack == 2 ? hitDirection * hitLength * .5f : Vector3.zero);
                 Vector3 side = Vector3.Cross(Vector3.up, hitDirection);
@@ -176,6 +176,22 @@ namespace CrowdPunch.Mono.Player
                 float radius = Mathf.Lerp(hitWidth * .22f, hitWidth - .25f, pop);
                 Ring(hitCenter, radius, Mathf.Lerp(.5f, .1f, t), ink, .07f);
                 Ring(hitCenter, radius, Mathf.Lerp(.28f, .05f, t), cream, .08f);
+                if (hitAttack == 3)
+                {
+                    // A complete circular wing cut, with rotating tapered crescents rather than a lane stroke.
+                    for (int arc = 0; arc < 3; arc++)
+                        for (int i = 0; i < 20; i++)
+                        {
+                            float a = arc * Mathf.PI * 2 / 3 + i * .065f + pop * 1.8f;
+                            float b = a + .065f;
+                            float outer = hitWidth * Mathf.Lerp(.65f, .96f, pop);
+                            float stroke = Mathf.Sin((i + .5f) / 20 * Mathf.PI) * .85f * fade;
+                            Vector3 v = new Vector3(Mathf.Cos(a), 0, Mathf.Sin(a));
+                            Vector3 w = new Vector3(Mathf.Cos(b), 0, Mathf.Sin(b));
+                            Quad(hitCenter + v * outer, hitCenter + w * outer,
+                                hitCenter + w * (outer - stroke), hitCenter + v * (outer - stroke), cream, .14f);
+                        }
+                }
                 if (hitAttack == 1)
                 {
                     Vector3 top = hitOrigin;

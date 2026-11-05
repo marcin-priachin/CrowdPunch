@@ -12,6 +12,11 @@ namespace CrowdPunch.Configuration
         [Header("Campaign")]
         [Tooltip("Allow selection of all available campaign levels from startup without marking them complete or changing saved progress.")]
         [SerializeField] private bool startWithAllLevelsUnlocked;
+        [Header("Player And Hints")]
+        [Tooltip("Reject all player damage and damage-hit reactions, including hazards that bypass ordinary hit invulnerability. Objective failures still apply.")]
+        [SerializeField] private bool playerInvincible;
+        [Tooltip("Hide opening gameplay hints in campaign and legacy gauntlet levels.")]
+        [SerializeField] private bool disableHints;
         [Header("Baseline Crowd Tactics (Provisional)")]
         [Tooltip("Regional engages nearby groups; Whole Arena involves every eligible Baseline. Settings are baked: restart/rebake after editing.")]
         [SerializeField] private CrowdParticipation crowdParticipation = CrowdParticipation.Regional;
@@ -82,6 +87,8 @@ namespace CrowdPunch.Configuration
 
         public bool StartRunning => startRunning;
         public bool StartWithAllLevelsUnlocked => startWithAllLevelsUnlocked;
+        public bool PlayerInvincible => playerInvincible;
+        public bool DisableHints => disableHints;
         public EnemyCrowdPressureSettings CrowdPressure => new EnemyCrowdPressureSettings
         {
             Participation = crowdParticipation,

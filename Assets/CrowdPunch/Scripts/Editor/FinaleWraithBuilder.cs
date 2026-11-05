@@ -74,9 +74,8 @@ namespace CrowdPunch.Editor
                 renderer.updateWhenOffscreen = true;
                 PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
             }
-            // One fixed translation covers the complete grounded clip envelope, including death.
-            // No per-frame fitting or scale changes disturb the authored floating motion.
-            float minimum = float.PositiveInfinity;
+            // Active grounded poses sit low; the death clip has its own deeper envelope.
+            float minimum = float.PositiveInfinity, deathMinimum = float.PositiveInfinity;
             var mesh = new Mesh();
             try
             {
@@ -89,12 +88,18 @@ namespace CrowdPunch.Editor
                         {
                             renderer.BakeMesh(mesh);
                             foreach (var vertex in mesh.vertices)
-                                minimum = Mathf.Min(minimum, model.transform.InverseTransformPoint(renderer.transform.TransformPoint(vertex)).y);
+                            {
+                                float height = model.transform.InverseTransformPoint(renderer.transform.TransformPoint(vertex)).y;
+                                if (clip.name == "Die") deathMinimum = Mathf.Min(deathMinimum, height);
+                                else if (clip.name == "Idle" || clip.name == "Take Damage" || clip.name == "Spin Wing Slash Attack" || clip.name == "Cast Spell")
+                                    minimum = Mathf.Min(minimum, height);
+                            }
                         }
                     }
             }
             finally { UnityEngine.Object.DestroyImmediate(mesh); }
             finale.groundedModelOffset = minimum - .04f;
+            finale.defeatedModelOffset = deathMinimum - .04f;
             animator.Rebind();
             clips[0].SampleAnimation(model, 0);
             model.transform.position = new Vector3(0, finale.settings.flightHeight - finale.groundHeight, 0);

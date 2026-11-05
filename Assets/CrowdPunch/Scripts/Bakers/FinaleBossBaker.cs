@@ -21,7 +21,7 @@ namespace CrowdPunch.Bakers
                 StageTwo = t.stageTwoThreshold, StageThree = t.stageThreeThreshold, ReboundSafetyDegrees = t.reboundSafetyDegrees,
                 AirIntervals = t.airborneIntervals, WarningSeconds = t.warningSeconds,
                 StrikeRadius = t.strikeRadius, SweepLength = t.sweepLength, SweepWidth = t.sweepWidth,
-                SlamLength = t.slamLength, SlamWidth = t.slamWidth, ShockwaveRadius = t.shockwaveRadius,
+                SlamRadius = t.slamRadius, ShockwaveRadius = t.shockwaveRadius,
                 LandingRadius = t.landingRadius, PlayerDamage = t.playerDamage, EnemyDamage = t.enemyDamage,
                 PushSpeed = t.pushSpeed, GroundInterval = t.groundInterval });
             AddComponent(e, new FinaleBoss { Health = t.health, Stage = 1, AttackRemaining = 4 });

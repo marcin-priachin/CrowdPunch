@@ -1,4 +1,5 @@
 using System;
+using CrowdPunch.Configuration;
 using UnityEngine;
 
 namespace CrowdPunch.Mono.Player
@@ -13,6 +14,7 @@ namespace CrowdPunch.Mono.Player
         [SerializeField] private float maxHealth = 100f;
 
         private float currentHealth;
+        private GameRuntimeSettings gameSettings;
         private float invincibilityRemainingSeconds;
 
         public event Action<float, float> Changed;
@@ -24,7 +26,14 @@ namespace CrowdPunch.Mono.Player
 
         public float Normalized => maxHealth <= 0f ? 0f : Mathf.Clamp01(currentHealth / maxHealth);
 
-        public bool IsInvincible => invincibilityRemainingSeconds > 0f;
+        private bool RuntimeInvincibility => gameSettings != null && gameSettings.PlayerInvincible;
+
+        public bool IsInvincible => RuntimeInvincibility || invincibilityRemainingSeconds > 0f;
+
+        public void Configure(GameRuntimeSettings settings)
+        {
+            gameSettings = settings;
+        }
 
         private void Reset()
         {
@@ -79,6 +88,7 @@ namespace CrowdPunch.Mono.Player
 
         public void ApplyDamage(float amount)
         {
+            if (RuntimeInvincibility) return;
             SetHealth(currentHealth - Mathf.Max(0f, amount));
         }
 
@@ -95,7 +105,7 @@ namespace CrowdPunch.Mono.Player
 
         private void TryApplyEnemyContactHit(float damagePercent, float invincibilitySeconds, Vector3 pushImpulse)
         {
-            if (invincibilityRemainingSeconds > 0f || currentHealth <= 0f)
+            if (IsInvincible || currentHealth <= 0f)
             {
                 return;
             }
@@ -107,14 +117,14 @@ namespace CrowdPunch.Mono.Player
 
         private void ApplyWizardHit(float amount, Vector3 impulse)
         {
-            if (currentHealth <= 0) return;
+            if (RuntimeInvincibility || currentHealth <= 0) return;
             ApplyDamage(amount);
             DamageAccepted?.Invoke(impulse);
         }
 
         private void ApplyTrailDamage(float amount)
         {
-            if (currentHealth <= 0 || amount <= 0) return;
+            if (RuntimeInvincibility || currentHealth <= 0 || amount <= 0) return;
             ApplyDamage(amount);
             DamageAccepted?.Invoke(Vector3.zero);
         }

@@ -52,6 +52,7 @@ namespace CrowdPunch.Mono.Levels
         public bool RunFailed { get; private set; }
         public uint LevelEntrySequence { get; private set; }
         public string OpeningHint { get; private set; }
+        public bool HintsDisabled => gameSettings != null && gameSettings.DisableHints;
 
         private void Awake()
         {
@@ -81,6 +82,7 @@ namespace CrowdPunch.Mono.Levels
         {
             // Bootstrap can instantiate the GameObject player after this sequence's early Awake.
             playerHealth = Object.FindFirstObjectByType<PlayerHealth>(FindObjectsInactive.Include);
+            playerHealth?.Configure(gameSettings);
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;
             observedFailureSequence = GauntletFailureRegistry.Sequence;
             if (editorStartIndex >= 0)

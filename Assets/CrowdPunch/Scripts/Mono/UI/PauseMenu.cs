@@ -98,7 +98,8 @@ namespace CrowdPunch.Mono.UI
                 hintSecondsRemaining = 10f;
             }
             hintSecondsRemaining = Mathf.Max(0, hintSecondsRemaining - Time.deltaTime);
-            openingHint.gameObject.SetActive(!isPaused && hintSecondsRemaining > 0 && !string.IsNullOrEmpty(openingHint.text));
+            openingHint.gameObject.SetActive((gauntletSequence == null || !gauntletSequence.HintsDisabled)
+                && !isPaused && hintSecondsRemaining > 0 && !string.IsNullOrEmpty(openingHint.text));
             bool failed = gauntletSequence != null && gauntletSequence.RunFailed;
             bool complete = gauntletSequence != null && (gauntletSequence.RunComplete || failed);
             if (complete && !showingCompletion)

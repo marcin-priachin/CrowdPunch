@@ -69,7 +69,7 @@ namespace CrowdPunch.Mono.UI
             }
             if (sequence.RunFailed && !observedFailure) { observedFailure = true; Show(Page.Failure); }
             hintRemaining = Mathf.Max(0, hintRemaining - Time.deltaTime);
-            hint.gameObject.SetActive(!IsOpen && hintRemaining > 0 && !string.IsNullOrEmpty(hint.text));
+            hint.gameObject.SetActive(!sequence.HintsDisabled && !IsOpen && hintRemaining > 0 && !string.IsNullOrEmpty(hint.text));
             if (pause != null && pause.WasPressedThisFrame())
             {
                 if (!IsOpen) Show(Page.Pause);

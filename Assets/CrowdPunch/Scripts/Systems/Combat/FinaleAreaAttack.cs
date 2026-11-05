@@ -13,15 +13,16 @@ namespace CrowdPunch.Systems.Combat
         public static bool Contains(in FinaleBoss b, in FinaleTuning t, float3 p, float radius)
         {
             float2 d=p.xz-b.WarningCenter.xz;
-            if (b.Attack==FinaleAttack.Sweep || b.Attack==FinaleAttack.Slam) {
-                float length=b.Attack==FinaleAttack.Sweep?t.SweepLength:t.SlamLength;
-                float width=b.Attack==FinaleAttack.Sweep?t.SweepWidth:t.SlamWidth;
+            if (b.Attack==FinaleAttack.Sweep) {
+                float length=t.SweepLength;
+                float width=t.SweepWidth;
                 float along=math.dot(d,b.WarningDirection.xz);
                 return along >= (b.Attack==FinaleAttack.Sweep?-length*.5f:0)-radius
                     && along <= (b.Attack==FinaleAttack.Sweep?length*.5f:length)+radius
                     && math.abs(math.dot(d,new float2(-b.WarningDirection.z,b.WarningDirection.x)))<=width*.5f+radius;
             }
-            float reach=b.Attack==FinaleAttack.Landing?t.LandingRadius:b.Attack==FinaleAttack.Shockwave?t.ShockwaveRadius:t.StrikeRadius;
+            float reach=b.Attack==FinaleAttack.Landing?t.LandingRadius:b.Attack==FinaleAttack.Slam?t.SlamRadius:
+                b.Attack==FinaleAttack.Shockwave?t.ShockwaveRadius:t.StrikeRadius;
             return math.lengthsq(d)<=math.square(reach+radius);
         }
 

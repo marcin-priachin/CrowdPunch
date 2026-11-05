@@ -25,7 +25,7 @@ namespace CrowdPunch.Components
         public float FallSeconds, DownedSeconds, StunSeconds, TakeoffSeconds, VictorySeconds;
         public float StageTwo, StageThree, ReboundSafetyDegrees;
         public float3 AirIntervals, WarningSeconds;
-        public float StrikeRadius, SweepLength, SweepWidth, SlamLength, SlamWidth, ShockwaveRadius, LandingRadius;
+        public float StrikeRadius, SweepLength, SweepWidth, SlamRadius, ShockwaveRadius, LandingRadius;
         public float PlayerDamage, EnemyDamage, PushSpeed, GroundInterval;
     }
 

@@ -16,8 +16,8 @@ namespace CrowdPunch.Systems.Presentation
             foreach(var (boss,tuning,pose) in SystemAPI.Query<RefRO<FinaleBoss>,RefRO<FinaleTuning>,RefRO<LocalTransform>>()) {
                 var b=boss.ValueRO; var t=tuning.ValueRO; defeated=b.Phase==FinalePhase.Defeated;
                 var shape=b.Attack!=FinaleAttack.None?b.Attack:b.ResolvedAttack;
-                float length=shape==FinaleAttack.Sweep?t.SweepLength:shape==FinaleAttack.Slam?t.SlamLength:0;
-                float width=shape==FinaleAttack.Sweep?t.SweepWidth:shape==FinaleAttack.Slam?t.SlamWidth
+                float length=shape==FinaleAttack.Sweep?t.SweepLength:0;
+                float width=shape==FinaleAttack.Sweep?t.SweepWidth:shape==FinaleAttack.Slam?t.SlamRadius
                     :shape==FinaleAttack.Landing?t.LandingRadius:shape==FinaleAttack.Shockwave?t.ShockwaveRadius:t.StrikeRadius;
                 float duration=b.Attack==FinaleAttack.Landing?t.FallSeconds:t.WarningSeconds[math.clamp(b.Stage-1,0,2)];
                 float groundedWeight=b.Phase==FinalePhase.Downed || b.Phase==FinalePhase.Defeated?1:
@@ -25,7 +25,8 @@ namespace CrowdPunch.Systems.Presentation
                     b.Phase==FinalePhase.TakingOff?1-math.smoothstep(0,1,1-b.Remaining/math.max(.01f,t.TakeoffSeconds)):0;
                 FinalePresentation.Publish(pose.ValueRO.Position,pose.ValueRO.Rotation,(int)b.Phase,(int)b.Attack,b.WarningCenter,
                     b.WarningDirection,length,width,1-math.saturate(b.AttackRemaining/math.max(.01f,duration)),b.Health/t.Health,b.TetherOrigin,groundedWeight,
-                    b.AttackSequence,b.ResolvedAttackSequence,(int)b.ResolvedAttack);
+                    b.AttackSequence,b.ResolvedAttackSequence,(int)b.ResolvedAttack,
+                    b.Phase==FinalePhase.Downed && b.Remaining>t.DownedSeconds-t.StunSeconds);
             }
             if(PlayerBridgeRegistry.TryGetBridge(out var bridge)) bridge.EncounterVictory=defeated;
             int i=0;

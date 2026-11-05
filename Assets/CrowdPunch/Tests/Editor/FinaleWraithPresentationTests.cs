@@ -124,7 +124,7 @@ namespace CrowdPunch.Tests
                 var presentation = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<FinalePresentation>(true)).Single();
                 var model = presentation.model;
                 var scale = model.localScale;
-                foreach (string name in FinaleWraithBuilder.Motions)
+                foreach (string name in new[] { "Idle", "Take Damage", "Spin Wing Slash Attack", "Cast Spell", "Die" })
                 {
                     var clip = FinaleWraithBuilder.Clip(name);
                     for (int frame = 0; frame <= 40; frame++)
@@ -137,7 +137,8 @@ namespace CrowdPunch.Tests
                             foreach (var vertex in mesh.vertices)
                             {
                                 float height = model.InverseTransformPoint(renderer.transform.TransformPoint(vertex)).y;
-                                Assert.That(height - presentation.groundedModelOffset, Is.GreaterThanOrEqualTo(.035f), name);
+                                float offset = name == "Die" ? presentation.defeatedModelOffset : presentation.groundedModelOffset;
+                                Assert.That(height - offset, Is.GreaterThanOrEqualTo(.035f), name);
                             }
                         }
                     }

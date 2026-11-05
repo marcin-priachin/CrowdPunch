@@ -1,5 +1,50 @@
 # Final encounter verification
 
+## Low grounded body and circular attacks (2026-11-05)
+
+FINALE-003/007: the active grounded Wraith is lowered approximately 2.83 world metres.
+Its fixed grounding offset is now 0.1892595, measured across the active grounded clips;
+death retains its own -1.2274525 clearance. The old directional stab is replaced by
+the authored Spin Wing Slash Attack. Both grounded attacks now resolve full circles:
+12 m wing sweep (`slamRadius`) and 12 m shockwave (`shockwaveRadius`). Both radii remain
+editable. Warnings, radial dust and rotating crescent sweep effects match the full
+damage footprint. Airborne lanes and all attack/vulnerability timings are preserved.
+
+Unity compilation, C# build and all **25 finale-filtered tests** pass. New geometric
+tests check 32 directions per grounded attack, just inside/outside the radius and
+body-radius overlap. The clip-envelope regression checks the active grounded clips
+with their lower offset and death with its separate offset. A live objective-downing
+probe verifies the lower model, stun, resumed radial attack, takeoff and retry.
+Diagnostics are in `Temp/FinaleVisuals`; no natural combat/balance playthrough is claimed.
+The five-attack live probe also passes warning/contact/effect expiry, cancellation
+and retry checks with the new radial sweep and spell. Inspected captures of the
+lower stun pose and circular attacks are saved in `Images/FinaleGrounded`.
+
+## Downing presentation (2026-11-05)
+
+FINALE-002/003/007, VISION-005/006: completed anchors now produce a cream/cyan burst
+and an outlined curved pull tether with directional packets and a ribcage binding.
+Landing retains the cartoon dust and impact rings. The downed body has two visible
+floor leashes, capture brackets, temporary floor cracks and the existing cyan
+vulnerability ring. Three stars orbit the head only during the actual initial stun.
+Falling and stun use sampled authored Take Damage poses and viewer-facing orientation;
+active grounded attacks retain their own authored animation and direction.
+
+Unity compilation and the C# build pass with zero errors and the existing 318
+project/package warnings. All 23 finale-filtered EditMode tests pass; the three
+Wraith presentation regressions also pass after the final leash/facing refinement.
+A controlled live probe completes a baked anchor and checks pull, landing/stun,
+stun-end, takeoff cleanup and retry cleanup. This injects objective completion and
+restores player health; it is not a natural combat/balance playthrough.
+
+Selected inspected game-camera captures are in `Images/FinaleDowning`. Diagnostic
+logs, profiling and the probe are under ignored `Temp/FinaleVisuals/Downing`.
+The effects use one fixed-capacity mesh and no crowd queries; body shading, scale,
+ECS movement, damage, landing warning and vulnerability timing remain unchanged.
+A warmed active-grounded mesh sample (600 vertices, 200 direct updates) averages
+0.111 ms CPU per update with zero managed bytes allocated. This local Editor sample
+does not measure full-frame/GPU cost or establish a target-platform performance budget.
+
 ## Cartoon attack presentation (2026-11-05)
 
 Requirements: FINALE-003/007, VISION-005/006. Level 81 now uses filled violet warning

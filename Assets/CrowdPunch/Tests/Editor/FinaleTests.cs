@@ -45,6 +45,22 @@ namespace CrowdPunch.Tests
         private void Launch(EnemyLaunchOwner owner,uint sequence=1) => em.SetComponentData(source,new EnemyLaunchState {Owner=owner,Phase=EnemyLaunchPhase.Launched,LaunchSequence=sequence});
         private void Phase(FinalePhase phase) {var b=em.GetComponentData<FinaleBoss>(boss);b.Phase=phase;em.SetComponentData(boss,b);}
 
+        [TestCase(FinaleAttack.Slam)]
+        [TestCase(FinaleAttack.Shockwave)]
+        public void Finale003_GroundedAttacksCoverFullCircleAndRespectRadius(FinaleAttack attack)
+        {
+            var b = new FinaleBoss { Attack=attack, WarningCenter=new float3(7,0,-4), WarningDirection=new float3(0,0,1) };
+            var t = new FinaleTuning { SlamRadius=12, ShockwaveRadius=12 };
+            for (int i=0;i<32;i++)
+            {
+                float angle=i*math.PI*2/32;
+                float3 axis=new float3(math.cos(angle),0,math.sin(angle));
+                Assert.That(FinaleAreaAttack.Contains(b,t,b.WarningCenter+axis*11.9f,0),Is.True,"All directions inside the warning are dangerous.");
+                Assert.That(FinaleAreaAttack.Contains(b,t,b.WarningCenter+axis*12.1f,0),Is.False,"Outside the warning stays safe.");
+                Assert.That(FinaleAreaAttack.Contains(b,t,b.WarningCenter+axis*12.3f,.5f),Is.True,"Body radius overlaps the circle.");
+            }
+        }
+
         [Test] public void Finale002_CompletionCancelsAttackAndRejectsOtherAnchorsInSameFrame()
         {
             var other=Anchor(); var b=em.GetComponentData<FinaleBoss>(boss); b.Attack=FinaleAttack.Sweep; em.SetComponentData(boss,b);

@@ -13,7 +13,7 @@ Target approximately 6–8 minutes and 6–8 successful downings in typical play
 2. **Anchor activation:** completing any one anchor immediately cancels pending airborne attacks and clears their warnings. That anchor becomes spent. A visible energy tether drags the boss toward its nearby landing point.
 3. **Falling:** all installations pause, preserving progress and refusing further objective hits or activations.
 4. **Landing:** clearly telegraphed area damage and push affect player and enemies, but not anchors. Use a valid landing space near the completed anchor.
-5. **Downed:** vulnerability starts only after landing. A configurable fixed timer begins. Boss starts stunned and stops attacking; after the initial stun he alternates telegraphed directional slams and radial shockwaves while remaining vulnerable. Crowd combat continues.
+5. **Downed:** vulnerability starts only after landing. A configurable fixed timer begins. Boss starts stunned and stops attacking; after the initial stun he alternates telegraphed circular wing sweeps and radial shockwaves while remaining vulnerable. Crowd combat continues.
 6. **Takeoff:** timer expiry ends vulnerability. Takeoff is harmless. Installations remain paused through this transition.
 7. **Resumed flight:** unused anchors reactivate with their prior progress. Spent anchors stay unavailable. After the fourth anchor has been used and the boss resumes flight, reset and reactivate the entire set together.
 8. **Death:** immediate victory takes precedence over other transitions. Cancel attacks and replenishment, neutralize surviving enemies, play a short victory sequence, then report campaign completion. No survivor-clearing requirement.
@@ -55,7 +55,7 @@ Both damage and push player and enemies. They leave anchors unaffected. Threat c
 Activating an anchor cancels pending airborne attacks immediately and removes their warnings. Resolve cancellation consistently so no cancelled delayed hit lands during the fall.
 
 ### Grounded
-After the initial stun, alternate directional slams and radial shockwaves. Both have clear wind-ups/ground warnings, damage and push player and enemies, and leave anchors unaffected. Boss remains vulnerable until the downed timer expires.
+After the initial stun, alternate circular wing sweeps and radial shockwaves. Both cover the full area around the boss within their configured radius, have clear circular wind-ups/ground warnings, damage and push player and enemies, and leave anchors unaffected. Boss remains vulnerable until the downed timer expires. This supersedes the directional grounded slam on 2026-11-05; the grounded model sits close to the floor.
 
 ## Damage and physical interaction
 - Boss damage is restricted to the downed vulnerability window.

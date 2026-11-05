@@ -1,5 +1,17 @@
 # Crowd Punch â€” Current Architecture
 
+## Runtime player protection and hints (2026-11-05)
+
+`GameRuntimeSettings` exposes `Player Invincible` and `Disable Hints`, both off by
+default. `GauntletSequence.Start` passes its existing settings asset to `PlayerHealth`
+after bootstrap player creation. Health reads the live asset to reject every damage
+path and its damage-hit reaction when invincibility is enabled, including hazards
+that bypass ordinary temporary hit protection (COMBAT-015, TRAIL-003, GROUND-003).
+Objective failures remain independent. Campaign and legacy pause-menu presentation
+read `GauntletSequence.HintsDisabled` when showing opening hints (INFO-002).
+These MonoBehaviour options require no ECS rebake; crowd simulation ownership and
+ordinary per-source protection rules are unchanged when disabled.
+
 ## Static obstacle surface collision (2026-11-01, VISION-004/005/006)
 
 `SolidObstacleBaker` builds a static Unity Physics triangle mesh from enabled, visible
@@ -940,9 +952,38 @@ during downings. Charge accents originate at the animated ribcage. This changes 
 orientation and animation pacing only: prefab scale, body materials, attack areas,
 damage, warning duration and vulnerability rules remain intact (VISION-005/006,
 FINALE-003/007).
-The saved grounding offset is -1.2274528 model units, measured across all eight clips
-at the prefab's authored scale; the previous offset let the stab/death envelope cross
-the floor. This is one fixed translation for grounded phases, not per-frame fitting.
+The active grounded offset is 0.1892595 model units, sampled across Idle, Take Damage,
+Spin Wing Slash Attack and Cast Spell. Death has its own -1.2274525 offset. Separating
+these envelopes lowers the active grounded body about 2.83 world metres while keeping
+the death pose above the floor. Both are fixed offsets, without runtime mesh fitting.
+
+The 2026-11-05 grounded-attack revision replaces the directional slam with a complete
+circular wing sweep using Spin Wing Slash Attack. The existing Slam enum now denotes
+that radial sweep; its old length/width tuning is replaced by SlamRadius (12 m).
+Both it and Shockwave use radial ECS hit detection, circular presentation footprints,
+and outward warning chevrons. The wing sweep resolves into three rotating crescent
+strokes and radial dust; the spell retains expanding shockwave rings. Their radii
+remain separately editable. Airborne sweeping lanes, timing, ownership and vulnerability
+rules are unchanged (FINALE-003/007). This supersedes earlier directional-stab descriptions.
+
+The downing presentation pass (FINALE-002/003/007, VISION-005/006) adds
+`FinaleDowningVisuals`, a separate bounded vertex-colour mesh using CombatFeedback.
+Completing an anchor produces a cream/cyan source burst, an outlined curved tether
+with packets travelling toward the anchor, and a binding loop around the animated
+ribcage. The landing retains the established impact rings and pooled dust, then adds
+floor cracks, cyan capture brackets and two outlined leashes connecting the body to
+the floor inside the existing pulsing vulnerability ring.
+Three cream stars orbit above the authored head only during the initial stun.
+Takeoff, victory, retry, pause and scene lifetime clear these effects.
+
+`FinalePresentationSystem` now also copies the actual initial-stun flag from the
+downed timer and tuning. No enemy identities cross the bridge. During falling,
+`FinaleWraithAnimation` samples the authored Take Damage pose with fall progress and
+holds its hit pose through the initial stun, facing the viewer through both phases;
+ordinary authored idle/attack animation
+resumes afterward. The dedicated late presentation update follows the ribcage/head
+bones after animation. Body tint, proportions, movement, damage, vulnerability and
+anchor rules retain their existing ownership and tuning.
 
 ## Four-Enemy Campaign Integration (LOOP-009)
 
