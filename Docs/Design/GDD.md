@@ -172,9 +172,9 @@ Status: Must
 
 The immune flying boss smoothly follows above/ahead and uses telegraphed ground strikes and committed sweeping lanes. Its landing damages and pushes player/enemies, leaving anchors unaffected. Landing begins a fixed vulnerability window with an initial stun, then alternating telegraphed circular wing sweeps and radial shockwaves. Both grounded attacks cover the full area around the boss within their configured radius, with matching circular warnings and effects. The grounded model sits close to the floor; the boss remains stationary and unlaunchable. This supersedes the directional grounded slam on 2026-11-05. Takeoff is harmless and ends vulnerability. Three health-based stages increase airborne attack demands and specialist pressure without changing ordinary enemy stats.
 
-During flight, including airborne attacks and takeoff, the boss's visual facing stays
-toward the viewer while remaining upright. Its movement and attack direction remain
-independent of this visual facing.
+During ordinary flight and takeoff, the boss's visual facing stays toward the viewer
+while remaining upright. During attack windup and follow-through, it instead retains
+the committed attack direction. Movement remains independent of visual facing.
 
 ### FINALE-004 - Anchor Ownership
 

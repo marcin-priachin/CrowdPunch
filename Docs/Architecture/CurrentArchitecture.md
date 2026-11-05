@@ -945,9 +945,10 @@ Phase changes, retry, pause and scene lifetime clear temporary effects.
 `FinaleWraithAnimation` samples each original attack clip through an eased gather,
 held anticipation and fast commitment, with separate contact frames and an authored
 follow-through before blending to idle/flight. During flight and takeoff the model
-always faces the viewer horizontally, updated after CameraFollow, including airborne
-attacks. Grounded attacks turn toward their committed direction throughout preparation
-and follow-through; the ECS solid remains stationary
+faces the viewer horizontally, updated after CameraFollow, outside attacks.
+Airborne and grounded attacks lock visual facing to their committed direction per
+attack sequence throughout preparation and follow-through; camera movement cannot
+override it. The ECS solid remains stationary
 during downings. Charge accents originate at the animated ribcage. This changes visual
 orientation and animation pacing only: prefab scale, body materials, attack areas,
 damage, warning duration and vulnerability rules remain intact (VISION-005/006,
@@ -965,6 +966,17 @@ and outward warning chevrons. The wing sweep resolves into three rotating cresce
 strokes and radial dust; the spell retains expanding shockwave rings. Their radii
 remain separately editable. Airborne sweeping lanes, timing, ownership and vulnerability
 rules are unchanged (FINALE-003/007). This supersedes earlier directional-stab descriptions.
+
+The reference-led lightning revision keeps all attack shapes and resolution events
+unchanged. `FinaleAttackVisuals` draws fixed jagged knots with three secondary forks,
+layered translucent blue/cyan halos, fine white cores and flared blue/cream ground
+splinters. Airborne strikes connect the body to the target; the circular grounded spell
+distributes a bounded central discharge and three to eight satellite bolts across
+its copied radius. Bolt height, widths, splash size and placement scale with that
+radius. A single fading floor flash fills the exact resolved circle or lane; it does
+not repeat or change hit timing. The existing ReduceFlashes setting lowers flash
+opacity and replaces pale cores with saturated blue. All geometry stays in the same
+reused attack mesh, whose preallocated buffers now hold 16,384 vertices.
 
 The downing presentation pass (FINALE-002/003/007, VISION-005/006) adds
 `FinaleDowningVisuals`, a separate bounded vertex-colour mesh using CombatFeedback.

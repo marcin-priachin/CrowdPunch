@@ -70,8 +70,12 @@ namespace CrowdPunch.Tests
                         sequence++;
                         for (int frame = 0; frame <= 30; frame++)
                         {
+                            presentation.model.rotation = Quaternion.Euler(0, 90, 0);
                             Present(phase, attack, frame / 30f, 1, sequence);
                             presentation.animator.Update(0);
+                            Lifecycle(presentation, "LateUpdate");
+                            Assert.That(Vector3.Dot(presentation.model.forward, Vector3.forward), Is.GreaterThan(.999f),
+                                "Committed attack direction overrides flight/camera facing.");
                             Assert.That(presentation.model.localScale, Is.EqualTo(scale));
                         }
                         float contact = presentation.animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
@@ -81,6 +85,8 @@ namespace CrowdPunch.Tests
                         Assert.That(presentation.animator.GetCurrentAnimatorStateInfo(0).normalizedTime, Is.EqualTo(contact).Within(.001f));
                         Assert.That(presentation.animator.speed, Is.EqualTo(1));
                         Lifecycle(presentation, "LateUpdate");
+                        Assert.That(Vector3.Dot(presentation.model.forward, Vector3.forward), Is.GreaterThan(.999f),
+                            "Follow-through retains the committed direction.");
                         var effect = root.transform.Find("Finale cartoon attack effects").GetComponent<MeshRenderer>();
                         Assert.That(effect.enabled, Is.True, "A confirmed area resolution emits an impact.");
                         Present(3, 0, 0);

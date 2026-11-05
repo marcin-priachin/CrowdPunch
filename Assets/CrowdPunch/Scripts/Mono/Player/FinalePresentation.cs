@@ -25,10 +25,14 @@ namespace CrowdPunch.Mono.Player
         private FinaleDowningVisuals downing;
         private Transform attackOrigin, head;
         private bool initialStun;
+        private Quaternion attackFacing;
+        private uint facingSequence;
+        private bool hasAttackFacing;
         private Mono.Camera.CameraFollow cameraFollow;
         private void OnEnable() {
             active=this;
             previousPhase=-1; resolvedSequence=0; restart=Mono.UI.GameRestartRegistry.Sequence;
+            hasAttackFacing=false;
             wraithAnimation=new FinaleWraithAnimation(animator);
             if(model!=null)
                 foreach(var bone in model.GetComponentsInChildren<Transform>(true))
@@ -46,8 +50,9 @@ namespace CrowdPunch.Mono.Player
         private void OnDestroy() { attacks?.Dispose(); downing?.Dispose(); if(material!=null) Destroy(material); }
         private void LateUpdate()
         {
-            // Run after CameraFollow so flight always faces the viewer's current position.
-            if(model!=null && (previousPhase==0 || previousPhase==1 || previousPhase==3 || initialStun)) FaceViewer();
+            // Attack facing takes priority over camera-facing flight, including authored follow-through.
+            if(model!=null && hasAttackFacing && wraithAnimation.AttackPoseActive) model.rotation=attackFacing;
+            else if(model!=null && (previousPhase==0 || previousPhase==1 || previousPhase==3 || initialStun)) FaceViewer();
             if(FeedbackTimeController.IsSuspended) { attacks?.Clear(); downing?.Clear(); return; }
             attacks?.Tick();
             if(model!=null) downing?.Body(attackOrigin!=null?attackOrigin.position:model.position+Vector3.up*2,
@@ -74,12 +79,21 @@ namespace CrowdPunch.Mono.Player
             if(a.restart!=Mono.UI.GameRestartRegistry.Sequence || health>a.previousHealth) {
                 a.restart=Mono.UI.GameRestartRegistry.Sequence;
                 a.attacks?.Clear(); a.downing?.Clear(); a.wraithAnimation=new FinaleWraithAnimation(a.animator); a.previousPhase=-1;
+                a.hasAttackFacing=false;
             }
             bool released=a.previousPhase>=0 && resolvedAttackSequence!=a.resolvedSequence && resolvedAttack!=0
                 && phase!=4 && (phase!=1 || resolvedAttack==5);
             if(a.previousPhase!=phase && (phase==1 || phase==3 || phase==4)) a.attacks?.Clear();
             bool damaged=phase==2 && health<a.previousHealth;
             a.wraithAnimation.Present(phase,attack,attackSequence,progress,released,resolvedAttack,damaged,stunned);
+            if(attack>=1 && attack<=4 && !stunned && (phase==0 || phase==2)
+                && (!a.hasAttackFacing || a.facingSequence!=attackSequence)) {
+                Vector3 facing=direction; facing.y=0;
+                if(facing.sqrMagnitude>.001f) {
+                    a.attackFacing=Quaternion.LookRotation(facing.normalized);
+                    a.facingSequence=attackSequence; a.hasAttackFacing=true;
+                }
+            }
             float floorOffset=phase==4?a.defeatedModelOffset:a.groundedModelOffset;
             a.model.SetPositionAndRotation(position-Vector3.up*(a.groundHeight+floorOffset*a.model.localScale.y*groundedWeight),
                 Quaternion.RotateTowards(a.model.rotation,rotation,360*Time.deltaTime));

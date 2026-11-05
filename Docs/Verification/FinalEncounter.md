@@ -1,5 +1,42 @@
 # Final encounter verification
 
+## Committed attack facing (2026-11-05)
+
+FINALE-003/007: visual facing is captured from the warning direction once per attack
+sequence and retained through authored follow-through. It takes precedence over
+viewer-facing flight in the late presentation update. Ordinary flight, takeoff and
+stun retain viewer-facing behavior. Unity compilation, C# build and all three Wraith
+presentation tests pass; the warning/release regression now explicitly verifies
+facing through preparation and follow-through for all four attacks.
+
+## Reference lightning and footprint flashes (2026-11-05)
+
+FINALE-003/007, VISION-005/006: attack lightning now follows the supplied blue-white
+reference with jagged branching filaments, layered blue/cyan halos, fine white cores
+and flared blue/cream impact crowns. The grounded circular spell distributes strikes
+across its full radius; bolt height, width, placement and splash size scale with the
+copied attack footprint. Circle and lane flashes fill the exact resolved footprint
+and fade once. ReduceFlashes lowers their opacity and uses saturated lightning cores.
+Warning geometry, combat timing, damage and actor animation are unchanged.
+
+- Unity compilation and the C# build pass (318 existing warnings, zero errors).
+- All three Wraith presentation tests pass.
+- The controlled five-attack baked-world probe passes warnings, correct one-shot
+  impacts, effect expiry, cancellation and retry cleanup. Captures were inspected.
+- A focused paused presentation capture shows the 12 m circular spell; this uses
+  an injected presentation snapshot and a temporary camera for framing. Saved image:
+  `Images/FinaleLightning/CircularSpell.png`. It is not evidence of a natural playthrough.
+- A direct ReduceFlashes check at the same impact age reduces floor-flash alpha
+  from 0.1712 to 0.0447 and restores the original setting afterward.
+- A stage-three sample observes 64 physical bodies. Two hundred warmed updates of
+  simultaneous warning/impact geometry average 2.043 ms CPU, zero managed allocation,
+  and 8,343 vertices inside the fixed 16,384-vertex buffer. The existing dust pool is
+  still twelve effects. Whole-Editor samples: 174 frames, 34.68 ms mean, 57.17 ms p95.
+  These local tool/Editor measurements do not establish a target-platform GPU/FPS budget.
+
+Logs and probes are under ignored `Temp/FinaleVisuals` (`lightning-build.txt`,
+`probe.txt`, `lightning-profile.txt`). Human playtesting of overlapping threats remains.
+
 ## Low grounded body and circular attacks (2026-11-05)
 
 FINALE-003/007: the active grounded Wraith is lowered approximately 2.83 world metres.

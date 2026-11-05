@@ -14,9 +14,10 @@ namespace CrowdPunch.Mono.Player
         private readonly Mesh mesh;
         private readonly MeshRenderer renderer;
         private readonly Material material;
-        private readonly List<Vector3> vertices = new List<Vector3>(8192);
-        private readonly List<Color> colors = new List<Color>(8192);
-        private readonly List<int> indices = new List<int>(8192);
+        private readonly Configuration.CombatFeedbackSettings feedback;
+        private readonly List<Vector3> vertices = new List<Vector3>(16384);
+        private readonly List<Color> colors = new List<Color>(16384);
+        private readonly List<int> indices = new List<int>(16384);
         private readonly ParticleSystem[] dust = new ParticleSystem[12];
         private Vector3 center, direction, origin, hitCenter, hitDirection, hitOrigin;
         private float length, width, progress, hitLength, hitWidth, hitTime = -10;
@@ -31,6 +32,7 @@ namespace CrowdPunch.Mono.Player
             mesh.MarkDynamic();
             root.gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
             material = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            feedback = Resources.Load<Configuration.CombatFeedbackSettings>("CombatFeedbackSettings");
             renderer = root.gameObject.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = material;
             renderer.shadowCastingMode = ShadowCastingMode.Off;
@@ -154,10 +156,16 @@ namespace CrowdPunch.Mono.Player
             Color cream = Cream; cream.a = fade;
             Color ink = Ink; ink.a *= fade;
             float pop = 1 - Mathf.Pow(1 - t, 3);
+            float flash = Mathf.Clamp01(1 - t / .32f);
+            bool reduced = feedback != null && feedback.ReduceFlashes;
+            Color flashColor = reduced ? new Color(.25f, .48f, 1, flash * .06f)
+                : new Color(.65f, .86f, 1, flash * .23f);
             if (hitAttack == 2)
             {
                 Vector3 start = hitCenter - (hitAttack == 2 ? hitDirection * hitLength * .5f : Vector3.zero);
                 Vector3 side = Vector3.Cross(Vector3.up, hitDirection);
+                Quad(start - side * hitWidth * .5f, start + hitDirection * hitLength - side * hitWidth * .5f,
+                    start + hitDirection * hitLength + side * hitWidth * .5f, start + side * hitWidth * .5f, flashColor, .035f);
                 // Both strokes cover the resolved lane immediately; no travelling damage is implied.
                 for (int i = -1; i <= 1; i++)
                 {
@@ -171,6 +179,8 @@ namespace CrowdPunch.Mono.Player
             }
             else
             {
+                // The flash covers the exact committed circle; it is a single fading impact, not a strobe.
+                Disc(hitCenter + Vector3.up * .035f, hitWidth, flashColor);
                 // The outer ring confirms the entire instantaneous resolved footprint.
                 Ring(hitCenter, hitWidth - .2f, .4f * fade, purple, .06f);
                 float radius = Mathf.Lerp(hitWidth * .22f, hitWidth - .25f, pop);
@@ -192,18 +202,97 @@ namespace CrowdPunch.Mono.Player
                                 hitCenter + w * (outer - stroke), hitCenter + v * (outer - stroke), cream, .14f);
                         }
                 }
-                if (hitAttack == 1)
+                if (hitAttack == 1 || hitAttack == 4)
                 {
-                    Vector3 top = hitOrigin;
-                    Vector3 bottom = hitCenter + Vector3.up * .15f;
-                    Vector3 side = Vector3.Cross((bottom - top).normalized, UnityEngine.Camera.main != null
-                        ? UnityEngine.Camera.main.transform.forward : Vector3.forward).normalized;
-                    Vector3 bend = Vector3.Lerp(top, bottom, .52f) + side * 1.2f;
-                    Ribbon(top, bend, side, .6f * fade, purple);
-                    Ribbon(bend, bottom, side, .45f * fade, cream);
+                    Lightning(t, reduced);
                 }
-                Star(hitCenter, Mathf.Min(2.4f, hitWidth * .45f) * (1 - t), ink, .1f);
-                Star(hitCenter, Mathf.Min(1.9f, hitWidth * .36f) * (1 - t), cream, .11f);
+                Star(hitCenter, hitWidth * .28f * (1 - t), ink, .1f);
+                Star(hitCenter, hitWidth * .22f * (1 - t), reduced ? purple : cream, .11f);
+            }
+        }
+
+        private void Lightning(float t, bool reduced)
+        {
+            var camera = UnityEngine.Camera.main;
+            if (camera == null) return;
+            float fade = 1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.12f, .82f, t));
+            if (fade <= 0) return;
+            // Larger circles get a bounded ring of strikes as well as the central discharge.
+            int satellites = Mathf.Clamp(Mathf.CeilToInt(hitWidth * .5f), 3, 8);
+            for (int bolt = 0; bolt <= satellites; bolt++)
+            {
+                float angle = bolt * Mathf.PI * 2 / satellites + .3f;
+                Vector3 radial = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+                Vector3 bottom = hitCenter + Vector3.up * .12f;
+                if (bolt > 0) bottom += radial * hitWidth * .78f;
+                float height = Mathf.Max(5, hitWidth * .8f) * (bolt == 0 ? 1.15f : .75f);
+                Vector3 top = bolt == 0 && hitAttack == 1 ? hitOrigin : bottom + Vector3.up * height + radial * .6f;
+                float seed = bolt * 3.17f + hitAttack * 1.91f;
+                float stroke = Mathf.Clamp(hitWidth * .01f, .045f, .12f) * (bolt == 0 ? 1 : .65f);
+                Bolt(top, bottom, stroke, seed, fade, t, reduced, camera);
+                ElectricSplash(bottom, hitWidth * (bolt == 0 ? .25f : .14f), fade, t, reduced, camera);
+            }
+        }
+
+        private void Bolt(Vector3 top, Vector3 bottom, float width, float seed, float fade, float age,
+            bool reduced, UnityEngine.Camera camera)
+        {
+            Vector3 right = camera.transform.right;
+            float spread = Mathf.Min(1.2f, Vector3.Distance(top, bottom) * .13f);
+            for (int i = 0; i < 16; i++)
+            {
+                Vector3 a = BoltPoint(top, bottom, right, i / 16f, spread, seed, age);
+                Vector3 b = BoltPoint(top, bottom, right, (i + 1) / 16f, spread, seed, age);
+                ElectricStroke(a, b, width * Mathf.Lerp(.7f, 1, (i + .5f) / 16), fade, reduced, camera);
+            }
+            for (int branch = 0; branch < 3; branch++)
+            {
+                float p = .22f + branch * .24f;
+                Vector3 start = BoltPoint(top, bottom, right, p, spread, seed, age);
+                Vector3 end = start + right * ((branch % 2 == 0 ? 1 : -1) * spread * 2.2f)
+                    + (bottom - top) * .22f;
+                for (int i = 0; i < 5; i++)
+                {
+                    Vector3 a = BoltPoint(start, end, right, i / 5f, spread * .4f, seed + branch + 5, age);
+                    Vector3 b = BoltPoint(start, end, right, (i + 1) / 5f, spread * .4f, seed + branch + 5, age);
+                    ElectricStroke(a, b, width * .46f * (1 - i / 6f), fade * .75f, reduced, camera);
+                }
+            }
+        }
+
+        private static Vector3 BoltPoint(Vector3 top, Vector3 bottom, Vector3 right, float p, float spread, float seed, float age)
+        {
+            // Fixed knots keep the silhouette readable. A small continuous drift adds life without frame-random flicker.
+            float kink = Mathf.Sin(p * 39 + seed) * .62f + Mathf.Sin(p * 73 + seed * 2) * .38f;
+            float drift = Mathf.Sin(p * 18 + seed + age * 6) * .12f;
+            return Vector3.Lerp(top, bottom, p) + right * ((kink + drift) * Mathf.Sin(p * Mathf.PI) * spread);
+        }
+
+        private void ElectricStroke(Vector3 a, Vector3 b, float width, float fade, bool reduced, UnityEngine.Camera camera)
+        {
+            Vector3 side = Vector3.Cross(b - a, camera.transform.forward).normalized;
+            // Soft blue silhouette, cyan inner glow and a fine white-hot core, following the reference.
+            Ribbon(a, b, side, width * 4.5f, new Color(.06f, .3f, 1, fade * .09f));
+            Ribbon(a, b, side, width * 2.8f, new Color(.12f, .52f, 1, fade * .18f));
+            Ribbon(a, b, side, width * 1.35f, new Color(.28f, .85f, 1, fade * .75f));
+            Ribbon(a, b, side, width * .48f, reduced ? new Color(.4f, .8f, 1, fade) : new Color(.92f, 1, 1, fade));
+        }
+
+        private void ElectricSplash(Vector3 p, float radius, float fade, float age, bool reduced, UnityEngine.Camera camera)
+        {
+            // Low flared splinters, like the drawn blue crown at the base of the supplied lightning.
+            for (int i = 0; i < 9; i++)
+            {
+                float angle = i * Mathf.PI * 2 / 9;
+                Vector3 axis = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+                float length = radius * Mathf.Lerp(.5f, 1, (Mathf.Sin(i * 7.1f) + 1) * .5f);
+                Vector3 tip = p + axis * length * Mathf.Lerp(.65f, 1, age)
+                    + Vector3.up * length * Mathf.Lerp(.3f, .8f, (Mathf.Sin(i * 4.7f) + 1) * .5f);
+                Vector3 side = Vector3.Cross(tip - p, camera.transform.forward).normalized;
+                Quad(p - side * radius * .08f, tip, p + axis * length * .4f, p + side * radius * .08f,
+                    new Color(.15f, .55f, 1, fade * .65f));
+                Triangle(p, tip * .72f + p * .28f, p + axis * length * .35f,
+                    reduced ? new Color(.4f, .8f, 1, fade) : new Color(1, .94f, .69f, fade));
             }
         }
 
@@ -258,7 +347,7 @@ namespace CrowdPunch.Mono.Player
             }
         }
         private void Ribbon(Vector3 a, Vector3 b, Vector3 side, float width, Color color)
-            => Quad(a - side * width, b - side * width * .3f, b + side * width * .3f, a + side * width, color);
+            => Quad(a - side * width, b - side * width, b + side * width, a + side * width, color);
         private void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Color color, float lift = 0)
         { Triangle(a, b, c, color, lift); Triangle(a, c, d, color, lift); }
         private void Triangle(Vector3 a, Vector3 b, Vector3 c, Color color, float lift = 0)
