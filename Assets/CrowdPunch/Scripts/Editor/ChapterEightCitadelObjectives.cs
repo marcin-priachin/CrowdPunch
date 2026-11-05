@@ -46,13 +46,15 @@ namespace CrowdPunch.Editor
             }
             foreach(var r in scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<MeshRenderer>(true)))
             {
-                if(r.GetComponentInParent<FallingPillarAuthoring>()!=null)
+                if(r.GetComponentInParent<FallingPillarAuthoring>()!=null && r.transform.parent.name!="KayKit Pillar")
                 {r.sharedMaterial=Surface(r.name=="Stone Band"?"PillarBrass":"PillarStone",false,false,true);Dynamic(r);}
                 if(r.name=="Track rail" || r.name=="Socket end stop")r.sharedMaterial=Surface("Slate");
                 if(r.name=="Socket rim" || r.GetComponent<TrackSocketVisualAuthoring>()!=null)
                 {r.sharedMaterial=Surface("Ochre",false,false,true);Dynamic(r);}
                 if(r.name.StartsWith("Gate terrain"))r.sharedMaterial=Surface("Cliff");
             }
+            foreach(var pillar in scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<FallingPillarAuthoring>(true)))
+                DinoPillarVisualBuilder.RefreshMaterials(pillar,true);
             ChapterEightProtectedPointVisuals.Apply(scene);
             ChapterEightCitadelHazards.Apply(scene);
             

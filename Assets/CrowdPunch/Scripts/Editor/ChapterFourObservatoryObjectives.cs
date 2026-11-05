@@ -56,6 +56,8 @@ namespace CrowdPunch.Editor
                 {r.sharedMaterial=Surface("Ochre",false,false,true);Dynamic(r);}
                 if(r.name.StartsWith("Gate terrain"))r.sharedMaterial=Surface("Cliff");
             }
+            foreach(var pillar in scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<FallingPillarAuthoring>(true)))
+                DinoPillarVisualBuilder.RefreshMaterials(pillar,false);
             CampaignCargoTrackVisuals.ApplyObservatory(scene);
             ChapterFourObservatoryHazards.Apply(scene);
             ChapterFourProtectedPointVisuals.Apply(scene);

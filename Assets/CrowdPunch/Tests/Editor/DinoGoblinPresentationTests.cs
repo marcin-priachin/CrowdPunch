@@ -21,6 +21,22 @@ namespace CrowdPunch.Tests
 {
     public sealed class DinoGoblinPresentationTests
     {
+        [TestCase(1)] [TestCase(2)]
+        public void Pillar006_SavedScenesRetainLocalPrefabReferences(int encounter)
+        {
+            string text = File.ReadAllText(DinoModelBuilder.ScenePaths[encounter]);
+            var ids = new System.Collections.Generic.HashSet<string>(
+                System.Text.RegularExpressions.Regex.Matches(text, @"(?m)^--- !u!\d+ &(-?\d+)")
+                    .Cast<System.Text.RegularExpressions.Match>().Select(m => m.Groups[1].Value));
+            // Stripped prefab records are local reference targets too, even though their header has a suffix.
+            foreach (System.Text.RegularExpressions.Match reference in
+                System.Text.RegularExpressions.Regex.Matches(text, @"\{fileID: (-?\d+)\}"))
+            {
+                string id = reference.Groups[1].Value;
+                if (id != "0") Assert.IsTrue(ids.Contains(id), "Missing scene/prefab reference record " + id);
+            }
+        }
+
         [TestCase(0)] [TestCase(1)] [TestCase(2)]
         public void Pillar006_SavedModelPreservesScalesEquipmentPaletteAndSources(int encounter)
         {

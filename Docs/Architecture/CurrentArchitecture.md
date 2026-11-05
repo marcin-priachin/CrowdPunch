@@ -312,6 +312,16 @@ This document describes what exists now. It is not a desired future architecture
 
 ## Goblin Giant Dino Presentation (2026-10-25, PILLAR-001/006, VISION-005/006)
 
+Campaign 40/80 pillars use fitted KayKit `pillar.fbx` geometry authored by
+`DinoPillarVisualBuilder` (2026-11-05, PILLAR-002/003/005/006, VISION-005/006).
+The existing base pivot and settings-driven 3 x 18 x 3 m envelope are preserved;
+only plain shaft spans stretch, retaining the bevelled caps and middle collar.
+Stone, collar and brass are separate single-material renderers so every rendered
+piece receives `PillarVisualOwner` and the existing ECS phase tint. Chapter-owned
+pigment copies use local Painted Foundry mapping, with limestone/sage/aged brass in
+40 and ash/slate/brass in 80. No collision, navigation, timing or runtime system
+ownership changes. See `Docs/Verification/KayKitDinoPillars.md`.
+
 `DinoModelBuilder` replaces Dino's visual in Campaign 40/80 and legacy Gauntlet 22 with
 `Goblin Giant Armored Variant.prefab`. Every authored transform scale is preserved.
 Only translation grounds the sampled geometry, including defeat. The body and five rigid
