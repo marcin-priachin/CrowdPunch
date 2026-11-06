@@ -21,12 +21,17 @@ MonoBehaviour:
   damage: 10
   cooldown: 1.25
   missCooldown: 0.5
-  usePlayerDirectionOnly: 1
+  usePlayerDirectionOnly: 0
   directionPositionWeight: 0
   aimAssistRange: 22
   aimAssistMaximumAngleDegrees: 24
-  aimAssistReleaseAngleDegrees: 32
-  aimAssistSwitchDelay: 0.12
+  aimAssistReleaseAngleDegrees: 50
+  aimAssistSwitchDelay: 0.25
+  aimAssistSwitchScoreMargin: 0.2
+  aimAssistIntentAngleDegrees: 6
+  aimAssistIntentMinimumTurnDegrees: 3
+  aimAssistIntentMemorySeconds: 0.2
+  aimAssistIntentSwitchDelay: 0.04
   aimAssistDistanceWeight: 0.35
   hitIndication: 1
   trajectoryRenderToFirstContact: 1

@@ -79,6 +79,24 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Player004_PreviewPublishesAuthoredStickyAndDeliberateSwitchSettings()
+        {
+            Set(settings, "aimAssistSwitchScoreMargin", .3f);
+            Set(settings, "aimAssistIntentAngleDegrees", 5f);
+            Set(settings, "aimAssistIntentMinimumTurnDegrees", 2f);
+            Set(settings, "aimAssistIntentMemorySeconds", .15f);
+            Set(settings, "aimAssistIntentSwitchDelay", .02f);
+            var preview = root.AddComponent<PunchTrajectoryPreview>(); preview.Initialize(settings);
+            Set(punch, "trajectoryPreview", preview);
+            Call(punch, "PublishPunchPreview");
+            Assert.That(bridge.PunchPreviewSwitchScoreMargin, Is.EqualTo(.3f));
+            Assert.That(bridge.PunchPreviewIntentAngleDegrees, Is.EqualTo(5f));
+            Assert.That(bridge.PunchPreviewIntentMinimumTurnDegrees, Is.EqualTo(2f));
+            Assert.That(bridge.PunchPreviewIntentMemorySeconds, Is.EqualTo(.15f));
+            Assert.That(bridge.PunchPreviewIntentSwitchDelay, Is.EqualTo(.02f));
+        }
+
+        [Test]
         public void Player008_ReadyPopFiresOnceSettlesAndDoesNotAccumulateBoneScale()
         {
             Transform hand = CreateHandFeedback();

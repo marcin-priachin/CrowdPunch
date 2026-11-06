@@ -329,6 +329,29 @@ When an attack is committed, the player should not be uncertain about its initia
 
 Player punches use configurable range-based aim assistance limited by a configurable maximum horizontal acquisition angle from player facing. Use a wider release angle to retain a valid current lock near the acquisition boundary. A valid enemy hit by the facing ray is preferred; otherwise score eligible candidates by alignment with a configurable distance penalty. Ordinary solid obstructions reject targets, while rotating cover/enclosures retain their existing aim-selection exception. A new preferred candidate must persist for a configurable switch delay before replacing a valid lock; an invalid or out-of-range lock can be replaced immediately. Leaving the punch volume clears selection. Protected Armored enemies do not originate a launch preview, but remain valid targets for assistance from another body. An assist range of zero disables selection. Predict a target's horizontal movement for a short configurable time and maximum displacement, using launch speed to estimate travel time. Bound the resulting direction to the release cone. Preview and launch use the same solution; the punch commits the last displayed per-enemy direction/target when still eligible, rather than silently selecting a newer solution after the click. Aim assistance never expands or redirects the punch hit volume. Input-specific tuning remains unresolved under OQ-017.
 
+Sticky selection amendment (2026-11-06, chosen approaches 1 + 3): widen the release
+cone and require a configurable improvement in the normalized alignment/distance
+score before an ordinary challenger can replace a valid lock, including a facing-ray
+challenger. Initial acquisition keeps the existing ray preference. A clearly better
+challenger uses the ordinary persistence delay; actual look-input rotation toward a
+challenger inside a narrow centre cone permits a shorter configurable delay and may
+bypass the ordinary score margin, while still requiring a better score. Position
+changes, target motion and camera follow/shake alone cannot qualify for that shortcut.
+Accumulate recent same-direction look rotation, restart it on reversal, expire it
+after a short configurable input-memory interval, and consume it when the target
+changes. Fast rotation without a centred challenger is insufficient. Gatekeeper
+head priority and its ordinary challenger delay remain unchanged (BOSS-001/002).
+Retained targets continue to update their launch solution from current positions.
+Existing eligibility, obstruction, hard range/release limits, source punch-volume
+clearing and displayed-direction commitment remain authoritative. There is no
+outside-limits grace period or target memory shared between punchable bodies.
+Initial shared tuning is 24/50 degree acquisition/release, 0.2 score improvement,
+0.25s ordinary switching, and 0.04s deliberate switching within 6 degrees after at
+least 3 degrees of alignment-improving look input remembered for 0.2s. These numbers
+are provisional and exposed in Player Punch Settings. Both input schemes use the
+same angular criteria; OQ-017 remains open. Enable assistance in the shared asset
+by disabling its facing-only option; preserve that option for manual use.
+
 Facing-only option amendment (2026-11-02): expose `Use Player Direction Only` in
 `PlayerPunchSettings`, disabled by default. When enabled, directly punched bodies
 and redirected Chicken projectiles use only the player's horizontal facing for

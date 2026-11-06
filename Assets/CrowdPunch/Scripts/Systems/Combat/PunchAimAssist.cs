@@ -7,9 +7,60 @@ using Unity.Physics;
 
 namespace CrowdPunch.Systems.Combat
 {
-    /// <summary>Validates locked targets and supplies the angle-based fallback used at aim start.</summary>
+    /// <summary>Validates targets and evaluates launch alignment and deliberate target-switch input.</summary>
     internal static class PunchAimAssist
     {
+        public static float AngleDegrees(float3 facing, float3 offset)
+        {
+            return math.degrees(math.acos(math.clamp(math.dot(math.normalizesafe(facing.xz),
+                math.normalizesafe(offset.xz)), -1f, 1f)));
+        }
+
+        public static float TargetScore(float3 facing, float3 offset, float acquisitionDegrees,
+            float range, float distanceWeight)
+        {
+            return TargetScore(AngleDegrees(facing, offset), math.length(offset.xz), acquisitionDegrees, range, distanceWeight);
+        }
+
+        public static float TargetScore(float angleDegrees, float distance, float acquisitionDegrees,
+            float range, float distanceWeight)
+        {
+            return angleDegrees / math.max(.0001f, acquisitionDegrees)
+                + distance / math.max(.0001f, range) * distanceWeight;
+        }
+
+        public static void UpdateInputTurn(ref PunchAimAssistTarget aim, double inputDegrees,
+            uint resetSequence, double now, float memorySeconds)
+        {
+            bool hasHistory = aim.IsAiming != 0 && aim.InputResetSequence == resetSequence;
+            float delta = hasHistory ? (float)(inputDegrees - aim.InputRotationDegrees) : 0f;
+            aim.InputRotationDegrees = inputDegrees;
+            aim.InputResetSequence = resetSequence;
+            if (!hasHistory || now - aim.LastInputTurnTime > memorySeconds)
+                aim.RecentInputTurnDegrees = 0f;
+            if (math.abs(delta) <= .0001f) return;
+            if (delta * aim.RecentInputTurnDegrees < 0f) aim.RecentInputTurnDegrees = 0f;
+            if (aim.RecentInputTurnDegrees == 0f)
+                aim.InputTurnStartYawDegrees = math.degrees(math.atan2(aim.Facing.x, aim.Facing.z));
+            aim.RecentInputTurnDegrees = math.clamp(aim.RecentInputTurnDegrees + delta, -90f, 90f);
+            aim.LastInputTurnTime = now;
+        }
+
+        public static bool HasSwitchIntent(in PunchAimAssistTarget aim, float3 facing, float3 offset,
+            double now, float centreDegrees, float minimumTurnDegrees, float memorySeconds)
+        {
+            if (centreDegrees <= 0f || now - aim.LastInputTurnTime > memorySeconds
+                || math.abs(aim.RecentInputTurnDegrees) < math.max(.001f, minimumTurnDegrees)) return false;
+            float angle = AngleDegrees(facing, offset);
+            if (angle > centreDegrees) return false;
+            // Hold the current geometry fixed: only the input turn may improve alignment,
+            // not a moving source/target or the camera catching up with player translation.
+            float3 beforeInput = math.rotate(quaternion.RotateY(math.radians(aim.InputTurnStartYawDegrees)), math.forward());
+            float3 afterInput = math.rotate(quaternion.RotateY(math.radians(aim.RecentInputTurnDegrees)), beforeInput);
+            return AngleDegrees(beforeInput, offset) - AngleDegrees(afterInput, offset)
+                >= math.max(.001f, minimumTurnDegrees) - .0001f;
+        }
+
         public static bool TryGetFallbackTarget(EntityManager manager, Entity source, float3 sourcePosition,
             float3 committedDirection, float range, float maximumAngleDegrees,
             NativeArray<Entity> candidates, out Entity target)

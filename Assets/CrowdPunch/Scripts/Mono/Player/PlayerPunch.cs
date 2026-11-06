@@ -125,7 +125,12 @@ namespace CrowdPunch.Mono.Player
                 settings.TrajectoryMaximumSeconds,
                 settings.TrajectorySteps,
                 settings.Damage,
-                settings.TrajectoryRenderToFirstContact);
+                settings.TrajectoryRenderToFirstContact,
+                settings.AimAssistSwitchScoreMargin,
+                settings.AimAssistIntentAngleDegrees,
+                settings.AimAssistIntentMinimumTurnDegrees,
+                settings.AimAssistIntentMemorySeconds,
+                settings.AimAssistIntentSwitchDelay);
         }
 
         private void UpdateCooldownFeedback()

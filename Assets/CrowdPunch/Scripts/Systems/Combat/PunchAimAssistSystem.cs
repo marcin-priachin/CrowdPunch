@@ -95,6 +95,8 @@ namespace CrowdPunch.Systems.Combat
                 aim.IsAiming = 0;
                 return;
             }
+            PunchAimAssist.UpdateInputTurn(ref aim, bridge.AimInputRotationDegrees, bridge.AimInputResetSequence, now,
+                bridge.PunchPreviewIntentMemorySeconds);
             bool retain = PunchAimAssist.IsValidTarget(em, source, aim.Target)
                 && PunchAimAssist.IsWithinAssistLimits(em, aim.Target, position, facing,
                     bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewReleaseAngleDegrees)
@@ -111,7 +113,30 @@ namespace CrowdPunch.Systems.Combat
                     || !Clear(em, world, visibility, source, preferred, position))
                     preferred = Fallback(em, world, visibility, source, position, facing, bridge, entities, poses);
             }
-            LaunchAimPrediction.UpdateLock(ref aim, preferred, retain, now, bridge.PunchPreviewSwitchDelay);
+            float switchDelay = bridge.PunchPreviewSwitchDelay;
+            if (retain && preferred != Entity.Null && preferred != aim.Target
+                && !em.HasComponent<BossEncounter>(preferred))
+            {
+                float3 candidateOffset = em.GetComponentData<LocalTransform>(preferred).Position - position;
+                float3 lockedOffset = em.GetComponentData<LocalTransform>(aim.Target).Position - position;
+                float candidateScore = PunchAimAssist.TargetScore(facing, candidateOffset,
+                    bridge.PunchPreviewAimAssistMaximumAngleDegrees, bridge.PunchPreviewAimAssistRange,
+                    bridge.PunchPreviewDistanceWeight);
+                float lockedScore = PunchAimAssist.TargetScore(facing, lockedOffset,
+                    bridge.PunchPreviewAimAssistMaximumAngleDegrees, bridge.PunchPreviewAimAssistRange,
+                    bridge.PunchPreviewDistanceWeight);
+                bool deliberate = PunchAimAssist.HasSwitchIntent(aim, facing, candidateOffset, now,
+                    bridge.PunchPreviewIntentAngleDegrees, bridge.PunchPreviewIntentMinimumTurnDegrees,
+                    bridge.PunchPreviewIntentMemorySeconds);
+                if (candidateScore >= lockedScore
+                    || !deliberate && candidateScore + bridge.PunchPreviewSwitchScoreMargin >= lockedScore)
+                    preferred = aim.Target;
+                else if (deliberate)
+                    switchDelay = bridge.PunchPreviewIntentSwitchDelay;
+            }
+            Entity previousTarget = aim.Target;
+            LaunchAimPrediction.UpdateLock(ref aim, preferred, retain, now, switchDelay);
+            if (aim.Target != previousTarget) aim.RecentInputTurnDegrees = 0f;
             aim.Facing = facing;
             aim.LaunchSpeed = speed;
             aim.LeadSeconds = tuning.AimLeadSeconds;
@@ -135,8 +160,8 @@ namespace CrowdPunch.Systems.Combat
                 float distance = math.sqrt(distanceSq);
                 float angle = math.acos(math.clamp(math.dot(facing.xz, offset / distance), -1f, 1f));
                 if (angle > angleLimit + .000001f) continue;
-                float score = angle / math.max(.0001f, angleLimit)
-                    + distance / range * bridge.PunchPreviewDistanceWeight;
+                float score = PunchAimAssist.TargetScore(math.degrees(angle), distance,
+                    bridge.PunchPreviewAimAssistMaximumAngleDegrees, range, bridge.PunchPreviewDistanceWeight);
                 Entity candidate = entities[i];
                 if (score > bestScore || score == bestScore && distance > bestDistance
                     || score == bestScore && distance == bestDistance && best != Entity.Null && candidate.Index >= best.Index

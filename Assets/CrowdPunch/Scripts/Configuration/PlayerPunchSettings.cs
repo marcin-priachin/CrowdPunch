@@ -32,11 +32,21 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0f), Tooltip("Maximum distance from a punched enemy to another enemy that aim assist can target. Set to 0 to disable aim assist.")]
         private float aimAssistRange = 22f;
         [SerializeField, Range(0f, 180f), Tooltip("Maximum horizontal angle in degrees from player facing to an aim-assist target.")]
-        private float aimAssistMaximumAngleDegrees = 12f;
+        private float aimAssistMaximumAngleDegrees = 24f;
         [SerializeField, Range(0f, 180f), Tooltip("Retain a valid lock within this wider cone to avoid boundary flicker.")]
-        private float aimAssistReleaseAngleDegrees = 16f;
+        private float aimAssistReleaseAngleDegrees = 50f;
         [SerializeField, Min(0f), Tooltip("Seconds a challenger must stay preferred before replacing a valid lock.")]
-        private float aimAssistSwitchDelay = 0.12f;
+        private float aimAssistSwitchDelay = 0.25f;
+        [SerializeField, Min(0f), Tooltip("Required improvement over the current target's angle/distance score for passive switching. Deliberate centred aiming can bypass the margin. Angle is normalized by the acquisition cone. Zero removes this margin.")]
+        private float aimAssistSwitchScoreMargin = 0.2f;
+        [SerializeField, Range(0f, 180f), Tooltip("A challenger inside this angle can switch faster after deliberate look input toward it. Zero disables fast switching.")]
+        private float aimAssistIntentAngleDegrees = 6f;
+        [SerializeField, Min(0f), Tooltip("Minimum look-input rotation toward a centred challenger, in degrees. Position changes alone never qualify.")]
+        private float aimAssistIntentMinimumTurnDegrees = 3f;
+        [SerializeField, Min(0f), Tooltip("Seconds to remember a continuous look-input turn after its last movement. Reversing direction starts a new turn.")]
+        private float aimAssistIntentMemorySeconds = 0.2f;
+        [SerializeField, Min(0f), Tooltip("Challenger persistence in seconds after deliberately aiming near its centre. Capped by the ordinary switch delay.")]
+        private float aimAssistIntentSwitchDelay = 0.04f;
         [SerializeField, Range(0f, 1f), Tooltip("Distance penalty relative to angle in fallback selection. Zero selects by alignment alone.")]
         private float aimAssistDistanceWeight = 0.35f;
 
@@ -145,6 +155,11 @@ namespace CrowdPunch.Configuration
         public float AimAssistMaximumAngleDegrees => aimAssistMaximumAngleDegrees;
         public float AimAssistReleaseAngleDegrees => Mathf.Max(aimAssistMaximumAngleDegrees, aimAssistReleaseAngleDegrees);
         public float AimAssistSwitchDelay => Mathf.Max(0f, aimAssistSwitchDelay);
+        public float AimAssistSwitchScoreMargin => Mathf.Max(0f, aimAssistSwitchScoreMargin);
+        public float AimAssistIntentAngleDegrees => Mathf.Min(AimAssistMaximumAngleDegrees, aimAssistIntentAngleDegrees);
+        public float AimAssistIntentMinimumTurnDegrees => Mathf.Max(0f, aimAssistIntentMinimumTurnDegrees);
+        public float AimAssistIntentMemorySeconds => Mathf.Max(0f, aimAssistIntentMemorySeconds);
+        public float AimAssistIntentSwitchDelay => Mathf.Clamp(aimAssistIntentSwitchDelay, 0f, AimAssistSwitchDelay);
         public float AimAssistDistanceWeight => aimAssistDistanceWeight;
         public PunchHitIndication HitIndication => hitIndication;
         public bool TrajectoryRenderToFirstContact => trajectoryRenderToFirstContact;

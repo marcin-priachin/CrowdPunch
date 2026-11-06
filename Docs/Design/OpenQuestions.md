@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-10-16
+Last updated: 2026-11-06
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -61,6 +61,22 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-11-06 - Sticky auto aim (PLAYER-003/004)
+
+Decision: implement approaches 1 + 3 from the auto-aim review: wider retention with
+a challenger score margin, plus faster switching after deliberate look rotation
+toward a centred challenger. The deliberate override may bypass the ordinary margin
+when the challenger still scores better, allowing closely spaced target switches.
+Preserve per-source locks, live target tracking, eligibility/obstruction, hard limits,
+Gatekeeper priority and preview/click agreement. No grace period or shared player-level
+target memory is part of this slice. Initial numbers are exposed provisional tuning
+documented in PLAYER-004. Shared assistance is enabled by disabling Use Player
+Direction Only in the existing punch asset; the facing-only option remains available.
+Both mouse and gamepad use the same angular criteria. Input-specific balance under
+OQ-017 remains unresolved.
+
+Source: user selected "1 + 3" in this auto-aim retention design conversation.
 
 ### 2026-11-02 - Authoritative dotted launch path
 

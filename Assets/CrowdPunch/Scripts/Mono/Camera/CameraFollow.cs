@@ -21,6 +21,7 @@ namespace CrowdPunch.Mono.Camera
         private CombatCameraFeedback feedback;
         private CameraSceneryCutaway sceneryCutaway;
         private InputAction lookAction;
+        private PlayerEcsBridge aimBridge;
         private float orbitAngle;
         public float EncounterLookHeight { get; set; }
 
@@ -66,9 +67,12 @@ namespace CrowdPunch.Mono.Camera
                 ? 0f : lookAction?.ReadValue<Vector2>().x ?? 0f;
             bool usesJoystick = lookAction?.activeControl?.device is Gamepad
                 || lookAction?.activeControl?.device is Joystick;
-            orbitAngle += usesJoystick
+            float inputRotation = usesJoystick
                 ? horizontalLook * movementSettings.JoystickRotationSpeed * Time.deltaTime
                 : horizontalLook * horizontalLookSensitivity;
+            orbitAngle += inputRotation;
+            if (aimBridge == null) target.TryGetComponent(out aimBridge);
+            aimBridge?.PublishAimRotation(inputRotation);
 
             Vector3 orbitOffset = Quaternion.Euler(0f, orbitAngle, 0f)
                 * new Vector3(0f, offset.y, -new Vector2(offset.x, offset.z).magnitude);

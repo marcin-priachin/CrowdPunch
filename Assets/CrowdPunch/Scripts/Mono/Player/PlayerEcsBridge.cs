@@ -189,6 +189,21 @@ namespace CrowdPunch.Mono.Player
         public float PunchPreviewReleaseAngleDegrees { get; private set; }
         public float PunchPreviewSwitchDelay { get; private set; }
         public float PunchPreviewDistanceWeight { get; private set; }
+        public float PunchPreviewSwitchScoreMargin { get; private set; }
+        public float PunchPreviewIntentAngleDegrees { get; private set; }
+        public float PunchPreviewIntentMinimumTurnDegrees { get; private set; }
+        public float PunchPreviewIntentMemorySeconds { get; private set; }
+        public float PunchPreviewIntentSwitchDelay { get; private set; }
+
+        /// <summary>Accumulated camera orbit commanded by look input, excluding follow motion and shake.</summary>
+        public double AimInputRotationDegrees { get; private set; }
+        public uint AimInputResetSequence { get; private set; }
+
+        public void PublishAimRotation(float degrees)
+        {
+            if (isActiveAndEnabled && !FeedbackTimeController.IsSuspended && math.isfinite(degrees))
+                AimInputRotationDegrees += degrees;
+        }
 
         /// <summary>Latest punch origin.</summary>
         public float3 PunchOrigin { get; private set; }
@@ -325,7 +340,12 @@ namespace CrowdPunch.Mono.Player
             float trajectoryMaximumSeconds = 8f,
             int trajectorySteps = 160,
             float previewDamage = 0f,
-            bool trajectoryRenderToFirstContact = false)
+            bool trajectoryRenderToFirstContact = false,
+            float switchScoreMargin = 0.2f,
+            float intentAngleDegrees = 6f,
+            float intentMinimumTurnDegrees = 3f,
+            float intentMemorySeconds = 0.2f,
+            float intentSwitchDelay = 0.04f)
         {
             PunchPreviewOrigin = new float3(origin.x, origin.y, origin.z);
             PunchPreviewDirection = new float3(direction.x, direction.y, direction.z);
@@ -343,6 +363,11 @@ namespace CrowdPunch.Mono.Player
             PunchPreviewReleaseAngleDegrees = Mathf.Max(aimAssistMaximumAngleDegrees, releaseAngleDegrees);
             PunchPreviewSwitchDelay = Mathf.Max(0f, switchDelay);
             PunchPreviewDistanceWeight = Mathf.Clamp01(distanceWeight);
+            PunchPreviewSwitchScoreMargin = Mathf.Max(0f, switchScoreMargin);
+            PunchPreviewIntentAngleDegrees = Mathf.Clamp(intentAngleDegrees, 0f, aimAssistMaximumAngleDegrees);
+            PunchPreviewIntentMinimumTurnDegrees = Mathf.Max(0f, intentMinimumTurnDegrees);
+            PunchPreviewIntentMemorySeconds = Mathf.Max(0f, intentMemorySeconds);
+            PunchPreviewIntentSwitchDelay = Mathf.Clamp(intentSwitchDelay, 0f, PunchPreviewSwitchDelay);
             PunchPreviewPositionWeight = Mathf.Clamp01(pushDirectionPositionWeight);
             PunchPreviewAimAssistRange = Mathf.Max(0f, aimAssistRange);
             PunchPreviewAimAssistMaximumAngleDegrees = Mathf.Clamp(aimAssistMaximumAngleDegrees, 0f, 180f);
@@ -351,6 +376,7 @@ namespace CrowdPunch.Mono.Player
 
         public void ClearPunchPreview()
         {
+            AimInputResetSequence++;
             CollisionPreviewResetSequence++;
             IsPunchPreviewAvailable = false;
             BeginTrajectoryPreview();

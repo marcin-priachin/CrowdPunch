@@ -2036,7 +2036,7 @@ Player health was temporarily protected and restored. Evidence is in `Temp/borde
 2. `EnemyCrowdTacticsSystem` assigns Baseline pursuit, interception and concentrated reserve orders before `EnemyChaseSystem` converts them into explicit navigation destinations and separate local separation. See Baseline pursuit and interception above for COMBAT-016 allocation, commitment and defaults. Explosives alone retain the configurable closest-enemy cap and individual low-discrepancy coverage slots. Slot restoration uses normal movement speed while an enemy is materially displaced and reduces, but does not disable, separation influence until it nears the assigned area; this prevents crowd repulsion from overpowering interior coverage. An active explosive inside its authored contact-attempt range bypasses the pressure cap, continuously targets the player, and retains its spawn-selected separation distance/weight including archetype overrides throughout pursuit and contact attempts (ENEMY-010, COMBAT-013). The existing active-enemy snapshot pass also selects the closest eligible unexploded explosive by horizontal player distance, breaking ties by entity index. Only that enemy may suppress separation when the blended direct-pursuit vector has no positive projection toward the player. Protected-point attacker selection restricts eligibility. This adds no extra crowd scan or persistent state. If that direct player target lies beyond the navigation spacing grid but the complete route is clear of authored static obstacles, `EnemyNavigationSystem` preserves the direct physics pursuit instead of resolving the goal back to the grid edge; this keeps COMBAT-017's distribution volume separate from physically reachable arena space. Other assigned enemies approach deterministic surround-ring slots, using normal speed outside their authored charge distance and the charge multiplier inside it. When a slot is compressed by the inset arena bounds, the system samples deterministic golden-angle alternatives and selects the candidate that preserves the most intended radius. Assigned enemies use per-enemy randomized intervals to make brief, speed-scaled contact attempts toward the player. Each enemy uses its spawn-selected default separation distance and weight unless its profile's override array contains an entry for the nearby enemy's explicit archetype, and ordinary contact attempts retain separation with an independently authored weight. Ranged, Dasher, and elite systems retain their later archetype-specific overrides.
 3. `RangedEnemyPositioningSystem`, `DasherDecisionSystem`, `ElitePunchSystem`, and `EliteCrowdSupportSystem` make their existing tactical overrides. Each intent writer publishes an explicit `NavigationIntent` destination, arrival behavior, mode, and separate local-separation vector alongside legacy `DesiredMovement`. Destinations are never reconstructed from a blended direction.
 4. `WizardCastSystem` advances cast state after the player bridge and wave spawning. `WizardPositioningSystem` writes its dedicated distance-band intent, and `WizardHazardAvoidanceSystem` adds local zone avoidance after the other tactical writers. `EnemyNavigationSystem` runs after these intent writers and before both movement systems. It resolves clearance-valid direct travel or a budgeted cached route, then applies terrain-safe local steering to `DesiredMovement`. `EnemyMovementSystem` remains the normal Unity Physics velocity owner and rejects non-`Active` enemies. `DasherMovementSystem` retains committed straight-dash velocity ownership. See [Static obstacles and navigation](Navigation.md) for scheduler, settings, lifecycle, and inspection details.
-5. `PunchAimAssistSystem` maintains an ECS-owned target lock for each punchable enemy in the live punch volume. A physics ray from the source enemy along player facing replaces the lock when it hits another eligible enemy inside the configured range and horizontal-angle limit; misses retain the lock only while it remains within those limits, and the smallest-angle rule supplies an initial in-cone fallback. `PunchDetectionSystem` uses that locked direction for each hit, clears existing linear and angular velocity before a normal player launch in any eligible state, starts a fresh `Launched` sequence with the current punch data, and enables impulse and damage requests (PLAYER-003, PLAYER-004, COMBAT-014).
+5. `PunchAimAssistSystem` maintains an ECS-owned target lock for each punchable enemy in the live punch volume. Initial acquisition prefers the facing ray, then scores in-cone candidates by alignment and distance. Retention uses the wider release cone; ordinary challengers must beat the current score by a margin and persist. Recent deliberate look input toward a centred challenger permits the shorter delay (see Sticky target retention below). `PunchDetectionSystem` uses that locked direction for each hit, clears existing linear and angular velocity before a normal player launch in any eligible state, starts a fresh `Launched` sequence with the current punch data, and enables impulse and damage requests (PLAYER-003, PLAYER-004, COMBAT-014).
 6. `DamageApplicationSystem` applies enabled damage requests, clamps health, and resolves immediate defeat or records launch-deferred defeat.
 7. `RangedEnemyAttackSystem` evaluates ranged state after punch and damage resolution, cancels invalid wind-ups, predicts a fire-time intercept from the collision-resolved player velocity and configured lead multiplier, and instantiates a projectile when a valid wind-up completes. The projectile locks that target and does not home (ENEMY-002, ENEMY-003).
 8. `ApplyImpulseSystem` adds gameplay impulse to `PhysicsVelocity`.
@@ -2058,6 +2058,39 @@ Ordering between systems that share only a group should be made explicit when co
 - `OutOfBoundsSystem` compares enemy positions with the separate baked three-dimensional `EnemyDefeatBounds`. Escaped enemies whose profile allows respawning enter the existing pool immediately; fixed wave enemies instead enter terminal `Defeated` state with zero health so their ownership is counted and they cannot block cumulative encounter completion from outside the authored arena.
 - `DefeatedEnemyLifecycleSystem` converts the one-shot defeat marker into the existing respawn request.
 - `EnemyRespawnSystem` brakes, pools, resets, and respawns defeated or otherwise invalid enemies.
+
+### Sticky target retention (2026-11-06, PLAYER-003/004)
+
+`CameraFollow` publishes only the signed orbit degrees commanded by mouse/gamepad
+look input through `PlayerEcsBridge.PublishAimRotation`. The double accumulator
+excludes camera follow interpolation and combat shake. No enemy identity enters Mono.
+`PlayerPunch` forwards the score margin and fast-switch tuning from the shared
+settings through the existing preview bridge. Both input devices use the same
+angular thresholds; input-device balance remains OQ-017.
+
+`PunchAimAssistTarget` owns the last observed input accumulator, recent signed turn
+and last-turn timestamp plus starting facing per source. `PunchAimAssistSystem` reads the signal before
+selection, expires idle turns, restarts on reversal and consumes the turn on a lock
+change. A candidate must improve on the current normalized angle/distance score by
+the configured margin. The fast delay additionally requires a narrow centre angle
+and enough alignment gain attributable to look rotation from the turn's starting
+facing with current geometry held fixed. This deliberate override bypasses the normal
+score margin for closely spaced targets, but still requires a better score.
+The bridge's aim-input reset sequence invalidates recent turns when previews clear,
+including a pause with no intervening fixed step.
+Passive source/target movement can only use the ordinary persistence delay and margin.
+Gatekeeper priority retains its existing ordinary-delay exception. Invalid or
+out-of-limits locks replace immediately; leaving the punch volume/protection clears
+all source state. Assistance disabled also stops intent accumulation. Existing
+preview revision and click commitment are unchanged for enemies and Chicken shots.
+
+Saved tuning: 22m range, 24/50 degree acquire/release cones, 0.2 score margin,
+0.25s ordinary delay, 6 degree fast-switch centre cone, 3 degree input-turn minimum,
+0.2s input memory and 0.04s fast delay. The shared asset enables assistance and retains
+the manual facing-only toggle. Margin zero removes score hysteresis; centre cone zero
+disables fast switching. No extra crowd scan or physics query is added; extra scoring
+uses only the current target and already-selected challenger. Source reset/pooling
+uses the existing default aim-state reset. See `Docs/Verification/StickyAimRetention.md`.
 
 ### Stable launch aiming (2026-10-31)
 

@@ -74,6 +74,182 @@ namespace CrowdPunch.Tests
             world.GetOrCreateSystem<PunchAimAssistSystem>().Update(world.Unmanaged);
         }
 
+        private void PreviewYaw(float degrees, float scoreMargin = .2f, float intentAngle = 6f)
+        {
+            bridge.PublishPunchPreview(Vector3.back, Quaternion.Euler(0, degrees, 0) * Vector3.forward,
+                1, 2, 5, 0, 22, 24, 3, 18, 90, 50, .25f, .35f,
+                switchScoreMargin: scoreMargin, intentAngleDegrees: intentAngle);
+        }
+
+        private void PrepareTurn(float sign = 1f, float degrees = 12f)
+        {
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(0, 0, 8)));
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(sign * math.tan(math.radians(degrees)) * 8, 0, 8)));
+            PreviewYaw(0); Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+        }
+
+        [Test]
+        public void Player004_WiderRetentionTracksMovedTargetAndReleasesAtHardLimit()
+        {
+            PreviewYaw(0); Aim(0);
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(100, 0, 100)));
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(math.sin(math.radians(40)) * 8, 0,
+                math.cos(math.radians(40)) * 8)));
+            Aim(.02);
+            PreviewYaw(-5); Aim(.1); Aim(.5);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            Assert.That(PunchAimAssist.TryGetLockedDirection(em, source, float3.zero, out var direction), Is.True);
+            Assert.That(PunchAimAssist.AngleDegrees(direction, em.GetComponentData<LocalTransform>(target).Position),
+                Is.LessThan(.05f), "Retention must keep following the current target position.");
+            PreviewYaw(-11); Aim(.52);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(Entity.Null));
+        }
+
+        [Test]
+        public void Player004_MarginalFacingRayAndSourceMotionCannotStealLock()
+        {
+            PreviewYaw(0); Aim(0);
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(0, 0, 8)));
+            SetCollisionBodies(target, other);
+            Aim(.02); Aim(.5);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            em.SetComponentData(source, LocalTransform.FromPosition(new float3(.1f, 0, 0)));
+            Aim(.6); Aim(1);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Challenger, Is.EqualTo(Entity.Null));
+        }
+
+        [TestCase(-1f, 4f)]
+        [TestCase(1f, 4f)]
+        [TestCase(-1f, 12f)]
+        [TestCase(1f, 12f)]
+        public void Player004_DeliberateTurnToCentredChallengerUsesFastDelay(float sign, float degrees)
+        {
+            PrepareTurn(sign, degrees);
+            bridge.PublishAimRotation(sign * degrees); PreviewYaw(sign * degrees);
+            Aim(.02); Aim(.05);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            Aim(.06);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(other));
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).RecentInputTurnDegrees, Is.Zero);
+        }
+
+        [TestCase(0f)]
+        [TestCase(-12f)]
+        [TestCase(1f)]
+        public void Player004_FollowMotionWrongWayAndTinyLookUseOrdinaryDelay(float inputDegrees)
+        {
+            PrepareTurn();
+            bridge.PublishAimRotation(inputDegrees); PreviewYaw(12);
+            Aim(.02); Aim(.06); Aim(.24);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            Aim(.27);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(other));
+        }
+
+        [Test]
+        public void Player004_TurnWithoutCentredChallengerDoesNotUseFastDelay()
+        {
+            PrepareTurn();
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(math.tan(math.radians(25)) * 8, 0, 8)));
+            bridge.PublishAimRotation(17); PreviewYaw(17);
+            Aim(.02); Aim(.06);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            Aim(.27);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(other));
+        }
+
+        [Test]
+        public void Player004_FastSwitchCommitsDisplayedSolutionAtPunch()
+        {
+            PrepareTurn();
+            bridge.PublishAimRotation(12); PreviewYaw(12);
+            Aim(.02); Aim(.06);
+            var presentation = world.GetOrCreateSystem<PresentationBridgeSystem>();
+            presentation.Update(world.Unmanaged);
+            var shown = bridge.TrajectoryPreviewSegments[0];
+            float3 expected = math.normalize(shown.End - shown.Start);
+            Vector3 facing = Quaternion.Euler(0, 12, 0) * Vector3.forward;
+            bridge.PublishPunch(Vector3.back, facing, 1, 2, 90, .1f, 10, 0);
+            world.GetOrCreateSystem<PlayerBridgeSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<PunchDetectionSystem>().Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(source).HomingTarget, Is.EqualTo(other));
+            Assert.That(math.distance(math.normalize(em.GetComponentData<ExternalImpulse>(source).Value), expected),
+                Is.LessThan(.0001f));
+        }
+
+        [Test]
+        public void Player004_ExpiredLookCannotAccelerateLaterPositionDrivenSwitch()
+        {
+            PrepareTurn();
+            bridge.PublishAimRotation(12); PreviewYaw(12);
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(100, 0, 100)));
+            Aim(.02); Aim(.24);
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(math.tan(math.radians(12)) * 8, 0, 8)));
+            Aim(.26); Aim(.3);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            Aim(.51);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(other));
+        }
+
+        [Test]
+        public void Player004_ZeroIntentConeDisablesFastSwitching()
+        {
+            PrepareTurn();
+            bridge.PublishAimRotation(12); PreviewYaw(12, intentAngle: 0);
+            Aim(.02); Aim(.06);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            Aim(.27);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(other));
+        }
+
+        [Test]
+        public void Player004_PreviewClearDiscardsIntentWithoutAnInterveningFixedStep()
+        {
+            PrepareTurn();
+            bridge.PublishAimRotation(12); PreviewYaw(12);
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(100, 0, 100)));
+            Aim(.02);
+            bridge.ClearPunchPreview(); PreviewYaw(12);
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(math.tan(math.radians(12)) * 8, 0, 8)));
+            Aim(.04); Aim(.08);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).RecentInputTurnDegrees, Is.Zero);
+            Aim(.29);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(other));
+        }
+
+        [Test]
+        public void Player004_ReversingLookRestartsMinimumTurnRequirement()
+        {
+            PrepareTurn();
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(100, 0, 100)));
+            bridge.PublishAimRotation(12); PreviewYaw(12); Aim(.02);
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(math.tan(math.radians(10)) * 8, 0, 8)));
+            bridge.PublishAimRotation(-2); PreviewYaw(10);
+            Aim(.04); Aim(.08);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).RecentInputTurnDegrees, Is.EqualTo(-2));
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+        }
+
+        [Test]
+        public void Player004_InvalidLockReplacesImmediatelyAndLeavingVolumeClearsInputHistory()
+        {
+            PrepareTurn();
+            em.SetComponentData(target, new Health());
+            Aim(.02);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(other));
+            bridge.PublishAimRotation(12); PreviewYaw(12); Aim(.04);
+            em.SetComponentData(source, LocalTransform.FromPosition(new float3(100, 0, 0)));
+            Aim(.06);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(Entity.Null));
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).RecentInputTurnDegrees, Is.Zero);
+            em.SetComponentData(source, LocalTransform.FromPosition(float3.zero));
+            Aim(.08);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).RecentInputTurnDegrees, Is.Zero);
+        }
+
         private Entity GatekeeperHead(float3 position)
         {
             Entity head = em.CreateEntity(typeof(BossEncounter), typeof(BossPart), typeof(LocalTransform),

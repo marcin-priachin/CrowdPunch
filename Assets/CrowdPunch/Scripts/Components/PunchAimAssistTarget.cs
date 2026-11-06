@@ -9,6 +9,9 @@ namespace CrowdPunch.Components
         public Entity Target;
         public Entity Challenger;
         public double ChallengerSince;
+        public double InputRotationDegrees, LastInputTurnTime;
+        public float RecentInputTurnDegrees, InputTurnStartYawDegrees;
+        public uint InputResetSequence;
         public float LaunchSpeed, LeadSeconds, LeadMaximumDistance;
         public float3 Facing;
         public float DirectionLimitDegrees;
