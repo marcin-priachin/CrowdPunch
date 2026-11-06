@@ -9,6 +9,12 @@ using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Presentation
 {
+    internal struct LaunchTrajectoryContact
+    {
+        public int EndPointIndex;
+        public float3 Position;
+    }
+
     internal struct LaunchTrajectoryImpact
     {
         public float3 Position, Direction;
@@ -36,9 +42,10 @@ namespace CrowdPunch.Systems.Presentation
             EnemyDefeatBounds? defeatBounds = null, NativeList<LaunchTrajectoryImpact> impacts = default,
             PlayerSnapshot player = default, float fixedTimestep = DefaultTimestep,
             NativeList<LaunchTrajectorySample> samples = default, NativeList<LaunchReboundPlan> rebounds = default,
-            NativeList<LaunchPathPoint> path = default)
+            NativeList<LaunchPathPoint> path = default, NativeList<LaunchTrajectoryContact> firstContact = default)
         {
             points.Clear();
+            if (firstContact.IsCreated) firstContact.Clear();
             if (impacts.IsCreated) impacts.Clear();
             if (samples.IsCreated) samples.Clear();
             if (rebounds.IsCreated) rebounds.Clear();
@@ -157,6 +164,8 @@ namespace CrowdPunch.Systems.Presentation
                         / math.max(.0001f, math.length(velocity)), impact, velocity); return; }
                     pose.Position = impact;
                     points.Add(pose.Position);
+                    if (firstContact.IsCreated && firstContact.Length == 0)
+                        firstContact.Add(new LaunchTrajectoryContact { EndPointIndex = points.Length - 1, Position = impact });
                     PathPoint(path, elapsed + dt - remaining + remaining * closest.Fraction,
                         pose.Position, velocity, closest.Entity, closest.SurfaceNormal);
                     if (impacts.IsCreated && IsImpactTarget(em, source.Entity, closest.Entity) && markedTargets.Add(closest.Entity))

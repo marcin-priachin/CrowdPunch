@@ -72,6 +72,59 @@ namespace CrowdPunch.Tests
             return points.AsArray().ToArray();
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Player003_FirstContactClipsOnlyPublishedGeometry(bool clip)
+        {
+            Entity target = Body(new float3(0, 0, 6));
+            using var physics = Physics(source, target);
+            var initial = new LaunchPreviewSource { Entity = source, Direction = math.forward(), Speed = 12 };
+            using var punched = new NativeArray<LaunchPreviewSource>(new[] { initial }, Allocator.Temp);
+            using var points = new NativeList<float3>(Allocator.Temp);
+            using var impacts = new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+            using var contact = new NativeList<LaunchTrajectoryContact>(Allocator.Temp);
+            using var path = new NativeList<LaunchPathPoint>(Allocator.Temp);
+            DirectLaunchTrajectoryPrediction.Trace(em, physics.CollisionWorld, initial, punched, settings,
+                2, 160, points, impacts: impacts, path: path, firstContact: contact);
+            Assert.That(contact.Length, Is.EqualTo(1));
+            Assert.That(contact[0].Position.z, Is.EqualTo(5).Within(.02f));
+            Assert.That(points.Length - 1, Is.GreaterThan(contact[0].EndPointIndex));
+            int savedPathLength = path.Length;
+            var root = new GameObject("First contact preview");
+            try
+            {
+                var bridge = root.AddComponent<PlayerEcsBridge>();
+                bridge.PublishPunchPreview(Vector3.zero, Vector3.forward, 2, 3, 0, 0, 0, 0,
+                    useDottedTrajectory: true, trajectoryRenderToFirstContact: clip);
+                PresentationBridgeSystem.PublishDottedTrajectory(bridge, points, impacts, contact);
+                var segments = bridge.TrajectoryPreviewSegments;
+                Assert.That(segments.Count, Is.EqualTo(clip ? contact[0].EndPointIndex : points.Length - 1));
+                Assert.That(segments[segments.Count - 1].End,
+                    Is.EqualTo(clip ? contact[0].Position : points[points.Length - 1]));
+                Assert.That(path.Length, Is.EqualTo(savedPathLength), "Rendering never truncates the authoritative path.");
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void Player003_FirstContactIncludesSceneryWithoutAccent()
+        {
+            Entity wall = Body(new float3(0, 0, 3));
+            em.RemoveComponent<Enemy>(wall);
+            em.SetComponentData(wall, new PhysicsMass());
+            using var physics = Physics(source, wall);
+            var initial = new LaunchPreviewSource { Entity = source, Direction = math.forward(), Speed = 12 };
+            using var punched = new NativeArray<LaunchPreviewSource>(new[] { initial }, Allocator.Temp);
+            using var points = new NativeList<float3>(Allocator.Temp);
+            using var impacts = new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+            using var contact = new NativeList<LaunchTrajectoryContact>(Allocator.Temp);
+            DirectLaunchTrajectoryPrediction.Trace(em, physics.CollisionWorld, initial, punched, settings,
+                1, 80, points, impacts: impacts, firstContact: contact);
+            Assert.That(contact.Length, Is.EqualTo(1));
+            Assert.That(contact[0].Position.z, Is.EqualTo(2).Within(.02f));
+            Assert.That(impacts.Length, Is.Zero);
+        }
+
         [Test]
         [TestCase("enemy")]
         [TestCase("barricade")]

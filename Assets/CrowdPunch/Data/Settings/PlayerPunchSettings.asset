@@ -24,11 +24,12 @@ MonoBehaviour:
   usePlayerDirectionOnly: 1
   directionPositionWeight: 0
   aimAssistRange: 22
-  aimAssistMaximumAngleDegrees: 12
-  aimAssistReleaseAngleDegrees: 16
+  aimAssistMaximumAngleDegrees: 24
+  aimAssistReleaseAngleDegrees: 32
   aimAssistSwitchDelay: 0.12
   aimAssistDistanceWeight: 0.35
   hitIndication: 1
+  trajectoryRenderToFirstContact: 1
   trajectoryDotDiameter: 0.22
   trajectoryDotSpacing: 0.65
   trajectoryDotColor: {r: 1, g: 1, b: 1, a: 0.5}

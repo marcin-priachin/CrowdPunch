@@ -37,6 +37,19 @@ namespace CrowdPunch.Systems.Presentation
             if (collisionStates.IsCreated) collisionStates.Dispose();
         }
 
+        // PLAYER-003: clipping the copied decoration must not truncate the committed launch path.
+        internal static void PublishDottedTrajectory(PlayerEcsBridge bridge, NativeList<float3> points,
+            NativeList<LaunchTrajectoryImpact> impacts, NativeList<LaunchTrajectoryContact> firstContact)
+        {
+            bool clipped = bridge.TrajectoryRenderToFirstContact && firstContact.Length > 0;
+            int last = clipped ? firstContact[0].EndPointIndex : points.Length - 1;
+            for (int i = 1; i <= last; i++)
+                bridge.AddDottedTrajectory(points[i - 1], clipped && i == last ? firstContact[0].Position : points[i], i == 1);
+            foreach (var impact in impacts)
+                if (!clipped || math.distancesq(impact.Position, firstContact[0].Position) < .000001f)
+                    bridge.AddTrajectoryImpact(impact.Position, impact.Direction);
+        }
+
         public void OnUpdate(ref SystemState state)
         {
             if (!PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
@@ -179,15 +192,13 @@ namespace CrowdPunch.Systems.Presentation
                     SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var projectileLaunchSettings);
                     using var shotPoints = new NativeList<float3>(Allocator.Temp);
                     using var shotImpacts = new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+                    using var shotContact = new NativeList<LaunchTrajectoryContact>(Allocator.Temp);
                     ChickenProjectileTrajectoryPrediction.Trace(state.EntityManager, shot, pose.ValueRO.Position,
                         direction, projectileLaunchSettings, SystemAPI.GetComponent<PlayerSnapshot>(playerEntity),
                         bridge.TrajectoryMaximumSeconds, bridge.TrajectorySteps,
                         state.World.GetExistingSystemManaged<FixedStepSimulationSystemGroup>()?.Timestep
-                            ?? DirectLaunchTrajectoryPrediction.DefaultTimestep, shotPoints, shotImpacts);
-                    for (int i = 1; i < shotPoints.Length; i++)
-                        bridge.AddDottedTrajectory(shotPoints[i - 1], shotPoints[i], i == 1);
-                    foreach (var impact in shotImpacts)
-                        bridge.AddTrajectoryImpact(impact.Position, impact.Direction);
+                            ?? DirectLaunchTrajectoryPrediction.DefaultTimestep, shotPoints, shotImpacts, shotContact);
+                    PublishDottedTrajectory(bridge, shotPoints, shotImpacts, shotContact);
                 }
                 else if (bridge.PunchPreviewLength > 0f)
                     bridge.AddTrajectoryPreview(pose.ValueRO.Position, pose.ValueRO.Position + direction * bridge.PunchPreviewLength);
@@ -199,6 +210,7 @@ namespace CrowdPunch.Systems.Presentation
                 if (sources.Length == 0 || !SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var trajectoryPhysics)
                     || !SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var trajectorySettings)) return;
                 using var points = new NativeList<float3>(Allocator.Temp);
+                using var firstContact = new NativeList<LaunchTrajectoryContact>(Allocator.Temp);
                 using var impacts = new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
                 using var rebounds = new NativeList<LaunchReboundPlan>(Allocator.Temp);
                 using var path = new NativeList<LaunchPathPoint>(Allocator.Temp);
@@ -211,7 +223,7 @@ namespace CrowdPunch.Systems.Presentation
                     DirectLaunchTrajectoryPrediction.Trace(state.EntityManager, trajectoryPhysics.CollisionWorld,
                         source, sources.AsArray(), trajectorySettings, bridge.TrajectoryMaximumSeconds,
                         bridge.TrajectorySteps, points, gravity, defeatBounds, impacts,
-                        SystemAPI.GetComponent<PlayerSnapshot>(playerEntity), fixedTimestep, rebounds: rebounds, path: path);
+                        SystemAPI.GetComponent<PlayerSnapshot>(playerEntity), fixedTimestep, rebounds: rebounds, path: path, firstContact: firstContact);
                     if (SystemAPI.HasBuffer<DisplayedLaunchPathPoint>(source.Entity))
                     {
                         var displayedPath = SystemAPI.GetBuffer<DisplayedLaunchPathPoint>(source.Entity);
@@ -234,10 +246,7 @@ namespace CrowdPunch.Systems.Presentation
                             ? (byte)1 : (byte)0;
                         SystemAPI.SetComponent(source.Entity, aim);
                     }
-                    for (int i = 1; i < points.Length; i++)
-                        bridge.AddDottedTrajectory(points[i - 1], points[i], i == 1);
-                    foreach (var impact in impacts)
-                        bridge.AddTrajectoryImpact(impact.Position, impact.Direction);
+                    PublishDottedTrajectory(bridge, points, impacts, firstContact);
                 }
                 return;
             }

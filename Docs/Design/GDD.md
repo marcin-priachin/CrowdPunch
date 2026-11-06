@@ -255,6 +255,16 @@ Display trajectory indicators and their accents on the arena floor with normal s
 occlusion so characters and objects cover them. The forecast is advisory: future crowd movement, contacts
 and specialized mechanics can change the actual result.
 
+First-contact rendering option (2026-11-06): Expose a disabled-by-default
+`Trajectory Render To First Contact` toggle in the shared punch settings. In dotted
+mode, it clips each rendered source path at its first predicted physical contact,
+including protected targets, pass-through contacts and solid scenery. Retain only
+an eligible impact accent at that contact. With no contact, show the full path.
+This is a presentation limit: continue forecasting and committing the complete
+source path under the authoritative-path rule below. Its captured endpoint still
+ends the launch; the rendering cutoff does not end it. Apply the same rendering
+choice to redirected Chicken projectiles.
+
 Ricochet assistance amendment (2026-11-02): The dotted trajectory includes the same
 bounded outgoing target correction and renewed guidance used by player-owned enemy
 bodies after a ricochet (COMBAT-012). Direct launch direction and commitment continue

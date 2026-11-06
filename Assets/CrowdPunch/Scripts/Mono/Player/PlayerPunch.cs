@@ -124,7 +124,8 @@ namespace CrowdPunch.Mono.Player
                 settings.HitIndication == PunchHitIndication.DottedTrajectory,
                 settings.TrajectoryMaximumSeconds,
                 settings.TrajectorySteps,
-                settings.Damage);
+                settings.Damage,
+                settings.TrajectoryRenderToFirstContact);
         }
 
         private void UpdateCooldownFeedback()

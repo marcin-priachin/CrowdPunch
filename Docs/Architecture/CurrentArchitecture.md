@@ -2273,6 +2273,16 @@ mode. Projectile travel remains advisory and uses its existing swept simulation;
 the enemy-only authoritative path motor is unchanged. Future target motion can change
 contacts. No new MonoBehaviour enemy access or runtime component ownership is added.
 
+### First-contact dotted rendering (2026-11-06, PLAYER-003)
+
+`PlayerPunchSettings.TrajectoryRenderToFirstContact` defaults to false and flows
+through PlayerPunch and PlayerEcsBridge. Both trajectory predictors optionally
+return the first physical contact's source-centre position and segment endpoint
+index, independently of impact-accent eligibility. PresentationBridgeSystem clips
+only the copied dotted segments and accents. Full displayed ECS path/rebound
+buffers and launch commitment retain the complete forecast. No-contact paths and
+arrow mode retain their existing output. MonoBehaviours receive no entity identity.
+
 ### Optional dotted direct-launch preview (2026-11-01)
 
 Forecast/runtime consistency amendment (2026-11-02), PLAYER-003/004, COMBAT-012:

@@ -12,9 +12,11 @@ namespace CrowdPunch.Systems.Presentation
     {
         internal static void Trace(EntityManager em, Entity shot, float3 position, float3 direction,
             in EnemyLaunchSettings launchSettings, in PlayerSnapshot player, float maximumSeconds,
-            int steps, float timestep, NativeList<float3> points, NativeList<LaunchTrajectoryImpact> impacts)
+            int steps, float timestep, NativeList<float3> points, NativeList<LaunchTrajectoryImpact> impacts,
+            NativeList<LaunchTrajectoryContact> firstContact = default)
         {
             points.Clear(); impacts.Clear();
+            if (firstContact.IsCreated) firstContact.Clear();
             var projectile = em.GetComponentData<ChickenProjectile>(shot);
             if (!em.HasComponent<ChickenTuning>(projectile.Boss) || timestep <= 0f) return;
             var tuning = em.GetComponentData<ChickenTuning>(projectile.Boss);
@@ -65,6 +67,7 @@ namespace CrowdPunch.Systems.Presentation
                         tuning.ProjectileRadius + tuning.BodyRadius, out float bossAt) && bossAt < stop)
                     { stop = bossAt; consumed = true; bossHit = true; }
                     end = math.lerp(position, end, stop);
+                    float firstAt = consumed || wall < 1f ? 1f : float.PositiveInfinity;
                     for (int i = 0; i < enemies.Length; i++)
                     {
                         Entity enemy = enemies[i];
@@ -75,11 +78,15 @@ namespace CrowdPunch.Systems.Presentation
                         float radius = tuning.ProjectileRadius + contacts[i].ContactRadius;
                         if (math.abs(enemyPosition.y - position.y) > radius
                             || !ChickenProjectileSystem.Sweep(position, end, enemyPosition, radius, out float at)) continue;
+                        firstAt = math.min(firstAt, at);
                         hitEnemies.Add(enemy);
                         projectile.HomingTarget = Entity.Null; projectile.HomingSecondsRemaining = 0f;
                         if (!ArmorHitResolution.IsProtected(em, enemy))
                             impacts.Add(new LaunchTrajectoryImpact { Position = math.lerp(position, end, at), Direction = projectile.Velocity });
                     }
+                    if (firstContact.IsCreated && firstContact.Length == 0 && math.isfinite(firstAt))
+                        firstContact.Add(new LaunchTrajectoryContact { EndPointIndex = points.Length,
+                            Position = math.lerp(position, end, firstAt) });
                     points.Add(end); position = end;
                     if (bossHit)
                         impacts.Add(new LaunchTrajectoryImpact { Position = position, Direction = projectile.Velocity });

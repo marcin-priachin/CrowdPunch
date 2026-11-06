@@ -45,6 +45,8 @@ namespace CrowdPunch.Configuration
         private PunchHitIndication hitIndication = PunchHitIndication.Arrows;
 
         [Header("Dotted Launch Trajectory")]
+        [SerializeField, Tooltip("Render each dotted path only up to its first predicted contact, including blocking or protected targets. Only changes presentation; the full launch forecast remains active.")]
+        private bool trajectoryRenderToFirstContact;
         [SerializeField, Min(0.02f)] private float trajectoryDotDiameter = 0.22f;
         [SerializeField, Min(0.05f)] private float trajectoryDotSpacing = 0.65f;
         [SerializeField] private Color trajectoryDotColor = new Color(1f, 1f, 1f, 0.5f);
@@ -145,6 +147,7 @@ namespace CrowdPunch.Configuration
         public float AimAssistSwitchDelay => Mathf.Max(0f, aimAssistSwitchDelay);
         public float AimAssistDistanceWeight => aimAssistDistanceWeight;
         public PunchHitIndication HitIndication => hitIndication;
+        public bool TrajectoryRenderToFirstContact => trajectoryRenderToFirstContact;
         public float TrajectoryDotDiameter => Mathf.Max(0.02f, trajectoryDotDiameter);
         public float TrajectoryDotSpacing => Mathf.Max(TrajectoryDotDiameter * 1.25f, trajectoryDotSpacing);
         public Color TrajectoryDotColor => trajectoryDotColor;

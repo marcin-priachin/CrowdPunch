@@ -174,6 +174,7 @@ namespace CrowdPunch.Mono.Player
         public float PunchPreviewStrength { get; private set; }
         public float PunchPreviewDamage { get; private set; }
         public bool UseDottedTrajectory { get; private set; }
+        public bool TrajectoryRenderToFirstContact { get; private set; }
         public float TrajectoryMaximumSeconds { get; private set; }
         public int TrajectorySteps { get; private set; }
         public float PunchPreviewPositionWeight { get; private set; }
@@ -323,7 +324,8 @@ namespace CrowdPunch.Mono.Player
             bool useDottedTrajectory = false,
             float trajectoryMaximumSeconds = 8f,
             int trajectorySteps = 160,
-            float previewDamage = 0f)
+            float previewDamage = 0f,
+            bool trajectoryRenderToFirstContact = false)
         {
             PunchPreviewOrigin = new float3(origin.x, origin.y, origin.z);
             PunchPreviewDirection = new float3(direction.x, direction.y, direction.z);
@@ -335,6 +337,7 @@ namespace CrowdPunch.Mono.Player
             PunchPreviewStrength = Mathf.Max(0f, previewStrength);
             PunchPreviewDamage = Mathf.Max(0f, previewDamage);
             UseDottedTrajectory = useDottedTrajectory;
+            TrajectoryRenderToFirstContact = trajectoryRenderToFirstContact;
             TrajectoryMaximumSeconds = Mathf.Clamp(trajectoryMaximumSeconds, .5f, 20f);
             TrajectorySteps = Mathf.Clamp(trajectorySteps, 16, 400);
             PunchPreviewReleaseAngleDegrees = Mathf.Max(aimAssistMaximumAngleDegrees, releaseAngleDegrees);
