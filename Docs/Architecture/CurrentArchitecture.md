@@ -54,6 +54,15 @@ The Mono/ECS bridge and movement-resolution ordering remain unchanged.
 
 See `Docs/Verification/ObstacleGeometry.md` and `ObstacleGeometryTests`.
 
+Campaign gate side terrain (2026-11-06, BARRICADE-003/006/007) uses visible cuboids
+instead of tapered rocks in levels 13/22/34/42/56/62/74, including all 28 room gates.
+`CampaignGateSideTerrain` updates the saved surfaces while preserving chapter materials,
+footprints and rearward overlap with each gate. `CampaignGateTerrain` applies the same
+surface when generating new campaign levels; cloned rooms inherit it. The existing
+`SolidObstacleBaker` builds matching collision, leaving the 2m opening clear once
+the gate breaks. `Barricade006_EveryRoomSealsGateSidesAndOpensAfterDestruction` covers
+the full room width, both jambs and the destroyed opening for every gate.
+
 ## Baseline pursuit and interception (2026-10-28, COMBAT-016, ENEMY-012)
 
 ### Timed direct-contact subset (2026-10-30, COMBAT-016, ENEMY-012)

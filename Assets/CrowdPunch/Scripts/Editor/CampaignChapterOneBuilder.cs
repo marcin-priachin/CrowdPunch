@@ -192,7 +192,7 @@ namespace CrowdPunch.Editor
         private static void CampaignGateTerrain(ArenaAuthoring arena,BarricadeAuthoring gate)
         {
             // Extend beyond the perimeter and overlap the gate's rear half. Keeping
-            // the rocks behind its front face lets edge shots hit the gate first.
+            // the square walls behind its front face lets edge shots hit the gate first.
             int span = Mathf.CeilToInt(arena.DefeatSize.x*.5f);
             float halfGap = gate.size.x*.5f;
             for(int side=-1;side<=1;side+=2)
@@ -203,6 +203,7 @@ namespace CrowdPunch.Editor
                 var visual=rock.transform.GetChild(0);
                 visual.localPosition=Vector3.up*rock.height*.5f;
                 visual.localScale=new Vector3(span,rock.height,3);
+                CampaignGateSideTerrain.SquareSurface(rock);
             }
         }
 

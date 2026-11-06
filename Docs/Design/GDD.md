@@ -601,7 +601,7 @@ Continuously replenish a configurable bounded crowd of Baseline melee enemies wi
 
 Status: Must
 
-Chapter 1's introductory campaign barricades retain their wide targets. From campaign level 13 onward, break-and-exit barricades must be 2 metres wide. Match the visible plate and damage-stage visuals to the collider. Solid terrain must seal the approach on both sides, connecting to the arena perimeter so the exit can only be reached through the gate opening after destruction. This campaign rule does not resize legacy gauntlets or other objective types.
+Chapter 1's introductory campaign barricades retain their wide targets. From campaign level 13 onward, break-and-exit barricades must be 2 metres wide. Match the visible plate and damage-stage visuals to the collider. Solid terrain must seal the approach on both sides, connecting to the arena perimeter so the exit can only be reached through the gate opening after destruction. Use square-ended side obstacles with the level's existing visual treatment, fitted flush against each gate without tapered gaps (requested 2026-11-06). This campaign rule does not resize legacy gauntlets or other objective types.
 
 ### BARRICADE-007 - Progressive Campaign Room Chains
 

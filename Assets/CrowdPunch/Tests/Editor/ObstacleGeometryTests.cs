@@ -24,6 +24,67 @@ namespace CrowdPunch.Tests
         private static IEnumerable<string> Scenes() => AssetDatabase.FindAssets("t:Scene", new[] { "Assets/CrowdPunch/Scenes" })
             .Select(AssetDatabase.GUIDToAssetPath).OrderBy(p => p);
 
+        [TestCase(13, 1)]
+        [TestCase(22, 2)]
+        [TestCase(34, 3)]
+        [TestCase(42, 4)]
+        [TestCase(56, 5)]
+        [TestCase(62, 6)]
+        [TestCase(74, 7)]
+        public void Barricade006_EveryRoomSealsGateSidesAndOpensAfterDestruction(int level, int gateCount)
+        {
+            var scene = EditorSceneManager.OpenPreviewScene(
+                $"Assets/CrowdPunch/Scenes/Campaign/Campaign_{level:00}/Campaign_{level:00} Sub Scene.unity");
+            var origin = new GameObject("Gate terrain validation origin");
+            try
+            {
+                var roots = scene.GetRootGameObjects();
+                var arena = roots.SelectMany(r => r.GetComponentsInChildren<ArenaAuthoring>()).Single();
+                var floor = roots.SelectMany(r => r.GetComponentsInChildren<MeshRenderer>())
+                    .Single(r => r.name == "Continuous Convex Floor").bounds;
+                var gates = roots.SelectMany(r => r.GetComponentsInChildren<BarricadeAuthoring>()).ToArray();
+                var sides = roots.SelectMany(r => r.GetComponentsInChildren<SolidObstacleAuthoring>())
+                    .Where(s => s.name.StartsWith("Gate terrain")).ToArray();
+                Assert.That(gates.Length, Is.EqualTo(gateCount));
+                Assert.That(sides.Length, Is.EqualTo(gateCount * 2));
+                using var terrain = SolidObstacleGeometry.CreateCollider(origin.transform,
+                    sides.SelectMany(s => s.GetComponentsInChildren<MeshFilter>()).ToArray());
+                using var player = Unity.Physics.SphereCollider.Create(new SphereGeometry { Radius = .5f });
+                foreach (var gate in gates)
+                {
+                    Assert.That(gate.size.x, Is.EqualTo(2));
+                    float3 position = gate.transform.position;
+                    using var intact = Unity.Physics.BoxCollider.Create(new BoxGeometry
+                        { Size = gate.size, Orientation = quaternion.identity, BevelRadius = .02f });
+                    // Scan the entire room, including the wall/perimeter joins. This uses
+                    // the visible meshes through the same collision construction as baking.
+                    for (float x = floor.min.x + .5f; x <= floor.max.x - .5f; x += .2f)
+                    {
+                        float3 start = new float3(x, arena.GroundSurfaceHeight + .52f, position.z - 4);
+                        float3 end = start + new float3(0, 0, 9);
+                        bool blocked = terrain.Value.CastCollider(new ColliderCastInput(player, start, end), out ColliderCastHit _)
+                            || intact.Value.CastCollider(new ColliderCastInput(player, start - position, end - position), out ColliderCastHit _);
+                        Assert.True(blocked, $"Level {level}, {gate.name}: bypass at x={x}");
+                    }
+                    // The square inner ends meet the gate, even for a zero-radius ray
+                    // next to either jamb and across several player-height samples.
+                    foreach (int side in new[] { -1, 1 })
+                    foreach (float height in new[] { .05f, .52f, 1.5f })
+                    {
+                        float3 start = new float3(position.x + side * (gate.size.x * .5f + .01f),
+                            arena.GroundSurfaceHeight + height, position.z - 4);
+                        Assert.True(terrain.Value.CastRay(new RaycastInput
+                            { Start = start, End = start + new float3(0, 0, 9), Filter = CollisionFilter.Default }, out Unity.Physics.RaycastHit _),
+                            $"Level {level}, {gate.name}: open jamb on side {side} at height {height}");
+                    }
+                    float3 opening = new float3(position.x, arena.GroundSurfaceHeight + .52f, position.z - 4);
+                    Assert.False(terrain.Value.CastCollider(new ColliderCastInput(player, opening, opening + new float3(0, 0, 9)), out ColliderCastHit _),
+                        $"Level {level}, {gate.name}: terrain blocks the destroyed gate's opening");
+                }
+            }
+            finally { Object.DestroyImmediate(origin); EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
         [Test]
         public void Vision004_NavigationCoversLowProtrusionsWithoutBlockingOnOverheadCanopy()
         {
