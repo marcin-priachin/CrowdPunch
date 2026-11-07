@@ -19,7 +19,8 @@ namespace CrowdPunch.Systems.Combat
                 damage.LastDamageReceived = 0; damage.IsDefeatDeferred = 0;
                 em.SetComponentData(target, damage); em.SetComponentEnabled<DamageRequest>(target, false); return;
             }
-            float amount = health.Current <= 0 ? 0 : math.max(0, em.GetComponentData<DamageRequest>(target).Amount);
+            var request = em.GetComponentData<DamageRequest>(target);
+            float amount = health.Current <= 0 ? 0 : math.max(0, request.Amount);
             if (SnakeHitRules.Protected(em, target) || SnakeHitRules.Attached(em, target)) amount = 0;
             if (em.HasComponent<EnemyArmor>(target))
             {
@@ -36,6 +37,7 @@ namespace CrowdPunch.Systems.Combat
                 damage.LastDamageChainDepth = owner == EnemyLaunchOwner.Player ? chainDepth : 0;
                 if (health.Current <= 0)
                 {
+                    damage.DefeatPunchSequence = request.DefeatPunchSequence;
                     damage.DefeatOwner = owner; damage.DefeatSource = source;
                     damage.DefeatSourceLifetime = sourceLifetime;
                     damage.DefeatChainDepth = damage.LastDamageChainDepth;

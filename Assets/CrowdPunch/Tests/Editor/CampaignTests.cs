@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using CrowdPunch.Authoring;
+using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Levels;
 using NUnit.Framework;
@@ -41,6 +42,28 @@ namespace CrowdPunch.Tests
             Assert.That(reloaded.Reset(),Is.True);
             Assert.That(new CampaignProgress(path).NextUnfinished(catalog),Is.Zero);
         }
+        [Test]
+        public void Score001_LegacySaveAndReplayKeepBestClearByDefeatsThenPunches()
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            const string levelId = "cp-002";
+            File.WriteAllText(path, "{\"version\":1,\"completed\":[\"cp-002\"]}");
+            var progress = new CampaignProgress(path);
+            Assert.That(progress.IsComplete(levelId), Is.True);
+            Assert.That(progress.GetBestClear(levelId).IsScored, Is.False);
+
+            Assert.That(progress.Complete(levelId, new LevelClearScore { IsScored = true, Defeats = 19, Punches = 3 }), Is.True);
+            Assert.That(progress.Complete(levelId, new LevelClearScore { IsScored = true, Defeats = 20, Punches = 10 }), Is.True);
+            Assert.That(progress.Complete(levelId, new LevelClearScore { IsScored = true, Defeats = 20, Punches = 7 }), Is.True);
+            string bestSave = File.ReadAllText(path);
+            Assert.That(progress.Complete(levelId, new LevelClearScore { IsScored = true, Defeats = 20, Punches = 8 }), Is.True);
+            Assert.That(File.ReadAllText(path), Is.EqualTo(bestSave));
+
+            var best = new CampaignProgress(path).GetBestClear(levelId);
+            Assert.That(best.Points, Is.EqualTo(2000));
+            Assert.That(best.Punches, Is.EqualTo(7));
+        }
+
         [Test] public void Loop007_CorruptPrimaryRecoversBackupWithoutInventingCompletion()
         {
             var progress=new CampaignProgress(path);

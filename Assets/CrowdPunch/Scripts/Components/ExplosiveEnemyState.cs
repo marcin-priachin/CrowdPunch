@@ -10,5 +10,6 @@ namespace CrowdPunch.Components
 
     public struct ExplosiveDetonationRequest : IComponentData, IEnableableComponent
     {
+        public uint PunchSequence;
     }
 }

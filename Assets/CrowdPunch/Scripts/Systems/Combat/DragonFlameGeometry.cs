@@ -29,7 +29,7 @@ namespace CrowdPunch.Systems.Combat
                 Forward = math.normalizesafe(math.forward(pose.Rotation).xz, new float2(0, 1)), Profile = launched ? tuning.Launched : tuning.Normal,
                 Tuning = tuning, Launch = launch, Generation = generation, Active = active ? (byte)1 : (byte)0 };
             // Recovery retains the body's historical owner. Normal bursts have no active launch credit.
-            if (!launched) { cone.Launch.Owner = EnemyLaunchOwner.None; cone.Launch.FeedbackChainDepth = 0; }
+            if (!launched) { cone.Launch.Owner = EnemyLaunchOwner.None; cone.Launch.FeedbackChainDepth = 0; cone.Launch.OriginatingPunchSequence = 0; }
             return active || launch.Phase == EnemyLaunchPhase.Active && flame.Phase == DragonFlamePhase.Warning;
         }
 

@@ -26,6 +26,7 @@ namespace CrowdPunch.Mono.UI
         public void Configure(GauntletSequence value)
         {
             sequence = value;
+            gameObject.AddComponent<LevelScoreFeedback>().Configure(sequence, this);
             hint = PauseMenu.CreateLabel(transform, string.Empty, 22, 64);
             hint.name = "Campaign Opening Hint";
             hint.raycastTarget = false;
@@ -127,6 +128,13 @@ namespace CrowdPunch.Mono.UI
                     if (sequence.Screen == CampaignScreen.ReplayComplete)
                     {
                         Label("REPLAY COMPLETE", 22);
+                        if (sequence.LastClearScore.IsScored)
+                        {
+                            Label(LevelScoreFeedback.Format(sequence.LastClearScore), 24);
+                            var best = sequence.Progress.GetBestClear(sequence.Campaign.Get(sequence.CurrentLevelIndex).id);
+                            if (best.IsScored)
+                                Label("BEST  " + LevelScoreFeedback.Format(best), 20);
+                        }
                         Button("Retry", sequence.RestartCurrentLevel);
                         Button("Next Level", () => sequence.SelectLevel(sequence.CurrentLevelIndex + 1), sequence.CanSelect(sequence.CurrentLevelIndex + 1));
                     }
@@ -158,13 +166,14 @@ namespace CrowdPunch.Mono.UI
                     break;
                 case Page.ConfirmNew:
                     Title("NEW CAMPAIGN?");
-                    Label("This clears saved level completion and chapter unlocks.", 24);
+                    Label("This clears saved level completion, best scores and chapter unlocks.", 24);
                     Button("Cancel", () => Show(Page.Main));
                     Button("Clear Progress and Start", sequence.NewCampaign);
                     break;
                 case Page.Milestone:
                     bool campaignComplete = sequence.Screen == CampaignScreen.CampaignComplete;
                     Title(campaignComplete ? "CAMPAIGN COMPLETE" : $"CHAPTER {sequence.Campaign.ChapterFor(sequence.CurrentLevelIndex) + 1} COMPLETE");
+                    if (sequence.LastClearScore.IsScored) Label(LevelScoreFeedback.Format(sequence.LastClearScore), 24);
                     bool nextAvailable = sequence.CanSelect(sequence.CurrentLevelIndex + 1);
                     if (!campaignComplete)
                         Button(nextAvailable ? "Continue" : "Next Chapter Not Yet Available",

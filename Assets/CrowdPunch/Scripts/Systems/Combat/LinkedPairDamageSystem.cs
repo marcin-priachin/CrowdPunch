@@ -104,7 +104,7 @@ namespace CrowdPunch.Systems.Combat
             bool normal = EnemyLaunchTransition.IsLaunchable(em.GetComponentData<EnemyTier>(target));
             if (!flying) {
                 if (normal && t.Response == LinkedPairResponse.DamageAndLaunch) {
-                    EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.EnemyCollision, source.LaunchDamage, source.Owner);
+                    EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.EnemyCollision, source.LaunchDamage, source.Owner, source.OriginatingPunchSequence);
                     launch.FeedbackChainDepth = math.min(64, source.FeedbackChainDepth + 1);
                     em.SetComponentData(target, launch);
                     em.SetComponentData(target, new PhysicsVelocity { Linear = direction * t.LaunchSpeed });
@@ -115,9 +115,10 @@ namespace CrowdPunch.Systems.Combat
                 }
             }
             if (em.HasComponent<ExplosiveEnemyState>(target) && em.GetComponentData<ExplosiveEnemyState>(target).HasExploded == 0)
-                em.SetComponentEnabled<ExplosiveDetonationRequest>(target, true);
+                ExplosionResolutionSystem.RequestDetonation(em, target, source.OriginatingPunchSequence);
             var damage = em.IsComponentEnabled<DamageRequest>(target) ? em.GetComponentData<DamageRequest>(target) : default;
-            damage.Amount += t.EnemyDamage; em.SetComponentData(target, damage); em.SetComponentEnabled<DamageRequest>(target, true);
+            damage.Add(t.EnemyDamage, em.GetComponentData<Health>(target).Current, source.OriginatingPunchSequence);
+            em.SetComponentData(target, damage); em.SetComponentEnabled<DamageRequest>(target, true);
             if (!attached) EnemyDamageResolution.ApplyPending(em, target, now, source.Owner, leader, source.FeedbackChainDepth + 1, em.GetComponentData<EnemyLifetime>(leader).Generation);
         }
         private static bool Protected(EntityManager em, Entity target, double now) => SnakeHitRules.Protected(em, target)

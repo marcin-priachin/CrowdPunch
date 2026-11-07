@@ -34,12 +34,12 @@ namespace CrowdPunch.Systems.Lifetime
                          RefRO<EnemyRespawnSettings> respawnSettings,
                          RefRW<RespawnRequest> respawnRequest,
                          EnabledRefRW<RespawnRequest> respawnRequestEnabled,
-                         EnabledRefRW<DeathRequest> deathRequestEnabled) in
+                         EnabledRefRW<DeathRequest> deathRequestEnabled, Entity enemy) in
                      SystemAPI.Query<RefRO<LocalTransform>, RefRW<Health>, RefRW<EnemyLaunchState>,
                              RefRO<EnemyRespawnSettings>, RefRW<RespawnRequest>,
                              EnabledRefRW<RespawnRequest>, EnabledRefRW<DeathRequest>>()
                          .WithAll<Enemy>()
-                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
+                         .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState).WithEntityAccess())
             {
                 if (respawnRequestEnabled.ValueRO || IsInside(transform.ValueRO.Position, minimum, maximum))
                 {
@@ -55,6 +55,13 @@ namespace CrowdPunch.Systems.Lifetime
 
                 // Fixed wave enemies cannot return to play. Treat leaving the authored defeat bounds as
                 // terminal defeat so they cannot invisibly block cumulative wave completion.
+                if (health.ValueRO.Current > 0 && launchState.ValueRO.Phase == EnemyLaunchPhase.Launched
+                    && SystemAPI.HasComponent<EnemyDamageState>(enemy))
+                {
+                    var damage = SystemAPI.GetComponent<EnemyDamageState>(enemy);
+                    damage.DefeatPunchSequence = launchState.ValueRO.OriginatingPunchSequence;
+                    SystemAPI.SetComponent(enemy, damage);
+                }
                 health.ValueRW.Current = 0f;
                 launchState.ValueRW.Phase = EnemyLaunchPhase.Defeated;
                 deathRequestEnabled.ValueRW = true;

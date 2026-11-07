@@ -78,6 +78,7 @@ namespace CrowdPunch.Systems.Combat
                     DamagesEnemies = launched || s.EnemyDamage == TrailEnemyDamageMode.Both ? (byte)1 : (byte)0,
                     Launched = launched ? (byte)1 : (byte)0,
                     Owner = launched ? launch.ValueRO.Owner : EnemyLaunchOwner.None,
+                    OriginatingPunchSequence = launched ? launch.ValueRO.OriginatingPunchSequence : 0,
                     ChainDepth = launched && launch.ValueRO.Owner == EnemyLaunchOwner.Player ? launch.ValueRO.FeedbackChainDepth : 0,
                     Color = launched ? s.LaunchedColor : s.NormalColor
                 };

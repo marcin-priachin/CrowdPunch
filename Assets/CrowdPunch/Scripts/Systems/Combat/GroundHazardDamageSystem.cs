@@ -56,7 +56,8 @@ namespace CrowdPunch.Systems.Combat
                 }
                 timer.NextHitAt = now + h.DamageInterval;
                 bool playerOwned = launch.Phase == EnemyLaunchPhase.Launched && launch.Owner == EnemyLaunchOwner.Player;
-                em.SetComponentData(entity, new DamageRequest { Amount = h.Damage });
+                em.SetComponentData(entity, new DamageRequest { Amount = h.Damage,
+                    DefeatPunchSequence = playerOwned ? launch.OriginatingPunchSequence : 0 });
                 em.SetComponentEnabled<DamageRequest>(entity, true);
                 EnemyDamageResolution.ApplyPending(em, entity, now, playerOwned ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Environment,
                     entity, playerOwned ? launch.FeedbackChainDepth : 0, life.ValueRO.Generation);

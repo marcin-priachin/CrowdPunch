@@ -28,12 +28,13 @@ namespace CrowdPunch.Systems.Combat
             ref EnemyLaunchState state,
             EnemyLaunchCause cause,
             float launchDamage,
-            EnemyLaunchOwner owner)
+            EnemyLaunchOwner owner, uint originatingPunchSequence = 0)
         {
             if (state.Phase != EnemyLaunchPhase.Launched) state.ContinuousFlight++;
             state.Phase = EnemyLaunchPhase.Launched;
             state.LastCause = cause;
             state.Owner = owner;
+            state.OriginatingPunchSequence = originatingPunchSequence;
             state.BelowUsefulMomentumSeconds = 0f;
             state.RecoverySecondsRemaining = 0f;
             state.LaunchSequence++;

@@ -41,6 +41,7 @@ namespace CrowdPunch.Systems.Combat
                 Origin = punchRequest.Origin, Direction = punchRequest.Direction, Range = punchRequest.Range,
                 Radius = punchRequest.Radius, Strength = punchRequest.Strength,
                 Damage = punchRequest.Damage, PositionWeight = punchRequest.PushDirectionPositionWeight,
+                PunchSequence = punchRequest.Sequence,
                 Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1, AffectRecovering = 1,
                 EventTime = SystemAPI.Time.ElapsedTime,
                 AffectLaunched = 1, ApplyDamage = 1

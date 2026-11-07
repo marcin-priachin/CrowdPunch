@@ -23,7 +23,7 @@ namespace CrowdPunch.Systems.Combat
             var tuning = em.GetComponentData<LinkedPairTuning>(record);
             Entity follower = leader == pair.A ? pair.B : pair.A;
             var state = em.GetComponentData<EnemyLaunchState>(follower);
-            EnemyLaunchTransition.Begin(ref state, source.LastCause, source.LaunchDamage, source.Owner);
+            EnemyLaunchTransition.Begin(ref state, source.LastCause, source.LaunchDamage, source.Owner, source.OriginatingPunchSequence);
             state.FeedbackChainDepth = source.FeedbackChainDepth;
             em.SetComponentData(follower, state);
             if (replaceLeader) {

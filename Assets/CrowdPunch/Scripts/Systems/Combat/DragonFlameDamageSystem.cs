@@ -66,7 +66,8 @@ namespace CrowdPunch.Systems.Combat
                     // Pending ordinary impacts retain their own attribution; flame never requests Exploder detonation or a launch.
                     EnemyDamageResolution.ApplyPending(em, c.Entity, now);
                     if (em.GetComponentData<Health>(c.Entity).Current <= 0) continue;
-                    em.SetComponentData(c.Entity, new DamageRequest { Amount = cone.Profile.EnemyDamage });
+                    em.SetComponentData(c.Entity, new DamageRequest { Amount = cone.Profile.EnemyDamage,
+                        DefeatPunchSequence = cone.Launch.OriginatingPunchSequence });
                     em.SetComponentEnabled<DamageRequest>(c.Entity, true);
                     EnemyDamageResolution.ApplyPending(em, c.Entity, now, cone.Launch.Owner, source, cone.Launch.FeedbackChainDepth, cone.Generation);
                     if (em.GetComponentData<EnemyLaunchState>(c.Entity).Phase == EnemyLaunchPhase.Launched) continue;

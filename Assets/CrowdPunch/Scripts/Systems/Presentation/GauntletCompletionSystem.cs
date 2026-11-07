@@ -71,7 +71,8 @@ namespace CrowdPunch.Systems.Presentation
             if (isComplete && !completionReported)
             {
                 completionReported = true;
-                GauntletCompletionRegistry.ReportCompletion();
+                SystemAPI.TryGetSingleton<LevelClearScore>(out var score);
+                GauntletCompletionRegistry.ReportCompletion(score);
             }
             else if (!isComplete)
             {

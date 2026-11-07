@@ -32,6 +32,11 @@ namespace CrowdPunch.Systems.Initialization
             }
 
             lastRestartSequence = restartSequence;
+            if (SystemAPI.TryGetSingletonRW<LevelClearScore>(out var score))
+            {
+                score.ValueRW = default;
+                SystemAPI.GetSingletonBuffer<ScoredDefeat>().Clear();
+            }
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<LinkedPair>().Build());
             foreach (var hits in SystemAPI.Query<DynamicBuffer<LinkedPairPlayerHit>>()) hits.Clear();
             using (var oldOrbs = SystemAPI.QueryBuilder().WithAll<SnakeSegment>().Build().ToEntityArray(Allocator.Temp))

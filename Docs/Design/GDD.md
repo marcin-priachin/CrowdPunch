@@ -150,6 +150,16 @@ Use the existing LINK-001..007, DRAGON-001..007, SNAKE-001..007 and NINJA-001..0
 
 This campaign integration is additional scope to the original legacy-only enemy implementation slices. Preserve Gauntlet_24..27's recipes, assets, Level Play access and exclusion from campaign progression/player builds. Their original placement instructions do not exclude the four enemy prefabs from campaign encounters authorized here.
 
+### SCORE-001 - Punch Efficiency
+
+Status: Must
+
+Award equal points per player-credited enemy defeat in scored wave clears. Rank clears by
+credited defeats first, then by fewer executed punches, including misses and blocked punches.
+A multi-defeat punch earns a brief feat callout. The callout and points appear during play,
+while the result shows both defeats and punches. Keep score feedback transient during combat
+and preserve ordinary level completion and replay flow (INFO-001/002, LOOP-006/007).
+
 ## Final Encounter - Level 81
 
 The accepted detailed handoff is [FinalEncounter.md](FinalEncounter.md), from the design conversation dated 2026-10-14. These rules deliberately append to the original 80-level campaign; numerical values remain editable tuning.

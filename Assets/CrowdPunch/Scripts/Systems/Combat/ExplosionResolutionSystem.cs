@@ -31,10 +31,11 @@ namespace CrowdPunch.Systems.Combat
                 foreach ((RefRO<LocalTransform> transform,
                              RefRO<ExplosiveEnemySettings> settings,
                              RefRW<ExplosiveEnemyState> explosiveState,
+                             RefRW<ExplosiveDetonationRequest> request,
                              EnabledRefRW<ExplosiveDetonationRequest> requestEnabled,
                              Entity explosive) in
                          SystemAPI.Query<RefRO<LocalTransform>, RefRO<ExplosiveEnemySettings>,
-                                 RefRW<ExplosiveEnemyState>, EnabledRefRW<ExplosiveDetonationRequest>>()
+                                 RefRW<ExplosiveEnemyState>, RefRW<ExplosiveDetonationRequest>, EnabledRefRW<ExplosiveDetonationRequest>>()
                              .WithAll<Enemy>()
                              .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
                              .WithEntityAccess())
@@ -45,13 +46,15 @@ namespace CrowdPunch.Systems.Combat
                     }
 
                     requestEnabled.ValueRW = false;
+                    uint punchSequence = request.ValueRO.PunchSequence;
+                    request.ValueRW = default;
                     if (explosiveState.ValueRO.HasExploded != 0)
                     {
                         continue;
                     }
 
                     explosiveState.ValueRW.HasExploded = 1;
-                    ResolveExplosion(explosive, transform.ValueRO.Position, settings.ValueRO, player);
+                    ResolveExplosion(explosive, transform.ValueRO.Position, settings.ValueRO, player, punchSequence);
                     resolvedExplosion = true;
                 }
             } while (resolvedExplosion);
@@ -70,11 +73,10 @@ namespace CrowdPunch.Systems.Combat
                          RefRO<EnemyContactDamageSettings> contact,
                          RefRO<EnemyLaunchState> launchState,
                          RefRO<ExplosiveEnemyState> explosiveState,
-                         EnabledRefRW<ExplosiveDetonationRequest> requestEnabled, Entity entity) in
+                         Entity entity) in
                      SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyContactDamageSettings>,
-                             RefRO<EnemyLaunchState>, RefRO<ExplosiveEnemyState>,
-                             EnabledRefRW<ExplosiveDetonationRequest>>()
-                         .WithAll<Enemy>()
+                             RefRO<EnemyLaunchState>, RefRO<ExplosiveEnemyState>>()
+                         .WithAll<Enemy, ExplosiveDetonationRequest>()
                          .WithNone<RespawnRequest>()
                          .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState).WithEntityAccess())
             {
@@ -88,7 +90,7 @@ namespace CrowdPunch.Systems.Combat
                 float contactRadius = player.Radius + math.max(0f, contact.ValueRO.ContactRadius);
                 if (math.distancesq(transform.ValueRO.Position.xz, player.Position.xz) <= contactRadius * contactRadius)
                 {
-                    requestEnabled.ValueRW = true;
+                    RequestDetonation(EntityManager, entity, 0);
                 }
             }
         }
@@ -97,7 +99,7 @@ namespace CrowdPunch.Systems.Combat
             Entity explosive,
             float3 center,
             ExplosiveEnemySettings settings,
-            PlayerSnapshot player)
+            PlayerSnapshot player, uint punchSequence)
         {
             float radius = math.max(0f, settings.Radius);
             float radiusSquared = radius * radius;
@@ -169,11 +171,11 @@ namespace CrowdPunch.Systems.Combat
                     EntityManager.SetComponentData(target, velocity);
                     continue;
                 }
-                QueueDamage(target, settings.Damage);
+                QueueDamage(target, settings.Damage, punchSequence);
                 if (SystemAPI.HasComponent<ExplosiveEnemyState>(target)
                     && SystemAPI.GetComponent<ExplosiveEnemyState>(target).HasExploded == 0)
                 {
-                    SystemAPI.SetComponentEnabled<ExplosiveDetonationRequest>(target, true);
+                    RequestDetonation(EntityManager, target, punchSequence);
                 }
 
                 float3 direction = transform.ValueRO.Position - center;
@@ -186,7 +188,8 @@ namespace CrowdPunch.Systems.Combat
                             <= math.distancesq(SystemAPI.GetComponent<LocalTransform>(pair.B).Position, center) ? pair.A : pair.B;
                         EntityManager.SetComponentData(pairEntity, pair);
                         var launch = SystemAPI.GetComponent<EnemyLaunchState>(leader);
-                        EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.Explosion, settings.Damage);
+                        EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.Explosion, settings.Damage,
+                            EnemyLaunchOwnership.FromCause(EnemyLaunchCause.Explosion), punchSequence);
                         float3 away = SystemAPI.GetComponent<LocalTransform>(leader).Position - center; away.y = 0;
                         LinkedPairLaunchResolution.Begin(EntityManager, leader, launch,
                             math.normalizesafe(away, new float3(0, 0, 1)) * settings.NormalEnemyKnockbackForce);
@@ -205,12 +208,13 @@ namespace CrowdPunch.Systems.Combat
                 if (!isElite)
                 {
                     EnemyLaunchState nextLaunchState = launchState.ValueRO;
-                    EnemyLaunchTransition.Begin(ref nextLaunchState, EnemyLaunchCause.Explosion, settings.Damage);
+                    EnemyLaunchTransition.Begin(ref nextLaunchState, EnemyLaunchCause.Explosion, settings.Damage,
+                            EnemyLaunchOwnership.FromCause(EnemyLaunchCause.Explosion), punchSequence);
                     launchState.ValueRW = nextLaunchState;
                 }
             }
 
-            DefeatExplosive(explosive);
+            DefeatExplosive(explosive, punchSequence);
             AffectPlayer(center, radiusSquared, settings, player);
             if (PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
             {
@@ -218,12 +222,19 @@ namespace CrowdPunch.Systems.Combat
             }
         }
 
-        private void QueueDamage(Entity target, float amount)
+        internal static void RequestDetonation(EntityManager entityManager, Entity enemy, uint punchSequence)
+        {
+            if (entityManager.IsComponentEnabled<ExplosiveDetonationRequest>(enemy)) return;
+            entityManager.SetComponentData(enemy, new ExplosiveDetonationRequest { PunchSequence = punchSequence });
+            entityManager.SetComponentEnabled<ExplosiveDetonationRequest>(enemy, true);
+        }
+
+        private void QueueDamage(Entity target, float amount, uint punchSequence)
         {
             DamageRequest request = SystemAPI.IsComponentEnabled<DamageRequest>(target)
                 ? SystemAPI.GetComponent<DamageRequest>(target)
                 : default;
-            request.Amount += math.max(0f, amount);
+            request.Add(math.max(0f, amount), SystemAPI.GetComponent<Health>(target).Current, punchSequence);
             SystemAPI.SetComponent(target, request);
             SystemAPI.SetComponentEnabled<DamageRequest>(target, true);
         }
@@ -238,9 +249,15 @@ namespace CrowdPunch.Systems.Combat
             SystemAPI.SetComponentEnabled<ExternalImpulse>(target, true);
         }
 
-        private void DefeatExplosive(Entity explosive)
+        private void DefeatExplosive(Entity explosive, uint punchSequence)
         {
             EnemyLaunchState state = SystemAPI.GetComponent<EnemyLaunchState>(explosive);
+            if (SystemAPI.GetComponent<Health>(explosive).Current > 0)
+            {
+                var damage = SystemAPI.GetComponent<EnemyDamageState>(explosive);
+                damage.DefeatPunchSequence = punchSequence;
+                SystemAPI.SetComponent(explosive, damage);
+            }
             state.Phase = EnemyLaunchPhase.Defeated;
             state.BelowUsefulMomentumSeconds = 0f;
             state.RecoverySecondsRemaining = 0f;

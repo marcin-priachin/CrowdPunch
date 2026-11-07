@@ -7,6 +7,7 @@ namespace CrowdPunch.Components
     {
         public Entity Record, Source;
         public uint SourceLifetime;
+        public uint OriginatingPunchSequence;
         public float3 Start, End;
         public double CreatedAt, ExpiresAt;
         public float Width, Damage, TickInterval, PlayerProtection;

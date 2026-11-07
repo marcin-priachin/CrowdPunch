@@ -164,7 +164,7 @@ namespace CrowdPunch.Systems.Combat
                 // An explosive body requests its ordinary explosion even if this launch already hit the wall.
                 if (em.HasComponent<ExplosiveDetonationRequest>(source)
                     && em.GetComponentData<ExplosiveEnemyState>(source).HasExploded == 0)
-                    em.SetComponentEnabled<ExplosiveDetonationRequest>(source, true);
+                    ExplosionResolutionSystem.RequestDetonation(em, source, launch.ValueRO.OriginatingPunchSequence);
 
                 if (em.GetComponentData<Barricade>(closest.Entity).HitsRemaining > 0)
                 {

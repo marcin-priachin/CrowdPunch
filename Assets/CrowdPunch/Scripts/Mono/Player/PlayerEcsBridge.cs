@@ -57,6 +57,9 @@ namespace CrowdPunch.Mono.Player
             => ProjectileBurstReceived?.Invoke(kind, position, direction, scale);
         public CrowdPunch.Configuration.CombatFeedbackSettings FeedbackSettings { get; set; }
         public event Action<CombatFeedbackMessage> ImpactReceived;
+        public event Action<int, int> ScoreAwarded;
+
+        public void ReceiveScoreAward(int defeats, int chainDefeats) => ScoreAwarded?.Invoke(defeats, chainDefeats);
         public event Action<Vector3, Vector3, float, bool> PillarImpactReceived;
         public void ReceivePillarImpact(Vector3 position, Vector3 direction, float width, bool bossHit)
             => PillarImpactReceived?.Invoke(position, direction, width, bossHit);
@@ -317,6 +320,7 @@ namespace CrowdPunch.Mono.Player
             PunchDamage = Mathf.Max(0f, damage);
             PunchPushDirectionPositionWeight = Mathf.Clamp01(pushDirectionPositionWeight);
             PunchSequence++;
+            if (PunchSequence == 0) PunchSequence++;
             PunchAimRevision = TrajectoryPreviewRevision;
             HasPendingPunch = true;
         }

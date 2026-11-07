@@ -44,6 +44,7 @@ namespace CrowdPunch.Systems.Combat
             ComponentLookup<KnockbackResponse> tiers = SystemAPI.GetComponentLookup<KnockbackResponse>(true);
             ComponentLookup<EnemyLaunchState> launches = SystemAPI.GetComponentLookup<EnemyLaunchState>();
             ComponentLookup<EnemyTier> enemyTiers = SystemAPI.GetComponentLookup<EnemyTier>(true);
+            var health = SystemAPI.GetComponentLookup<Health>(true);
             ComponentLookup<DamageRequest> damageRequests = SystemAPI.GetComponentLookup<DamageRequest>();
             ComponentLookup<ExternalImpulse> impulses = SystemAPI.GetComponentLookup<ExternalImpulse>();
             ComponentLookup<ExplosiveEnemyState> explosiveStates = SystemAPI.GetComponentLookup<ExplosiveEnemyState>(true);
@@ -73,7 +74,7 @@ namespace CrowdPunch.Systems.Combat
                     if (DistanceSqToSegment(transforms[target].Position, start, end) > combinedRadius * combinedRadius) continue;
                     ResolveImpact(source, target, sourceTransform.ValueRO.Position,
                         transforms[target].Position, dash.ValueRO, settings.ValueRO, history,
-                        ref launches, ref tiers, ref enemyTiers, ref damageRequests, ref impulses,
+                        ref launches, ref tiers, ref enemyTiers, ref health, ref damageRequests, ref impulses,
                         ref explosiveStates, ref detonationRequests, ref feedbacks, elapsed,
                         ref armors, ref armorSettings, ref armorHistory, ref velocities, launchSettings, ref commitments);
                 }
@@ -86,7 +87,7 @@ namespace CrowdPunch.Systems.Combat
             DasherSettings settings, DynamicBuffer<DasherHitHistory> history,
             ref ComponentLookup<EnemyLaunchState> launches, ref ComponentLookup<KnockbackResponse> tiers,
             ref ComponentLookup<EnemyTier> enemyTiers,
-            ref ComponentLookup<DamageRequest> damageRequests, ref ComponentLookup<ExternalImpulse> impulses,
+            ref ComponentLookup<Health> health, ref ComponentLookup<DamageRequest> damageRequests, ref ComponentLookup<ExternalImpulse> impulses,
             ref ComponentLookup<ExplosiveEnemyState> explosiveStates,
             ref ComponentLookup<ExplosiveDetonationRequest> detonationRequests,
             ref ComponentLookup<EnemyImpactFeedback> feedbacks, double elapsed,
@@ -118,8 +119,9 @@ namespace CrowdPunch.Systems.Combat
 
             if (explosiveStates.HasComponent(target)
                 && explosiveStates[target].HasExploded == 0
-                && detonationRequests.HasComponent(target))
+                && detonationRequests.HasComponent(target) && !detonationRequests.IsComponentEnabled(target))
             {
+                detonationRequests[target] = new ExplosiveDetonationRequest { PunchSequence = launches[source].OriginatingPunchSequence };
                 detonationRequests.SetComponentEnabled(target, true);
             }
 
@@ -154,7 +156,7 @@ namespace CrowdPunch.Systems.Combat
                     ref targetLaunch,
                     EnemyLaunchCause.EnemyCollision,
                     damage,
-                    launches[source].Owner);
+                    launches[source].Owner, launches[source].OriginatingPunchSequence);
                 targetLaunch.FeedbackChainDepth = math.min(64, launches[source].FeedbackChainDepth + 1);
                 launches[target] = targetLaunch;
             }
@@ -168,10 +170,10 @@ namespace CrowdPunch.Systems.Combat
                     math.length(dash.PreservedLaunchedVelocity), knockback, significance, elapsed);
                 feedbacks[target] = feedback;
             }
-            if (damage > 0f)
+            if (damage > 0f && health.HasComponent(target) && damageRequests.HasComponent(target))
             {
                 DamageRequest pending = damageRequests.IsComponentEnabled(target) ? damageRequests[target] : default;
-                pending.Amount += damage;
+                pending.Add(damage, health[target].Current, launches[source].OriginatingPunchSequence);
                 damageRequests[target] = pending;
                 damageRequests.SetComponentEnabled(target, true);
             }

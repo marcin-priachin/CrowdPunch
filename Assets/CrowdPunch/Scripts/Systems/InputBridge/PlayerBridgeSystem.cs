@@ -43,6 +43,8 @@ namespace CrowdPunch.Systems.InputBridge
 
             if (bridge.HasPendingPunch)
             {
+                if (SystemAPI.TryGetSingletonRW<LevelClearScore>(out var score))
+                    score.ValueRW.Punches++;
                 SystemAPI.SetComponent(playerStateEntity, new PunchRequest
                 {
                     Origin = bridge.PunchOrigin,

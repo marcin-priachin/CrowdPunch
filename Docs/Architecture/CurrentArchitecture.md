@@ -3810,8 +3810,7 @@ pending damage resolves separately before trail damage so it cannot acquire trai
 
 `EnemyDamageState` records last damage and lethal damage source lifetime, ownership and chain
 depth. Lethal trail credit survives deferred defeat and later source reuse without altering the
-target's launch ownership. The repository has no numeric score/reward economy; these fields retain
-player kill/chain attribution for the existing/future consumers without inventing progression.
+target's launch ownership. SCORE-001 separately snapshots the originating punch for scored defeats.
 `TrailPlayerHitSystem` drains an ECS hit buffer into `PlayerEcsBridge.TrailDamageReceived`.
 `PlayerHealth` accepts damage independently from ordinary invulnerability, with zero impulse.
 
@@ -4430,3 +4429,26 @@ applies scalar controls through MaterialPropertyBlocks. OnValidate marks setting
 the pool uploads changed profiles on its next Begin, including during Play mode. Unchanged
 frames perform a revision comparison. Code-driven edits call RefreshTrailStyle(). The pool
 owns and disposes its texture; no shared material asset is mutated during play.
+
+## Wave-clear scoring (SCORE-001)
+
+`PlayerBridgeSystem` counts each consumed punch request once. Direct and propagated launches
+carry the original punch sequence independently of launch ownership and per-body sequence.
+Damage requests remember which queued hit crosses zero, and `EnemyDamageState` retains that
+punch through deferred defeat. Player-caused ring-outs use the current launch when no lethal
+damage has already resolved. Blast requests and persistent trail sections snapshot their
+credit so subsequent launches and pooling cannot change it.
+
+`EnemyWaveDefeatCountSystem` records eligible defeats at its existing once-per-life accounting
+point, before pooling. Scoring applies to finite wave clears. Boss and objective encounters,
+replenishing crowd and supplemental ammunition are excluded. Each credited defeat is 100 points.
+The post-physics pass appends small value events to a buffer, and `LevelScoreBridgeSystem`
+drains it once per presentation frame. It groups feats by originating punch and sends one
+aggregate update through `PlayerEcsBridge`. Campaign UI displays a transient score pop and
+larger multi-defeat callout. It uses unscaled presentation time and the existing campaign canvas.
+
+`GameRestartSystem` clears attempt totals and pending awards. Completion snapshots the totals
+for `GauntletSequence` before the ordinary transition. `CampaignProgress` stores the best
+eligible clear by stable level ID in the existing version-1 save, comparing defeats before
+punches. Earlier saves acquire a best when the level is cleared again. Campaign editor preview
+uses the existing save isolation.

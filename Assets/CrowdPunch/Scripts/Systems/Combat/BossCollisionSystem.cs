@@ -54,7 +54,7 @@ namespace CrowdPunch.Systems.Combat
                 && em.HasComponent<EnemyLaunchState>(body)
                 && em.GetComponentData<EnemyLaunchState>(body).Phase==EnemyLaunchPhase.Launched
                 && em.GetComponentData<ExplosiveEnemyState>(body).HasExploded==0)
-                em.SetComponentEnabled<ExplosiveDetonationRequest>(body,true);
+                ExplosionResolutionSystem.RequestDetonation(em, body, em.GetComponentData<EnemyLaunchState>(body).OriginatingPunchSequence);
         }
 
         private static void Hit(EntityManager em,Contact c,EnemyLaunchSettings settings,double now)

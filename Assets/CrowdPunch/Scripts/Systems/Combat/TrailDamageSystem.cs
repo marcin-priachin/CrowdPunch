@@ -75,7 +75,7 @@ namespace CrowdPunch.Systems.Combat
                         // Resolve any earlier request separately so its lethal damage cannot acquire trail credit.
                         EnemyDamageResolution.ApplyPending(em, target, now);
                         if (em.GetComponentData<Health>(target).Current <= 0) continue;
-                        var request = new DamageRequest { Amount = section.Damage };
+                        var request = new DamageRequest { Amount = section.Damage, DefeatPunchSequence = section.OriginatingPunchSequence };
                         em.SetComponentData(target, request); em.SetComponentEnabled<DamageRequest>(target, true);
                         // Damage credit is detached from current source state and never alters target launch ownership.
                         EnemyDamageResolution.ApplyPending(em, target, now, section.Owner, section.Source, section.ChainDepth, section.SourceLifetime);

@@ -321,7 +321,7 @@ namespace CrowdPunch.Systems.Combat
                     ref targetState,
                     EnemyLaunchCause.EnemyCollision,
                     sourceState.LaunchDamage,
-                    sourceState.Owner);
+                    sourceState.Owner, sourceState.OriginatingPunchSequence);
                 targetState.FeedbackChainDepth = math.min(64, sourceState.FeedbackChainDepth + 1);
                 targetState.PropagatedLaunchCount++;
                 targetState.LastPropagationImpulse = estimatedImpulse;
@@ -334,7 +334,7 @@ namespace CrowdPunch.Systems.Combat
                         if (LaunchStateLookup.HasComponent(partner) && !IsUnavailable(partner)
                             && LaunchStateLookup[partner].Phase != EnemyLaunchPhase.Defeated) {
                             var follower = LaunchStateLookup[partner];
-                            EnemyLaunchTransition.Begin(ref follower, targetState.LastCause, targetState.LaunchDamage, targetState.Owner);
+                            EnemyLaunchTransition.Begin(ref follower, targetState.LastCause, targetState.LaunchDamage, targetState.Owner, targetState.OriginatingPunchSequence);
                             follower.FeedbackChainDepth = targetState.FeedbackChainDepth; LaunchStateLookup[partner] = follower;
                             VelocityLookup[partner] = new PhysicsVelocity { Linear = VelocityLookup[target].Linear * .35f };
                             pair.Leader = target; pair.Phase = EnemyLaunchPhase.Launched;
@@ -408,6 +408,7 @@ namespace CrowdPunch.Systems.Combat
             private void TryQueueDamage(Entity source, Entity target, float estimatedImpulse)
             {
                 if (estimatedImpulse < MinimumDamageImpulse
+                    || !HealthLookup.HasComponent(target)
                     || !DamageRequestLookup.HasComponent(target)
                     || !DamageHistoryLookup.HasBuffer(target))
                 {
@@ -449,7 +450,7 @@ namespace CrowdPunch.Systems.Combat
                 DamageRequest pendingDamage = DamageRequestLookup.IsComponentEnabled(target)
                     ? DamageRequestLookup[target]
                     : default;
-                pendingDamage.Amount += damage;
+                pendingDamage.Add(damage, HealthLookup[target].Current, LaunchStateLookup[source].OriginatingPunchSequence);
                 DamageRequestLookup[target] = pendingDamage;
                 DamageRequestLookup.SetComponentEnabled(target, true);
             }

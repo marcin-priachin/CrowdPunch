@@ -59,16 +59,21 @@ namespace CrowdPunch.Systems.Combat
                     return;
                 }
 
-                RequestIfAvailable(a);
-                RequestIfAvailable(b);
+                RequestIfAvailable(a, LaunchLookup[a], LaunchLookup[b]);
+                RequestIfAvailable(b, LaunchLookup[b], LaunchLookup[a]);
             }
 
-            private void RequestIfAvailable(Entity entity)
+            private void RequestIfAvailable(Entity entity, EnemyLaunchState ownLaunch, EnemyLaunchState otherLaunch)
             {
                 if (ExplosiveStateLookup.HasComponent(entity)
                     && ExplosiveStateLookup[entity].HasExploded == 0
-                    && RequestLookup.HasComponent(entity))
+                    && RequestLookup.HasComponent(entity) && !RequestLookup.IsComponentEnabled(entity))
                 {
+                    RequestLookup[entity] = new ExplosiveDetonationRequest
+                    {
+                        PunchSequence = ownLaunch.Phase == EnemyLaunchPhase.Launched
+                            ? ownLaunch.OriginatingPunchSequence : otherLaunch.OriginatingPunchSequence
+                    };
                     RequestLookup.SetComponentEnabled(entity, true);
                 }
             }

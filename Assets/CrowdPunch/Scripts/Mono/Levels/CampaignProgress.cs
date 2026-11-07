@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using UnityEngine;
 
@@ -14,6 +15,14 @@ namespace CrowdPunch.Mono.Levels
         {
             public int version = 1;
             public List<string> completed = new();
+            public List<BestClear> bestClears = new();
+        }
+
+        [Serializable]
+        private struct BestClear
+        {
+            public string id;
+            public LevelClearScore score;
         }
 
         private readonly string path;
@@ -35,13 +44,30 @@ namespace CrowdPunch.Mono.Levels
         }
         public bool IsUnlocked(CampaignCatalog catalog, int index)
             => index >= 0 && index < catalog.Count && (allLevelsUnlocked || index <= NextUnfinished(catalog));
-        public bool Complete(string id)
+        public LevelClearScore GetBestClear(string id)
         {
-            // A successful replay does not mutate progress or rotate the recovery backup.
-            // Retry a previous failed write even when its completion is already in memory.
-            if (data.completed.Contains(id) && Error == null) return true;
-            if (!data.completed.Contains(id)) data.completed.Add(id);
-            return Write();
+            int index = data.bestClears.FindIndex(entry => entry.id == id);
+            return index < 0 ? default : data.bestClears[index].score;
+        }
+
+        public bool Complete(string id, LevelClearScore score = default)
+        {
+            bool changed = !data.completed.Contains(id);
+            if (changed) data.completed.Add(id);
+            if (score.IsScored)
+            {
+                int index = data.bestClears.FindIndex(entry => entry.id == id);
+                if (index < 0 || score.IsBetterThan(data.bestClears[index].score))
+                {
+                    var best = new BestClear { id = id, score = score };
+                    if (index < 0) data.bestClears.Add(best);
+                    else data.bestClears[index] = best;
+                    changed = true;
+                }
+            }
+
+            // A worse replay leaves the save and backup alone. Retry earlier failed writes.
+            return !changed && Error == null || Write();
         }
         public bool Reset()
         {
@@ -64,6 +90,7 @@ namespace CrowdPunch.Mono.Levels
                 var saved = JsonUtility.FromJson<Save>(File.ReadAllText(source));
                 if (saved == null || saved.version != 1 || saved.completed == null) return false;
                 saved.completed.RemoveAll(string.IsNullOrEmpty);
+                saved.bestClears ??= new List<BestClear>();
                 data = saved;
                 return true;
             }

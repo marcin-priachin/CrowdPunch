@@ -16,6 +16,7 @@ namespace CrowdPunch.Systems.Combat
         public Entity AssistedLaunchTarget;
         public Entity CommittedEliteTarget;
         public float Range, Radius, Strength, Damage, PositionWeight;
+        public uint PunchSequence;
         public float HomingDuration;
         public uint AimRevision;
         public EnemyLaunchCause Cause;
@@ -88,7 +89,7 @@ namespace CrowdPunch.Systems.Combat
             if (repeatPairPunch) {
                 if (punch.ApplyDamage != 0) {
                     var damage = manager.IsComponentEnabled<DamageRequest>(target) ? manager.GetComponentData<DamageRequest>(target) : default;
-                    damage.Amount += punch.Damage; manager.SetComponentData(target, damage); manager.SetComponentEnabled<DamageRequest>(target, true);
+                    damage.Add(punch.Damage, health.Current, punch.PunchSequence); manager.SetComponentData(target, damage); manager.SetComponentEnabled<DamageRequest>(target, true);
                 }
                 return true;
             }
@@ -131,7 +132,8 @@ namespace CrowdPunch.Systems.Combat
             manager.SetComponentEnabled<ExternalImpulse>(target, true);
             if (EnemyLaunchTransition.IsLaunchable(tier))
             {
-                EnemyLaunchTransition.Begin(ref launch, punch.Cause, punch.Damage);
+                EnemyLaunchTransition.Begin(ref launch, punch.Cause, punch.Damage,
+                    EnemyLaunchOwnership.FromCause(punch.Cause), punch.PunchSequence);
                 launch.HomingTarget = punch.HasAssistedLaunchDirection != 0
                     ? punch.AssistedLaunchTarget
                     : Entity.Null;
@@ -146,7 +148,7 @@ namespace CrowdPunch.Systems.Combat
             if (punch.ApplyDamage != 0 && punch.Damage > 0f)
             {
                 DamageRequest damage = manager.IsComponentEnabled<DamageRequest>(target) ? manager.GetComponentData<DamageRequest>(target) : default;
-                damage.Amount += punch.Damage; manager.SetComponentData(target, damage); manager.SetComponentEnabled<DamageRequest>(target, true);
+                damage.Add(punch.Damage, health.Current, punch.PunchSequence); manager.SetComponentData(target, damage); manager.SetComponentEnabled<DamageRequest>(target, true);
             }
             if (manager.HasComponent<EnemyImpactFeedback>(target))
             {

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.IO;
+using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Mono.UI;
@@ -52,6 +53,9 @@ namespace CrowdPunch.Mono.Levels
         public bool RunFailed { get; private set; }
         public uint LevelEntrySequence { get; private set; }
         public string OpeningHint { get; private set; }
+        public LevelClearScore LastClearScore { get; private set; }
+        public bool LastClearIsBest { get; private set; }
+        public uint ClearScoreSequence { get; private set; }
         public bool HintsDisabled => gameSettings != null && gameSettings.DisableHints;
 
         private void Awake()
@@ -119,7 +123,12 @@ namespace CrowdPunch.Mono.Levels
             observedCompletionSequence = completionSequence;
             if (HasCampaign)
             {
-                if (!EditorPreview) Progress.Complete(campaign.Get(currentLevelIndex).id);
+                string levelId = campaign.Get(currentLevelIndex).id;
+                LastClearScore = GauntletCompletionRegistry.Score;
+                LastClearIsBest = !EditorPreview && LastClearScore.IsBetterThan(Progress.GetBestClear(levelId));
+                if (!EditorPreview)
+                    LastClearIsBest = Progress.Complete(levelId, LastClearScore) && LastClearIsBest;
+                ClearScoreSequence++;
                 if (replay) Screen = CampaignScreen.ReplayComplete;
                 else if (currentLevelIndex == campaign.Count - 1) Screen = CampaignScreen.CampaignComplete;
                 else if (currentLevelIndex + 1 == campaign.ChapterEnd(campaign.ChapterFor(currentLevelIndex))) Screen = CampaignScreen.ChapterComplete;
