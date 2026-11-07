@@ -26,7 +26,8 @@ namespace CrowdPunch.Mono.Player
 
         public float Normalized => maxHealth <= 0f ? 0f : Mathf.Clamp01(currentHealth / maxHealth);
 
-        private bool RuntimeInvincibility => gameSettings != null && gameSettings.PlayerInvincible;
+        private bool RuntimeInvincibility => FeedbackTimeController.IsMenuPreview ||
+            (gameSettings != null && gameSettings.PlayerInvincible);
 
         public bool IsInvincible => RuntimeInvincibility || invincibilityRemainingSeconds > 0f;
 

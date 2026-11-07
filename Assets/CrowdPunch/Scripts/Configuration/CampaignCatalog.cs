@@ -11,6 +11,7 @@ namespace CrowdPunch.Configuration
         {
             public string id;
             public string title;
+            public string objective;
             [Tooltip("Empty until this encounter is implemented.")]
             public string scenePath;
             public bool Available => !string.IsNullOrEmpty(scenePath);

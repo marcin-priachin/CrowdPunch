@@ -156,9 +156,11 @@ Status: Must
 
 Award equal points per player-credited enemy defeat in scored wave clears. Rank clears by
 credited defeats first, then by fewer executed punches, including misses and blocked punches.
-A multi-defeat punch earns a brief feat callout. The callout and points appear during play,
-while the result shows both defeats and punches. Keep score feedback transient during combat
-and preserve ordinary level completion and replay flow (INFO-001/002, LOOP-006/007).
+A multi-defeat punch earns a brief feat callout. Once points are earned in a scored attempt,
+show the running score in the upper part of the screen. Briefly show awarded points at each
+defeated enemy's screen position and animate them toward the score. Count the total up as
+awards arrive. The result still shows defeats and punches. Preserve ordinary level completion
+and replay flow (INFO-001/002, LOOP-006/007).
 
 ## Final Encounter - Level 81
 

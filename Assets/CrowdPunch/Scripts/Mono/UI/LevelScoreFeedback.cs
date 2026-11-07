@@ -6,27 +6,33 @@ using UnityEngine.UI;
 
 namespace CrowdPunch.Mono.UI
 {
-    /// <summary>Brief score callouts and clear summaries on the existing campaign canvas.</summary>
+    /// <summary>Running score, chain callouts and clear summaries on the campaign canvas (SCORE-001).</summary>
+    [DefaultExecutionOrder(100)] // Project after the camera has followed the player.
     public sealed class LevelScoreFeedback : MonoBehaviour
     {
         private const float AwardDuration = .85f;
         private const float ClearDuration = 2.5f;
-        private static readonly Color ChainColor = new(1f, .81f, .31f);
         private GauntletSequence sequence;
         private CampaignMenu menu;
         private PlayerEcsBridge bridge;
+        private LevelScoreTally tally;
         private Text award, clear;
         private Color awardColor;
         private float awardAt, clearRemaining;
         private uint clearSequence, restartSequence;
+        private bool finishingScoredLevel;
 
         public void Configure(GauntletSequence gauntletSequence, CampaignMenu campaignMenu)
         {
             sequence = gauntletSequence;
             menu = campaignMenu;
-            award = CreateCallout("Defeat Score", 34, .68f);
+            tally = new LevelScoreTally(transform);
+            award = CreateCallout("Defeat Score", 34, 1f);
+            award.rectTransform.anchoredPosition = new Vector2(0, -122);
+            CelComicUi.StyleText(award, heading: true);
             clear = CreateCallout("Level Clear Score", 24, .18f);
             clearSequence = sequence.ClearScoreSequence;
+            restartSequence = GameRestartRegistry.Sequence;
         }
 
         private Text CreateCallout(string labelName, int size, float verticalAnchor)
@@ -50,25 +56,29 @@ namespace CrowdPunch.Mono.UI
             PlayerBridgeRegistry.TryGetBridge(out var activeBridge);
             if (bridge != activeBridge)
             {
-                if (bridge != null) bridge.ScoreAwarded -= ShowAward;
+                Unsubscribe();
                 bridge = activeBridge;
-                if (bridge != null) bridge.ScoreAwarded += ShowAward;
+                if (bridge != null)
+                {
+                    bridge.ScoredDefeatReceived += QueueDefeat;
+                    bridge.ScoreAwarded += ShowAward;
+                }
             }
 
+            SyncRestart();
             float now = Time.unscaledTime;
             if (clearSequence != sequence.ClearScoreSequence)
             {
                 clearSequence = sequence.ClearScoreSequence;
                 clear.text = (sequence.LastClearIsBest ? "NEW BEST  |  " : "CLEAR  |  ") + Format(sequence.LastClearScore);
                 clearRemaining = ClearDuration;
-                clear.gameObject.SetActive(sequence.LastClearScore.IsScored && sequence.Screen == CampaignScreen.Playing);
+                finishingScoredLevel = sequence.LastClearScore.IsScored && sequence.Screen == CampaignScreen.Playing;
+                clear.gameObject.SetActive(finishingScoredLevel);
             }
 
-            if (restartSequence != GameRestartRegistry.Sequence)
-            {
-                restartSequence = GameRestartRegistry.Sequence;
-                award.gameObject.SetActive(false);
-            }
+            // Let the final award finish in the existing transition window without delaying loading.
+            tally.Tick(CanShowAward() || finishingScoredLevel && sequence.TransitionInProgress && !menu.IsOpen,
+                Mathf.Min(Time.unscaledDeltaTime, .05f));
             if (award.gameObject.activeSelf)
             {
                 float age = now - awardAt;
@@ -84,7 +94,9 @@ namespace CrowdPunch.Mono.UI
                 // Give the summary its full reading time even when the next scene takes time to load.
                 if (!sequence.TransitionInProgress)
                     clearRemaining -= Mathf.Min(Time.unscaledDeltaTime, .1f);
-                clear.color = new Color(1f, 1f, 1f, Mathf.Clamp01(clearRemaining / .35f));
+                var color = CelComicUi.Paper;
+                color.a = Mathf.Clamp01(clearRemaining / .35f);
+                clear.color = color;
                 clear.gameObject.SetActive(clearRemaining > 0 && sequence.Screen == CampaignScreen.Playing && !menu.IsOpen);
             }
         }
@@ -92,12 +104,27 @@ namespace CrowdPunch.Mono.UI
         private bool CanShowAward() => sequence.Screen == CampaignScreen.Playing &&
             !menu.IsOpen && !sequence.TransitionInProgress && !sequence.RunFailed;
 
-        private void ShowAward(int defeats, int chainDefeats)
+        private void QueueDefeat(Vector3 worldPosition)
         {
-            if (!CanShowAward()) return;
-            int points = defeats * LevelClearScore.PointsPerDefeat;
-            award.text = chainDefeats > 1 ? $"{chainDefeats} IN ONE!   |   +{points:N0} pts" : $"+{points:N0} pts";
-            awardColor = chainDefeats > 1 ? ChainColor : Color.white;
+            if (sequence.Screen != CampaignScreen.Playing || sequence.TransitionInProgress || sequence.RunFailed) return;
+            SyncRestart();
+            tally.Queue(worldPosition);
+        }
+
+        private void SyncRestart()
+        {
+            if (restartSequence == GameRestartRegistry.Sequence) return;
+            restartSequence = GameRestartRegistry.Sequence;
+            finishingScoredLevel = false;
+            tally.Reset();
+            award.gameObject.SetActive(false);
+        }
+
+        private void ShowAward(int _, int chainDefeats)
+        {
+            if (chainDefeats < 2 || !CanShowAward()) return;
+            award.text = $"{chainDefeats} IN ONE!";
+            awardColor = CelComicUi.Gold;
             award.color = awardColor;
             awardAt = Time.unscaledTime;
             award.gameObject.SetActive(true);
@@ -106,9 +133,13 @@ namespace CrowdPunch.Mono.UI
         public static string Format(LevelClearScore score) =>
             $"{score.Points:N0} pts   |   {score.Defeats} defeated   |   {score.Punches} {(score.Punches == 1 ? "punch" : "punches")}";
 
-        private void OnDestroy()
+        private void OnDestroy() => Unsubscribe();
+
+        private void Unsubscribe()
         {
-            if (bridge != null) bridge.ScoreAwarded -= ShowAward;
+            if (bridge == null) return;
+            bridge.ScoredDefeatReceived -= QueueDefeat;
+            bridge.ScoreAwarded -= ShowAward;
         }
     }
 }

@@ -182,7 +182,7 @@ namespace CrowdPunch.Mono.UI
             rootRect.offsetMax = Vector2.zero;
 
             Image shade = menuRoot.AddComponent<Image>();
-            shade.color = new Color(0.02f, 0.03f, 0.05f, 0.86f);
+            shade.color = CelComicUi.Shade;
 
             GameObject panel = CreateUiObject("Menu Panel", menuRoot.transform);
             RectTransform panelRect = panel.GetComponent<RectTransform>();
@@ -198,12 +198,14 @@ namespace CrowdPunch.Mono.UI
             layout.childForceExpandHeight = false;
 
             menuTitle = CreateLabel(panel.transform, "PAUSED", 42, 64f);
+            CelComicUi.StyleText(menuTitle, heading: true);
+            CelComicUi.AddInkShadow(menuTitle);
             firstButton = CreateButton(panel.transform, "Resume", () =>
             {
                 if (gauntletSequence != null && gauntletSequence.RunComplete) SelectLevel(0);
                 else if (gauntletSequence != null && gauntletSequence.RunFailed) SelectLevel(gauntletSequence.CurrentLevelIndex);
                 else SetPaused(false);
-            });
+            }, primary: true);
             CreateLabel(panel.transform, "SELECT LEVEL", 22, 48f);
 
             GameObject levelGrid = CreateUiObject("Levels", panel.transform);
@@ -243,30 +245,23 @@ namespace CrowdPunch.Mono.UI
             LayoutElement element = labelObject.AddComponent<LayoutElement>();
             element.preferredHeight = height;
             Text label = labelObject.AddComponent<Text>();
-            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             label.text = value;
             label.fontSize = fontSize;
-            label.fontStyle = FontStyle.Bold;
             label.alignment = TextAnchor.MiddleCenter;
-            label.color = Color.white;
+            CelComicUi.StyleText(label);
             return label;
         }
 
-        internal static Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction action)
+        internal static Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction action,
+            bool primary = false)
         {
             GameObject buttonObject = CreateUiObject(label, parent);
             LayoutElement element = buttonObject.AddComponent<LayoutElement>();
             element.preferredHeight = 58f;
             Image image = buttonObject.AddComponent<Image>();
-            image.color = new Color(0.12f, 0.17f, 0.24f, 0.96f);
             Button button = buttonObject.AddComponent<Button>();
             button.targetGraphic = image;
             button.onClick.AddListener(action);
-
-            ColorBlock colors = button.colors;
-            colors.highlightedColor = new Color(0.28f, 0.52f, 0.78f, 1f);
-            colors.selectedColor = colors.highlightedColor;
-            button.colors = colors;
 
             GameObject textObject = CreateUiObject("Label", buttonObject.transform);
             RectTransform textRect = textObject.GetComponent<RectTransform>();
@@ -275,11 +270,10 @@ namespace CrowdPunch.Mono.UI
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
             Text text = textObject.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             text.text = label;
-            text.fontSize = 22;
+            text.fontSize = 26;
             text.alignment = TextAnchor.MiddleCenter;
-            text.color = Color.white;
+            CelComicUi.StyleButton(button, primary);
             return button;
         }
 

@@ -10,8 +10,9 @@ namespace CrowdPunch.Mono.Player
         private static FeedbackTimeController instance;
         private double freezeUntil, slowUntil;
         private float slowScale = 1f, baseline = 1f;
-        private bool paused, transitioning;
-        public static bool IsSuspended => instance != null && (instance.paused || instance.transitioning);
+        private bool paused, transitioning, menuPreview;
+        public static bool IsMenuPreview => instance != null && instance.menuPreview;
+        public static bool IsSuspended => instance != null && (instance.paused || instance.transitioning || instance.menuPreview);
 
         private void Awake()
         {
@@ -45,6 +46,12 @@ namespace CrowdPunch.Mono.Player
         {
             if (instance == null) { Time.timeScale = value ? 0f : 1f; return; }
             instance.transitioning = value;
+            CancelEffects();
+        }
+        public static void SetMenuPreview(bool value)
+        {
+            if (instance == null) return;
+            instance.menuPreview = value;
             CancelEffects();
         }
         public static void CancelEffects()

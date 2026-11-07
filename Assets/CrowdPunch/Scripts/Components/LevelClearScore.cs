@@ -1,5 +1,6 @@
 using System;
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace CrowdPunch.Components
 {
@@ -23,5 +24,6 @@ namespace CrowdPunch.Components
     public struct ScoredDefeat : IBufferElementData
     {
         public uint PunchSequence;
+        public float3 WorldPosition;
     }
 }

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7757eeab2ea04b18987ae60c0bf838e4, type: 3}
+  m_Name: CelComicUi
+  m_EditorClassIdentifier:
+  display: {fileID: 12800000, guid: c23b1946f34f2f34b9dbff80a3d10727, type: 3}
+  body: {fileID: 12800000, guid: c4d91d59dace3aa4a8fef3ff5bfc9e38, type: 3}
+  buttonTexture: {fileID: 2800000, guid: 3f01180109b55f341879fb2d58824548, type: 3}
+  moveSound: {fileID: 8300000, guid: 99e93459ec9593d4c820c561f7015f6c, type: 3}
+  confirmSound: {fileID: 8300000, guid: 9a28398ea04941d4e94fed836c9da668, type: 3}
+  controllerPrompts:
+  - {fileID: 2800000, guid: 58809cb4a257eb841ad29d2553baf743, type: 3}
+  - {fileID: 2800000, guid: 83c84caf19c346049b0a7569f03dfaaa, type: 3}
+  - {fileID: 2800000, guid: 5cc5075e477c6994490c2cc97ec18ab9, type: 3}
+  keyboardPrompts:
+  - {fileID: 2800000, guid: 0255ac329000e8b44b7b8231390eeb97, type: 3}
+  - {fileID: 2800000, guid: 6df85d5d3bb52f247bd848ce6814af17, type: 3}
+  - {fileID: 2800000, guid: c8e3c1de4b50f204ba7e6c5cb11871c0, type: 3}

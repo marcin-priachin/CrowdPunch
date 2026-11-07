@@ -49,6 +49,7 @@ namespace CrowdPunch.Mono.Levels
         public int LevelCount => HasCampaign ? campaign.Count : levelSceneNames?.Length ?? 0;
         public int CurrentLevelIndex => currentLevelIndex;
         public bool TransitionInProgress => transitionInProgress;
+        public bool LoadingMenuPreview { get; private set; }
         public bool RunComplete { get; private set; }
         public bool RunFailed { get; private set; }
         public uint LevelEntrySequence { get; private set; }
@@ -97,6 +98,10 @@ namespace CrowdPunch.Mono.Levels
             if (!HasCampaign && loadFirstLevelOnStart && levelSceneNames is { Length: > 0 })
             {
                 StartCoroutine(LoadLevel(0));
+            }
+            else if (HasCampaign)
+            {
+                StartMenuPreview();
             }
         }
 
@@ -185,16 +190,24 @@ namespace CrowdPunch.Mono.Levels
         public void NewCampaign()
         {
             if (!HasCampaign || transitionInProgress || EditorPreview) return;
-            if (Progress.Reset()) SelectLevel(0);
+            if (CanSelect(0) && Progress.Reset()) SelectLevel(0);
         }
 
         public void ReturnToMenu()
         {
             if (!HasCampaign || transitionInProgress) return;
             Screen = CampaignScreen.MainMenu;
+            StartMenuPreview();
         }
 
-        private IEnumerator LoadLevel(int levelIndex)
+        private void StartMenuPreview()
+        {
+            // The first arena is a temporary attract scene. Never promote it to a campaign entry.
+            if (!FeedbackTimeController.IsMenuPreview && campaign.Get(0)?.Available == true)
+                StartCoroutine(LoadLevel(0, menuPreview: true));
+        }
+
+        private IEnumerator LoadLevel(int levelIndex, bool menuPreview = false)
         {
             string sceneName = HasCampaign ? campaign.Get(levelIndex).scenePath : levelSceneNames[levelIndex];
             if (string.IsNullOrWhiteSpace(sceneName))
@@ -210,17 +223,22 @@ namespace CrowdPunch.Mono.Levels
 #endif
             if (!available)
             {
-                LoadError = $"Could not load level '{sceneName}'.";
-                Debug.LogError(LoadError, this);
+                if (!menuPreview)
+                {
+                    LoadError = $"Could not load level '{sceneName}'.";
+                    Debug.LogError(LoadError, this);
+                }
                 yield break;
             }
 
             LoadError = null;
             transitionInProgress = true;
-            Screen = CampaignScreen.Playing;
+            LoadingMenuPreview = menuPreview;
+            Screen = menuPreview ? CampaignScreen.MainMenu : CampaignScreen.Playing;
             RunComplete = false;
             RunFailed = false;
             FeedbackTimeController.SetTransition(true);
+            FeedbackTimeController.SetMenuPreview(menuPreview);
             FeedbackTimeController.SetPaused(false);
 
             if (currentLevelScene.IsValid() && currentLevelScene.isLoaded)
@@ -241,7 +259,7 @@ namespace CrowdPunch.Mono.Levels
 #endif
             yield return load;
             currentLevelScene = SceneManager.GetSceneByName(Path.GetFileNameWithoutExtension(sceneName));
-            currentLevelIndex = levelIndex;
+            currentLevelIndex = menuPreview ? -1 : levelIndex;
 
             GauntletLevel level = FindLevelMarker(currentLevelScene);
             if (level == null)
@@ -251,13 +269,17 @@ namespace CrowdPunch.Mono.Levels
             else
             {
                 PlacePlayer(level.PlayerEntryPoint);
-                OpeningHint = level.OpeningHint;
-                LevelEntrySequence++;
+                if (!menuPreview)
+                {
+                    OpeningHint = level.OpeningHint;
+                    LevelEntrySequence++;
+                }
             }
 
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;
             FeedbackTimeController.SetTransition(false);
             observedFailureSequence = GauntletFailureRegistry.Sequence;
+            LoadingMenuPreview = false;
             transitionInProgress = false;
         }
 

@@ -1593,12 +1593,21 @@ default-off session policy bypasses sequential unlock checks for chapter and lev
 completion records, Continue, and save format remain unchanged. New Campaign retains the
 session policy after resetting completion. `CanSelect` still rejects unavailable catalog entries.
 
-`PauseMenu` routes campaign presentation to the narrow uGUI `CampaignMenu`, retaining its
-existing input asset and EventSystem. Main/selection/confirmation/pause/failure/milestone pages
-use controller-selectable buttons. Player movement/punch/look inputs are suspended while menu
-or transition gates are active. `FeedbackTimeController` still owns those independent time gates.
-No runtime MonoBehaviour queries enemy entities. Health binding occurs in Start because
-Bootstrap may create PlayerHealth after the sequence's early Awake.
+`PauseMenu` routes campaign presentation to the uGUI `CampaignMenu`, retaining the pause input
+and EventSystem. `CelComicUi` references the imported fonts, Kenney button texture, prompts and
+menu sounds. `ArenaBrowser` shows one catalog encounter with its authored objective, replay or
+lock status, and a chapter jump. The catalog and sequence still decide which encounters can load
+(LOOP-007). Replay results retain Retry and Next Level. The score tally and temporary callouts
+use the display font (LOOP-006, SCORE-001). The campaign keeps its thin player and boss health
+bars and exposes retry through Pause (INFO-002, INFO-007).
+
+The main menu and its browser use the first campaign arena as a temporary live preview. The
+sequence keeps the preview outside the campaign entry and completion counters. The preview gate
+suppresses player input, damage and combat feedback while allowing the crowd to simulate. The
+normal additive transition unloads the preview before loading the selected encounter fresh.
+Browsing from a paused run keeps that run paused so Back and Resume can return to it. No runtime
+MonoBehaviour queries enemy entities. Health binding occurs in Start because Bootstrap may create
+PlayerHealth after the sequence's early Awake.
 
 The existing Level Play window has Campaign and Legacy tabs. Campaign Editor previews permit
 any implemented level and do not write the normal campaign save; legacy launches use Editor-only
@@ -4442,10 +4451,14 @@ credit so subsequent launches and pooling cannot change it.
 `EnemyWaveDefeatCountSystem` records eligible defeats at its existing once-per-life accounting
 point, before pooling. Scoring applies to finite wave clears. Boss and objective encounters,
 replenishing crowd and supplemental ammunition are excluded. Each credited defeat is 100 points.
-The post-physics pass appends small value events to a buffer, and `LevelScoreBridgeSystem`
-drains it once per presentation frame. It groups feats by originating punch and sends one
-aggregate update through `PlayerEcsBridge`. Campaign UI displays a transient score pop and
-larger multi-defeat callout. It uses unscaled presentation time and the existing campaign canvas.
+The post-physics pass snapshots each credited defeat's world position before pooling.
+`LevelScoreBridgeSystem` drains those value events once per presentation frame and forwards
+positions and the originating-punch chain summary through `PlayerEcsBridge`. On the campaign
+canvas, `LevelScoreTally` projects each position and animates pooled point labels into the
+upper-right total. The tally starts with the first award, counts up on arrival, and banks points
+without a flight when the origin is behind the camera or the presentation budget is full.
+The larger multi-defeat callout is brief. These effects use unscaled presentation time and
+the tally hides while a menu is open.
 
 `GameRestartSystem` clears attempt totals and pending awards. Completion snapshots the totals
 for `GauntletSequence` before the ordinary transition. `CampaignProgress` stores the best

@@ -2,6 +2,8 @@ using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using CrowdPunch.Systems.Physics;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Lifetime
 {
@@ -75,7 +77,10 @@ namespace CrowdPunch.Systems.Lifetime
             uint punchSequence = entityManager.GetComponentData<EnemyDamageState>(enemy).DefeatPunchSequence;
             if (punchSequence == 0) return;
             score.Defeats++;
-            scoredDefeats.Add(new ScoredDefeat { PunchSequence = punchSequence });
+            // Capture the root before the defeated enemy can be pooled or destroyed.
+            float3 position = entityManager.HasComponent<LocalTransform>(enemy)
+                ? entityManager.GetComponentData<LocalTransform>(enemy).Position : new float3(float.NaN);
+            scoredDefeats.Add(new ScoredDefeat { PunchSequence = punchSequence, WorldPosition = position });
         }
     }
 }

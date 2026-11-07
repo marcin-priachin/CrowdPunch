@@ -27,15 +27,16 @@ namespace CrowdPunch.Systems.Presentation
             if (defeats.Length == 0) return;
 
             int bestChain = 0;
+            PlayerBridgeRegistry.TryGetBridge(out var bridge);
             foreach (var defeat in defeats)
             {
                 defeatsByPunch.TryGetValue(defeat.PunchSequence, out int count);
                 defeatsByPunch[defeat.PunchSequence] = ++count;
                 if (count > bestChain) bestChain = count;
+                if (bridge != null) bridge.ReceiveScoredDefeat(defeat.WorldPosition);
             }
 
-            if (PlayerBridgeRegistry.TryGetBridge(out var bridge))
-                bridge.ReceiveScoreAward(defeats.Length, bestChain);
+            if (bridge != null) bridge.ReceiveScoreAward(defeats.Length, bestChain);
             defeats.Clear();
         }
     }
