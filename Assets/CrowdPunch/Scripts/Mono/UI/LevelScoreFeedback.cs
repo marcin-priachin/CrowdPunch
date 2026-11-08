@@ -43,9 +43,7 @@ namespace CrowdPunch.Mono.UI
             label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(.5f, verticalAnchor);
             label.rectTransform.anchoredPosition = Vector2.zero;
             label.rectTransform.sizeDelta = new Vector2(740, 76);
-            var outline = label.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(.045f, .035f, .02f, .9f);
-            outline.effectDistance = new Vector2(2f, -2f);
+            RingsideUi.OutlineHud(label);
             label.gameObject.SetActive(false);
             return label;
         }
@@ -94,7 +92,7 @@ namespace CrowdPunch.Mono.UI
                 // Give the summary its full reading time even when the next scene takes time to load.
                 if (!sequence.TransitionInProgress)
                     clearRemaining -= Mathf.Min(Time.unscaledDeltaTime, .1f);
-                var color = CelComicUi.Paper;
+                var color = RingsideUi.Paper;
                 color.a = Mathf.Clamp01(clearRemaining / .35f);
                 clear.color = color;
                 clear.gameObject.SetActive(clearRemaining > 0 && sequence.Screen == CampaignScreen.Playing && !menu.IsOpen);
@@ -124,7 +122,7 @@ namespace CrowdPunch.Mono.UI
         {
             if (chainDefeats < 2 || !CanShowAward()) return;
             award.text = $"{chainDefeats} IN ONE!";
-            awardColor = CelComicUi.Gold;
+            awardColor = RingsideUi.Gold;
             award.color = awardColor;
             awardAt = Time.unscaledTime;
             award.gameObject.SetActive(true);

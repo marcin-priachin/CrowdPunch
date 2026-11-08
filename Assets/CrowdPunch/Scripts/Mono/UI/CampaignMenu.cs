@@ -19,8 +19,10 @@ namespace CrowdPunch.Mono.UI
         private CanvasGroup controls, healthHud;
         private Transform panel;
         private Text hint;
+        private RectTransform hintPanel;
         private Button first;
         private ArenaBrowser browser;
+        private RingsideMenuLayout ringside;
         private Page page, browserOrigin;
         private CampaignScreen observedScreen;
         private bool observedFailure, gamepad;
@@ -35,16 +37,24 @@ namespace CrowdPunch.Mono.UI
         {
             sequence = value;
             gameObject.AddComponent<LevelScoreFeedback>().Configure(sequence, this);
-            healthHud = GetHudGroup(GetComponentInChildren<PlayerHealthBar>());
+            var playerHealth = GetComponentInChildren<PlayerHealthBar>();
+            playerHealth?.StyleRingside();
+            healthHud = GetHudGroup(playerHealth);
             var restart = GetComponentInChildren<RestartGameButton>();
             if (restart != null) restart.gameObject.SetActive(false);
-            hint = PauseMenu.CreateLabel(transform, string.Empty, 25, 64);
-            hint.name = "Campaign Opening Hint";
-            CelComicUi.AddInkShadow(hint, 2);
-            hint.rectTransform.anchorMin = hint.rectTransform.anchorMax = new Vector2(.5f, 1);
-            hint.rectTransform.anchoredPosition = new Vector2(0, -48);
-            hint.rectTransform.sizeDelta = new Vector2(1120, 64);
-            hint.gameObject.SetActive(false);
+            hintPanel = RingsideUi.Image(transform, "Campaign Opening Hint", RingsideUi.Hint).rectTransform;
+            hintPanel.anchorMin = new Vector2(.24f, 1);
+            hintPanel.anchorMax = new Vector2(.76f, 1);
+            hintPanel.pivot = new Vector2(.5f, 1);
+            hintPanel.anchoredPosition = new Vector2(0, -56);
+            hintPanel.sizeDelta = new Vector2(0, 76);
+            hint = RingsideUi.Label(hintPanel, string.Empty, 24, 76, RingsideUi.Paper);
+            hint.alignment = TextAnchor.MiddleCenter;
+            CelComicUi.Stretch(hint.rectTransform, 8);
+            hint.resizeTextForBestFit = true;
+            hint.resizeTextMinSize = 17;
+            hint.resizeTextMaxSize = 24;
+            hintPanel.gameObject.SetActive(false);
 
             root = PauseMenu.CreateUiObject("Campaign Menu", transform);
             CelComicUi.Stretch((RectTransform)root.transform);
@@ -77,7 +87,7 @@ namespace CrowdPunch.Mono.UI
             {
                 entry = sequence.LevelEntrySequence;
                 hint.text = sequence.OpeningHint;
-                hint.rectTransform.anchoredPosition = new Vector2(0, sequence.CurrentLevelIndex == 80 ? -105 : -48);
+                hintPanel.anchoredPosition = new Vector2(0, sequence.CurrentLevelIndex == 80 ? -105 : -56);
                 hintRemaining = 10;
                 observedScreen = sequence.Screen;
                 observedFailure = false;
@@ -97,13 +107,14 @@ namespace CrowdPunch.Mono.UI
                 Show(Page.Failure);
             }
             hintRemaining = Mathf.Max(0, hintRemaining - Time.deltaTime);
-            hint.gameObject.SetActive(!sequence.HintsDisabled && !IsOpen && hintRemaining > 0 && !string.IsNullOrEmpty(hint.text));
+            hintPanel.gameObject.SetActive(!sequence.HintsDisabled && !IsOpen && hintRemaining > 0 && !string.IsNullOrEmpty(hint.text));
 
             if (IsOpen)
             {
                 root.transform.SetAsLastSibling();
                 controls.interactable = !sequence.LoadingMenuPreview;
                 browser?.Fit();
+                ringside?.Fit();
                 if (!controls.interactable) return;
                 var selection = EventSystem.current?.currentSelectedGameObject;
                 if (selection != lastSelection && selection != null)
@@ -137,10 +148,11 @@ namespace CrowdPunch.Mono.UI
                 Destroy(panel.gameObject);
             }
             browser = null;
+            ringside = null;
             first = null;
 
-            shade.color = page == Page.Main ? Color.clear
-                : page == Page.Browser ? new Color32(17, 18, 55, 255) : CelComicUi.Shade;
+            shade.color = page == Page.Browser ? new Color32(17, 18, 55, 255)
+                : page == Page.ConfirmNew ? RingsideUi.Hint : Color.clear;
             if (page == Page.Browser)
             {
                 var viewport = (RectTransform)PauseMenu.CreateUiObject("Level Select", root.transform).transform;
@@ -152,42 +164,19 @@ namespace CrowdPunch.Mono.UI
             }
             else
             {
-                panel = CreatePagePanel();
+                var viewport = (RectTransform)PauseMenu.CreateUiObject("Ringside", root.transform).transform;
+                panel = viewport;
+                CelComicUi.Stretch(viewport);
+                ringside = new RingsideMenuLayout(viewport, page == Page.Main, page == Page.ConfirmNew);
                 BuildPage();
                 ShowErrors();
             }
 
             Canvas.ForceUpdateCanvases();
             browser?.Fit();
+            ringside?.Fit();
             EventSystem.current?.SetSelectedGameObject(first == null ? null : first.gameObject);
             lastSelection = EventSystem.current?.currentSelectedGameObject;
-        }
-
-        private Transform CreatePagePanel()
-        {
-            bool main = page == Page.Main;
-            bool pause = page == Page.Pause;
-            Vector2 anchor = main ? new Vector2(0, .5f) : new Vector2(.5f, .5f);
-            float width = main ? 600 : pause ? 540 : 680;
-            var rect = (RectTransform)PauseMenu.CreateUiObject("Campaign Panel", root.transform).transform;
-            rect.anchorMin = rect.anchorMax = rect.pivot = anchor;
-            rect.anchoredPosition = main ? new Vector2(64, 0) : Vector2.zero;
-            rect.sizeDelta = new Vector2(width, main ? 750 : 920);
-            var image = rect.gameObject.AddComponent<Image>();
-            image.color = main ? new Color32(23, 28, 42, 235) : CelComicUi.Ink;
-            image.raycastTarget = false;
-            var layout = rect.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(38, 38, 30, 30);
-            layout.spacing = 10;
-            layout.childAlignment = main ? TextAnchor.MiddleLeft : TextAnchor.MiddleCenter;
-            layout.childControlHeight = layout.childControlWidth = true;
-            layout.childForceExpandHeight = false;
-            if (pause)
-            {
-                var fit = rect.gameObject.AddComponent<ContentSizeFitter>();
-                fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            }
-            return rect;
         }
 
         private void BuildPage()
@@ -195,9 +184,7 @@ namespace CrowdPunch.Mono.UI
             switch (page)
             {
                 case Page.Main:
-                    Title("CROWD", 112, 104);
-                    Title("PUNCH", 112, 104).color = CelComicUi.Gold;
-                    if (sequence.EditorPreview) Label("EDITOR PREVIEW  /  SAVE ISOLATED", 24);
+                    if (sequence.EditorPreview) Description("EDITOR PREVIEW  /  SAVE ISOLATED", 32);
                     bool finished = sequence.NextUnfinished >= sequence.LevelCount;
                     bool available = sequence.CanSelect(sequence.NextUnfinished);
                     Button(finished ? "Replay Campaign" : available ? "Continue" : "Next Chapter Not Yet Available",
@@ -208,7 +195,7 @@ namespace CrowdPunch.Mono.UI
                     Button("Exit Game", PauseMenu.ExitGame);
                     break;
                 case Page.Pause:
-                    Title("PAUSED");
+                    ringside.Heading("PAUSED", LevelTag());
                     Button("Resume", Close, primary: true);
                     Button("Retry Level", sequence.RestartCurrentLevel);
                     Button("Level Select", () => OpenBrowser(Page.Pause));
@@ -216,29 +203,40 @@ namespace CrowdPunch.Mono.UI
                     Button("Exit Game", PauseMenu.ExitGame);
                     break;
                 case Page.ConfirmNew:
-                    Title("NEW CAMPAIGN?");
-                    Label("This clears saved level completion, best scores and chapter unlocks.", 28);
+                    ringside.Heading("NEW CAMPAIGN?", "CAMPAIGN");
+                    Description("This clears saved level completion, best scores and chapter unlocks.", 80);
                     Button("Cancel", () => Show(Page.Main), primary: true);
                     Button("Clear Progress and Start", () =>
                     {
                         sequence.NewCampaign();
                         if (!sequence.TransitionInProgress) Show(Page.ConfirmNew);
-                    });
+                    }, danger: true);
                     break;
                 case Page.Milestone:
                     bool campaignComplete = sequence.Screen == CampaignScreen.CampaignComplete;
-                    Title(campaignComplete ? "CAMPAIGN COMPLETE" : $"CHAPTER {sequence.Campaign.ChapterFor(sequence.CurrentLevelIndex) + 1} COMPLETE");
-                    if (sequence.LastClearScore.IsScored) Label(LevelScoreFeedback.Format(sequence.LastClearScore), 27);
+                    int chapter = sequence.Campaign.ChapterFor(sequence.CurrentLevelIndex);
+                    ringside.Heading(campaignComplete ? "CAMPAIGN COMPLETE" : $"CHAPTER {chapter + 1:00} COMPLETE",
+                        $"LEVEL {sequence.CurrentLevelIndex + 1:00}");
+                    if (sequence.LastClearScore.IsScored)
+                    {
+                        RingsideUi.ScoreColumns(ringside.Content, sequence.LastClearScore, 65);
+                        if (sequence.LastClearIsBest)
+                            RingsideUi.Label(ringside.Content, "NEW BEST", 24, 36, RingsideUi.Gold);
+                    }
                     bool nextAvailable = sequence.CanSelect(sequence.CurrentLevelIndex + 1);
                     if (!campaignComplete)
+                    {
+                        if (nextAvailable && sequence.CurrentLevelIndex + 1 == sequence.Campaign.ChapterEnd(chapter))
+                            Description($"Chapter {chapter + 2:00} unlocked.", 45);
                         Button(nextAvailable ? "Continue" : "Next Chapter Not Yet Available",
                             () => sequence.SelectLevel(sequence.CurrentLevelIndex + 1), nextAvailable, primary: true);
+                    }
                     Button("Level Select", () => OpenBrowser(Page.Milestone), primary: campaignComplete);
                     Button("Main Menu", ReturnToMain);
                     break;
                 case Page.Failure:
-                    Title("LEVEL FAILED");
-                    Label("Completed levels and chapter unlocks are saved.", 26);
+                    ringside.Heading("LEVEL FAILED", LevelTag());
+                    Description("Completed levels and chapter unlocks are saved.", 52);
                     Button("Retry Level", sequence.RestartCurrentLevel, primary: true);
                     Button("Level Select", () => OpenBrowser(Page.Failure));
                     Button("Main Menu", ReturnToMain);
@@ -276,40 +274,24 @@ namespace CrowdPunch.Mono.UI
 
         private void ShowErrors()
         {
-            if (!string.IsNullOrEmpty(sequence.Progress.Error)) Label(sequence.Progress.Error, 21);
-            if (!string.IsNullOrEmpty(sequence.LoadError)) Label(sequence.LoadError, 21);
+            if (!string.IsNullOrEmpty(sequence.Progress.Error)) Description(sequence.Progress.Error, 64);
+            if (!string.IsNullOrEmpty(sequence.LoadError)) Description(sequence.LoadError, 64);
         }
 
-        private Text Title(string text, int size = 60, float height = 74)
-        {
-            var label = PauseMenu.CreateLabel(panel, text, size, height);
-            CelComicUi.StyleText(label, heading: true);
-            CelComicUi.AddInkShadow(label, 4);
-            if (page == Page.Main) label.alignment = TextAnchor.MiddleLeft;
-            return label;
-        }
+        private string LevelTag() => sequence.CurrentLevelIndex < 0 ? string.Empty
+            : $"CHAPTER {sequence.Campaign.ChapterFor(sequence.CurrentLevelIndex) + 1:00} / LEVEL {sequence.CurrentLevelIndex + 1:00}";
 
-        private Text Label(string text, int size, float height = 64)
-        {
-            return PauseMenu.CreateLabel(panel, text, size, height);
-        }
+        private void Description(string text, float height) =>
+            RingsideUi.Label(ringside.Content, text, 26, height, RingsideUi.Sky);
 
-        private Button Button(string text, UnityAction action, bool enabled = true, bool primary = false)
+        private void Button(string text, UnityAction action, bool enabled = true, bool primary = false, bool danger = false)
         {
-            var button = PauseMenu.CreateButton(panel, text, () =>
+            var button = RingsideUi.Action(ringside.Content, text, () =>
             {
                 ConfirmSound();
                 action();
-            }, primary);
-            CelComicUi.SetButtonAvailable(button, enabled, primary);
-            if (page == Page.Main)
-            {
-                var label = button.GetComponentInChildren<Text>();
-                label.alignment = TextAnchor.MiddleLeft;
-                label.rectTransform.offsetMin = new Vector2(26, 0);
-            }
+            }, enabled, primary, danger: danger);
             if (first == null && enabled) first = button;
-            return button;
         }
 
         private void Close()

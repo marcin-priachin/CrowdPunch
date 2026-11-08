@@ -35,12 +35,18 @@ namespace CrowdPunch.Mono.UI
         {
             root = (RectTransform)PauseMenu.CreateUiObject("Running Level Score", canvas).transform;
             CelComicUi.Stretch(root);
-            total = CreateLabel("Score Total", 39);
+            var caption = RingsideUi.Label(root, "SCORE", 23, 28, RingsideUi.Sky);
+            caption.name = "Score Caption";
+            caption.alignment = TextAnchor.MiddleRight;
+            RingsideUi.OutlineHud(caption);
+            PlaceAtTopRight(caption.rectTransform, -32, 160, 28);
+            total = CreateLabel("Score Total", 78);
             var rect = total.rectTransform;
-            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one;
-            rect.anchoredPosition = new Vector2(-80, -34);
-            rect.sizeDelta = new Vector2(340, 54);
+            PlaceAtTopRight(rect, -57, 310, 70);
             total.alignment = TextAnchor.MiddleRight;
+            total.color = RingsideUi.Paper;
+            var line = RingsideUi.Image(root, "Score Underline", RingsideUi.Gold).rectTransform;
+            PlaceAtTopRight(line, -134, 95, 4);
             Reset();
         }
 
@@ -60,7 +66,7 @@ namespace CrowdPunch.Mono.UI
             points = unanimatedPoints = displayedPoints = 0;
             countFrom = shownPoints = 0;
             countElapsed = CountTime;
-            total.text = "SCORE  0";
+            total.text = "0";
             total.rectTransform.localScale = Vector3.one;
             root.gameObject.SetActive(false);
         }
@@ -97,7 +103,7 @@ namespace CrowdPunch.Mono.UI
             if (display != displayedPoints)
             {
                 displayedPoints = display;
-                total.text = $"SCORE  {display:N0}";
+                total.text = $"{display:N0}";
             }
             total.rectTransform.localScale = Vector3.one * (1f + .14f * settle * settle);
         }
@@ -137,7 +143,7 @@ namespace CrowdPunch.Mono.UI
         private int AdvanceFlights(float deltaTime)
         {
             int landed = 0;
-            Vector2 target = root.InverseTransformPoint(total.rectTransform.position) + new Vector3(-56, -27);
+            Vector2 target = root.InverseTransformPoint(total.rectTransform.position) + new Vector3(-56, -35);
             for (int i = flights.Count - 1; i >= 0; i--)
             {
                 var flight = flights[i];
@@ -175,11 +181,18 @@ namespace CrowdPunch.Mono.UI
             var label = PauseMenu.CreateLabel(root, string.Empty, size, 54);
             label.name = name;
             CelComicUi.StyleText(label, heading: true);
-            CelComicUi.AddInkShadow(label);
-            label.color = CelComicUi.Gold;
+            RingsideUi.OutlineHud(label);
+            label.color = RingsideUi.Gold;
             label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(.5f, .5f);
             label.rectTransform.sizeDelta = new Vector2(134, 54);
             return label;
+        }
+
+        private static void PlaceAtTopRight(RectTransform rect, float y, float width, float height)
+        {
+            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one;
+            rect.anchoredPosition = new Vector2(-80, y);
+            rect.sizeDelta = new Vector2(width, height);
         }
 
         private void Recycle(Text label)

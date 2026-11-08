@@ -44,11 +44,8 @@ namespace CrowdPunch.Mono.UI
             {
                 var last = sequence.LastClearScore;
                 var best = sequence.Progress.GetBestClear(catalog.Get(sequence.CurrentLevelIndex).id);
-                string summary = last.IsScored ? LevelScoreFeedback.Format(last) : string.Empty;
-                if (best.IsScored)
-                    summary += (last.IsScored ? "   /   " : string.Empty) + $"BEST {best.Points:N0} pts";
                 int advance = sequence.CurrentLevelIndex + 1;
-                (retry, next) = view.ReplayResult(summary, () =>
+                (retry, next) = view.ReplayResult(last, best, sequence.LastClearIsBest, () =>
                 {
                     confirm();
                     sequence.RestartCurrentLevel();

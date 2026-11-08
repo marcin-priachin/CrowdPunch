@@ -1,3 +1,4 @@
+using CrowdPunch.Components;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -133,19 +134,26 @@ namespace CrowdPunch.Mono.UI
             play.SetAction(playable, primary: true);
         }
 
-        internal (Button retry, Button next) ReplayResult(string result, UnityAction retry, UnityAction next, bool canAdvance)
+        internal (Button retry, Button next) ReplayResult(LevelClearScore result, LevelClearScore best, bool newBest,
+            UnityAction retry, UnityAction next, bool canAdvance)
         {
-            var strip = Block(frame, "Replay result", 20, 568, 984, 82, Panel);
-            Block(strip, "Red edge", 0, 0, 4, 82, Red);
-            Label(strip, "REPLAY COMPLETE", 14, 9, 510, 29, 26, Paper, true);
-            var score = Label(strip, result, 14, 40, 664, 30, 17, Score);
-            score.resizeTextForBestFit = true;
-            score.resizeTextMinSize = 12;
-            score.resizeTextMaxSize = 17;
-            var retryChoice = Action(strip, "Retry", 689, 19, 116, 44, retry);
-            var nextChoice = Action(strip, "Next Level", 816, 19, 158, 44, next);
-            nextChoice.SetAction(canAdvance, primary: false);
-            return (retryChoice.Button, canAdvance ? nextChoice.Button : null);
+            var strip = Block(frame, "Replay result", 20, 568, 984, 82, RingsideUi.Ink);
+            Block(strip, "Red rule", 0, 0, 984, 3, RingsideUi.Red);
+            Label(strip, "REPLAY COMPLETE", 13, 14, 223, 29, 28, RingsideUi.Paper, true);
+            if (best.IsScored)
+                Label(strip, newBest ? "NEW BEST" : $"BEST {best.Points:N0} pts", 13, 44, 223, 26, 16, RingsideUi.Gold);
+            if (result.IsScored)
+            {
+                var stats = Place(strip, "Score", 252, 20, 417, 45);
+                CelComicUi.Stretch(RingsideUi.ScoreColumns(stats, result, 28));
+            }
+            var retrySlot = Place(strip, "Retry action", 689, 19, 116, 44);
+            var nextSlot = Place(strip, "Next action", 816, 19, 158, 44);
+            var retryButton = RingsideUi.Action(retrySlot, "Retry", retry, true, true, 44, 24);
+            var nextButton = RingsideUi.Action(nextSlot, "Next Level", next, canAdvance, false, 44, 24);
+            CelComicUi.Stretch((RectTransform)retryButton.transform);
+            CelComicUi.Stretch((RectTransform)nextButton.transform);
+            return (retryButton, canAdvance ? nextButton : null);
         }
 
         private static Choice Action(Transform parent, string name, float x, float y, float width, float height,
