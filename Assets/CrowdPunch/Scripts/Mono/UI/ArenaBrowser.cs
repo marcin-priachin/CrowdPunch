@@ -6,147 +6,184 @@ using UnityEngine.UI;
 
 namespace CrowdPunch.Mono.UI
 {
-    // Presents one catalog entry. The sequence remains the only authority for loading it.
+    // LOOP-006/007 and SCORE-001. The browser reads the campaign, while the sequence owns loading and saves.
     internal sealed class ArenaBrowser
     {
         private readonly GauntletSequence sequence;
-        private readonly Text number, title, objective, chapter, playLabel;
-        private readonly Button play, previous, next, backButton;
-        private readonly RawImage playGlyph, backGlyph, chaptersGlyph;
+        private readonly VersusSelectLayout view;
+        private readonly VersusSelectLayout.Choice[] chapters, rows;
+        private readonly UnityAction confirm;
+        private readonly Button retry, next;
+        private int chapter, start, count, index;
 
-        internal int Index { get; private set; }
-        internal Button First => play.interactable ? play : next.interactable ? next : previous.interactable ? previous : backButton;
+        internal Button First => rows[index - start].Button;
 
-        internal ArenaBrowser(Transform root, GauntletSequence sequence, int index,
-            UnityAction showChapters, UnityAction back, UnityAction confirm)
+        internal ArenaBrowser(RectTransform root, GauntletSequence sequence, int index,
+            UnityAction goBack, UnityAction confirm)
         {
             this.sequence = sequence;
-            Index = index;
-
-            var info = Anchor("Encounter", root, Vector2.zero, new Vector2(68, 64), new Vector2(700, 246));
-            number = PlaceLabel(info, 25, 206, 32);
-            title = PlaceLabel(info, 63, 132, 76, heading: true);
-            title.resizeTextForBestFit = true;
-            title.resizeTextMinSize = 40;
-            title.resizeTextMaxSize = 63;
-            objective = PlaceLabel(info, 30, 92, 36);
-
-            play = PlaceButton(info, "Play", new Vector2(0, 6), new Vector2(220, 62), () =>
+            this.confirm = confirm;
+            var catalog = sequence.Campaign;
+            bool replay = sequence.Screen == CampaignScreen.ReplayComplete;
+            view = new VersusSelectLayout(root, catalog.Count, catalog.chapterNames.Length, replay, Play, goBack);
+            chapters = new VersusSelectLayout.Choice[catalog.chapterNames.Length];
+            int rowCount = 0;
+            for (int i = 0; i < chapters.Length; i++)
             {
-                if (!sequence.CanSelect(Index)) return;
-                confirm();
-                sequence.SelectLevel(Index);
-            }, primary: true);
-            playLabel = play.GetComponentInChildren<Text>();
-            playLabel.rectTransform.offsetMin = new Vector2(35, 0);
-            playGlyph = PlaceGlyph(play.transform, new Vector2(17, 14), 36, CelComicUi.Ink);
-            previous = PlaceButton(info, "<", new Vector2(242, 6), new Vector2(50, 62), () => Step(-1));
-            next = PlaceButton(info, ">", new Vector2(298, 6), new Vector2(50, 62), () => Step(1));
-            var browseHint = Anchor("Browse hint", info, Vector2.zero, new Vector2(361, 6), new Vector2(92, 62));
-            PlaceLabel(browseHint, 23, 0, 62).text = "Browse";
-            backButton = PlaceButton(info, "Back", new Vector2(462, 6), new Vector2(136, 62), back);
-            backButton.GetComponentInChildren<Text>().rectTransform.offsetMin = new Vector2(30, 0);
-            backGlyph = PlaceGlyph(backButton.transform, new Vector2(12, 16), 32, CelComicUi.Paper);
-
-            var chapterBox = Anchor("Chapter shortcut", root, Vector2.one, new Vector2(-64, -48), new Vector2(420, 102));
-            chapter = PlaceLabel(chapterBox, 27, 57, 38, heading: true);
-            chapter.alignment = TextAnchor.MiddleRight;
-            var chapterButton = PlaceButton(chapterBox, "Jump Chapter", new Vector2(174, 0), new Vector2(246, 54), showChapters);
-            chapterButton.GetComponentInChildren<Text>().rectTransform.offsetMin = new Vector2(36, 0);
-            chaptersGlyph = PlaceGlyph(chapterButton.transform, new Vector2(14, 10), 34, CelComicUi.Paper);
-
-            // Left/right are encounter controls even while another button is focused.
-            foreach (var button in new[] { play, previous, next, backButton, chapterButton })
-            {
-                var nav = button.navigation;
-                nav.mode = Navigation.Mode.Vertical;
-                button.navigation = nav;
+                int destination = i;
+                chapters[i] = view.Chapter(i, () => JumpToChapter(destination));
+                rowCount = Mathf.Max(rowCount, catalog.ChapterEnd(i) - catalog.ChapterStart(i));
             }
-            Refresh();
+            rows = new VersusSelectLayout.Choice[rowCount];
+            for (int i = 0; i < rows.Length; i++)
+            {
+                int slot = i;
+                rows[i] = view.Level(i, () => Select(start + slot), () => Select(start + slot), () => Play(start + slot));
+            }
+            if (replay)
+            {
+                var last = sequence.LastClearScore;
+                var best = sequence.Progress.GetBestClear(catalog.Get(sequence.CurrentLevelIndex).id);
+                string summary = last.IsScored ? LevelScoreFeedback.Format(last) : string.Empty;
+                if (best.IsScored)
+                    summary += (last.IsScored ? "   /   " : string.Empty) + $"BEST {best.Points:N0} pts";
+                int advance = sequence.CurrentLevelIndex + 1;
+                (retry, next) = view.ReplayResult(summary, () =>
+                {
+                    confirm();
+                    sequence.RestartCurrentLevel();
+                }, () =>
+                {
+                    confirm();
+                    sequence.SelectLevel(advance);
+                }, sequence.CanSelect(advance));
+            }
+            OpenChapter(catalog.ChapterFor(index), index);
         }
 
-        internal void Step(int direction)
+        internal void Fit() => view.Fit();
+        internal void SetPrompts(bool gamepad) => view.SetPrompts(gamepad);
+        internal void FocusChapters() => Focus(chapters[chapter].Button);
+
+        internal void StepChapter(int direction)
         {
-            int chapterIndex = sequence.Campaign.ChapterFor(Index);
-            int destination = Mathf.Clamp(Index + direction, sequence.Campaign.ChapterStart(chapterIndex),
-                sequence.Campaign.ChapterEnd(chapterIndex) - 1);
-            if (destination == Index) return;
-            Index = destination;
-            Refresh();
-            if (EventSystem.current?.currentSelectedGameObject is GameObject selected &&
-                selected.TryGetComponent(out Button button) && !button.interactable)
-                EventSystem.current.SetSelectedGameObject(First.gameObject);
+            int target = chapter + direction;
+            if (target >= 0 && target < chapters.Length) JumpToChapter(target);
         }
 
-        internal void SetPrompts(bool gamepad)
+        private void JumpToChapter(int target)
         {
-            var theme = CelComicUi.Theme;
-            playGlyph.texture = theme?.GetPrompt(CelComicUi.Prompt.Play, gamepad);
-            backGlyph.texture = theme?.GetPrompt(CelComicUi.Prompt.Back, gamepad);
-            chaptersGlyph.texture = theme?.GetPrompt(CelComicUi.Prompt.Chapters, gamepad);
+            if (target != chapter)
+            {
+                var catalog = sequence.Campaign;
+                int first = catalog.ChapterStart(target);
+                int unfinished = sequence.NextUnfinished;
+                int destination = unfinished >= first && unfinished < catalog.ChapterEnd(target) ? unfinished : first;
+                OpenChapter(target, destination);
+            }
+            Focus(First);
         }
 
-        private void Refresh()
+        private void OpenChapter(int target, int destination)
         {
             var catalog = sequence.Campaign;
-            var level = catalog.Get(Index);
-            int chapterIndex = catalog.ChapterFor(Index);
-            bool cleared = sequence.Progress.IsComplete(level.id);
-            bool available = sequence.CanSelect(Index);
-            number.text = $"LEVEL {Index + 1:00}" + (cleared ? "    /    CLEARED" : string.Empty);
-            number.color = cleared ? CelComicUi.Teal : CelComicUi.Paper;
-            title.text = level.title.ToUpperInvariant();
-            objective.text = level.objective;
-            chapter.text = $"{chapterIndex + 1:00} / {catalog.chapterNames.Length:00}  /  {catalog.chapterNames[chapterIndex].ToUpperInvariant()}";
-            CelComicUi.SetButtonAvailable(play, available, primary: true);
-            playLabel.text = available ? (cleared ? "Replay" : "Play") : level.Available ? "Locked" : "Unavailable";
-            playGlyph.gameObject.SetActive(available);
-            CelComicUi.SetButtonAvailable(previous, Index > catalog.ChapterStart(chapterIndex));
-            CelComicUi.SetButtonAvailable(next, Index + 1 < catalog.ChapterEnd(chapterIndex));
+            chapter = target;
+            start = catalog.ChapterStart(chapter);
+            count = catalog.ChapterEnd(chapter) - start;
+            int cleared = 0;
+            for (int i = 0; i < count; i++)
+                if (sequence.Progress.IsComplete(catalog.Get(start + i).id)) cleared++;
+            view.ShowChapter(chapter, cleared, count);
+            for (int i = 0; i < chapters.Length; i++)
+            {
+                int first = catalog.ChapterStart(i);
+                bool open = sequence.CanSelect(first);
+                chapters[i].Show(i == chapter, open ? "OPEN" : catalog.Get(first).Available ? "LOCKED" : "UNAVAILABLE", open);
+            }
+            for (int i = 0; i < rows.Length; i++)
+                rows[i].Button.gameObject.SetActive(i < count);
+            index = destination;
+            RefreshRows();
         }
 
-        internal static RectTransform Anchor(string name, Transform root, Vector2 anchor, Vector2 position, Vector2 size)
+        private void Select(int destination)
         {
-            var rect = (RectTransform)PauseMenu.CreateUiObject(name, root).transform;
-            rect.anchorMin = rect.anchorMax = rect.pivot = anchor;
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
-            return rect;
+            if (index == destination) return;
+            index = destination;
+            RefreshRows();
         }
 
-        private static Text PlaceLabel(RectTransform parent, int fontSize, float y, float height, bool heading = false)
+        private void RefreshRows()
         {
-            var text = PauseMenu.CreateLabel(parent, string.Empty, fontSize, height);
-            var rect = text.rectTransform;
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.right;
-            rect.pivot = Vector2.zero;
-            rect.sizeDelta = new Vector2(0, height);
-            rect.anchoredPosition = new Vector2(0, y);
-            text.alignment = TextAnchor.MiddleLeft;
-            CelComicUi.StyleText(text, heading);
-            CelComicUi.AddInkShadow(text, heading ? 4 : 2);
-            return text;
+            for (int i = 0; i < count; i++)
+            {
+                int levelIndex = start + i;
+                var level = sequence.Campaign.Get(levelIndex);
+                bool playable = sequence.CanSelect(levelIndex);
+                bool cleared = sequence.Progress.IsComplete(level.id);
+                var best = sequence.Progress.GetBestClear(level.id);
+                string status = playable ? "READY" : level.Available ? "LOCKED" : "UNAVAILABLE";
+                bool scored = cleared && best.IsScored;
+                string score = scored ? $"{best.Points:N0}" : cleared ? "CLEARED" : status;
+                var row = rows[i];
+                row.Number.text = $"{levelIndex + 1:00}";
+                row.Show(levelIndex == index, score, cleared || playable, scored);
+                if (levelIndex == index)
+                {
+                    string selected = scored ? $"{score} pts" : score;
+                    string action = playable ? cleared ? "Replay" : "Play" : level.Available ? "Locked" : "Unavailable";
+                    view.ShowSelection(index, selected, action, playable, scored);
+                }
+            }
+            LinkNavigation();
         }
 
-        private static Button PlaceButton(RectTransform parent, string text, Vector2 position, Vector2 size,
-            UnityAction action, bool primary = false)
+        private void LinkNavigation()
         {
-            var button = PauseMenu.CreateButton(parent, text, action, primary);
-            var rect = (RectTransform)button.transform;
-            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.zero;
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
-            return button;
+            var play = view.Play.interactable ? view.Play : null;
+            var deck = play ?? view.Back;
+            var chapterButton = chapters[chapter].Button;
+            for (int i = 0; i < chapters.Length; i++)
+            {
+                Link(chapters[i].Button, up: i > 0 ? chapters[i - 1].Button : null,
+                    down: i + 1 < chapters.Length ? chapters[i + 1].Button : view.Back, right: First);
+            }
+            for (int i = 0; i < count; i++)
+            {
+                int perColumn = VersusSelectLayout.RowsPerColumn;
+                bool left = i < perColumn;
+                Button up = i % perColumn == 0 ? null : rows[i - 1].Button;
+                Button down = i % perColumn == perColumn - 1 || i + 1 == count ? deck : rows[i + 1].Button;
+                Button other = i + perColumn < count ? rows[i + perColumn].Button : null;
+                Link(rows[i].Button, up, down, left ? chapterButton : rows[i - perColumn].Button, other);
+            }
+            Link(view.Back, First, retry, chapterButton, play);
+            Link(view.Play, First, next ?? retry, view.Back);
+            if (retry != null) Link(retry, view.Back, right: next);
+            if (next != null) Link(next, deck, left: retry);
         }
 
-        private static RawImage PlaceGlyph(Transform parent, Vector2 position, float size, Color color)
+        private void Play() => Play(index);
+
+        private void Play(int destination)
         {
-            var image = Anchor("Input prompt", parent, Vector2.zero, position, new Vector2(size, size))
-                .gameObject.AddComponent<RawImage>();
-            image.color = color;
-            image.raycastTarget = false;
-            return image;
+            if (!sequence.CanSelect(destination)) return;
+            confirm();
+            sequence.SelectLevel(destination);
+        }
+
+        private static void Focus(Button button) => EventSystem.current?.SetSelectedGameObject(button.gameObject);
+
+        private static void Link(Button button, Button up = null, Button down = null, Button left = null, Button right = null)
+        {
+            button.navigation = new Navigation
+            {
+                mode = Navigation.Mode.Explicit,
+                selectOnUp = up,
+                selectOnDown = down,
+                selectOnLeft = left,
+                selectOnRight = right
+            };
         }
     }
 }

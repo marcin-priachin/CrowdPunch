@@ -2559,6 +2559,13 @@ The existing player bridge receives explosion damage through the normal `PlayerH
 
 ## Pause And Level Selection
 
+For campaign play, `CampaignMenu` opens Versus Select from the main menu, pause, failure and campaign milestones.
+`ArenaBrowser` handles chapter jumps and focus within the numbered score table. It reads completion and best
+points from `CampaignProgress` by stable level ID, displays older completions without a recorded score as
+`CLEARED`, and uses `GauntletSequence.CanSelect` for launch eligibility. Locked chapters can be browsed.
+Replay results keep Retry and Next Level on the same screen. The layout uses the existing game canvas and Input
+System UI navigation, with a direct chapter shortcut and keyboard Page Up/Page Down (LOOP-006/007, SCORE-001, FINALE-001).
+
 `PauseMenu` is a scene-level MonoBehaviour UI boundary created on the persistent game canvas by `GameBootstrap`. It reads
 the shared `Assets/InputSystem_Actions.inputactions` `Game/Pause` action, toggles `Time.timeScale`, and owns no ECS data.
 It also owns cursor capture: active gameplay locks and hides the cursor, while pausing releases and shows it for menu

@@ -11,7 +11,7 @@ namespace CrowdPunch.Mono.UI
     /// <summary>Campaign menu routing and pause ownership (LOOP-005/006/007).</summary>
     public sealed class CampaignMenu : MonoBehaviour
     {
-        private enum Page { Main, Browser, Chapters, Pause, ConfirmNew, Milestone, Failure }
+        private enum Page { Main, Browser, Pause, ConfirmNew, Milestone, Failure }
 
         private GauntletSequence sequence;
         private GameObject root;
@@ -22,12 +22,11 @@ namespace CrowdPunch.Mono.UI
         private Button first;
         private ArenaBrowser browser;
         private Page page, browserOrigin;
-        private int encounter;
         private CampaignScreen observedScreen;
         private bool observedFailure, gamepad;
         private uint entry;
         private float hintRemaining;
-        private InputAction previous, next, jump, back;
+        private InputAction previousChapter, nextChapter, jump, back;
         private AudioSource menuAudio;
         private GameObject lastSelection;
         public bool IsOpen => root != null && root.activeSelf;
@@ -56,8 +55,8 @@ namespace CrowdPunch.Mono.UI
             menuAudio.ignoreListenerPause = true;
             menuAudio.volume = .28f;
 
-            previous = MenuAction("Previous Encounter", "<Keyboard>/leftArrow", "<Gamepad>/dpad/left", "<Gamepad>/leftStick/left");
-            next = MenuAction("Next Encounter", "<Keyboard>/rightArrow", "<Gamepad>/dpad/right", "<Gamepad>/leftStick/right");
+            previousChapter = MenuAction("Previous Chapter", "<Keyboard>/pageUp");
+            nextChapter = MenuAction("Next Chapter", "<Keyboard>/pageDown");
             jump = MenuAction("Jump Chapter", "<Keyboard>/y", "<Gamepad>/buttonNorth");
             back = MenuAction("Menu Back", "<Gamepad>/buttonEast");
             gamepad = Gamepad.current != null;
@@ -104,6 +103,7 @@ namespace CrowdPunch.Mono.UI
             {
                 root.transform.SetAsLastSibling();
                 controls.interactable = !sequence.LoadingMenuPreview;
+                browser?.Fit();
                 if (!controls.interactable) return;
                 var selection = EventSystem.current?.currentSelectedGameObject;
                 if (selection != lastSelection && selection != null)
@@ -111,9 +111,9 @@ namespace CrowdPunch.Mono.UI
                 lastSelection = selection;
                 if (page == Page.Browser)
                 {
-                    if (previous.WasPressedThisFrame()) Browse(-1);
-                    else if (next.WasPressedThisFrame()) Browse(1);
-                    else if (jump.WasPressedThisFrame()) OpenChapters();
+                    if (previousChapter.WasPressedThisFrame()) browser.StepChapter(-1);
+                    else if (nextChapter.WasPressedThisFrame()) browser.StepChapter(1);
+                    else if (jump.WasPressedThisFrame()) browser.FocusChapters();
                 }
                 if (pause?.WasPressedThisFrame() == true || back.WasPressedThisFrame()) GoBack();
             }
@@ -123,7 +123,7 @@ namespace CrowdPunch.Mono.UI
             }
         }
 
-        private void Show(Page nextPage)
+        private void Show(Page nextPage, int encounter = 0)
         {
             page = nextPage;
             root.SetActive(true);
@@ -139,16 +139,16 @@ namespace CrowdPunch.Mono.UI
             browser = null;
             first = null;
 
-            bool showArena = page == Page.Browser;
-            shade.color = showArena || page == Page.Main ? Color.clear : CelComicUi.Shade;
-            if (showArena)
+            shade.color = page == Page.Main ? Color.clear
+                : page == Page.Browser ? new Color32(17, 18, 55, 255) : CelComicUi.Shade;
+            if (page == Page.Browser)
             {
-                panel = PauseMenu.CreateUiObject("Arena Browser", root.transform).transform;
-                CelComicUi.Stretch((RectTransform)panel);
-                browser = new ArenaBrowser(panel, sequence, encounter, OpenChapters, GoBack, ConfirmSound);
+                var viewport = (RectTransform)PauseMenu.CreateUiObject("Level Select", root.transform).transform;
+                panel = viewport;
+                CelComicUi.Stretch(viewport);
+                browser = new ArenaBrowser(viewport, sequence, encounter, GoBack, ConfirmSound);
                 browser.SetPrompts(gamepad);
                 first = browser.First;
-                if (sequence.Screen == CampaignScreen.ReplayComplete) BuildReplayResult();
             }
             else
             {
@@ -158,6 +158,7 @@ namespace CrowdPunch.Mono.UI
             }
 
             Canvas.ForceUpdateCanvases();
+            browser?.Fit();
             EventSystem.current?.SetSelectedGameObject(first == null ? null : first.gameObject);
             lastSelection = EventSystem.current?.currentSelectedGameObject;
         }
@@ -168,8 +169,10 @@ namespace CrowdPunch.Mono.UI
             bool pause = page == Page.Pause;
             Vector2 anchor = main ? new Vector2(0, .5f) : new Vector2(.5f, .5f);
             float width = main ? 600 : pause ? 540 : 680;
-            var rect = ArenaBrowser.Anchor("Campaign Panel", root.transform, anchor,
-                main ? new Vector2(64, 0) : Vector2.zero, new Vector2(width, main ? 750 : 920));
+            var rect = (RectTransform)PauseMenu.CreateUiObject("Campaign Panel", root.transform).transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = anchor;
+            rect.anchoredPosition = main ? new Vector2(64, 0) : Vector2.zero;
+            rect.sizeDelta = new Vector2(width, main ? 750 : 920);
             var image = rect.gameObject.AddComponent<Image>();
             image.color = main ? new Color32(23, 28, 42, 235) : CelComicUi.Ink;
             image.raycastTarget = false;
@@ -200,18 +203,15 @@ namespace CrowdPunch.Mono.UI
                     Button(finished ? "Replay Campaign" : available ? "Continue" : "Next Chapter Not Yet Available",
                         () => { if (finished) OpenBrowser(Page.Main); else sequence.ContinueCampaign(); },
                         finished || available, primary: true);
-                    Button("Arena Browser", () => OpenBrowser(Page.Main));
+                    Button("Level Select", () => OpenBrowser(Page.Main));
                     Button("New Campaign", () => Show(Page.ConfirmNew), !sequence.EditorPreview);
                     Button("Exit Game", PauseMenu.ExitGame);
-                    break;
-                case Page.Chapters:
-                    BuildChapterPicker();
                     break;
                 case Page.Pause:
                     Title("PAUSED");
                     Button("Resume", Close, primary: true);
                     Button("Retry Level", sequence.RestartCurrentLevel);
-                    Button("Arena Browser", () => OpenBrowser(Page.Pause));
+                    Button("Level Select", () => OpenBrowser(Page.Pause));
                     Button("Main Menu", ReturnToMain);
                     Button("Exit Game", PauseMenu.ExitGame);
                     break;
@@ -233,65 +233,17 @@ namespace CrowdPunch.Mono.UI
                     if (!campaignComplete)
                         Button(nextAvailable ? "Continue" : "Next Chapter Not Yet Available",
                             () => sequence.SelectLevel(sequence.CurrentLevelIndex + 1), nextAvailable, primary: true);
-                    Button("Arena Browser", () => OpenBrowser(Page.Milestone), primary: campaignComplete);
+                    Button("Level Select", () => OpenBrowser(Page.Milestone), primary: campaignComplete);
                     Button("Main Menu", ReturnToMain);
                     break;
                 case Page.Failure:
                     Title("LEVEL FAILED");
                     Label("Completed levels and chapter unlocks are saved.", 26);
                     Button("Retry Level", sequence.RestartCurrentLevel, primary: true);
-                    Button("Arena Browser", () => OpenBrowser(Page.Failure));
+                    Button("Level Select", () => OpenBrowser(Page.Failure));
                     Button("Main Menu", ReturnToMain);
                     break;
             }
-        }
-
-        private void BuildChapterPicker()
-        {
-            Title("JUMP CHAPTER", 57, 67);
-            var catalog = sequence.Campaign;
-            int selectedChapter = catalog.ChapterFor(encounter);
-            for (int i = 0; i < catalog.chapterNames.Length; i++)
-            {
-                int chapter = i;
-                int start = catalog.ChapterStart(chapter);
-                bool available = catalog.Get(start)?.Available == true;
-                bool unlocked = sequence.CanSelect(start);
-                string state = !available ? "  /  Unavailable" : !unlocked ? "  /  Locked" : string.Empty;
-                var button = Button($"{i + 1:00}   {catalog.chapterNames[i]}{state}", () =>
-                {
-                    if (chapter != selectedChapter)
-                    {
-                        int unfinished = sequence.NextUnfinished;
-                        encounter = unfinished >= start && unfinished < catalog.ChapterEnd(chapter) ? unfinished : start;
-                    }
-                    Show(Page.Browser);
-                }, unlocked, primary: chapter == selectedChapter);
-                if (chapter == selectedChapter && unlocked) first = button;
-            }
-            Button("Back", () => Show(Page.Browser));
-        }
-
-        private void BuildReplayResult()
-        {
-            var result = ArenaBrowser.Anchor("Replay Result", panel, new Vector2(0, 1),
-                new Vector2(68, -48), new Vector2(600, 238));
-            var layout = result.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.childControlWidth = layout.childControlHeight = true;
-            layout.childForceExpandHeight = false;
-            layout.spacing = 4;
-            panel = result;
-            Title("REPLAY COMPLETE", 42, 50);
-            if (sequence.LastClearScore.IsScored)
-            {
-                Label(LevelScoreFeedback.Format(sequence.LastClearScore), 23, 31);
-                var best = sequence.Progress.GetBestClear(sequence.Campaign.Get(sequence.CurrentLevelIndex).id);
-                if (best.IsScored) Label("BEST  /  " + LevelScoreFeedback.Format(best), 23, 31);
-            }
-            Button("Retry", sequence.RestartCurrentLevel);
-            Button("Next Level", () => sequence.SelectLevel(sequence.CurrentLevelIndex + 1),
-                sequence.CanSelect(sequence.CurrentLevelIndex + 1));
-            panel = result.parent;
         }
 
         private void OpenBrowser(Page origin)
@@ -299,21 +251,7 @@ namespace CrowdPunch.Mono.UI
             browserOrigin = origin;
             int preferred = origin == Page.Main && sequence.Screen != CampaignScreen.ReplayComplete
                 ? sequence.NextUnfinished : sequence.CurrentLevelIndex;
-            encounter = Mathf.Clamp(preferred, 0, sequence.LevelCount - 1);
-            Show(Page.Browser);
-        }
-
-        private void Browse(int direction)
-        {
-            int before = browser.Index;
-            browser.Step(direction);
-            if (before != browser.Index) PlaySound(CelComicUi.Theme?.MoveSound);
-        }
-
-        private void OpenChapters()
-        {
-            encounter = browser.Index;
-            Show(Page.Chapters);
+            Show(Page.Browser, Mathf.Clamp(preferred, 0, sequence.LevelCount - 1));
         }
 
         private void GoBack()
@@ -325,7 +263,6 @@ namespace CrowdPunch.Mono.UI
                     if (sequence.Screen == CampaignScreen.ReplayComplete) ReturnToMain();
                     else Show(browserOrigin);
                     break;
-                case Page.Chapters: Show(Page.Browser); break;
                 case Page.ConfirmNew: Show(Page.Main); break;
             }
         }
@@ -354,9 +291,7 @@ namespace CrowdPunch.Mono.UI
 
         private Text Label(string text, int size, float height = 64)
         {
-            var label = PauseMenu.CreateLabel(panel, text, size, height);
-            if (page == Page.Browser) CelComicUi.AddInkShadow(label);
-            return label;
+            return PauseMenu.CreateLabel(panel, text, size, height);
         }
 
         private Button Button(string text, UnityAction action, bool enabled = true, bool primary = false)
@@ -428,8 +363,8 @@ namespace CrowdPunch.Mono.UI
         private void OnDestroy()
         {
             InputSystem.onActionChange -= TrackInputDevice;
-            previous?.Dispose();
-            next?.Dispose();
+            previousChapter?.Dispose();
+            nextChapter?.Dispose();
             jump?.Dispose();
             back?.Dispose();
             if (menuAudio != null) Destroy(menuAudio);
