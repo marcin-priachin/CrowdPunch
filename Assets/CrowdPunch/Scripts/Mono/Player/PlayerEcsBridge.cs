@@ -190,6 +190,9 @@ namespace CrowdPunch.Mono.Player
 
         /// <summary>Monotonic request id used to distinguish repeated punches.</summary>
         public uint PunchSequence { get; private set; }
+        internal bool CanApplyPunchApproach { get; set; }
+        internal bool HasPunchContactPose { get; private set; }
+        internal float3 PunchContactOffset { get; private set; }
         public uint PunchAimRevision { get; private set; }
         public uint TrajectoryPreviewRevision { get; private set; }
         public float PunchPreviewReleaseAngleDegrees { get; private set; }
@@ -284,6 +287,15 @@ namespace CrowdPunch.Mono.Player
             ObstacleDisplacementReceived?.Invoke(new Vector3(position.x, position.y, position.z));
         }
 
+        internal event Action<Vector3> PunchApproachApplied;
+
+        internal void ApplyPunchApproach(float3 displacement)
+        {
+            PunchPreviewOrigin += displacement;
+            ReceiveObstacleDisplacement(Position + displacement);
+            PunchApproachApplied?.Invoke(displacement);
+        }
+
         public void ClearMovement()
         {
             HasPendingMovement = false;
@@ -325,7 +337,15 @@ namespace CrowdPunch.Mono.Player
             PunchSequence++;
             if (PunchSequence == 0) PunchSequence++;
             PunchAimRevision = TrajectoryPreviewRevision;
+            HasPunchContactPose = false;
             HasPendingPunch = true;
+        }
+
+        internal void SetPunchContactPose(Vector3 handPosition)
+        {
+            if (!HasPendingPunch || !CanApplyPunchApproach) return;
+            PunchContactOffset = handPosition - transform.position;
+            HasPunchContactPose = true;
         }
 
         public void PublishPunchPreview(

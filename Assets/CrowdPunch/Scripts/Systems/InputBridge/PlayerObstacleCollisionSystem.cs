@@ -121,17 +121,34 @@ namespace CrowdPunch.Systems.InputBridge
                 sphere.Dispose();
             }
 
-            CollisionFilter filter = new CollisionFilter
-            {
-                BelongsTo = collisionLayer,
-                CollidesWith = ~EnemyCategory,
-                GroupIndex = 0
-            };
             sphere = SphereCollider.Create(
-                new SphereGeometry { Center = float3.zero, Radius = radius }, filter);
+                new SphereGeometry { Center = float3.zero, Radius = radius }, MovementFilter(collisionLayer));
             sphereRadius = radius;
             sphereLayer = collisionLayer;
         }
+
+        internal static float3 LimitPunchApproach(in CollisionWorld world, in PlayerSnapshot player,
+            float groundHeight, float3 displacement)
+        {
+            float distance = math.length(displacement);
+            if (distance <= 1e-5f || player.Radius <= 0f) return float3.zero;
+
+            float3 direction = displacement / distance;
+            float3 start = player.Position;
+            start.y = groundHeight + player.Radius + Skin;
+            if (!world.SphereCast(start, player.Radius, direction, distance, out var hit,
+                MovementFilter(player.CollisionLayer), QueryInteraction.IgnoreTriggers))
+                return displacement;
+
+            // Stop along the approach line. Sliding here would move the fist off its target.
+            return direction * math.max(0f, hit.Fraction * distance - Skin);
+        }
+
+        private static CollisionFilter MovementFilter(uint collisionLayer) => new CollisionFilter
+        {
+            BelongsTo = collisionLayer,
+            CollidesWith = ~EnemyCategory
+        };
 
         private static float3 CastWithSlide(
             CollisionWorld world,

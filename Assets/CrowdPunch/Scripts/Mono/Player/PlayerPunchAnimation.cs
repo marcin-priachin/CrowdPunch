@@ -50,6 +50,7 @@ namespace CrowdPunch.Mono.Player
         private PlayerEcsBridge playerBridge;
         private PlayerHitAnimation hitAnimation;
         private Transform spine;
+        private Transform punchHand;
         private Quaternion animatedSpineRotation;
         private bool hasRotationOffset;
         private float upperBodyYaw;
@@ -67,6 +68,7 @@ namespace CrowdPunch.Mono.Player
             if (animator.isHuman)
             {
                 spine = animator.GetBoneTransform(HumanBodyBones.Spine);
+                punchHand = animator.GetBoneTransform(HumanBodyBones.RightHand);
             }
             if (playerPunch == null)
             {
@@ -141,6 +143,9 @@ namespace CrowdPunch.Mono.Player
             playingPunch = true;
             SetPose(playbackTime);
             animator.Update(0f);
+            ApplyUpperBodyRotation();
+            if (punchHand != null && playerBridge != null)
+                playerBridge.SetPunchContactPose(punchHand.position);
         }
 
         private void ResetPose()
@@ -188,6 +193,11 @@ namespace CrowdPunch.Mono.Player
         private void LateUpdate()
         {
             RestoreAnimatedRotation();
+            ApplyUpperBodyRotation();
+        }
+
+        private void ApplyUpperBodyRotation()
+        {
             if (!HasAnimation() || !animator.isActiveAndEnabled || spine == null)
             {
                 return;

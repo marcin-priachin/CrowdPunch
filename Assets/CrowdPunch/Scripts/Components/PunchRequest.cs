@@ -18,6 +18,9 @@ namespace CrowdPunch.Components
         public float PushDirectionPositionWeight;
         public uint Sequence;
         public uint AimRevision;
+        public float3 ContactOffset;
+        public float3 ApproachDisplacement;
+        public bool HasContactPose;
         public bool IsResolved;
         public bool HitEnemy;
     }

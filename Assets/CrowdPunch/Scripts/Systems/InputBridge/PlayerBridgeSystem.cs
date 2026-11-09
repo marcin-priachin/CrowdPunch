@@ -57,7 +57,9 @@ namespace CrowdPunch.Systems.InputBridge
                     Damage = bridge.PunchDamage,
                     PushDirectionPositionWeight = bridge.PunchPushDirectionPositionWeight,
                     Sequence = bridge.PunchSequence,
-                    AimRevision = bridge.PunchAimRevision
+                    AimRevision = bridge.PunchAimRevision,
+                    ContactOffset = bridge.PunchContactOffset,
+                    HasContactPose = bridge.HasPunchContactPose && bridge.CanApplyPunchApproach
                 });
                 SystemAPI.SetComponentEnabled<PunchRequest>(playerStateEntity, true);
                 bridge.ClearPunch();

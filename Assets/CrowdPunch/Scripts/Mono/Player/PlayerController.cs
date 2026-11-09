@@ -101,6 +101,7 @@ namespace CrowdPunch.Mono.Player
             moveAction?.Disable();
             dashAction?.Disable();
             EndDash();
+            if (ecsBridge != null) ecsBridge.CanApplyPunchApproach = false;
             LocomotionVelocity = Vector3.zero;
         }
 
@@ -146,6 +147,8 @@ namespace CrowdPunch.Mono.Player
 
             Vector3 facingDirection = cameraForward;
             Vector3 playerDisplacement = Time.deltaTime * settings.MoveSpeed * movement;
+            // Include the last dash step, even if it ends the dash before punch input runs.
+            ecsBridge.CanApplyPunchApproach = !IsDashing || dashTimeRemaining <= 0f;
             if (IsDashing && dashTimeRemaining <= 0f)
             {
                 EndDash();

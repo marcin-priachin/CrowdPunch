@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
@@ -48,6 +49,8 @@ namespace CrowdPunch.Systems.Combat
             };
             punch.AimRevision = punchRequest.AimRevision;
             punch.HomingDuration = launchSettings.LaunchHomingDuration;
+            float3 playerPosition = SystemAPI.GetComponent<PlayerSnapshot>(punchEntity).Position;
+            float closestApproach = float.MaxValue;
             foreach ((RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launchState,
                          RefRO<Health> health, RefRO<EnemyTier> tier, Entity enemy) in
                      SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>, RefRO<EnemyTier>>()
@@ -55,10 +58,16 @@ namespace CrowdPunch.Systems.Combat
                          .WithNone<RespawnRequest>()
                          .WithEntityAccess())
             {
+                LocalTransform pose = transform.ValueRO;
                 if (ArmorHitResolution.IsProtected(state.EntityManager, enemy))
                 {
-                    punchRequest.HitEnemy |= PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, punch)
-                        && PunchResolution.Contains(state.EntityManager, enemy, transform.ValueRO.Position, punch);
+                    if (PunchResolution.IsEligible(launchState.ValueRO, health.ValueRO, punch)
+                        && PunchResolution.Contains(state.EntityManager, enemy, pose.Position, punch))
+                    {
+                        punchRequest.HitEnemy = true;
+                        RecordContactApproach(state.EntityManager, enemy, pose, playerPosition,
+                            ref punchRequest, ref closestApproach);
+                    }
                     continue;
                 }
                 PunchSpecification targetPunch = punch;
@@ -79,7 +88,12 @@ namespace CrowdPunch.Systems.Combat
                 }
                 if (tier.ValueRO.Value == EnemyCombatTier.Elite)
                     targetPunch.Strength *= math.max(0f, punchRequest.EliteKnockbackMultiplier);
-                punchRequest.HitEnemy |= PunchResolution.TryApply(state.EntityManager, enemy, targetPunch);
+                if (PunchResolution.TryApply(state.EntityManager, enemy, targetPunch))
+                {
+                    punchRequest.HitEnemy = true;
+                    RecordContactApproach(state.EntityManager, enemy, pose, playerPosition,
+                        ref punchRequest, ref closestApproach);
+                }
             }
 
             foreach (var (wall, transform, target) in SystemAPI.Query<RefRO<Barricade>, RefRO<LocalTransform>>().WithEntityAccess())
@@ -104,6 +118,54 @@ namespace CrowdPunch.Systems.Combat
             punchRequest.IsResolved = true;
             SystemAPI.SetComponent(punchEntity, punchRequest);
             SystemAPI.SetComponentEnabled<PunchRequest>(punchEntity, false);
+        }
+
+        // Keep collider distance dispatch out of the Burst-compiled update's stack frame.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void RecordContactApproach(EntityManager manager, Entity enemy, in LocalTransform pose,
+            float3 playerPosition, ref PunchRequest request, ref float closestApproach)
+        {
+            if (!request.HasContactPose || closestApproach == 0f
+                || !manager.HasComponent<PhysicsCollider>(enemy))
+                return;
+
+            var collider = manager.GetComponentData<PhysicsCollider>(enemy).Value;
+            if (!collider.IsCreated) return;
+            var body = new RigidBody
+            {
+                Collider = collider,
+                WorldFromBody = new RigidTransform(pose.Rotation, pose.Position),
+                Scale = pose.Scale
+            };
+            float3 displacement = ContactApproach(body, playerPosition, request.ContactOffset);
+            float distance = math.lengthsq(displacement);
+            // A multi-hit punch only needs one visible contact. Prefer the smallest move.
+            if (distance >= closestApproach) return;
+            closestApproach = distance;
+            request.ApproachDisplacement = displacement;
+        }
+
+        internal static float3 ContactApproach(in RigidBody body, float3 playerPosition, float3 contactOffset)
+        {
+            const float knuckleReach = .1f;
+            float3 center = body.CalculateAabb().Center;
+            float3 fist = playerPosition + contactOffset;
+            // Match ground-plane spacing even for enemies whose bodies sit below the fist.
+            fist.y = center.y;
+            float3 towardEnemy = center - fist;
+            float maxDistance = math.length(towardEnemy);
+            if (!body.CalculateDistance(new PointDistanceInput
+                {
+                    Position = fist, MaxDistance = maxDistance + knuckleReach, Filter = CollisionFilter.Default
+                }, out DistanceHit hit) || hit.Distance <= 0f)
+                return float3.zero;
+
+            float3 gap = hit.Position - fist;
+            gap.y = 0f;
+            // The fist can pass a very close enemy. Never pull the player back toward it.
+            if (math.dot(gap.xz, (center - playerPosition).xz) <= 0f) return float3.zero;
+            float distance = math.length(gap);
+            return math.normalizesafe(gap) * math.max(0f, distance - knuckleReach);
         }
     }
 }

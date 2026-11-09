@@ -433,6 +433,12 @@ Status: Must
 
 During active gameplay, the mouse cursor must be locked and hidden. Pausing must release and show the cursor for menu interaction, and resuming must lock and hide it again.
 
+### PLAYER-012 — Punch Contact Spacing
+
+Status: Must
+
+When a punch connects with an enemy beyond the animated fist's reach, move the player horizontally toward contact by the missing distance. Use the smallest correction among enemies hit by the punch. Stop at solid geometry and preserve dash movement (PLAYER-005). Punch eligibility and launch direction are determined from the original punch.
+
 ## Combat And Crowd Physics
 
 ### COMBAT-001 — Enemies As Projectiles
