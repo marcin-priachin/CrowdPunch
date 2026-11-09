@@ -46,7 +46,7 @@ namespace CrowdPunch.Mono.UI
         }
 
         internal static Button Action(Transform parent, string label, UnityAction activate,
-            bool enabled, bool primary, float height = 75, int size = 42, bool danger = false)
+            bool enabled, bool primary, float height = 75, int size = 42, bool danger = false, bool levelClear = false)
         {
             var border = Image(parent, label, Color.white);
             border.raycastTarget = true;
@@ -70,8 +70,8 @@ namespace CrowdPunch.Mono.UI
             {
                 face.gameObject.AddComponent<RectMask2D>();
                 var slash = Image(face.transform, "Gold diagonal", new Color32(255, 184, 46, 255)).rectTransform;
-                slash.anchorMin = slash.anchorMax = new Vector2(0, .5f);
-                slash.anchoredPosition = new Vector2(height * .52f, 0);
+                slash.anchorMin = slash.anchorMax = new Vector2(levelClear ? 1 : 0, .5f);
+                slash.anchoredPosition = new Vector2(height * (levelClear ? .50f : .52f), 0);
                 slash.sizeDelta = new Vector2(height * 2.35f, height * 4);
                 slash.localRotation = Quaternion.Euler(0, 0, -28);
             }
@@ -81,11 +81,11 @@ namespace CrowdPunch.Mono.UI
             edge.offsetMax = new Vector2(0, 1);
 
             var text = Label(face.transform, label, size, height,
-                !enabled ? Muted : primary ? Ink : Paper, heading: true);
+                !enabled ? Muted : primary ? Ink : Paper, heading: !levelClear);
             CelComicUi.Stretch(text.rectTransform);
             float inset = size * .45f;
-            text.rectTransform.offsetMin = new Vector2(primary && enabled ? inset * 2 : inset, 0);
-            text.rectTransform.offsetMax = new Vector2(-inset, 0);
+            text.rectTransform.offsetMin = new Vector2(primary && enabled && !levelClear ? inset * 2 : inset, 0);
+            text.rectTransform.offsetMax = new Vector2(primary && enabled && levelClear ? -inset * 3 : -inset, 0);
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Truncate;
             text.resizeTextForBestFit = true;
@@ -95,10 +95,10 @@ namespace CrowdPunch.Mono.UI
             if (enabled && primary)
             {
                 var cursor = Label(face.transform, ">", Mathf.RoundToInt(size * .65f), height, Ink);
-                cursor.rectTransform.anchorMin = Vector2.zero;
-                cursor.rectTransform.anchorMax = Vector2.up;
-                cursor.rectTransform.offsetMin = new Vector2(inset * .55f, 0);
-                cursor.rectTransform.offsetMax = new Vector2(inset * 1.75f, 0);
+                cursor.rectTransform.anchorMin = levelClear ? Vector2.right : Vector2.zero;
+                cursor.rectTransform.anchorMax = levelClear ? Vector2.one : Vector2.up;
+                cursor.rectTransform.offsetMin = new Vector2(inset * (levelClear ? -1.75f : .55f), 0);
+                cursor.rectTransform.offsetMax = new Vector2(inset * (levelClear ? -.55f : 1.75f), 0);
             }
             return button;
         }
@@ -125,7 +125,7 @@ namespace CrowdPunch.Mono.UI
                 stack.childForceExpandHeight = false;
                 Label(column.transform, value, size, size * .93f, Sky, heading: true);
                 int captionSize = Mathf.RoundToInt(size * .34f);
-                Label(column.transform, label, captionSize, captionSize + 3, Muted);
+                Label(column.transform, label, captionSize, captionSize * 1.35f, Muted);
                 Rule(column.transform, new Color32(118, 135, 255, 175), 2);
             }
         }

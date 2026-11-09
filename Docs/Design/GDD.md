@@ -122,7 +122,7 @@ Any pause, selection, or non-action interruption during a run should be very sho
 
 Status: Must
 
-Ordinary campaign completion advances to the next level. Chapter completion shows Continue and chapter selection; final campaign completion offers replay access. Completing a replay returns to level selection with Retry and Next Level available when loadable, and never lowers progress. Transitions remain short, clear previous encounter state, and place the player at the authored entry point. During chapter-by-chapter development, unlocks may refer to future content, but unavailable scenes must never be loaded or mistaken for full campaign completion.
+An ordinary campaign clear opens the Full Stack Ringside Rail results screen. Identify the chapter and level by number and stack Next Level, Retry, Level Select, and Main Menu in that order. Next Level advances when the next encounter is loadable. Chapter completion shows Continue and chapter selection. Final campaign completion offers replay access. Completing a replay returns to level selection with Retry and Next Level available when loadable, and never lowers progress. Transitions remain short, clear previous encounter state, and place the player at the authored entry point. During chapter-by-chapter development, unlocks may refer to future content, but unavailable scenes must never be loaded or mistaken for full campaign completion.
 
 ### LOOP-007 - Campaign Persistence And Menus
 

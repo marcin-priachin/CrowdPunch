@@ -2565,8 +2565,12 @@ points from `CampaignProgress` by stable level ID, displays older completions wi
 `CLEARED`, and uses `GauntletSequence.CanSelect` for launch eligibility. Locked chapters can be browsed.
 Replay results keep Retry and Next Level on the same screen. The layout uses the existing game canvas and Input
 System UI navigation, with a direct chapter shortcut and keyboard Page Up/Page Down (LOOP-006/007, SCORE-001, FINALE-001).
-Ringside draws the campaign menu, pause, and result pages over the arena on the same canvas. Its replay statistics
-use the existing results strip within Versus Select. The campaign HUD styles the existing player health, opening
+Ringside draws the campaign menu, pause, and result pages over the arena on the same canvas. After saving an ordinary
+clear, `GauntletSequence` enters `LevelComplete` and waits for a menu action (LOOP-005/006/007). `CampaignMenu`
+pauses the cleared arena and builds the numbered results rail with Next Level, Retry, Level Select, and Main Menu.
+Next Level uses the existing additive scene transition. Back from Level Select returns to the results rail. Scored
+clears use `LastClearScore` and `LastClearIsBest` for the result (SCORE-001). Replay statistics use the existing
+results strip within Versus Select. The campaign HUD styles the existing player health, opening
 hint, and score feedback. The score tally still consumes player-credited defeats from the bridge and the boss
 bar keeps the textless upper-center presentation (SCORE-001, INFO-002/007).
 

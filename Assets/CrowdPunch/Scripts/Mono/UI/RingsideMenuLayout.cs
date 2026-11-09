@@ -9,16 +9,19 @@ namespace CrowdPunch.Mono.UI
         private const float ReferenceWidth = 1920;
         private const float ReferenceHeight = 1080;
         private readonly RectTransform viewport, frame;
+        private readonly bool levelClear;
         private Vector2 fittedSize;
         internal RectTransform Content { get; }
 
-        internal RingsideMenuLayout(RectTransform viewport, bool main, bool confirmation)
+        internal RingsideMenuLayout(RectTransform viewport, bool main, bool confirmation, bool levelClear)
         {
             this.viewport = viewport;
+            this.levelClear = levelClear;
             if (!confirmation)
             {
                 var backdrop = PauseMenu.CreateUiObject("Ringside scrim", viewport).AddComponent<RingsideBackdrop>();
                 backdrop.MainMenu = main;
+                backdrop.LevelClear = levelClear;
                 backdrop.raycastTarget = false;
                 CelComicUi.Stretch(backdrop.rectTransform);
             }
@@ -40,7 +43,10 @@ namespace CrowdPunch.Mono.UI
                 CelComicUi.AddInkShadow(RingsideUi.Label(wordmark, "PUNCH", 168, 153, RingsideUi.Gold, true), 5);
             }
 
-            Content = Stack(frame, "Campaign Panel", confirmation ? 850 : main ? 630 : 720, main, -445, confirmation);
+            Content = Stack(frame, "Campaign Panel", confirmation ? 850 : main ? 630 : levelClear ? 810 : 720,
+                main, -445, confirmation);
+            if (levelClear)
+                Content.GetComponent<VerticalLayoutGroup>().spacing = 10;
             if (main)
                 RingsideUi.Label(Content, "CAMPAIGN", 24, 36, RingsideUi.Muted);
             Fit();
@@ -58,13 +64,14 @@ namespace CrowdPunch.Mono.UI
         {
             if (!string.IsNullOrEmpty(kicker))
                 RingsideUi.Label(Content, kicker, 24, 34, RingsideUi.Muted);
-            var label = RingsideUi.Label(Content, title, 104, 112, RingsideUi.Paper, true);
+            int size = levelClear ? 146 : 104;
+            var label = RingsideUi.Label(Content, title, size, size + 8, RingsideUi.Paper, true);
             label.resizeTextForBestFit = true;
             label.resizeTextMinSize = 58;
-            label.resizeTextMaxSize = 104;
+            label.resizeTextMaxSize = size;
             label.verticalOverflow = VerticalWrapMode.Truncate;
             CelComicUi.AddInkShadow(label, 4);
-            RingsideUi.Rule(Content, RingsideUi.Red, 4);
+            RingsideUi.Rule(Content, RingsideUi.Red, levelClear ? 6 : 4);
         }
 
         private static RectTransform Stack(Transform parent, string name, float width, bool top, float y, bool boxed = false)

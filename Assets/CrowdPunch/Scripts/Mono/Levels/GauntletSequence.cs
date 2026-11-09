@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 
 namespace CrowdPunch.Mono.Levels
 {
-    public enum CampaignScreen { Playing, MainMenu, ReplayComplete, ChapterComplete, CampaignComplete }
+    public enum CampaignScreen { Playing, MainMenu, ReplayComplete, ChapterComplete, CampaignComplete, LevelComplete }
 
     /// <summary>Owns additive encounter loading, completion and campaign transitions (LOOP-002/006).</summary>
     [DefaultExecutionOrder(-200)]
@@ -56,7 +56,6 @@ namespace CrowdPunch.Mono.Levels
         public string OpeningHint { get; private set; }
         public LevelClearScore LastClearScore { get; private set; }
         public bool LastClearIsBest { get; private set; }
-        public uint ClearScoreSequence { get; private set; }
         public bool HintsDisabled => gameSettings != null && gameSettings.DisableHints;
 
         private void Awake()
@@ -133,12 +132,10 @@ namespace CrowdPunch.Mono.Levels
                 LastClearIsBest = !EditorPreview && LastClearScore.IsBetterThan(Progress.GetBestClear(levelId));
                 if (!EditorPreview)
                     LastClearIsBest = Progress.Complete(levelId, LastClearScore) && LastClearIsBest;
-                ClearScoreSequence++;
                 if (replay) Screen = CampaignScreen.ReplayComplete;
                 else if (currentLevelIndex == campaign.Count - 1) Screen = CampaignScreen.CampaignComplete;
                 else if (currentLevelIndex + 1 == campaign.ChapterEnd(campaign.ChapterFor(currentLevelIndex))) Screen = CampaignScreen.ChapterComplete;
-                else if (CanSelect(currentLevelIndex + 1)) StartCoroutine(LoadLevel(currentLevelIndex + 1));
-                else Screen = CampaignScreen.ChapterComplete;
+                else Screen = CampaignScreen.LevelComplete;
                 return;
             }
             if (levelSceneNames != null && currentLevelIndex + 1 < levelSceneNames.Length)
@@ -157,6 +154,13 @@ namespace CrowdPunch.Mono.Levels
             {
                 StartCoroutine(LoadLevel(currentLevelIndex));
             }
+        }
+
+        public void AdvanceFromLevelClear()
+        {
+            int nextLevel = currentLevelIndex + 1;
+            if (Screen == CampaignScreen.LevelComplete && !transitionInProgress && CanSelect(nextLevel))
+                StartCoroutine(LoadLevel(nextLevel));
         }
 
         public string GetLevelName(int levelIndex)

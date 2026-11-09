@@ -8,6 +8,7 @@ namespace CrowdPunch.Mono.UI
     internal sealed class RingsideBackdrop : MaskableGraphic
     {
         internal bool MainMenu { get; set; }
+        internal bool LevelClear { get; set; }
 
         private RingsideBackdrop() => useLegacyMeshGeneration = false;
 
@@ -19,15 +20,17 @@ namespace CrowdPunch.Mono.UI
 
             float aspect = rect.width / rect.height;
             float narrow = Mathf.InverseLerp(1.65f, 1.15f, aspect);
-            float top = Mathf.Lerp(.49f, .75f, narrow);
-            float bottom = Mathf.Lerp(.32f, .58f, narrow);
-            var navy = new Color32(16, 22, 58, 241);
+            float top = LevelClear ? Mathf.Lerp(.62f, .96f, narrow) : Mathf.Lerp(.49f, .75f, narrow);
+            float bottom = LevelClear ? Mathf.Lerp(.50f, .84f, narrow) : Mathf.Lerp(.32f, .58f, narrow);
+            var navy = new Color32(16, 22, 58, LevelClear ? (byte)252 : (byte)241);
             var edge = new Color32(49, 69, 134, 255);
-            var tint = new Color32(12, 23, 48, MainMenu ? (byte)85 : (byte)62);
+            var tint = new Color32(12, 23, 48, LevelClear ? (byte)77 : MainMenu ? (byte)85 : (byte)62);
             var clear = new Color32(12, 23, 48, 0);
+            if (LevelClear) Band(0, 0, 1, 1, tint, tint);
             Band(0, 0, top, bottom, navy, navy);
             Band(top, bottom, top + .004f, bottom + .004f, edge, edge);
-            Band(top + .004f, bottom + .004f, .79f + .15f * narrow, .68f + .15f * narrow, tint, clear);
+            if (!LevelClear)
+                Band(top + .004f, bottom + .004f, .79f + .15f * narrow, .68f + .15f * narrow, tint, clear);
 
             void Band(float leftTop, float leftBottom, float rightTop, float rightBottom, Color32 left, Color32 right)
             {

@@ -11,7 +11,7 @@ namespace CrowdPunch.Mono.UI
     /// <summary>Campaign menu routing and pause ownership (LOOP-005/006/007).</summary>
     public sealed class CampaignMenu : MonoBehaviour
     {
-        private enum Page { Main, Browser, Pause, ConfirmNew, Milestone, Failure }
+        private enum Page { Main, Browser, Pause, ConfirmNew, Milestone, Failure, LevelClear }
 
         private GauntletSequence sequence;
         private GameObject root;
@@ -99,6 +99,7 @@ namespace CrowdPunch.Mono.UI
                 if (observedScreen == CampaignScreen.Playing) Close();
                 else if (observedScreen == CampaignScreen.MainMenu) Show(Page.Main);
                 else if (observedScreen == CampaignScreen.ReplayComplete) OpenBrowser(Page.Main);
+                else if (observedScreen == CampaignScreen.LevelComplete) Show(Page.LevelClear);
                 else Show(Page.Milestone);
             }
             if (sequence.RunFailed && !observedFailure)
@@ -167,7 +168,8 @@ namespace CrowdPunch.Mono.UI
                 var viewport = (RectTransform)PauseMenu.CreateUiObject("Ringside", root.transform).transform;
                 panel = viewport;
                 CelComicUi.Stretch(viewport);
-                ringside = new RingsideMenuLayout(viewport, page == Page.Main, page == Page.ConfirmNew);
+                ringside = new RingsideMenuLayout(viewport, page == Page.Main, page == Page.ConfirmNew,
+                    levelClear: page == Page.LevelClear);
                 BuildPage();
                 ShowErrors();
             }
@@ -212,17 +214,25 @@ namespace CrowdPunch.Mono.UI
                         if (!sequence.TransitionInProgress) Show(Page.ConfirmNew);
                     }, danger: true);
                     break;
+                case Page.LevelClear:
+                    ringside.Heading("LEVEL CLEAR!", LevelTag());
+                    ShowClearScore(92);
+                    Button("Next Level", () =>
+                    {
+                        sequence.AdvanceFromLevelClear();
+                        if (!sequence.TransitionInProgress && !string.IsNullOrEmpty(sequence.LoadError))
+                            Show(Page.LevelClear);
+                    }, sequence.CanSelect(sequence.CurrentLevelIndex + 1), primary: true);
+                    Button("Retry", sequence.RestartCurrentLevel);
+                    Button("Level Select", () => OpenBrowser(Page.LevelClear));
+                    Button("Main Menu", ReturnToMain);
+                    break;
                 case Page.Milestone:
                     bool campaignComplete = sequence.Screen == CampaignScreen.CampaignComplete;
                     int chapter = sequence.Campaign.ChapterFor(sequence.CurrentLevelIndex);
                     ringside.Heading(campaignComplete ? "CAMPAIGN COMPLETE" : $"CHAPTER {chapter + 1:00} COMPLETE",
                         $"LEVEL {sequence.CurrentLevelIndex + 1:00}");
-                    if (sequence.LastClearScore.IsScored)
-                    {
-                        RingsideUi.ScoreColumns(ringside.Content, sequence.LastClearScore, 65);
-                        if (sequence.LastClearIsBest)
-                            RingsideUi.Label(ringside.Content, "NEW BEST", 24, 36, RingsideUi.Gold);
-                    }
+                    ShowClearScore(65);
                     bool nextAvailable = sequence.CanSelect(sequence.CurrentLevelIndex + 1);
                     if (!campaignComplete)
                     {
@@ -284,13 +294,21 @@ namespace CrowdPunch.Mono.UI
         private void Description(string text, float height) =>
             RingsideUi.Label(ringside.Content, text, 26, height, RingsideUi.Sky);
 
+        private void ShowClearScore(int size)
+        {
+            if (!sequence.LastClearScore.IsScored) return;
+            RingsideUi.ScoreColumns(ringside.Content, sequence.LastClearScore, size);
+            if (sequence.LastClearIsBest)
+                RingsideUi.Label(ringside.Content, "NEW BEST", 24, 36, RingsideUi.Gold);
+        }
+
         private void Button(string text, UnityAction action, bool enabled = true, bool primary = false, bool danger = false)
         {
             var button = RingsideUi.Action(ringside.Content, text, () =>
             {
                 ConfirmSound();
                 action();
-            }, enabled, primary, danger: danger);
+            }, enabled, primary, danger: danger, levelClear: page == Page.LevelClear);
             if (first == null && enabled) first = button;
         }
 

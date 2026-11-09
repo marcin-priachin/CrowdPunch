@@ -6,10 +6,12 @@ using System.Reflection;
 using CrowdPunch.Components;
 using CrowdPunch.Mono.Levels;
 using CrowdPunch.Mono.Player;
+using CrowdPunch.Mono.UI;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace CrowdPunch.Editor
@@ -91,6 +93,20 @@ namespace CrowdPunch.Editor
                 Record("PASS player death opens failure; retry requested without progress loss."); return;
             }
             if(player!=null) { player.gameObject.SetActive(true); player.Restore(player.MaxHealth); }
+            if (flow.Screen == CampaignScreen.LevelComplete)
+            {
+                if (!Object.FindFirstObjectByType<CampaignMenu>().IsOpen) return;
+                var next = GameObject.Find("Campaign Panel/Next Level")?.GetComponent<Button>();
+                int cleared = flow.CurrentLevelIndex;
+                Require(new CampaignProgress(savePath).IsComplete(flow.Campaign.Get(cleared).id),
+                    "Level clear did not save before advancing.");
+                Require(Time.timeScale == 0 && next != null && next.interactable,
+                    "Expected a paused level clear with Next Level available.");
+                next.onClick.Invoke();
+                Require(flow.TransitionInProgress, "Next Level did not start the scene transition.");
+                Record($"PASS Level {cleared+1:00} saved on the results rail. Next Level starts the transition.");
+                return;
+            }
             if(flow.Screen==CampaignScreen.ChapterComplete || (Chapter==8 && flow.Screen==CampaignScreen.CampaignComplete))
             {
                 if(Chapter>1 && flow.CurrentLevelIndex==FirstLevel-1)
