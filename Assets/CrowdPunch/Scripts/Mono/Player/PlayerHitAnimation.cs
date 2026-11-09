@@ -70,12 +70,15 @@ namespace CrowdPunch.Mono.Player
 
         private void Update()
         {
+            if (playerHealth != null && playerHealth.IsDefeated && !reactionCancelled)
+                CancelReaction();
             if (animator != null && layer >= 0)
                 animator.SetLayerWeight(layer, ReactionWeight);
         }
 
         private void PlayHit(Vector3 impulse)
         {
+            if (playerHealth != null && playerHealth.IsDefeated) return;
             // Only accepted hits trigger presentation; invulnerability remains health-owned.
             if (animator != null && animator.isActiveAndEnabled && layer >= 0)
             {

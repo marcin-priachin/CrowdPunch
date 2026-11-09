@@ -24,6 +24,7 @@ namespace CrowdPunch.Systems.InputBridge
             }
 
             Entity playerStateEntity = SystemAPI.GetSingletonEntity<PlayerSnapshot>();
+            bool canAct = !bridge.PlayerDefeated && !FeedbackTimeController.IsLevelClear;
 
             SystemAPI.SetComponent(playerStateEntity, new PlayerSnapshot
             {
@@ -32,7 +33,7 @@ namespace CrowdPunch.Systems.InputBridge
                 Forward = bridge.Forward,
                 Radius = bridge.Radius,
                 CollisionLayer = bridge.CollisionLayer,
-                IsAvailable = !FeedbackTimeController.IsLevelClear
+                IsAvailable = canAct
             });
             SystemAPI.SetComponent(playerStateEntity, new PlayerHealthSnapshot
             {
@@ -41,7 +42,7 @@ namespace CrowdPunch.Systems.InputBridge
                 IsAvailable = bridge.MaxHealth > 0f
             });
 
-            if (bridge.HasPendingPunch && !FeedbackTimeController.IsLevelClear)
+            if (bridge.HasPendingPunch && canAct)
             {
                 if (SystemAPI.TryGetSingletonRW<LevelClearScore>(out var score))
                     score.ValueRW.Punches++;

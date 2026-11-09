@@ -112,6 +112,10 @@ Status: Must
 
 Zero player health fails only the current level. Retry restores that level and full player health while preserving completed levels and chapter unlocks. Every level entry restores full health. Existing objective failure rules also fail only the current level.
 
+On the failure screen, use the results camera framing with the player as the subject.
+At zero health, keep the player visible and play the supplied Knocked Out animation once
+while the arena is paused. Retry restores the normal player pose.
+
 ### LOOP-005 — Short Interruptions
 
 Status: Should

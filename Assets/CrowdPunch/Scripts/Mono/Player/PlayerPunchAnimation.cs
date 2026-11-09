@@ -47,6 +47,7 @@ namespace CrowdPunch.Mono.Player
         [SerializeField, HideInInspector] private Quaternion[] spineReferenceRotations;
 
         private Animator animator;
+        private PlayerEcsBridge playerBridge;
         private PlayerHitAnimation hitAnimation;
         private Transform spine;
         private Quaternion animatedSpineRotation;
@@ -62,6 +63,7 @@ namespace CrowdPunch.Mono.Player
         private void Awake()
         {
             animator = GetComponent<Animator>();
+            playerBridge = GetComponentInParent<PlayerEcsBridge>();
             if (animator.isHuman)
             {
                 spine = animator.GetBoneTransform(HumanBodyBones.Spine);
@@ -171,6 +173,7 @@ namespace CrowdPunch.Mono.Player
         private bool HasAnimation()
         {
             return animator != null && animator.runtimeAnimatorController != null
+                && (playerBridge == null || !playerBridge.PlayerDefeated)
                 && punchClip != null && punchClip.length > 0f && punchClip.frameRate > 0f;
         }
 

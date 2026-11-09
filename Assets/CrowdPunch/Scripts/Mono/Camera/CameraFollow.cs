@@ -80,7 +80,7 @@ namespace CrowdPunch.Mono.Camera
 
             Vector3 orbitOffset = Quaternion.Euler(0f, orbitAngle, 0f)
                 * new Vector3(0f, offset.y, -new Vector2(offset.x, offset.z).magnitude);
-            if (clearCamera.TryFrame(orbitOffset, target.position + targetOffset, out var subject))
+            if (clearCamera.TryFrame(orbitOffset, target.position, targetOffset, out var subject))
             {
                 wasFramingClear = true;
                 sceneryCutaway?.SetFocus(subject);

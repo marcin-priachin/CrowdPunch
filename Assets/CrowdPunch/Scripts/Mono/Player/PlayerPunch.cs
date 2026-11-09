@@ -90,6 +90,12 @@ namespace CrowdPunch.Mono.Player
 
         private void Update()
         {
+            if (ecsBridge != null && ecsBridge.PlayerDefeated)
+            {
+                cooldownFeedback?.Hide();
+                ecsBridge.ClearPunchPreview();
+                return;
+            }
             if (FeedbackTimeController.IsSuspended) { ecsBridge?.ClearPunchPreview(); return; }
             PublishPunchPreview();
             UpdateCooldownFeedback();
@@ -160,7 +166,8 @@ namespace CrowdPunch.Mono.Player
 
         private bool CanPunch()
         {
-            return isActiveAndEnabled && !FeedbackTimeController.IsSuspended && ecsBridge != null && settings != null
+            return isActiveAndEnabled && !FeedbackTimeController.IsSuspended && ecsBridge != null
+                && !ecsBridge.PlayerDefeated && settings != null
                 && !awaitingPunchResult && Time.time >= nextPunchTime;
         }
 

@@ -60,6 +60,8 @@ namespace CrowdPunch.Mono.Levels
         internal GameRuntimeSettings RuntimeSettings => gameSettings;
         internal bool ShowingClear => !transitionInProgress && Screen is (CampaignScreen.LevelComplete
             or CampaignScreen.ChapterComplete or CampaignScreen.CampaignComplete or CampaignScreen.ReplayComplete);
+        internal bool ShowingFailure => RunFailed && !transitionInProgress && Screen == CampaignScreen.Playing;
+        internal bool PlayerDefeated => playerHealth != null && playerHealth.IsDefeated;
         internal bool ShowingReplayShot => Screen == CampaignScreen.ReplayComplete
             && Time.unscaledTimeAsDouble < replayShotUntil;
         public bool HintsDisabled => gameSettings != null && gameSettings.DisableHints;
@@ -115,7 +117,7 @@ namespace CrowdPunch.Mono.Levels
             if (currentLevelIndex < 0 || (HasCampaign && Screen != CampaignScreen.Playing)) return;
             bool encounterVictory = PlayerBridgeRegistry.TryGetBridge(out var bridge) && bridge.EncounterVictory;
             if (encounterVictory) RunFailed = false;
-            if (!encounterVictory && !transitionInProgress && playerHealth != null && playerHealth.CurrentHealth <= 0)
+            if (!encounterVictory && !transitionInProgress && PlayerDefeated)
                 RunFailed = true;
             if (!transitionInProgress && observedFailureSequence != GauntletFailureRegistry.Sequence)
             {

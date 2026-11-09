@@ -105,7 +105,7 @@ namespace CrowdPunch.Mono.UI
             if (complete && !showingCompletion)
             {
                 showingCompletion = true;
-                menuTitle.text = failed ? "PROTECTED ZONE BREACHED" : "RUN COMPLETE";
+                menuTitle.text = !failed ? "RUN COMPLETE" : gauntletSequence.PlayerDefeated ? "LEVEL FAILED" : "PROTECTED ZONE BREACHED";
                 firstButton.GetComponentInChildren<Text>().text = failed ? "Retry Level" : "Play Again";
                 SetPaused(true);
             }

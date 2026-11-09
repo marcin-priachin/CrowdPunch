@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace CrowdPunch.Mono.Camera
 {
-    /// <summary>Frames the finishing subject in the part of the arena exposed by the results rail.</summary>
+    /// <summary>Frames the results subject in the exposed arena.</summary>
     internal sealed class LevelClearCamera
     {
         private readonly UnityEngine.Camera view;
@@ -21,12 +21,14 @@ namespace CrowdPunch.Mono.Camera
             this.sequence = sequence;
         }
 
-        internal bool TryFrame(Vector3 orbitOffset, Vector3 player, out Vector3 subject)
+        internal bool TryFrame(Vector3 orbitOffset, Vector3 player, Vector3 playerAimOffset, out Vector3 subject)
         {
             subject = default;
             var settings = sequence != null ? sequence.RuntimeSettings : null;
-            if (settings == null || !settings.LevelClearCameraEnabled || !sequence.ShowingClear
-                || GauntletCompletionRegistry.Focus is not Vector3 focus || view == null || orbitOffset.sqrMagnitude < .01f)
+            bool failure = sequence != null && sequence.ShowingFailure;
+            Vector3? resultFocus = failure ? player : GauntletCompletionRegistry.Focus;
+            if (settings == null || !settings.LevelClearCameraEnabled || (!failure && !sequence.ShowingClear)
+                || resultFocus is not Vector3 focus || view == null || orbitOffset.sqrMagnitude < .01f)
             {
                 framing = false;
                 return false;
@@ -52,8 +54,8 @@ namespace CrowdPunch.Mono.Camera
             viewport.x = Mathf.Lerp(ArenaEdge(view.aspect, viewport.y, sequence.Screen), 1f, viewport.x);
             Vector3 offset = orbitOffset * settings.LevelClearCameraDistance;
             Pose shot = Compose(view, subject, offset, viewport);
-            Quaternion orbit = settings.LevelClearCameraIncludePlayer
-                ? FindPlayerOrbit(view, shot, subject, player, viewport, sequence.Screen)
+            Quaternion orbit = !failure && settings.LevelClearCameraIncludePlayer
+                ? FindPlayerOrbit(view, shot, subject, player + playerAimOffset, viewport, sequence.Screen)
                 : Quaternion.identity;
             trackedOrbit = Quaternion.Slerp(trackedOrbit, orbit, follow);
             float duration = settings.LevelClearCameraBlendSeconds;

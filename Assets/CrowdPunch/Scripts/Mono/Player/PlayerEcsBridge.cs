@@ -159,6 +159,7 @@ namespace CrowdPunch.Mono.Player
 
         /// <summary>Latest player health value published by MonoBehaviour player code.</summary>
         public float CurrentHealth { get; private set; }
+        public bool PlayerDefeated => MaxHealth > 0f && CurrentHealth <= 0f;
 
         /// <summary>Latest player max health value published by MonoBehaviour player code.</summary>
         public float MaxHealth { get; private set; }

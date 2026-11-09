@@ -23,6 +23,7 @@ namespace CrowdPunch.Mono.Player
         public float CurrentHealth => currentHealth;
 
         public float MaxHealth => maxHealth;
+        public bool IsDefeated => currentHealth <= 0f;
 
         public float Normalized => maxHealth <= 0f ? 0f : Mathf.Clamp01(currentHealth / maxHealth);
 
@@ -132,7 +133,6 @@ namespace CrowdPunch.Mono.Player
 
         private void SetHealth(float value)
         {
-            bool wasAlive = currentHealth > 0f;
             float clampedHealth = Mathf.Clamp(value, 0f, Mathf.Max(0f, maxHealth));
             if (Mathf.Approximately(currentHealth, clampedHealth))
             {
@@ -142,11 +142,6 @@ namespace CrowdPunch.Mono.Player
             currentHealth = clampedHealth;
             Publish();
             Changed?.Invoke(currentHealth, maxHealth);
-
-            if (wasAlive && currentHealth <= 0f)
-            {
-                gameObject.SetActive(false);
-            }
         }
 
         private void Publish()

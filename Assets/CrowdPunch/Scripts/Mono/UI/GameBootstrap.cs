@@ -30,6 +30,8 @@ namespace CrowdPunch.Mono.UI
             EnsurePlayerPunch();
             EnsurePlayerHealth();
             EnsurePlayerHitAnimation();
+            if (playerHealth != null && !playerHealth.TryGetComponent<PlayerDefeatAnimation>(out _))
+                playerHealth.gameObject.AddComponent<PlayerDefeatAnimation>();
             if (GetComponent<FeedbackTimeController>() == null) gameObject.AddComponent<FeedbackTimeController>();
             if (combatFeedbackSettings == null)
                 combatFeedbackSettings = Resources.Load<CrowdPunch.Configuration.CombatFeedbackSettings>("CombatFeedbackSettings");

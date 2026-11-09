@@ -2575,6 +2575,10 @@ hold with the paused arena. The other combat feedback remains suspended (VISION-
 `LevelClearFixedStepSystem` scales the ECS timestep by the clear slowdown multiplier before
 the fixed group runs. This preserves its real-time update cadence during the shot and restores
 its prior timestep when the shot pauses or a transition starts.
+Failure uses the same framing settings with the player's position as the subject. A defeated
+player remains visible while the gameplay input and ECS snapshot gates suspend their actions.
+`PlayerDefeatAnimation` plays the non-looping humanoid Knocked Out clip in a full-body
+Animator layer on unscaled time. Restoring health removes the layer override (LOOP-004).
 The completion system tracks the finishing ECS subject and publishes only its position through
 `GauntletCompletionRegistry`. Wave defeats snapshot their position before pooling and use
 lethal simulation time to resolve the final subject. Bosses and objectives supply their own
