@@ -2567,7 +2567,23 @@ Replay results keep Retry and Next Level on the same screen. The layout uses the
 System UI navigation, with a direct chapter shortcut and keyboard Page Up/Page Down (LOOP-006/007, SCORE-001, FINALE-001).
 Ringside draws the campaign menu, pause, and result pages over the arena on the same canvas. After saving an ordinary
 clear, `GauntletSequence` enters `LevelComplete` and waits for a menu action (LOOP-005/006/007). `CampaignMenu`
-pauses the cleared arena and builds the numbered results rail with Next Level, Retry, Level Select, and Main Menu.
+builds the numbered results rail with Next Level, Retry, Level Select, and Main Menu while
+`FeedbackTimeController` runs a real-time clear slowdown, then holds the arena paused.
+Clear presentation locks player input and damage while allowing the slowed simulation.
+Launch speed lines continue following eligible airborne bodies during the clear shot and
+hold with the paused arena. The other combat feedback remains suspended (VISION-005).
+`LevelClearFixedStepSystem` scales the ECS timestep by the clear slowdown multiplier before
+the fixed group runs. This preserves its real-time update cadence during the shot and restores
+its prior timestep when the shot pauses or a transition starts.
+The completion system tracks the finishing ECS subject and publishes only its position through
+`GauntletCompletionRegistry`. Wave defeats snapshot their position before pooling and use
+lethal simulation time to resolve the final subject. Bosses and objectives supply their own
+focus. `LevelClearCamera` eases from the gameplay view and composes the subject inside the
+exposed arena using the rail's aspect-dependent edge. The optional orbit rotates the shot
+around the finishing subject to bring the player into view at the same camera distance and
+subject framing. It can lower the angle to bring a distant player into view. The same runtime settings asset owns
+slowdown duration/scale and camera enable, blend, distance and framing. Replays show the
+arena shot before the opaque Versus Select screen (LOOP-005/006).
 Next Level uses the existing additive scene transition. Back from Level Select returns to the results rail. Scored
 clears use `LastClearScore` and `LastClearIsBest` for the result (SCORE-001). Replay statistics use the existing
 results strip within Versus Select. The campaign HUD styles the existing player health, opening
@@ -3049,8 +3065,9 @@ FeedbackTimeController centrally composes hit-stop, exceptional slow motion, men
 additive transition gates. Hit-stop wins while active; an unexpired slow-motion window then
 continues, followed by the captured baseline. Deadlines use unscaled time. Pause and transition
 cancel temporary effects and never capture a transient zero scale as their resume value.
-The fixed timestep and Unity Physics integration are unchanged; gameplay timers and movement
-remain on scaled time, while feedback restoration continues on real time. Reset, disable,
+Combat hit-stop and slow motion use the normal ECS timestep. The campaign clear shot owns
+its separate cadence adjustment. Gameplay timers and movement remain on scaled time, while
+feedback restoration continues on real time. Reset, disable,
 death and restart cancel temporary state. PauseMenu and GauntletSequence retain separate gates.
 
 CameraFollow removes the previous translation before its normal follow solve and composes
@@ -4463,8 +4480,11 @@ punch through deferred defeat. Player-caused ring-outs use the current launch wh
 damage has already resolved. Blast requests and persistent trail sections snapshot their
 credit so subsequent launches and pooling cannot change it.
 
-`EnemyWaveDefeatCountSystem` records eligible defeats at its existing once-per-life accounting
-point, before pooling. Scoring applies to finite wave clears. Boss and objective encounters,
+`EnemyWaveDefeatCountSystem` records eligible defeats once per life before pooling. On the
+fully spawned final defeat-gated wave of a scored encounter, it also counts deferred launched
+bodies once all remaining owned enemies have reached zero health. This updates wave accounting
+and score without writing launch, animation, or lifecycle state. The wave spawner still applies
+its authored completion gate (LOOP-006). Scoring applies to finite wave clears. Boss and objective encounters,
 replenishing crowd and supplemental ammunition are excluded. Each credited defeat is 100 points.
 The post-physics pass snapshots each credited defeat's world position before pooling.
 `LevelScoreBridgeSystem` drains those value events once per presentation frame and forwards

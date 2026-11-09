@@ -14,6 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.GameRuntimeSettings
   startRunning: 1
   startWithAllLevelsUnlocked: 1
+  levelClearSlowSeconds: 1.25
+  levelClearTimeScale: 0.25
+  levelClearCameraEnabled: 1
+  levelClearCameraIncludePlayer: 1
+  levelClearCameraBlendSeconds: 0.45
+  levelClearCameraDistance: 0.9
+  levelClearCameraTrackingSeconds: 0.06
+  levelClearCameraFraming: {x: 0.5, y: 0.55}
+  levelClearCameraSubjectHeight: 1
   playerInvincible: 0
   disableHints: 1
   crowdParticipation: 1

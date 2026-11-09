@@ -161,10 +161,11 @@ namespace CrowdPunch.Mono.Player
         private void Update()
         {
             if (!bound || bridge == null || flash == null) return;
-            if (restart != GameRestartRegistry.Sequence || FeedbackTimeController.IsSuspended)
+            bool restarted = restart != GameRestartRegistry.Sequence;
+            if (restarted || FeedbackTimeController.IsSuspended)
             {
                 restart = GameRestartRegistry.Sequence;
-                ResetFeedback();
+                ResetFeedback(preserveLaunchTrails: !restarted && FeedbackTimeController.AllowsLaunchTrails);
                 return;
             }
             if (cameraFeedback != null) cameraFeedback.Dashing = controller != null && controller.isActiveAndEnabled && controller.IsDashing;
@@ -195,7 +196,9 @@ namespace CrowdPunch.Mono.Player
                 }
             }
         }
-        public void ResetFeedback()
+        public void ResetFeedback() => ResetFeedback(preserveLaunchTrails: false);
+
+        private void ResetFeedback(bool preserveLaunchTrails)
         {
             if (bridge != null) observedPunch = bridge.PunchSequence;
             if (explosions == null && bridge != null) explosions = bridge.GetComponent<ExplosionFeedback>();
@@ -204,7 +207,8 @@ namespace CrowdPunch.Mono.Player
             dashEndPending = false;
             dashDirection = Vector3.zero;
             nextCameraTime = nextExceptionalTime = nextDamageTime = 0;
-            particles?.Clear(); comicImpacts?.Clear(); trails?.Clear(); dasherTelegraphs?.Clear(); flash?.Clear();
+            particles?.Clear(); comicImpacts?.Clear(); dasherTelegraphs?.Clear(); flash?.Clear();
+            if (!preserveLaunchTrails) trails?.Clear();
             launchDepartures?.Clear();
             pillarImpacts?.Clear();
             if (cameraFeedback != null) cameraFeedback.ResetFeedback();

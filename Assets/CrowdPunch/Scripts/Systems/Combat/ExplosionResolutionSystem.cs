@@ -255,6 +255,7 @@ namespace CrowdPunch.Systems.Combat
             if (SystemAPI.GetComponent<Health>(explosive).Current > 0)
             {
                 var damage = SystemAPI.GetComponent<EnemyDamageState>(explosive);
+                damage.DefeatedAt = SystemAPI.Time.ElapsedTime;
                 damage.DefeatPunchSequence = punchSequence;
                 SystemAPI.SetComponent(explosive, damage);
             }

@@ -24,7 +24,7 @@ namespace CrowdPunch.Systems.Presentation
             state.Dependency.Complete();
             selected.Clear();
             int capacity = PlayerBridgeRegistry.TryGetBridge(out var bridge) && bridge.FeedbackSettings != null
-                && bridge.isActiveAndEnabled && !FeedbackTimeController.IsSuspended
+                && bridge.isActiveAndEnabled && FeedbackTimeController.AllowsLaunchTrails
                 ? math.clamp(bridge.FeedbackSettings.MaximumTrails, 0, 256) : 0;
             float minimumSpeed = capacity > 0 ? bridge.FeedbackSettings.TrailMinimumSpeed : float.PositiveInfinity;
             int selectedCount = 0;

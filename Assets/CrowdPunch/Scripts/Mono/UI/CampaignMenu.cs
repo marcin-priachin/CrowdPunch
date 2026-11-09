@@ -93,7 +93,12 @@ namespace CrowdPunch.Mono.UI
                 observedFailure = false;
                 Close();
             }
-            if (observedScreen != sequence.Screen)
+            if (sequence.ShowingReplayShot && observedScreen != sequence.Screen)
+            {
+                Close();
+                SetHudVisible(false);
+            }
+            else if (observedScreen != sequence.Screen)
             {
                 observedScreen = sequence.Screen;
                 if (observedScreen == CampaignScreen.Playing) Close();
@@ -108,7 +113,8 @@ namespace CrowdPunch.Mono.UI
                 Show(Page.Failure);
             }
             hintRemaining = Mathf.Max(0, hintRemaining - Time.deltaTime);
-            hintPanel.gameObject.SetActive(!sequence.HintsDisabled && !IsOpen && hintRemaining > 0 && !string.IsNullOrEmpty(hint.text));
+            hintPanel.gameObject.SetActive(sequence.Screen == CampaignScreen.Playing && !sequence.HintsDisabled
+                && !IsOpen && hintRemaining > 0 && !string.IsNullOrEmpty(hint.text));
 
             if (IsOpen)
             {
@@ -129,7 +135,7 @@ namespace CrowdPunch.Mono.UI
                 }
                 if (pause?.WasPressedThisFrame() == true || back.WasPressedThisFrame()) GoBack();
             }
-            else if (pause?.WasPressedThisFrame() == true)
+            else if (sequence.Screen == CampaignScreen.Playing && pause?.WasPressedThisFrame() == true)
             {
                 Show(Page.Pause);
             }

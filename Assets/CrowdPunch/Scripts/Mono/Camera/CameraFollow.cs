@@ -1,4 +1,5 @@
 using CrowdPunch.Configuration;
+using CrowdPunch.Mono.Levels;
 using CrowdPunch.Mono.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -22,12 +23,15 @@ namespace CrowdPunch.Mono.Camera
         private CameraSceneryCutaway sceneryCutaway;
         private InputAction lookAction;
         private PlayerEcsBridge aimBridge;
+        private LevelClearCamera clearCamera;
+        private bool wasFramingClear;
         private float orbitAngle;
         public float EncounterLookHeight { get; set; }
 
         private void Awake()
         {
             sceneryCutaway = GetComponent<CameraSceneryCutaway>();
+            clearCamera = new LevelClearCamera(GetComponent<UnityEngine.Camera>(), FindFirstObjectByType<GauntletSequence>());
             orbitAngle = Mathf.Atan2(offset.x, -offset.z) * Mathf.Rad2Deg;
 
             if (movementSettings == null && target != null
@@ -76,9 +80,16 @@ namespace CrowdPunch.Mono.Camera
 
             Vector3 orbitOffset = Quaternion.Euler(0f, orbitAngle, 0f)
                 * new Vector3(0f, offset.y, -new Vector2(offset.x, offset.z).magnitude);
+            if (clearCamera.TryFrame(orbitOffset, target.position + targetOffset, out var subject))
+            {
+                wasFramingClear = true;
+                sceneryCutaway?.SetFocus(subject);
+                return;
+            }
             Vector3 lookTarget = target.position + targetOffset + Vector3.up * EncounterLookHeight;
             Vector3 desiredPosition = lookTarget + orbitOffset;
-            float interpolation = 1f - Mathf.Exp(-followSharpness * Time.deltaTime);
+            float interpolation = wasFramingClear ? 1f : 1f - Mathf.Exp(-followSharpness * Time.deltaTime);
+            wasFramingClear = false;
 
             transform.position = Vector3.Lerp(transform.position, desiredPosition, interpolation);
             transform.LookAt(lookTarget);

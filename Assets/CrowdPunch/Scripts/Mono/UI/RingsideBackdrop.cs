@@ -12,6 +12,14 @@ namespace CrowdPunch.Mono.UI
 
         private RingsideBackdrop() => useLegacyMeshGeneration = false;
 
+        internal static float ArenaEdge(float aspect, float height, bool levelClear)
+        {
+            float narrow = Mathf.InverseLerp(1.65f, 1.15f, aspect);
+            float top = levelClear ? Mathf.Lerp(.62f, .96f, narrow) : Mathf.Lerp(.49f, .75f, narrow);
+            float bottom = levelClear ? Mathf.Lerp(.50f, .84f, narrow) : Mathf.Lerp(.32f, .58f, narrow);
+            return Mathf.Lerp(bottom, top, height) + .004f;
+        }
+
         protected override void OnPopulateMesh(VertexHelper mesh)
         {
             mesh.Clear();
@@ -20,8 +28,8 @@ namespace CrowdPunch.Mono.UI
 
             float aspect = rect.width / rect.height;
             float narrow = Mathf.InverseLerp(1.65f, 1.15f, aspect);
-            float top = LevelClear ? Mathf.Lerp(.62f, .96f, narrow) : Mathf.Lerp(.49f, .75f, narrow);
-            float bottom = LevelClear ? Mathf.Lerp(.50f, .84f, narrow) : Mathf.Lerp(.32f, .58f, narrow);
+            float top = ArenaEdge(aspect, 1f, LevelClear) - .004f;
+            float bottom = ArenaEdge(aspect, 0f, LevelClear) - .004f;
             var navy = new Color32(16, 22, 58, LevelClear ? (byte)252 : (byte)241);
             var edge = new Color32(49, 69, 134, 255);
             var tint = new Color32(12, 23, 48, LevelClear ? (byte)77 : MainMenu ? (byte)85 : (byte)62);

@@ -12,6 +12,24 @@ namespace CrowdPunch.Configuration
         [Header("Campaign")]
         [Tooltip("Allow selection of all available campaign levels from startup without marking them complete or changing saved progress.")]
         [SerializeField] private bool startWithAllLevelsUnlocked;
+        [Header("Level Clear Presentation")]
+        [Tooltip("Real-time seconds of slow motion before the results pause. Zero skips the slowdown.")]
+        [SerializeField, Min(0f)] private float levelClearSlowSeconds = 1.25f;
+        [Tooltip("Fraction of normal gameplay speed during the clear shot.")]
+        [SerializeField, Range(.05f, 1f)] private float levelClearTimeScale = .25f;
+        [SerializeField] private bool levelClearCameraEnabled = true;
+        [Tooltip("Orbit the finishing subject at the configured shot distance to bring the player into the exposed arena.")]
+        [SerializeField] private bool levelClearCameraIncludePlayer;
+        [Tooltip("Real-time seconds for the camera to ease into the clear shot. Zero cuts immediately.")]
+        [SerializeField, Min(0f)] private float levelClearCameraBlendSeconds = .45f;
+        [Tooltip("Clear shot distance relative to the regular gameplay camera offset.")]
+        [SerializeField, Min(.1f)] private float levelClearCameraDistance = .9f;
+        [Tooltip("Real-time smoothing for a moving subject during the shot. Zero follows immediately.")]
+        [SerializeField, Min(0f)] private float levelClearCameraTrackingSeconds = .06f;
+        [Tooltip("Horizontal position within the exposed arena area, and vertical position within the viewport, measured from the bottom.")]
+        [SerializeField] private Vector2 levelClearCameraFraming = new Vector2(.5f, .55f);
+        [Tooltip("Vertical framing offset in world metres above the finishing subject's origin.")]
+        [SerializeField] private float levelClearCameraSubjectHeight = 1f;
         [Header("Player And Hints")]
         [Tooltip("Reject all player damage and damage-hit reactions, including hazards that bypass ordinary hit invulnerability. Objective failures still apply.")]
         [SerializeField] private bool playerInvincible;
@@ -87,6 +105,15 @@ namespace CrowdPunch.Configuration
 
         public bool StartRunning => startRunning;
         public bool StartWithAllLevelsUnlocked => startWithAllLevelsUnlocked;
+        public float LevelClearSlowSeconds => Mathf.Max(0f, levelClearSlowSeconds);
+        public float LevelClearTimeScale => Mathf.Clamp(levelClearTimeScale, .05f, 1f);
+        public bool LevelClearCameraEnabled => levelClearCameraEnabled;
+        public bool LevelClearCameraIncludePlayer => levelClearCameraIncludePlayer;
+        public float LevelClearCameraBlendSeconds => Mathf.Max(0f, levelClearCameraBlendSeconds);
+        public float LevelClearCameraDistance => Mathf.Max(.1f, levelClearCameraDistance);
+        public float LevelClearCameraTrackingSeconds => Mathf.Max(0f, levelClearCameraTrackingSeconds);
+        public Vector2 LevelClearCameraFraming => new Vector2(Mathf.Clamp01(levelClearCameraFraming.x), Mathf.Clamp01(levelClearCameraFraming.y));
+        public float LevelClearCameraSubjectHeight => levelClearCameraSubjectHeight;
         public bool PlayerInvincible => playerInvincible;
         public bool DisableHints => disableHints;
         public EnemyCrowdPressureSettings CrowdPressure => new EnemyCrowdPressureSettings

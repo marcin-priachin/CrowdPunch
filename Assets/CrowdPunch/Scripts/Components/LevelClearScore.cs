@@ -20,6 +20,14 @@ namespace CrowdPunch.Components
                 (Defeats == previous.Defeats && Punches < previous.Punches));
     }
 
+    // ECS retains the entity; the completion bridge exports only its world position.
+    public struct LevelClearSubject : IComponentData
+    {
+        public Entity Entity;
+        public float3 Position;
+        public double DefeatedAt;
+    }
+
     [InternalBufferCapacity(8)]
     public struct ScoredDefeat : IBufferElementData
     {

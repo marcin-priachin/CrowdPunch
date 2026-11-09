@@ -32,7 +32,7 @@ namespace CrowdPunch.Systems.InputBridge
                 Forward = bridge.Forward,
                 Radius = bridge.Radius,
                 CollisionLayer = bridge.CollisionLayer,
-                IsAvailable = true
+                IsAvailable = !FeedbackTimeController.IsLevelClear
             });
             SystemAPI.SetComponent(playerStateEntity, new PlayerHealthSnapshot
             {
@@ -41,7 +41,7 @@ namespace CrowdPunch.Systems.InputBridge
                 IsAvailable = bridge.MaxHealth > 0f
             });
 
-            if (bridge.HasPendingPunch)
+            if (bridge.HasPendingPunch && !FeedbackTimeController.IsLevelClear)
             {
                 if (SystemAPI.TryGetSingletonRW<LevelClearScore>(out var score))
                     score.ValueRW.Punches++;
@@ -63,6 +63,7 @@ namespace CrowdPunch.Systems.InputBridge
             }
             else
             {
+                if (bridge.HasPendingPunch) bridge.ClearPunch();
                 SystemAPI.SetComponentEnabled<PunchRequest>(playerStateEntity, false);
             }
         }

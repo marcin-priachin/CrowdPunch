@@ -8,6 +8,7 @@ namespace CrowdPunch.Components
     public struct EnemyDamageState : IComponentData
     {
         public float LastDamageReceived;
+        public double DefeatedAt;
         public uint DefeatPunchSequence;
         public byte IsDefeatDeferred;
         public EnemyLaunchOwner LastDamageOwner, DefeatOwner;

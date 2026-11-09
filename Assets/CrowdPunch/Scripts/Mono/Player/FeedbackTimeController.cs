@@ -3,16 +3,22 @@ using UnityEngine;
 namespace CrowdPunch.Mono.Player
 {
     // The pause menu and additive scene transition have separate gates. Neither captures
-    // a transient hit-stop scale as its future resume value. Fixed timestep is untouched.
+    // a transient hit-stop scale as its future resume value.
     [DefaultExecutionOrder(-300)]
     public sealed class FeedbackTimeController : MonoBehaviour
     {
         private static FeedbackTimeController instance;
         private double freezeUntil, slowUntil;
         private float slowScale = 1f, baseline = 1f;
-        private bool paused, transitioning, menuPreview;
+        private double levelClearUntil;
+        private float levelClearScale;
+        private bool paused, transitioning, menuPreview, levelClear;
         public static bool IsMenuPreview => instance != null && instance.menuPreview;
-        public static bool IsSuspended => instance != null && (instance.paused || instance.transitioning || instance.menuPreview);
+        public static bool IsLevelClear => instance != null && instance.levelClear;
+        public static bool IsLevelClearSlowMotion => IsLevelClear && Time.unscaledTimeAsDouble < instance.levelClearUntil;
+        internal static float LevelClearStepScale => IsLevelClearSlowMotion ? instance.levelClearScale : 1f;
+        public static bool IsSuspended => instance != null && (instance.paused || instance.transitioning || instance.menuPreview || instance.levelClear);
+        internal static bool AllowsLaunchTrails => !IsSuspended || IsLevelClear && !instance.transitioning && !instance.menuPreview;
 
         private void Awake()
         {
@@ -46,7 +52,22 @@ namespace CrowdPunch.Mono.Player
         {
             if (instance == null) { Time.timeScale = value ? 0f : 1f; return; }
             instance.transitioning = value;
+            if (value) instance.levelClear = false;
             CancelEffects();
+        }
+        public static void BeginLevelClear(float scale, float seconds)
+        {
+            if (instance == null) return;
+            instance.levelClear = true;
+            instance.levelClearScale = scale;
+            instance.levelClearUntil = Time.unscaledTimeAsDouble + seconds;
+            CancelEffects();
+        }
+        public static void EndLevelClear()
+        {
+            if (!IsLevelClear) return;
+            instance.levelClear = false;
+            instance.Apply();
         }
         public static void SetMenuPreview(bool value)
         {
@@ -64,8 +85,9 @@ namespace CrowdPunch.Mono.Player
         internal static float ResolveScale(float baseline, bool blocked, double now,
             double freezeEnd, double slowEnd, float slowScale)
             => blocked || now < freezeEnd ? 0f : baseline * (now < slowEnd ? slowScale : 1f);
-        private void Apply() => Time.timeScale = ResolveScale(baseline, paused || transitioning,
-            Time.unscaledTimeAsDouble, freezeUntil, slowUntil, slowScale);
+        private void Apply() => Time.timeScale = levelClear && !transitioning
+            ? (IsLevelClearSlowMotion ? baseline * levelClearScale : 0f)
+            : ResolveScale(baseline, paused || transitioning, Time.unscaledTimeAsDouble, freezeUntil, slowUntil, slowScale);
         private void OnDisable()
         {
             if (instance != this) return;

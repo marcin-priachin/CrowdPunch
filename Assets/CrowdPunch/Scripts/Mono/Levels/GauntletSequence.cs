@@ -29,6 +29,7 @@ namespace CrowdPunch.Mono.Levels
         private Scene currentLevelScene;
         private uint observedCompletionSequence;
         private uint observedFailureSequence;
+        private double replayShotUntil;
         private bool transitionInProgress;
         private bool legacyMode;
         private bool replay;
@@ -56,6 +57,11 @@ namespace CrowdPunch.Mono.Levels
         public string OpeningHint { get; private set; }
         public LevelClearScore LastClearScore { get; private set; }
         public bool LastClearIsBest { get; private set; }
+        internal GameRuntimeSettings RuntimeSettings => gameSettings;
+        internal bool ShowingClear => !transitionInProgress && Screen is (CampaignScreen.LevelComplete
+            or CampaignScreen.ChapterComplete or CampaignScreen.CampaignComplete or CampaignScreen.ReplayComplete);
+        internal bool ShowingReplayShot => Screen == CampaignScreen.ReplayComplete
+            && Time.unscaledTimeAsDouble < replayShotUntil;
         public bool HintsDisabled => gameSettings != null && gameSettings.DisableHints;
 
         private void Awake()
@@ -136,6 +142,11 @@ namespace CrowdPunch.Mono.Levels
                 else if (currentLevelIndex == campaign.Count - 1) Screen = CampaignScreen.CampaignComplete;
                 else if (currentLevelIndex + 1 == campaign.ChapterEnd(campaign.ChapterFor(currentLevelIndex))) Screen = CampaignScreen.ChapterComplete;
                 else Screen = CampaignScreen.LevelComplete;
+                float slowSeconds = gameSettings != null ? gameSettings.LevelClearSlowSeconds : 1.25f;
+                float cameraSeconds = gameSettings != null && gameSettings.LevelClearCameraEnabled
+                    && GauntletCompletionRegistry.Focus.HasValue ? gameSettings.LevelClearCameraBlendSeconds : 0f;
+                replayShotUntil = Time.unscaledTimeAsDouble + Mathf.Max(slowSeconds, cameraSeconds);
+                FeedbackTimeController.BeginLevelClear(gameSettings != null ? gameSettings.LevelClearTimeScale : .25f, slowSeconds);
                 return;
             }
             if (levelSceneNames != null && currentLevelIndex + 1 < levelSceneNames.Length)
@@ -200,6 +211,7 @@ namespace CrowdPunch.Mono.Levels
         public void ReturnToMenu()
         {
             if (!HasCampaign || transitionInProgress) return;
+            FeedbackTimeController.EndLevelClear();
             Screen = CampaignScreen.MainMenu;
             StartMenuPreview();
         }

@@ -34,7 +34,8 @@ namespace CrowdPunch.Systems.Presentation
                 && bridge.FeedbackSettings != null;
             var settings = available ? bridge.FeedbackSettings : null;
             bool reset = restart != GameRestartRegistry.Sequence || !available || !bridge.gameObject.activeInHierarchy
-                || FeedbackTimeController.IsSuspended;
+                || !FeedbackTimeController.AllowsLaunchTrails;
+            bool trailsOnly = FeedbackTimeController.IsSuspended;
             restart = GameRestartRegistry.Sequence;
             modelBounds.Clear();
             poseBounds.Clear();
@@ -76,6 +77,7 @@ namespace CrowdPunch.Systems.Presentation
                 }
             }
             float dt = UnityEngine.Time.unscaledDeltaTime;
+            float launchDelta = trailsOnly ? UnityEngine.Time.deltaTime : dt;
             int emitted = 0;
             int departures = 0;
             int trails = 0;
@@ -97,9 +99,13 @@ namespace CrowdPunch.Systems.Presentation
                     continue;
                 }
                 ref var f = ref feedback.ValueRW;
-                f.VisualRemaining = math.max(0f, f.VisualRemaining - dt);
-                f.FlashRemaining = math.max(0f, f.FlashRemaining - dt);
-                if (f.Pending != 0)
+                f.VisualRemaining = trailsOnly ? 0f : math.max(0f, f.VisualRemaining - dt);
+                f.FlashRemaining = trailsOnly ? 0f : math.max(0f, f.FlashRemaining - dt);
+                if (trailsOnly)
+                {
+                    f.Pending = 0;
+                }
+                else if (f.Pending != 0)
                 {
                     f.Pending = 0;
                     bool punch = f.Kind == CombatImpactKind.Punch;
@@ -126,10 +132,10 @@ namespace CrowdPunch.Systems.Presentation
                 float speed = math.length(velocity.ValueRO.Linear);
                 bool launched = launch.ValueRO.Phase == EnemyLaunchPhase.Launched;
                 bool newLaunch = launched && (f.WasLaunched == 0 || f.ObservedLaunchSequence != launch.ValueRO.LaunchSequence);
-                f.LaunchAge = newLaunch ? 0f : f.LaunchAge + dt;
+                f.LaunchAge = newLaunch ? 0f : f.LaunchAge + launchDelta;
                 f.WasLaunched = (byte)(launched ? 1 : 0);
                 f.ObservedLaunchSequence = launch.ValueRO.LaunchSequence;
-                f.LaunchSnapDuration = launched && settings.LaunchBodySnap ? math.max(.06f, settings.LaunchBodySnapDuration) : 0f;
+                f.LaunchSnapDuration = launched && !trailsOnly && settings.LaunchBodySnap ? math.max(.06f, settings.LaunchBodySnapDuration) : 0f;
                 f.LaunchCompression = settings.LaunchBodyCompression;
                 f.LaunchStretch = settings.LaunchBodyStretch;
                 if (newLaunch) f.LaunchDirection = math.normalizesafe(velocity.ValueRO.Linear, new float3(0, 0, 1));
@@ -152,7 +158,7 @@ namespace CrowdPunch.Systems.Presentation
                     // Outside the bounded skin-probe budget, avoid using the oversized
                     // animation-culling envelope as the snap pivot.
                     f.LaunchPivot = poseBounds.ContainsKey(entity) ? centre : transform.ValueRO.Position;
-                    if (newLaunch && settings.LaunchDeparturePuff && departures++ < settings.MaximumImpactsPerFrame)
+                    if (newLaunch && !trailsOnly && settings.LaunchDeparturePuff && departures++ < settings.MaximumImpactsPerFrame)
                         bridge.ReceiveLaunch(centre, f.LaunchDirection, size);
                 }
                 if (launch.ValueRO.Phase == EnemyLaunchPhase.Launched && speed >= settings.TrailMinimumSpeed

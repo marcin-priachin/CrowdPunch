@@ -37,6 +37,7 @@ namespace CrowdPunch.Systems.Combat
                 damage.LastDamageChainDepth = owner == EnemyLaunchOwner.Player ? chainDepth : 0;
                 if (health.Current <= 0)
                 {
+                    damage.DefeatedAt = now;
                     damage.DefeatPunchSequence = request.DefeatPunchSequence;
                     damage.DefeatOwner = owner; damage.DefeatSource = source;
                     damage.DefeatSourceLifetime = sourceLifetime;

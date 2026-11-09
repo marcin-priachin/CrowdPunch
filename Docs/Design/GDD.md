@@ -124,6 +124,14 @@ Status: Must
 
 An ordinary campaign clear opens the Full Stack Ringside Rail results screen. Identify the chapter and level by number and stack Next Level, Retry, Level Select, and Main Menu in that order. Next Level advances when the next encounter is loadable. Chapter completion shows Continue and chapter selection. Final campaign completion offers replay access. Completing a replay returns to level selection with Retry and Next Level available when loadable, and never lowers progress. Transitions remain short, clear previous encounter state, and place the player at the authored entry point. During chapter-by-chapter development, unlocks may refer to future content, but unavailable scenes must never be loaded or mistaken for full campaign completion.
 
+On a campaign clear, briefly slow the arena and ease the camera toward the last defeated enemy,
+the defeated boss, or the completed objective. Place that subject in the part of the viewport
+visible beside the results rail. Keep the results controls available during the shot, then
+hold the paused view. Replays show the shot before the full-screen level selection results.
+Expose slowdown and camera framing controls in Game Runtime Settings.
+Offer an option to orbit the finishing subject at the configured shot distance to bring the player into the exposed arena.
+Keep launched motion smooth during the slowdown.
+
 ### LOOP-007 - Campaign Persistence And Menus
 
 Status: Must
@@ -154,7 +162,10 @@ This campaign integration is additional scope to the original legacy-only enemy 
 
 Status: Must
 
-Award equal points per player-credited enemy defeat in scored wave clears. Rank clears by
+Award equal points per player-credited enemy defeat in scored wave clears. Once the final
+wave is spawned and all remaining enemies reach zero health, include their credited defeats
+in the result and allow the encounter to clear without waiting for launched bodies to settle.
+Enemy launch, death animation, and pooling follow their existing lifecycle. Rank clears by
 credited defeats first, then by fewer executed punches, including misses and blocked punches.
 A multi-defeat punch earns a brief feat callout. Once points are earned in a scored attempt,
 show the running score in the upper part of the screen. Briefly show awarded points at each

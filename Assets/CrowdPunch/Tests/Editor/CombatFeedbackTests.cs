@@ -15,6 +15,71 @@ namespace CrowdPunch.Tests
 {
     public sealed class CombatFeedbackTests
     {
+        [TestCase(16f / 9f)]
+        [TestCase(4f / 3f)]
+        public void Loop006_ClearCameraProjectsSubjectIntoExposedArena(float aspect)
+        {
+            var root = new GameObject("Clear shot camera");
+            try
+            {
+                var camera = root.AddComponent<Camera>();
+                camera.aspect = aspect;
+                var subject = new Vector3(20f, 2f, -8f);
+                const float height = .55f;
+                float edge = Mono.UI.RingsideBackdrop.ArenaEdge(aspect, height, levelClear: true);
+                var desired = new Vector2(Mathf.Lerp(edge, 1f, .5f), height);
+                var pose = LevelClearCamera.Compose(camera, subject, new Vector3(0f, 10f, -12f), desired);
+                root.transform.SetPositionAndRotation(pose.position, pose.rotation);
+                Vector3 projected = camera.WorldToViewportPoint(subject);
+                Assert.That(projected.z, Is.Positive);
+                Assert.That(projected.x, Is.EqualTo(desired.x).Within(.001f));
+                Assert.That(projected.y, Is.EqualTo(desired.y).Within(.001f));
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [TestCase(16f / 9f, 12f)]
+        [TestCase(4f / 3f, 5f)]
+        [TestCase(16f / 9f, 80f)]
+        [TestCase(4f / 3f, 300f)]
+        public void Loop006_ClearCameraOrbitsWithoutChangingDistanceOrSubjectFraming(float aspect, float separation)
+        {
+            var root = new GameObject("Two-subject clear shot");
+            try
+            {
+                var camera = root.AddComponent<Camera>();
+                camera.aspect = aspect;
+                camera.fieldOfView = 60f;
+                var screen = Mono.Levels.CampaignScreen.LevelComplete;
+                var subject = new Vector3(20f, 2f, -8f);
+                var player = subject - Vector3.right * separation;
+                var offset = new Vector3(0f, 10f, -12f);
+                const float height = .55f;
+                float edge = Mono.UI.RingsideBackdrop.ArenaEdge(aspect, height, levelClear: true);
+                var desired = new Vector2(Mathf.Lerp(edge, 1f, .5f), height);
+                var focus = LevelClearCamera.Compose(camera, subject, offset, desired);
+                var orbit = LevelClearCamera.FindPlayerOrbit(camera, focus, subject, player, desired, screen);
+                var pose = LevelClearCamera.Orbit(focus, subject, orbit);
+                root.transform.SetPositionAndRotation(pose.position, pose.rotation);
+
+                var projected = camera.WorldToViewportPoint(subject);
+                Assert.That(projected.x, Is.EqualTo(desired.x).Within(.001f));
+                Assert.That(projected.y, Is.EqualTo(desired.y).Within(.001f));
+                Assert.That(Vector3.Distance(pose.position, subject),
+                    Is.EqualTo(Vector3.Distance(focus.position, subject)).Within(.001f));
+                AssertExposed(camera.WorldToViewportPoint(player));
+            }
+            finally { Object.DestroyImmediate(root); }
+
+            void AssertExposed(Vector3 point)
+            {
+                float edge = Mono.UI.RingsideBackdrop.ArenaEdge(aspect, point.y, levelClear: true);
+                Assert.That(point.x, Is.InRange(edge, 1f));
+                Assert.That(point.y, Is.InRange(0f, 1f));
+                Assert.That(point.z, Is.Positive);
+            }
+        }
+
         [TestCase(EnemyLaunchCause.PlayerPunch)]
         [TestCase(EnemyLaunchCause.EnemyCollision)]
         public void Vision005LaunchAccentsObserveLaunchesRatherThanContactMailboxOrTrailCapacity(EnemyLaunchCause cause)

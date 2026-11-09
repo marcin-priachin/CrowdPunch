@@ -100,8 +100,8 @@ namespace CrowdPunch.Editor
                 int cleared = flow.CurrentLevelIndex;
                 Require(new CampaignProgress(savePath).IsComplete(flow.Campaign.Get(cleared).id),
                     "Level clear did not save before advancing.");
-                Require(Time.timeScale == 0 && next != null && next.interactable,
-                    "Expected a paused level clear with Next Level available.");
+                Require(FeedbackTimeController.IsLevelClear && next != null && next.interactable,
+                    "Expected a level clear with Next Level available during the presentation.");
                 next.onClick.Invoke();
                 Require(flow.TransitionInProgress, "Next Level did not start the scene transition.");
                 Record($"PASS Level {cleared+1:00} saved on the results rail. Next Level starts the transition.");
