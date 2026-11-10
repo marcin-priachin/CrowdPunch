@@ -1,5 +1,26 @@
 # Crowd Punch â€” Current Architecture
 
+## Gameplay SFX (VISION-005, COMBAT-003, ENEMY-003, OQ-019)
+
+`GameBootstrap` binds `GameplaySfx` to the scene's player bridge. The resource catalog assigns
+Elastic as the default gameplay profile. Dry remains an audition asset in
+`Assets/CrowdPunch/SFX`.
+
+The Mono audio endpoint consumes punch acknowledgements, player events and bounded combat
+presentation events. `GameplaySfxBridgeSystem` observes specialised actor phase and sequence
+changes and sends cue IDs and world positions through `PlayerEcsBridge`. It observes while
+paused so persistent actors do not replay old cues on resume. Audio data and clip selection
+stay out of combat resolution. Punch requests carry the first protected armour contact for
+presentation, and the wizard boss records each teleport departure.
+
+Player and results cues have dedicated voices. World cues use eight pooled voices, range
+attenuation and per-cue throttling. Crowd collisions keep the strongest audible contact per
+presentation frame and share a cadence with the exceptional-chain accent. Baseline, Dasher,
+Ranged and Linked Pair share squeaky reactions on confirmed punches and qualifying crowd hits.
+The ranged projectile release uses a short swish and retains its separate contact splash.
+Pause and retry clear active combat sounds. The exploder fuse is an audition warning when an
+active exploder enters a small band outside player contact range.
+
 ## Runtime player protection and hints (2026-11-05)
 
 `GameRuntimeSettings` exposes `Player Invincible` and `Disable Hints`, both off by

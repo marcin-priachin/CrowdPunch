@@ -78,6 +78,8 @@ namespace CrowdPunch.Systems.Presentation
                 if (punch.IsResolved)
                 {
                     bridge.ReceivePunchResult(punch.Sequence, punch.HitEnemy);
+                    if (punch.HitArmor && punch.Sequence == bridge.PunchSequence)
+                        bridge.ReceiveGameplaySfx(GameplaySfxCue.ArmorBlock, punch.ArmorContact);
                     punch.IsResolved = false;
                     SystemAPI.SetComponent(playerEntity, punch);
                 }

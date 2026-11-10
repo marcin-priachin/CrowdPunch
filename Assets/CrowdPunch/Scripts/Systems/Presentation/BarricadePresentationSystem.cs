@@ -19,10 +19,15 @@ namespace CrowdPunch.Systems.Presentation
                 if (wall.ValueRO.HitSequence == feedback.ValueRO.ReportedHit) continue;
                 feedback.ValueRW.ReportedHit = wall.ValueRO.HitSequence;
                 if (feedback.ValueRO.ReportedHit != 0 && PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
+                {
                     bridge.ReceiveImpact(new CombatFeedbackMessage { Kind = CombatImpactKind.Environment,
                         Position = wall.ValueRO.LastHitPosition, Direction = math.up(),
                         Intensity = wall.ValueRO.HitsRemaining == 0 ? 1
                             : SystemAPI.HasComponent<ShellTarget>(entity) && SystemAPI.GetComponent<ShellTarget>(entity).LastHitBlocked != 0 ? .2f : .65f });
+                    if (!SystemAPI.HasComponent<ShellTarget>(entity))
+                        bridge.ReceiveGameplaySfx(wall.ValueRO.HitsRemaining == 0 ? GameplaySfxCue.BarricadeBreak
+                            : GameplaySfxCue.BarricadeHit, wall.ValueRO.LastHitPosition);
+                }
             }
             foreach (var (visual, transform, color) in
                 SystemAPI.Query<RefRW<BarricadeVisual>, RefRW<LocalTransform>, RefRW<URPMaterialPropertyBaseColor>>().WithNone<ShellVisual,VillageGatePiece>())

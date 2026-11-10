@@ -12,7 +12,12 @@ namespace CrowdPunch.Systems.InputBridge
         public void OnCreate(ref SystemState state) => state.RequireForUpdate<LinkedPairPlayerHit>();
         public void OnUpdate(ref SystemState state) {
             var hits = SystemAPI.GetSingletonBuffer<LinkedPairPlayerHit>();
-            if (PlayerBridgeRegistry.TryGetBridge(out var bridge)) foreach (var hit in hits) bridge.ReceiveLinkedPairDamage(hit.Damage);
+            if (PlayerBridgeRegistry.TryGetBridge(out var bridge))
+                foreach (var hit in hits)
+                {
+                    bridge.ReceiveLinkedPairDamage(hit.Damage);
+                    bridge.ReceiveGameplaySfx(GameplaySfxCue.LinkedPairAttack, hit.Position);
+                }
             hits.Clear();
         }
     }

@@ -18,7 +18,8 @@ namespace CrowdPunch.Components
         public quaternion Facing;
         public double InvulnerableUntil;
         public uint RushSequence, AcceptedHits;
-        public uint ShotSequence;
+        public uint ShotSequence, TeleportSequence;
+        public float3 TeleportDeparture;
         public byte RushHitPlayer, AlternateSide;
     }
 

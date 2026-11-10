@@ -364,7 +364,7 @@ namespace CrowdPunch.Systems.AI
             PunchSpecification punch = Spec(origin, direction, settings);
             punch.CommittedEliteTarget = selected;
             punch.ApplyDamage = settings.ProjectileReceivesDamage;
-            PunchResolution.TryApply(EntityManager, selected, punch);
+            bool hit = PunchResolution.TryApply(EntityManager, selected, punch);
             if (settings.InteractionMode == ElitePunchInteractionMode.AllValidEnemiesInPunchVolume)
             {
                 punch.CommittedEliteTarget = Entity.Null;
@@ -372,8 +372,10 @@ namespace CrowdPunch.Systems.AI
                 foreach (Entity enemy in all)
                     if (enemy != selected && EntityManager.Exists(enemy)
                         && EntityManager.GetComponentData<EnemyTier>(enemy).Value == EnemyCombatTier.Normal)
-                        PunchResolution.TryApply(EntityManager, enemy, punch);
+                        hit |= PunchResolution.TryApply(EntityManager, enemy, punch);
             }
+            if (hit && PlayerBridgeRegistry.TryGetBridge(out var audioBridge))
+                audioBridge.ReceiveGameplaySfx(GameplaySfxCue.EliteLaunch, origin);
             if (settings.CanDirectlyHitPlayer != 0 && PunchResolution.Contains(player.Position, punch)
                 && PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge))
                 bridge.ReceiveEnemyHit(settings.DirectPlayerDamage, settings.PlayerInvincibilityDuration, direction * settings.PlayerPush);

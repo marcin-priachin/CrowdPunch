@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fc2d6e9aad7bc144b3a986a3adbb8a4, type: 3}
+  m_Name: DrySfxAudition
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.GameplaySfxProfile
+  PunchConfirmed:
+  - {fileID: 8300000, guid: 99b946f9ee1cb7b4287bdb6b4baf1b59, type: 3}
+  PunchMiss:
+  - {fileID: 8300000, guid: 7edaf12fb79cc674fa081fbef74bcf19, type: 3}
+  - {fileID: 8300000, guid: 0dad18368fb9ec54ba064a679ddef3da, type: 3}
+  PlayerDash:
+  - {fileID: 8300000, guid: 21276b400636b5842a53348e94385c92, type: 3}
+  LaunchDeparture:
+  - {fileID: 8300000, guid: deb17930f40dc53488facfe3ca7d466d, type: 3}
+  - {fileID: 8300000, guid: 03ec46e828b9ab240a62c45be0781c1c, type: 3}
+  CrowdCollision:
+  - {fileID: 8300000, guid: 75538d1fe3c3d3d45b0e9cda819259d7, type: 3}
+  - {fileID: 8300000, guid: 5793a18dc0d61d3498e3905a52d11600, type: 3}
+  - {fileID: 8300000, guid: 6f63541279191854b8b82c04939a12d2, type: 3}
+  ExceptionalChain:
+  - {fileID: 8300000, guid: 54da4de1f20fc7e48ada6c1a8783ff6c, type: 3}
+  - {fileID: 8300000, guid: 6d85671c6f4ee644a82cdcc20e43995f, type: 3}
+  PlayerHurt:
+  - {fileID: 8300000, guid: 8390011425381ff48b079d19207d558a, type: 3}
+  - {fileID: 8300000, guid: fbaec98ca17c7894aabf3caea9190a9f, type: 3}
+  GoblinGrunt:
+  - {fileID: 8300000, guid: 92121684f0298ff4aabbe0849a804d12, type: 3}
+  - {fileID: 8300000, guid: 43f989f78e111964f96b8d2879d2db11, type: 3}
+  - {fileID: 8300000, guid: 9a60d9418ab060f49954626d1791e404, type: 3}
+  LinkedPairAttack:
+  - {fileID: 8300000, guid: d40d7ffa2f6705a4d9630696374343d8, type: 3}
+  - {fileID: 8300000, guid: ac9ee750a69945f40b9224ca6aba932e, type: 3}
+  EliteLaunch:
+  - {fileID: 8300000, guid: ddf2628ff0521d84a97115c54e1258c8, type: 3}
+  - {fileID: 8300000, guid: 678ff39aefb0ca0448d45bf5e2c33c0f, type: 3}
+  DasherRoll:
+  - {fileID: 8300000, guid: 1411e787557e5034ba8c04279a14d252, type: 3}
+  - {fileID: 8300000, guid: f52d4f2155fa72f41b289eb0b1c6c89f, type: 3}
+  ArmorBlock:
+  - {fileID: 8300000, guid: 9f718d1f283f79642b9184f182a14017, type: 3}
+  - {fileID: 8300000, guid: 7d43816cf14ab0f45881eaf6f925aedd, type: 3}
+  ArmorBreak:
+  - {fileID: 8300000, guid: 37d44d45f1d73a34ebd8b0301666bb24, type: 3}
+  - {fileID: 8300000, guid: defc22b611ff1344896b7cbe14c18ea0, type: 3}
+  RangerCast:
+  - {fileID: 8300000, guid: 60357c02f0be8514bacdc9a9b9349bbb, type: 3}
+  - {fileID: 8300000, guid: 2dfe076ab2a9bb649b8c4d3e2a722095, type: 3}
+  RangerImpact:
+  - {fileID: 8300000, guid: feef972d118628546a040eb7c1805e33, type: 3}
+  - {fileID: 8300000, guid: 8c0e3007d09803043a40a749c2abce36, type: 3}
+  FlowerWindup:
+  - {fileID: 8300000, guid: ebd85d61e9772434cb8c744471dd0be7, type: 3}
+  - {fileID: 8300000, guid: 2a38411ea6dd6d64cace2231810a156d, type: 3}
+  FlowerSporeBurst:
+  - {fileID: 8300000, guid: 03ec46e828b9ab240a62c45be0781c1c, type: 3}
+  - {fileID: 8300000, guid: ae0f0913fd6fa8c4791f216c4f4e7f42, type: 3}
+  SquidInk:
+  - {fileID: 8300000, guid: 7635bbfb45ae9494794ece48c11edf0e, type: 3}
+  - {fileID: 8300000, guid: 58bcad32ad9a19f44b71b4e8ab5b2098, type: 3}
+  BlobDetach:
+  - {fileID: 8300000, guid: e8e14fa0599b3b94a85b1dc574e56c34, type: 3}
+  - {fileID: 8300000, guid: 9146f5f1142924844b2e031b046887ef, type: 3}
+  BlobBounce:
+  - {fileID: 8300000, guid: 6cb4e0e2edede0d468c936b263b8c2d2, type: 3}
+  - {fileID: 8300000, guid: de1b84555f6ef0f4b91cca8f859a02ee, type: 3}
+  ExploderWarning:
+  - {fileID: 8300000, guid: 59c0dbac0fec8774c95eca05fabad6bf, type: 3}
+  ExploderDetonation:
+  - {fileID: 8300000, guid: 70d32c86f95ff7045ad60c8c67e21e32, type: 3}
+  GoblinWizardCharge:
+  - {fileID: 8300000, guid: 2f21049bfb2b6b843a36f1fc10cf20a8, type: 3}
+  GoblinWizardCast:
+  - {fileID: 8300000, guid: 0e8bf55ebb364b1478a8c950918e43f6, type: 3}
+  - {fileID: 8300000, guid: 51c51cbeff7d9724b8ca8cc6ac0bdc99, type: 3}
+  GoblinWizardTeleport:
+  - {fileID: 8300000, guid: 647b8b16e5c413a43b9b85e8611bcb23, type: 3}
+  ArmoredBossMovement:
+  - {fileID: 8300000, guid: a382ffb4388aa04439b3229a8674e63d, type: 3}
+  - {fileID: 8300000, guid: 56bea1682a9c68e4f874fb4a7f2bfa6c, type: 3}
+  PillarLanding:
+  - {fileID: 8300000, guid: 353c24b9bc442e347a2c55d669f4abec, type: 3}
+  - {fileID: 8300000, guid: 2e2ddc58e5e86de4caf783ddb6f4a44e, type: 3}
+  PillarBossHit:
+  - {fileID: 8300000, guid: 68405a1439217264fad65371f23f5a0d, type: 3}
+  - {fileID: 8300000, guid: 5dc726a5e7fb75f4e886cee08705c3e8, type: 3}
+  SpikedTurtleRoll:
+  - {fileID: 8300000, guid: 90cbf1c2331825b4ca6a749be37d90aa, type: 3}
+  - {fileID: 8300000, guid: 4a2c43c67dff0cf4797e0bfe42004d60, type: 3}
+  SpikedTurtleWallHit:
+  - {fileID: 8300000, guid: 16cbc62af79a34149b74e7ae803cb25e, type: 3}
+  BarricadeHit:
+  - {fileID: 8300000, guid: db06c6e1bf5c36845ae917a637644ad1, type: 3}
+  - {fileID: 8300000, guid: f4778e38286da9f44a96a581d008b8e7, type: 3}
+  BarricadeBreak:
+  - {fileID: 8300000, guid: 6c009ef29d1272840ba70de18d48849c, type: 3}
+  - {fileID: 8300000, guid: 0a2d40db4b7a9ac41bc9e7f226bb9b81, type: 3}
+  LevelClear:
+  - {fileID: 8300000, guid: bc9a23e0091886b4aa68e581712cdf57, type: 3}

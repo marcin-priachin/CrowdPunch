@@ -23,6 +23,8 @@ namespace CrowdPunch.Systems.Movement
                          RefRW<LocalTransform>, RefRW<PhysicsVelocity>>())
             {
                 if (boss.ValueRO.Phase != ChickenPhase.Teleport) continue;
+                boss.ValueRW.TeleportDeparture = pose.ValueRO.Position;
+                boss.ValueRW.TeleportSequence++;
                 var position = FarthestPosition(player.Position, pose.ValueRO.Position.y, tuning.ValueRO);
                 // Explicit teleport before the physics world is built. Normal movement remains velocity-owned.
                 pose.ValueRW.Position = position;

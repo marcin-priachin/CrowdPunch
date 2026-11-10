@@ -63,8 +63,9 @@ namespace CrowdPunch.Systems.Combat
                 float3 a = em.GetComponentData<LocalTransform>(pair.A).Position, b = em.GetComponentData<LocalTransform>(pair.B).Position;
                 float3 oldA = pair.HasPrevious != 0 ? pair.PreviousA : a, oldB = pair.HasPrevious != 0 ? pair.PreviousB : b;
                 if (player.IsAvailable && LinkedPairGeometry.Sweep(oldA, oldB, a, b, player.Position - player.Velocity * dt,
-                    player.Position, t.Width * .5f + player.Radius, world, enemies, out _, out _) &&
-                    LinkedPairGeometry.Tick(clocks, Entity.Null, 0, now, t.TickInterval)) hits.Add(new LinkedPairPlayerHit { Damage = t.PlayerDamage });
+                    player.Position, t.Width * .5f + player.Radius, world, enemies, out var playerContact, out _) &&
+                    LinkedPairGeometry.Tick(clocks, Entity.Null, 0, now, t.TickInterval))
+                    hits.Add(new LinkedPairPlayerHit { Damage = t.PlayerDamage, Position = playerContact });
                 if (pair.Phase == EnemyLaunchPhase.Launched) {
                     float reach = padding + t.Width * .5f;
                     float2 lo = math.min(math.min(a.xz, b.xz), math.min(oldA.xz, oldB.xz)) - reach;

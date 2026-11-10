@@ -38,5 +38,9 @@ namespace CrowdPunch.Components
         public double NextHitAt;
     }
 
-    public struct LinkedPairPlayerHit : IBufferElementData { public float Damage; }
+    public struct LinkedPairPlayerHit : IBufferElementData
+    {
+        public float Damage;
+        public float3 Position;
+    }
 }

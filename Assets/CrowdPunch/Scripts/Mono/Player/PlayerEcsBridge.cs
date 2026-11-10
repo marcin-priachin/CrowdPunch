@@ -57,6 +57,9 @@ namespace CrowdPunch.Mono.Player
             => ProjectileBurstReceived?.Invoke(kind, position, direction, scale);
         public CrowdPunch.Configuration.CombatFeedbackSettings FeedbackSettings { get; set; }
         public event Action<CombatFeedbackMessage> ImpactReceived;
+        internal GameplaySfx GameplayAudio { get; set; }
+        internal event Action<GameplaySfxCue, Vector3> GameplaySfxReceived;
+        internal void ReceiveGameplaySfx(GameplaySfxCue cue, Vector3 position) => GameplaySfxReceived?.Invoke(cue, position);
         public event Action<Vector3> ScoredDefeatReceived;
         public event Action<int, int> ScoreAwarded;
 

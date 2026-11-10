@@ -23,5 +23,7 @@ namespace CrowdPunch.Components
         public bool HasContactPose;
         public bool IsResolved;
         public bool HitEnemy;
+        public bool HitArmor;
+        public float3 ArmorContact;
     }
 }

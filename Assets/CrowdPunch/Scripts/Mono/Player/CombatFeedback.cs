@@ -121,7 +121,7 @@ namespace CrowdPunch.Mono.Player
         private void OnLaunch(Vector3 position, Vector3 direction, Vector3 size)
         {
             if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
-            launchDepartures?.Show(position, direction, size);
+            if (settings.LaunchDeparturePuff) launchDepartures?.Show(position, direction, size);
         }
         private void OnDamage(Vector3 impulse)
         {

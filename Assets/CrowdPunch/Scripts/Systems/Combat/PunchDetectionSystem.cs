@@ -65,6 +65,11 @@ namespace CrowdPunch.Systems.Combat
                         && PunchResolution.Contains(state.EntityManager, enemy, pose.Position, punch))
                     {
                         punchRequest.HitEnemy = true;
+                        if (!punchRequest.HitArmor && SystemAPI.HasComponent<EnemyArmor>(enemy))
+                        {
+                            punchRequest.HitArmor = true;
+                            punchRequest.ArmorContact = pose.Position;
+                        }
                         RecordContactApproach(state.EntityManager, enemy, pose, playerPosition,
                             ref punchRequest, ref closestApproach);
                     }
