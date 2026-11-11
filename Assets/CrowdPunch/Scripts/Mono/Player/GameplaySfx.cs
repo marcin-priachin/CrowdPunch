@@ -17,7 +17,8 @@ namespace CrowdPunch.Mono.Player
         private readonly float[] worldPriorities = new float[8];
         private readonly AudioSource[] crowdVoices = new AudioSource[2];
         private AudioSource punchVoice, hurtVoice, dashVoice, clearVoice, projectileDischargeVoice;
-        private WorldLoopAudioPool dasherRolls, wizardProjectiles, rollingBossRolls, flowerSporeEmissions;
+        private WorldLoopAudioPool dasherRolls, wizardProjectiles, rollingBossRolls, flowerSporeEmissions, dragonFlames;
+        private WorldLoopAudioPool finaleFlight, finaleWarning;
         private Transform audioCamera;
         private int nextCrowdVoice;
         private PlayerEcsBridge bridge;
@@ -66,6 +67,15 @@ namespace CrowdPunch.Mono.Player
             if (profile.FlowerSporeLoop != null)
                 flowerSporeEmissions = new WorldLoopAudioPool(transform, player.transform, audioCamera, profile.FlowerSporeLoop,
                     "Flower Spore SFX", 4, 30f, 164);
+            if (profile.DragonFlameLoop != null)
+                dragonFlames = new WorldLoopAudioPool(transform, player.transform, audioCamera, profile.DragonFlameLoop,
+                    "Dragon Flame SFX", 4, 36f, 168);
+            if (profile.FinaleWarningLoop != null)
+                finaleWarning = new WorldLoopAudioPool(transform, player.transform, audioCamera, profile.FinaleWarningLoop,
+                    "Finale Warning SFX", 1, 56f, 64);
+            if (profile.FinaleFlightLoop != null)
+                finaleFlight = new WorldLoopAudioPool(transform, player.transform, audioCamera, profile.FinaleFlightLoop,
+                    "Finale Flight SFX", 1, 72f, 176);
             for (int i = 0; i < crowdVoices.Length; i++)
             {
                 crowdVoices[i] = MakeVoice("Crowd Impact SFX", false);
@@ -101,6 +111,9 @@ namespace CrowdPunch.Mono.Player
             bridge.PunchResolved += OnPunch;
             bridge.ImpactReceived += OnImpact;
             bridge.LaunchReceived += OnLaunch;
+            bridge.NinjaTeleportReceived += OnNinjaTeleport;
+            if (finaleWarning != null) bridge.FinaleWarningReceived += OnFinaleWarning;
+            if (finaleFlight != null) bridge.FinaleFlightReceived += OnFinaleFlight;
             bridge.PillarImpactReceived += OnPillar;
             bridge.ExplosionReceived += OnExplosion;
             bridge.ProjectileBurstReceived += OnProjectileImpact;
@@ -129,6 +142,12 @@ namespace CrowdPunch.Mono.Player
                 bridge.FlowerSporeEmissionReceived += OnFlowerSporeEmission;
                 bridge.FlowerSporeEmissionsEnded += flowerSporeEmissions.End;
             }
+            if (dragonFlames != null)
+            {
+                bridge.DragonFlamesBegan += dragonFlames.Begin;
+                bridge.DragonFlameAudioReceived += OnDragonFlame;
+                bridge.DragonFlamesEnded += dragonFlames.End;
+            }
             if (controller != null) controller.DashStarted += OnDash;
             if (health != null) health.DamageAccepted += OnHurt;
         }
@@ -142,6 +161,9 @@ namespace CrowdPunch.Mono.Player
                 bridge.PunchResolved -= OnPunch;
                 bridge.ImpactReceived -= OnImpact;
                 bridge.LaunchReceived -= OnLaunch;
+                bridge.NinjaTeleportReceived -= OnNinjaTeleport;
+                if (finaleWarning != null) bridge.FinaleWarningReceived -= OnFinaleWarning;
+                if (finaleFlight != null) bridge.FinaleFlightReceived -= OnFinaleFlight;
                 bridge.PillarImpactReceived -= OnPillar;
                 bridge.ExplosionReceived -= OnExplosion;
                 bridge.ProjectileBurstReceived -= OnProjectileImpact;
@@ -169,6 +191,12 @@ namespace CrowdPunch.Mono.Player
                     bridge.FlowerSporeEmissionsBegan -= flowerSporeEmissions.Begin;
                     bridge.FlowerSporeEmissionReceived -= OnFlowerSporeEmission;
                     bridge.FlowerSporeEmissionsEnded -= flowerSporeEmissions.End;
+                }
+                if (dragonFlames != null)
+                {
+                    bridge.DragonFlamesBegan -= dragonFlames.Begin;
+                    bridge.DragonFlameAudioReceived -= OnDragonFlame;
+                    bridge.DragonFlamesEnded -= dragonFlames.End;
                 }
             }
             if (controller != null) controller.DashStarted -= OnDash;
@@ -210,6 +238,9 @@ namespace CrowdPunch.Mono.Player
             wizardProjectiles?.Clear();
             rollingBossRolls?.Clear();
             flowerSporeEmissions?.Clear();
+            dragonFlames?.Clear();
+            finaleWarning?.Clear();
+            finaleFlight?.Clear();
             foreach (var voice in crowdVoices) voice.Stop();
             foreach (var voice in worldVoices) voice.Stop();
             nextCrowdVoice = 0;
@@ -224,6 +255,9 @@ namespace CrowdPunch.Mono.Player
             punchSequence = sequence;
             if (CanPlay) Play(punchVoice, hit ? profile.PunchConfirmed : profile.PunchMiss, hit ? .8f : .43f);
         }
+
+        private void OnNinjaTeleport(Vector3 _, Vector3 arrival) =>
+            OnWorldCue(GameplaySfxCue.NinjaTeleport, arrival);
 
         private void OnDash()
         {
@@ -325,6 +359,35 @@ namespace CrowdPunch.Mono.Player
             if (CanPlay) flowerSporeEmissions.Show(id, position, 1f, .48f);
         }
 
+        private void OnDragonFlame(ulong id, Vector3 position)
+        {
+            if (CanPlay) dragonFlames.Show(id, position, 1f, .18f);
+        }
+
+        private void OnFinaleFlight(Vector3 position, float gain)
+        {
+            finaleFlight.Begin();
+            if (gain > 0f && CanPlay) finaleFlight.Show(1, position, 1f, .16f * gain);
+            finaleFlight.End();
+        }
+
+        private void OnFinaleWarning(uint sequence, FinaleAttack attack, Vector3 position, float progress)
+        {
+            finaleWarning.Begin();
+            if (sequence != 0 && CanPlay)
+            {
+                float pitch = attack switch
+                {
+                    FinaleAttack.Strike => 1.03f,
+                    FinaleAttack.Shockwave => .89f,
+                    FinaleAttack.Landing => .66f,
+                    _ => .78f
+                };
+                finaleWarning.Show(sequence, position, pitch + progress * .43f, Mathf.Lerp(.19f, .49f, progress));
+            }
+            finaleWarning.End();
+        }
+
         private void OnProjectileVisual(ProjectileVisualSample sample)
         {
             if (sample.Kind == ProjectileVisualKind.Boss)
@@ -337,6 +400,16 @@ namespace CrowdPunch.Mono.Player
         {
             double now = Time.unscaledTimeAsDouble;
             if (!CanPlay || now < nextCue[(int)cue]) return;
+            if (TryHandleFinaleCue(cue, position, now)) return;
+            if (cue == GameplaySfxCue.LinkedPairPlayerShock)
+            {
+                if (Play(hurtVoice, profile.LinkedPairShock, .85f))
+                {
+                    nextHurt = now + .25;
+                    nextCue[(int)cue] = now + .12;
+                }
+                return;
+            }
             if (cue == GameplaySfxCue.GoblinWizardProjectileDischarge)
             {
                 float gain = CrowdImpactGain(position);
@@ -360,7 +433,7 @@ namespace CrowdPunch.Mono.Player
             var clips = cue switch
             {
                 GameplaySfxCue.GoblinGrunt => profile.GoblinGrunt,
-                GameplaySfxCue.LinkedPairAttack => profile.LinkedPairAttack,
+                GameplaySfxCue.LinkedPairEnemyShock => profile.LinkedPairShock,
                 GameplaySfxCue.EliteLaunch => profile.EliteLaunch,
                 GameplaySfxCue.ArmorBlock => profile.ArmorBlock,
                 GameplaySfxCue.ArmorBreak => profile.ArmorBreak,
@@ -369,6 +442,10 @@ namespace CrowdPunch.Mono.Player
                 GameplaySfxCue.FlowerWindup => profile.FlowerWindup,
                 GameplaySfxCue.FlowerSporeBurst => profile.FlowerSporeBurst,
                 GameplaySfxCue.SquidInk => profile.SquidInk,
+                GameplaySfxCue.DragonFlameBurst => profile.DragonFlameBurst,
+                GameplaySfxCue.DragonHit => profile.DragonHit,
+                GameplaySfxCue.NinjaTeleport => profile.NinjaTeleport,
+                GameplaySfxCue.NinjaDash => profile.NinjaDash,
                 GameplaySfxCue.BlobDetach => profile.BlobDetach,
                 GameplaySfxCue.BlobBounce => profile.BlobBounce,
                 GameplaySfxCue.ExploderWarning => profile.ExploderWarning,
@@ -409,10 +486,21 @@ namespace CrowdPunch.Mono.Player
                 GameplaySfxCue.GoblinWizardProjectileRedirect => .68f,
                 GameplaySfxCue.GoblinWizardProjectileImpact => .64f,
                 GameplaySfxCue.ArmoredBossClang => .8f,
+                GameplaySfxCue.LinkedPairEnemyShock => .66f,
+                GameplaySfxCue.DragonFlameBurst => .74f,
+                GameplaySfxCue.DragonHit => .6f,
+                GameplaySfxCue.NinjaTeleport => .7f,
+                GameplaySfxCue.NinjaDash => .54f,
+                GameplaySfxCue.BlobDetach => .68f,
+                GameplaySfxCue.BlobBounce => .64f,
                 _ => gatekeeper ? .9f : .46f
             };
-            bool played = PlayWorld(clips, position, volume, gatekeeper || giantGoblin ? 2.5f : 1f,
-                playerRelative: gatekeeper || giantGoblin, pitch: cue == GameplaySfxCue.GiantGoblinHit ? .76f : 1f);
+            bool playerRelative = gatekeeper || giantGoblin
+                || cue is GameplaySfxCue.LinkedPairEnemyShock or GameplaySfxCue.DragonFlameBurst or GameplaySfxCue.DragonHit
+                    or GameplaySfxCue.BlobDetach or GameplaySfxCue.BlobBounce
+                    or GameplaySfxCue.NinjaTeleport or GameplaySfxCue.NinjaDash;
+            bool played = PlayWorld(clips, position, volume, playerRelative ? 2.5f : 1f,
+                playerRelative: playerRelative, pitch: cue == GameplaySfxCue.GiantGoblinHit ? .76f : 1f);
             switch (cue)
             {
                 case GameplaySfxCue.ArmoredBossMovement:
@@ -428,11 +516,37 @@ namespace CrowdPunch.Mono.Player
                     played |= PlayWorld(profile.GatekeeperStrikeImpact, position, .85f, 3f, playerRelative: true);
                     break;
             }
-            if (played) nextCue[(int)cue] = now + .17;
+            if (played) nextCue[(int)cue] = now + (cue == GameplaySfxCue.BlobBounce ? .08 : .17);
         }
 
         private float Attenuation(Vector3 position) =>
             Mathf.Clamp01(1f - Vector3.Distance(position, bridge.transform.position) / WorldRange);
+
+        private bool TryHandleFinaleCue(GameplaySfxCue cue, Vector3 position, double now)
+        {
+            if (cue == GameplaySfxCue.FinaleDefeat)
+            {
+                PlayResults(profile.FinaleDefeat, .96f);
+                return true;
+            }
+
+            var (clips, volume, priority) = cue switch
+            {
+                GameplaySfxCue.FinaleLightningStrike => (profile.FinaleLightningStrike, .91f, 6f),
+                GameplaySfxCue.FinaleAirSweep => (profile.FinaleAirSweep, .82f, 5f),
+                GameplaySfxCue.FinaleWingSweep => (profile.FinaleWingSweep, .86f, 5f),
+                GameplaySfxCue.FinaleShockwave => (profile.FinaleShockwave, .94f, 6f),
+                GameplaySfxCue.FinaleAnchorOverload => (profile.FinaleAnchorOverload, .83f, 5f),
+                GameplaySfxCue.FinaleLanding => (profile.FinaleLanding, 1f, 7f),
+                GameplaySfxCue.FinaleTakeoff => (profile.FinaleTakeoff, .77f, 4f),
+                GameplaySfxCue.FinaleHit => (profile.FinaleHit, .74f, 4f),
+                _ => (null, 0f, 0f)
+            };
+            if (volume == 0f) return false;
+            if (PlayWorld(clips, position, volume, priority, playerRelative: true))
+                nextCue[(int)cue] = now + .17;
+            return true;
+        }
 
         private bool PlayWorld(AudioClip[] clips, Vector3 position, float volume, float priority,
             bool playerRelative = false, float pitch = 1f)

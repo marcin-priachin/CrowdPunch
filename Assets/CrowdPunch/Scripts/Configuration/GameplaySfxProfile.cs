@@ -17,7 +17,7 @@ namespace CrowdPunch.Configuration
         [Header("Goblins")]
         [Tooltip("Hit reaction shared by Baseline, Dasher, Ranged and Linked Pair.")]
         public AudioClip[] GoblinGrunt;
-        public AudioClip[] LinkedPairAttack;
+        public AudioClip[] LinkedPairShock;
         public AudioClip[] EliteLaunch;
         [Tooltip("Seamless rolling loop for the Dasher's charge, committed dash and launched roll.")]
         public AudioClip DasherRollLoop;
@@ -32,6 +32,12 @@ namespace CrowdPunch.Configuration
         [Tooltip("Loop for the flower's continuous spore emission.")]
         public AudioClip FlowerSporeLoop;
         public AudioClip[] SquidInk;
+        public AudioClip[] DragonFlameBurst;
+        [Tooltip("Quiet loop under the Dragon's active breath and launched flame.")]
+        public AudioClip DragonFlameLoop;
+        public AudioClip[] DragonHit;
+        public AudioClip[] NinjaTeleport;
+        public AudioClip[] NinjaDash;
         public AudioClip[] BlobDetach;
         public AudioClip[] BlobBounce;
         public AudioClip[] ExploderWarning;
@@ -66,6 +72,19 @@ namespace CrowdPunch.Configuration
         [Tooltip("Seamless rumble for the spiked turtle's spinning attack.")]
         public AudioClip SpikedTurtleRollLoop;
         public AudioClip[] SpikedTurtleWallHit;
+
+        [Header("Final encounter")]
+        public AudioClip FinaleFlightLoop;
+        public AudioClip FinaleWarningLoop;
+        public AudioClip[] FinaleLightningStrike;
+        public AudioClip[] FinaleAirSweep;
+        public AudioClip[] FinaleWingSweep;
+        public AudioClip[] FinaleShockwave;
+        public AudioClip[] FinaleAnchorOverload;
+        public AudioClip[] FinaleLanding;
+        public AudioClip[] FinaleTakeoff;
+        public AudioClip[] FinaleHit;
+        public AudioClip[] FinaleDefeat;
 
         [Header("Objectives and results")]
         public AudioClip[] BarricadeHit;

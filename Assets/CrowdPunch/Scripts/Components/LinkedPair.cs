@@ -43,4 +43,10 @@ namespace CrowdPunch.Components
         public float Damage;
         public float3 Position;
     }
+
+    public struct LinkedPairEnemyShock : IComponentData
+    {
+        public float3 Position;
+        public byte Pending;
+    }
 }

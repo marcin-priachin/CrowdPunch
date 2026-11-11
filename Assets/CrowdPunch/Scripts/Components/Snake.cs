@@ -27,6 +27,9 @@ namespace CrowdPunch.Components
         public uint Generation;
         public int Index;
         public byte Detached, BouncedOutsideOwner;
+        public uint WallBounceSequence;
+        public float3 WallBouncePosition;
+        public double NextWallBounceSoundAt;
         public float Radius;
         public EnemyWaveOwnership Encounter;
     }

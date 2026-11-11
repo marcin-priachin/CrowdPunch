@@ -21,7 +21,8 @@ namespace CrowdPunch.Systems.Combat
         public void OnCreate(ref SystemState state) {
             previousTargets = new NativeParallelHashMap<Entity, PreviousTarget>(1024, Allocator.Persistent);
             currentTargets = new NativeParallelHashMap<Entity, PreviousTarget>(1024, Allocator.Persistent);
-            state.EntityManager.AddBuffer<LinkedPairPlayerHit>(state.EntityManager.CreateEntity());
+            var feedback = state.EntityManager.CreateEntity(typeof(LinkedPairEnemyShock));
+            state.EntityManager.AddBuffer<LinkedPairPlayerHit>(feedback);
             state.RequireForUpdate<LinkedPair>(); state.RequireForUpdate<PhysicsWorldSingleton>();
         }
         public void OnDestroy(ref SystemState state) { previousTargets.Dispose(); currentTargets.Dispose(); }
@@ -36,6 +37,9 @@ namespace CrowdPunch.Systems.Combat
             var segments = SystemAPI.GetComponentLookup<SnakeSegment>(true);
             var armors = SystemAPI.GetComponentLookup<EnemyArmor>(true);
             var player = SystemAPI.HasSingleton<PlayerSnapshot>() ? SystemAPI.GetSingleton<PlayerSnapshot>() : default;
+            var shock = SystemAPI.GetSingletonRW<LinkedPairEnemyShock>();
+            float nearestShock = shock.ValueRO.Pending != 0
+                ? math.distancesq(shock.ValueRO.Position.xz, player.Position.xz) : float.MaxValue;
             double now = SystemAPI.Time.ElapsedTime; float dt = SystemAPI.Time.DeltaTime;
             currentTargets.Clear();
             int count = SystemAPI.QueryBuilder().WithAll<Enemy>().Build().CalculateEntityCount();
@@ -80,7 +84,13 @@ namespace CrowdPunch.Systems.Combat
                         var source = em.GetComponentData<EnemyLaunchState>(pair.Leader);
                         float3 direction = math.normalizesafe(motion, math.normalizesafe(c.Position - point,
                             math.normalizesafe(em.GetComponentData<PhysicsVelocity>(pair.Leader).Linear, new float3(0, 0, 1)))); direction.y = 0;
-                        Hit(em, c.Entity, source, pair.Leader, direction, t, now);
+                        bool damaged = Hit(em, c.Entity, source, pair.Leader, direction, t, now);
+                        float distance = math.distancesq(point.xz, player.Position.xz);
+                        if (damaged && distance < nearestShock)
+                        {
+                            nearestShock = distance;
+                            shock.ValueRW = new LinkedPairEnemyShock { Position = point, Pending = 1 };
+                        }
                     }
                 }
                 // Other pairs may have changed this record while resolving pair-on-pair propagation.
@@ -92,15 +102,15 @@ namespace CrowdPunch.Systems.Combat
         }
         private struct Candidate { public Entity Entity; public float3 Position, OldPosition; public float Radius; public uint Lifetime; }
 
-        internal static void Hit(EntityManager em, Entity target, EnemyLaunchState source, Entity leader, float3 direction, LinkedPairTuning t, double now)
+        internal static bool Hit(EntityManager em, Entity target, EnemyLaunchState source, Entity leader, float3 direction, LinkedPairTuning t, double now)
         {
-            if (Protected(em, target, now)) return;
+            if (Protected(em, target, now)) return false;
             bool attached = SnakeHitRules.Attached(em, target);
             // Attached tips require a launch to detach; damage alone cannot bypass SNAKE-002.
-            if (attached && t.Response == LinkedPairResponse.DamageAndPush) return;
-            if (em.GetComponentData<EnemyTier>(target).Value == EnemyCombatTier.Boss) return;
+            if (attached && t.Response == LinkedPairResponse.DamageAndPush) return false;
+            if (em.GetComponentData<EnemyTier>(target).Value == EnemyCombatTier.Boss) return false;
             var launch = em.GetComponentData<EnemyLaunchState>(target);
-            if (launch.Phase == EnemyLaunchPhase.Defeated) return;
+            if (launch.Phase == EnemyLaunchPhase.Defeated) return false;
             bool flying = launch.Phase == EnemyLaunchPhase.Launched;
             bool normal = EnemyLaunchTransition.IsLaunchable(em.GetComponentData<EnemyTier>(target));
             if (!flying) {
@@ -118,9 +128,13 @@ namespace CrowdPunch.Systems.Combat
             if (em.HasComponent<ExplosiveEnemyState>(target) && em.GetComponentData<ExplosiveEnemyState>(target).HasExploded == 0)
                 ExplosionResolutionSystem.RequestDetonation(em, target, source.OriginatingPunchSequence);
             var damage = em.IsComponentEnabled<DamageRequest>(target) ? em.GetComponentData<DamageRequest>(target) : default;
-            damage.Add(t.EnemyDamage, em.GetComponentData<Health>(target).Current, source.OriginatingPunchSequence);
+            float previousHealth = em.GetComponentData<Health>(target).Current;
+            damage.Add(t.EnemyDamage, previousHealth, source.OriginatingPunchSequence);
             em.SetComponentData(target, damage); em.SetComponentEnabled<DamageRequest>(target, true);
-            if (!attached) EnemyDamageResolution.ApplyPending(em, target, now, source.Owner, leader, source.FeedbackChainDepth + 1, em.GetComponentData<EnemyLifetime>(leader).Generation);
+            // A launched Snake tip detaches before its queued damage resolves.
+            if (attached) return launch.Phase == EnemyLaunchPhase.Launched && previousHealth > 0f && t.EnemyDamage > 0f;
+            EnemyDamageResolution.ApplyPending(em, target, now, source.Owner, leader, source.FeedbackChainDepth + 1, em.GetComponentData<EnemyLifetime>(leader).Generation);
+            return t.EnemyDamage > 0f && em.GetComponentData<Health>(target).Current < previousHealth;
         }
         private static bool Protected(EntityManager em, Entity target, double now) => SnakeHitRules.Protected(em, target)
             || em.HasComponent<EnemyArmor>(target) && (em.GetComponentData<EnemyArmor>(target).Stages > 0 || now < em.GetComponentData<EnemyArmor>(target).ProtectedUntil);

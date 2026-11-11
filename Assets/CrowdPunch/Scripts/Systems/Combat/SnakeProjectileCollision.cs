@@ -17,14 +17,28 @@ namespace CrowdPunch.Systems.Combat
         }
 
         // Swept barricade/cover rebounds can happen without a discrete solver event.
-        public static void RecordRebound(EntityManager em, Entity source, float3 incoming, float3 normal)
+        public static void RecordRebound(EntityManager em, Entity source, float3 incoming, float3 normal,
+            float3 position, double now, bool wall)
         {
             if (!em.HasComponent<SnakeSegment>(source) || !em.HasComponent<PhysicsMass>(source)) return;
             var segment = em.GetComponentData<SnakeSegment>(source);
             float inverseMass = em.GetComponentData<PhysicsMass>(source).InverseMass;
             float impulse = inverseMass > .0001f ? math.abs(math.dot(incoming,normal)) / inverseMass : 0;
             RecordExternalBounce(ref segment,incoming,normal,impulse);
+            if (wall) RecordWallBounce(ref segment, incoming, normal, impulse, position, now);
             em.SetComponentData(source,segment);
+        }
+
+        public static void RecordWallBounce(ref SnakeSegment segment, float3 incoming, float3 normal,
+            float impulse, float3 position, double now)
+        {
+            if (segment.Detached == 0 || now < segment.NextWallBounceSoundAt
+                || !LaunchContactResponse.Meaningful(normal, impulse, .25f)
+                || math.abs(math.dot(incoming.xz, normal.xz)) < 1f) return;
+            segment.WallBounceSequence++;
+            segment.WallBouncePosition = position;
+            // A swept rebound and the solver can report the same impact.
+            segment.NextWallBounceSoundAt = now + .08;
         }
 
         // SNAKE-003: departure distance and resting floor contacts cannot arm a return shot.

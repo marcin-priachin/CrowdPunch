@@ -36,9 +36,8 @@ MonoBehaviour:
   GoblinGrunt:
   - {fileID: 8300000, guid: 8b1d2e21066107a47b80702ffde7ac21, type: 3}
   - {fileID: 8300000, guid: 5429636950963a24c9bc61e27f1c250c, type: 3}
-  LinkedPairAttack:
-  - {fileID: 8300000, guid: e74d1a398985d5c478f7f97cece5c5e1, type: 3}
-  - {fileID: 8300000, guid: a66a3c536e56d2f47bd5a57b7eb304f1, type: 3}
+  LinkedPairShock:
+  - {fileID: 8300000, guid: 37c7d55061420064baeeb997004a06a4, type: 3}
   EliteLaunch:
   - {fileID: 8300000, guid: 99e8db2c28e408e4cad4cdbce762ef52, type: 3}
   - {fileID: 8300000, guid: af77b44e4ec3e9c4cad5a13a52987734, type: 3}
@@ -66,15 +65,23 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 350fafaf43f37674793ac9b9dbbe5d6b, type: 3}
   - {fileID: 8300000, guid: 8516ea30ff17b3e4bbf836ee06bf90fc, type: 3}
   BlobDetach:
-  - {fileID: 8300000, guid: b60b202c45c153a42ac76cf90eb4cae2, type: 3}
-  - {fileID: 8300000, guid: a7af941e8463f6245ad7ad15de615f8d, type: 3}
+  - {fileID: 8300000, guid: 1575b6fd88c8e1649873a625aac7c0ba, type: 3}
   BlobBounce:
-  - {fileID: 8300000, guid: ca0d7e1076db03143bfa3b84c7524032, type: 3}
-  - {fileID: 8300000, guid: df9650f00680cde488af20a1b84add10, type: 3}
+  - {fileID: 8300000, guid: e5d46cbc55c443b4faa4bf99735ca86d, type: 3}
   ExploderWarning:
   - {fileID: 8300000, guid: 59c0dbac0fec8774c95eca05fabad6bf, type: 3}
   ExploderDetonation:
   - {fileID: 8300000, guid: 70d32c86f95ff7045ad60c8c67e21e32, type: 3}
+  DragonFlameBurst:
+  - {fileID: 8300000, guid: 75d9eb271cd959346a5231e7fb94f11a, type: 3}
+  DragonFlameLoop: {fileID: 8300000, guid: edd02fbfefa084449911bd220a5c2246, type: 3}
+  DragonHit:
+  - {fileID: 8300000, guid: f46bb35d61ede264b81eb5efef9b9c5e, type: 3}
+  - {fileID: 8300000, guid: 2c1be6df3d19acb4382a420857c3ac09, type: 3}
+  NinjaTeleport:
+  - {fileID: 8300000, guid: 5b817f9cbcf12214586042ed5fdd2499, type: 3}
+  NinjaDash:
+  - {fileID: 8300000, guid: 1ee223f4572de81489bce817b1c2a9e8, type: 3}
   GatekeeperWindup:
   - {fileID: 8300000, guid: f0a61db9e34de5f4cb9117563ed15328, type: 3}
   GatekeeperWindupGrunt:
@@ -133,6 +140,26 @@ MonoBehaviour:
   SpikedTurtleWallHit:
   - {fileID: 8300000, guid: 7d5e5e579a3f9d344a4a030fa7156a04, type: 3}
   - {fileID: 8300000, guid: 223a62e5bba3a0648ba51c251e72f8a7, type: 3}
+  FinaleFlightLoop: {fileID: 8300000, guid: f026d014da9a3e344adf356b63d8e840, type: 3}
+  FinaleWarningLoop: {fileID: 8300000, guid: 9a5a5288974afec4c9ffd63fec556e89, type: 3}
+  FinaleLightningStrike:
+  - {fileID: 8300000, guid: 9095a3d42380f964ea281e6c18b5c2f9, type: 3}
+  FinaleAirSweep:
+  - {fileID: 8300000, guid: ebd9725285297914e86e20d96fc4f9a1, type: 3}
+  FinaleWingSweep:
+  - {fileID: 8300000, guid: 6b04c4c9fbaeb2b48aa5282c7c0f0565, type: 3}
+  FinaleShockwave:
+  - {fileID: 8300000, guid: 317134f6f40cab04aaa5feb1c334058f, type: 3}
+  FinaleAnchorOverload:
+  - {fileID: 8300000, guid: 81e4d3ac053f5894699f912d465ecb5d, type: 3}
+  FinaleLanding:
+  - {fileID: 8300000, guid: 5b7f36a3102f92e4fb0cf2392466d77b, type: 3}
+  FinaleTakeoff:
+  - {fileID: 8300000, guid: 983c083fb5c961a49aae53aaa67d43d7, type: 3}
+  FinaleHit:
+  - {fileID: 8300000, guid: 8add496fbf6acf24f92b17ace0277ce1, type: 3}
+  FinaleDefeat:
+  - {fileID: 8300000, guid: 28b46c16886bdee418ce9434d92c144d, type: 3}
   BarricadeHit:
   - {fileID: 8300000, guid: ad4ebbe042dcd9d45ab215c44c1d7fea, type: 3}
   - {fileID: 8300000, guid: 6c87679fa5bc8ba4a88b317626f13a97, type: 3}

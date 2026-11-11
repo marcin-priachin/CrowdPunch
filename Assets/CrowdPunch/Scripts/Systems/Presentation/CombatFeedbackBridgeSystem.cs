@@ -129,12 +129,10 @@ namespace CrowdPunch.Systems.Presentation
                             bridge.ReceiveImpact(new CombatFeedbackMessage { Kind = f.Kind, Position = f.Position,
                                 Direction = f.Direction, Intensity = intensity, ChainDepth = f.ChainDepth, PlayerOwned = f.PlayerOwned != 0 });
                             if ((punch || f.Kind == CombatImpactKind.EnemyCollision)
+                                && !SystemAPI.HasComponent<SnakeSegment>(entity)
                                 && SystemAPI.HasComponent<EnemyArchetype>(entity)
                                 && IsSmallGoblin(SystemAPI.GetComponent<EnemyArchetype>(entity).Value))
                                 bridge.ReceiveGameplaySfx(GameplaySfxCue.GoblinGrunt, f.Position);
-                            if (environment && SystemAPI.HasComponent<SnakeSegment>(entity)
-                                && SystemAPI.GetComponent<SnakeSegment>(entity).Detached != 0)
-                                bridge.ReceiveGameplaySfx(GameplaySfxCue.BlobBounce, f.Position);
                         }
                     }
                 }

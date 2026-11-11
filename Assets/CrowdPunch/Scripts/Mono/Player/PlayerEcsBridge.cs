@@ -102,6 +102,19 @@ namespace CrowdPunch.Mono.Player
         internal void EndFlowerSporeEmissions() => FlowerSporeEmissionsEnded?.Invoke();
         internal void ReceiveFlowerSporeEmission(ulong id, Vector3 position) => FlowerSporeEmissionReceived?.Invoke(id, position);
 
+        internal event Action DragonFlamesBegan, DragonFlamesEnded;
+        internal event Action<ulong, Vector3> DragonFlameAudioReceived;
+        internal void BeginDragonFlames() => DragonFlamesBegan?.Invoke();
+        internal void EndDragonFlames() => DragonFlamesEnded?.Invoke();
+        internal void ReceiveDragonFlameAudio(ulong id, Vector3 position) => DragonFlameAudioReceived?.Invoke(id, position);
+
+        internal event Action<uint, FinaleAttack, Vector3, float> FinaleWarningReceived;
+        internal void ReceiveFinaleWarning(uint sequence, FinaleAttack attack, Vector3 position, float progress)
+            => FinaleWarningReceived?.Invoke(sequence, attack, position, progress);
+
+        internal event Action<Vector3, float> FinaleFlightReceived;
+        internal void ReceiveFinaleFlight(Vector3 position, float gain) => FinaleFlightReceived?.Invoke(position, gain);
+
         public readonly struct TrajectoryPreviewSegment
         {
             public TrajectoryPreviewSegment(float3 start, float3 end, bool isCollision = false, float opacity = 1f,
@@ -478,8 +491,11 @@ namespace CrowdPunch.Mono.Player
         /// <summary>Routes configured enemy damage through the existing player health and invulnerability path.</summary>
         public event Action<float, Vector3> WizardHitReceived;
         public event Action<float> TrailDamageReceived;
-        public event Action<float> LinkedPairDamageReceived;
-        public void ReceiveLinkedPairDamage(float amount) { if (!EncounterVictory) LinkedPairDamageReceived?.Invoke(amount); }
+        public event Action<float, Vector3> LinkedPairDamageReceived;
+        public void ReceiveLinkedPairDamage(float amount, Vector3 position)
+        {
+            if (!EncounterVictory) LinkedPairDamageReceived?.Invoke(amount, position);
+        }
         public event Action<float, Vector3> DragonFlameReceived;
         public void ReceiveDragonFlame(float damage, float3 push) { if (!EncounterVictory) DragonFlameReceived?.Invoke(damage, push); }
         public event Action<float> GroundHazardDamageReceived;

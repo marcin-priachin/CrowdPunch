@@ -36,7 +36,8 @@ namespace CrowdPunch.Systems.Physics
                             SystemAPI.GetSingleton<PlayerSnapshot>().Position, contact.Normal, angle);
                     }
                     SystemAPI.SetComponent(contact.Source, velocity);
-                    SnakeProjectileCollision.RecordRebound(state.EntityManager,contact.Source,contact.IncomingVelocity,contact.Normal);
+                    SnakeProjectileCollision.RecordRebound(state.EntityManager, contact.Source, contact.IncomingVelocity,
+                        contact.Normal, contact.ContactCenter, SystemAPI.Time.ElapsedTime, wall: true);
                     LaunchAimPrediction.StopHoming(ref launch);
                     launch.RicochetSurface = target;
                     launch.RicochetNormal = contact.Normal;

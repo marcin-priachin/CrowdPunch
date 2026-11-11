@@ -61,7 +61,9 @@ namespace CrowdPunch.Systems.Physics
                 if (path.ValueRO.ReachedPoint != 0)
                 {
                     if (path.ValueRO.ExpectedContact != 0)
-                        SnakeProjectileCollision.RecordRebound(em, source, path.ValueRO.IncomingVelocity, point.Normal);
+                        SnakeProjectileCollision.RecordRebound(em, source, path.ValueRO.IncomingVelocity, point.Normal,
+                            path.ValueRO.ContactPoint, SystemAPI.Time.ElapsedTime,
+                            wall: !em.HasComponent<PhysicsVelocity>(surface) && !em.HasComponent<Enemy>(surface));
                     path.ValueRW.NextPoint++;
                     if (path.ValueRO.NextPoint >= points.Length)
                     {

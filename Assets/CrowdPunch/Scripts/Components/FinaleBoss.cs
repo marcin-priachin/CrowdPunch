@@ -16,6 +16,7 @@ namespace CrowdPunch.Components
         public uint AttackSequence;
         public uint ResolvedAttackSequence;
         public FinaleAttack ResolvedAttack;
+        public float3 ResolvedAttackCenter;
         public byte Neutralized;
     }
 

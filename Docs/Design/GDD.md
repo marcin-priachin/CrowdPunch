@@ -1988,8 +1988,8 @@ dash, recovery, launch and defeat (model amendment requested 2026-10-25). Use au
 instead of scripted body tints, flashes, shaking or scale deformation, with established Full Cel
 shading. Keep a recognizable preparation, a locked arrival attack pose, and compact departure/arrival
 smoke that preserves the character's short reaction window. Add no directional dash line,
-screen-space warning or dedicated HUD. Audio is deferred; a later audio pass may add distinct
-preparation and arrival sounds.
+screen-space warning or dedicated HUD. Play a quick poof on a successful teleport and a sharp
+swish at the start of a committed dash.
 
 ### NINJA-006 - Legacy Gauntlet_25 And Tuning
 

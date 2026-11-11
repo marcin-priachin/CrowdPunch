@@ -125,8 +125,8 @@ namespace CrowdPunch.Systems.Combat
                 StopHomingOnImpact(collisionEvent, entityA);
                 StopHomingOnImpact(collisionEvent, entityB);
 
-                RecordSnakeBounce(collisionEvent, entityA, entityB);
-                RecordSnakeBounce(collisionEvent, entityB, entityA);
+                RecordSnakeBounce(collisionEvent, entityA, entityB, collisionEvent.BodyIndexB >= World.NumDynamicBodies);
+                RecordSnakeBounce(collisionEvent, entityB, entityA, collisionEvent.BodyIndexA >= World.NumDynamicBodies);
 
                 bool enemyA = EnemyLookup.HasComponent(entityA);
                 bool enemyB = EnemyLookup.HasComponent(entityB);
@@ -223,13 +223,14 @@ namespace CrowdPunch.Systems.Combat
                 LaunchStateLookup[entity] = launch;
             }
 
-            private void RecordSnakeBounce(CollisionEvent collision, Entity source, Entity other)
+            private void RecordSnakeBounce(CollisionEvent collision, Entity source, Entity other, bool staticSurface)
             {
                 if (!SnakeSegments.HasComponent(source) || !FeedbackLookup.HasComponent(source)
                     || !LaunchStateLookup.HasComponent(source)
                     || LaunchStateLookup[source].Phase != EnemyLaunchPhase.Launched) return;
                 var segment = SnakeSegments[source];
-                if (segment.Detached == 0 || segment.BouncedOutsideOwner != 0 || other == segment.Head
+                bool wall = staticSurface && !EnemyLookup.HasComponent(other) && math.abs(collision.Normal.y) <= .7f;
+                if (segment.Detached == 0 || (segment.BouncedOutsideOwner != 0 && !wall) || other == segment.Head
                     || SnakeSegments.HasComponent(other) && SnakeSegments[other].Head == segment.Head
                         && SnakeSegments[other].Generation == segment.Generation) return;
                 float3 incoming = FeedbackLookup[source].IncomingVelocity;
@@ -237,6 +238,9 @@ namespace CrowdPunch.Systems.Combat
                 if (math.abs(math.dot(incoming.xz, collision.Normal.xz)) <= .1f) return;
                 var details = collision.CalculateDetails(ref World);
                 SnakeProjectileCollision.RecordExternalBounce(ref segment, incoming, collision.Normal, details.EstimatedImpulse);
+                if (wall)
+                    SnakeProjectileCollision.RecordWallBounce(ref segment, incoming, collision.Normal,
+                        details.EstimatedImpulse, details.AverageContactPointPosition, ElapsedTime);
                 SnakeSegments[source] = segment;
             }
 

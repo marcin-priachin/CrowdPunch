@@ -14,10 +14,7 @@ namespace CrowdPunch.Systems.InputBridge
             var hits = SystemAPI.GetSingletonBuffer<LinkedPairPlayerHit>();
             if (PlayerBridgeRegistry.TryGetBridge(out var bridge))
                 foreach (var hit in hits)
-                {
-                    bridge.ReceiveLinkedPairDamage(hit.Damage);
-                    bridge.ReceiveGameplaySfx(GameplaySfxCue.LinkedPairAttack, hit.Position);
-                }
+                    bridge.ReceiveLinkedPairDamage(hit.Damage, hit.Position);
             hits.Clear();
         }
     }

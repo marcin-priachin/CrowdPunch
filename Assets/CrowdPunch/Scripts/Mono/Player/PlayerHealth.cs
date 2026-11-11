@@ -63,7 +63,7 @@ namespace CrowdPunch.Mono.Player
                 ecsBridge.EnemyContactHitReceived += TryApplyEnemyContactHit;
                 ecsBridge.WizardHitReceived += ApplyWizardHit;
                 ecsBridge.TrailDamageReceived += ApplyTrailDamage;
-                ecsBridge.LinkedPairDamageReceived += ApplyTrailDamage;
+                ecsBridge.LinkedPairDamageReceived += ApplyLinkedPairDamage;
                 ecsBridge.DragonFlameReceived += ApplyWizardHit;
                 ecsBridge.GroundHazardDamageReceived += ApplyTrailDamage;
             }
@@ -76,7 +76,7 @@ namespace CrowdPunch.Mono.Player
                 ecsBridge.EnemyContactHitReceived -= TryApplyEnemyContactHit;
                 ecsBridge.WizardHitReceived -= ApplyWizardHit;
                 ecsBridge.TrailDamageReceived -= ApplyTrailDamage;
-                ecsBridge.LinkedPairDamageReceived -= ApplyTrailDamage;
+                ecsBridge.LinkedPairDamageReceived -= ApplyLinkedPairDamage;
                 ecsBridge.DragonFlameReceived -= ApplyWizardHit;
                 ecsBridge.GroundHazardDamageReceived -= ApplyTrailDamage;
             }
@@ -128,6 +128,16 @@ namespace CrowdPunch.Mono.Player
         {
             if (RuntimeInvincibility || currentHealth <= 0 || amount <= 0) return;
             ApplyDamage(amount);
+            DamageAccepted?.Invoke(Vector3.zero);
+        }
+
+        private void ApplyLinkedPairDamage(float amount, Vector3 position)
+        {
+            if (RuntimeInvincibility || currentHealth <= 0f || amount <= 0f) return;
+            float previousHealth = currentHealth;
+            ApplyDamage(amount);
+            if (currentHealth < previousHealth)
+                ecsBridge.ReceiveGameplaySfx(GameplaySfxCue.LinkedPairPlayerShock, position);
             DamageAccepted?.Invoke(Vector3.zero);
         }
 

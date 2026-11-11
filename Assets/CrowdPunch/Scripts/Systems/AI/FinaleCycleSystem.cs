@@ -47,8 +47,7 @@ namespace CrowdPunch.Systems.AI
                     b.Remaining -= dt; b.AttackRemaining = b.Remaining;
                     pose.ValueRW.Position = math.lerp(b.TransitionStart,b.Landing,math.smoothstep(0,1,1-b.Remaining/t.FallSeconds));
                     if (b.Remaining <= 0) {
-                        FinaleAreaAttack.Resolve(state.EntityManager,entity,b,t,player);
-                        b.ResolvedAttack=b.Attack; b.ResolvedAttackSequence=b.AttackSequence;
+                        ResolveAttack(state.EntityManager, entity, ref b, t, player);
                         b.Phase = FinalePhase.Downed; b.Remaining=t.DownedSeconds;
                         b.Attack=FinaleAttack.None; b.AttackRemaining=t.StunSeconds; b.GroundAttackIndex=0;
                         pose.ValueRW.Position=b.Landing;
@@ -77,8 +76,7 @@ namespace CrowdPunch.Systems.AI
                 b.AttackRemaining -= dt;
                 if (b.AttackRemaining > 0 || !player.IsAvailable) continue;
                 if (b.Attack != FinaleAttack.None) {
-                    FinaleAreaAttack.Resolve(state.EntityManager,entity,b,t,player);
-                    b.ResolvedAttack=b.Attack; b.ResolvedAttackSequence=b.AttackSequence;
+                    ResolveAttack(state.EntityManager, entity, ref b, t, player);
                     b.Attack=FinaleAttack.None;
                     b.AttackRemaining=b.Phase==FinalePhase.Flying?t.AirIntervals[b.Stage-1]:t.GroundInterval;
                 }
@@ -92,6 +90,15 @@ namespace CrowdPunch.Systems.AI
                     b.AttackRemaining=t.WarningSeconds[b.Stage-1];
                 }
             }
+        }
+
+        private static void ResolveAttack(EntityManager em, Entity entity, ref FinaleBoss boss,
+            in FinaleTuning tuning, in PlayerSnapshot player)
+        {
+            FinaleAreaAttack.Resolve(em, entity, boss, tuning, player);
+            boss.ResolvedAttack = boss.Attack;
+            boss.ResolvedAttackSequence = boss.AttackSequence;
+            boss.ResolvedAttackCenter = boss.WarningCenter;
         }
     }
 }

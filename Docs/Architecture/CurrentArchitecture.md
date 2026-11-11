@@ -18,6 +18,13 @@ attenuation and per-cue throttling. Crowd collisions and exceptional chains use 
 voices with player-relative distance falloff and camera-relative stereo pan. They keep the
 strongest audible contact per presentation frame and share a playback cadence. Baseline, Dasher,
 Ranged and Linked Pair share squeaky reactions on confirmed punches and qualifying crowd hits.
+Linked Pair chain damage plays an electric zap through the player hurt voice or at the
+nearest enemy contact per presentation frame (LINK-003/004).
+Dragon flame starts with a positional whoosh and sustains a quiet loop at the sampled mouth.
+The loop continues through launches that extend an active flame and fades when emission ends
+(DRAGON-001/002).
+The Dragon gives a short squeak when its health decreases, including during launched flame
+(DRAGON-001).
 The Elite plays the giant goblin wizard's deep grunt when its health decreases (ENEMY-009).
 Dino shares that grunt on burst entry and successful pillar hits. Its contact system records
 launched-body strikes for a positional armor clang from solver events or the committed
@@ -26,6 +33,17 @@ The spiked turtle boss uses a positional shell rumble during the spinning animat
 loop keeps its phase across wall rebounds and fades at the end of the roll (ROLL-001/007).
 The flower's moving cast zone carries a positional spore loop through the warning and active
 phases. Detached impact zones still play a single burst on creation (WIZARD-005/006).
+Snake blobs pop on detachment and play a rubbery bounce at meaningful wall contacts.
+Snake segments are excluded from the shared goblin hit voice (SNAKE-002).
+Solver events and swept rebounds share a short audio cooldown per blob (SNAKE-002/003).
+The Ninja poof shares the successful teleport event with the smoke effect. Its dash swish
+plays once per ambush when post-physics travel first confirms movement (NINJA-001/003/005).
+The finale's warning loop rises at the committed attack footprint and fades when the warning
+ends. Resolved attacks retain their own center for positional lightning, sweep, shockwave and
+landing cues. Anchor overloads, takeoff, accepted damage and defeat have separate sounds
+(FINALE-002/003/005/007).
+A quiet positional Wraith loop continues through airborne attacks, fades into the landing,
+and returns near the end of takeoff (FINALE-003).
 The ranged projectile release uses a short swish and retains its separate contact splash.
 Pause and retry clear active combat sounds. The exploder fuse is an audition warning when an
 active exploder enters a small band outside player contact range.

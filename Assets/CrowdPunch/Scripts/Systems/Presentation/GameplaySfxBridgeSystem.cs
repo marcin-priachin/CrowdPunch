@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CrowdPunch.Components;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Mono.UI;
+using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -13,6 +14,7 @@ namespace CrowdPunch.Systems.Presentation
     [UpdateBefore(typeof(GauntletCompletionSystem))]
     public partial class GameplaySfxBridgeSystem : SystemBase
     {
+        private const float FinaleFlightFadeSeconds = .7f;
         private Dictionary<(Entity, GameplaySfxCue), uint> previous = new();
         private Dictionary<(Entity, GameplaySfxCue), uint> current = new();
         private PlayerEcsBridge bridge;
@@ -20,7 +22,13 @@ namespace CrowdPunch.Systems.Presentation
 
         protected override void OnUpdate()
         {
-            if (!PlayerBridgeRegistry.TryGetBridge(out var activeBridge) || activeBridge.GameplayAudio == null)
+            bool hasAudio = PlayerBridgeRegistry.TryGetBridge(out var activeBridge) && activeBridge.GameplayAudio != null;
+            if (SystemAPI.TryGetSingletonRW<LinkedPairEnemyShock>(out var shock) && shock.ValueRO.Pending != 0)
+            {
+                if (hasAudio) activeBridge.ReceiveGameplaySfx(GameplaySfxCue.LinkedPairEnemyShock, shock.ValueRO.Position);
+                shock.ValueRW = default;
+            }
+            if (!hasAudio)
             {
                 previous.Clear();
                 bridge = null;
@@ -45,11 +53,7 @@ namespace CrowdPunch.Systems.Presentation
                          .WithAll<ElitePunchState>().WithOptions(EntityQueryOptions.IgnoreComponentEnabledState).WithEntityAccess())
             {
                 if (respawn.ValueRO.IsPooled != 0) continue;
-                var key = (entity, GameplaySfxCue.GiantGoblinHit);
-                float hitPoints = health.ValueRO.Current;
-                current[key] = math.asuint(hitPoints);
-                if (previous.TryGetValue(key, out uint lastHealth) && hitPoints < math.asfloat(lastHealth))
-                    bridge.ReceiveGameplaySfx(GameplaySfxCue.GiantGoblinHit, pose.ValueRO.Position);
+                ObserveHealth(entity, GameplaySfxCue.GiantGoblinHit, health.ValueRO.Current, pose.ValueRO.Position);
             }
 
             foreach (var (armor, pose, entity) in SystemAPI.Query<RefRO<EnemyArmor>, RefRO<LocalTransform>>()
@@ -78,6 +82,37 @@ namespace CrowdPunch.Systems.Presentation
             }
             bridge.EndFlowerSporeEmissions();
 
+            bridge.BeginDragonFlames();
+            foreach (var (tuning, flame, launch, pose, life, health, respawn, entity) in
+                SystemAPI.Query<RefRO<DragonTuning>, RefRO<DragonFlameState>, RefRO<EnemyLaunchState>,
+                    RefRO<LocalTransform>, RefRO<EnemyLifetime>, RefRO<Health>, RefRO<RespawnRequest>>()
+                    .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState).WithEntityAccess())
+            {
+                if (respawn.ValueRO.IsPooled != 0) continue;
+                ObserveHealth(entity, GameplaySfxCue.DragonHit, health.ValueRO.Current, pose.ValueRO.Position);
+                if (SystemAPI.IsComponentEnabled<RespawnRequest>(entity)) continue;
+
+                bool emitting = DragonFlameGeometry.TryCone(entity, pose.ValueRO, tuning.ValueRO, flame.ValueRO,
+                    launch.ValueRO, life.ValueRO.Generation, out var cone) && cone.Active != 0;
+                Observe(entity, GameplaySfxCue.DragonFlameBurst, emitting ? life.ValueRO.Generation + 1u : 0u,
+                    cone.Mouth, playFirst: true);
+                if (emitting)
+                {
+                    ulong id = ((ulong)(uint)entity.Version << 32) | (uint)entity.Index;
+                    bridge.ReceiveDragonFlameAudio(id, cone.Mouth);
+                }
+            }
+            bridge.EndDragonFlames();
+
+            foreach (var (ninja, pose, entity) in SystemAPI.Query<RefRO<NinjaState>, RefRO<LocalTransform>>()
+                         .WithNone<RespawnRequest>().WithEntityAccess())
+            {
+                // Distance is measured after physics and retained until the next successful teleport.
+                var state = ninja.ValueRO;
+                Observe(entity, GameplaySfxCue.NinjaDash, state.DistanceTravelled > .001f ? state.TeleportSequence : 0u,
+                    pose.ValueRO.Position, playFirst: true);
+            }
+
             foreach (var (emitter, pose, entity) in SystemAPI.Query<RefRO<TrailEmitter>, RefRO<LocalTransform>>()
                          .WithNone<RespawnRequest>().WithEntityAccess())
                 Observe(entity, GameplaySfxCue.SquidInk, emitter.ValueRO.Emitting == 0
@@ -85,8 +120,11 @@ namespace CrowdPunch.Systems.Presentation
 
             foreach (var (segment, pose, entity) in SystemAPI.Query<RefRO<SnakeSegment>, RefRO<LocalTransform>>()
                          .WithNone<RespawnRequest>().WithEntityAccess())
-                Observe(entity, GameplaySfxCue.BlobDetach, segment.ValueRO.Detached != 0
-                    ? 1u : 0u, pose.ValueRO.Position);
+            {
+                var blob = segment.ValueRO;
+                Observe(entity, GameplaySfxCue.BlobDetach, blob.Detached != 0 ? 1u : 0u, pose.ValueRO.Position, playFirst: true);
+                Observe(entity, GameplaySfxCue.BlobBounce, blob.WallBounceSequence, blob.WallBouncePosition, playFirst: true);
+            }
 
             if (!SystemAPI.TryGetSingleton<PlayerSnapshot>(out var player)) return;
             foreach (var (exploder, contact, launch, pose, entity) in SystemAPI.Query<RefRO<ExplosiveEnemyState>,
@@ -103,6 +141,7 @@ namespace CrowdPunch.Systems.Presentation
 
         private void ObserveBosses()
         {
+            ObserveFinale();
             ObserveGatekeeper();
             foreach (var (boss, pose, entity) in SystemAPI.Query<RefRO<ChickenBoss>, RefRO<LocalTransform>>().WithEntityAccess())
             {
@@ -141,6 +180,53 @@ namespace CrowdPunch.Systems.Presentation
             bridge.EndRollingBossRolls();
         }
 
+        private void ObserveFinale()
+        {
+            if (!SystemAPI.TryGetSingletonEntity<FinaleBoss>(out var entity))
+            {
+                bridge.ReceiveFinaleFlight(default, 0f);
+                bridge.ReceiveFinaleWarning(0, FinaleAttack.None, default, 0f);
+                return;
+            }
+
+            var state = SystemAPI.GetComponent<FinaleBoss>(entity);
+            var position = SystemAPI.GetComponent<LocalTransform>(entity).Position;
+            var tuning = SystemAPI.GetComponent<FinaleTuning>(entity);
+            float flightGain = state.Phase switch
+            {
+                FinalePhase.Flying => 1f,
+                FinalePhase.Falling => math.smoothstep(0f, math.clamp(tuning.FallSeconds, .01f, FinaleFlightFadeSeconds), state.Remaining),
+                FinalePhase.TakingOff => 1f - math.smoothstep(0f, math.clamp(tuning.TakeoffSeconds, .01f, FinaleFlightFadeSeconds), state.Remaining),
+                _ => 0f
+            };
+            bridge.ReceiveFinaleFlight(position, flightGain);
+
+            float warningDuration = state.Attack == FinaleAttack.Landing ? tuning.FallSeconds
+                : tuning.WarningSeconds[math.clamp(state.Stage - 1, 0, 2)];
+            bridge.ReceiveFinaleWarning(state.Attack == FinaleAttack.None ? 0u : state.AttackSequence, state.Attack,
+                state.WarningCenter, 1f - math.saturate(state.AttackRemaining / math.max(.01f, warningDuration)));
+
+            bool defeated = state.Phase == FinalePhase.Defeated;
+            Observe(entity, GameplaySfxCue.FinaleAnchorOverload, state.Phase == FinalePhase.Falling
+                ? state.AttackSequence : 0u, state.TetherOrigin, playFirst: true);
+            Observe(entity, GameplaySfxCue.FinaleTakeoff, state.Phase == FinalePhase.TakingOff ? 1u : 0u, position);
+            Observe(entity, GameplaySfxCue.FinaleDefeat, defeated ? 1u : 0u, position);
+            if (defeated) return;
+
+            ObserveHealth(entity, GameplaySfxCue.FinaleHit, state.Health, position);
+            var impact = state.ResolvedAttack switch
+            {
+                FinaleAttack.Strike => GameplaySfxCue.FinaleLightningStrike,
+                FinaleAttack.Sweep => GameplaySfxCue.FinaleAirSweep,
+                FinaleAttack.Slam => GameplaySfxCue.FinaleWingSweep,
+                FinaleAttack.Shockwave => GameplaySfxCue.FinaleShockwave,
+                FinaleAttack.Landing => GameplaySfxCue.FinaleLanding,
+                _ => GameplaySfxCue.Count
+            };
+            if (impact != GameplaySfxCue.Count)
+                Observe(entity, impact, state.ResolvedAttackSequence, state.ResolvedAttackCenter, playFirst: true);
+        }
+
         private void ObserveGatekeeper()
         {
             foreach (var (boss, pose, impact, entity) in SystemAPI.Query<RefRO<BossEncounter>, RefRO<LocalTransform>,
@@ -173,6 +259,14 @@ namespace CrowdPunch.Systems.Presentation
                 Observe(entity, GameplaySfxCue.GatekeeperSweep, attack.Attack == BossAttack.Sweep
                     && (active || recovery) ? attack.AttackSequence : 0u, position);
             }
+        }
+
+        private void ObserveHealth(Entity entity, GameplaySfxCue cue, float health, float3 position)
+        {
+            var key = (entity, cue);
+            current[key] = math.asuint(health);
+            if (previous.TryGetValue(key, out uint lastHealth) && health < math.asfloat(lastHealth))
+                bridge.ReceiveGameplaySfx(cue, position);
         }
 
         private void Observe(Entity entity, GameplaySfxCue cue, uint value, float3 position, bool playFirst = false)

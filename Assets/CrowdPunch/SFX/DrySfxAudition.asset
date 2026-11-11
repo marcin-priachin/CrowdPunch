@@ -36,9 +36,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 92121684f0298ff4aabbe0849a804d12, type: 3}
   - {fileID: 8300000, guid: 43f989f78e111964f96b8d2879d2db11, type: 3}
   - {fileID: 8300000, guid: 9a60d9418ab060f49954626d1791e404, type: 3}
-  LinkedPairAttack:
-  - {fileID: 8300000, guid: d40d7ffa2f6705a4d9630696374343d8, type: 3}
-  - {fileID: 8300000, guid: ac9ee750a69945f40b9224ca6aba932e, type: 3}
+  LinkedPairShock:
+  - {fileID: 8300000, guid: 37c7d55061420064baeeb997004a06a4, type: 3}
   EliteLaunch:
   - {fileID: 8300000, guid: ddf2628ff0521d84a97115c54e1258c8, type: 3}
   - {fileID: 8300000, guid: 678ff39aefb0ca0448d45bf5e2c33c0f, type: 3}
@@ -66,15 +65,23 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 7635bbfb45ae9494794ece48c11edf0e, type: 3}
   - {fileID: 8300000, guid: 58bcad32ad9a19f44b71b4e8ab5b2098, type: 3}
   BlobDetach:
-  - {fileID: 8300000, guid: e8e14fa0599b3b94a85b1dc574e56c34, type: 3}
-  - {fileID: 8300000, guid: 9146f5f1142924844b2e031b046887ef, type: 3}
+  - {fileID: 8300000, guid: 1575b6fd88c8e1649873a625aac7c0ba, type: 3}
   BlobBounce:
-  - {fileID: 8300000, guid: 6cb4e0e2edede0d468c936b263b8c2d2, type: 3}
-  - {fileID: 8300000, guid: de1b84555f6ef0f4b91cca8f859a02ee, type: 3}
+  - {fileID: 8300000, guid: e5d46cbc55c443b4faa4bf99735ca86d, type: 3}
   ExploderWarning:
   - {fileID: 8300000, guid: 59c0dbac0fec8774c95eca05fabad6bf, type: 3}
   ExploderDetonation:
   - {fileID: 8300000, guid: 70d32c86f95ff7045ad60c8c67e21e32, type: 3}
+  DragonFlameBurst:
+  - {fileID: 8300000, guid: 75d9eb271cd959346a5231e7fb94f11a, type: 3}
+  DragonFlameLoop: {fileID: 8300000, guid: edd02fbfefa084449911bd220a5c2246, type: 3}
+  DragonHit:
+  - {fileID: 8300000, guid: f46bb35d61ede264b81eb5efef9b9c5e, type: 3}
+  - {fileID: 8300000, guid: 2c1be6df3d19acb4382a420857c3ac09, type: 3}
+  NinjaTeleport:
+  - {fileID: 8300000, guid: 5b817f9cbcf12214586042ed5fdd2499, type: 3}
+  NinjaDash:
+  - {fileID: 8300000, guid: 1ee223f4572de81489bce817b1c2a9e8, type: 3}
   GoblinWizardCharge:
   - {fileID: 8300000, guid: 2f21049bfb2b6b843a36f1fc10cf20a8, type: 3}
   GoblinWizardCast:
@@ -99,6 +106,26 @@ MonoBehaviour:
   SpikedTurtleRollLoop: {fileID: 8300000, guid: 1c65c939c8729274da67f83bca8f9e26, type: 3}
   SpikedTurtleWallHit:
   - {fileID: 8300000, guid: 16cbc62af79a34149b74e7ae803cb25e, type: 3}
+  FinaleFlightLoop: {fileID: 8300000, guid: f026d014da9a3e344adf356b63d8e840, type: 3}
+  FinaleWarningLoop: {fileID: 8300000, guid: 9a5a5288974afec4c9ffd63fec556e89, type: 3}
+  FinaleLightningStrike:
+  - {fileID: 8300000, guid: 9095a3d42380f964ea281e6c18b5c2f9, type: 3}
+  FinaleAirSweep:
+  - {fileID: 8300000, guid: ebd9725285297914e86e20d96fc4f9a1, type: 3}
+  FinaleWingSweep:
+  - {fileID: 8300000, guid: 6b04c4c9fbaeb2b48aa5282c7c0f0565, type: 3}
+  FinaleShockwave:
+  - {fileID: 8300000, guid: 317134f6f40cab04aaa5feb1c334058f, type: 3}
+  FinaleAnchorOverload:
+  - {fileID: 8300000, guid: 81e4d3ac053f5894699f912d465ecb5d, type: 3}
+  FinaleLanding:
+  - {fileID: 8300000, guid: 5b7f36a3102f92e4fb0cf2392466d77b, type: 3}
+  FinaleTakeoff:
+  - {fileID: 8300000, guid: 983c083fb5c961a49aae53aaa67d43d7, type: 3}
+  FinaleHit:
+  - {fileID: 8300000, guid: 8add496fbf6acf24f92b17ace0277ce1, type: 3}
+  FinaleDefeat:
+  - {fileID: 8300000, guid: 28b46c16886bdee418ce9434d92c144d, type: 3}
   BarricadeHit:
   - {fileID: 8300000, guid: db06c6e1bf5c36845ae917a637644ad1, type: 3}
   - {fileID: 8300000, guid: f4778e38286da9f44a96a581d008b8e7, type: 3}
