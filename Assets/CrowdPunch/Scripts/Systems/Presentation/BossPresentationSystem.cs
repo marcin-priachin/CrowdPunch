@@ -24,6 +24,8 @@ namespace CrowdPunch.Systems.Presentation
                     feedback.ValueRW.Pending=0;
                     BossAttackTelegraphs.Impact(feedback.ValueRO.Position,feedback.ValueRO.Direction,
                         part.ValueRO.Kind==BossPartKind.Head?.45f:.25f);
+                    if (part.ValueRO.Kind != BossPartKind.Head && PlayerBridgeRegistry.TryGetBridge(out var bridge))
+                        bridge.ReceiveGameplaySfx(GameplaySfxCue.GatekeeperHandHit, feedback.ValueRO.Position);
                 }
                 var boss=SystemAPI.GetComponent<BossEncounter>(part.ValueRO.Encounter);
                 if(boss.Cycle==BossCycle.Defeated || boss.Cycle==BossCycle.Transition || !SystemAPI.HasComponent<BossHand>(entity)) continue;

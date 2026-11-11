@@ -24,6 +24,8 @@ namespace CrowdPunch.Components
         public float3 Start, Target, Direction, PreviousPosition;
         public double StaggerProtectedUntil;
         public uint AttackSequence;
+        public uint StrikeContactSequence;
+        public float3 StrikeContactPosition;
         public byte PlayerHit;
     }
 

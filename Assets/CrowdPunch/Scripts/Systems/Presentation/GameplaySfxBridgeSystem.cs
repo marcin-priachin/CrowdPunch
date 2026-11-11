@@ -10,6 +10,7 @@ using Unity.Transforms;
 namespace CrowdPunch.Systems.Presentation
 {
     [UpdateInGroup(typeof(GamePresentationGroup))]
+    [UpdateBefore(typeof(GauntletCompletionSystem))]
     public partial class GameplaySfxBridgeSystem : SystemBase
     {
         private Dictionary<(Entity, GameplaySfxCue), uint> previous = new();
@@ -86,6 +87,7 @@ namespace CrowdPunch.Systems.Presentation
 
         private void ObserveBosses()
         {
+            ObserveGatekeeper();
             foreach (var (boss, pose, entity) in SystemAPI.Query<RefRO<ChickenBoss>, RefRO<LocalTransform>>().WithEntityAccess())
             {
                 var state = boss.ValueRO;
@@ -102,6 +104,40 @@ namespace CrowdPunch.Systems.Presentation
             {
                 Observe(entity, GameplaySfxCue.SpikedTurtleRoll, boss.ValueRO.RollSequence, pose.ValueRO.Position);
                 Observe(entity, GameplaySfxCue.SpikedTurtleWallHit, (uint)boss.ValueRO.Bounces, pose.ValueRO.Position);
+            }
+        }
+
+        private void ObserveGatekeeper()
+        {
+            foreach (var (boss, pose, impact, entity) in SystemAPI.Query<RefRO<BossEncounter>, RefRO<LocalTransform>,
+                         RefRO<BossImpactFeedback>>().WithEntityAccess())
+            {
+                var state = boss.ValueRO;
+                bool defeated = state.Cycle == BossCycle.Defeated;
+                Observe(entity, GameplaySfxCue.GatekeeperMove, state.Cycle == BossCycle.Relocating ? 1u : 0u, pose.ValueRO.Position);
+                Observe(entity, GameplaySfxCue.GatekeeperHeadHit, defeated ? 0u : state.AcceptedHits, impact.ValueRO.Position);
+                Observe(entity, GameplaySfxCue.GatekeeperDefeat, defeated ? 1u : 0u, pose.ValueRO.Position);
+            }
+
+            foreach (var (hand, part, pose, entity) in SystemAPI.Query<RefRO<BossHand>, RefRO<BossPart>,
+                         RefRO<LocalTransform>>().WithEntityAccess())
+            {
+                var attack = hand.ValueRO;
+                var position = pose.ValueRO.Position;
+                uint windup = attack.Phase == BossHandPhase.Anticipation ? attack.AttackSequence : 0u;
+                float3 windupPosition = windup != 0 ? SystemAPI.GetComponent<LocalTransform>(part.ValueRO.Encounter).Position : position;
+                Observe(entity, GameplaySfxCue.GatekeeperWindup, windup, windupPosition);
+                Observe(entity, GameplaySfxCue.GatekeeperStrikeImpact, attack.StrikeContactSequence, attack.StrikeContactPosition);
+                // The slam becomes dangerous at the bottom of the arc. Recovery covers an
+                // active-to-recovery transition that occurs between presentation frames.
+                bool recovery = attack.Phase == BossHandPhase.Recovery;
+                bool active = attack.Phase == BossHandPhase.Active;
+                Observe(entity, GameplaySfxCue.GatekeeperSlam, attack.Attack == BossAttack.Slam
+                    && (recovery || active && position.y <= attack.Target.y + .5f) ? attack.AttackSequence : 0u, attack.Target);
+                Observe(entity, GameplaySfxCue.GatekeeperLunge, attack.Attack == BossAttack.Lunge
+                    && (active || recovery) ? attack.AttackSequence : 0u, position);
+                Observe(entity, GameplaySfxCue.GatekeeperSweep, attack.Attack == BossAttack.Sweep
+                    && (active || recovery) ? attack.AttackSequence : 0u, position);
             }
         }
 

@@ -14,8 +14,9 @@ stay out of combat resolution. Punch requests carry the first protected armour c
 presentation, and the wizard boss records each teleport departure.
 
 Player and results cues have dedicated voices. World cues use eight pooled voices, range
-attenuation and per-cue throttling. Crowd collisions keep the strongest audible contact per
-presentation frame and share a cadence with the exceptional-chain accent. Baseline, Dasher,
+attenuation and per-cue throttling. Crowd collisions and exceptional chains use two dedicated
+voices with player-relative distance falloff and camera-relative stereo pan. They keep the
+strongest audible contact per presentation frame and share a playback cadence. Baseline, Dasher,
 Ranged and Linked Pair share squeaky reactions on confirmed punches and qualifying crowd hits.
 The ranged projectile release uses a short swish and retains its separate contact splash.
 Pause and retry clear active combat sounds. The exploder fuse is an audition warning when an
@@ -844,6 +845,16 @@ MonoBehaviours and no writes to physics, damage, attack timing or crowd ownershi
 `GatekeeperEffectsBuilder` rebuilds the owned prefab without changing pack assets or
 shared ordinary-enemy effects. Bootstrap's existing endpoint serves campaign 10/50 and
 legacy Gauntlet 11; pause, restart and encounter cancellation clear presentation state.
+
+Elastic uses stone recordings for the Gatekeeper's windup, slam landing, lunge, sweep,
+relocation, hand contacts, accepted head hits and defeat (BOSS-001/002/005/007/008).
+`GameplaySfxBridgeSystem` observes each hand's attack sequence and the head's accepted-hit
+counter. `BossPresentationSystem` forwards hand contacts from the existing impact mailbox.
+The windup and accepted head hits layer pitched-down creature vocals over the stone cues.
+A bass impact layers over the slam landing. Each lunge or sweep records its first crowd
+scatter or player contact on the hand's attack sequence for the same bass impact.
+The combat cues use player-relative falloff with stereo panning. The defeat cue plays
+alongside the level-clear cue on the results voice.
 
 The Magma model's three native ambient emitters also have scene-owned overrides:
 both palms use small cream/gold Cartoon FX smoke puffs and the head uses fading warm

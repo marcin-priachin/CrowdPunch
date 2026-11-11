@@ -84,6 +84,12 @@ namespace CrowdPunch.Systems.Combat
             var history=em.GetBuffer<BossScatterHistory>(c.Part);
             for(int i=0;i<history.Length;i++) if(history[i].Body==c.Body && history[i].AttackSequence==hand.AttackSequence) return;
             history.Add(new BossScatterHistory { Body=c.Body, AttackSequence=hand.AttackSequence });
+            if (hand.Attack != BossAttack.Slam && hand.StrikeContactSequence != hand.AttackSequence)
+            {
+                hand.StrikeContactSequence = hand.AttackSequence;
+                hand.StrikeContactPosition = c.Point;
+                em.SetComponentData(c.Part, hand);
+            }
             var t=em.GetComponentData<BossTuning>(part.Encounter);
             // Active interception starts a new boss launch even if this body was already player-owned.
             EnemyLaunchTransition.Begin(ref launch,EnemyLaunchCause.BossAttack,t.ScatterDamage);

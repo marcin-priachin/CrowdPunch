@@ -20,22 +20,22 @@ MonoBehaviour:
   PlayerDash:
   - {fileID: 8300000, guid: 21276b400636b5842a53348e94385c92, type: 3}
   LaunchDeparture:
-  - {fileID: 8300000, guid: 1177f101f960bb94c929cef21bd3d1b5, type: 3}
-  - {fileID: 8300000, guid: b60b202c45c153a42ac76cf90eb4cae2, type: 3}
+  - {fileID: 8300000, guid: 6dcc00db28df8d24caf2a3062f23807d, type: 3}
+  - {fileID: 8300000, guid: 8b054e6b5b4ef0649a1ed8dc7ec5baad, type: 3}
+  - {fileID: 8300000, guid: 522355f5c6807ea4fb0f88cd065fea45, type: 3}
   CrowdCollision:
-  - {fileID: 8300000, guid: 316887329712946408f425cb21917e7d, type: 3}
-  - {fileID: 8300000, guid: c41ab1dc24489e049a3bb3da6de16601, type: 3}
-  - {fileID: 8300000, guid: 13636c1f7573d2d419df36a596f47fc3, type: 3}
+  - {fileID: 8300000, guid: 6dcc00db28df8d24caf2a3062f23807d, type: 3}
+  - {fileID: 8300000, guid: 8b054e6b5b4ef0649a1ed8dc7ec5baad, type: 3}
+  - {fileID: 8300000, guid: 522355f5c6807ea4fb0f88cd065fea45, type: 3}
   ExceptionalChain:
   - {fileID: 8300000, guid: 4613569130002dc4281fd29dd9dc333f, type: 3}
   - {fileID: 8300000, guid: 6f0215ad39ec4244a9d00cc15b8b4c47, type: 3}
   PlayerHurt:
-  - {fileID: 8300000, guid: 8390011425381ff48b079d19207d558a, type: 3}
-  - {fileID: 8300000, guid: fbaec98ca17c7894aabf3caea9190a9f, type: 3}
+  - {fileID: 8300000, guid: 0b815b8613e1e9f4da7deb0fd851b1ad, type: 3}
+  - {fileID: 8300000, guid: 7582391a731a6d94383b7af825e4e390, type: 3}
   GoblinGrunt:
-  - {fileID: 8300000, guid: d36777cf1fc279d439271f32521665ee, type: 3}
   - {fileID: 8300000, guid: 8b1d2e21066107a47b80702ffde7ac21, type: 3}
-  - {fileID: 8300000, guid: 2aa1a05396517d647b78c63f0b4209a8, type: 3}
+  - {fileID: 8300000, guid: 5429636950963a24c9bc61e27f1c250c, type: 3}
   LinkedPairAttack:
   - {fileID: 8300000, guid: e74d1a398985d5c478f7f97cece5c5e1, type: 3}
   - {fileID: 8300000, guid: a66a3c536e56d2f47bd5a57b7eb304f1, type: 3}
@@ -76,6 +76,30 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 59c0dbac0fec8774c95eca05fabad6bf, type: 3}
   ExploderDetonation:
   - {fileID: 8300000, guid: 70d32c86f95ff7045ad60c8c67e21e32, type: 3}
+  GatekeeperWindup:
+  - {fileID: 8300000, guid: f0a61db9e34de5f4cb9117563ed15328, type: 3}
+  GatekeeperWindupGrunt:
+  - {fileID: 8300000, guid: f72a02c83c34a924c96c18a071faec07, type: 3}
+  GatekeeperSlam:
+  - {fileID: 8300000, guid: 4a2c43c67dff0cf4797e0bfe42004d60, type: 3}
+  GatekeeperLunge:
+  - {fileID: 8300000, guid: 6b7556c061be19c47a803ab405a59fa9, type: 3}
+  GatekeeperSweep:
+  - {fileID: 8300000, guid: 95591680b2223fa49ad1bc2bd8bbd23c, type: 3}
+  - {fileID: 8300000, guid: 2adda4418cabffd41a525149ccb7f4e3, type: 3}
+  GatekeeperStrikeImpact:
+  - {fileID: 8300000, guid: fbaec98ca17c7894aabf3caea9190a9f, type: 3}
+  - {fileID: 8300000, guid: fbaec98ca17c7894aabf3caea9190a9f, type: 3}
+  GatekeeperMove:
+  - {fileID: 8300000, guid: bea9990a276dccf46b7ff0cd72af850b, type: 3}
+  GatekeeperHeadHit:
+  - {fileID: 8300000, guid: 95ab53f8e512ba24293e57b9f8c6b836, type: 3}
+  GatekeeperHitGrunt:
+  - {fileID: 8300000, guid: 50b0baac37458aa46a2b44b883e46a5f, type: 3}
+  GatekeeperHandHit:
+  - {fileID: 8300000, guid: 16cbc62af79a34149b74e7ae803cb25e, type: 3}
+  GatekeeperDefeat:
+  - {fileID: 8300000, guid: 68405a1439217264fad65371f23f5a0d, type: 3}
   GoblinWizardCharge:
   - {fileID: 8300000, guid: 51c51cbeff7d9724b8ca8cc6ac0bdc99, type: 3}
   GoblinWizardCast:

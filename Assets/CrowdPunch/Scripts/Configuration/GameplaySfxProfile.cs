@@ -35,6 +35,17 @@ namespace CrowdPunch.Configuration
         public AudioClip[] ExploderDetonation;
 
         [Header("Bosses")]
+        public AudioClip[] GatekeeperWindup;
+        public AudioClip[] GatekeeperWindupGrunt;
+        public AudioClip[] GatekeeperSlam;
+        public AudioClip[] GatekeeperLunge;
+        public AudioClip[] GatekeeperSweep;
+        public AudioClip[] GatekeeperStrikeImpact;
+        public AudioClip[] GatekeeperMove;
+        public AudioClip[] GatekeeperHeadHit;
+        public AudioClip[] GatekeeperHitGrunt;
+        public AudioClip[] GatekeeperHandHit;
+        public AudioClip[] GatekeeperDefeat;
         public AudioClip[] GoblinWizardCharge;
         public AudioClip[] GoblinWizardCast;
         public AudioClip[] GoblinWizardTeleport;

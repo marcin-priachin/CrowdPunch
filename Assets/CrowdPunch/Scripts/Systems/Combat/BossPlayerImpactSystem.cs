@@ -38,6 +38,11 @@ namespace CrowdPunch.Systems.Combat
                     if(hit && PlayerBridgeRegistry.TryGetBridge(out var bridge))
                     {
                         hand.ValueRW.PlayerHit=1;
+                        if (hand.ValueRO.Attack != BossAttack.Slam && hand.ValueRO.StrikeContactSequence != hand.ValueRO.AttackSequence)
+                        {
+                            hand.ValueRW.StrikeContactSequence = hand.ValueRO.AttackSequence;
+                            hand.ValueRW.StrikeContactPosition = player.Position;
+                        }
                         float3 direction=math.normalizesafe(new float3(player.Position.x-current.x,0,player.Position.z-current.z),hand.ValueRO.Direction);
                         bridge.ReceiveEnemyHit(t.PlayerDamage,t.PlayerInvulnerability,direction*t.PlayerKnockback);
                     }

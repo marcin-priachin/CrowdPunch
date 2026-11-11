@@ -11,9 +11,14 @@ namespace CrowdPunch.Mono.Player
     public sealed class GameplaySfx : MonoBehaviour
     {
         private const float WorldRange = 30f;
+        private const float CrowdImpactRange = 48f;
+        private const float CrowdImpactFullVolumeRange = 8f;
         private readonly AudioSource[] worldVoices = new AudioSource[8];
         private readonly float[] worldPriorities = new float[8];
+        private readonly AudioSource[] crowdVoices = new AudioSource[2];
         private AudioSource punchVoice, hurtVoice, dashVoice, clearVoice;
+        private Transform audioCamera;
+        private int nextCrowdVoice;
         private PlayerEcsBridge bridge;
         private PlayerController controller;
         private PlayerHealth health;
@@ -41,6 +46,13 @@ namespace CrowdPunch.Mono.Player
             hurtVoice = MakeVoice("Hurt SFX", false);
             dashVoice = MakeVoice("Dash SFX", false);
             clearVoice = MakeVoice("Level clear SFX", false);
+            var camera = UnityEngine.Camera.main;
+            audioCamera = camera != null ? camera.transform : null;
+            for (int i = 0; i < crowdVoices.Length; i++)
+            {
+                crowdVoices[i] = MakeVoice("Crowd Impact SFX", false);
+                crowdVoices[i].priority = 96;
+            }
             for (int i = 0; i < worldVoices.Length; i++) worldVoices[i] = MakeVoice("World SFX", true);
             Subscribe();
         }
@@ -115,7 +127,7 @@ namespace CrowdPunch.Mono.Player
             {
                 completion = GauntletCompletionRegistry.Sequence;
                 if (!FeedbackTimeController.IsMenuPreview)
-                    Play(clearVoice, profile.LevelClear, .62f);
+                    PlayResults(profile.LevelClear, .62f);
             }
             if (CanPlay) FlushImpacts();
             collisionScore = chainScore = 0f;
@@ -126,7 +138,9 @@ namespace CrowdPunch.Mono.Player
             punchVoice.Stop();
             hurtVoice.Stop();
             dashVoice.Stop();
+            foreach (var voice in crowdVoices) voice.Stop();
             foreach (var voice in worldVoices) voice.Stop();
+            nextCrowdVoice = 0;
             nextImpact = nextChain = nextHurt = nextLaunch = 0;
             System.Array.Clear(nextCue, 0, nextCue.Length);
             collisionScore = chainScore = 0f;
@@ -162,7 +176,7 @@ namespace CrowdPunch.Mono.Player
         private void OnImpact(CombatFeedbackMessage message)
         {
             if (!CanPlay || message.Kind != CombatImpactKind.EnemyCollision) return;
-            float score = message.Intensity * Attenuation(message.Position);
+            float score = Mathf.Lerp(.25f, 1f, message.Intensity) * CrowdImpactGain(message.Position);
             if (score > collisionScore) { collisionScore = score; collision = message; }
             if (message.PlayerOwned && message.ChainDepth >= feedback.ExceptionalChainDepth
                 && message.Intensity >= feedback.CollisionCameraThreshold && score > chainScore)
@@ -175,14 +189,40 @@ namespace CrowdPunch.Mono.Player
         private void FlushImpacts()
         {
             double now = Time.unscaledTimeAsDouble;
-            if (chainScore > 0f && now >= nextChain && PlayWorld(profile.ExceptionalChain, chain.Position, .6f, 2f))
+            if (chainScore > 0f && now >= nextChain && PlayCrowdImpact(profile.ExceptionalChain, chain.Position, .85f))
             {
                 nextChain = now + feedback.ExceptionalCooldown;
                 nextImpact = now + .085;
             }
-            if (collisionScore > .04f && now >= nextImpact
-                && PlayWorld(profile.CrowdCollision, collision.Position, .35f + .22f * collision.Intensity, collisionScore))
+            if (collisionScore > 0f && now >= nextImpact
+                && PlayCrowdImpact(profile.CrowdCollision, collision.Position, Mathf.Lerp(.6f, .85f, collision.Intensity)))
                 nextImpact = now + .085;
+        }
+
+        private float CrowdImpactGain(Vector3 position)
+        {
+            Vector3 offset = position - bridge.transform.position;
+            offset.y = 0f;
+            return Mathf.InverseLerp(CrowdImpactRange, CrowdImpactFullVolumeRange, offset.magnitude);
+        }
+
+        private bool PlayCrowdImpact(AudioClip[] clips, Vector3 position, float volume)
+        {
+            float gain = CrowdImpactGain(position);
+            if (gain <= 0f) return false;
+            var voice = crowdVoices[nextCrowdVoice];
+            // Pan relative to the view while applying distance falloff only from the player.
+            voice.panStereo = PlayerRelativePan(position);
+            if (!Play(voice, clips, volume * gain)) return false;
+            nextCrowdVoice = (nextCrowdVoice + 1) % crowdVoices.Length;
+            return true;
+        }
+
+        private float PlayerRelativePan(Vector3 position)
+        {
+            Vector3 offset = position - bridge.transform.position;
+            offset.y = 0f;
+            return audioCamera != null ? .45f * Vector3.Dot(audioCamera.right, offset.normalized) : 0f;
         }
 
         private void OnPillar(Vector3 position, Vector3 direction, float width, bool bossHit)
@@ -206,6 +246,12 @@ namespace CrowdPunch.Mono.Player
         {
             double now = Time.unscaledTimeAsDouble;
             if (!CanPlay || now < nextCue[(int)cue]) return;
+            if (cue == GameplaySfxCue.GatekeeperDefeat)
+            {
+                // The regular world voices stop when the results camera takes over.
+                PlayResults(profile.GatekeeperDefeat, .9f);
+                return;
+            }
             var clips = cue switch
             {
                 GameplaySfxCue.GoblinGrunt => profile.GoblinGrunt,
@@ -230,17 +276,43 @@ namespace CrowdPunch.Mono.Player
                 GameplaySfxCue.SpikedTurtleWallHit => profile.SpikedTurtleWallHit,
                 GameplaySfxCue.BarricadeHit => profile.BarricadeHit,
                 GameplaySfxCue.BarricadeBreak => profile.BarricadeBreak,
+                GameplaySfxCue.GatekeeperWindup => profile.GatekeeperWindup,
+                GameplaySfxCue.GatekeeperSlam => profile.GatekeeperSlam,
+                GameplaySfxCue.GatekeeperLunge => profile.GatekeeperLunge,
+                GameplaySfxCue.GatekeeperSweep => profile.GatekeeperSweep,
+                GameplaySfxCue.GatekeeperStrikeImpact => profile.GatekeeperStrikeImpact,
+                GameplaySfxCue.GatekeeperMove => profile.GatekeeperMove,
+                GameplaySfxCue.GatekeeperHeadHit => profile.GatekeeperHeadHit,
+                GameplaySfxCue.GatekeeperHandHit => profile.GatekeeperHandHit,
                 _ => null
             };
-            if (PlayWorld(clips, position, .46f, 1f)) nextCue[(int)cue] = now + .17;
+            bool gatekeeper = cue is GameplaySfxCue.GatekeeperWindup or GameplaySfxCue.GatekeeperSlam
+                or GameplaySfxCue.GatekeeperLunge or GameplaySfxCue.GatekeeperSweep or GameplaySfxCue.GatekeeperMove
+                or GameplaySfxCue.GatekeeperHeadHit or GameplaySfxCue.GatekeeperHandHit or GameplaySfxCue.GatekeeperStrikeImpact;
+            float volume = gatekeeper ? (cue == GameplaySfxCue.GatekeeperMove ? .58f : .9f) : .46f;
+            bool played = PlayWorld(clips, position, volume, gatekeeper ? 2.5f : 1f, playerRelative: gatekeeper);
+            switch (cue)
+            {
+                case GameplaySfxCue.GatekeeperWindup:
+                    played |= PlayWorld(profile.GatekeeperWindupGrunt, position, .72f, 3f, playerRelative: true, pitch: .82f);
+                    break;
+                case GameplaySfxCue.GatekeeperHeadHit:
+                    played |= PlayWorld(profile.GatekeeperHitGrunt, position, .65f, 3f, playerRelative: true, pitch: .74f);
+                    break;
+                case GameplaySfxCue.GatekeeperSlam:
+                    played |= PlayWorld(profile.GatekeeperStrikeImpact, position, .85f, 3f, playerRelative: true);
+                    break;
+            }
+            if (played) nextCue[(int)cue] = now + .17;
         }
 
         private float Attenuation(Vector3 position) =>
             Mathf.Clamp01(1f - Vector3.Distance(position, bridge.transform.position) / WorldRange);
 
-        private bool PlayWorld(AudioClip[] clips, Vector3 position, float volume, float priority)
+        private bool PlayWorld(AudioClip[] clips, Vector3 position, float volume, float priority,
+            bool playerRelative = false, float pitch = 1f)
         {
-            float gain = Attenuation(position);
+            float gain = playerRelative ? CrowdImpactGain(position) : Attenuation(position);
             if (gain <= 0f || clips == null || clips.Length == 0) return false;
             priority *= gain;
             int slot = -1;
@@ -252,21 +324,34 @@ namespace CrowdPunch.Mono.Player
             if (slot < 0) return false;
             var source = worldVoices[slot];
             source.transform.position = position;
+            source.spatialBlend = playerRelative ? 0f : .65f;
+            source.panStereo = playerRelative ? PlayerRelativePan(position) : 0f;
+            source.pitch = pitch;
             worldPriorities[slot] = priority;
             return Play(source, clips, volume * gain);
         }
 
         private static bool Play(AudioSource source, AudioClip[] clips, float volume)
         {
-            if (clips == null || clips.Length == 0) return false;
-            // Use audio's clock to vary takes without perturbing Unity's shared gameplay RNG.
-            int index = (int)(AudioSettings.dspTime * 1000.0 % clips.Length);
-            var clip = clips[index];
+            var clip = SelectClip(clips);
             if (clip == null) return false;
             source.clip = clip;
             source.volume = volume;
             source.Play();
             return true;
+        }
+
+        private void PlayResults(AudioClip[] clips, float volume)
+        {
+            var clip = SelectClip(clips);
+            if (clip != null) clearVoice.PlayOneShot(clip, volume);
+        }
+
+        private static AudioClip SelectClip(AudioClip[] clips)
+        {
+            if (clips == null || clips.Length == 0) return null;
+            // Use audio's clock to vary takes without perturbing Unity's shared gameplay RNG.
+            return clips[(int)(AudioSettings.dspTime * 1000.0 % clips.Length)];
         }
     }
 }
