@@ -17,6 +17,7 @@ namespace CrowdPunch.Mono.Player
         private readonly float[] worldPriorities = new float[8];
         private readonly AudioSource[] crowdVoices = new AudioSource[2];
         private AudioSource punchVoice, hurtVoice, dashVoice, clearVoice;
+        private DasherRollAudioPool dasherRolls;
         private Transform audioCamera;
         private int nextCrowdVoice;
         private PlayerEcsBridge bridge;
@@ -48,6 +49,8 @@ namespace CrowdPunch.Mono.Player
             clearVoice = MakeVoice("Level clear SFX", false);
             var camera = UnityEngine.Camera.main;
             audioCamera = camera != null ? camera.transform : null;
+            if (profile.DasherRollLoop != null)
+                dasherRolls = new DasherRollAudioPool(transform, player.transform, audioCamera, profile.DasherRollLoop);
             for (int i = 0; i < crowdVoices.Length; i++)
             {
                 crowdVoices[i] = MakeVoice("Crowd Impact SFX", false);
@@ -87,6 +90,12 @@ namespace CrowdPunch.Mono.Player
             bridge.ExplosionReceived += OnExplosion;
             bridge.ProjectileBurstReceived += OnProjectileImpact;
             bridge.GameplaySfxReceived += OnWorldCue;
+            if (dasherRolls != null)
+            {
+                bridge.DasherTelegraphsBegan += dasherRolls.Begin;
+                bridge.DasherRollReceived += dasherRolls.Show;
+                bridge.DasherTelegraphsEnded += dasherRolls.End;
+            }
             if (controller != null) controller.DashStarted += OnDash;
             if (health != null) health.DamageAccepted += OnHurt;
         }
@@ -104,6 +113,12 @@ namespace CrowdPunch.Mono.Player
                 bridge.ExplosionReceived -= OnExplosion;
                 bridge.ProjectileBurstReceived -= OnProjectileImpact;
                 bridge.GameplaySfxReceived -= OnWorldCue;
+                if (dasherRolls != null)
+                {
+                    bridge.DasherTelegraphsBegan -= dasherRolls.Begin;
+                    bridge.DasherRollReceived -= dasherRolls.Show;
+                    bridge.DasherTelegraphsEnded -= dasherRolls.End;
+                }
             }
             if (controller != null) controller.DashStarted -= OnDash;
             if (health != null) health.DamageAccepted -= OnHurt;
@@ -138,6 +153,7 @@ namespace CrowdPunch.Mono.Player
             punchVoice.Stop();
             hurtVoice.Stop();
             dashVoice.Stop();
+            dasherRolls?.Clear();
             foreach (var voice in crowdVoices) voice.Stop();
             foreach (var voice in worldVoices) voice.Stop();
             nextCrowdVoice = 0;
@@ -257,7 +273,6 @@ namespace CrowdPunch.Mono.Player
                 GameplaySfxCue.GoblinGrunt => profile.GoblinGrunt,
                 GameplaySfxCue.LinkedPairAttack => profile.LinkedPairAttack,
                 GameplaySfxCue.EliteLaunch => profile.EliteLaunch,
-                GameplaySfxCue.DasherRoll => profile.DasherRoll,
                 GameplaySfxCue.ArmorBlock => profile.ArmorBlock,
                 GameplaySfxCue.ArmorBreak => profile.ArmorBreak,
                 GameplaySfxCue.RangerCast => profile.RangerCast,

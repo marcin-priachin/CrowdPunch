@@ -41,11 +41,6 @@ namespace CrowdPunch.Systems.Presentation
 
         private void ObserveEnemies()
         {
-            foreach (var (dash, launch, pose, entity) in SystemAPI.Query<RefRO<DasherState>, RefRO<EnemyLaunchState>,
-                         RefRO<LocalTransform>>().WithNone<RespawnRequest>().WithEntityAccess())
-                Observe(entity, GameplaySfxCue.DasherRoll, dash.ValueRO.Phase == DasherPhase.Dashing
-                    && launch.ValueRO.Phase == EnemyLaunchPhase.Active ? 1u : 0u, pose.ValueRO.Position);
-
             foreach (var (armor, pose, entity) in SystemAPI.Query<RefRO<EnemyArmor>, RefRO<LocalTransform>>()
                          .WithNone<RespawnRequest>().WithEntityAccess())
                 Observe(entity, GameplaySfxCue.ArmorBreak, armor.ValueRO.HitSequence, pose.ValueRO.Position);

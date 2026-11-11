@@ -19,7 +19,8 @@ namespace CrowdPunch.Configuration
         public AudioClip[] GoblinGrunt;
         public AudioClip[] LinkedPairAttack;
         public AudioClip[] EliteLaunch;
-        public AudioClip[] DasherRoll;
+        [Tooltip("Seamless rolling loop for the Dasher's charge, committed dash and launched roll.")]
+        public AudioClip DasherRollLoop;
         public AudioClip[] ArmorBlock;
         public AudioClip[] ArmorBreak;
 

@@ -73,6 +73,7 @@ namespace CrowdPunch.Mono.Player
         public event Action<Vector3, Vector3, Vector3> LaunchReceived;
         public event Action DasherTelegraphsBegan, DasherTelegraphsEnded;
         public event Action<ulong, Vector3, Vector3, float> DasherTelegraphReceived;
+        internal event Action<ulong, Vector3, float, float> DasherRollReceived;
         public event Action<Vector3, Vector3> NinjaTeleportReceived;
         public void ReceiveNinjaTeleport(Vector3 departure, Vector3 arrival) => NinjaTeleportReceived?.Invoke(departure, arrival);
         public void ReceiveImpact(CombatFeedbackMessage message) => ImpactReceived?.Invoke(message);
@@ -87,6 +88,8 @@ namespace CrowdPunch.Mono.Player
         public void EndDasherTelegraphs() => DasherTelegraphsEnded?.Invoke();
         public void ReceiveDasherTelegraph(ulong id, Vector3 position, Vector3 direction, float progress)
             => DasherTelegraphReceived?.Invoke(id, position, direction, progress);
+        internal void ReceiveDasherRoll(ulong id, Vector3 position, float rollSpeed, float intensity)
+            => DasherRollReceived?.Invoke(id, position, rollSpeed, intensity);
 
         public readonly struct TrajectoryPreviewSegment
         {

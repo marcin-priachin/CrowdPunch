@@ -553,6 +553,11 @@ twice (preparation/dash), Take Damage, reverse Die (rise), Spawn, Look Around (d
 recovery), Roll Forward In Place (launched) and Die. Preparation loops with playback increasing
 from 1x to 3x through the telegraph clock; the committed dash keeps the continuous roll phase
 and 3x speed, including obstruction redirects. These are presentation rates only.
+The Dasher audio pool consumes roll samples from the telegraph bridge. It raises pitch and volume
+with charge progress and keeps the same voice through the committed dash and into a launch.
+Launched Dashers use the flying animation's base roll rate at full volume before distance
+falloff, then fade out on recovery or defeat. Four voices cover the nearest audible Dashers
+(ENEMY-005/007, VISION-005).
 Launch loops Roll Forward In Place and repunch restarts it. Shared recovery uses Die then rise.
 Animation writes only skin matrices. Dasher pose interpolation uses quaternion slerp
 and retains the sampled bone scales, avoiding the shrinking caused by linearly
