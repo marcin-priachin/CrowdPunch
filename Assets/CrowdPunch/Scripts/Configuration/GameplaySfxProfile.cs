@@ -49,7 +49,11 @@ namespace CrowdPunch.Configuration
         public AudioClip[] GatekeeperDefeat;
         public AudioClip[] GoblinWizardCharge;
         public AudioClip[] GoblinWizardCast;
+        public AudioClip[] GoblinWizardHit;
         public AudioClip[] GoblinWizardTeleport;
+        public AudioClip[] GoblinWizardTeleportArrival;
+        public AudioClip GoblinWizardProjectileLoop;
+        public AudioClip[] GoblinWizardProjectileRedirect;
         public AudioClip[] ArmoredBossMovement;
         public AudioClip[] PillarLanding;
         public AudioClip[] PillarBossHit;

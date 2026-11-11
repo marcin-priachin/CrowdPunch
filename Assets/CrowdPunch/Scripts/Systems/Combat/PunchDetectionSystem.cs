@@ -119,6 +119,11 @@ namespace CrowdPunch.Systems.Combat
                 ChickenProjectilePunch.Redirect(state.EntityManager, shot, ref projectile.ValueRW, pose.ValueRO.Position,
                     punch, SystemAPI.GetComponent<ChickenTuning>(projectile.ValueRO.Boss));
                 punchRequest.HitEnemy = true;
+                if (!punchRequest.RedirectedChickenProjectile)
+                {
+                    punchRequest.RedirectedChickenProjectile = true;
+                    punchRequest.ChickenProjectileContact = pose.ValueRO.Position;
+                }
             }
             punchRequest.IsResolved = true;
             SystemAPI.SetComponent(punchEntity, punchRequest);

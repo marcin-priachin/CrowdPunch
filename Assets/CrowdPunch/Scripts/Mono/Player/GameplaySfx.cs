@@ -17,7 +17,7 @@ namespace CrowdPunch.Mono.Player
         private readonly float[] worldPriorities = new float[8];
         private readonly AudioSource[] crowdVoices = new AudioSource[2];
         private AudioSource punchVoice, hurtVoice, dashVoice, clearVoice;
-        private DasherRollAudioPool dasherRolls;
+        private WorldLoopAudioPool dasherRolls, wizardProjectiles;
         private Transform audioCamera;
         private int nextCrowdVoice;
         private PlayerEcsBridge bridge;
@@ -50,7 +50,11 @@ namespace CrowdPunch.Mono.Player
             var camera = UnityEngine.Camera.main;
             audioCamera = camera != null ? camera.transform : null;
             if (profile.DasherRollLoop != null)
-                dasherRolls = new DasherRollAudioPool(transform, player.transform, audioCamera, profile.DasherRollLoop);
+                dasherRolls = new WorldLoopAudioPool(transform, player.transform, audioCamera, profile.DasherRollLoop,
+                    "Dasher Roll SFX", 4, 36f, 112);
+            if (profile.GoblinWizardProjectileLoop != null)
+                wizardProjectiles = new WorldLoopAudioPool(transform, player.transform, audioCamera, profile.GoblinWizardProjectileLoop,
+                    "Wizard Projectile SFX", 8, 48f, 176);
             for (int i = 0; i < crowdVoices.Length; i++)
             {
                 crowdVoices[i] = MakeVoice("Crowd Impact SFX", false);
@@ -93,8 +97,14 @@ namespace CrowdPunch.Mono.Player
             if (dasherRolls != null)
             {
                 bridge.DasherTelegraphsBegan += dasherRolls.Begin;
-                bridge.DasherRollReceived += dasherRolls.Show;
+                bridge.DasherRollReceived += OnDasherRoll;
                 bridge.DasherTelegraphsEnded += dasherRolls.End;
+            }
+            if (wizardProjectiles != null)
+            {
+                bridge.ProjectileVisualsBegan += wizardProjectiles.Begin;
+                bridge.ProjectileVisualReceived += OnProjectileVisual;
+                bridge.ProjectileVisualsEnded += wizardProjectiles.End;
             }
             if (controller != null) controller.DashStarted += OnDash;
             if (health != null) health.DamageAccepted += OnHurt;
@@ -116,8 +126,14 @@ namespace CrowdPunch.Mono.Player
                 if (dasherRolls != null)
                 {
                     bridge.DasherTelegraphsBegan -= dasherRolls.Begin;
-                    bridge.DasherRollReceived -= dasherRolls.Show;
+                    bridge.DasherRollReceived -= OnDasherRoll;
                     bridge.DasherTelegraphsEnded -= dasherRolls.End;
+                }
+                if (wizardProjectiles != null)
+                {
+                    bridge.ProjectileVisualsBegan -= wizardProjectiles.Begin;
+                    bridge.ProjectileVisualReceived -= OnProjectileVisual;
+                    bridge.ProjectileVisualsEnded -= wizardProjectiles.End;
                 }
             }
             if (controller != null) controller.DashStarted -= OnDash;
@@ -154,6 +170,7 @@ namespace CrowdPunch.Mono.Player
             hurtVoice.Stop();
             dashVoice.Stop();
             dasherRolls?.Clear();
+            wizardProjectiles?.Clear();
             foreach (var voice in crowdVoices) voice.Stop();
             foreach (var voice in worldVoices) voice.Stop();
             nextCrowdVoice = 0;
@@ -256,6 +273,15 @@ namespace CrowdPunch.Mono.Player
             if (kind == ProjectileVisualKind.Ranged) OnWorldCue(GameplaySfxCue.RangerImpact, position);
         }
 
+        private void OnDasherRoll(ulong id, Vector3 position, float rollSpeed, float intensity) =>
+            dasherRolls.Show(id, position, .65f * rollSpeed, Mathf.Lerp(.16f, .42f, intensity));
+
+        private void OnProjectileVisual(ProjectileVisualSample sample)
+        {
+            if (sample.Kind == ProjectileVisualKind.Boss)
+                wizardProjectiles.Show(sample.Key, sample.Position, sample.Redirected ? 1.12f : 1f, .14f);
+        }
+
         private readonly double[] nextCue = new double[(int)GameplaySfxCue.Count];
 
         private void OnWorldCue(GameplaySfxCue cue, Vector3 position)
@@ -266,6 +292,11 @@ namespace CrowdPunch.Mono.Player
             {
                 // The regular world voices stop when the results camera takes over.
                 PlayResults(profile.GatekeeperDefeat, .9f);
+                return;
+            }
+            if (cue == GameplaySfxCue.GoblinWizardDefeat)
+            {
+                PlayResults(profile.GoblinWizardHit, .65f);
                 return;
             }
             var clips = cue switch
@@ -285,7 +316,10 @@ namespace CrowdPunch.Mono.Player
                 GameplaySfxCue.ExploderWarning => profile.ExploderWarning,
                 GameplaySfxCue.GoblinWizardCharge => profile.GoblinWizardCharge,
                 GameplaySfxCue.GoblinWizardCast => profile.GoblinWizardCast,
+                GameplaySfxCue.GoblinWizardHit => profile.GoblinWizardHit,
                 GameplaySfxCue.GoblinWizardTeleport => profile.GoblinWizardTeleport,
+                GameplaySfxCue.GoblinWizardTeleportArrival => profile.GoblinWizardTeleportArrival,
+                GameplaySfxCue.GoblinWizardProjectileRedirect => profile.GoblinWizardProjectileRedirect,
                 GameplaySfxCue.ArmoredBossMovement => profile.ArmoredBossMovement,
                 GameplaySfxCue.SpikedTurtleRoll => profile.SpikedTurtleRoll,
                 GameplaySfxCue.SpikedTurtleWallHit => profile.SpikedTurtleWallHit,
@@ -304,8 +338,19 @@ namespace CrowdPunch.Mono.Player
             bool gatekeeper = cue is GameplaySfxCue.GatekeeperWindup or GameplaySfxCue.GatekeeperSlam
                 or GameplaySfxCue.GatekeeperLunge or GameplaySfxCue.GatekeeperSweep or GameplaySfxCue.GatekeeperMove
                 or GameplaySfxCue.GatekeeperHeadHit or GameplaySfxCue.GatekeeperHandHit or GameplaySfxCue.GatekeeperStrikeImpact;
-            float volume = gatekeeper ? (cue == GameplaySfxCue.GatekeeperMove ? .58f : .9f) : .46f;
-            bool played = PlayWorld(clips, position, volume, gatekeeper ? 2.5f : 1f, playerRelative: gatekeeper);
+            bool wizard = cue is GameplaySfxCue.GoblinWizardHit or GameplaySfxCue.GoblinWizardTeleport
+                or GameplaySfxCue.GoblinWizardTeleportArrival or GameplaySfxCue.GoblinWizardProjectileRedirect;
+            float volume = cue switch
+            {
+                GameplaySfxCue.GatekeeperMove => .58f,
+                GameplaySfxCue.GoblinWizardHit => .75f,
+                GameplaySfxCue.GoblinWizardTeleport => .8f,
+                GameplaySfxCue.GoblinWizardTeleportArrival => .58f,
+                GameplaySfxCue.GoblinWizardProjectileRedirect => .68f,
+                _ => gatekeeper ? .9f : .46f
+            };
+            bool played = PlayWorld(clips, position, volume, gatekeeper || wizard ? 2.5f : 1f,
+                playerRelative: gatekeeper || wizard, pitch: cue == GameplaySfxCue.GoblinWizardHit ? .76f : 1f);
             switch (cue)
             {
                 case GameplaySfxCue.GatekeeperWindup:

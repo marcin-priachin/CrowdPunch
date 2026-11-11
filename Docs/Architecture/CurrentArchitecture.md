@@ -515,6 +515,13 @@ the action through the existing phase transition. Cast animation bypasses direct
 
 ## Goblin Chicken Boss Presentation (2026-10-24, CHICKEN-001/007, INFO-004, VISION-006)
 
+Elastic plays a deep creature grunt for each accepted hit. Teleporting publishes separate
+departure and arrival cues from the actual teleport sequence and positions (CHICKEN-002/005/007).
+Quiet projectile loops follow the existing projectile samples. The nearest eight shots
+use pooled voices, with a small pitch rise after player redirection and a fade on removal.
+The punch acknowledgement carries the first redirected shot's contact position for the
+separate redirect snap, including shots that disappear before presentation (CHICKEN-003/004).
+
 `ChickenModelBuilder` replaces Chicken presentation in Campaign 20/60 and Gauntlet 20 with the
 supplied Giant Wizard prefab at authored scale and Giant-pack Humanoid clips. CPA3 body, shoulder,
 hat and wand samples remain ECS-owned; CPJ1 directional jogs override only legs below the

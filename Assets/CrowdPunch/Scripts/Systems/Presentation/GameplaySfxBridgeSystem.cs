@@ -90,6 +90,10 @@ namespace CrowdPunch.Systems.Presentation
                 Observe(entity, GameplaySfxCue.GoblinWizardCharge, charging ? (uint)state.Phase : 0u, pose.ValueRO.Position);
                 Observe(entity, GameplaySfxCue.GoblinWizardCast, state.ShotSequence, pose.ValueRO.Position);
                 Observe(entity, GameplaySfxCue.GoblinWizardTeleport, state.TeleportSequence, state.TeleportDeparture);
+                Observe(entity, GameplaySfxCue.GoblinWizardTeleportArrival, state.TeleportSequence, pose.ValueRO.Position);
+                bool defeated = state.Phase == ChickenPhase.Defeated;
+                Observe(entity, GameplaySfxCue.GoblinWizardHit, defeated ? 0u : state.AcceptedHits, pose.ValueRO.Position);
+                Observe(entity, GameplaySfxCue.GoblinWizardDefeat, defeated ? state.AcceptedHits : 0u, pose.ValueRO.Position);
             }
             foreach (var (boss, pose, entity) in SystemAPI.Query<RefRO<DinoBoss>, RefRO<LocalTransform>>().WithEntityAccess())
                 Observe(entity, GameplaySfxCue.ArmoredBossMovement, boss.ValueRO.Phase == DinoPhase.Burst

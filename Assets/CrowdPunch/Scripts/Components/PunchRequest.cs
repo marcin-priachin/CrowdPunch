@@ -25,5 +25,7 @@ namespace CrowdPunch.Components
         public bool HitEnemy;
         public bool HitArmor;
         public float3 ArmorContact;
+        public bool RedirectedChickenProjectile;
+        public float3 ChickenProjectileContact;
     }
 }

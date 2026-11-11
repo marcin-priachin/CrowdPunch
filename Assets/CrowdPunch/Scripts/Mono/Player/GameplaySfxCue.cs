@@ -7,6 +7,7 @@ namespace CrowdPunch.Mono.Player
         ExploderWarning, GoblinWizardCharge, GoblinWizardCast, GoblinWizardTeleport,
         ArmoredBossMovement, SpikedTurtleRoll, SpikedTurtleWallHit, BarricadeHit, BarricadeBreak,
         GatekeeperWindup, GatekeeperSlam, GatekeeperLunge, GatekeeperSweep, GatekeeperMove,
-        GatekeeperHeadHit, GatekeeperHandHit, GatekeeperDefeat, GatekeeperStrikeImpact, Count
+        GatekeeperHeadHit, GatekeeperHandHit, GatekeeperDefeat, GatekeeperStrikeImpact,
+        GoblinWizardHit, GoblinWizardDefeat, GoblinWizardTeleportArrival, GoblinWizardProjectileRedirect, Count
     }
 }
