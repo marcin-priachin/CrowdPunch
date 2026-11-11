@@ -30,7 +30,8 @@ namespace CrowdPunch.Systems.Combat
                 Guide(em,entity,ref p,pose.ValueRO.Position,launchTuning,dt);
                 float remaining=math.min(dt,math.max(0,t.Lifetime-p.Age)); p.Age+=dt;
                 bool destroy=false; float3 position=pose.ValueRO.Position;
-                bool hasVfxBridge = PlayerBridgeRegistry.TryGetBridge(out var vfxBridge);
+                float3? impactPosition = null;
+                bool hasBridge = PlayerBridgeRegistry.TryGetBridge(out var bridge);
                 for(int segment=0;segment<=t.BounceLimit && remaining>.000001f;segment++)
                 {
                     float fraction=WallFraction(position,p.Velocity*remaining,t,out float3 normal);
@@ -49,35 +50,47 @@ namespace CrowdPunch.Systems.Combat
                         if(tier.ValueRO.Value!=EnemyCombatTier.Normal || launch.ValueRO.Phase==EnemyLaunchPhase.Defeated) continue;
                         // Projectile height is fixed. Vertical separation can make an airborne body miss.
                         if(math.abs(enemyPose.ValueRO.Position.y-position.y)>t.ProjectileRadius+contact.ValueRO.ContactRadius) continue;
-                        if(!Sweep(position,end,enemyPose.ValueRO.Position,t.ProjectileRadius+contact.ValueRO.ContactRadius,out _)) continue;
+                        if(!Sweep(position,end,enemyPose.ValueRO.Position,t.ProjectileRadius+contact.ValueRO.ContactRadius,out float enemyAt)) continue;
                         uint lifetime=em.HasComponent<EnemyLifetime>(enemy)?em.GetComponentData<EnemyLifetime>(enemy).Generation:0;
                         bool seen=false; foreach(var hit in history) if(hit.Target==enemy && hit.Lifetime==lifetime) { seen=true; break; }
                         if(seen) continue;
                         history.Add(new ChickenProjectileHit { Target=enemy,Lifetime=lifetime });
                         p.HomingTarget=Entity.Null;p.HomingSecondsRemaining=0;
                         HitEnemy(em,enemy,entity,p,t,SystemAPI.Time.ElapsedTime);
+                        impactPosition ??= math.lerp(position, end, enemyAt);
                     }
                     position=end;
+                    if (playerHit || bossHit)
+                    {
+                        impactPosition = null;
+                        if (hasBridge) bridge.ReceiveGameplaySfx(GameplaySfxCue.GoblinWizardProjectileDischarge, position);
+                    }
                     if(playerHit)
                     {
-                        if (hasVfxBridge) vfxBridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, -p.Velocity);
-                        if(PlayerBridgeRegistry.TryGetBridge(out var bridge)) bridge.ReceiveEnemyHit(t.ProjectileDamage,t.PlayerProtection,math.normalizesafe(p.Velocity)*t.PlayerPush);
+                        if (hasBridge)
+                        {
+                            bridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, -p.Velocity);
+                            bridge.ReceiveEnemyHit(t.ProjectileDamage,t.PlayerProtection,math.normalizesafe(p.Velocity)*t.PlayerPush);
+                        }
                         destroy=true; break; // Consumed even when player invulnerability rejects the hit.
                     }
                     if(bossHit)
                     {
-                        if (hasVfxBridge) vfxBridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, -p.Velocity, 1.2f);
+                        if (hasBridge) bridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, -p.Velocity, 1.2f);
                         ChickenDamageResolution.Queue(em,p.Boss,entity,p.Launch,t.ReturnedBossDamage); destroy=true; break;
                     }
                     if(fraction>=1) break;
                     remaining*=1-fraction;
+                    impactPosition ??= position;
                     Reflect(ref p,normal); position+=normal*.001f;
-                    if (hasVfxBridge) vfxBridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, normal, .65f);
+                    if (hasBridge) bridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, normal, .65f);
                     if(p.Bounces>=t.BounceLimit) { destroy=true; break; }
                 }
                 pose.ValueRW.Position=position;
-                if (!destroy && p.Age >= t.Lifetime && hasVfxBridge)
-                    vfxBridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, -p.Velocity, .45f);
+                if (hasBridge && impactPosition.HasValue)
+                    bridge.ReceiveGameplaySfx(GameplaySfxCue.GoblinWizardProjectileImpact, impactPosition.Value);
+                if (!destroy && p.Age >= t.Lifetime && hasBridge)
+                    bridge.ReceiveProjectileBurst(ProjectileVisualKind.Boss, position, -p.Velocity, .45f);
                 if(destroy || p.Age>=t.Lifetime) commands.DestroyEntity(entity);
             }
             commands.Playback(em); commands.Dispose();

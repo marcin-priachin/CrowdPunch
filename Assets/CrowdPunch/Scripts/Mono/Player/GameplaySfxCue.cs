@@ -5,9 +5,10 @@ namespace CrowdPunch.Mono.Player
         GoblinGrunt, LinkedPairAttack, EliteLaunch, ArmorBlock, ArmorBreak,
         RangerCast, RangerImpact, FlowerWindup, FlowerSporeBurst, SquidInk, BlobDetach, BlobBounce,
         ExploderWarning, GoblinWizardCharge, GoblinWizardCast, GoblinWizardTeleport,
-        ArmoredBossMovement, SpikedTurtleRoll, SpikedTurtleWallHit, BarricadeHit, BarricadeBreak,
+        ArmoredBossMovement, SpikedTurtleWallHit, BarricadeHit, BarricadeBreak,
         GatekeeperWindup, GatekeeperSlam, GatekeeperLunge, GatekeeperSweep, GatekeeperMove,
         GatekeeperHeadHit, GatekeeperHandHit, GatekeeperDefeat, GatekeeperStrikeImpact,
-        GoblinWizardHit, GoblinWizardDefeat, GoblinWizardTeleportArrival, GoblinWizardProjectileRedirect, Count
+        GiantGoblinHit, GiantGoblinDefeat, GoblinWizardTeleportArrival, GoblinWizardProjectileRedirect,
+        GoblinWizardProjectileImpact, GoblinWizardProjectileDischarge, ArmoredBossClang, Count
     }
 }

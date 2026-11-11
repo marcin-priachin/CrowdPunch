@@ -16,8 +16,8 @@ namespace CrowdPunch.Mono.Player
         private readonly AudioSource[] worldVoices = new AudioSource[8];
         private readonly float[] worldPriorities = new float[8];
         private readonly AudioSource[] crowdVoices = new AudioSource[2];
-        private AudioSource punchVoice, hurtVoice, dashVoice, clearVoice;
-        private WorldLoopAudioPool dasherRolls, wizardProjectiles;
+        private AudioSource punchVoice, hurtVoice, dashVoice, clearVoice, projectileDischargeVoice;
+        private WorldLoopAudioPool dasherRolls, wizardProjectiles, rollingBossRolls, flowerSporeEmissions;
         private Transform audioCamera;
         private int nextCrowdVoice;
         private PlayerEcsBridge bridge;
@@ -47,6 +47,11 @@ namespace CrowdPunch.Mono.Player
             hurtVoice = MakeVoice("Hurt SFX", false);
             dashVoice = MakeVoice("Dash SFX", false);
             clearVoice = MakeVoice("Level clear SFX", false);
+            if (profile.GoblinWizardProjectileDischarge?.Length > 0)
+            {
+                projectileDischargeVoice = MakeVoice("Wizard Projectile Discharge SFX", false);
+                projectileDischargeVoice.priority = 80;
+            }
             var camera = UnityEngine.Camera.main;
             audioCamera = camera != null ? camera.transform : null;
             if (profile.DasherRollLoop != null)
@@ -55,6 +60,12 @@ namespace CrowdPunch.Mono.Player
             if (profile.GoblinWizardProjectileLoop != null)
                 wizardProjectiles = new WorldLoopAudioPool(transform, player.transform, audioCamera, profile.GoblinWizardProjectileLoop,
                     "Wizard Projectile SFX", 8, 48f, 176);
+            if (profile.SpikedTurtleRollLoop != null)
+                rollingBossRolls = new WorldLoopAudioPool(transform, player.transform, audioCamera, profile.SpikedTurtleRollLoop,
+                    "Rolling Boss Spin SFX", 1, 48f, 104);
+            if (profile.FlowerSporeLoop != null)
+                flowerSporeEmissions = new WorldLoopAudioPool(transform, player.transform, audioCamera, profile.FlowerSporeLoop,
+                    "Flower Spore SFX", 4, 30f, 164);
             for (int i = 0; i < crowdVoices.Length; i++)
             {
                 crowdVoices[i] = MakeVoice("Crowd Impact SFX", false);
@@ -106,6 +117,18 @@ namespace CrowdPunch.Mono.Player
                 bridge.ProjectileVisualReceived += OnProjectileVisual;
                 bridge.ProjectileVisualsEnded += wizardProjectiles.End;
             }
+            if (rollingBossRolls != null)
+            {
+                bridge.RollingBossRollsBegan += rollingBossRolls.Begin;
+                bridge.RollingBossRollReceived += OnRollingBossRoll;
+                bridge.RollingBossRollsEnded += rollingBossRolls.End;
+            }
+            if (flowerSporeEmissions != null)
+            {
+                bridge.FlowerSporeEmissionsBegan += flowerSporeEmissions.Begin;
+                bridge.FlowerSporeEmissionReceived += OnFlowerSporeEmission;
+                bridge.FlowerSporeEmissionsEnded += flowerSporeEmissions.End;
+            }
             if (controller != null) controller.DashStarted += OnDash;
             if (health != null) health.DamageAccepted += OnHurt;
         }
@@ -135,6 +158,18 @@ namespace CrowdPunch.Mono.Player
                     bridge.ProjectileVisualReceived -= OnProjectileVisual;
                     bridge.ProjectileVisualsEnded -= wizardProjectiles.End;
                 }
+                if (rollingBossRolls != null)
+                {
+                    bridge.RollingBossRollsBegan -= rollingBossRolls.Begin;
+                    bridge.RollingBossRollReceived -= OnRollingBossRoll;
+                    bridge.RollingBossRollsEnded -= rollingBossRolls.End;
+                }
+                if (flowerSporeEmissions != null)
+                {
+                    bridge.FlowerSporeEmissionsBegan -= flowerSporeEmissions.Begin;
+                    bridge.FlowerSporeEmissionReceived -= OnFlowerSporeEmission;
+                    bridge.FlowerSporeEmissionsEnded -= flowerSporeEmissions.End;
+                }
             }
             if (controller != null) controller.DashStarted -= OnDash;
             if (health != null) health.DamageAccepted -= OnHurt;
@@ -152,7 +187,8 @@ namespace CrowdPunch.Mono.Player
                 clearVoice.Stop();
             }
             bool blocked = FeedbackTimeController.IsSuspended || !bridge.isActiveAndEnabled;
-            if (blocked && !suspended) StopCombat();
+            if (blocked && !suspended)
+                StopCombat(preserveDischarge: FeedbackTimeController.IsLevelClear || health != null && health.IsDefeated);
             suspended = blocked;
             if (completion != GauntletCompletionRegistry.Sequence)
             {
@@ -164,13 +200,16 @@ namespace CrowdPunch.Mono.Player
             collisionScore = chainScore = 0f;
         }
 
-        private void StopCombat()
+        private void StopCombat(bool preserveDischarge = false)
         {
             punchVoice.Stop();
             hurtVoice.Stop();
             dashVoice.Stop();
+            if (!preserveDischarge) projectileDischargeVoice?.Stop();
             dasherRolls?.Clear();
             wizardProjectiles?.Clear();
+            rollingBossRolls?.Clear();
+            flowerSporeEmissions?.Clear();
             foreach (var voice in crowdVoices) voice.Stop();
             foreach (var voice in worldVoices) voice.Stop();
             nextCrowdVoice = 0;
@@ -276,6 +315,16 @@ namespace CrowdPunch.Mono.Player
         private void OnDasherRoll(ulong id, Vector3 position, float rollSpeed, float intensity) =>
             dasherRolls.Show(id, position, .65f * rollSpeed, Mathf.Lerp(.16f, .42f, intensity));
 
+        private void OnRollingBossRoll(ulong id, Vector3 position)
+        {
+            if (CanPlay) rollingBossRolls.Show(id, position, 1f, .48f);
+        }
+
+        private void OnFlowerSporeEmission(ulong id, Vector3 position)
+        {
+            if (CanPlay) flowerSporeEmissions.Show(id, position, 1f, .48f);
+        }
+
         private void OnProjectileVisual(ProjectileVisualSample sample)
         {
             if (sample.Kind == ProjectileVisualKind.Boss)
@@ -288,13 +337,22 @@ namespace CrowdPunch.Mono.Player
         {
             double now = Time.unscaledTimeAsDouble;
             if (!CanPlay || now < nextCue[(int)cue]) return;
+            if (cue == GameplaySfxCue.GoblinWizardProjectileDischarge)
+            {
+                float gain = CrowdImpactGain(position);
+                if (projectileDischargeVoice == null || gain <= 0f) return;
+                projectileDischargeVoice.panStereo = PlayerRelativePan(position);
+                if (Play(projectileDischargeVoice, profile.GoblinWizardProjectileDischarge, .72f * gain))
+                    nextCue[(int)cue] = now + .08;
+                return;
+            }
             if (cue == GameplaySfxCue.GatekeeperDefeat)
             {
                 // The regular world voices stop when the results camera takes over.
                 PlayResults(profile.GatekeeperDefeat, .9f);
                 return;
             }
-            if (cue == GameplaySfxCue.GoblinWizardDefeat)
+            if (cue == GameplaySfxCue.GiantGoblinDefeat)
             {
                 PlayResults(profile.GoblinWizardHit, .65f);
                 return;
@@ -316,12 +374,13 @@ namespace CrowdPunch.Mono.Player
                 GameplaySfxCue.ExploderWarning => profile.ExploderWarning,
                 GameplaySfxCue.GoblinWizardCharge => profile.GoblinWizardCharge,
                 GameplaySfxCue.GoblinWizardCast => profile.GoblinWizardCast,
-                GameplaySfxCue.GoblinWizardHit => profile.GoblinWizardHit,
+                GameplaySfxCue.GiantGoblinHit => profile.GoblinWizardHit,
                 GameplaySfxCue.GoblinWizardTeleport => profile.GoblinWizardTeleport,
                 GameplaySfxCue.GoblinWizardTeleportArrival => profile.GoblinWizardTeleportArrival,
                 GameplaySfxCue.GoblinWizardProjectileRedirect => profile.GoblinWizardProjectileRedirect,
+                GameplaySfxCue.GoblinWizardProjectileImpact => profile.GoblinWizardProjectileImpact,
                 GameplaySfxCue.ArmoredBossMovement => profile.ArmoredBossMovement,
-                GameplaySfxCue.SpikedTurtleRoll => profile.SpikedTurtleRoll,
+                GameplaySfxCue.ArmoredBossClang => profile.ArmoredBossClang,
                 GameplaySfxCue.SpikedTurtleWallHit => profile.SpikedTurtleWallHit,
                 GameplaySfxCue.BarricadeHit => profile.BarricadeHit,
                 GameplaySfxCue.BarricadeBreak => profile.BarricadeBreak,
@@ -338,21 +397,27 @@ namespace CrowdPunch.Mono.Player
             bool gatekeeper = cue is GameplaySfxCue.GatekeeperWindup or GameplaySfxCue.GatekeeperSlam
                 or GameplaySfxCue.GatekeeperLunge or GameplaySfxCue.GatekeeperSweep or GameplaySfxCue.GatekeeperMove
                 or GameplaySfxCue.GatekeeperHeadHit or GameplaySfxCue.GatekeeperHandHit or GameplaySfxCue.GatekeeperStrikeImpact;
-            bool wizard = cue is GameplaySfxCue.GoblinWizardHit or GameplaySfxCue.GoblinWizardTeleport
-                or GameplaySfxCue.GoblinWizardTeleportArrival or GameplaySfxCue.GoblinWizardProjectileRedirect;
+            bool giantGoblin = cue is GameplaySfxCue.GiantGoblinHit or GameplaySfxCue.GoblinWizardTeleport
+                or GameplaySfxCue.GoblinWizardTeleportArrival or GameplaySfxCue.GoblinWizardProjectileRedirect
+                or GameplaySfxCue.GoblinWizardProjectileImpact or GameplaySfxCue.ArmoredBossClang;
             float volume = cue switch
             {
                 GameplaySfxCue.GatekeeperMove => .58f,
-                GameplaySfxCue.GoblinWizardHit => .75f,
+                GameplaySfxCue.GiantGoblinHit => .75f,
                 GameplaySfxCue.GoblinWizardTeleport => .8f,
                 GameplaySfxCue.GoblinWizardTeleportArrival => .58f,
                 GameplaySfxCue.GoblinWizardProjectileRedirect => .68f,
+                GameplaySfxCue.GoblinWizardProjectileImpact => .64f,
+                GameplaySfxCue.ArmoredBossClang => .8f,
                 _ => gatekeeper ? .9f : .46f
             };
-            bool played = PlayWorld(clips, position, volume, gatekeeper || wizard ? 2.5f : 1f,
-                playerRelative: gatekeeper || wizard, pitch: cue == GameplaySfxCue.GoblinWizardHit ? .76f : 1f);
+            bool played = PlayWorld(clips, position, volume, gatekeeper || giantGoblin ? 2.5f : 1f,
+                playerRelative: gatekeeper || giantGoblin, pitch: cue == GameplaySfxCue.GiantGoblinHit ? .76f : 1f);
             switch (cue)
             {
+                case GameplaySfxCue.ArmoredBossMovement:
+                    played |= PlayWorld(profile.GoblinWizardHit, position, .75f, 2.5f, playerRelative: true, pitch: .76f);
+                    break;
                 case GameplaySfxCue.GatekeeperWindup:
                     played |= PlayWorld(profile.GatekeeperWindupGrunt, position, .72f, 3f, playerRelative: true, pitch: .82f);
                     break;

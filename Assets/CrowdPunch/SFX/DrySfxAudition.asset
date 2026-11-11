@@ -61,6 +61,7 @@ MonoBehaviour:
   FlowerSporeBurst:
   - {fileID: 8300000, guid: 03ec46e828b9ab240a62c45be0781c1c, type: 3}
   - {fileID: 8300000, guid: ae0f0913fd6fa8c4791f216c4f4e7f42, type: 3}
+  FlowerSporeLoop: {fileID: 8300000, guid: 195268759ddbd404688ff6ac04f9dee9, type: 3}
   SquidInk:
   - {fileID: 8300000, guid: 7635bbfb45ae9494794ece48c11edf0e, type: 3}
   - {fileID: 8300000, guid: 58bcad32ad9a19f44b71b4e8ab5b2098, type: 3}
@@ -79,20 +80,23 @@ MonoBehaviour:
   GoblinWizardCast:
   - {fileID: 8300000, guid: 0e8bf55ebb364b1478a8c950918e43f6, type: 3}
   - {fileID: 8300000, guid: 51c51cbeff7d9724b8ca8cc6ac0bdc99, type: 3}
+  GoblinWizardHit:
+  - {fileID: 8300000, guid: 4b06be9dc0391a642b68f0d2d8ec2496, type: 3}
   GoblinWizardTeleport:
   - {fileID: 8300000, guid: 647b8b16e5c413a43b9b85e8611bcb23, type: 3}
   ArmoredBossMovement:
   - {fileID: 8300000, guid: a382ffb4388aa04439b3229a8674e63d, type: 3}
   - {fileID: 8300000, guid: 56bea1682a9c68e4f874fb4a7f2bfa6c, type: 3}
+  ArmoredBossClang:
+  - {fileID: 8300000, guid: e0e66ec2a1429264db7f21a8c9f9a019, type: 3}
+  - {fileID: 8300000, guid: da8c9b8cd05c1874b9d2d35ddaa880ef, type: 3}
   PillarLanding:
   - {fileID: 8300000, guid: 353c24b9bc442e347a2c55d669f4abec, type: 3}
   - {fileID: 8300000, guid: 2e2ddc58e5e86de4caf783ddb6f4a44e, type: 3}
   PillarBossHit:
   - {fileID: 8300000, guid: 68405a1439217264fad65371f23f5a0d, type: 3}
   - {fileID: 8300000, guid: 5dc726a5e7fb75f4e886cee08705c3e8, type: 3}
-  SpikedTurtleRoll:
-  - {fileID: 8300000, guid: 90cbf1c2331825b4ca6a749be37d90aa, type: 3}
-  - {fileID: 8300000, guid: 4a2c43c67dff0cf4797e0bfe42004d60, type: 3}
+  SpikedTurtleRollLoop: {fileID: 8300000, guid: 1c65c939c8729274da67f83bca8f9e26, type: 3}
   SpikedTurtleWallHit:
   - {fileID: 8300000, guid: 16cbc62af79a34149b74e7ae803cb25e, type: 3}
   BarricadeHit:

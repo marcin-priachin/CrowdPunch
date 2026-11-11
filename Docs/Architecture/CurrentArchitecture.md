@@ -18,6 +18,14 @@ attenuation and per-cue throttling. Crowd collisions and exceptional chains use 
 voices with player-relative distance falloff and camera-relative stereo pan. They keep the
 strongest audible contact per presentation frame and share a playback cadence. Baseline, Dasher,
 Ranged and Linked Pair share squeaky reactions on confirmed punches and qualifying crowd hits.
+The Elite plays the giant goblin wizard's deep grunt when its health decreases (ENEMY-009).
+Dino shares that grunt on burst entry and successful pillar hits. Its contact system records
+launched-body strikes for a positional armor clang from solver events or the committed
+launch sweep, with a short cooldown across both sources (PILLAR-001/006).
+The spiked turtle boss uses a positional shell rumble during the spinning animation. The
+loop keeps its phase across wall rebounds and fades at the end of the roll (ROLL-001/007).
+The flower's moving cast zone carries a positional spore loop through the warning and active
+phases. Detached impact zones still play a single burst on creation (WIZARD-005/006).
 The ranged projectile release uses a short swish and retains its separate contact splash.
 Pause and retry clear active combat sounds. The exploder fuse is an audition warning when an
 active exploder enters a small band outside player contact range.
@@ -521,6 +529,10 @@ Quiet projectile loops follow the existing projectile samples. The nearest eight
 use pooled voices, with a small pitch rise after player redirection and a fade on removal.
 The punch acknowledgement carries the first redirected shot's contact position for the
 separate redirect snap, including shots that disappear before presentation (CHICKEN-003/004).
+Wall bounces and crowd contacts play a short impact cue. Contact that consumes a shot on
+the player or boss plays a thump with a discharge tail, including when protection rejects
+damage. The discharge can finish over results after a lethal hit. Lifetime expiry uses its
+existing visual burst (CHICKEN-003/004).
 
 `ChickenModelBuilder` replaces Chicken presentation in Campaign 20/60 and Gauntlet 20 with the
 supplied Giant Wizard prefab at authored scale and Giant-pack Humanoid clips. CPA3 body, shoulder,

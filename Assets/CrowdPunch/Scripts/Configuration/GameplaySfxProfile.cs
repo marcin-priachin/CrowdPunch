@@ -29,6 +29,8 @@ namespace CrowdPunch.Configuration
         public AudioClip[] RangerImpact;
         public AudioClip[] FlowerWindup;
         public AudioClip[] FlowerSporeBurst;
+        [Tooltip("Loop for the flower's continuous spore emission.")]
+        public AudioClip FlowerSporeLoop;
         public AudioClip[] SquidInk;
         public AudioClip[] BlobDetach;
         public AudioClip[] BlobBounce;
@@ -49,15 +51,20 @@ namespace CrowdPunch.Configuration
         public AudioClip[] GatekeeperDefeat;
         public AudioClip[] GoblinWizardCharge;
         public AudioClip[] GoblinWizardCast;
+        [Tooltip("Deep grunt shared by the Elite, giant goblin wizard, and armored giant goblin.")]
         public AudioClip[] GoblinWizardHit;
         public AudioClip[] GoblinWizardTeleport;
         public AudioClip[] GoblinWizardTeleportArrival;
         public AudioClip GoblinWizardProjectileLoop;
         public AudioClip[] GoblinWizardProjectileRedirect;
+        public AudioClip[] GoblinWizardProjectileImpact;
+        public AudioClip[] GoblinWizardProjectileDischarge;
         public AudioClip[] ArmoredBossMovement;
+        public AudioClip[] ArmoredBossClang;
         public AudioClip[] PillarLanding;
         public AudioClip[] PillarBossHit;
-        public AudioClip[] SpikedTurtleRoll;
+        [Tooltip("Seamless rumble for the spiked turtle's spinning attack.")]
+        public AudioClip SpikedTurtleRollLoop;
         public AudioClip[] SpikedTurtleWallHit;
 
         [Header("Objectives and results")]

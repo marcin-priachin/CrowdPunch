@@ -74,6 +74,8 @@ namespace CrowdPunch.Mono.Player
         public event Action DasherTelegraphsBegan, DasherTelegraphsEnded;
         public event Action<ulong, Vector3, Vector3, float> DasherTelegraphReceived;
         internal event Action<ulong, Vector3, float, float> DasherRollReceived;
+        internal event Action RollingBossRollsBegan, RollingBossRollsEnded;
+        internal event Action<ulong, Vector3> RollingBossRollReceived;
         public event Action<Vector3, Vector3> NinjaTeleportReceived;
         public void ReceiveNinjaTeleport(Vector3 departure, Vector3 arrival) => NinjaTeleportReceived?.Invoke(departure, arrival);
         public void ReceiveImpact(CombatFeedbackMessage message) => ImpactReceived?.Invoke(message);
@@ -90,6 +92,15 @@ namespace CrowdPunch.Mono.Player
             => DasherTelegraphReceived?.Invoke(id, position, direction, progress);
         internal void ReceiveDasherRoll(ulong id, Vector3 position, float rollSpeed, float intensity)
             => DasherRollReceived?.Invoke(id, position, rollSpeed, intensity);
+        internal void BeginRollingBossRolls() => RollingBossRollsBegan?.Invoke();
+        internal void EndRollingBossRolls() => RollingBossRollsEnded?.Invoke();
+        internal void ReceiveRollingBossRoll(ulong id, Vector3 position) => RollingBossRollReceived?.Invoke(id, position);
+
+        internal event Action FlowerSporeEmissionsBegan, FlowerSporeEmissionsEnded;
+        internal event Action<ulong, Vector3> FlowerSporeEmissionReceived;
+        internal void BeginFlowerSporeEmissions() => FlowerSporeEmissionsBegan?.Invoke();
+        internal void EndFlowerSporeEmissions() => FlowerSporeEmissionsEnded?.Invoke();
+        internal void ReceiveFlowerSporeEmission(ulong id, Vector3 position) => FlowerSporeEmissionReceived?.Invoke(id, position);
 
         public readonly struct TrajectoryPreviewSegment
         {

@@ -41,6 +41,17 @@ namespace CrowdPunch.Systems.Presentation
 
         private void ObserveEnemies()
         {
+            foreach (var (health, pose, respawn, entity) in SystemAPI.Query<RefRO<Health>, RefRO<LocalTransform>, RefRO<RespawnRequest>>()
+                         .WithAll<ElitePunchState>().WithOptions(EntityQueryOptions.IgnoreComponentEnabledState).WithEntityAccess())
+            {
+                if (respawn.ValueRO.IsPooled != 0) continue;
+                var key = (entity, GameplaySfxCue.GiantGoblinHit);
+                float hitPoints = health.ValueRO.Current;
+                current[key] = math.asuint(hitPoints);
+                if (previous.TryGetValue(key, out uint lastHealth) && hitPoints < math.asfloat(lastHealth))
+                    bridge.ReceiveGameplaySfx(GameplaySfxCue.GiantGoblinHit, pose.ValueRO.Position);
+            }
+
             foreach (var (armor, pose, entity) in SystemAPI.Query<RefRO<EnemyArmor>, RefRO<LocalTransform>>()
                          .WithNone<RespawnRequest>().WithEntityAccess())
                 Observe(entity, GameplaySfxCue.ArmorBreak, armor.ValueRO.HitSequence, pose.ValueRO.Position);
@@ -53,9 +64,19 @@ namespace CrowdPunch.Systems.Presentation
                 Observe(entity, GameplaySfxCue.FlowerWindup, cast.ValueRO.Phase == WizardCastPhase.Telegraph
                     ? 1u : 0u, pose.ValueRO.Position);
 
+            bridge.BeginFlowerSporeEmissions();
             foreach (var (zone, entity) in SystemAPI.Query<RefRO<WizardZone>>().WithEntityAccess())
-                Observe(entity, GameplaySfxCue.FlowerSporeBurst, zone.ValueRO.Active != 0
-                    ? 1u : 0u, zone.ValueRO.Position, playFirst: true);
+            {
+                var hazard = zone.ValueRO;
+                if (hazard.Follow != 0)
+                {
+                    ulong id = ((ulong)(uint)entity.Version << 32) | (uint)entity.Index;
+                    bridge.ReceiveFlowerSporeEmission(id, hazard.Position);
+                }
+                Observe(entity, GameplaySfxCue.FlowerSporeBurst, hazard.Active != 0
+                    ? 1u : 0u, hazard.Position, playFirst: true);
+            }
+            bridge.EndFlowerSporeEmissions();
 
             foreach (var (emitter, pose, entity) in SystemAPI.Query<RefRO<TrailEmitter>, RefRO<LocalTransform>>()
                          .WithNone<RespawnRequest>().WithEntityAccess())
@@ -92,18 +113,32 @@ namespace CrowdPunch.Systems.Presentation
                 Observe(entity, GameplaySfxCue.GoblinWizardTeleport, state.TeleportSequence, state.TeleportDeparture);
                 Observe(entity, GameplaySfxCue.GoblinWizardTeleportArrival, state.TeleportSequence, pose.ValueRO.Position);
                 bool defeated = state.Phase == ChickenPhase.Defeated;
-                Observe(entity, GameplaySfxCue.GoblinWizardHit, defeated ? 0u : state.AcceptedHits, pose.ValueRO.Position);
-                Observe(entity, GameplaySfxCue.GoblinWizardDefeat, defeated ? state.AcceptedHits : 0u, pose.ValueRO.Position);
+                Observe(entity, GameplaySfxCue.GiantGoblinHit, defeated ? 0u : state.AcceptedHits, pose.ValueRO.Position);
+                Observe(entity, GameplaySfxCue.GiantGoblinDefeat, defeated ? state.AcceptedHits : 0u, pose.ValueRO.Position);
             }
             foreach (var (boss, pose, entity) in SystemAPI.Query<RefRO<DinoBoss>, RefRO<LocalTransform>>().WithEntityAccess())
-                Observe(entity, GameplaySfxCue.ArmoredBossMovement, boss.ValueRO.Phase == DinoPhase.Burst
-                    ? 1u : 0u, pose.ValueRO.Position);
+            {
+                var state = boss.ValueRO;
+                var position = pose.ValueRO.Position;
+                bool defeated = state.Phase == DinoPhase.Defeated;
+                Observe(entity, GameplaySfxCue.ArmoredBossMovement, state.Phase == DinoPhase.Burst ? 1u : 0u, position);
+                Observe(entity, GameplaySfxCue.GiantGoblinHit, defeated ? 0u : (uint)state.SuccessfulHits, position, playFirst: true);
+                Observe(entity, GameplaySfxCue.GiantGoblinDefeat, defeated ? (uint)state.SuccessfulHits : 0u, position, playFirst: true);
+                Observe(entity, GameplaySfxCue.ArmoredBossClang, defeated ? 0u : state.ArmorContactSequence,
+                    state.ArmorContactPosition, playFirst: true);
+            }
 
+            bridge.BeginRollingBossRolls();
             foreach (var (boss, pose, entity) in SystemAPI.Query<RefRO<RollingBoss>, RefRO<LocalTransform>>().WithEntityAccess())
             {
-                Observe(entity, GameplaySfxCue.SpikedTurtleRoll, boss.ValueRO.RollSequence, pose.ValueRO.Position);
+                if (boss.ValueRO.Phase == RollingPhase.Roll)
+                {
+                    ulong id = ((ulong)(uint)entity.Version << 32) | (uint)entity.Index;
+                    bridge.ReceiveRollingBossRoll(id, pose.ValueRO.Position);
+                }
                 Observe(entity, GameplaySfxCue.SpikedTurtleWallHit, (uint)boss.ValueRO.Bounces, pose.ValueRO.Position);
             }
+            bridge.EndRollingBossRolls();
         }
 
         private void ObserveGatekeeper()

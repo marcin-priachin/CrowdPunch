@@ -11,6 +11,9 @@ namespace CrowdPunch.Components
         public float Remaining;
         public float3 Direction, PreviousPosition;
         public double NextPlayerContact;
+        public uint ArmorContactSequence;
+        public float3 ArmorContactPosition;
+        public double NextArmorContact;
     }
     public struct DinoTuning : IComponentData
     {
