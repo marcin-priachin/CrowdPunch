@@ -165,6 +165,14 @@ points. Pending geometry uses bounded ring/candidate counts. Failed allocations 
 body's current relative position and retry; contact eligibility is independently governed
 by the enemy's authored range and cadence, even when no surround position is available.
 
+Refresh optimisation (2026-11-13, COMBAT-016): actor clearance class, current navigation
+region, territory limits and ring dimensions are computed once per refresh. Candidate
+offsets are reused for availability, lane checks and the final assignment. A lane query
+skips the overlapping spatial-hash cells already checked by its preceding sample; body
+tests still use the original full segment and endpoint rules. No values are cached across
+refreshes. Reservation checks remain live as each actor claims a slot, preserving sort
+order, retained reservations, inner-ring promotion, tie breaks and update cadence.
+
 `EnemyChaseSystem` reads the separate surround assignment only during pursuit. Contact
 eligibility was relaxed on 2026-10-30: pursuing Baselines advance their ordinary contact
 cadence whenever in Contact Attempt Distance, irrespective of surround arrival or other
@@ -4522,6 +4530,14 @@ the URP CombatSprite shader clips spore billboards to the world-space circular f
 For WIZARD-006, cast pollen samples Bud's animated crown through a baked spore origin on
 the enemy root. Larger gold motes rise from the crown and reach the outer mist before fading.
 Detached impact zones keep ground-centered pollen.
+Wizard decoration now checks conservative bounds against active cameras and open Scene views
+after the camera's LateUpdate. Bounds include billboard corners and the animated crown spray.
+Only when every originally eligible zone is outside every view are both shared decoration
+batches omitted; all ground boundaries and gameplay still update. If any decoration could be
+visible, the complete original batches are generated, preserving transparent sort bounds,
+particle order, zone/quad budgets and time-based animation. Camera/frustum storage is reused;
+stereo or uncertain views retain the original rendering path. Mixed-visibility batches are
+deliberately retained to avoid changing visible effects (WIZARD-006).
 The Wizard sections of `Resources/CombatVfxLibrary.asset` control pollen spread and flight,
 warning and active fill and ring styling, and the ring's inward thickness as a fraction of
 the zone radius. The presentation system reads these settings for each draw.

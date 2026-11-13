@@ -1,5 +1,45 @@
 # Combat VFX validation - 2026-10-26
 
+## Wizard decoration visibility optimisation - 2026-11-13
+
+Scope: optimisation 5, preserving WIZARD-006 gameplay and visible effects. Ground rings,
+hazard state, particle formulas, materials, timing and authored settings remain unchanged.
+Conservative bounds include the ground footprint, animated crown, vertical flight and tilted
+billboard corners. Active cameras and open Scene views are checked using reused storage.
+The existing presentation group runs after MonoBehaviour LateUpdate, including CameraFollow.
+
+Both shared decoration batches are skipped only when every zone inside the original
+decoration budget is outside every relevant view. If even one can be visible, the complete
+original batch is retained. This preserves transparent sort bounds and particle-budget
+allocation; mixed-visibility batches intentionally receive no geometry-generation savings.
+Stereo/uncertain views fail open to the original rendering path.
+
+- Unity compilation passed. `dotnet build Assembly-CSharp.csproj --no-restore -v:q` passed
+  with 309 existing warnings and zero errors.
+- All 9 WizardDecorationVisibilityTests passed, including the explicit CPU sample. Cases
+  cover hidden-batch omission, exact vertex restoration at the same animation time, unchanged
+  zone data, mixed visibility, cap preservation, secondary cameras and layer masks.
+- Bounds contain generated cloud/pollen vertices over 80 phases at four radii; an animated
+  crown above an offscreen ground footprint retains its pollen, also checked over 80 phases.
+- The broader `Wizard` filter passed all 60 cases, covering existing gameplay regression tests.
+- All 4 CombatVfxTests passed.
+
+Unity Editor CPU sample: 32 zones, radius 6 m, 24 cloud and 48 pollen quads per zone,
+20 warmup updates and 120 measured updates. Both paths still submit all 32 ground rings.
+The retained path generated 768 cloud and 1536 pollen quads; the hidden path generated none.
+
+| Current rendering path | Mean CPU per update | Calling-thread allocations / 120 updates |
+| --- | ---: | ---: |
+| Decoration retained | 3.6665 ms | 0 bytes |
+| All decoration hidden | 0.2259 ms | 0 bytes |
+
+This compares the current retained and hidden paths in an isolated Editor world, not a
+before/after player benchmark. It excludes GPU rendering and does not establish an overall
+frame-rate gain. A full encounter visual playthrough and standalone player profile were not
+performed. The repeatable local sample is `Wizard006ProfileThirtyTwoHiddenVersusRetainedZones`.
+
+## Original combat VFX scope
+
 Scope: VISION-005/006, ENEMY-003, CHICKEN-003/004/007, WIZARD-006 and the existing
 Dragon/Snake/hazard presentation rules. Visual changes only; no combat tuning or encounter edits.
 

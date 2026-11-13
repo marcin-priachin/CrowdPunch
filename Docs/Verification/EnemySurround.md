@@ -1,5 +1,75 @@
 # Occupancy-aware Baseline surround
 
+## Refresh work optimisation (2026-11-13)
+
+Scope: approved optimisation 4 only, preserving COMBAT-016 and ENEMY-012.
+`EnemySurroundSystem` now caches each eligible actor's clearance class, current
+navigation region, territory limits and ring dimensions for one refresh. A candidate's
+offset is reused through availability, lane evaluation and assignment. Lane occupancy
+queries skip cells already covered by the preceding sample's neighbourhood; the original
+sample positions, full-segment distance test, self exclusion and endpoint rules remain.
+Reservations are still checked against the evolving reserved map. There is no cross-refresh
+cache, altered refresh interval, new search budget or change to candidate/ring order,
+sorting, tie breaks, retention, promotion, contact attacks, physics or presentation.
+Other proposed optimisations were left untouched.
+
+### Behaviour verification
+
+Before editing the planner, captured assignment fingerprints covering the assigned flag,
+slot ID and exact offset bits for 96 mixed actors over eight updates, with and without a
+navigation grid. Both sequences match after the change. They cover different radii/ring
+profiles, unsupported clearance radii, disconnected navigation regions, reservations,
+committed actors, direct pursuers, reserves, pooling/recovery, a launched vacancy, small
+and large player movement, suspension/resume and arena-edge placement.
+
+Three additional occupancy cases compare the optimized lane query with an independent
+body-first exhaustive oracle: 256 queries each at cell sizes 1, 2.5 and 4 (768 comparisons).
+They cover zero-length checks, axial/diagonal segments, negative coordinates, exact cell
+boundaries, differing body/query radii and self exclusion.
+
+Unity 6000.3.10f1 loaded the new planner and tests with no compilation failure. All
+134 focused Editor cases passed:
+
+| Suite | Passed |
+| --- | ---: |
+| EnemySurroundTests | 27 |
+| EnemyCrowdTacticsTests | 16 |
+| DirectContactPursuitTests | 19 |
+| BarricadeRoomMovementTests | 23 |
+| EnemyArenaDistributionTests | 13 |
+| ProtectedPointTests | 17 |
+| NavigationSystemTests | 19 |
+
+`dotnet build Assembly-CSharp.csproj --no-restore -v:q` passed with zero errors and
+309 existing/package warnings using installed-SDK access. `git diff --check` passed.
+An initial native-list write compilation issue was fixed; results obtained before the
+new assembly loaded were discarded. The final run explicitly verified that Unity had
+loaded the optimized actor geometry and occupancy test. No scene or settings assets changed.
+
+### Same-session planner cost comparison
+
+Synthetic 100 x 100 m arena, deterministic body positions, 30 warmups and 50 measured
+updates per workload. Physics, chase, navigation-system execution and rendering are
+excluded; the navigation variant includes a static obstacle grid used by the planner.
+The initial post-reload run included asynchronous Burst compilation and was discarded.
+The final measurements below use warmed compiled code, compared with the captured
+pre-change planner on the same Editor machine.
+
+| Bodies | Navigation grid | Refresh mean before / after | Fresh allocation mean before / after |
+| --- | --- | --- | --- |
+| 148 | No | 1.7599 / 1.3530 ms | 2.0025 / 1.3345 ms |
+| 512 | No | 9.1695 / 7.4866 ms | 8.9753 / 6.9415 ms |
+| 148 | Yes | 2.3263 / 1.7054 ms | 2.6220 / 1.5655 ms |
+| 512 | Yes | 10.7712 / 7.9252 ms | 10.4342 / 7.6960 ms |
+
+At 512 bodies, warmed refresh means were about 18% lower without the grid and 26% lower
+with it. Steady-update means were 0.0873/0.0851 ms without/with the grid, compared with
+0.0893/0.0903 ms before. The 148-body no-grid steady probe had an Editor outlier (1.8051 ms
+maximum), so its mean is not useful as an optimisation comparison. These samples are not
+whole-frame FPS, target-hardware acceptance under OQ-001, or a new balance/visual playtest.
+Raw local outputs are `Temp/SurroundOptimisationBefore.txt` and
+`Temp/SurroundOptimisationAfterWarm.txt`.
+
 ## Contact eligibility follow-up (2026-10-30)
 
 This follow-up supersedes the arrival/clear-lane prerequisites described in the original

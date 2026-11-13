@@ -60,6 +60,162 @@ namespace CrowdPunch.Tests
         }
         private EnemySurroundAssignment Order(Entity e) => em.GetComponentData<EnemySurroundAssignment>(e);
 
+        [TestCase(1f)] [TestCase(2.5f)] [TestCase(4f)]
+        public void Combat016_CellDeduplicationMatchesExhaustiveOccupancy(float cellSize)
+        {
+            var random = new Unity.Mathematics.Random(0xc0111de);
+            var bodies = new EnemySurroundSystem.Body[80];
+            using var cells = new NativeParallelMultiHashMap<int2, EnemySurroundSystem.Body>(bodies.Length, Allocator.Temp);
+            float maxRadius = 0;
+            for (int i = 0; i < bodies.Length; i++)
+            {
+                bodies[i] = new EnemySurroundSystem.Body { Entity = new Entity { Index = i + 1, Version = 1 },
+                    Position = random.NextFloat2(new float2(-12), new float2(12)), Radius = .2f + (i % 5) * .2f };
+                cells.Add((int2)math.floor(bodies[i].Position / cellSize), bodies[i]);
+                maxRadius = math.max(maxRadius, bodies[i].Radius);
+            }
+            for (int sample = 0; sample < 256; sample++)
+            {
+                float2 start = random.NextFloat2(new float2(-15), new float2(15));
+                float2 end = random.NextFloat2(new float2(-15), new float2(15));
+                if (sample % 4 == 0) start = math.floor(start / cellSize) * cellSize;
+                if (sample % 4 == 1) end = start;
+                if (sample % 4 == 2) end.x = start.x;
+                if (sample % 4 == 3) end.y = start.y;
+                float radius = .1f + (sample % 7) * .3f;
+                Entity self = bodies[sample % bodies.Length].Entity;
+                bool expected = false;
+                float2 delta = end - start;
+                float lengthSq = math.lengthsq(delta);
+                int steps = math.max(1, (int)math.ceil(math.sqrt(lengthSq) / cellSize));
+                int reach = math.max(1, (int)math.ceil((radius + maxRadius) / cellSize));
+                // Independent body-first oracle: test every body, then membership in the original sampled cells.
+                foreach (var body in bodies)
+                {
+                    if (body.Entity == self) continue;
+                    float t = lengthSq > .0001f ? math.saturate(math.dot(body.Position - start, delta) / lengthSq) : 0;
+                    if (lengthSq > .0001f && (t <= 0 || t >= 1)) continue;
+                    if (math.distancesq(start + delta * t, body.Position) >= math.square(radius + body.Radius)) continue;
+                    int2 bodyCell = (int2)math.floor(body.Position / cellSize);
+                    for (int step = 0; step <= steps; step++)
+                    {
+                        int2 cell = (int2)math.floor(math.lerp(start, end, (float)step / steps) / cellSize);
+                        if (math.all(math.abs(bodyCell - cell) <= reach)) { expected = true; break; }
+                    }
+                    if (expected) break;
+                }
+                Assert.That(EnemySurroundSystem.Blocked(start, end, self, radius, cellSize, maxRadius, cells),
+                    Is.EqualTo(expected), $"cellSize={cellSize}, sample={sample}, start={start}, end={end}");
+            }
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void Combat016_RefreshAssignmentsMatchPreOptimisationSnapshots(bool navigation)
+        {
+            using var obstacles = new NativeArray<NavigationRectangle>(new[] {
+                new NavigationRectangle { Minimum = new float2(-2, 2), Maximum = new float2(2, 7) },
+                new NavigationRectangle { Minimum = new float2(9, -50), Maximum = new float2(11, 50) }
+            }, Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-50), new float2(50), 1,
+                new float3(.6f, 1, 2), obstacles, Allocator.Persistent);
+            if (navigation) em.SetComponentData(em.CreateEntity(typeof(NavigationGrid)), new NavigationGrid { Data = blob });
+            var random = new Unity.Mathematics.Random(0x159ab);
+            var crowd = new Entity[96];
+            for (int i = 0; i < crowd.Length; i++)
+            {
+                float2 p = random.NextFloat2(new float2(-20), new float2(20));
+                var e = crowd[i] = Enemy(new float3(p.x, 0, p.y));
+                var movement = em.GetComponentData<EnemyMovementSettings>(e);
+                movement.SurroundDistance = 3.5f + i % 4;
+                movement.SurroundRingSpacing = 2 + i % 3;
+                em.SetComponentData(e, movement);
+                em.SetComponentData(e, new NavigationAgent { Radius = i % 9 == 0 ? 2.5f : .3f + (i % 3) * .3f });
+                em.AddComponent<DirectContactPursuit>(e);
+                em.SetComponentEnabled<DirectContactPursuit>(e, i % 17 == 0);
+                if (i % 11 == 0) em.SetComponentData(e, new EnemyContactAttemptState { IsAttempting = 1 });
+                if (i % 13 == 0) em.SetComponentData(e, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering });
+                if (i % 19 == 0) em.SetComponentEnabled<RespawnRequest>(e, true);
+                if (i % 7 == 0) em.SetComponentData(e, new EnemyCrowdAssignment { Initialized = 1, Role = EnemyCrowdRole.Reserve });
+            }
+            var hashes = new List<string>();
+            double[] times = { 0, .1, .6, .61, 1.2, 1.21, 1.22, 1.8 };
+            for (int step = 0; step < times.Length; step++)
+            {
+                if (step == 2)
+                {
+                    foreach (var e in crowd)
+                    {
+                        var order = Order(e);
+                        if (order.Assigned != 0 && order.Slot >= 0)
+                            em.SetComponentData(e, LocalTransform.FromPosition(new float3(order.Offset.x, 0, order.Offset.y)));
+                    }
+                    em.SetComponentData(crowd[1], new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+                }
+                if (step == 3 || step == 4)
+                    em.SetComponentData(player, new PlayerSnapshot { IsAvailable = true, Radius = .5f,
+                        Position = step == 3 ? new float3(.2f, 0, .1f) : new float3(-3, 0, -2) });
+                if (step == 5) em.SetComponentData(player, new PlayerSnapshot { IsAvailable = false, Radius = .5f });
+                if (step == 6) em.SetComponentData(player, new PlayerSnapshot { IsAvailable = true, Radius = .5f, Position = new float3(46, 0, 46) });
+                world.SetTime(new TimeData(times[step], .02f));
+                world.GetOrCreateSystem<EnemySurroundSystem>().Update(world.Unmanaged);
+                ulong hash = 14695981039346656037ul;
+                foreach (var e in crowd)
+                {
+                    var order = Order(e);
+                    Mix(order.Assigned); Mix(unchecked((uint)order.Slot));
+                    Mix(math.asuint(order.Offset.x)); Mix(math.asuint(order.Offset.y));
+                }
+                hashes.Add(hash.ToString("X16"));
+                void Mix(uint value) { hash = unchecked((hash ^ value) * 1099511628211ul); }
+            }
+            string actual = string.Join(" ", hashes);
+            TestContext.WriteLine($"Surround snapshots, navigation={navigation}: {actual}");
+            // Captured from the unchanged planner before optimisation: every slot and offset bit, in entity order.
+            string expected = navigation
+                ? "2DB3C7FCAB70C0A6 2DB3C7FCAB70C0A6 8D2CDD0EBE9D3952 8D2CDD0EBE9D3952 9FAA7C5A3B34F2B8 C86EC345C0EE8125 125759022C840390 125759022C840390"
+                : "B557E26D9A45529F B557E26D9A45529F 838B3C0E338861C0 838B3C0E338861C0 CF75D58478F5E7B2 C86EC345C0EE8125 EE3F7BF3BC0F6B20 EE3F7BF3BC0F6B20";
+            Assert.That(actual, Is.EqualTo(expected));
+        }
+
+        [TestCase(148, false)] [TestCase(512, false)]
+        [TestCase(148, true)] [TestCase(512, true)]
+        public void Combat016_MeasuresSteadyRetainedAndFreshRefreshes(int count, bool navigation)
+        {
+            using var obstacles = new NativeArray<NavigationRectangle>(new[] {
+                new NavigationRectangle { Minimum = new float2(-2, 2), Maximum = new float2(2, 7) }
+            }, Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-50), new float2(50), 1,
+                new float3(.6f, 1, 2), obstacles, Allocator.Persistent);
+            if (navigation) em.SetComponentData(em.CreateEntity(typeof(NavigationGrid)), new NavigationGrid { Data = blob });
+            var random = new Unity.Mathematics.Random(0x159ab);
+            var crowd = new Entity[count];
+            for (int i = 0; i < count; i++)
+            {
+                float2 p = random.NextFloat2(new float2(-40), new float2(40));
+                crowd[i] = Enemy(new float3(p.x, 0, p.y));
+            }
+            var system = world.GetOrCreateSystem<EnemySurroundSystem>();
+            double time = 0;
+            foreach (string mode in new[] { "steady", "refresh", "fresh" })
+            {
+                double total = 0, maximum = 0;
+                for (int sample = -30; sample < 50; sample++)
+                {
+                    if (mode == "fresh") foreach (var e in crowd) em.SetComponentData(e, default(EnemySurroundAssignment));
+                    if (mode != "steady") time += .6;
+                    world.SetTime(new TimeData(time, .02f));
+                    var timer = System.Diagnostics.Stopwatch.StartNew();
+                    system.Update(world.Unmanaged);
+                    em.CompleteAllTrackedJobs();
+                    timer.Stop();
+                    if (sample < 0) continue;
+                    total += timer.Elapsed.TotalMilliseconds;
+                    maximum = System.Math.Max(maximum, timer.Elapsed.TotalMilliseconds);
+                }
+                TestContext.WriteLine($"Surround {count}, navigation={navigation}, {mode}: mean {total / 50:F4} ms, max {maximum:F4} ms (Editor, planner only).");
+            }
+        }
+
         [Test] public void Combat016_OneSidedQueueReservesDistinctPositionsAllAroundPlayer()
         {
             var crowd = Queue(30); Tick(0); int inner = 0; bool left = false, right = false, behind = false;

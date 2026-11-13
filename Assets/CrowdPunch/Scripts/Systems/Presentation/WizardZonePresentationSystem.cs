@@ -24,6 +24,10 @@ namespace CrowdPunch.Systems.Presentation
         private MaterialPropertyBlock properties;
         private CombatVfxLibrary library;
         private CombatSpriteMesh clouds, pollen;
+        private Camera[] viewingCameras = new Camera[4];
+        private readonly System.Collections.Generic.List<Plane[]> viewingFrusta = new();
+        private int viewingFrustumCount;
+        private bool uncertainVisibility;
         protected override void OnCreate()
         {
             properties = new MaterialPropertyBlock();
@@ -49,6 +53,7 @@ namespace CrowdPunch.Systems.Presentation
             if (library == null) library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
             clouds.Clear(); pollen.Clear();
             var camera = Camera.main;
+            bool drawDecoration = library != null && camera != null && AnyDecorationVisible();
             double now = SystemAPI.Time.ElapsedTime;
             var warningStyle = library != null ? library.WizardWarningIndicator : WizardIndicatorStyle.Warning;
             var activeStyle = library != null ? library.WizardActiveIndicator : WizardIndicatorStyle.Active;
@@ -71,7 +76,7 @@ namespace CrowdPunch.Systems.Presentation
                 Graphics.DrawMesh(disc, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * hazard.Radius),
                     material, 0, null, 0, properties, ShadowCastingMode.Off, false);
                 // All zones retain the full boundary; only decorative cloud density is capped.
-                if (library == null || camera == null || decorated++ >= library.MaximumCloudZones) continue;
+                if (!drawDecoration || decorated++ >= library.MaximumCloudZones) continue;
                 float radius = hazard.Radius;
                 if (radius <= .001f) continue;
                 Vector4 clip = new Vector4(position.x,position.z,radius,1);
@@ -91,6 +96,78 @@ namespace CrowdPunch.Systems.Presentation
                 DrawPollen(hazard, camera.transform, clip, now, opacity);
             }
             if (library != null) { clouds.Draw(library.SporeCloud); pollen.Draw(library.Pollen); }
+        }
+
+        private bool AnyDecorationVisible()
+        {
+            CaptureViewingFrusta();
+            if (uncertainVisibility) return true;
+            int decorated = 0;
+            foreach (var zone in SystemAPI.Query<RefRO<WizardZone>>())
+            {
+                if (decorated++ >= library.MaximumCloudZones) break;
+                var hazard = zone.ValueRO;
+                if (hazard.Radius <= .001f) continue;
+                Vector3 crown = default;
+                bool hasCrown = hazard.Follow != 0 && TryGetSporeOrigin(hazard.Source, out crown);
+                var bounds = DecorationBounds(hazard, hasCrown, crown);
+                if (!math.all(math.isfinite((float3)bounds.center)) ||
+                    !math.all(math.isfinite((float3)bounds.extents))) return true;
+                for (int i = 0; i < viewingFrustumCount; i++)
+                    if (GeometryUtility.TestPlanesAABB(viewingFrusta[i], bounds)) return true;
+            }
+            // Keep shared transparent bounds, sorting and quad-budget allocation identical whenever
+            // anything can be seen. Only omit BOTH batches when every eligible zone is out of view.
+            return false;
+        }
+
+        private void CaptureViewingFrusta()
+        {
+            viewingFrustumCount = 0;
+            uncertainVisibility = false;
+            int count = Camera.allCamerasCount;
+            if (viewingCameras.Length < count) System.Array.Resize(ref viewingCameras, count);
+            count = Camera.GetAllCameras(viewingCameras);
+            for (int i = 0; i < count; i++) AddViewingFrustum(viewingCameras[i]);
+#if UNITY_EDITOR
+            var sceneViews = UnityEditor.SceneView.sceneViews;
+            for (int i = 0; i < sceneViews.Count; i++)
+                AddViewingFrustum(((UnityEditor.SceneView)sceneViews[i]).camera);
+#endif
+            // Without a usable view, keep the existing rendering path.
+            if (viewingFrustumCount == 0) uncertainVisibility = true;
+        }
+
+        private void AddViewingFrustum(Camera camera)
+        {
+            if (camera == null || (camera.cullingMask & 1) == 0) return;
+            if (camera.stereoEnabled) { uncertainVisibility = true; return; }
+            if (viewingFrustumCount == viewingFrusta.Count) viewingFrusta.Add(new Plane[6]);
+            var planes = viewingFrusta[viewingFrustumCount++];
+            GeometryUtility.CalculateFrustumPlanes(camera, planes);
+            foreach (var plane in planes)
+                if (!math.all(math.isfinite((float3)plane.normal)) || !math.isfinite(plane.distance))
+                    uncertainVisibility = true;
+        }
+
+        private static Bounds DecorationBounds(in WizardZone zone, bool hasCrown, Vector3 crown)
+        {
+            var ground = (Vector3)zone.Position;
+            // Full footprint is conservative for both mist and pollen, including any spread tuning.
+            var minimum = ground - new Vector3(zone.Radius, 0, zone.Radius);
+            var maximum = ground + new Vector3(zone.Radius, 1.4f, zone.Radius);
+            if (hasCrown)
+            {
+                minimum = Vector3.Min(minimum, crown);
+                maximum = Vector3.Max(maximum, crown);
+                maximum.y += .95f;
+            }
+            // A tilted billboard corner can reach sqrt(2) times its radius along any world axis.
+            float padding = 1.414214f * math.max(math.min(.95f, zone.Radius * .3f) * 1.1f,
+                math.min(zone.Radius * .22f, .14f)) + .01f;
+            var bounds = new Bounds();
+            bounds.SetMinMax(minimum - Vector3.one * padding, maximum + Vector3.one * padding);
+            return bounds;
         }
 
         private void DrawPollen(in WizardZone zone, Transform camera, Vector4 clip, double now, float opacity)
