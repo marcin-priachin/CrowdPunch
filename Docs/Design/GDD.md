@@ -162,6 +162,13 @@ Use the existing LINK-001..007, DRAGON-001..007, SNAKE-001..007 and NINJA-001..0
 
 This campaign integration is additional scope to the original legacy-only enemy implementation slices. Preserve Gauntlet_24..27's recipes, assets, Level Play access and exclusion from campaign progression/player builds. Their original placement instructions do not exclude the four enemy prefabs from campaign encounters authorized here.
 
+### LOOP-010 - Campaign Music
+
+Status: Must
+
+The main menu and each campaign chapter have their own background music. Assign their
+tracks in a shared ScriptableObject.
+
 ### SCORE-001 - Punch Efficiency
 
 Status: Must

@@ -2076,6 +2076,13 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 
 `GauntletSequence` belongs to the persistent Bootstrap scene and loads one configured gauntlet scene additively at a time. A gauntlet scene owns its presentation layout, one `GauntletLevel` marker with an authored player entry point, and an ECS SubScene for level-specific collision and encounter data. The transition pauses scaled simulation, unloads the previous scene and its baked entities, loads the next scene, places the GameObject player at the authored entry point, and requests the established ECS restart reset. It never queries or retains enemy entities.
 
+For LOOP-010, Bootstrap's `CampaignMusicPlayer` owns one looping 2D AudioSource.
+It reads the menu state and loaded level from `GauntletSequence`, using
+`CampaignCatalog.ChapterFor` to select the chapter track. The menu preview uses the
+menu track, and the chapter track continues through pause, results, retries, and
+same-chapter loads. `Data/Settings/CampaignMusicSettings.asset` holds the menu track,
+chapter tracks in catalog order, and music volume. Empty slots are silent.
+
 `GauntletCompletionSystem` runs in `GamePresentationGroup` and reports through the narrow `GauntletCompletionRegistry`. Ordinary gauntlets require every loaded wave sequence to complete; an empty loading interval cannot advance. When a boss is loaded, its defeat state is authoritative and supporting-wave completion cannot win early. The Bootstrap flow consumes one completion signal and loads the next scene (LOOP-002/006). Gauntlet 10 advances to The Gatekeeper; its defeat advances to Gauntlet_12 (Crack the Shell). Chicken defeat advances to Gauntlet_21 (Rolling Blob), and its defeat advances to Gauntlet_22 (Dino Pillars). Only the final authored gauntlet sets `GauntletSequence.RunComplete`. The existing pause menu presents Run Complete, Play Again, and twenty-two selectable levels (BOSS-007, CHICKEN-006, ROLL-006, PILLAR-006).
 
 `GauntletLevel` owns optional opening-hint text alongside its entry transform. `GauntletSequence` publishes that text and an entry counter to the existing `PauseMenu`, which shows a ten-second hint in levels 1-2 and a two-column selection grid in the menu. This is GameObject presentation metadata, not an enemy bridge. The authored display names are separate from scene-loading names. The existing restart button now delegates through `GameBootstrap` to `RestartCurrentLevel` when a gauntlet is active, resetting final-completion state and reusing the additive reload path. Legacy scenes still use soft restart.

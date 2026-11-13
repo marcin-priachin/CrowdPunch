@@ -634,6 +634,7 @@ GameObject:
   - component: {fileID: 1935685714}
   - component: {fileID: 1935685716}
   - component: {fileID: 1935685717}
+  - component: {fileID: 1935685718}
   m_Layer: 0
   m_Name: GameBootstrap
   m_TagString: Untagged
@@ -768,6 +769,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d77186151d774840bb2e573b7b0511e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Player.BossAttackTelegraphs
+--- !u!114 &1935685718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1935685713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41d58d864e63404da09fe7938c18cd75, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Audio.CampaignMusicPlayer
+  settings: {fileID: 11400000, guid: ab303875ed0f4087850d6a10d0515d19, type: 2}
 --- !u!1001 &5834298129128892533
 PrefabInstance:
   m_ObjectHideFlags: 0

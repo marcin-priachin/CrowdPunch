@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ea0a7744df94b43b835f5bd8f41d32c, type: 3}
+  m_Name: CampaignMusicSettings
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.CampaignMusicSettings
+  mainMenuTrack: {fileID: 8300000, guid: 3a385ae2d13cc5741ac8f7c0dd4e9956, type: 3}
+  chapterTracks:
+  - {fileID: 8300000, guid: 15759f60a23c7e74696b004816a14a4d, type: 3}
+  - {fileID: 8300000, guid: ab1ce2ecb7bb64948b566dd6a59783e8, type: 3}
+  - {fileID: 8300000, guid: 69d8e443db6080345988da8f9c798dd7, type: 3}
+  - {fileID: 8300000, guid: 90feeb12473e96248a18866ec005502c, type: 3}
+  - {fileID: 8300000, guid: f140120aa7eef1f48b5b8d76ad954bf8, type: 3}
+  - {fileID: 8300000, guid: 6eb69e1da6ee6d74cb54093cd034344a, type: 3}
+  - {fileID: 8300000, guid: d815c60f9f5c85e42b79fbaf2cd0f382, type: 3}
+  - {fileID: 8300000, guid: dd32e4afbb4bc7b4d99d47a7df61c5a0, type: 3}
+  - {fileID: 8300000, guid: b1a7f4416cda0db4985aa48609af1225, type: 3}
+  volume: 0.25
