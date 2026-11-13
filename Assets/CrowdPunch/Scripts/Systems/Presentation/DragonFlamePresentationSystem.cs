@@ -93,7 +93,7 @@ namespace CrowdPunch.Systems.Presentation
                 }
             }
             mesh.Clear(); if (vertices.Count == 0) return;
-            mesh.SetVertices(vertices); mesh.SetColors(colors); mesh.SetTriangles(triangles, 0); mesh.RecalculateBounds();
+            mesh.SetVertices(vertices); mesh.SetColors(colors); mesh.SetTriangles(triangles, 0);
             Graphics.DrawMesh(mesh, Matrix4x4.identity, material, 0, null, 0, null, ShadowCastingMode.Off, false);
             stream.Draw(streamMaterial, library);
             if (library != null) embers.Draw(library.Pollen);

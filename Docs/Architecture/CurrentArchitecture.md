@@ -2410,6 +2410,16 @@ arrow mode retain their existing output. MonoBehaviours receive no entity identi
 
 ### Optional dotted direct-launch preview (2026-11-01)
 
+Allocation-only optimisation (2026-11-13, PLAYER-003/004, INFO-005):
+`PresentationBridgeSystem` owns persistent `LaunchTrajectoryScratch` lists and sets,
+reusing their capacity across synchronous direct-body forecasts and presentation frames.
+Each trace clears all scratch contents, including early-return cases; system destruction
+disposes the storage. Standalone callers retain a temporary-storage overload. Forecast
+steps, contact order, complete committed paths and rendered output are unchanged.
+`PunchAimAssistSystem` gathers its update-local candidate snapshot only when an eligible
+source needs enabled aim assistance; normal lock clearing still runs for every source.
+Enemy and Chicken sources share that snapshot for the update, with no cross-frame cache.
+
 Forecast/runtime consistency amendment (2026-11-02), PLAYER-003/004, COMBAT-012:
 `PresentationBridgeSystem` reads this world's `FixedStepSimulationSystemGroup.Timestep`
 and passes it to `DirectLaunchTrajectoryPrediction`. Isolated callers default to the

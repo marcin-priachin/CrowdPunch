@@ -169,7 +169,6 @@ namespace CrowdPunch.Mono.Player
             dottedMesh.SetVertices(dotVertices);
             dottedMesh.SetColors(dotColors);
             dottedMesh.SetTriangles(dotTriangles, 0);
-            dottedMesh.RecalculateBounds();
             arrowProperties.SetFloat(OpacityProperty, 1f);
             Graphics.DrawMesh(dottedMesh, Matrix4x4.identity, lineMaterial, gameObject.layer, null, 0, arrowProperties,
                 ShadowCastingMode.Off, false, null, LightProbeUsage.Off);

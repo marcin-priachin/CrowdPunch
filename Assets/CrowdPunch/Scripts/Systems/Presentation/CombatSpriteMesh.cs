@@ -36,7 +36,7 @@ namespace CrowdPunch.Systems.Presentation
         {
             if (vertices.Count == 0 || material == null) return;
             mesh.Clear(); mesh.SetVertices(vertices); mesh.SetUVs(0,uv); mesh.SetUVs(1,circles);
-            mesh.SetColors(colors); mesh.SetTriangles(indices,0); mesh.RecalculateBounds();
+            mesh.SetColors(colors); mesh.SetTriangles(indices,0);
             Graphics.DrawMesh(mesh,Matrix4x4.identity,material,0,null,0,null,ShadowCastingMode.Off,false);
         }
         public void Dispose()

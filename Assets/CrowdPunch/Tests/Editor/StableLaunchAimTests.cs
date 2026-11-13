@@ -89,6 +89,61 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
         }
 
+        [TestCase(100)]
+        [TestCase(1000)]
+        public void Player004_MeasuresLazyCandidateGatheringAcrossCrowds(int crowd)
+        {
+            var bodies = new Entity[crowd];
+            bodies[0] = source; bodies[1] = target; bodies[2] = other;
+            for (int i = 3; i < crowd; i++) bodies[i] = Body(new float3((i % 32) * 2, 0, 10 + (i / 32) * 2));
+            SetCollisionBodies(bodies);
+            double time = 0;
+            for (int mode = 0; mode < 4; mode++)
+            {
+                em.SetComponentData(source, LocalTransform.FromPosition(mode == 2 ? new float3(-100, 0, -100) : float3.zero));
+                bridge.PublishPunchPreview(Vector3.back, Vector3.forward, 1, 2, 5, 0,
+                    mode == 3 ? 0 : 22, 12, 3, 18, 90, 16, .12f, .35f);
+                if (mode == 1) bridge.ClearPunchPreview();
+                for (int i = 0; i < 20; i++) Aim(time += .02);
+                var timer = System.Diagnostics.Stopwatch.StartNew();
+                for (int i = 0; i < 100; i++) Aim(time += .02);
+                timer.Stop();
+                var aim = em.GetComponentData<PunchAimAssistTarget>(source);
+                Assert.That(aim.Target, mode == 0 ? Is.Not.EqualTo(Entity.Null) : Is.EqualTo(Entity.Null));
+                string label = mode == 0 ? "active" : mode == 1 ? "unavailable" : mode == 2 ? "no source in volume" : "assist disabled";
+                TestContext.WriteLine($"Aim: {crowd} bodies, {label}, {timer.Elapsed.TotalMilliseconds / 100:F4} ms/update (Editor, warm; physics frozen).");
+            }
+        }
+
+        [Test]
+        public void Player004_UnavailablePreviewClearsLocksAndReacquiresOnResume()
+        {
+            Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+            bridge.ClearPunchPreview();
+            Aim(.02);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source), Is.EqualTo(default(PunchAimAssistTarget)));
+            PreviewYaw(0);
+            Aim(.04);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+        }
+
+        [Test]
+        public void Player004_ChickenOnlySourceAcquiresAndClearsOutsidePunchVolume()
+        {
+            em.SetComponentData(source, LocalTransform.FromPosition(new float3(100, 0, 100)));
+            Entity shot = em.CreateEntity(typeof(ChickenProjectile), typeof(LocalTransform), typeof(PunchAimAssistTarget));
+            em.SetComponentData(shot, LocalTransform.Identity);
+            Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(shot).Target, Is.EqualTo(target));
+            em.SetComponentData(shot, LocalTransform.FromPosition(new float3(100, 0, 100)));
+            Aim(.02);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(shot), Is.EqualTo(default(PunchAimAssistTarget)));
+            em.SetComponentData(shot, LocalTransform.Identity);
+            Aim(.04);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(shot).Target, Is.EqualTo(target));
+        }
+
         [Test]
         public void Player004_WiderRetentionTracksMovedTargetAndReleasesAtHardLimit()
         {

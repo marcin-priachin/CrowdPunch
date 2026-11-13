@@ -31,6 +31,43 @@ namespace CrowdPunch.Systems.Presentation
         public float GuidanceSeconds;
     }
 
+    // Owned by one synchronous caller; contents belong to a single trace, capacity survives reuse.
+    internal struct LaunchTrajectoryScratch : System.IDisposable
+    {
+        public NativeList<ColliderCastHit> Hits;
+        public NativeList<int> Nearby;
+        public NativeList<RaycastHit> Rays;
+        public NativeHashSet<Entity> Departed, MarkedTargets, AssistExcluded, CountedWalls;
+
+        public LaunchTrajectoryScratch(Allocator allocator)
+        {
+            Hits = new NativeList<ColliderCastHit>(16, allocator);
+            Nearby = new NativeList<int>(16, allocator);
+            Rays = new NativeList<RaycastHit>(16, allocator);
+            Departed = new NativeHashSet<Entity>(16, allocator);
+            MarkedTargets = new NativeHashSet<Entity>(16, allocator);
+            AssistExcluded = new NativeHashSet<Entity>(16, allocator);
+            CountedWalls = new NativeHashSet<Entity>(16, allocator);
+        }
+
+        public void Clear()
+        {
+            Hits.Clear(); Nearby.Clear(); Rays.Clear();
+            Departed.Clear(); MarkedTargets.Clear(); AssistExcluded.Clear(); CountedWalls.Clear();
+        }
+
+        public void Dispose()
+        {
+            if (Hits.IsCreated) Hits.Dispose();
+            if (Nearby.IsCreated) Nearby.Dispose();
+            if (Rays.IsCreated) Rays.Dispose();
+            if (Departed.IsCreated) Departed.Dispose();
+            if (MarkedTargets.IsCreated) MarkedTargets.Dispose();
+            if (AssistExcluded.IsCreated) AssistExcluded.Dispose();
+            if (CountedWalls.IsCreated) CountedWalls.Dispose();
+        }
+    }
+
     // PLAYER-003 / INFO-005: estimate only the directly punched body's flight. No gameplay writes.
     internal static class DirectLaunchTrajectoryPrediction
     {
@@ -44,6 +81,21 @@ namespace CrowdPunch.Systems.Presentation
             NativeList<LaunchTrajectorySample> samples = default, NativeList<LaunchReboundPlan> rebounds = default,
             NativeList<LaunchPathPoint> path = default, NativeList<LaunchTrajectoryContact> firstContact = default)
         {
+            using var scratch = new LaunchTrajectoryScratch(Allocator.Temp);
+            Trace(em, world, source, punched, settings, maximumSeconds, steps, points, scratch,
+                gravity, defeatBounds, impacts, player, fixedTimestep, samples, rebounds, path, firstContact);
+        }
+
+        public static void Trace(EntityManager em, CollisionWorld world, LaunchPreviewSource source,
+            NativeArray<LaunchPreviewSource> punched, in EnemyLaunchSettings settings,
+            float maximumSeconds, int steps, NativeList<float3> points, LaunchTrajectoryScratch scratch,
+            float3 gravity = default, EnemyDefeatBounds? defeatBounds = null,
+            NativeList<LaunchTrajectoryImpact> impacts = default, PlayerSnapshot player = default,
+            float fixedTimestep = DefaultTimestep, NativeList<LaunchTrajectorySample> samples = default,
+            NativeList<LaunchReboundPlan> rebounds = default, NativeList<LaunchPathPoint> path = default,
+            NativeList<LaunchTrajectoryContact> firstContact = default)
+        {
+            scratch.Clear();
             points.Clear();
             if (firstContact.IsCreated) firstContact.Clear();
             if (impacts.IsCreated) impacts.Clear();
@@ -85,17 +137,14 @@ namespace CrowdPunch.Systems.Presentation
             PathPoint(path, 0f, pose.Position, velocity);
             if (samples.IsCreated) samples.Add(new LaunchTrajectorySample { Position = pose.Position, Velocity = velocity,
                 GuidanceTarget = homing, GuidanceSeconds = remainingHoming });
-            using var hitStorage = new NativeList<ColliderCastHit>(Allocator.Temp);
-            using var nearbyStorage = new NativeList<int>(Allocator.Temp);
-            using var rayStorage = new NativeList<RaycastHit>(Allocator.Temp);
             // A struck crowd body departs with transferred momentum. Do not repeatedly resolve it
             // at its old snapshot position; forecasting its subsequent collision chain is out of scope.
-            using var departed = new NativeHashSet<Entity>(16, Allocator.Temp);
-            using var markedTargets = new NativeHashSet<Entity>(16, Allocator.Temp);
-            using var assistExcluded = new NativeHashSet<Entity>(16, Allocator.Temp);
-            using var countedWalls = new NativeHashSet<Entity>(16, Allocator.Temp);
+            var departed = scratch.Departed;
+            var markedTargets = scratch.MarkedTargets;
+            var assistExcluded = scratch.AssistExcluded;
+            var countedWalls = scratch.CountedWalls;
             foreach (var body in punched) assistExcluded.Add(body.Entity);
-            var hits = hitStorage; var nearby = nearbyStorage; var rays = rayStorage;
+            var hits = scratch.Hits; var nearby = scratch.Nearby; var rays = scratch.Rays;
             for (int step = 0; step < math.clamp(steps, 16, 400); step++)
             {
                 // A partial final step would have a different damping/guidance/contact order.

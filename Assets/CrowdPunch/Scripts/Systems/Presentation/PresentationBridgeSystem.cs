@@ -19,6 +19,7 @@ namespace CrowdPunch.Systems.Presentation
     {
         private EntityQuery correctionCandidates;
         private NativeHashMap<Entity, CollisionPreviewState> collisionStates;
+        private LaunchTrajectoryScratch trajectoryScratch;
         private uint collisionFrame, resetSequence;
         private double lastPreviewTime;
         private int bridgeInstance;
@@ -28,6 +29,7 @@ namespace CrowdPunch.Systems.Presentation
         public void OnCreate(ref SystemState state)
         {
             collisionStates = new NativeHashMap<Entity, CollisionPreviewState>(32, Allocator.Persistent);
+            trajectoryScratch = new LaunchTrajectoryScratch(Allocator.Persistent);
             correctionCandidates = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<LocalTransform>().WithAny<Enemy, Barricade>().Build(ref state);
         }
@@ -35,6 +37,7 @@ namespace CrowdPunch.Systems.Presentation
         public void OnDestroy(ref SystemState state)
         {
             if (collisionStates.IsCreated) collisionStates.Dispose();
+            trajectoryScratch.Dispose();
         }
 
         // PLAYER-003: clipping the copied decoration must not truncate the committed launch path.
@@ -228,7 +231,7 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     DirectLaunchTrajectoryPrediction.Trace(state.EntityManager, trajectoryPhysics.CollisionWorld,
                         source, sources.AsArray(), trajectorySettings, bridge.TrajectoryMaximumSeconds,
-                        bridge.TrajectorySteps, points, gravity, defeatBounds, impacts,
+                        bridge.TrajectorySteps, points, trajectoryScratch, gravity, defeatBounds, impacts,
                         SystemAPI.GetComponent<PlayerSnapshot>(playerEntity), fixedTimestep, rebounds: rebounds, path: path, firstContact: firstContact);
                     if (SystemAPI.HasBuffer<DisplayedLaunchPathPoint>(source.Entity))
                     {

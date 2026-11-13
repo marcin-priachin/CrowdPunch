@@ -62,7 +62,7 @@ namespace CrowdPunch.Systems.Presentation
                 DrawStreams(a, b, view, tuning.ValueRO.MaximumLength, appearance, launched, accent, time, p.A.Index);
             }
             mesh.Clear(); if (vertices.Count == 0) return;
-            mesh.SetVertices(vertices); mesh.SetColors(colors); mesh.SetTriangles(indices, 0); mesh.RecalculateBounds();
+            mesh.SetVertices(vertices); mesh.SetColors(colors); mesh.SetTriangles(indices, 0);
             Graphics.DrawMesh(mesh, Matrix4x4.identity, material, 0, null, 0, null, ShadowCastingMode.Off, false);
         }
         protected override void OnDestroy() { if (mesh != null) Object.Destroy(mesh); }

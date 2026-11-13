@@ -286,6 +286,51 @@ namespace CrowdPunch.Tests
             Assert.That(points[points.Length - 1].z, Is.EqualTo(10).Within(.001f));
         }
 
+        [Test]
+        public void Player003_ReusedScratchPreservesEveryOutputAcrossSourcesAndEarlyReturn()
+        {
+            Entity victim = Body(new float3(0, 0, 6));
+            Entity second = Body(new float3(3, 0, 0));
+            Entity otherVictim = Body(new float3(3, 0, 6));
+            Entity wall = Body(new float3(0, 0, 12));
+            em.RemoveComponent<Enemy>(wall);
+            em.SetComponentData(wall, new PhysicsMass());
+            using var physics = Physics(source, victim, second, otherVictim, wall);
+            using var scratch = new LaunchTrajectoryScratch(Allocator.Persistent);
+            using var punched = new NativeArray<LaunchPreviewSource>(new[] {
+                new LaunchPreviewSource { Entity = source, Direction = math.forward(), Speed = 90 },
+                new LaunchPreviewSource { Entity = second, Direction = math.forward(), Speed = 90 }
+            }, Allocator.Temp);
+            using var points = new NativeList<float3>(Allocator.Temp);
+            using var impacts = new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+            using var contacts = new NativeList<LaunchTrajectoryContact>(Allocator.Temp);
+            using var samples = new NativeList<LaunchTrajectorySample>(Allocator.Temp);
+            using var rebounds = new NativeList<LaunchReboundPlan>(Allocator.Temp);
+            using var path = new NativeList<LaunchPathPoint>(Allocator.Temp);
+            for (int pass = 0; pass < 4; pass++)
+            {
+                var initial = punched[pass == 1 ? 1 : 0];
+                if (pass == 2) initial.Speed = 0;
+                DirectLaunchTrajectoryPrediction.Trace(em, physics.CollisionWorld, initial, punched, settings,
+                    8, 160, points, impacts: impacts, samples: samples, rebounds: rebounds, path: path, firstContact: contacts);
+                var expectedPoints = points.AsArray().ToArray();
+                var expectedImpacts = impacts.AsArray().ToArray();
+                var expectedContacts = contacts.AsArray().ToArray();
+                var expectedSamples = samples.AsArray().ToArray();
+                var expectedRebounds = rebounds.AsArray().ToArray();
+                var expectedPath = path.AsArray().ToArray();
+                if (pass == 0) Assert.That(expectedContacts.Length, Is.EqualTo(1));
+                DirectLaunchTrajectoryPrediction.Trace(em, physics.CollisionWorld, initial, punched, settings,
+                    8, 160, points, scratch, impacts: impacts, samples: samples, rebounds: rebounds, path: path, firstContact: contacts);
+                Assert.That(points.AsArray().ToArray(), Is.EqualTo(expectedPoints), $"Path geometry, pass {pass}");
+                Assert.That(impacts.AsArray().ToArray(), Is.EqualTo(expectedImpacts), $"Accents, pass {pass}");
+                Assert.That(contacts.AsArray().ToArray(), Is.EqualTo(expectedContacts), $"First contact, pass {pass}");
+                Assert.That(samples.AsArray().ToArray(), Is.EqualTo(expectedSamples), $"Physics samples, pass {pass}");
+                Assert.That(rebounds.AsArray().ToArray(), Is.EqualTo(expectedRebounds), $"Rebounds, pass {pass}");
+                Assert.That(path.AsArray().ToArray(), Is.EqualTo(expectedPath), $"Committed path, pass {pass}");
+            }
+        }
+
         [TestCase(100)]
         [TestCase(1000)]
         public void Player003_MeasuresWholePathCostAcrossRepresentativeCrowds(int crowd)
@@ -301,19 +346,32 @@ namespace CrowdPunch.Tests
                 shots[i] = new LaunchPreviewSource { Entity = bodies[i], Direction = math.forward(), Speed = 90 };
             using var points = new NativeList<float3>(Allocator.Temp);
             settings.UsefulMomentumSpeed = 15;
-            void Frame()
+            using var scratch = new LaunchTrajectoryScratch(Allocator.Persistent);
+            void Frame(bool reuse)
             {
                 foreach (var initial in punched)
                 {
-                    DirectLaunchTrajectoryPrediction.Trace(em, physics.CollisionWorld, initial, punched, settings, 8, 160, points);
+                    if (reuse)
+                        DirectLaunchTrajectoryPrediction.Trace(em, physics.CollisionWorld, initial, punched, settings, 8, 160, points, scratch);
+                    else
+                        DirectLaunchTrajectoryPrediction.Trace(em, physics.CollisionWorld, initial, punched, settings, 8, 160, points);
                     Assert.That(points.Length, Is.GreaterThan(1));
                 }
             }
-            Frame();
-            var timer = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < 10; i++) Frame();
-            timer.Stop();
-            TestContext.WriteLine($"Dotted trajectory: {crowd} crowd / 8 punched, {timer.Elapsed.TotalMilliseconds / 10:F3} ms per preview frame (Editor, warm).");
+            Frame(false); Frame(true);
+            double fresh = 0, reused = 0;
+            // Alternate order to avoid attributing an Editor warmup/drift to either strategy.
+            for (int sample = 0; sample < 10; sample++)
+                for (int variant = 0; variant < 2; variant++)
+                {
+                    bool reuse = (sample + variant) % 2 == 0;
+                    var timer = System.Diagnostics.Stopwatch.StartNew();
+                    Frame(reuse);
+                    timer.Stop();
+                    if (reuse) reused += timer.Elapsed.TotalMilliseconds;
+                    else fresh += timer.Elapsed.TotalMilliseconds;
+                }
+            TestContext.WriteLine($"Dotted trajectory: {crowd} crowd / 8 punched, fresh {fresh / 10:F3}, reused {reused / 10:F3} ms per preview frame (Editor, warm).");
         }
 
         [Test]

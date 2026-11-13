@@ -35,11 +35,6 @@ namespace CrowdPunch.Systems.Combat
                 Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1, AffectRecovering = 1, AffectLaunched = 1
             } : default;
             SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var tuning);
-            using var entities = candidates.ToEntityArray(Allocator.Temp);
-            using var poses = candidates.ToComponentDataArray<LocalTransform>(Allocator.Temp);
-            using var heads = gatekeeperHeads.ToEntityArray(Allocator.Temp);
-            using var headPoses = gatekeeperHeads.ToComponentDataArray<LocalTransform>(Allocator.Temp);
-            using var hits = new NativeList<RaycastHit>(Allocator.Temp);
             var collision = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
             var visibility = new LaunchObstructionCollector { Enemies = SystemAPI.GetComponentLookup<Enemy>(true),
                 Covers = SystemAPI.GetComponentLookup<RotatingCover>(true),
@@ -47,38 +42,42 @@ namespace CrowdPunch.Systems.Combat
                 BossParts = SystemAPI.GetComponentLookup<BossPart>(true), IgnoreTargetBossHands = true };
             var em = state.EntityManager;
             double now = SystemAPI.Time.ElapsedTime;
-            foreach (var (pose, launch, health, aim, source) in
-                SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>, RefRW<PunchAimAssistTarget>>()
-                    .WithAll<Enemy>().WithEntityAccess())
+            var snapshot = new AimCandidateSnapshot { Candidates = candidates, GatekeeperHeads = gatekeeperHeads };
+            try
             {
-                if (!available || !PunchResolution.Contains(em, source, pose.ValueRO.Position, volume)
-                    || !PunchResolution.IsEligible(launch.ValueRO, health.ValueRO, volume)
-                    || ArmorHitResolution.IsProtected(em, source)
-                    || SnakeHitRules.Protected(em, source)
-                    || em.HasComponent<RespawnRequest>(source) && em.IsComponentEnabled<RespawnRequest>(source)
-                    || !SnakePunchOcclusion.CanReach(em, source, volume.Origin))
-                { aim.ValueRW = default; continue; }
-                float speed = em.HasComponent<DasherSettings>(source)
-                    ? em.GetComponentData<DasherSettings>(source).DashSpeed : bridge.PunchPreviewStrength;
-                UpdateAim(em, collision, visibility, source, pose.ValueRO.Position, bridge,
-                    entities, poses, heads, headPoses, hits, tuning, now, speed, ref aim.ValueRW);
+                foreach (var (pose, launch, health, aim, source) in
+                    SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyLaunchState>, RefRO<Health>, RefRW<PunchAimAssistTarget>>()
+                        .WithAll<Enemy>().WithEntityAccess())
+                {
+                    if (!available || !PunchResolution.Contains(em, source, pose.ValueRO.Position, volume)
+                        || !PunchResolution.IsEligible(launch.ValueRO, health.ValueRO, volume)
+                        || ArmorHitResolution.IsProtected(em, source)
+                        || SnakeHitRules.Protected(em, source)
+                        || em.HasComponent<RespawnRequest>(source) && em.IsComponentEnabled<RespawnRequest>(source)
+                        || !SnakePunchOcclusion.CanReach(em, source, volume.Origin))
+                    { aim.ValueRW = default; continue; }
+                    float speed = em.HasComponent<DasherSettings>(source)
+                        ? em.GetComponentData<DasherSettings>(source).DashSpeed : bridge.PunchPreviewStrength;
+                    UpdateAim(em, collision, visibility, source, pose.ValueRO.Position, bridge,
+                        ref snapshot, tuning, now, speed, ref aim.ValueRW);
+                }
+                foreach (var (pose, projectile, aim, source) in
+                    SystemAPI.Query<RefRO<LocalTransform>, RefRO<ChickenProjectile>, RefRW<PunchAimAssistTarget>>().WithEntityAccess())
+                {
+                    if (!available || !PunchResolution.Contains(pose.ValueRO.Position, volume))
+                    { aim.ValueRW = default; continue; }
+                    float speed = em.HasComponent<ChickenTuning>(projectile.ValueRO.Boss)
+                        ? em.GetComponentData<ChickenTuning>(projectile.ValueRO.Boss).ReturnSpeed : bridge.PunchPreviewStrength;
+                    UpdateAim(em, collision, visibility, source, pose.ValueRO.Position, bridge,
+                        ref snapshot, tuning, now, speed, ref aim.ValueRW);
+                }
             }
-            foreach (var (pose, projectile, aim, source) in
-                SystemAPI.Query<RefRO<LocalTransform>, RefRO<ChickenProjectile>, RefRW<PunchAimAssistTarget>>().WithEntityAccess())
-            {
-                if (!available || !PunchResolution.Contains(pose.ValueRO.Position, volume))
-                { aim.ValueRW = default; continue; }
-                float speed = em.HasComponent<ChickenTuning>(projectile.ValueRO.Boss)
-                    ? em.GetComponentData<ChickenTuning>(projectile.ValueRO.Boss).ReturnSpeed : bridge.PunchPreviewStrength;
-                UpdateAim(em, collision, visibility, source, pose.ValueRO.Position, bridge,
-                    entities, poses, heads, headPoses, hits, tuning, now, speed, ref aim.ValueRW);
-            }
+            finally { snapshot.Dispose(); }
         }
 
         private static void UpdateAim(EntityManager em, CollisionWorld world, LaunchObstructionCollector visibility,
-            Entity source, float3 position, PlayerEcsBridge bridge, NativeArray<Entity> entities,
-            NativeArray<LocalTransform> poses, NativeArray<Entity> heads, NativeArray<LocalTransform> headPoses,
-            NativeList<RaycastHit> hits, in EnemyLaunchSettings tuning,
+            Entity source, float3 position, PlayerEcsBridge bridge, ref AimCandidateSnapshot snapshot,
+            in EnemyLaunchSettings tuning,
             double now, float speed, ref PunchAimAssistTarget aim)
         {
             float3 facing = math.normalizesafe(new float3(bridge.PunchPreviewDirection.x, 0, bridge.PunchPreviewDirection.z));
@@ -95,6 +94,8 @@ namespace CrowdPunch.Systems.Combat
                 aim.IsAiming = 0;
                 return;
             }
+            // PLAYER-004: eligibility and unassisted snapshot clearing still run without gathering targets.
+            snapshot.GatherIfNeeded();
             PunchAimAssist.UpdateInputTurn(ref aim, bridge.AimInputRotationDegrees, bridge.AimInputResetSequence, now,
                 bridge.PunchPreviewIntentMemorySeconds);
             bool retain = PunchAimAssist.IsValidTarget(em, source, aim.Target)
@@ -103,15 +104,15 @@ namespace CrowdPunch.Systems.Combat
                 && Clear(em, world, visibility, source, aim.Target, position);
             // BOSS-001/002: prefer the weak spot; shielding hands still intercept the real flight.
             Entity preferred = retain && em.HasComponent<BossEncounter>(aim.Target) ? aim.Target
-                : Fallback(em, world, visibility, source, position, facing, bridge, heads, headPoses);
+                : Fallback(em, world, visibility, source, position, facing, bridge, snapshot.Heads, snapshot.HeadPoses);
             if (preferred == Entity.Null)
             {
-                preferred = RayTarget(em, world, source, position, facing, bridge.PunchPreviewAimAssistRange, hits);
+                preferred = RayTarget(em, world, source, position, facing, bridge.PunchPreviewAimAssistRange, snapshot.Hits);
                 if (!PunchAimAssist.IsValidTarget(em, source, preferred)
                     || !PunchAimAssist.IsWithinAssistLimits(em, preferred, position, facing,
                         bridge.PunchPreviewAimAssistRange, bridge.PunchPreviewAimAssistMaximumAngleDegrees)
                     || !Clear(em, world, visibility, source, preferred, position))
-                    preferred = Fallback(em, world, visibility, source, position, facing, bridge, entities, poses);
+                    preferred = Fallback(em, world, visibility, source, position, facing, bridge, snapshot.Entities, snapshot.Poses);
             }
             float switchDelay = bridge.PunchPreviewSwitchDelay;
             if (retain && preferred != Entity.Null && preferred != aim.Target
@@ -142,6 +143,35 @@ namespace CrowdPunch.Systems.Combat
             aim.LeadSeconds = tuning.AimLeadSeconds;
             aim.LeadMaximumDistance = tuning.AimLeadMaximumDistance;
             aim.DirectionLimitDegrees = bridge.PunchPreviewReleaseAngleDegrees;
+        }
+
+        private struct AimCandidateSnapshot : System.IDisposable
+        {
+            public EntityQuery Candidates, GatekeeperHeads;
+            public NativeArray<Entity> Entities, Heads;
+            public NativeArray<LocalTransform> Poses, HeadPoses;
+            public NativeList<RaycastHit> Hits;
+            private bool gathered;
+
+            public void GatherIfNeeded()
+            {
+                if (gathered) return;
+                Entities = Candidates.ToEntityArray(Allocator.Temp);
+                Poses = Candidates.ToComponentDataArray<LocalTransform>(Allocator.Temp);
+                Heads = GatekeeperHeads.ToEntityArray(Allocator.Temp);
+                HeadPoses = GatekeeperHeads.ToComponentDataArray<LocalTransform>(Allocator.Temp);
+                Hits = new NativeList<RaycastHit>(Allocator.Temp);
+                gathered = true;
+            }
+
+            public void Dispose()
+            {
+                if (Entities.IsCreated) Entities.Dispose();
+                if (Poses.IsCreated) Poses.Dispose();
+                if (Heads.IsCreated) Heads.Dispose();
+                if (HeadPoses.IsCreated) HeadPoses.Dispose();
+                if (Hits.IsCreated) Hits.Dispose();
+            }
         }
 
         private static Entity Fallback(EntityManager em, CollisionWorld world, LaunchObstructionCollector visibility,
