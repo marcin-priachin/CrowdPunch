@@ -18,7 +18,8 @@ namespace CrowdPunch.Configuration
         Trail = 7,
         Ninja = 8,
         Dragon = 9,
-        LinkedPair = 10
+        LinkedPair = 10,
+        MushroomShooter = 11
     }
 
     [Serializable]
@@ -118,6 +119,10 @@ namespace CrowdPunch.Configuration
         [SerializeField, Min(0.01f)] private float projectileLifetime = 5f;
         [SerializeField, Min(0.01f)] private float projectileRadius = 0.4f;
         [SerializeField] private LayerMask projectilePlayerLayers = ~0;
+
+        [Header("Mushroom Shooter (uses ranged speed, radius, player damage, cooldown and spacing)")]
+        [SerializeField] private MushroomShooterSettings mushroomShooter = MushroomShooterSettings.Default;
+        public MushroomShooterSettings MushroomShooter => mushroomShooter;
 
         [Header("Explosion (provisional)")]
         [SerializeField, Min(0f)] private float explosionRadius = 5f;

@@ -44,6 +44,8 @@ namespace CrowdPunch.Systems.Movement
             state.Dependency = new EnemyMovementJob
             {
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
+                MushroomShooters = SystemAPI.GetComponentLookup<MushroomShooterSettings>(true),
+                RangedAttacks = SystemAPI.GetComponentLookup<RangedAttackState>(true),
                 Owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true),
                 Rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true),
                 PillarMembers = SystemAPI.GetComponentLookup<PillarCrowdMember>(true),
@@ -66,6 +68,8 @@ namespace CrowdPunch.Systems.Movement
         private partial struct EnemyMovementJob : IJobEntity
         {
             [Unity.Collections.ReadOnly] public ComponentLookup<EnemyArmor> Armors;
+            [ReadOnly] public ComponentLookup<MushroomShooterSettings> MushroomShooters;
+            [ReadOnly] public ComponentLookup<RangedAttackState> RangedAttacks;
             [Unity.Collections.ReadOnly] public ComponentLookup<EnemyWaveOwnership> Owners;
             [Unity.Collections.ReadOnly] public ComponentLookup<BarricadeRoom> Rooms;
             [Unity.Collections.ReadOnly] public ComponentLookup<PillarCrowdMember> PillarMembers;
@@ -107,6 +111,12 @@ namespace CrowdPunch.Systems.Movement
                 if (launchState.Phase != EnemyLaunchPhase.Active
                     || Armors.HasComponent(entity) && Now < Armors[entity].StaggerUntil)
                 {
+                    return;
+                }
+
+                if (MushroomShooters.HasComponent(entity) && RangedAttacks[entity].Phase == RangedAttackPhase.WindUp)
+                {
+                    physicsVelocity.Linear.xz = float2.zero;
                     return;
                 }
 

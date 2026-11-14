@@ -225,9 +225,11 @@ namespace CrowdPunch.Systems.Presentation
                     return;
                 }
                 playback.WasRecovering = 0;
-                if (animation.Profile == (byte)EnemyAnimationProfile.Ranged)
+                if (animation.Profile == (byte)EnemyAnimationProfile.Ranged
+                    || animation.Profile == (byte)EnemyAnimationProfile.MushroomShooter)
                 {
-                    AnimateRanged(owner, ref playback, ref skin, ref samples, launch);
+                    AnimateRanged(owner, ref playback, ref skin, ref samples, launch,
+                        animation.Profile == (byte)EnemyAnimationProfile.MushroomShooter);
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Armored)
@@ -851,7 +853,7 @@ namespace CrowdPunch.Systems.Presentation
             }
 
             private void AnimateRanged(Entity owner, ref EnemyAnimationPlayback playback,
-                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch, bool mushroom)
             {
                 const int attackMotion = 2;
                 if (launch.Phase == EnemyLaunchPhase.Launched)
@@ -885,6 +887,11 @@ namespace CrowdPunch.Systems.Presentation
                 playback.Landing = 0;
                 if (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)
                     return;
+                if (mushroom)
+                {
+                    AnimateMushroom(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
                 bool attacking = RangedAttacks.HasComponent(owner)
                     && RangedAttacks[owner].Phase == RangedAttackPhase.WindUp;
                 if (attacking)
@@ -907,6 +914,77 @@ namespace CrowdPunch.Systems.Presentation
                 float frame = playback.Phase * samples.FrameCount;
                 int a = (int)frame;
                 ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
+            }
+
+            private void AnimateMushroom(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                var attack = RangedAttacks[owner];
+                var tuning = RangedTuning[owner];
+                bool released = attack.ProjectilesSpawned != playback.ProjectileSequence;
+                playback.ProjectileSequence = attack.ProjectilesSpawned;
+                float health = Health[owner].Current;
+                bool hit = playback.HealthInitialized != 0 && health < playback.PreviousHealth;
+                playback.HealthInitialized = 1;
+                playback.PreviousHealth = health;
+                float progress = 0f;
+                int motion;
+                if (launch.Phase == EnemyLaunchPhase.Recovering)
+                {
+                    playback.WasAttacking = 0;
+                    if (playback.WasRecovering == 0)
+                        playback.ImpactDuration = math.max(.01f, launch.RecoverySecondsRemaining);
+                    playback.WasRecovering = 1;
+                    motion = 3;
+                    progress = math.saturate(1f - launch.RecoverySecondsRemaining / playback.ImpactDuration);
+                }
+                else
+                {
+                    playback.WasRecovering = 0;
+                    if (hit) { playback.HitActive = 1; playback.HitPhase = 0f; }
+                    if (released)
+                    {
+                        playback.AttackPhase = tuning.ProjectileLaunchProgress;
+                        playback.WasAttacking = 1;
+                    }
+                    else if (playback.WasAttacking != 0)
+                    {
+                        playback.AttackPhase += DeltaTime / math.max(.01f, samples.Durations[2]);
+                        if (playback.AttackPhase >= 1f) playback.WasAttacking = 0;
+                    }
+                    if (attack.Phase == RangedAttackPhase.WindUp)
+                    {
+                        motion = 2;
+                        progress = tuning.ProjectileLaunchProgress * math.saturate(
+                            1f - attack.SecondsRemaining / math.max(.01f, tuning.WindUpDuration));
+                        playback.WasAttacking = 0;
+                        playback.HitActive = 0;
+                    }
+                    else if (playback.WasAttacking != 0)
+                    {
+                        motion = 2;
+                        progress = playback.AttackPhase;
+                        playback.HitActive = 0;
+                    }
+                    else if (playback.HitActive != 0)
+                    {
+                        motion = 3;
+                        progress = playback.HitPhase;
+                        playback.HitPhase += DeltaTime / math.max(.01f, samples.Durations[3]);
+                        if (playback.HitPhase >= 1f) playback.HitActive = 0;
+                    }
+                    else
+                    {
+                        motion = Movement[owner].Speed > .01f ? 1 : 0;
+                        playback.Phase = math.frac(playback.Phase + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                        progress = playback.Phase;
+                    }
+                }
+                bool loop = motion < 2;
+                float frame = progress * (loop ? samples.FrameCount : samples.FrameCount - 1);
+                int from = (int)frame;
+                int next = loop ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1);
+                ApplyFrame(ref skin, ref samples, motion, from, next, math.frac(frame));
             }
 
             private void AnimateElite(Entity owner, ref EnemyAnimationPlayback playback,

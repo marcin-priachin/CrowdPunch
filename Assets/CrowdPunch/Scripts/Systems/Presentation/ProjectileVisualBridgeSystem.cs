@@ -55,6 +55,28 @@ namespace CrowdPunch.Systems.Presentation
                     velocity.y += 4 * p.ArcHeight * (1 - 2 * p.ElapsedSeconds / duration) / duration;
                     Send(bridge, entity, ProjectileVisualKind.Ranged, 0, pose.ValueRO.Position, velocity, p.Radius, false);
                 }
+                foreach (var (lane, attack, tuning, launch) in SystemAPI.Query<RefRO<MushroomWarningLane>,
+                    RefRO<RangedAttackState>, RefRO<RangedEnemySettings>, RefRO<EnemyLaunchState>>().WithNone<RespawnRequest>())
+                {
+                    var warning = lane.ValueRO;
+                    if (attack.ValueRO.Phase != RangedAttackPhase.WindUp || launch.ValueRO.Phase != EnemyLaunchPhase.Active
+                        || warning.Length <= .001f) continue;
+                    float3 origin = warning.Origin;
+                    origin.y = warning.GroundHeight + .025f;
+                    bridge.ReceiveProjectileVisual(new ProjectileVisualSample
+                    {
+                        Kind = ProjectileVisualKind.MushroomLane, Position = origin, Velocity = warning.Direction,
+                        Radius = math.max(.01f, tuning.ValueRO.ProjectileRadius),
+                        LaneLength = warning.Length, LaneLocked = warning.Locked
+                    });
+                }
+                foreach (var (shot, pose, entity) in SystemAPI.Query<RefRO<MushroomProjectile>, RefRO<LocalTransform>>().WithEntityAccess())
+                {
+                    var p = shot.ValueRO;
+                    bool returned = p.Owner == EnemyLaunchOwner.Player;
+                    Send(bridge, entity, ProjectileVisualKind.MushroomEnemy, returned ? 1u : 0u,
+                        pose.ValueRO.Position, p.Direction * p.Speed, p.Radius, returned);
+                }
                 foreach (var (segment, launch, pose, velocity, entity) in SystemAPI.Query<RefRO<SnakeSegment>, RefRO<EnemyLaunchState>,
                     RefRO<LocalTransform>, RefRO<PhysicsVelocity>>().WithNone<RespawnRequest>().WithEntityAccess())
                 {

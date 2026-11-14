@@ -46,6 +46,7 @@ namespace CrowdPunch.Bakers
                     Configuration.EnemyArchetype.Ninja => EnemyArchetypeKind.Ninja,
                     Configuration.EnemyArchetype.Dragon => EnemyArchetypeKind.Dragon,
                     Configuration.EnemyArchetype.LinkedPair => EnemyArchetypeKind.LinkedPair,
+                    Configuration.EnemyArchetype.MushroomShooter => EnemyArchetypeKind.MushroomShooter,
                     Configuration.EnemyArchetype.Elite => EnemyArchetypeKind.Elite,
                     _ => EnemyArchetypeKind.Baseline
                 },
@@ -59,6 +60,8 @@ namespace CrowdPunch.Bakers
                 TrailSettings = settings.TrailSettings,
                 Health = settings.Health,
                 ContactDamageSettings = settings.ContactDamageSettings,
+                MushroomShooter = settings.Archetype == Configuration.EnemyArchetype.MushroomShooter
+                    ? settings.MushroomShooter : default,
                 RangedSettings = new RangedEnemySettings
                 {
                     ProjectilePrefab = projectilePrefab,
@@ -69,7 +72,9 @@ namespace CrowdPunch.Bakers
                     ApproachSpeed = settings.ApproachSpeed,
                     InitialAttackDelay = settings.InitialAttackDelay,
                     InitialDelayVariation = settings.InitialDelayVariation,
-                    WindUpDuration = settings.WindUpDuration,
+                    WindUpDuration = settings.Archetype == Configuration.EnemyArchetype.MushroomShooter
+                        ? settings.MushroomShooter.TrackingSeconds + settings.MushroomShooter.LockedSeconds
+                        : settings.WindUpDuration,
                     ProjectileLaunchProgress = settings.ProjectileLaunchProgress,
                     Cooldown = settings.Cooldown,
                     CooldownVariation = settings.CooldownVariation,

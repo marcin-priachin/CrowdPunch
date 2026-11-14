@@ -198,14 +198,19 @@ namespace CrowdPunch.Systems.Initialization
             {
                 return;
             }
-            if (profile.Archetype == EnemyArchetypeKind.Ranged)
+            if (profile.Archetype == EnemyArchetypeKind.Ranged || profile.Archetype == EnemyArchetypeKind.MushroomShooter)
             {
                 commandBuffer.AddComponent(enemy, profile.RangedSettings);
                 commandBuffer.AddComponent(enemy, new RangedPositioningState
                 {
                     Mode = RangedPositioningMode.Hold
                 });
-                commandBuffer.AddComponent(enemy, new URPMaterialPropertyBaseColor
+                if (profile.Archetype == EnemyArchetypeKind.MushroomShooter)
+                {
+                    commandBuffer.AddComponent(enemy, profile.MushroomShooter);
+                    commandBuffer.AddComponent<MushroomWarningLane>(enemy);
+                }
+                else commandBuffer.AddComponent(enemy, new URPMaterialPropertyBaseColor
                 {
                     Value = new float4(0.15f, 0.65f, 1f, 1f)
                 });

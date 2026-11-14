@@ -27,6 +27,7 @@ namespace CrowdPunch.Systems.Physics
             {
                 Wizards = SystemAPI.GetComponentLookup<WizardSettings>(true),
                 Dragons = SystemAPI.GetComponentLookup<DragonTuning>(true),
+                MushroomLanes = SystemAPI.GetComponentLookup<MushroomWarningLane>(true),
                 Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
                 Movements = SystemAPI.GetComponentLookup<DesiredMovement>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
@@ -46,6 +47,7 @@ namespace CrowdPunch.Systems.Physics
         {
             [ReadOnly] public ComponentLookup<WizardSettings> Wizards;
             [ReadOnly] public ComponentLookup<DragonTuning> Dragons;
+            [ReadOnly] public ComponentLookup<MushroomWarningLane> MushroomLanes;
             public bool Defending;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movements;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
@@ -87,6 +89,9 @@ namespace CrowdPunch.Systems.Physics
                 }
                 if (Defending && !launched && !committedDash && !charging && Movements.HasComponent(entity) && Movements[entity].Speed > 0)
                     toward = Movements[entity].Direction;
+                if (launch.Phase == EnemyLaunchPhase.Active && MushroomLanes.TryGetComponent(entity, out var lane)
+                    && math.lengthsq(lane.Direction) > .001f)
+                    toward = lane.Direction;
                 if (math.lengthsq(toward) <= 0.0001f) return;
                 // Keep the physics capsule upright; animation supplies launched visual pitch.
                 var originalRotation = transform.Rotation;

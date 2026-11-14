@@ -3325,6 +3325,29 @@ Navigation participation anchors now default to the clearance-valid spacing-boun
 Campaign level 41 includes its diagonal perimeter colliders in the baked navigation grid (LOOP-002, COMBAT-017). The wall-aligned footprints participate in spawn reachability, route clearance, and navigation escape checks. See [perimeter authoring](Navigation.md#authoring-and-data-ownership).
 
 
+## Mushroom Shooter and Gauntlet_33 (MUSHROOM-001..004)
+
+The Mushroom Shooter has a distinct spawn archetype. It shares the Ranged distance band,
+attack lifecycle, and common damage settings. `MushroomShooterPositioningSystem` overrides
+the ordinary ranged intent while cover blocks the player, finding a reachable angle near
+the preferred distance. Navigation resolves the path and enemy movement owns velocity.
+
+`MushroomShooterAttackSystem` runs after Physics, body collisions, and explosion resolution
+so that a launch on the release step still cancels the wind-up. The cooldown only advances
+while the Shooter is active. The warning tracks the player, then keeps its origin and
+direction as the same sphere sweep updates its length against solid cover. Presentation
+reads the lane snapshot and animates the authored attack up to the release frame.
+
+`PunchDetectionSystem` checks redirectable shots before resolving enemy targets. A successful
+punch changes ownership and direction and resets the full range budget. The projectile
+system sweeps its travel, resolves the first cover or player contact, and applies ordinary
+player-owned damage to eligible enemies before that contact. Per-shot hit history deduplicates
+each enemy lifetime. Shots are independent of their Shooter and clean up on restart, arena
+unload, contact, or range expiry. They do not create launched-body hits.
+
+**Crowd Punch > Levels > Build Mushroom Shooter Gauntlet 33** rebuilds the legacy encounter
+and registers it for Editor Level Play. Campaign build registration remains catalog-driven.
+
 ## Armored And Gauntlet_12 (ENEMY-014/015)
 
 Armored appends serialized archetype value 5 and stays Normal tier. EnemySpawnSettings owns

@@ -36,6 +36,14 @@ namespace CrowdPunch.Editor
             "projectileMinimumAltitude", "projectileLifetime", "projectileRadius", "projectilePlayerLayers"
         };
 
+        private static readonly string[] MushroomProperties =
+        {
+            "mushroomShooter", "preferredMinimumDistance", "preferredMaximumDistance", "engagementRange",
+            "retreatSpeed", "approachSpeed", "initialAttackDelay", "initialDelayVariation", "projectileLaunchFrame",
+            "cooldown", "cooldownVariation", "projectileDamage", "playerInvincibilitySeconds", "projectileSpeed",
+            "projectileRadius", "projectilePlayerLayers"
+        };
+
         private static readonly string[] ExplosiveProperties =
         {
             "explosionRadius", "explosionDamage", "normalEnemyKnockbackForce", "playerEliteKnockbackForce",
@@ -80,6 +88,7 @@ namespace CrowdPunch.Editor
                     "The selected assets use different archetypes. All archetype-specific settings are shown.",
                     MessageType.Info);
                 DrawSection("Ranged (provisional)", RangedProperties);
+                DrawSection("Mushroom Shooter", MushroomProperties);
                 DrawSection("Explosion (provisional)", ExplosiveProperties);
                 DrawSection("Dasher (provisional)", DasherProperties);
                 DrawEliteSettings();
@@ -96,6 +105,9 @@ namespace CrowdPunch.Editor
                         break;
                     case EnemyArchetype.Ranged:
                         DrawSection("Ranged (provisional)", RangedProperties);
+                        break;
+                    case EnemyArchetype.MushroomShooter:
+                        DrawSection("Mushroom Shooter", MushroomProperties);
                         break;
                     case EnemyArchetype.Explosive:
                         DrawSection("Explosion (provisional)", ExplosiveProperties);
@@ -175,7 +187,7 @@ namespace CrowdPunch.Editor
                 if (propertyName == "projectileLaunchFrame" && property != null)
                 {
                     int lastFrame = System.Math.Max(1, serializedObject.FindProperty("firingAnimationLastFrame").intValue);
-                    EditorGUILayout.IntSlider(property, 0, lastFrame);
+                    EditorGUILayout.IntSlider(property, 0, lastFrame, new UnityEngine.GUIContent("Projectile Release Frame"));
                 }
                 else if (propertyName == "eliteEnemyLaunchFrame" && property != null)
                 {
