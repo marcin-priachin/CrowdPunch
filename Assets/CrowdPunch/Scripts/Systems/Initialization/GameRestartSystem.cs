@@ -53,6 +53,11 @@ namespace CrowdPunch.Systems.Initialization
                 foreach (Entity projectileRoot in projectileRoots)
                     if (EntityManager.Exists(projectileRoot)) EntityManager.DestroyEntity(projectileRoot);
             }
+            EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<AlienSpikeProjectile>().Build());
+            foreach (var pending in SystemAPI.Query<DynamicBuffer<AlienSpikeBurst>>()) pending.Clear();
+            foreach (var history in SystemAPI.Query<DynamicBuffer<AlienSpikeBurstHistory>>()) history.Clear();
+            foreach (var (tuning, volley) in SystemAPI.Query<RefRO<AlienSpikeTuning>, RefRW<AlienSpikeVolley>>())
+                volley.ValueRW = new AlienSpikeVolley { Remaining = tuning.ValueRO.Cooldown };
             EntityQuery oldZones = SystemAPI.QueryBuilder().WithAll<WizardZone>().Build();
             EntityManager.DestroyEntity(oldZones);
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<TrailSection>().Build());

@@ -14,6 +14,7 @@ namespace CrowdPunch.Mono.Player
         private sealed class Slot
         {
             public ParticleSystem Flight;
+            public MeshRenderer Spike;
             public TrailRenderer Trail;
             public ProjectileVisualKind Kind;
             public ulong Key;
@@ -25,6 +26,9 @@ namespace CrowdPunch.Mono.Player
         private readonly Dictionary<ulong, Slot> assigned = new Dictionary<ulong, Slot>();
         private ParticleBurstPool[] bursts;
         private Transform root;
+        private Mesh spikeMesh;
+        private Material spikeMaterial;
+        private MaterialPropertyBlock spikeTint;
         private PlayerEcsBridge bridge;
         private uint restart;
         internal int ActiveFlightCount => assigned.Count;
@@ -50,7 +54,8 @@ namespace CrowdPunch.Mono.Player
             var prefabs = new[] { library.RangedFlight, library.BossFlight, library.SnakeFlight, library.RangedCharge };
             int[] counts = { Mathf.Clamp(library.RangedCapacity, 1, 128), Mathf.Clamp(library.BossCapacity, 1, 64),
                 Mathf.Clamp(library.SnakeCapacity, 1, 64), Mathf.Clamp(library.RangedCapacity, 1, 128) };
-            slots = new Slot[counts[0] + counts[1] + counts[2] + counts[3]];
+            const int spikeCapacity = 96;
+            slots = new Slot[counts[0] + counts[1] + counts[2] + counts[3] + spikeCapacity];
             int index = 0;
             for (int kind = 0; kind < counts.Length; kind++)
             for (int i = 0; i < counts[kind]; i++)
@@ -77,10 +82,38 @@ namespace CrowdPunch.Mono.Player
                 }
                 slots[index++] = slot;
             }
+            for (int i = 0; i < spikeCapacity; i++) slots[index++] = new Slot { Kind = ProjectileVisualKind.AlienSpike };
             bursts = new[] { new ParticleBurstPool(root, library.RangedImpact, library.BurstCapacity),
                 new ParticleBurstPool(root, library.BossImpact, library.BurstCapacity),
                 new ParticleBurstPool(root, library.SnakeSever, library.BurstCapacity) };
         }
+        private MeshRenderer CreateSpikeRenderer()
+        {
+            spikeTint ??= new MaterialPropertyBlock();
+            if (spikeMesh == null) spikeMesh = CreateSpikeMesh();
+            if (spikeMaterial == null)
+                spikeMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "Alien Spike Projectile" };
+            var spike = new GameObject("Alien spike projectile");
+            spike.transform.SetParent(root, false);
+            spike.AddComponent<MeshFilter>().sharedMesh = spikeMesh;
+            var renderer = spike.AddComponent<MeshRenderer>();
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.sharedMaterial = spikeMaterial;
+            return renderer;
+        }
+
+        private static Mesh CreateSpikeMesh()
+        {
+            var mesh = new Mesh { name = "Alien Spike Tip" };
+            mesh.vertices = new[] { new Vector3(0, 0, .9f), new Vector3(0, 0, -.65f),
+                new Vector3(.45f, 0, -.25f), new Vector3(0, .45f, -.25f),
+                new Vector3(-.45f, 0, -.25f), new Vector3(0, -.45f, -.25f) };
+            mesh.triangles = new[] { 0, 3, 2, 0, 4, 3, 0, 5, 4, 0, 2, 5,
+                1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 2 };
+            mesh.RecalculateNormals();
+            return mesh;
+        }
+
         private void Begin() { if (slots != null) foreach (var slot in slots) slot.Seen = false; }
         private void Show(ProjectileVisualSample sample)
         {
@@ -103,6 +136,19 @@ namespace CrowdPunch.Mono.Player
                 // Ease the growing orb and tighten its pulse as release approaches.
                 diameter *= Mathf.Lerp(.25f, 1.15f, progress)
                     * (1 + .07f * progress * Mathf.Sin(sample.ChargeProgress * Mathf.PI * 12));
+            }
+            if (slot.Kind == ProjectileVisualKind.AlienSpike)
+            {
+                if (slot.Spike == null) slot.Spike = CreateSpikeRenderer();
+                slot.Spike.enabled = true;
+                slot.Spike.transform.SetPositionAndRotation(sample.Position, Quaternion.LookRotation(sample.Velocity));
+                slot.Spike.transform.localScale = Vector3.one * diameter * 1.45f;
+                if (newLaunch)
+                {
+                    var color = CombatOwnershipTint.Accent(sample.Redirected ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Boss, library);
+                    spikeTint.SetColor("_BaseColor", color);
+                    slot.Spike.SetPropertyBlock(spikeTint);
+                }
             }
             if (slot.Flight != null)
             {
@@ -138,12 +184,14 @@ namespace CrowdPunch.Mono.Player
             {
                 if (!slot.Active || slot.Seen) continue;
                 assigned.Remove(slot.Key); slot.Active = false;
+                if (slot.Spike != null) slot.Spike.enabled = false;
                 if (slot.Flight != null) slot.Flight.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 if (slot.Trail != null) { slot.Trail.emitting = false; slot.Trail.Clear(); }
             }
         }
         private void Burst(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale)
         {
+            if (kind == ProjectileVisualKind.AlienSpike) kind = ProjectileVisualKind.Boss;
             if (isActiveAndEnabled && !FeedbackTimeController.IsSuspended && bursts != null && (int)kind < bursts.Length)
                 bursts[(int)kind].Show(position, direction, scale);
         }
@@ -168,9 +216,18 @@ namespace CrowdPunch.Mono.Player
         }
         private void OnDestroy()
         {
-            if (root == null) return;
-            if (Application.isPlaying) Destroy(root.gameObject);
-            else DestroyImmediate(root.gameObject);
+            if (Application.isPlaying)
+            {
+                if (root != null) Destroy(root.gameObject);
+                if (spikeMesh != null) Destroy(spikeMesh);
+                if (spikeMaterial != null) Destroy(spikeMaterial);
+            }
+            else
+            {
+                if (root != null) DestroyImmediate(root.gameObject);
+                if (spikeMesh != null) DestroyImmediate(spikeMesh);
+                if (spikeMaterial != null) DestroyImmediate(spikeMaterial);
+            }
         }
     }
 }

@@ -47,6 +47,12 @@ namespace CrowdPunch.Systems.Presentation
                     Send(bridge, entity, ProjectileVisualKind.Boss, p.Launch, pose.ValueRO.Position, p.Velocity,
                         SystemAPI.GetComponent<ChickenTuning>(p.Boss).ProjectileRadius, p.Redirected != 0);
                 }
+                foreach (var (shot, pose, entity) in SystemAPI.Query<RefRO<AlienSpikeProjectile>, RefRO<LocalTransform>>().WithEntityAccess())
+                {
+                    var p = shot.ValueRO;
+                    Send(bridge, entity, ProjectileVisualKind.AlienSpike, p.VisualSequence, pose.ValueRO.Position, p.Velocity,
+                        p.Tuning.Radius, p.PlayerOwned != 0);
+                }
                 foreach (var (shot, pose, entity) in SystemAPI.Query<RefRO<RangedProjectile>, RefRO<LocalTransform>>().WithEntityAccess())
                 {
                     var p = shot.ValueRO;

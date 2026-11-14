@@ -119,10 +119,29 @@ namespace CrowdPunch.Systems.Combat
                 ChickenProjectilePunch.Redirect(state.EntityManager, shot, ref projectile.ValueRW, pose.ValueRO.Position,
                     punch, SystemAPI.GetComponent<ChickenTuning>(projectile.ValueRO.Boss));
                 punchRequest.HitEnemy = true;
-                if (!punchRequest.RedirectedChickenProjectile)
+                if (!punchRequest.RedirectedProjectile)
                 {
-                    punchRequest.RedirectedChickenProjectile = true;
-                    punchRequest.ChickenProjectileContact = pose.ValueRO.Position;
+                    punchRequest.RedirectedProjectile = true;
+                    punchRequest.ProjectileRedirectContact = pose.ValueRO.Position;
+                }
+            }
+            if (!SystemAPI.QueryBuilder().WithAll<AlienSpikeProjectile>().Build().IsEmpty
+                && SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physics))
+            {
+                var contacts = AlienSpikeProjectileSystem.Contacts(ref state);
+                foreach (var (projectile, pose, shot) in
+                    SystemAPI.Query<RefRW<AlienSpikeProjectile>, RefRO<LocalTransform>>().WithEntityAccess())
+                {
+                    float3 position = pose.ValueRO.Position;
+                    if (!AlienSpikeProjectilePunch.Contains(physics.CollisionWorld, contacts, projectile.ValueRO, position, punch))
+                        continue;
+                    AlienSpikeProjectilePunch.Redirect(state.EntityManager, shot, ref projectile.ValueRW, position, punch);
+                    punchRequest.HitEnemy = true;
+                    if (!punchRequest.RedirectedProjectile)
+                    {
+                        punchRequest.RedirectedProjectile = true;
+                        punchRequest.ProjectileRedirectContact = position;
+                    }
                 }
             }
             punchRequest.IsResolved = true;

@@ -36,6 +36,9 @@ namespace CrowdPunch.Systems.Combat
                 .Build();
             EnemyCollisionJob job = new EnemyCollisionJob
             {
+                SpikeBursts = SystemAPI.GetBufferLookup<AlienSpikeBurst>(),
+                SpikeHistory = SystemAPI.GetBufferLookup<AlienSpikeBurstHistory>(),
+                Lifetimes = SystemAPI.GetComponentLookup<EnemyLifetime>(true),
                 SnakeHeads = SystemAPI.GetComponentLookup<SnakeHead>(true),
                 Commitments = SystemAPI.GetComponentLookup<CommittedLaunchFlight>(),
                 PairEndpoints = SystemAPI.GetComponentLookup<LinkedPairEndpoint>(true),
@@ -83,6 +86,9 @@ namespace CrowdPunch.Systems.Combat
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
             public ComponentLookup<CommittedLaunchFlight> Commitments;
+            public BufferLookup<AlienSpikeBurst> SpikeBursts;
+            public BufferLookup<AlienSpikeBurstHistory> SpikeHistory;
+            [ReadOnly] public ComponentLookup<EnemyLifetime> Lifetimes;
             [ReadOnly] public ComponentLookup<SnakeHead> SnakeHeads;
             [ReadOnly] public ComponentLookup<LinkedPairEndpoint> PairEndpoints;
             public ComponentLookup<LinkedPair> Pairs;
@@ -262,6 +268,19 @@ namespace CrowdPunch.Systems.Combat
                 CollisionEvent.Details details = collisionEvent.CalculateDetails(ref World);
                 float estimatedImpulse = math.max(0f, details.EstimatedImpulse);
 
+                var triggeringLaunch = LaunchStateLookup[source];
+                float threshold = math.min(MinimumDamageImpulse, MinimumPropagationImpulse);
+                if (Armors.HasComponent(target) && Armors[target].Stages > 0)
+                    threshold = MinimumPropagationImpulse;
+                if (triggeringLaunch.Owner == EnemyLaunchOwner.Player
+                    && estimatedImpulse >= math.max(.01f, threshold)
+                    && (SpikeBursts.HasBuffer(source) || SpikeBursts.HasBuffer(target)))
+                {
+                    uint lifetime = Lifetimes.HasComponent(source) ? Lifetimes[source].Generation : 0;
+                    RecordSpikeBurst(source, source, triggeringLaunch, lifetime);
+                    RecordSpikeBurst(target, source, triggeringLaunch, lifetime);
+                }
+
                 if (Armors.HasComponent(target))
                 {
                     // Use the existing meaningful-impact thresholds, independent of launch ownership.
@@ -313,6 +332,19 @@ namespace CrowdPunch.Systems.Combat
                         estimatedImpulse, significance, ElapsedTime);
                     FeedbackLookup[target] = feedback;
                 }
+            }
+
+            private void RecordSpikeBurst(Entity spike, Entity source, in EnemyLaunchState launch, uint lifetime)
+            {
+                if (!SpikeBursts.HasBuffer(spike)) return;
+                var contact = new AlienSpikeBurst
+                {
+                    Source = source, LaunchSequence = launch.LaunchSequence, SourceLifetime = lifetime,
+                    PunchSequence = launch.OriginatingPunchSequence, ChainDepth = launch.FeedbackChainDepth + 1
+                };
+                if (!AlienSpikeBurstRecording.TryRecord(SpikeHistory[spike], contact)) return;
+                contact.Pose = TransformLookup[spike];
+                SpikeBursts[spike].Add(contact);
             }
 
             private void PropagateLaunch(Entity source, Entity target, float estimatedImpulse)

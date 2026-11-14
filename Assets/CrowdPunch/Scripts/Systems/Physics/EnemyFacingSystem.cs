@@ -27,6 +27,7 @@ namespace CrowdPunch.Systems.Physics
             {
                 Wizards = SystemAPI.GetComponentLookup<WizardSettings>(true),
                 Dragons = SystemAPI.GetComponentLookup<DragonTuning>(true),
+                Spikes = SystemAPI.GetComponentLookup<AlienSpikeVolley>(true),
                 Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
                 Movements = SystemAPI.GetComponentLookup<DesiredMovement>(true),
                 Contacts = SystemAPI.GetComponentLookup<EnemyContactAttemptState>(true),
@@ -46,6 +47,7 @@ namespace CrowdPunch.Systems.Physics
         {
             [ReadOnly] public ComponentLookup<WizardSettings> Wizards;
             [ReadOnly] public ComponentLookup<DragonTuning> Dragons;
+            [ReadOnly] public ComponentLookup<AlienSpikeVolley> Spikes;
             public bool Defending;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movements;
             [ReadOnly] public ComponentLookup<EnemyContactAttemptState> Contacts;
@@ -60,6 +62,11 @@ namespace CrowdPunch.Systems.Physics
                 in EnemyLaunchState launch)
             {
                 bool launched = launch.Phase == EnemyLaunchPhase.Launched;
+                if (!launched && Spikes.HasComponent(entity) && Spikes[entity].Phase != AlienSpikeVolleyPhase.Moving)
+                {
+                    velocity.Angular.y = 0;
+                    return;
+                }
                 bool charging = launch.Phase == EnemyLaunchPhase.Active
                     && Archetypes.HasComponent(entity) && Archetypes[entity].Value == EnemyArchetypeKind.Baseline
                     && Contacts.HasComponent(entity) && Contacts[entity].IsAttempting != 0;

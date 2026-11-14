@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CrowdPunch.Mono.Player
 {
-    public enum ProjectileVisualKind : byte { Ranged, Boss, Snake, RangedCharge }
+    public enum ProjectileVisualKind : byte { Ranged, Boss, Snake, RangedCharge, AlienSpike }
     public struct ProjectileVisualSample
     {
         public ulong Key;

@@ -22,6 +22,7 @@ namespace CrowdPunch.Systems.Presentation
                 SnakeSegments = SystemAPI.GetComponentLookup<SnakeSegment>(true),
                 SnakeTunings = SystemAPI.GetComponentLookup<SnakeTuning>(true),
                 Wizards = SystemAPI.GetComponentLookup<WizardCastState>(true),
+                AlienSpikes = SystemAPI.GetComponentLookup<AlienSpikeVolley>(true),
                 Ninjas = SystemAPI.GetComponentLookup<NinjaState>(true),
                 Archetypes = SystemAPI.GetComponentLookup<EnemyArchetype>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
@@ -67,6 +68,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<SnakeSegment> SnakeSegments;
             [ReadOnly] public ComponentLookup<SnakeTuning> SnakeTunings;
             [ReadOnly] public ComponentLookup<WizardCastState> Wizards;
+            [ReadOnly] public ComponentLookup<AlienSpikeVolley> AlienSpikes;
             [ReadOnly] public ComponentLookup<NinjaState> Ninjas;
             [ReadOnly] public ComponentLookup<EnemyArchetype> Archetypes;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
@@ -78,8 +80,17 @@ namespace CrowdPunch.Systems.Presentation
 
             private void Execute(in EnemyVisualOwner owner, ref URPMaterialPropertyBaseColor color)
             {
-                if (owner.AnimationDriven != 0) { color.Value = new float4(1f); return; }
                 Entity enemy = owner.Value;
+                if (owner.AnimationDriven != 0)
+                {
+                    color.Value = new float4(1f);
+                    if (AlienSpikes.HasComponent(enemy) && AlienSpikes[enemy].Phase == AlienSpikeVolleyPhase.Telegraph)
+                    {
+                        float pulse = .4f + .2f * math.sin(Time * 16f);
+                        color.Value = new float4(1f + pulse, 1f, 1f + pulse, 1f);
+                    }
+                    return;
+                }
                 if (!Archetypes.HasComponent(enemy) || !Launches.HasComponent(enemy)) return;
                 EnemyArchetypeKind kind = Archetypes[enemy].Value;
                 if (kind == EnemyArchetypeKind.Dasher && owner.UsesAtlas == 0) return;

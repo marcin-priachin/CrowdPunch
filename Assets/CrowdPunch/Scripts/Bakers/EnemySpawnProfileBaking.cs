@@ -46,6 +46,7 @@ namespace CrowdPunch.Bakers
                     Configuration.EnemyArchetype.Ninja => EnemyArchetypeKind.Ninja,
                     Configuration.EnemyArchetype.Dragon => EnemyArchetypeKind.Dragon,
                     Configuration.EnemyArchetype.LinkedPair => EnemyArchetypeKind.LinkedPair,
+                    Configuration.EnemyArchetype.AlienSpike => EnemyArchetypeKind.AlienSpike,
                     Configuration.EnemyArchetype.Elite => EnemyArchetypeKind.Elite,
                     _ => EnemyArchetypeKind.Baseline
                 },

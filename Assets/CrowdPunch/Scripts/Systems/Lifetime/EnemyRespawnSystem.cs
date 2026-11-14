@@ -127,6 +127,15 @@ namespace CrowdPunch.Systems.Lifetime
                         });
                     }
                     SystemAPI.GetBuffer<CollisionDamageHistory>(enemy).Clear();
+                    if (SystemAPI.HasBuffer<AlienSpikeBurstHistory>(enemy))
+                    {
+                        SystemAPI.GetBuffer<AlienSpikeBurstHistory>(enemy).Clear();
+                        SystemAPI.GetBuffer<AlienSpikeBurst>(enemy).Clear();
+                        SystemAPI.SetComponent(enemy, new AlienSpikeVolley
+                        {
+                            Remaining = SystemAPI.GetComponent<AlienSpikeTuning>(enemy).Cooldown
+                        });
+                    }
                     if (SystemAPI.HasComponent<EnemyArmor>(enemy))
                     {
                         SystemAPI.SetComponent(enemy, EnemyArmor.Fresh);

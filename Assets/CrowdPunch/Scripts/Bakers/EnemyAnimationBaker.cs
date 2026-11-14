@@ -35,6 +35,14 @@ namespace CrowdPunch.Bakers
             string currentHash = UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.runtimeAnimatorController)).ToString()
                 + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(renderer.sharedMesh))
                 + UnityEditor.AssetDatabase.GetAssetDependencyHash(UnityEditor.AssetDatabase.GetAssetPath(animator.avatar));
+            if (authoring.Profile == EnemyAnimationProfile.AlienSpike)
+            {
+                var spike = GetComponentInParent<AlienSpikeAuthoring>();
+                if (spike == null) throw new InvalidDataException("Alien Spike animation needs an AlienSpikeAuthoring owner.");
+                var clips = spike.SampleClips();
+                foreach (var clip in clips) DependsOn(clip);
+                currentHash = AlienSpikeAuthoring.SampleHash(clips);
+            }
             if (sourceHash != currentHash)
                 throw new InvalidDataException("Enemy animation sources changed. Run Crowd Punch/Animation/Rebuild Enemy Samples.");
 #endif

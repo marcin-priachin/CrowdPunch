@@ -20,6 +20,7 @@ namespace CrowdPunch.Systems.Presentation
             state.Dependency = new EnemyPosePlaybackJob
             {
                 Dragons = SystemAPI.GetComponentLookup<DragonFlameState>(true),
+                AlienSpikes = SystemAPI.GetComponentLookup<AlienSpikeVolley>(true),
                 Wizards = SystemAPI.GetComponentLookup<WizardCastState>(true),
                 WizardTuning = SystemAPI.GetComponentLookup<WizardSettings>(true),
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
@@ -73,6 +74,7 @@ namespace CrowdPunch.Systems.Presentation
         private partial struct EnemyPosePlaybackJob : IJobEntity
         {
             [ReadOnly] public ComponentLookup<DragonFlameState> Dragons;
+            [ReadOnly] public ComponentLookup<AlienSpikeVolley> AlienSpikes;
             [ReadOnly] public ComponentLookup<WizardCastState> Wizards;
             [ReadOnly] public ComponentLookup<WizardSettings> WizardTuning;
             [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
@@ -203,6 +205,11 @@ namespace CrowdPunch.Systems.Presentation
                     AnimateWizard(owner, ref playback, ref skin, ref samples, launch,
                         WizardTuning.HasComponent(owner) ? math.max(0f, WizardTuning[owner].AnimationGroundClearance)
                             * animation.WorldToAnimationHeight : 0f);
+                    return;
+                }
+                if (animation.Profile == (byte)EnemyAnimationProfile.AlienSpike)
+                {
+                    AnimateAlienSpike(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Dragon)
@@ -1316,6 +1323,55 @@ namespace CrowdPunch.Systems.Presentation
             }
 
             // DRAGON-001/006: the jaw and body consume the same cast clock, including continuous launched flame.
+            private void AnimateAlienSpike(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, in EnemyLaunchState launch)
+            {
+                var volley = AlienSpikes.HasComponent(owner) ? AlienSpikes[owner] : default;
+                int motion;
+                float progress;
+                bool loop = false;
+                if (launch.Phase == EnemyLaunchPhase.Defeated)
+                {
+                    motion = EnemyAnimationSamples.ImpactMotion;
+                    playback.ImpactPhase = playback.Landing == 0 ? 0 : math.saturate(playback.ImpactPhase
+                        + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                    playback.Landing = 1;
+                    progress = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount);
+                }
+                else if (launch.Phase == EnemyLaunchPhase.Launched)
+                {
+                    playback.Landing = 0;
+                    playback.Phase = 0;
+                    // Match the idle pose used by the collision-burst sockets.
+                    motion = 0;
+                    progress = 0;
+                }
+                else if (launch.Phase == EnemyLaunchPhase.Recovering)
+                {
+                    playback.Landing = 0;
+                    motion = 5;
+                    progress = math.saturate(1 - launch.RecoverySecondsRemaining / math.max(.01f, samples.Durations[motion]));
+                }
+                else if (volley.Phase != AlienSpikeVolleyPhase.Moving)
+                {
+                    playback.Landing = 0;
+                    motion = 2;
+                    progress = volley.AnimationPhase;
+                }
+                else
+                {
+                    playback.Landing = 0;
+                    motion = Movement[owner].Speed > .01f ? 1 : 0;
+                    loop = true;
+                    playback.Phase = math.frac(playback.Phase + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                    progress = playback.Phase;
+                }
+                float frame = progress * (loop ? samples.FrameCount : samples.FrameCount - 1);
+                int from = (int)frame;
+                ApplyDasherFrame(ref skin, ref samples, motion, from,
+                    loop ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1), math.frac(frame));
+            }
+
             private void AnimateDragon(Entity owner, ref EnemyAnimationPlayback playback,
                 ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
             {

@@ -84,8 +84,8 @@ namespace CrowdPunch.Systems.Presentation
                     if (punch.Sequence == bridge.PunchSequence)
                     {
                         if (punch.HitArmor) bridge.ReceiveGameplaySfx(GameplaySfxCue.ArmorBlock, punch.ArmorContact);
-                        if (punch.RedirectedChickenProjectile)
-                            bridge.ReceiveGameplaySfx(GameplaySfxCue.GoblinWizardProjectileRedirect, punch.ChickenProjectileContact);
+                        if (punch.RedirectedProjectile)
+                            bridge.ReceiveGameplaySfx(GameplaySfxCue.GoblinWizardProjectileRedirect, punch.ProjectileRedirectContact);
                     }
                     punch.IsResolved = false;
                     SystemAPI.SetComponent(playerEntity, punch);
@@ -211,6 +211,55 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 else if (bridge.PunchPreviewLength > 0f)
                     bridge.AddTrajectoryPreview(pose.ValueRO.Position, pose.ValueRO.Position + direction * bridge.PunchPreviewLength);
+            }
+
+            if ((bridge.UseDottedTrajectory || bridge.PunchPreviewLength > 0)
+                && !SystemAPI.QueryBuilder().WithAll<AlienSpikeProjectile>().Build().IsEmpty
+                && SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var spikePhysics))
+            {
+                var em = state.EntityManager;
+                var collector = AlienSpikeProjectileSystem.Contacts(ref state);
+                var world = spikePhysics.CollisionWorld;
+                var player = SystemAPI.GetComponent<PlayerSnapshot>(playerEntity);
+                SystemAPI.TryGetSingleton<EnemyLaunchSettings>(out var guidance);
+                volume.PositionWeight = positionWeight;
+                volume.HomingDuration = guidance.LaunchHomingDuration;
+                using var points = new NativeList<float3>(Allocator.Temp);
+                using var impacts = new NativeList<LaunchTrajectoryImpact>(Allocator.Temp);
+                using var contacts = new NativeList<LaunchTrajectoryContact>(Allocator.Temp);
+                float timestep = state.World.GetExistingSystemManaged<FixedStepSimulationSystemGroup>()?.Timestep
+                    ?? DirectLaunchTrajectoryPrediction.DefaultTimestep;
+                foreach (var (pose, shot, entity) in
+                    SystemAPI.Query<RefRO<LocalTransform>, RefRO<AlienSpikeProjectile>>().WithEntityAccess())
+                {
+                    float3 position = pose.ValueRO.Position;
+                    if (shot.ValueRO.Tuning.AimMode == AlienSpikeAimMode.DirectContactOnly
+                        || !AlienSpikeProjectilePunch.Contains(world, collector, shot.ValueRO, position, volume)) continue;
+                    var direction = AlienSpikeProjectilePunch.Direction(em, entity, position, shot.ValueRO, volume);
+                    var aim = SystemAPI.GetComponent<PunchAimAssistTarget>(entity);
+                    aim.PreviewDirection = direction;
+                    aim.PreviewTarget = aim.Target;
+                    aim.PreviewTargetGeneration = CommittedLaunchPlan.Generation(em, aim.Target);
+                    aim.PreviewRevision = bridge.TrajectoryPreviewRevision;
+                    SystemAPI.SetComponent(entity, aim);
+                    if (bridge.UseDottedTrajectory)
+                    {
+                        points.Clear();
+                        impacts.Clear();
+                        contacts.Clear();
+                        AlienSpikeTrajectoryPrediction.Trace(em, entity, world, collector, shot.ValueRO, position, volume,
+                            player, guidance, bridge.TrajectoryMaximumSeconds, bridge.TrajectorySteps, timestep, points, impacts, contacts);
+                        PublishDottedTrajectory(bridge, points, impacts, contacts);
+                    }
+                    else
+                    {
+                        var returned = shot.ValueRO;
+                        returned.PlayerOwned = returned.Redirected = 1;
+                        var span = direction * bridge.PunchPreviewLength;
+                        var contact = AlienSpikeShotContact.Sweep(world, collector, returned, player, position, span);
+                        bridge.AddTrajectoryPreview(position, position + span * contact.MaxFraction);
+                    }
+                }
             }
 
             if (bridge.UseDottedTrajectory)

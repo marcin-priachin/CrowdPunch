@@ -2100,3 +2100,54 @@ then 12 Baselines + 2 Dragons. Use a compact arena with solid cover, clear flank
 and safe spawn placement. Advance/complete through ordinary enemy clearance; no lingering
 flame gate or new ammunition replenishment policy. Layout and timing are delegated.
 Preserve prior legacy encounters, campaign content, tuning and saves (LOOP-002/006).
+
+## Alien Spike
+
+### SPIKE-001 - Grounded radial volley
+
+Status: Must
+
+Use the Alien Spike model and the Projectile Attack telegraph and release. Shots leave the
+model's individual spike tips along their horizontal outward axes at grounded target height.
+The enemy stays at ordinary grounded altitude in flight and recovery (COMBAT-018).
+The default moving timer and optional mid-range positioning both stop for a range-gated
+telegraph. A committed volley fires outside engagement range. Launch cancels it and recovery
+starts a full cooldown.
+
+### SPIKE-002 - Player-owned impact burst
+
+Status: Must
+
+A qualifying player-owned body impact emits an immediate burst from each involved Alien Spike,
+including a lethal impact and a propagated launch. Each Spike can burst once for the same
+launch sequence. A fresh punch can trigger it again independently of player distance.
+
+### SPIKE-003 - Spike contacts and attribution
+
+Status: Must
+
+Enemy violet normal shots pass through enemies and damage the player. Amber burst and redirected
+shots can also damage eligible enemies and credit their initiating player punch. Swept contact
+consumes each shot at its nearest eligible target or solid obstruction. The emitter ignores its
+own shots until redirected. Ordinary spike damage preserves movement and flight. Intact armor
+absorbs the shot without losing a stage. Boss and puzzle target eligibility remains unchanged.
+Eligible Exploders consume the shot and detonate by default. The ordinary-damage option still
+consumes the shot. Detonation uses the shot's punch sequence and ordinary explosion rules.
+
+### SPIKE-004 - Punchable shots
+
+Status: Must
+
+Either kind of flying spike can be redirected by a punch and remains dangerous to the player
+afterward. Redirection replaces chain credit with the new punch. Chicken-style aim assist and
+indication are the default, with direct punch contact as the alternative. The returned path
+still stops at its first eligible hit or solid obstruction (PLAYER-003/004, CHICKEN-003).
+
+### SPIKE-005 - Legacy Gauntlet 32
+
+Status: Must
+
+Introduce the enemy in two clear-to-advance waves. Start with one Alien Spike and a small
+Baseline crowd in open space, then use several Alien Spikes, a denser crowd and one Armored.
+Place solid cover that leaves the opening space readable. Clearing both waves completes the
+encounter. Retry resets shots, cooldowns and launch history. Keep this encounter legacy-only.

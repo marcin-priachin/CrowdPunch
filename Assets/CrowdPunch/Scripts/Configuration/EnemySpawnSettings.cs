@@ -18,7 +18,8 @@ namespace CrowdPunch.Configuration
         Trail = 7,
         Ninja = 8,
         Dragon = 9,
-        LinkedPair = 10
+        LinkedPair = 10,
+        AlienSpike = 11
     }
 
     [Serializable]

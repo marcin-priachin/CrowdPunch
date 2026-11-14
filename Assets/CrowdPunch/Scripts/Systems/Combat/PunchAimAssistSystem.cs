@@ -71,6 +71,22 @@ namespace CrowdPunch.Systems.Combat
                     UpdateAim(em, collision, visibility, source, pose.ValueRO.Position, bridge,
                         ref snapshot, tuning, now, speed, ref aim.ValueRW);
                 }
+                if (!SystemAPI.QueryBuilder().WithAll<AlienSpikeProjectile>().Build().IsEmpty)
+                {
+                    var contacts = AlienSpikeProjectileSystem.Contacts(ref state);
+                    foreach (var (pose, projectile, aim, source) in
+                        SystemAPI.Query<RefRO<LocalTransform>, RefRO<AlienSpikeProjectile>, RefRW<PunchAimAssistTarget>>().WithEntityAccess())
+                    {
+                        if (!available || projectile.ValueRO.Tuning.AimMode == AlienSpikeAimMode.DirectContactOnly
+                            || !AlienSpikeProjectilePunch.Contains(collision, contacts, projectile.ValueRO, pose.ValueRO.Position, volume))
+                        {
+                            aim.ValueRW = default;
+                            continue;
+                        }
+                        UpdateAim(em, collision, visibility, source, pose.ValueRO.Position, bridge,
+                            ref snapshot, tuning, now, projectile.ValueRO.Tuning.Speed, ref aim.ValueRW);
+                    }
+                }
             }
             finally { snapshot.Dispose(); }
         }

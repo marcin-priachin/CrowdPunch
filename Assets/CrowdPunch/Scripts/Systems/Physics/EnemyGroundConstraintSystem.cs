@@ -25,10 +25,10 @@ namespace CrowdPunch.Systems.Physics
         {
             CollisionWorld world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
             var hits = new NativeList<RaycastHit>(Allocator.Temp);
-            foreach (var (ground, transform, velocity, collider) in
+            foreach (var (ground, transform, velocity, collider, entity) in
                      SystemAPI.Query<RefRW<EnemyGroundConstraint>, RefRW<LocalTransform>,
                          RefRW<PhysicsVelocity>, RefRO<PhysicsCollider>>()
-                         .WithAll<Enemy>().WithNone<RespawnRequest>())
+                         .WithAll<Enemy>().WithNone<RespawnRequest>().WithEntityAccess())
             {
                 if (ground.ValueRO.HasGround == 0 && collider.ValueRO.IsValid)
                 {
@@ -67,6 +67,7 @@ namespace CrowdPunch.Systems.Physics
                         }
                     }
                 }
+                if (SystemAPI.HasComponent<AlienSpikeTuning>(entity)) ground.ValueRW.SnapRequested = 1;
                 EnemyGroundProjection.Apply(ref ground.ValueRW, ref transform.ValueRW, ref velocity.ValueRW);
             }
             hits.Dispose();

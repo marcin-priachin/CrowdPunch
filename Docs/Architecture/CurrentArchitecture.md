@@ -1,5 +1,24 @@
 # Crowd Punch â€” Current Architecture
 
+## Alien Spike (SPIKE-001..005)
+
+`AlienSpikeVolleySystem` writes the normal volley phase and navigation intent before movement.
+Presentation reads that phase to sample the authored attack. The prefab stores twelve socket
+positions and outward directions sampled from the skinned mesh in idle and at 40% of Projectile
+Attack. The grounded projection preserves the body's horizontal solver motion (COMBAT-018).
+
+`EnemyLaunchCollisionSystem` records qualifying player-owned contacts before it propagates the
+launch or queues damage. Each Spike keeps its own history, keyed by the initiating punch across
+propagated bodies. For a player-owned launch without a punch sequence, the key is the source
+entity, lifetime and launch sequence. The post-physics emission system drains pending bursts even
+when the impact defeats the emitter. A shot carries its emitter, wave and scoring provenance.
+
+Spike shots sweep a sphere through Unity Physics and compare its nearest eligible contact to the
+player snapshot. The same sweep ends the dotted return forecast at its first contact. Ordinary
+spike damage uses the shared damage resolver. Exploders use the ordinary detonation request with
+the spike's punch sequence. The projectile bridge publishes violet or amber flight visuals.
+Wave transitions and retry invalidate previous shots, and retry clears each Spike's burst history.
+
 ## Gameplay SFX (VISION-005, COMBAT-003, ENEMY-003, OQ-019)
 
 `GameBootstrap` binds `GameplaySfx` to the scene's player bridge. The resource catalog assigns
