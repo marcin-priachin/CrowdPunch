@@ -253,6 +253,22 @@ namespace CrowdPunch.Tests
             Assert.That(playerHits, Is.Zero);
         }
 
+        [TestCase("EnemyMushroomShooter", EnemyAnimationProfile.MushroomShooter)]
+        [TestCase("EnemyAlienSpike", EnemyAnimationProfile.AlienSpike)]
+        public void EnemyPrefabUsesItsOwnAnimationProfile(string name, EnemyAnimationProfile expected)
+        {
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+                $"Assets/CrowdPunch/Prefabs/{name}.prefab");
+            Assert.That(prefab, Is.Not.Null);
+            var animators = prefab.GetComponentsInChildren<CrowdPunch.Authoring.EnemyAnimationAuthoring>(true);
+            Assert.That(animators, Is.Not.Empty);
+            foreach (var animation in animators)
+            {
+                Assert.That(animation.Profile, Is.EqualTo(expected));
+                Assert.That(animation.Samples, Is.Not.Null);
+            }
+        }
+
         private Entity Shooter(float3 position = default)
         {
             var entity = Body(position, true);
