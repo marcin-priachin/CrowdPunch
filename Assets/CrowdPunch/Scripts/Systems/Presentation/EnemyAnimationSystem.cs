@@ -233,9 +233,11 @@ namespace CrowdPunch.Systems.Presentation
                     return;
                 }
                 playback.WasRecovering = 0;
-                if (animation.Profile == (byte)EnemyAnimationProfile.Ranged)
+                if (animation.Profile == (byte)EnemyAnimationProfile.Ranged
+                    || animation.Profile == (byte)EnemyAnimationProfile.MushroomShooter)
                 {
-                    AnimateRanged(owner, ref playback, ref skin, ref samples, launch);
+                    AnimateRanged(owner, ref playback, ref skin, ref samples, launch,
+                        animation.Profile == (byte)EnemyAnimationProfile.MushroomShooter);
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Armored)
@@ -859,7 +861,7 @@ namespace CrowdPunch.Systems.Presentation
             }
 
             private void AnimateRanged(Entity owner, ref EnemyAnimationPlayback playback,
-                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch, bool mushroom)
             {
                 const int attackMotion = 2;
                 if (launch.Phase == EnemyLaunchPhase.Launched)
@@ -869,7 +871,6 @@ namespace CrowdPunch.Systems.Presentation
                     return;
                 }
 
-                playback.WasLaunched = 0;
                 if (launch.Phase == EnemyLaunchPhase.Defeated)
                 {
                     playback.WasAttacking = 0;
@@ -885,14 +886,30 @@ namespace CrowdPunch.Systems.Presentation
                     }
                     float deathFrame = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount) * (samples.FrameCount - 1);
                     int from = (int)deathFrame;
-                    ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
-                        math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
+                    float deathSeconds = playback.ImpactPhase * samples.Durations[EnemyAnimationSamples.ImpactMotion];
+                    playback.DefeatFlightWeight = mushroom && playback.WasLaunched != 0
+                        ? 1f - math.smoothstep(0f, .22f, deathSeconds) : 0f;
+                    if (playback.DefeatFlightWeight > 0f)
+                        BlendFlightIntoDefeat(ref skin, ref samples, playback, deathFrame);
+                    else
+                    {
+                        playback.WasLaunched = 0;
+                        ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
+                            math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
+                    }
                     return;
                 }
 
+                playback.WasLaunched = 0;
+                playback.DefeatFlightWeight = 0f;
                 playback.Landing = 0;
                 if (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)
                     return;
+                if (mushroom)
+                {
+                    AnimateMushroom(owner, ref playback, ref skin, ref samples, launch);
+                    return;
+                }
                 bool attacking = RangedAttacks.HasComponent(owner)
                     && RangedAttacks[owner].Phase == RangedAttackPhase.WindUp;
                 if (attacking)
@@ -915,6 +932,98 @@ namespace CrowdPunch.Systems.Presentation
                 float frame = playback.Phase * samples.FrameCount;
                 int a = (int)frame;
                 ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
+            }
+
+            private static void BlendFlightIntoDefeat(ref DynamicBuffer<SkinMatrix> skin,
+                ref EnemyAnimationSamples samples, in EnemyAnimationPlayback playback, float deathFrame)
+            {
+                float flightFrame = playback.FlightPhase * samples.FrameCount;
+                int flightFrom = (int)flightFrame;
+                int flightTo = (flightFrom + 1) % samples.FrameCount;
+                int deathFrom = (int)deathFrame;
+                int deathTo = math.min(deathFrom + 1, samples.FrameCount - 1);
+                var rotation = new float3x3(quaternion.RotateX(playback.FlightPitch));
+                for (int bone = 0; bone < skin.Length; bone++)
+                {
+                    var flight = Sample(ref samples, EnemyAnimationSamples.FlyingMotion,
+                        flightFrom, flightTo, bone, math.frac(flightFrame));
+                    flight = RotatePose(flight, rotation, float3.zero);
+                    var death = Sample(ref samples, EnemyAnimationSamples.ImpactMotion,
+                        deathFrom, deathTo, bone, math.frac(deathFrame));
+                    skin[bone] = new SkinMatrix { Value = playback.DefeatFlightWeight >= 1f
+                        ? flight : BlendPose(flight, death, 1f - playback.DefeatFlightWeight, true) };
+                }
+            }
+
+            private void AnimateMushroom(Entity owner, ref EnemyAnimationPlayback playback,
+                ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
+            {
+                var attack = RangedAttacks[owner];
+                var tuning = RangedTuning[owner];
+                bool released = attack.ProjectilesSpawned != playback.ProjectileSequence;
+                playback.ProjectileSequence = attack.ProjectilesSpawned;
+                float health = Health[owner].Current;
+                bool hit = playback.HealthInitialized != 0 && health < playback.PreviousHealth;
+                playback.HealthInitialized = 1;
+                playback.PreviousHealth = health;
+                float progress = 0f;
+                int motion;
+                if (launch.Phase == EnemyLaunchPhase.Recovering)
+                {
+                    playback.WasAttacking = 0;
+                    if (playback.WasRecovering == 0)
+                        playback.ImpactDuration = math.max(.01f, launch.RecoverySecondsRemaining);
+                    playback.WasRecovering = 1;
+                    motion = 3;
+                    progress = math.saturate(1f - launch.RecoverySecondsRemaining / playback.ImpactDuration);
+                }
+                else
+                {
+                    playback.WasRecovering = 0;
+                    if (hit) { playback.HitActive = 1; playback.HitPhase = 0f; }
+                    if (released)
+                    {
+                        playback.AttackPhase = tuning.ProjectileLaunchProgress;
+                        playback.WasAttacking = 1;
+                    }
+                    else if (playback.WasAttacking != 0)
+                    {
+                        playback.AttackPhase += DeltaTime / math.max(.01f, samples.Durations[2]);
+                        if (playback.AttackPhase >= 1f) playback.WasAttacking = 0;
+                    }
+                    if (attack.Phase == RangedAttackPhase.WindUp)
+                    {
+                        motion = 2;
+                        progress = tuning.ProjectileLaunchProgress * math.saturate(
+                            1f - attack.SecondsRemaining / math.max(.01f, tuning.WindUpDuration));
+                        playback.WasAttacking = 0;
+                        playback.HitActive = 0;
+                    }
+                    else if (playback.WasAttacking != 0)
+                    {
+                        motion = 2;
+                        progress = playback.AttackPhase;
+                        playback.HitActive = 0;
+                    }
+                    else if (playback.HitActive != 0)
+                    {
+                        motion = 3;
+                        progress = playback.HitPhase;
+                        playback.HitPhase += DeltaTime / math.max(.01f, samples.Durations[3]);
+                        if (playback.HitPhase >= 1f) playback.HitActive = 0;
+                    }
+                    else
+                    {
+                        motion = Movement[owner].Speed > .01f ? 1 : 0;
+                        playback.Phase = math.frac(playback.Phase + DeltaTime / math.max(.01f, samples.Durations[motion]));
+                        progress = playback.Phase;
+                    }
+                }
+                bool loop = motion < 2;
+                float frame = progress * (loop ? samples.FrameCount : samples.FrameCount - 1);
+                int from = (int)frame;
+                int next = loop ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1);
+                ApplyFrame(ref skin, ref samples, motion, from, next, math.frac(frame));
             }
 
             private void AnimateElite(Entity owner, ref EnemyAnimationPlayback playback,
@@ -1496,6 +1605,7 @@ namespace CrowdPunch.Systems.Presentation
                 playback.WasLaunched = 1;
                 playback.LaunchSequence = launch.LaunchSequence;
                 playback.Landing = 0;
+                playback.DefeatFlightWeight = 0f;
                 float pitch = sideways ? -math.PI * .5f : 0;
                 if (Velocities.HasComponent(owner))
                 {
@@ -1503,6 +1613,7 @@ namespace CrowdPunch.Systems.Presentation
                     if (math.lengthsq(velocity) > .01f)
                         pitch -= math.clamp(math.atan2(velocity.y, math.length(velocity.xz)), -.5f, .5f);
                 }
+                playback.FlightPitch = pitch;
                 float frame = playback.FlightPhase * samples.FrameCount;
                 int from = (int)frame;
                 ApplyRotatedFrame(ref skin, ref samples, motion, from, (from + 1) % samples.FrameCount,
@@ -1558,10 +1669,13 @@ namespace CrowdPunch.Systems.Presentation
                 for (int bone = 0; bone < skin.Length; bone++)
                 {
                     float3x4 pose = Sample(ref samples, motion, from, to, bone, blend);
-                    skin[bone] = new SkinMatrix { Value = new float3x4(math.mul(matrix, pose.c0),
-                        math.mul(matrix, pose.c1), math.mul(matrix, pose.c2), pivot + math.mul(matrix, pose.c3 - pivot)) };
+                    skin[bone] = new SkinMatrix { Value = RotatePose(pose, matrix, pivot) };
                 }
             }
+
+            private static float3x4 RotatePose(float3x4 pose, float3x3 rotation, float3 pivot)
+                => new float3x4(math.mul(rotation, pose.c0), math.mul(rotation, pose.c1),
+                    math.mul(rotation, pose.c2), pivot + math.mul(rotation, pose.c3 - pivot));
 
             private static float3x4 Sample(ref EnemyAnimationSamples data, int motion, int a, int b, int bone, float t)
             {

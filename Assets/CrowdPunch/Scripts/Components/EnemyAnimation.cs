@@ -20,7 +20,8 @@ namespace CrowdPunch.Components
         Trail,
         Slime,
         SlimeSegment,
-        AlienSpike
+        AlienSpike,
+        MushroomShooter
     }
 
     public struct EnemyAnimation : IComponentData
@@ -52,6 +53,7 @@ namespace CrowdPunch.Components
         public uint LaunchSequence;
         public float FlightPhase;
         public float FlightPitch;
+        public float DefeatFlightWeight;
         public byte Landing;
         public float ImpactPhase;
         public float ImpactDuration;

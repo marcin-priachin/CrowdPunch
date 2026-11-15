@@ -165,8 +165,10 @@ namespace CrowdPunch.Bakers
                 }
             }
             bool groundDefeatOnly = authoring.Profile == EnemyAnimationProfile.AlienSpike;
-            if ((authoring.Profile == EnemyAnimationProfile.Trail || groundDefeatOnly) && owner != null)
+            bool mushroom = authoring.Profile == EnemyAnimationProfile.MushroomShooter;
+            if ((authoring.Profile == EnemyAnimationProfile.Trail || groundDefeatOnly || mushroom) && owner != null)
             {
+                DependsOn(animator);
                 using var groundingBuilder = new BlobBuilder(Allocator.Temp);
                 ref var grounding = ref groundingBuilder.ConstructRoot<EnemyGroundingMesh>();
                 var vertices = renderer.sharedMesh.vertices;
@@ -190,6 +192,7 @@ namespace CrowdPunch.Bakers
                     Owner = GetEntity(owner, TransformUsageFlags.Dynamic),
                     Clearance = groundDefeatOnly ? AlienSpikeAuthoring.DefeatGroundClearance : math.max(0, authoring.GroundClearance),
                     DefeatOnly = groundDefeatOnly,
+                    LaunchedOnly = mushroom,
                     Mesh = groundingMesh
                 });
             }

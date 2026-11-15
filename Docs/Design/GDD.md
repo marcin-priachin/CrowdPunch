@@ -2154,3 +2154,48 @@ Introduce the enemy in two clear-to-advance waves. Start with one Alien Spike an
 Baseline crowd in open space, then use several Alien Spikes, a denser crowd and one Armored.
 Place solid cover that leaves the opening space readable. Clearing both waves completes the
 encounter. Retry resets shots, cooldowns and launch history. Keep this encounter legacy-only.
+## Mushroom Shooter
+
+### MUSHROOM-001 - Warning And Release
+
+Status: Must
+
+Maintain a preferred range and seek another angle when solid cover blocks the shot.
+Begin only from a clear angle. Plant the Shooter and track the player for 0.30 s by
+default, even if cover intervenes. Lock the origin and direction for a separately
+tunable 0.45 s by default, with a distinct lock cue. Truncate the floor warning at
+the first solid or maximum range. Fire once at the authored release pose even if
+the line is now obstructed. The warning does not deal damage. A launch before
+release cancels the warning and starts the normal cooldown after recovery.
+
+### MUSHROOM-002 - Straight Shot And Return
+
+Status: Must
+
+Use the same straight, horizontal path, speed (default 32 m/s), and height on both
+legs. The incoming shot passes ordinary enemies harmlessly. A valid player punch
+prioritizes a redirectable shot over enemies in the same hit area. Redirect at most
+once, using horizontal punch aim and resetting the full range budget at contact.
+Either leg ends on the first solid, player contact, or maximum range. Use normal
+player damage and invulnerability (10 damage, 0.5 s by default), with safety during
+the redirect contact only.
+
+### MUSHROOM-003 - Damage And Readability
+
+Status: Must
+
+The returned shot pierces eligible enemies, including the Shooter, and deals
+player-owned damage (default 5) once per enemy per shot without launching them.
+Preserve armor, boss, and objective gates that require a launched-body hit. Use
+the shared projectile ownership colors and the authored No Root Mushroom Shooter
+clips and textures in Full Cel (VISION-005/006).
+
+### MUSHROOM-004 - Legacy Gauntlet_33
+
+Status: Must
+
+Add one legacy Editor encounter accessible through Level Play, separate from
+campaign builds. Use solid cover and two sequential waves: 1 Shooter and 6
+Baselines, then 2 Shooters and 12 Baselines. Advance and complete on ordinary
+enemy clearance (LOOP-006). Layout, spacing, cooldown, range, width, and height
+are initial playtest tuning.

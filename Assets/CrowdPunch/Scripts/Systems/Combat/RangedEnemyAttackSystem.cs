@@ -45,6 +45,7 @@ namespace CrowdPunch.Systems.Combat
                      SystemAPI.Query<RefRW<RangedAttackState>, RefRO<RangedEnemySettings>, RefRO<EnemyLaunchState>,
                              RefRO<LocalTransform>, EnabledRefRO<RespawnRequest>>()
                          .WithAll<Enemy>()
+                         .WithNone<MushroomShooterSettings>()
                          .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
                          .WithEntityAccess())
             {

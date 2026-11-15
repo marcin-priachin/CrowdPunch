@@ -4,7 +4,7 @@ using CrowdPunch.Components;
 
 namespace CrowdPunch.Mono.Player
 {
-    public enum ProjectileVisualKind : byte { Ranged, Boss, Snake, RangedCharge, AlienSpike }
+    public enum ProjectileVisualKind : byte { Ranged, Boss, Snake, RangedCharge, AlienSpike, MushroomEnemy, MushroomPlayer, MushroomLane }
     public struct ProjectileVisualSample
     {
         public ulong Key;
@@ -13,6 +13,8 @@ namespace CrowdPunch.Mono.Player
         public Vector3 Position, Velocity;
         public float Radius;
         public float ChargeProgress;
+        public float LaneLength;
+        public bool LaneLocked;
         public bool Redirected;
         public BlobAssetReference<AlienSpikeColorGradient> SpikeColorGradient;
     }

@@ -14,6 +14,14 @@ namespace CrowdPunch.Bakers
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
             AddComponent<Enemy>(entity);
+            if (authoring.ShotSource != null)
+            {
+                DependsOn(authoring.ShotSource);
+                AddComponent(entity, new MushroomShotSource
+                {
+                    LocalPosition = authoring.transform.InverseTransformPoint(authoring.ShotSource.position)
+                });
+            }
             AddComponent(entity, new EnemyLifetime { Generation = 1 });
             AddComponent<EnemyImpactFeedback>(entity);
             AddComponent<EnemyGroundConstraint>(entity);
