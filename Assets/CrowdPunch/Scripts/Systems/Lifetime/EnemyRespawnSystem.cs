@@ -136,6 +136,12 @@ namespace CrowdPunch.Systems.Lifetime
                         });
                     }
                     SystemAPI.GetBuffer<CollisionDamageHistory>(enemy).Clear();
+                    if (SystemAPI.HasBuffer<SporellaImpactHistory>(enemy))
+                    {
+                        SystemAPI.GetBuffer<SporellaImpactHistory>(enemy).Clear();
+                        SystemAPI.GetBuffer<SporellaImpactContact>(enemy).Clear();
+                        SystemAPI.SetComponent(enemy, default(SporellaNormalBurst));
+                    }
                     if (SystemAPI.HasBuffer<AlienSpikeBurstHistory>(enemy))
                     {
                         SystemAPI.GetBuffer<AlienSpikeBurstHistory>(enemy).Clear();

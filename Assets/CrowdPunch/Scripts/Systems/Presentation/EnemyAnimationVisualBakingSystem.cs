@@ -42,8 +42,12 @@ namespace CrowdPunch.Systems.Presentation
                 if (!chicken && !rolling && !dino && !gatekeeper) commands.AddComponent(animation.ValueRO.Owner, new EnemyLandingAnimation
                 {
                     Duration = animation.ValueRO.Samples.Value.Durations[EnemyAnimationSamples.ImpactMotion],
-                    OrdinaryDefeatDuration = animation.ValueRO.Profile == (byte)EnemyAnimationProfile.Explosive
-                        ? animation.ValueRO.Samples.Value.Durations[8] : 0
+                    OrdinaryDefeatDuration = (EnemyAnimationProfile)animation.ValueRO.Profile switch
+                    {
+                        EnemyAnimationProfile.Explosive => animation.ValueRO.Samples.Value.Durations[8],
+                        EnemyAnimationProfile.Sporella => animation.ValueRO.Samples.Value.Durations[EnemyAnimationSamples.ImpactMotion],
+                        _ => 0f
+                    }
                 });
                 foreach (var child in additional)
                 {

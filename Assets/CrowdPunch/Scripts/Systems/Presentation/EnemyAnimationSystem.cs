@@ -233,11 +233,10 @@ namespace CrowdPunch.Systems.Presentation
                     return;
                 }
                 playback.WasRecovering = 0;
-                if (animation.Profile == (byte)EnemyAnimationProfile.Ranged
-                    || animation.Profile == (byte)EnemyAnimationProfile.MushroomShooter)
+                bool burstShooter = animation.Profile is (byte)EnemyAnimationProfile.MushroomShooter or (byte)EnemyAnimationProfile.Sporella;
+                if (animation.Profile == (byte)EnemyAnimationProfile.Ranged || burstShooter)
                 {
-                    AnimateRanged(owner, ref playback, ref skin, ref samples, launch,
-                        animation.Profile == (byte)EnemyAnimationProfile.MushroomShooter);
+                    AnimateRanged(owner, ref playback, ref skin, ref samples, launch, burstShooter);
                     return;
                 }
                 if (animation.Profile == (byte)EnemyAnimationProfile.Armored)
@@ -907,7 +906,7 @@ namespace CrowdPunch.Systems.Presentation
                     return;
                 if (mushroom)
                 {
-                    AnimateMushroom(owner, ref playback, ref skin, ref samples, launch);
+                    AnimateBurstShooter(owner, ref playback, ref skin, ref samples, launch);
                     return;
                 }
                 bool attacking = RangedAttacks.HasComponent(owner)
@@ -955,7 +954,7 @@ namespace CrowdPunch.Systems.Presentation
                 }
             }
 
-            private void AnimateMushroom(Entity owner, ref EnemyAnimationPlayback playback,
+            private void AnimateBurstShooter(Entity owner, ref EnemyAnimationPlayback playback,
                 ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch)
             {
                 var attack = RangedAttacks[owner];

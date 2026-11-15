@@ -83,6 +83,12 @@ namespace CrowdPunch.Systems.Presentation
                     Send(bridge, entity, ProjectileVisualKind.MushroomEnemy, returned ? 1u : 0u,
                         pose.ValueRO.Position, p.Direction * p.Speed, p.Radius, returned);
                 }
+                foreach (var (shot, pose, entity) in SystemAPI.Query<RefRO<SporellaProjectile>, RefRO<LocalTransform>>().WithEntityAccess())
+                {
+                    var p = shot.ValueRO;
+                    Send(bridge, entity, ProjectileVisualKind.SporellaEnemy, (uint)p.Kind, pose.ValueRO.Position,
+                        p.Direction * p.Speed, p.Radius, p.Kind != SporellaShotKind.EnemyShot);
+                }
                 foreach (var (segment, launch, pose, velocity, entity) in SystemAPI.Query<RefRO<SnakeSegment>, RefRO<EnemyLaunchState>,
                     RefRO<LocalTransform>, RefRO<PhysicsVelocity>>().WithNone<RespawnRequest>().WithEntityAccess())
                 {

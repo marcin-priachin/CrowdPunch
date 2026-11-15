@@ -49,6 +49,11 @@ namespace CrowdPunch.Systems.Initialization
             // Fired shots are independent of their shooter and are not owned by a SubScene.
             EntityQuery oldProjectiles = SystemAPI.QueryBuilder().WithAll<RangedProjectile>().Build();
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<MushroomProjectile>().Build());
+            EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<SporellaProjectile>().Build());
+            EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<SporellaImpactBurst>().Build());
+            foreach (var contacts in SystemAPI.Query<DynamicBuffer<SporellaImpactContact>>()) contacts.Clear();
+            foreach (var history in SystemAPI.Query<DynamicBuffer<SporellaImpactHistory>>()) history.Clear();
+            foreach (var burst in SystemAPI.Query<RefRW<SporellaNormalBurst>>()) burst.ValueRW = default;
             using (NativeArray<Entity> projectileRoots = oldProjectiles.ToEntityArray(Allocator.Temp))
             {
                 foreach (Entity projectileRoot in projectileRoots)

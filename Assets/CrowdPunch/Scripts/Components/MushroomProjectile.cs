@@ -13,11 +13,4 @@ namespace CrowdPunch.Components
         public EnemyLaunchOwner Owner;
         public bool ExitingRedirectContact;
     }
-
-    [InternalBufferCapacity(4)]
-    public struct MushroomProjectileHit : IBufferElementData
-    {
-        public Entity Enemy;
-        public uint Lifetime;
-    }
 }

@@ -116,6 +116,8 @@ namespace CrowdPunch.Systems.Combat
             if (!flying) {
                 if (normal && t.Response == LinkedPairResponse.DamageAndLaunch) {
                     EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.EnemyCollision, source.LaunchDamage, source.Owner, source.OriginatingPunchSequence);
+                    launch.FallbackChain = EnemyLaunchTransition.GetFallbackChain(leader,
+                        em.GetComponentData<EnemyLifetime>(leader).Generation, source);
                     launch.FeedbackChainDepth = math.min(64, source.FeedbackChainDepth + 1);
                     em.SetComponentData(target, launch);
                     em.SetComponentData(target, new PhysicsVelocity { Linear = direction * t.LaunchSpeed });

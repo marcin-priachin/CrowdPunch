@@ -36,6 +36,9 @@ namespace CrowdPunch.Systems.Combat
                 .Build();
             EnemyCollisionJob job = new EnemyCollisionJob
             {
+                SporellaTunings = SystemAPI.GetComponentLookup<SporellaSettings>(true),
+                SporellaContacts = SystemAPI.GetBufferLookup<SporellaImpactContact>(),
+                SporellaHistories = SystemAPI.GetBufferLookup<SporellaImpactHistory>(),
                 SpikeBursts = SystemAPI.GetBufferLookup<AlienSpikeBurst>(),
                 SpikeHistory = SystemAPI.GetBufferLookup<AlienSpikeBurstHistory>(),
                 Lifetimes = SystemAPI.GetComponentLookup<EnemyLifetime>(true),
@@ -86,6 +89,9 @@ namespace CrowdPunch.Systems.Combat
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
             public ComponentLookup<CommittedLaunchFlight> Commitments;
+            [ReadOnly] public ComponentLookup<SporellaSettings> SporellaTunings;
+            public BufferLookup<SporellaImpactContact> SporellaContacts;
+            public BufferLookup<SporellaImpactHistory> SporellaHistories;
             public BufferLookup<AlienSpikeBurst> SpikeBursts;
             public BufferLookup<AlienSpikeBurstHistory> SpikeHistory;
             [ReadOnly] public ComponentLookup<EnemyLifetime> Lifetimes;
@@ -186,6 +192,17 @@ namespace CrowdPunch.Systems.Combat
 
                 EnemyLaunchPhase phaseA = LaunchStateLookup[entityA].Phase;
                 EnemyLaunchPhase phaseB = LaunchStateLookup[entityB].Phase;
+
+                if ((phaseA == EnemyLaunchPhase.Launched || phaseB == EnemyLaunchPhase.Launched)
+                    && phaseA != EnemyLaunchPhase.Defeated && phaseB != EnemyLaunchPhase.Defeated
+                    && (SporellaTunings.HasComponent(entityA) || SporellaTunings.HasComponent(entityB)))
+                {
+                    float impulse = collisionEvent.CalculateDetails(ref World).EstimatedImpulse;
+                    if (phaseA == EnemyLaunchPhase.Launched)
+                        RecordSporellaImpact(entityA, entityB, -collisionEvent.Normal, impulse);
+                    if (phaseB == EnemyLaunchPhase.Launched)
+                        RecordSporellaImpact(entityB, entityA, collisionEvent.Normal, impulse);
+                }
 
                 if (phaseA == EnemyLaunchPhase.Launched && phaseB != EnemyLaunchPhase.Launched)
                 {
@@ -334,6 +351,33 @@ namespace CrowdPunch.Systems.Combat
                 }
             }
 
+            private void RecordSporellaImpact(Entity source, Entity target, float3 towardTarget, float impulse)
+            {
+                var launch = LaunchStateLookup[source];
+                if (launch.Owner != EnemyLaunchOwner.Player) return;
+                float threshold = Armors.HasComponent(target) && Armors[target].Stages > 0
+                    ? MinimumPropagationImpulse : math.min(MinimumDamageImpulse, MinimumPropagationImpulse);
+                if (impulse < math.max(.01f, threshold) || math.abs(towardTarget.y) >= .7f) return;
+
+                uint lifetime = Lifetimes.HasComponent(source) ? Lifetimes[source].Generation : 0;
+                var fallback = EnemyLaunchTransition.GetFallbackChain(source, lifetime, launch);
+                var chain = new SporellaImpactHistory
+                {
+                    PunchSequence = launch.OriginatingPunchSequence, Source = fallback.Source,
+                    SourceLifetime = fallback.Lifetime, LaunchSequence = fallback.Sequence
+                };
+                // Use travel into the solver. The velocity after a bounce may point backwards.
+                float3 direction = MushroomShotGeometry.Horizontal(
+                    FeedbackLookup.TryGetComponent(source, out var feedback) ? feedback.IncomingVelocity : float3.zero,
+                    MushroomShotGeometry.Horizontal(towardTarget, math.forward()));
+                if (SporellaTunings.TryGetComponent(target, out var incoming))
+                    SporellaImpactRecording.TryRecord(SporellaHistories[target], SporellaContacts[target],
+                        incoming, false, chain, TransformLookup[target].Position, direction, launch.FeedbackChainDepth + 1);
+                if (SporellaTunings.TryGetComponent(source, out var outgoing))
+                    SporellaImpactRecording.TryRecord(SporellaHistories[source], SporellaContacts[source],
+                        outgoing, true, chain, TransformLookup[source].Position, direction, launch.FeedbackChainDepth + 1);
+            }
+
             private void RecordSpikeBurst(Entity spike, Entity source, in EnemyLaunchState launch, uint lifetime)
             {
                 if (!SpikeBursts.HasBuffer(spike)) return;
@@ -358,6 +402,8 @@ namespace CrowdPunch.Systems.Combat
                     EnemyLaunchCause.EnemyCollision,
                     sourceState.LaunchDamage,
                     sourceState.Owner, sourceState.OriginatingPunchSequence);
+                targetState.FallbackChain = EnemyLaunchTransition.GetFallbackChain(source,
+                    Lifetimes.HasComponent(source) ? Lifetimes[source].Generation : 0, sourceState);
                 targetState.FeedbackChainDepth = math.min(64, sourceState.FeedbackChainDepth + 1);
                 targetState.PropagatedLaunchCount++;
                 targetState.LastPropagationImpulse = estimatedImpulse;
@@ -371,6 +417,7 @@ namespace CrowdPunch.Systems.Combat
                             && LaunchStateLookup[partner].Phase != EnemyLaunchPhase.Defeated) {
                             var follower = LaunchStateLookup[partner];
                             EnemyLaunchTransition.Begin(ref follower, targetState.LastCause, targetState.LaunchDamage, targetState.Owner, targetState.OriginatingPunchSequence);
+                            follower.FallbackChain = targetState.FallbackChain;
                             follower.FeedbackChainDepth = targetState.FeedbackChainDepth; LaunchStateLookup[partner] = follower;
                             VelocityLookup[partner] = new PhysicsVelocity { Linear = VelocityLookup[target].Linear * .35f };
                             pair.Leader = target; pair.Phase = EnemyLaunchPhase.Launched;

@@ -112,7 +112,7 @@ namespace CrowdPunch.Systems.Combat
                     PlayerInvincibility = ranged.PlayerInvincibilitySeconds, EnemyDamage = tuning.EnemyDamage,
                     PlayerLayers = ranged.ProjectilePlayerLayers
                 });
-                commands.AddBuffer<MushroomProjectileHit>(projectile);
+                commands.AddBuffer<BodyProjectileHit>(projectile);
                 attack.ProjectilesSpawned++;
                 SetCooldown(entity, ranged, ref attack);
                 lane.Length = 0f; // Facing keeps the last committed direction for the release frame.

@@ -4,7 +4,7 @@ using CrowdPunch.Components;
 
 namespace CrowdPunch.Mono.Player
 {
-    public enum ProjectileVisualKind : byte { Ranged, Boss, Snake, RangedCharge, AlienSpike, MushroomEnemy, MushroomPlayer, MushroomLane }
+    public enum ProjectileVisualKind : byte { Ranged, Boss, Snake, RangedCharge, AlienSpike, MushroomEnemy, MushroomPlayer, MushroomLane, SporellaEnemy, SporellaPlayer }
     public struct ProjectileVisualSample
     {
         public ulong Key;

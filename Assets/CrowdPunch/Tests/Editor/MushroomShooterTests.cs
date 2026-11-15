@@ -215,7 +215,7 @@ namespace CrowdPunch.Tests
             Flight(.055f);
             Flight(.03f);
             Assert.That(em.GetComponentData<Health>(enemy).Current, Is.EqualTo(10f));
-            Assert.That(em.GetBuffer<MushroomProjectileHit>(shot).Length, Is.EqualTo(1));
+            Assert.That(em.GetBuffer<BodyProjectileHit>(shot).Length, Is.EqualTo(1));
             MovePlayer(new float3(0, 1, 4));
             Flight(.1f);
             Assert.That(playerHits, Is.EqualTo(1));
@@ -317,7 +317,7 @@ namespace CrowdPunch.Tests
                 Range = 45, RangeRemaining = remaining, PlayerDamage = 10, PlayerInvincibility = .5f,
                 EnemyDamage = 5, PlayerLayers = 1
             });
-            em.AddBuffer<MushroomProjectileHit>(entity);
+            em.AddBuffer<BodyProjectileHit>(entity);
             return entity;
         }
 

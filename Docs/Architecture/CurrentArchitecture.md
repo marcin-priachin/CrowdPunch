@@ -1,5 +1,39 @@
 # Crowd Punch â€” Current Architecture
 
+## Alien Sporella (SPORELLA-001..004)
+
+Sporella uses the ranged distance-band steering and attack clock. Before movement,
+`SporellaPositioningSystem` can override its destination when solid cover blocks
+all shot lanes. The attack system runs after launch collision and explosion
+resolution and before recovery and facing. Its first shot locks the muzzle,
+centerline, and distance to the sampled player position. Each pass fires straight
+shots aimed at ordered lateral offsets across the locked target plane. The burst
+stops steering and supplies fixed facing until the last shot or cancellation.
+The authored front projectile clip provides the warning and release pose.
+
+The launch collision job records qualifying Sporella contacts before propagating
+launches and applying collision damage. Its per-enemy history uses the initiating
+punch or the fallback source entity, lifetime, and launch sequence carried across
+body propagation. Impact emission centers the sweep on the launch direction and
+copies the fixed sweep and remaining shots into
+an arena-scoped entity, so the ordinary defeat and pooling lifecycle does not
+interrupt it. Sporella bakes the authored Die clip duration for ordinary
+defeats, including projectile defeats without prior launch. The clear screen
+waits for the defeat and impact burst timers. Retry removes projectile and
+burst entities, and retry or respawn clears the enemy history.
+
+Clearance and flight sweep a sphere along each shot's straight line.
+Punch detection considers eligible Sporella and Mushroom shots before enemy
+targets. A redirect changes direction at the contact point and changes
+the scoring punch and presentation ownership. Sporella shares Mushroom's
+non-launching body projectile damage gates, player hit bridge, and redirect-contact
+protection. Each kind uses its own termination rule. The presentation bridge
+publishes position, velocity, and ownership to the existing projectile pool.
+
+**Crowd Punch > Levels > Build Sporella Gauntlet 34** authors the prefab,
+settings, two waves, and Legacy Level Play entry. Campaign registration is
+independent of this encounter.
+
 ## Alien Spike (SPIKE-001..005)
 
 `AlienSpikeVolleySystem` writes the normal volley phase and navigation intent before movement.

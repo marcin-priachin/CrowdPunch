@@ -21,6 +21,7 @@ namespace CrowdPunch.Components
         public EnemyContactDamageSettings ContactDamageSettings;
         public RangedEnemySettings RangedSettings;
         public MushroomShooterSettings MushroomShooter;
+        public SporellaSettings Sporella;
         public ExplosiveEnemySettings ExplosiveSettings;
         public DasherSettings DasherSettings;
         public ElitePunchSettings ElitePunchSettings;

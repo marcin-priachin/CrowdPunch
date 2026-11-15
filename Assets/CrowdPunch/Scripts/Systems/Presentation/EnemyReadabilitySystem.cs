@@ -123,7 +123,7 @@ namespace CrowdPunch.Systems.Presentation
                 EnemyLaunchPhase phase = Launches[enemy].Phase;
                 bool preparing = kind == EnemyArchetypeKind.Baseline && Contacts.HasComponent(enemy)
                     && Contacts[enemy].IsWindingUp != 0
-                    || Ranged.HasComponent(enemy) && Ranged[enemy].Phase == RangedAttackPhase.WindUp
+                    || kind != EnemyArchetypeKind.Sporella && Ranged.HasComponent(enemy) && Ranged[enemy].Phase == RangedAttackPhase.WindUp
                     || Elites.HasComponent(enemy) && Elites[enemy].Phase == ElitePunchPhase.WindUp
                     || Ninjas.HasComponent(enemy) && Ninjas[enemy].Phase == NinjaPhase.Preparing;
                 if (phase == EnemyLaunchPhase.Recovering || phase == EnemyLaunchPhase.Defeated)

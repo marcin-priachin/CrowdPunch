@@ -22,7 +22,8 @@ namespace CrowdPunch.Components
         SlimeSegment,
         // These values are serialized in the enemy prefabs.
         AlienSpike = 15,
-        MushroomShooter = 16
+        MushroomShooter = 16,
+        Sporella = 17
     }
 
     public struct EnemyAnimation : IComponentData

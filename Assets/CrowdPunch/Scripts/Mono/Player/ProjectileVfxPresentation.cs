@@ -60,11 +60,11 @@ namespace CrowdPunch.Mono.Player
             library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
             if (library == null) return;
             root = new GameObject("Arcane projectile VFX pool").transform;
-            var prefabs = new[] { library.RangedFlight, library.BossFlight, library.SnakeFlight, library.RangedCharge, null };
+            var prefabs = new[] { library.RangedFlight, library.BossFlight, library.SnakeFlight, library.RangedCharge, null, null };
             int[] counts = { Mathf.Clamp(library.RangedCapacity, 1, 128), Mathf.Clamp(library.BossCapacity, 1, 64),
-                Mathf.Clamp(library.SnakeCapacity, 1, 64), Mathf.Clamp(library.RangedCapacity, 1, 128), 16 };
+                Mathf.Clamp(library.SnakeCapacity, 1, 64), Mathf.Clamp(library.RangedCapacity, 1, 128), 16, 32 };
             const int spikeCapacity = 96;
-            slots = new Slot[counts[0] + counts[1] + counts[2] + counts[3] + counts[4] + spikeCapacity];
+            slots = new Slot[counts[0] + counts[1] + counts[2] + counts[3] + counts[4] + counts[5] + spikeCapacity];
             mushroomLanes = new MushroomLanePresentation(root);
             mushroomCore = new Material(Resources.Load<Shader>("Shaders/MushroomProjectile"));
             tint = new MaterialPropertyBlock();
@@ -72,38 +72,18 @@ namespace CrowdPunch.Mono.Player
             for (int kind = 0; kind < counts.Length; kind++)
             for (int i = 0; i < counts[kind]; i++)
             {
-                var slot = new Slot { Kind = kind < 4 ? (ProjectileVisualKind)kind : ProjectileVisualKind.MushroomEnemy };
+                var slot = new Slot { Kind = kind switch
+                    { 4 => ProjectileVisualKind.MushroomEnemy, 5 => ProjectileVisualKind.SporellaEnemy, _ => (ProjectileVisualKind)kind } };
                 if (prefabs[kind] != null)
                 {
                     slot.Flight = Instantiate(prefabs[kind], root);
                     slot.Flight.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 }
                 bool mushroom = slot.Kind == ProjectileVisualKind.MushroomEnemy;
-                if (mushroom)
-                {
-                    var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    sphere.name = "Mushroom shot core";
-                    Destroy(sphere.GetComponent<Collider>());
-                    sphere.transform.SetParent(root, false);
-                    slot.Core = sphere.GetComponent<MeshRenderer>();
-                    slot.Core.sharedMaterial = mushroomCore;
-                    slot.Core.shadowCastingMode = ShadowCastingMode.Off;
-                    slot.Core.enabled = false;
-                }
+                if (mushroom) CreateSeedCore(slot, "Mushroom");
                 if (kind < 2 || mushroom)
-                {
-                    var go = new GameObject(mushroom ? "Mushroom shot streak" : kind == 0 ? "Arcane comet streak" : "Archmage orb streak");
-                    go.transform.SetParent(root, false);
-                    slot.Trail = go.AddComponent<TrailRenderer>();
-                    slot.Trail.sharedMaterial = kind == 0 ? library.ArcaneTrail : library.BossTrail;
-                    slot.Trail.time = mushroom ? .085f : kind == 0 ? .16f : .23f;
-                    slot.Trail.minVertexDistance = .07f;
-                    slot.Trail.textureMode = LineTextureMode.Stretch;
-                    slot.Trail.widthCurve = AnimationCurve.EaseInOut(0, 1, 1, 0);
-                    slot.Trail.shadowCastingMode = ShadowCastingMode.Off;
-                    slot.Trail.receiveShadows = false;
-                    slot.Trail.emitting = false;
-                }
+                    CreateTrail(slot, mushroom ? "Mushroom shot streak" : kind == 0 ? "Arcane comet streak" : "Archmage orb streak",
+                        kind == 0 ? library.ArcaneTrail : library.BossTrail, mushroom ? .085f : kind == 0 ? .16f : .23f);
                 slots[index++] = slot;
             }
             for (int i = 0; i < spikeCapacity; i++) slots[index++] = new Slot { Kind = ProjectileVisualKind.AlienSpike };
@@ -111,6 +91,33 @@ namespace CrowdPunch.Mono.Player
                 new ParticleBurstPool(root, library.BossImpact, library.BurstCapacity),
                 new ParticleBurstPool(root, library.SnakeSever, library.BurstCapacity) };
         }
+        private void CreateSeedCore(Slot slot, string name)
+        {
+            var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            sphere.name = name + " shot core";
+            Destroy(sphere.GetComponent<Collider>());
+            sphere.transform.SetParent(root, false);
+            slot.Core = sphere.GetComponent<MeshRenderer>();
+            slot.Core.sharedMaterial = mushroomCore;
+            slot.Core.shadowCastingMode = ShadowCastingMode.Off;
+            slot.Core.enabled = false;
+        }
+
+        private void CreateTrail(Slot slot, string name, Material material, float duration)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(root, false);
+            slot.Trail = go.AddComponent<TrailRenderer>();
+            slot.Trail.sharedMaterial = material;
+            slot.Trail.time = duration;
+            slot.Trail.minVertexDistance = .07f;
+            slot.Trail.textureMode = LineTextureMode.Stretch;
+            slot.Trail.widthCurve = AnimationCurve.EaseInOut(0, 1, 1, 0);
+            slot.Trail.shadowCastingMode = ShadowCastingMode.Off;
+            slot.Trail.receiveShadows = false;
+            slot.Trail.emitting = false;
+        }
+
         private MeshRenderer CreateSpikeRenderer()
         {
             spikeTint ??= new MaterialPropertyBlock();
@@ -188,15 +195,21 @@ namespace CrowdPunch.Mono.Player
             slot.Sequence = sample.Sequence; slot.Seen = true;
             float diameter = Mathf.Max(.15f, sample.Radius * 2);
             bool mushroom = sample.Kind == ProjectileVisualKind.MushroomEnemy;
+            bool sporella = sample.Kind == ProjectileVisualKind.SporellaEnemy;
+            if (sporella && slot.Core == null)
+            {
+                CreateSeedCore(slot, "Sporella");
+                CreateTrail(slot, "Sporella shot streak", library.BossTrail, .12f);
+            }
             Color ownership = CombatOwnershipTint.Accent(
                 sample.Redirected ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Enemy, library);
             if (slot.Core != null)
             {
                 slot.Core.transform.SetPositionAndRotation(sample.Position, Quaternion.LookRotation(
                     sample.Velocity.sqrMagnitude > .001f ? sample.Velocity : Vector3.forward));
-                slot.Core.transform.localScale = Vector3.one * diameter;
-                tint.SetColor(BaseColor, sample.Redirected ? ownership : MushroomCap);
-                tint.SetColor(HighlightColor, sample.Redirected ? Color.Lerp(ownership, Color.white, .65f) : MushroomCream);
+                slot.Core.transform.localScale = (sporella ? new Vector3(.92f, .92f, 1.3f) : Vector3.one) * diameter;
+                tint.SetColor(BaseColor, sample.Redirected || sporella ? ownership : MushroomCap);
+                tint.SetColor(HighlightColor, sample.Redirected || sporella ? Color.Lerp(ownership, Color.white, .65f) : MushroomCream);
                 slot.Core.SetPropertyBlock(tint);
                 slot.Core.enabled = true;
             }
@@ -266,7 +279,8 @@ namespace CrowdPunch.Mono.Player
         }
         private void Burst(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale)
         {
-            if (kind is ProjectileVisualKind.AlienSpike or ProjectileVisualKind.MushroomEnemy or ProjectileVisualKind.MushroomPlayer)
+            if (kind is ProjectileVisualKind.AlienSpike or ProjectileVisualKind.MushroomEnemy or ProjectileVisualKind.MushroomPlayer
+                or ProjectileVisualKind.SporellaEnemy or ProjectileVisualKind.SporellaPlayer)
                 kind = ProjectileVisualKind.Boss;
             if (isActiveAndEnabled && !FeedbackTimeController.IsSuspended && bursts != null && (int)kind < bursts.Length)
                 bursts[(int)kind].Show(position, direction, scale);

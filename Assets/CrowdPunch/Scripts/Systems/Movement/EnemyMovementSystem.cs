@@ -44,6 +44,7 @@ namespace CrowdPunch.Systems.Movement
             state.Dependency = new EnemyMovementJob
             {
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
+                SporellaBursts = SystemAPI.GetComponentLookup<SporellaNormalBurst>(true),
                 MushroomShooters = SystemAPI.GetComponentLookup<MushroomShooterSettings>(true),
                 RangedAttacks = SystemAPI.GetComponentLookup<RangedAttackState>(true),
                 Owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true),
@@ -68,6 +69,7 @@ namespace CrowdPunch.Systems.Movement
         private partial struct EnemyMovementJob : IJobEntity
         {
             [Unity.Collections.ReadOnly] public ComponentLookup<EnemyArmor> Armors;
+            [ReadOnly] public ComponentLookup<SporellaNormalBurst> SporellaBursts;
             [ReadOnly] public ComponentLookup<MushroomShooterSettings> MushroomShooters;
             [ReadOnly] public ComponentLookup<RangedAttackState> RangedAttacks;
             [Unity.Collections.ReadOnly] public ComponentLookup<EnemyWaveOwnership> Owners;
@@ -114,7 +116,8 @@ namespace CrowdPunch.Systems.Movement
                     return;
                 }
 
-                if (MushroomShooters.HasComponent(entity) && RangedAttacks[entity].Phase == RangedAttackPhase.WindUp)
+                if ((MushroomShooters.HasComponent(entity) && RangedAttacks[entity].Phase == RangedAttackPhase.WindUp)
+                    || (SporellaBursts.TryGetComponent(entity, out var burst) && burst.ShotsRemaining > 0))
                 {
                     physicsVelocity.Linear.xz = float2.zero;
                     return;

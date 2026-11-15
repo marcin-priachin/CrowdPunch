@@ -32,6 +32,12 @@ namespace CrowdPunch.Components
         Environment
     }
 
+    public struct LaunchChainOrigin
+    {
+        public Entity Source;
+        public uint Lifetime, Sequence;
+    }
+
     /// <summary>
     /// ECS-owned enemy launch lifecycle. The cause and count are retained for development inspection.
     /// </summary>
@@ -44,6 +50,7 @@ namespace CrowdPunch.Components
         public float RecoverySecondsRemaining;
         public uint LaunchSequence;
         public uint OriginatingPunchSequence;
+        public LaunchChainOrigin FallbackChain;
         public uint ContinuousFlight;
         public int FeedbackChainDepth;
         public float LaunchDamage;

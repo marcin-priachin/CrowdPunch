@@ -165,8 +165,8 @@ namespace CrowdPunch.Bakers
                 }
             }
             bool groundDefeatOnly = authoring.Profile == EnemyAnimationProfile.AlienSpike;
-            bool mushroom = authoring.Profile == EnemyAnimationProfile.MushroomShooter;
-            if ((authoring.Profile == EnemyAnimationProfile.Trail || groundDefeatOnly || mushroom) && owner != null)
+            bool burstShooter = authoring.Profile is EnemyAnimationProfile.MushroomShooter or EnemyAnimationProfile.Sporella;
+            if ((authoring.Profile == EnemyAnimationProfile.Trail || groundDefeatOnly || burstShooter) && owner != null)
             {
                 DependsOn(animator);
                 using var groundingBuilder = new BlobBuilder(Allocator.Temp);
@@ -192,7 +192,7 @@ namespace CrowdPunch.Bakers
                     Owner = GetEntity(owner, TransformUsageFlags.Dynamic),
                     Clearance = groundDefeatOnly ? AlienSpikeAuthoring.DefeatGroundClearance : math.max(0, authoring.GroundClearance),
                     DefeatOnly = groundDefeatOnly,
-                    LaunchedOnly = mushroom,
+                    LaunchedOnly = burstShooter,
                     Mesh = groundingMesh
                 });
             }

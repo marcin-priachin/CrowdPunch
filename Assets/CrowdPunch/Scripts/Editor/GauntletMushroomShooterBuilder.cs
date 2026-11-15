@@ -50,9 +50,9 @@ namespace CrowdPunch.Editor
                 arena.gameObject.AddComponent<NavigationArenaAuthoring>().settings =
                     AssetDatabase.LoadAssetAtPath<NavigationSettings>(Root + "Data/Settings/NavigationSettings.asset");
                 var coverMaterial = MaterialAsset("MushroomGauntletCover", new Color(.29f, .34f, .47f));
-                AddMushroomCover(arena.transform, coverMaterial, "West Cover", -7f, 0f, 3, 5);
-                AddMushroomCover(arena.transform, coverMaterial, "East Cover", 7f, -4f, 4, 3);
-                AddMushroomCover(arena.transform, coverMaterial, "Back Cover", 4f, 11f, 3, 3);
+                AddProjectileCover(arena.transform, coverMaterial, "West Cover", -7f, 0f, 3, 5);
+                AddProjectileCover(arena.transform, coverMaterial, "East Cover", 7f, -4f, 4, 3);
+                AddProjectileCover(arena.transform, coverMaterial, "Back Cover", 4f, 11f, 3, 3);
                 // The warning sits just above the floor. The decorative entry apron
                 // shares that height and otherwise hides the lane under the player.
                 var apron = sub.GetRootGameObjects().Select(root => root.transform.Find("Entry Apron")).FirstOrDefault(t => t != null);
@@ -104,7 +104,7 @@ namespace CrowdPunch.Editor
             wave.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void AddMushroomCover(Transform parent, Material material, string name, float x, float z, int width, int depth)
+        private static void AddProjectileCover(Transform parent, Material material, string name, float x, float z, int width, int depth)
         {
             const float height = 2.5f;
             var obstacle = new GameObject(name);

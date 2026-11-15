@@ -20,7 +20,8 @@ namespace CrowdPunch.Configuration
         Dragon = 9,
         LinkedPair = 10,
         AlienSpike = 11,
-        MushroomShooter = 12
+        MushroomShooter = 12,
+        Sporella = 13
     }
 
     [Serializable]
@@ -124,6 +125,9 @@ namespace CrowdPunch.Configuration
         [Header("Mushroom Shooter (uses ranged speed, radius, player damage, cooldown and spacing)")]
         [SerializeField] private MushroomShooterSettings mushroomShooter = MushroomShooterSettings.Default;
         public MushroomShooterSettings MushroomShooter => mushroomShooter;
+
+        [SerializeField] private SporellaSettings sporella = SporellaSettings.Default;
+        public SporellaSettings Sporella => sporella;
 
         [Header("Explosion (provisional)")]
         [SerializeField, Min(0f)] private float explosionRadius = 5f;

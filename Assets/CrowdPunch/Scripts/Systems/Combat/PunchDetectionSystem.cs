@@ -49,7 +49,7 @@ namespace CrowdPunch.Systems.Combat
             };
             punch.AimRevision = punchRequest.AimRevision;
             punch.HomingDuration = launchSettings.LaunchHomingDuration;
-            if (TryRedirectMushroom(ref state, punch))
+            if (TryRedirectBodyProjectile(ref state, punch, ref punchRequest))
             {
                 punchRequest.HitEnemy = true;
                 punchRequest.IsResolved = true;
@@ -157,7 +157,7 @@ namespace CrowdPunch.Systems.Combat
             SystemAPI.SetComponentEnabled<PunchRequest>(punchEntity, false);
         }
 
-        private bool TryRedirectMushroom(ref SystemState state, in PunchSpecification punch)
+        private bool TryRedirectBodyProjectile(ref SystemState state, in PunchSpecification punch, ref PunchRequest request)
         {
             float3 forward = MushroomShotGeometry.Horizontal(punch.Direction, float3.zero);
             if (math.lengthsq(forward) < .001f) return false;
@@ -183,6 +183,41 @@ namespace CrowdPunch.Systems.Combat
                     enemies, start, (center - start) / travel, travel, .01f, ground, out _)) continue;
                 chosen = shot;
                 distanceSq = sq;
+            }
+            Entity sporellaShot = Entity.Null;
+            float3 contact = default;
+            foreach (var (projectile, pose, shot) in SystemAPI
+                .Query<RefRO<SporellaProjectile>, RefRO<LocalTransform>>().WithEntityAccess())
+            {
+                var candidate = projectile.ValueRO;
+                float3 center = pose.ValueRO.Position;
+                float3 delta = center - punch.Origin;
+                float sq = math.lengthsq(delta);
+                Entity incumbent = sporellaShot != Entity.Null ? sporellaShot : chosen;
+                if (!candidate.CanRedirect || candidate.Kind == SporellaShotKind.PunchReturn || sq > distanceSq
+                    || sq == distanceSq && shot.Index >= incumbent.Index
+                    || !MushroomProjectilePunch.Overlaps(delta, forward, punch.Range, punch.Radius, candidate.Radius))
+                    continue;
+                float3 start = new float3(punch.Origin.x, center.y, punch.Origin.z);
+                if (hasWorld && SporellaShotGeometry.FindCover(physics.CollisionWorld,
+                    enemies, start, center, .01f, ground, out _)) continue;
+                sporellaShot = shot;
+                contact = center;
+                distanceSq = sq;
+            }
+            if (sporellaShot != Entity.Null)
+            {
+                var redirect = SystemAPI.GetComponent<SporellaProjectile>(sporellaShot);
+                redirect.Direction = forward;
+                redirect.Distance = 0f;
+                redirect.Kind = SporellaShotKind.PunchReturn;
+                redirect.PunchSequence = punch.PunchSequence;
+                redirect.ChainDepth = 1;
+                redirect.ExitingRedirectContact = true;
+                SystemAPI.SetComponent(sporellaShot, redirect);
+                request.RedirectedProjectile = true;
+                request.ProjectileRedirectContact = contact;
+                return true;
             }
             if (chosen == Entity.Null) return false;
             var returned = SystemAPI.GetComponent<MushroomProjectile>(chosen);

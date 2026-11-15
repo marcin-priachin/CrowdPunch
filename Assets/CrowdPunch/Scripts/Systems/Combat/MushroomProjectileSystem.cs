@@ -36,7 +36,7 @@ namespace CrowdPunch.Systems.Combat
             using var commands = new EntityCommandBuffer(Allocator.Temp);
             var hits = new NativeList<ColliderCastHit>(Allocator.Temp);
             foreach (var (projectile, pose, history, entity) in SystemAPI
-                .Query<RefRW<MushroomProjectile>, RefRW<LocalTransform>, DynamicBuffer<MushroomProjectileHit>>()
+                .Query<RefRW<MushroomProjectile>, RefRW<LocalTransform>, DynamicBuffer<BodyProjectileHit>>()
                 .WithEntityAccess())
             {
                 ref var shot = ref projectile.ValueRW;
@@ -75,7 +75,7 @@ namespace CrowdPunch.Systems.Combat
                     {
                         // Cover and player contact win ties. With no terminal hit, include the end of the step.
                         if (hit.Fraction > stopAt || (coverHit || playerHit) && hit.Fraction >= stopAt) break;
-                        if (!TryDamage(em, hit.Entity, entity, history, shot, now)) continue;
+                        if (!BodyProjectileDamage.TryDamage(em, hit.Entity, entity, history, shot.EnemyDamage, shot.PunchSequence, now, 1)) continue;
                         bridge?.ReceiveProjectileBurst(ProjectileVisualKind.MushroomPlayer, hit.Position,
                             hit.SurfaceNormal, .65f);
                     }
@@ -94,36 +94,6 @@ namespace CrowdPunch.Systems.Combat
             }
             commands.Playback(em);
             hits.Dispose();
-        }
-
-        internal static bool TryDamage(EntityManager em, Entity target, Entity shotEntity,
-            DynamicBuffer<MushroomProjectileHit> history, in MushroomProjectile shot, double now)
-        {
-            if (!em.HasComponent<Enemy>(target) || !em.HasComponent<EnemyTier>(target)
-                || em.GetComponentData<EnemyTier>(target).Value == EnemyCombatTier.Boss
-                || em.HasComponent<BossPart>(target) || em.HasComponent<Barricade>(target)
-                || em.HasComponent<RespawnRequest>(target) && em.IsComponentEnabled<RespawnRequest>(target)
-                || !em.HasComponent<DamageRequest>(target) || !em.HasComponent<Health>(target)
-                || em.GetComponentData<Health>(target).Current <= 0f
-                || SnakeHitRules.Protected(em, target) || SnakeHitRules.Attached(em, target)) return false;
-            if (em.HasComponent<EnemyArmor>(target))
-            {
-                var armor = em.GetComponentData<EnemyArmor>(target);
-                if (armor.Stages > 0 || now < armor.ProtectedUntil) return false;
-            }
-            uint generation = em.HasComponent<EnemyLifetime>(target) ? em.GetComponentData<EnemyLifetime>(target).Generation : 0;
-            foreach (var hit in history)
-                if (hit.Enemy == target && hit.Lifetime == generation) return false;
-            history.Add(new MushroomProjectileHit { Enemy = target, Lifetime = generation });
-            EnemyDamageResolution.ApplyPending(em, target, now);
-            var health = em.GetComponentData<Health>(target);
-            if (health.Current <= 0f) return false;
-            var damage = new DamageRequest();
-            damage.Add(shot.EnemyDamage, health.Current, shot.PunchSequence);
-            em.SetComponentData(target, damage);
-            em.SetComponentEnabled<DamageRequest>(target, true);
-            EnemyDamageResolution.ApplyPending(em, target, now, EnemyLaunchOwner.Player, shotEntity, 1);
-            return true;
         }
 
         private struct TravelOrder : IComparer<ColliderCastHit>

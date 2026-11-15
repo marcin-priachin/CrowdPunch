@@ -48,6 +48,7 @@ namespace CrowdPunch.Bakers
                     Configuration.EnemyArchetype.LinkedPair => EnemyArchetypeKind.LinkedPair,
                     Configuration.EnemyArchetype.AlienSpike => EnemyArchetypeKind.AlienSpike,
                     Configuration.EnemyArchetype.MushroomShooter => EnemyArchetypeKind.MushroomShooter,
+                    Configuration.EnemyArchetype.Sporella => EnemyArchetypeKind.Sporella,
                     Configuration.EnemyArchetype.Elite => EnemyArchetypeKind.Elite,
                     _ => EnemyArchetypeKind.Baseline
                 },
@@ -63,6 +64,7 @@ namespace CrowdPunch.Bakers
                 ContactDamageSettings = settings.ContactDamageSettings,
                 MushroomShooter = settings.Archetype == Configuration.EnemyArchetype.MushroomShooter
                     ? settings.MushroomShooter : default,
+                Sporella = settings.Archetype == Configuration.EnemyArchetype.Sporella ? settings.Sporella : default,
                 RangedSettings = new RangedEnemySettings
                 {
                     ProjectilePrefab = projectilePrefab,
@@ -75,7 +77,7 @@ namespace CrowdPunch.Bakers
                     InitialDelayVariation = settings.InitialDelayVariation,
                     WindUpDuration = settings.Archetype == Configuration.EnemyArchetype.MushroomShooter
                         ? settings.MushroomShooter.TrackingSeconds + settings.MushroomShooter.LockedSeconds
-                        : settings.WindUpDuration,
+                        : settings.Archetype == Configuration.EnemyArchetype.Sporella ? settings.Sporella.Windup : settings.WindUpDuration,
                     ProjectileLaunchProgress = settings.ProjectileLaunchProgress,
                     Cooldown = settings.Cooldown,
                     CooldownVariation = settings.CooldownVariation,

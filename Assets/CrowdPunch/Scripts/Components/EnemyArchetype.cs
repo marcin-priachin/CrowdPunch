@@ -16,7 +16,8 @@ namespace CrowdPunch.Components
         Dragon = 9,
         LinkedPair = 10,
         AlienSpike = 11,
-        MushroomShooter = 12
+        MushroomShooter = 12,
+        Sporella = 13
     }
 
     /// <summary>Explicit spawn selection used without relying on prefab or presentation names.</summary>

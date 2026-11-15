@@ -2199,3 +2199,58 @@ campaign builds. Use solid cover and two sequential waves: 1 Shooter and 6
 Baselines, then 2 Shooters and 12 Baselines. Advance and complete on ordinary
 enemy clearance (LOOP-006). Layout, spacing, cooldown, range, width, and height
 are initial playtest tuning.
+
+## Alien Sporella
+
+### SPORELLA-001 - Left-To-Right Projectile Sweep
+
+Status: Must
+
+Seek a firing angle with at least one shot in range and clear of solid cover.
+Warn with an authored windup while still able to move and track. On release,
+plant and lock facing, muzzle position, and the aim point at the player's sampled
+horizontal position. Each shot travels straight at a fixed height. Each pass
+aims from just left of the aim point to just right, then the next pass starts
+on the left. Fire on cue if cover moves in during the windup. There is no floor
+warning. The aim point stays fixed after release. A launch cancels any unfired shots in the normal burst.
+Defaults are 2 passes of 3 shots, 1.5 m to either side of the aim point, 0.18 s
+between shots, a 0.65 s windup, and a shot speed of 14 m/s.
+
+### SPORELLA-002 - Player-Owned Impact Burst
+
+Status: Must
+
+A player-owned launched body hitting Sporella can trigger a burst. The separate
+direction setting permits incoming only or incoming and outgoing (default);
+outgoing means player-owned launched Sporella hits another enemy. Use the launched
+body's travel direction as the center of the same sweep, and lock the origin on
+Sporella at contact. Count propagated
+launches. Emit at most once per Sporella per initiating player chain, using Alien
+Spike's punch sequence or source, lifetime, and launch sequence fallback. The
+first shot is immediate and the rest use the normal cadence, even on lethal hits.
+
+### SPORELLA-003 - Ownership, Contact, And Damage
+
+Status: Must
+
+Provide punch redirect only, launched-body trigger only, and both (default).
+Either kind of projectile can be redirected once if enabled. A valid punch
+prioritizes it over enemies in the same area and sends it straight in the punch
+direction. Enemy shots pass enemies harmlessly. Impact shots stop on the first
+eligible enemy they damage. Punch returns pierce eligible enemies once per shot. Player-owned projectiles credit the player without launching
+targets. Preserve armor, boss, and objective gates. All three kinds stop at solid
+cover and can hurt the player under standard damage and invulnerability rules.
+Use Mushroom Shooter's redirect-contact protection. Sweep the traveled path
+and use the authored Sporella model, textures, and clips in Full Cel with shared
+ownership cues (VISION-005/006).
+
+When a projectile defeats Sporella, play its authored Die animation before
+pooling. The final clear screen lets the animation play before pausing the game.
+
+### SPORELLA-004 - Legacy Gauntlet_34
+
+Status: Must
+
+Add a Legacy Editor Level Play encounter outside campaign builds. Use solid
+cover and two clear-to-advance waves: 1 Sporella and 6 Baselines, then 2 Sporellas
+and 12 Baselines (LOOP-006). Use ordinary enemy clearance.

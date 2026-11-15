@@ -198,7 +198,7 @@ namespace CrowdPunch.Systems.Initialization
             {
                 return;
             }
-            if (profile.Archetype == EnemyArchetypeKind.Ranged || profile.Archetype == EnemyArchetypeKind.MushroomShooter)
+            if (profile.Archetype is EnemyArchetypeKind.Ranged or EnemyArchetypeKind.MushroomShooter or EnemyArchetypeKind.Sporella)
             {
                 commandBuffer.AddComponent(enemy, profile.RangedSettings);
                 commandBuffer.AddComponent(enemy, new RangedPositioningState
@@ -209,6 +209,13 @@ namespace CrowdPunch.Systems.Initialization
                 {
                     commandBuffer.AddComponent(enemy, profile.MushroomShooter);
                     commandBuffer.AddComponent<MushroomWarningLane>(enemy);
+                }
+                else if (profile.Archetype == EnemyArchetypeKind.Sporella)
+                {
+                    commandBuffer.AddComponent(enemy, profile.Sporella);
+                    commandBuffer.AddComponent<SporellaNormalBurst>(enemy);
+                    commandBuffer.AddBuffer<SporellaImpactHistory>(enemy);
+                    commandBuffer.AddBuffer<SporellaImpactContact>(enemy);
                 }
                 else commandBuffer.AddComponent(enemy, new URPMaterialPropertyBaseColor
                 {

@@ -28,6 +28,7 @@ namespace CrowdPunch.Systems.Physics
                 Wizards = SystemAPI.GetComponentLookup<WizardSettings>(true),
                 Dragons = SystemAPI.GetComponentLookup<DragonTuning>(true),
                 Spikes = SystemAPI.GetComponentLookup<AlienSpikeVolley>(true),
+                SporellaBursts = SystemAPI.GetComponentLookup<SporellaNormalBurst>(true),
                 MushroomLanes = SystemAPI.GetComponentLookup<MushroomWarningLane>(true),
                 Defending = SystemAPI.HasSingleton<ProtectedPoint>(),
                 Movements = SystemAPI.GetComponentLookup<DesiredMovement>(true),
@@ -49,6 +50,7 @@ namespace CrowdPunch.Systems.Physics
             [ReadOnly] public ComponentLookup<WizardSettings> Wizards;
             [ReadOnly] public ComponentLookup<DragonTuning> Dragons;
             [ReadOnly] public ComponentLookup<AlienSpikeVolley> Spikes;
+            [ReadOnly] public ComponentLookup<SporellaNormalBurst> SporellaBursts;
             [ReadOnly] public ComponentLookup<MushroomWarningLane> MushroomLanes;
             public bool Defending;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movements;
@@ -99,6 +101,9 @@ namespace CrowdPunch.Systems.Physics
                 if (launch.Phase == EnemyLaunchPhase.Active && MushroomLanes.TryGetComponent(entity, out var lane)
                     && math.lengthsq(lane.Direction) > .001f)
                     toward = lane.Direction;
+                if (launch.Phase == EnemyLaunchPhase.Active && SporellaBursts.TryGetComponent(entity, out var burst)
+                    && math.lengthsq(burst.Sweep.Forward) > .001f)
+                    toward = burst.Sweep.Forward;
                 if (math.lengthsq(toward) <= 0.0001f) return;
                 // Keep the physics capsule upright; animation supplies launched visual pitch.
                 var originalRotation = transform.Rotation;

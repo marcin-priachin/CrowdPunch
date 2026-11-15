@@ -36,6 +36,14 @@ namespace CrowdPunch.Editor
             "projectileMinimumAltitude", "projectileLifetime", "projectileRadius", "projectilePlayerLayers"
         };
 
+        private static readonly string[] SporellaProperties =
+        {
+            "sporella", "preferredMinimumDistance", "preferredMaximumDistance", "engagementRange",
+            "retreatSpeed", "approachSpeed", "initialAttackDelay", "initialDelayVariation", "projectileLaunchFrame",
+            "firingAnimationLastFrame", "cooldown", "cooldownVariation", "projectileDamage",
+            "playerInvincibilitySeconds", "projectileRadius", "projectilePlayerLayers"
+        };
+
         private static readonly string[] MushroomProperties =
         {
             "mushroomShooter", "preferredMinimumDistance", "preferredMaximumDistance", "engagementRange",
@@ -89,6 +97,7 @@ namespace CrowdPunch.Editor
                     MessageType.Info);
                 DrawSection("Ranged (provisional)", RangedProperties);
                 DrawSection("Mushroom Shooter", MushroomProperties);
+                DrawSection("Alien Sporella", SporellaProperties);
                 DrawSection("Explosion (provisional)", ExplosiveProperties);
                 DrawSection("Dasher (provisional)", DasherProperties);
                 DrawEliteSettings();
@@ -105,6 +114,9 @@ namespace CrowdPunch.Editor
                         break;
                     case EnemyArchetype.Ranged:
                         DrawSection("Ranged (provisional)", RangedProperties);
+                        break;
+                    case EnemyArchetype.Sporella:
+                        DrawSection("Alien Sporella", SporellaProperties);
                         break;
                     case EnemyArchetype.MushroomShooter:
                         DrawSection("Mushroom Shooter", MushroomProperties);

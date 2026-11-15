@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using Unity.Entities;
 
 namespace CrowdPunch.Systems.Combat
 {
@@ -18,6 +19,11 @@ namespace CrowdPunch.Systems.Combat
             return tier.Value == EnemyCombatTier.Normal;
         }
 
+        public static LaunchChainOrigin GetFallbackChain(Entity source, uint lifetime, in EnemyLaunchState launch)
+            => launch.Owner != EnemyLaunchOwner.Player || launch.OriginatingPunchSequence != 0 ? default
+                : launch.FallbackChain.Source != Entity.Null ? launch.FallbackChain
+                : new LaunchChainOrigin { Source = source, Lifetime = lifetime, Sequence = launch.LaunchSequence };
+
         public static void Begin(ref EnemyLaunchState state, EnemyLaunchCause cause, float launchDamage)
         {
             EnemyLaunchOwner owner = EnemyLaunchOwnership.FromCause(cause);
@@ -35,6 +41,7 @@ namespace CrowdPunch.Systems.Combat
             state.LastCause = cause;
             state.Owner = owner;
             state.OriginatingPunchSequence = originatingPunchSequence;
+            state.FallbackChain = default;
             state.BelowUsefulMomentumSeconds = 0f;
             state.RecoverySecondsRemaining = 0f;
             state.LaunchSequence++;
