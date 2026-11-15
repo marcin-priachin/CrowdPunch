@@ -69,9 +69,7 @@ namespace CrowdPunch.Systems.Physics
 
                     if (health.ValueRO.Current <= 0f || SystemAPI.HasComponent<SnakeSegment>(enemy))
                     {
-                        launchState.ValueRW.Phase = EnemyLaunchPhase.Defeated;
-                        launchState.ValueRW.RecoverySecondsRemaining = 0f;
-                        damageState.ValueRW.IsDefeatDeferred = 0;
+                        MarkDefeated(ref launchState.ValueRW, ref damageState.ValueRW);
                         SystemAPI.SetComponentEnabled<DeathRequest>(enemy, true);
                         continue;
                     }
@@ -92,6 +90,13 @@ namespace CrowdPunch.Systems.Physics
                         SystemAPI.SetComponentEnabled<EnemySpawnAnimation>(enemy, false);
                 }
             }
+        }
+
+        internal static void MarkDefeated(ref EnemyLaunchState launch, ref EnemyDamageState damage)
+        {
+            launch.Phase = EnemyLaunchPhase.Defeated;
+            launch.RecoverySecondsRemaining = 0f;
+            damage.IsDefeatDeferred = 0;
         }
     }
 }

@@ -184,6 +184,68 @@ namespace CrowdPunch.Tests
             Assert.That(position, Is.EqualTo(new float3(2.4f, 1.45f, 3)));
         }
 
+        [TestCase(AlienSpikeAuthoring.SpawnMotion, TestName = "SpawnEmergesOnceAndStaysAboveTheFloor")]
+        [TestCase(EnemyAnimationSamples.ImpactMotion, TestName = "DefeatIsGroundedFromTheFirstFrame")]
+        public void SampledPoseGrounding(int motion)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/CrowdPunch/Prefabs/EnemyAlienSpike.prefab");
+            var instance = Object.Instantiate(prefab);
+            try
+            {
+                var animation = instance.GetComponentInChildren<EnemyAnimationAuthoring>();
+                var skin = animation.GetComponent<SkinnedMeshRenderer>();
+                var visual = skin.GetComponentInParent<Animator>().transform;
+                var capsule = instance.GetComponent<UnityEngine.CapsuleCollider>();
+                float floor = capsule.center.y - capsule.height * .5f;
+                var vertices = skin.sharedMesh.vertices;
+                var weights = skin.sharedMesh.boneWeights;
+                using var reader = new System.IO.BinaryReader(new System.IO.MemoryStream(animation.Samples.bytes));
+                reader.ReadInt32();
+                reader.ReadString();
+                int bones = reader.ReadInt32();
+                int frames = reader.ReadInt32();
+                for (int i = 0; i < bones; i++) reader.ReadString();
+                reader.BaseStream.Position += sizeof(float) * (EnemyAnimationSamples.MotionCount + motion * frames * bones * 12);
+
+                var pose = new Matrix4x4[bones];
+                bool emerged = false;
+                for (int frame = 0; frame < frames; frame++)
+                {
+                    for (int bone = 0; bone < bones; bone++)
+                    {
+                        var matrix = Matrix4x4.identity;
+                        for (int column = 0; column < 4; column++)
+                        for (int row = 0; row < 3; row++)
+                            matrix[row, column] = reader.ReadSingle();
+                        pose[bone] = instance.transform.worldToLocalMatrix * visual.localToWorldMatrix * matrix;
+                    }
+                    float lowest = float.PositiveInfinity;
+                    for (int i = 0; i < vertices.Length; i++)
+                    {
+                        var w = weights[i];
+                        var v = vertices[i];
+                        float y = pose[w.boneIndex0].MultiplyPoint3x4(v).y * w.weight0
+                            + pose[w.boneIndex1].MultiplyPoint3x4(v).y * w.weight1
+                            + pose[w.boneIndex2].MultiplyPoint3x4(v).y * w.weight2
+                            + pose[w.boneIndex3].MultiplyPoint3x4(v).y * w.weight3;
+                        lowest = Mathf.Min(lowest, y);
+                    }
+                    if (motion == EnemyAnimationSamples.ImpactMotion)
+                    {
+                        Assert.That(lowest - floor, Is.InRange(0f, .025f), $"Defeat frame {frame}");
+                    }
+                    else
+                    {
+                        if (frame == 0) Assert.That(lowest, Is.LessThan(floor));
+                        emerged |= lowest >= floor;
+                        if (emerged) Assert.That(lowest, Is.GreaterThanOrEqualTo(floor), $"Spawn frame {frame}");
+                    }
+                }
+                if (motion == AlienSpikeAuthoring.SpawnMotion) Assert.That(emerged, Is.True);
+            }
+            finally { Object.DestroyImmediate(instance); }
+        }
+
         [Test]
         public void PrefabSocketsMatchTheAuthoredReleasePose()
         {

@@ -131,6 +131,7 @@ namespace CrowdPunch.Systems.Presentation
                     int from = (int)spawnFrame;
                     if (animation.Profile == (byte)EnemyAnimationProfile.Dasher
                         || animation.Profile == (byte)EnemyAnimationProfile.Dragon
+                        || animation.Profile == (byte)EnemyAnimationProfile.AlienSpike
                         || animation.Profile == (byte)EnemyAnimationProfile.Trail
                         || animation.Profile == (byte)EnemyAnimationProfile.Slime
                         || animation.Profile == (byte)EnemyAnimationProfile.SlimeSegment

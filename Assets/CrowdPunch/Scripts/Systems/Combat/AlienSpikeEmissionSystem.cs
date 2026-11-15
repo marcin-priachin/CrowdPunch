@@ -28,7 +28,10 @@ namespace CrowdPunch.Systems.Combat
                 var t = tuning.ValueRO;
                 float floor = hasPlane ? ground.SurfaceHeight : pose.ValueRO.Position.y - .9f;
                 if (bursts.IsEmpty && volley.ValueRO.Phase != AlienSpikeVolleyPhase.Release) continue;
-                var template = new AlienSpikeProjectile { Tuning = t.Shot, Emitter = emitter, Remaining = t.Shot.Lifetime };
+                var template = new AlienSpikeProjectile
+                {
+                    Tuning = t.Shot, ColorGradient = t.ProjectileColor, Emitter = emitter, Remaining = t.Shot.Lifetime
+                };
                 if (SystemAPI.HasComponent<EnemyWaveOwnership>(emitter))
                     template.Wave = SystemAPI.GetComponent<EnemyWaveOwnership>(emitter);
 

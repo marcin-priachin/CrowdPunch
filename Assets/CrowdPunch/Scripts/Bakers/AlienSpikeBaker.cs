@@ -1,7 +1,9 @@
 using CrowdPunch.Authoring;
 using CrowdPunch.Components;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace CrowdPunch.Bakers
 {
@@ -22,6 +24,7 @@ namespace CrowdPunch.Bakers
                 EngagementRadius = math.max(.5f, settings.engagementRadius),
                 PreferredDistance = math.clamp(settings.preferredFiringDistance, .5f, math.max(.5f, settings.engagementRadius)),
                 FollowThroughSeconds = authoring.projectileAttack.length * (1 - AlienSpikeAuthoring.ReleasePhase),
+                ProjectileColor = BakeProjectileColor(settings.projectileColorGradient),
                 Shot = new AlienSpikeShotTuning
                 {
                     ExploderMode = settings.exploderMode, AimMode = settings.aimMode,
@@ -42,6 +45,26 @@ namespace CrowdPunch.Bakers
                 });
             AddBuffer<AlienSpikeBurst>(entity);
             AddBuffer<AlienSpikeBurstHistory>(entity);
+        }
+
+        private BlobAssetReference<AlienSpikeColorGradient> BakeProjectileColor(Gradient gradient)
+        {
+            const int sampleCount = 64;
+            using var builder = new BlobBuilder(Allocator.Temp);
+            using var samples = new NativeList<uint>(sampleCount, Allocator.Temp);
+            ref var ramp = ref builder.ConstructRoot<AlienSpikeColorGradient>();
+            var colors = builder.Allocate(ref ramp.Colors, sampleCount);
+            for (int i = 0; i < sampleCount; i++)
+            {
+                Color32 color = gradient?.Evaluate(i / (float)(sampleCount - 1)) ?? Color.white;
+                uint packed = (uint)color.r | ((uint)color.g << 8) | ((uint)color.b << 16) | 0xff000000u;
+                colors[i] = packed;
+                samples.Add(packed);
+            }
+            ramp.Hash = UnityEngine.Hash128.Compute(samples.AsArray());
+            var blob = builder.CreateBlobAssetReference<AlienSpikeColorGradient>(Allocator.Persistent);
+            AddBlobAsset(ref blob, out _);
+            return blob;
         }
     }
 }

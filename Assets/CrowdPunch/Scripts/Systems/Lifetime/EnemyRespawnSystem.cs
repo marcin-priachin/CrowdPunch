@@ -22,6 +22,8 @@ namespace CrowdPunch.Systems.Lifetime
         private const double RespawnDelaySeconds = 5d;
         private const float PoolSpeedThreshold = 0.75f;
         private const float PendingPoolBrakingAcceleration = 18f;
+        private const float DefeatSlideDrag = 12f;
+        private const float DefeatSlideStopSpeed = .05f;
         // This project simulates world 0 only. Reserve this unsimulated index for pooled bodies.
         private const uint PooledPhysicsWorldIndex = uint.MaxValue;
 
@@ -66,6 +68,13 @@ namespace CrowdPunch.Systems.Lifetime
 
                 if (respawnRequest.ValueRO.IsPooled == 0)
                 {
+                    if (elapsedTime < respawnRequest.ValueRO.PoolNotBefore
+                        && SystemAPI.HasComponent<AlienSpikeTuning>(enemy))
+                    {
+                        float2 slide = physicsVelocity.ValueRO.Linear.xz * math.exp(-DefeatSlideDrag * SystemAPI.Time.DeltaTime);
+                        physicsVelocity.ValueRW.Linear.xz = math.lengthsq(slide) <= DefeatSlideStopSpeed * DefeatSlideStopSpeed
+                            ? float2.zero : slide;
+                    }
                     if (!IsReadyToPool(
                             elapsedTime,
                             respawnRequest.ValueRO,

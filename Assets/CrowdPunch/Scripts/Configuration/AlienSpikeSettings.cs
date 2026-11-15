@@ -19,6 +19,13 @@ namespace CrowdPunch.Configuration
         [Min(0)] public float normalDamage = 8f;
         [Min(0)] public float burstDamage = 15f;
         [Min(0)] public float playerInvincibility = .65f;
+
+        [Header("Projectile Appearance")]
+        [Tooltip("Color tint from tip (left) to base (right). Player-owned spikes use the gradient's brightness with the shared player hue. Alpha is ignored.")]
+        public Gradient projectileColorGradient = new Gradient
+        {
+            colorKeys = new[] { new GradientColorKey(Color.white, 0), new GradientColorKey(new Color(.55f, .55f, .55f), 1) }
+        };
     }
 }
 

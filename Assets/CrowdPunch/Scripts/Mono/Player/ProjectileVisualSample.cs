@@ -1,4 +1,6 @@
 using UnityEngine;
+using Unity.Entities;
+using CrowdPunch.Components;
 
 namespace CrowdPunch.Mono.Player
 {
@@ -12,5 +14,6 @@ namespace CrowdPunch.Mono.Player
         public float Radius;
         public float ChargeProgress;
         public bool Redirected;
+        public BlobAssetReference<AlienSpikeColorGradient> SpikeColorGradient;
     }
 }

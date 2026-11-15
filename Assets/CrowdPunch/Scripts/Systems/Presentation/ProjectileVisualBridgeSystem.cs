@@ -51,7 +51,7 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     var p = shot.ValueRO;
                     Send(bridge, entity, ProjectileVisualKind.AlienSpike, p.VisualSequence, pose.ValueRO.Position, p.Velocity,
-                        p.Tuning.Radius, p.PlayerOwned != 0);
+                        p.Tuning.Radius, p.PlayerOwned != 0, p.ColorGradient);
                 }
                 foreach (var (shot, pose, entity) in SystemAPI.Query<RefRO<RangedProjectile>, RefRO<LocalTransform>>().WithEntityAccess())
                 {
@@ -72,10 +72,12 @@ namespace CrowdPunch.Systems.Presentation
             bridge.EndProjectileVisuals();
         }
         private static void Send(PlayerEcsBridge bridge, Entity e, ProjectileVisualKind kind, uint sequence,
-            float3 position, float3 velocity, float radius, bool redirected)
+            float3 position, float3 velocity, float radius, bool redirected,
+            BlobAssetReference<AlienSpikeColorGradient> spikeColor = default)
         {
             bridge.ReceiveProjectileVisual(new ProjectileVisualSample { Key = ((ulong)(uint)e.Version << 32) | (uint)e.Index,
-                Kind = kind, Sequence = sequence, Position = position, Velocity = velocity, Radius = radius, Redirected = redirected });
+                Kind = kind, Sequence = sequence, Position = position, Velocity = velocity, Radius = radius,
+                Redirected = redirected, SpikeColorGradient = spikeColor });
         }
     }
 }

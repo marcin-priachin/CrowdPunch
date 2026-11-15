@@ -130,6 +130,31 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void DefeatOnlyGroundingStartsOnTheTransitionFromLaunched()
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(root, new LocalToWorld { Value = float4x4.identity });
+            SetMesh(new[] { UnityEngine.Vector3.zero },
+                new[] { new UnityEngine.BoneWeight { weight0 = 1 } }, .02f);
+            var grounding = em.GetComponentData<EnemyAnimationGrounding>(visual);
+            grounding.DefeatOnly = true;
+            em.SetComponentData(visual, grounding);
+            em.GetBuffer<SkinMatrix>(visual).Add(new SkinMatrix
+            {
+                Value = new float3x4(new float3(1, 0, 0), new float3(0, 1, 0),
+                    new float3(0, 0, 1), new float3(0, 2, 0))
+            });
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            Tick();
+            Assert.That(Bottom(), Is.EqualTo(2f));
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            Tick();
+            Assert.That(Bottom(), Is.EqualTo(.72f).Within(.00001f));
+        }
+
+        [Test]
         public void Trail006EverySquidPoseIncludingSpawnAndInterpolationClearsFloorAtCurrentPrefabScale()
         {
             var prefab = UnityEditor.PrefabUtility.LoadPrefabContents("Assets/CrowdPunch/Prefabs/EnemyTrail.prefab");

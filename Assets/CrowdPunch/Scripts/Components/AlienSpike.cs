@@ -15,6 +15,7 @@ namespace CrowdPunch.Components
         public float Cooldown, TelegraphSeconds, EngagementRadius, PreferredDistance;
         public float FollowThroughSeconds;
         public AlienSpikeShotTuning Shot;
+        public BlobAssetReference<AlienSpikeColorGradient> ProjectileColor;
     }
 
     public struct AlienSpikeShotTuning
@@ -56,6 +57,7 @@ namespace CrowdPunch.Components
     public struct AlienSpikeProjectile : IComponentData
     {
         public AlienSpikeShotTuning Tuning;
+        public BlobAssetReference<AlienSpikeColorGradient> ColorGradient;
         public Entity Emitter, Source, HomingTarget;
         public EnemyWaveOwnership Wave;
         public float3 Velocity;
@@ -63,6 +65,12 @@ namespace CrowdPunch.Components
         public uint LaunchSequence, PunchSequence, SourceLifetime, VisualSequence;
         public int ChainDepth;
         public byte PlayerOwned, Redirected;
+    }
+
+    public struct AlienSpikeColorGradient
+    {
+        public UnityEngine.Hash128 Hash;
+        public BlobArray<uint> Colors;
     }
 }
 

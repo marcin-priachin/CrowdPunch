@@ -8,6 +8,7 @@ namespace CrowdPunch.Components
         public Entity Root;
         public Entity Owner;
         public float Clearance;
+        public bool DefeatOnly;
         public BlobAssetReference<EnemyGroundingMesh> Mesh;
         public float3 Offset;
     }

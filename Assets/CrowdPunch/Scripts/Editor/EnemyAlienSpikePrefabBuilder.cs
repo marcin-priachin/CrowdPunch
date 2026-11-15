@@ -25,6 +25,22 @@ namespace CrowdPunch.Editor
         [MenuItem("Crowd Punch/Enemies/Rebuild Alien Spike Prefab")]
         public static void Rebuild() => Build();
 
+        [MenuItem("Crowd Punch/Enemies/Refresh Alien Spike Animation")]
+        public static void RefreshAnimation()
+        {
+            var root = PrefabUtility.LoadPrefabContents(PrefabPath);
+            try
+            {
+                var spike = root.GetComponent<AlienSpikeAuthoring>();
+                var animation = root.GetComponentInChildren<EnemyAnimationAuthoring>();
+                var skin = animation.GetComponent<SkinnedMeshRenderer>();
+                var visual = skin.GetComponentInParent<Animator>().gameObject;
+                ConfigureAnimation(spike, animation, visual, skin);
+                PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
         internal static EnemySpawnSettings Build()
         {
             var settings = AssetDatabase.LoadAssetAtPath<AlienSpikeSettings>(SettingsPath);
@@ -75,11 +91,12 @@ namespace CrowdPunch.Editor
                 spike.projectileAttack = attack;
                 spike.hurt = hurt;
                 spike.death = death;
-                spike.sockets = ReadSockets(root.transform, visual, skin, idle, attack);
                 var animation = skin.gameObject.AddComponent<EnemyAnimationAuthoring>();
                 animation.Profile = EnemyAnimationProfile.AlienSpike;
-                animation.Samples = WriteSamples(visual, skin, spike.SampleClips());
-                idle.SampleAnimation(visual, 0);
+                ConfigureAnimation(spike, animation, visual, skin);
+                var bounds = skin.localBounds;
+                bounds.Expand(1.6f);
+                skin.localBounds = bounds;
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally { UnityEngine.Object.DestroyImmediate(root); }
@@ -108,6 +125,18 @@ namespace CrowdPunch.Editor
             serialized.ApplyModifiedPropertiesWithoutUndo();
             AssetDatabase.SaveAssets();
             return profile;
+        }
+
+        private static void ConfigureAnimation(AlienSpikeAuthoring spike, EnemyAnimationAuthoring animation,
+            GameObject visual, SkinnedMeshRenderer skin)
+        {
+            spike.spawn = FindClip("Spawn to Idle");
+            spike.sockets = ReadSockets(spike.transform, visual, skin, spike.idle, spike.projectileAttack);
+            animation.SpawnMotion = AlienSpikeAuthoring.SpawnMotion;
+            var capsule = spike.GetComponent<CapsuleCollider>();
+            Vector3 floor = capsule.transform.TransformPoint(capsule.center - Vector3.up * (capsule.height * .5f));
+            animation.Samples = WriteSamples(visual, skin, spike.SampleClips(), visual.transform.InverseTransformPoint(floor).y);
+            spike.idle.SampleAnimation(visual, 0);
         }
 
         private static AnimationClip FindClip(string motion) => AssetDatabase
@@ -157,9 +186,10 @@ namespace CrowdPunch.Editor
                 for (int i = 0; i < count; i++)
                 {
                     int apex = firstTip + i * verticesPerSpike;
-                    Vector3 tip = SkinVertex(apex);
+                    Vector3 tip = SkinVertex(vertices[apex], weights[apex], matrices);
                     Vector3 rim = Vector3.zero;
-                    for (int j = 1; j < verticesPerSpike; j++) rim += SkinVertex(apex + j);
+                    for (int j = 1; j < verticesPerSpike; j++)
+                        rim += SkinVertex(vertices[apex + j], weights[apex + j], matrices);
                     Vector3 axis = tip - rim / (verticesPerSpike - 1);
                     var direction = new Vector2(axis.x, axis.z).normalized;
                     if (direction.sqrMagnitude < .99f) throw new InvalidOperationException($"Spike {i} is vertical.");
@@ -174,24 +204,28 @@ namespace CrowdPunch.Editor
                         sockets[i].releaseDirection = direction;
                     }
                 }
-
-                Vector3 SkinVertex(int i)
-                {
-                    var v = vertices[i];
-                    var w = weights[i];
-                    return matrices[w.boneIndex0].MultiplyPoint3x4(v) * w.weight0
-                        + matrices[w.boneIndex1].MultiplyPoint3x4(v) * w.weight1
-                        + matrices[w.boneIndex2].MultiplyPoint3x4(v) * w.weight2
-                        + matrices[w.boneIndex3].MultiplyPoint3x4(v) * w.weight3;
-                }
             }
             return sockets;
         }
 
-        private static TextAsset WriteSamples(GameObject visual, SkinnedMeshRenderer skin, AnimationClip[] clips)
+        private static Vector3 SkinVertex(Vector3 vertex, BoneWeight weight, Matrix4x4[] matrices)
+            => matrices[weight.boneIndex0].MultiplyPoint3x4(vertex) * weight.weight0
+                + matrices[weight.boneIndex1].MultiplyPoint3x4(vertex) * weight.weight1
+                + matrices[weight.boneIndex2].MultiplyPoint3x4(vertex) * weight.weight2
+                + matrices[weight.boneIndex3].MultiplyPoint3x4(vertex) * weight.weight3;
+
+        private static TextAsset WriteSamples(GameObject visual, SkinnedMeshRenderer skin, AnimationClip[] clips,
+            float floor)
         {
             var bindposes = skin.sharedMesh.bindposes;
             var bones = skin.bones;
+            var matrices = new Matrix4x4[bones.Length];
+            var vertices = skin.sharedMesh.vertices;
+            var weights = skin.sharedMesh.boneWeights;
+            float localMetre = visual.transform.InverseTransformVector(Vector3.up).y;
+            float clearance = .02f * localMetre;
+            float smoothing = .08f * localMetre;
+            bool hasEmerged = false;
             string hash = AlienSpikeAuthoring.SampleHash(clips);
             using (var writer = new BinaryWriter(File.Create(SamplesPath)))
             {
@@ -206,18 +240,44 @@ namespace CrowdPunch.Editor
                 {
                     float phase = frame / (float)(motion <= 1 ? Frames : Frames - 1);
                     clips[motion].SampleAnimation(visual, clips[motion].length * phase);
+                    Matrix4x4 toAnimation = visual.transform.worldToLocalMatrix;
+                    for (int bone = 0; bone < bones.Length; bone++)
+                        matrices[bone] = toAnimation * bones[bone].localToWorldMatrix * bindposes[bone];
+
+                    float verticalOffset = 0f;
+                    if (motion == AlienSpikeAuthoring.SpawnMotion || motion == EnemyAnimationSamples.ImpactMotion)
+                    {
+                        float lowest = float.PositiveInfinity;
+                        for (int vertex = 0; vertex < vertices.Length; vertex++)
+                            lowest = Mathf.Min(lowest, SkinVertex(vertices[vertex], weights[vertex], matrices).y);
+
+                        if (motion == EnemyAnimationSamples.ImpactMotion)
+                        {
+                            // INFO-004: settle the visual on the capsule floor as soon as Die takes over.
+                            verticalOffset = floor + AlienSpikeAuthoring.DefeatGroundClearance * localMetre - lowest;
+                        }
+                        else
+                        {
+                            // Preserve the rise through the floor and soften the clamp after emergence.
+                            hasEmerged |= lowest >= floor;
+                            if (hasEmerged)
+                            {
+                                float gap = lowest - (floor + clearance);
+                                float overlap = Mathf.Max(0, smoothing - Mathf.Abs(gap));
+                                verticalOffset = Mathf.Max(0, -gap) + overlap * overlap / (4 * smoothing);
+                            }
+                        }
+                    }
                     for (int bone = 0; bone < bones.Length; bone++)
                     {
-                        Matrix4x4 matrix = visual.transform.worldToLocalMatrix * bones[bone].localToWorldMatrix * bindposes[bone];
+                        Matrix4x4 matrix = matrices[bone];
+                        matrix.m13 += verticalOffset;
                         for (int column = 0; column < 4; column++)
                         for (int row = 0; row < 3; row++) writer.Write(matrix[row, column]);
                     }
                 }
             }
             AssetDatabase.ImportAsset(SamplesPath, ImportAssetOptions.ForceSynchronousImport);
-            var bounds = skin.localBounds;
-            bounds.Expand(1.6f);
-            skin.localBounds = bounds;
             return AssetDatabase.LoadAssetAtPath<TextAsset>(SamplesPath);
         }
     }

@@ -9,8 +9,10 @@ namespace CrowdPunch.Authoring
     {
         // Normal volley releases at the first forward extension of Projectile Attack.
         public const float ReleasePhase = .4f;
+        public const int SpawnMotion = 3;
+        internal const float DefeatGroundClearance = .02f;
         public AlienSpikeSettings settings;
-        public AnimationClip idle, move, projectileAttack, hurt, death;
+        public AnimationClip idle, move, projectileAttack, spawn, hurt, death;
         public SpikeSocket[] sockets;
 
 #if UNITY_EDITOR
@@ -23,7 +25,7 @@ namespace CrowdPunch.Authoring
         }
 
         internal AnimationClip[] SampleClips()
-            => new[] { idle, move, projectileAttack, idle, idle, hurt, hurt, idle, idle, idle, death };
+            => new[] { idle, move, projectileAttack, spawn, idle, hurt, hurt, idle, idle, idle, death };
 #endif
 
         [Serializable]

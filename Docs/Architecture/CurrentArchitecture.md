@@ -6,6 +6,11 @@
 Presentation reads that phase to sample the authored attack. The prefab stores twelve socket
 positions and outward directions sampled from the skinned mesh in idle and at 40% of Projectile
 Attack. The grounded projection preserves the body's horizontal solver motion (COMBAT-018).
+The Die samples align the mesh with the capsule floor from the first defeat pose. On defeat,
+`EnemyAnimationGroundingSystem` keeps the interpolated pose at floor level (INFO-004).
+When a lethal committed launch reaches its displayed endpoint, it starts defeat with the
+remaining horizontal velocity. The pending-pool lifecycle damps the grounded slide while
+the authored defeat animation plays (COMBAT-018).
 
 `EnemyLaunchCollisionSystem` records qualifying player-owned contacts before it propagates the
 launch or queues damage. Each Spike keeps its own history, keyed by the initiating punch across
@@ -16,7 +21,11 @@ when the impact defeats the emitter. A shot carries its emitter, wave and scorin
 Spike shots sweep a sphere through Unity Physics and compare its nearest eligible contact to the
 player snapshot. The same sweep ends the dotted return forecast at its first contact. Ordinary
 spike damage uses the shared damage resolver. Exploders use the ordinary detonation request with
-the spike's punch sequence. The projectile bridge publishes violet or amber flight visuals.
+the spike's punch sequence. The projectile bridge publishes ownership-tinted flight visuals.
+Each Spike settings asset bakes an RGB gradient into a sampled blob that travels with the shot.
+Presentation caches the ramp texture and applies it from tip to base. Enemy shots use its RGB
+tint with the shared enemy accent. Player-owned bursts and returns use its brightness with the
+shared player accent so an authored enemy hue cannot obscure ownership.
 Wave transitions and retry invalidate previous shots, and retry clears each Spike's burst history.
 
 ## Gameplay SFX (VISION-005, COMBAT-003, ENEMY-003, OQ-019)

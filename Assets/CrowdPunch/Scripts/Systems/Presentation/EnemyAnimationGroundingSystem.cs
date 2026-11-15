@@ -10,7 +10,7 @@ using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Presentation
 {
-    // TRAIL-006: measure the actual blended skin, then translate it in world-up.
+    // TRAIL-006 / INFO-004: measure the actual blended skin, then translate it in world-up.
     // Neither physics transforms nor authored bone rotations/scales are changed.
     [BurstCompile, UpdateInGroup(typeof(GamePresentationGroup))]
     [UpdateAfter(typeof(EnemyAnimationSystem))]
@@ -45,6 +45,9 @@ namespace CrowdPunch.Systems.Presentation
             {
                 grounding.Offset = 0;
                 if (!grounding.Mesh.IsCreated || !Roots.HasComponent(grounding.Root) || skin.Length == 0) return;
+                bool hasLaunchState = Launches.HasComponent(grounding.Owner);
+                var phase = hasLaunchState ? Launches[grounding.Owner].Phase : EnemyLaunchPhase.Active;
+                if (grounding.DefeatOnly && phase != EnemyLaunchPhase.Defeated) return;
                 if (Respawns.HasComponent(grounding.Owner) && Respawns.IsComponentEnabled(grounding.Owner)
                     && Respawns[grounding.Owner].IsPooled != 0) return;
                 float4x4 root = Roots[grounding.Root].Value;
@@ -66,7 +69,7 @@ namespace CrowdPunch.Systems.Presentation
                 float lift = GroundY + math.max(0, grounding.Clearance) - bottom;
                 // Grounded clips sit at the configured gap, including authored vertical root offsets.
                 // Launched bodies retain their physical flight height and only receive a minimum clamp.
-                if (!Launches.HasComponent(grounding.Owner) || Launches[grounding.Owner].Phase == EnemyLaunchPhase.Launched)
+                if (!hasLaunchState || phase == EnemyLaunchPhase.Launched)
                     lift = math.max(0, lift);
                 if (!math.isfinite(lift) || math.abs(lift) <= .000001f) return;
                 grounding.Offset = math.mul(math.inverse(axes), new float3(0, lift, 0));

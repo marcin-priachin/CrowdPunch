@@ -775,6 +775,38 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void AlienSpikeLethalPathEndsAtTheDisplayedEndpointWithRemainingMomentum()
+        {
+            em.AddComponent<AlienSpikeTuning>(source);
+            em.SetComponentData(source, new EnemyLaunchState
+            {
+                Phase = EnemyLaunchPhase.Launched, Owner = EnemyLaunchOwner.Player, LaunchSequence = 1
+            });
+            em.SetComponentData(source, new Health());
+            em.SetComponentData(source, new EnemyDamageState { IsDefeatDeferred = 1 });
+            em.SetComponentData(source, new AuthoritativeLaunchPath { LaunchSequence = 1, NextPoint = 1 });
+            em.SetComponentEnabled<AuthoritativeLaunchPath>(source, true);
+            var points = em.GetBuffer<CommittedLaunchPathPoint>(source);
+            var velocity = new float3(0, 0, 4);
+            var endpoint = new float3(0, 0, 1);
+            points.Add(new CommittedLaunchPathPoint { Value = new LaunchPathPoint { Velocity = velocity } });
+            points.Add(new CommittedLaunchPathPoint
+            {
+                Value = new LaunchPathPoint { Seconds = .25f, Position = endpoint, Velocity = velocity }
+            });
+
+            int steps = 0;
+            while (em.IsComponentEnabled<AuthoritativeLaunchPath>(source) && steps++ < 30) Step(true);
+            Assert.That(em.IsComponentEnabled<AuthoritativeLaunchPath>(source), Is.False);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(source).Phase, Is.EqualTo(EnemyLaunchPhase.Defeated));
+            Assert.That(em.GetComponentData<EnemyDamageState>(source).IsDefeatDeferred, Is.Zero);
+            Assert.That(em.IsComponentEnabled<DeathRequest>(source), Is.True);
+            Assert.That(math.distance(em.GetComponentData<LocalTransform>(source).Position, endpoint), Is.LessThan(.001f));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(source).Linear, Is.EqualTo(velocity));
+            Assert.That(em.GetComponentData<PhysicsMassOverride>(source).IsKinematic, Is.Zero);
+        }
+
+        [Test]
         public void Player003_RepunchAndResetReleaseTheOldPhysicsOverride()
         {
             Preview(); Punch(); Step();

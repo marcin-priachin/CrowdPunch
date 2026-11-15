@@ -114,57 +114,58 @@ MonoBehaviour:
   idle: {fileID: 1827226128182048838, guid: 544303a880cf9154993c3ea587ff2414, type: 3}
   move: {fileID: 1827226128182048838, guid: 4a8f070a7845fe44d9455a721831844e, type: 3}
   projectileAttack: {fileID: 1827226128182048838, guid: 6075de23562d4324b905af0166e18a94, type: 3}
+  spawn: {fileID: 1827226128182048838, guid: fb5ae7f08d2c5d742995cbee6fe44f74, type: 3}
   hurt: {fileID: 1827226128182048838, guid: 06d9e20266d54ef4aa981cac63b57cae, type: 3}
   death: {fileID: 1827226128182048838, guid: 7de48af7fd99c7b4f9dda07d7ee3bd43, type: 3}
   sockets:
-  - idleTip: {x: 0.238008496, y: 0.639555704, z: 0.177168615}
-    releaseTip: {x: 0.197708096, y: 0.523753852, z: 0.979009185}
+  - idleTip: {x: 0.44075647, y: 1.1843612, z: 0.32809004}
+    releaseTip: {x: 0.36612612, y: 0.9699135, z: 1.8129795}
     idleDirection: {x: 0.85445595, y: 0.51952386}
     releaseDirection: {x: 0.7579616, y: 0.6522993}
-  - idleTip: {x: 0.1544304, y: -0.240200385, z: 0.182576126}
-    releaseTip: {x: 0.130542637, y: -0.174061481, z: 0.850535037}
-    idleDirection: {x: 0.7519332, y: 0.65923923}
-    releaseDirection: {x: 0.9613398, y: 0.2753651}
-  - idleTip: {x: -0.011047319, y: -0.254503111, z: -0.183539393}
-    releaseTip: {x: -0.015038327, y: -0.130102222, z: 0.564180793}
-    idleDirection: {x: -0.23739392, y: -0.9714135}
-    releaseDirection: {x: -0.1933198, y: -0.9811358}
-  - idleTip: {x: -0.44660963, y: 0.101402222, z: -0.260762222}
-    releaseTip: {x: -0.368591281, y: 0.160748667, z: 0.572209704}
-    idleDirection: {x: -0.84742683, y: -0.5309122}
-    releaseDirection: {x: -0.8579331, y: -0.51376146}
-  - idleTip: {x: 0.504249156, y: 0.158429296, z: 0.071356893}
-    releaseTip: {x: 0.40870397, y: 0.16085763, z: 0.812478667}
-    idleDirection: {x: 0.99704987, y: 0.07675575}
-    releaseDirection: {x: 0.99997824, y: 0.006590053}
-  - idleTip: {x: 0.064659174, y: -0.001944904, z: -0.431185741}
-    releaseTip: {x: 0.037685133, y: 0.108424178, z: 0.404715556}
-    idleDirection: {x: 0.19844906, y: -0.98011124}
-    releaseDirection: {x: 0.14584021, y: -0.9893081}
-  - idleTip: {x: -0.020734726, y: 0.452123556, z: -0.430939333}
-    releaseTip: {x: -0.031116042, y: 0.467299704, z: 0.477645659}
-    idleDirection: {x: 0.03146487, y: -0.99950486}
-    releaseDirection: {x: -0.011269795, y: -0.99993646}
-  - idleTip: {x: -0.311730259, y: -0.18636203, z: 0.157768133}
-    releaseTip: {x: -0.245913704, y: -0.130599807, z: 0.854503852}
-    idleDirection: {x: -0.8948527, y: 0.44636163}
-    releaseDirection: {x: -0.95089126, y: 0.30952498}
-  - idleTip: {x: -0.475875778, y: 0.414946296, z: 0.017068982}
-    releaseTip: {x: -0.382884474, y: 0.366022296, z: 0.841213333}
-    idleDirection: {x: -0.9963092, y: 0.08583661}
-    releaseDirection: {x: -0.97739476, y: 0.21142237}
-  - idleTip: {x: 0.356034993, y: -0.155138022, z: 0.0359962}
-    releaseTip: {x: 0.288092444, y: -0.082879704, z: 0.741080593}
-    idleDirection: {x: 0.9967156, y: 0.08098157}
-    releaseDirection: {x: 0.9901065, y: -0.14031778}
-  - idleTip: {x: 0.379000859, y: 0.490543704, z: -0.225557681}
-    releaseTip: {x: 0.297853156, y: 0.468662222, z: 0.632892148}
-    idleDirection: {x: 0.87011856, y: -0.49284247}
-    releaseDirection: {x: 0.90554994, y: -0.4242397}
-  - idleTip: {x: -0.141622193, y: 0.713739407, z: -0.016745567}
-    releaseTip: {x: -0.114677363, y: 0.609896222, z: 0.849515704}
-    idleDirection: {x: -0.9991402, y: -0.04145946}
-    releaseDirection: {x: -0.75370616, y: 0.65721154}
+  - idleTip: {x: 0.28598225, y: -0.4448159, z: 0.33810383}
+    releaseTip: {x: 0.24174564, y: -0.3223365, z: 1.5750642}
+    idleDirection: {x: 0.7519333, y: 0.6592393}
+    releaseDirection: {x: 0.9613401, y: 0.2753637}
+  - idleTip: {x: -0.020457996, y: -0.47130242, z: -0.33988777}
+    releaseTip: {x: -0.027848756, y: -0.24093078, z: 1.0447787}
+    idleDirection: {x: -0.2373939, y: -0.97141343}
+    releaseDirection: {x: -0.19331974, y: -0.9811358}
+  - idleTip: {x: -0.82705474, y: 0.18778145, z: -0.48289296}
+    releaseTip: {x: -0.6825764, y: 0.29768163, z: 1.0596473}
+    idleDirection: {x: -0.8474267, y: -0.5309124}
+    releaseDirection: {x: -0.8579332, y: -0.51376116}
+  - idleTip: {x: 0.93379474, y: 0.29338688, z: 0.13214238}
+    releaseTip: {x: 0.75685924, y: 0.29788375, z: 1.5045897}
+    idleDirection: {x: 0.9970499, y: 0.07675582}
+    releaseDirection: {x: 0.9999783, y: 0.00659051}
+  - idleTip: {x: 0.119739205, y: -0.0036019087, z: -0.7984919}
+    releaseTip: {x: 0.069787286, y: 0.20078503, z: 0.74947274}
+    idleDirection: {x: 0.19844912, y: -0.9801112}
+    releaseDirection: {x: 0.14584024, y: -0.9893081}
+  - idleTip: {x: -0.03839764, y: 0.83726525, z: -0.7980354}
+    releaseTip: {x: -0.0576223, y: 0.8653686, z: 0.8845287}
+    idleDirection: {x: 0.03146488, y: -0.99950486}
+    releaseDirection: {x: -0.0112697715, y: -0.9999365}
+  - idleTip: {x: -0.57727826, y: -0.34511536, z: 0.29216307}
+    releaseTip: {x: -0.45539576, y: -0.24185212, z: 1.5824138}
+    idleDirection: {x: -0.8948527, y: 0.44636154}
+    releaseDirection: {x: -0.95089126, y: 0.3095254}
+  - idleTip: {x: -0.8812514, y: 0.7684183, z: 0.031609304}
+    releaseTip: {x: -0.70904535, y: 0.6778184, z: 1.557802}
+    idleDirection: {x: -0.9963092, y: 0.08583657}
+    releaseDirection: {x: -0.9773948, y: 0.21142222}
+  - idleTip: {x: 0.65932405, y: -0.28729305, z: 0.06665965}
+    releaseTip: {x: 0.53350455, y: -0.15348127, z: 1.3723708}
+    idleDirection: {x: 0.99671555, y: 0.08098202}
+    releaseDirection: {x: 0.9901065, y: -0.14031756}
+  - idleTip: {x: 0.70185345, y: 0.90841323, z: -0.41769913}
+    releaseTip: {x: 0.5515799, y: 0.8678921, z: 1.1720222}
+    idleDirection: {x: 0.8701188, y: -0.4928421}
+    releaseDirection: {x: 0.9055502, y: -0.42423913}
+  - idleTip: {x: -0.26226327, y: 1.3217387, z: -0.031010156}
+    releaseTip: {x: -0.21236548, y: 1.1294367, z: 1.5731765}
+    idleDirection: {x: -0.99914026, y: -0.04145796}
+    releaseDirection: {x: -0.7537067, y: 0.65721095}
 --- !u!1001 &4551453301098513096
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -287,15 +288,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8918576235763099783, guid: a777bd946c203254a8caad84e11f32d0, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.35
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 8918576235763099783, guid: a777bd946c203254a8caad84e11f32d0, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.35
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 8918576235763099783, guid: a777bd946c203254a8caad84e11f32d0, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.35
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 8918576235763099783, guid: a777bd946c203254a8caad84e11f32d0, type: 3}
       propertyPath: m_LocalPosition.x
@@ -303,7 +304,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8918576235763099783, guid: a777bd946c203254a8caad84e11f32d0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.35
+      value: -2.5
       objectReference: {fileID: 0}
     - target: {fileID: 8918576235763099783, guid: a777bd946c203254a8caad84e11f32d0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -336,6 +337,10 @@ PrefabInstance:
     - target: {fileID: 8918576235763099783, guid: a777bd946c203254a8caad84e11f32d0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8918576235763099783, guid: a777bd946c203254a8caad84e11f32d0, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -376,7 +381,7 @@ MonoBehaviour:
   Profile: 15
   GroundClearance: 0.1
   ArmorStagesRequired: 0
-  SpawnMotion: -1
+  SpawnMotion: 3
   RotateLaunchAroundOwner: 0
   LaunchPivotHeight: 0
   BlendResponse: 12

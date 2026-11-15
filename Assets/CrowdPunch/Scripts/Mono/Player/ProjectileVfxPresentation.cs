@@ -29,6 +29,7 @@ namespace CrowdPunch.Mono.Player
         private Mesh spikeMesh;
         private Material spikeMaterial;
         private MaterialPropertyBlock spikeTint;
+        private readonly Dictionary<Hash128, Texture2D> spikeGradients = new();
         private PlayerEcsBridge bridge;
         private uint restart;
         internal int ActiveFlightCount => assigned.Count;
@@ -92,7 +93,7 @@ namespace CrowdPunch.Mono.Player
             spikeTint ??= new MaterialPropertyBlock();
             if (spikeMesh == null) spikeMesh = CreateSpikeMesh();
             if (spikeMaterial == null)
-                spikeMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "Alien Spike Projectile" };
+                spikeMaterial = new Material(Resources.Load<Shader>("Shaders/AlienSpikeProjectile")) { name = "Alien Spike Projectile" };
             var spike = new GameObject("Alien spike projectile");
             spike.transform.SetParent(root, false);
             spike.AddComponent<MeshFilter>().sharedMesh = spikeMesh;
@@ -110,8 +111,32 @@ namespace CrowdPunch.Mono.Player
                 new Vector3(-.45f, 0, -.25f), new Vector3(0, -.45f, -.25f) };
             mesh.triangles = new[] { 0, 3, 2, 0, 4, 3, 0, 5, 4, 0, 2, 5,
                 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 2 };
+            const float shoulder = (0.9f + 0.25f) / (0.9f + 0.65f);
+            mesh.uv = new[] { Vector2.zero, Vector2.right, new Vector2(shoulder, 0),
+                new Vector2(shoulder, 0), new Vector2(shoulder, 0), new Vector2(shoulder, 0) };
             mesh.RecalculateNormals();
             return mesh;
+        }
+
+        private Texture2D SpikeGradient(in ProjectileVisualSample sample)
+        {
+            if (!sample.SpikeColorGradient.IsCreated) return Texture2D.whiteTexture;
+            ref var ramp = ref sample.SpikeColorGradient.Value;
+            if (spikeGradients.TryGetValue(ramp.Hash, out var texture)) return texture;
+
+            texture = new Texture2D(ramp.Colors.Length, 1, TextureFormat.RGBA32, false)
+            {
+                name = "Alien Spike Color Gradient", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear
+            };
+            var pixels = texture.GetRawTextureData<Color32>();
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                uint color = ramp.Colors[i];
+                pixels[i] = new Color32((byte)color, (byte)(color >> 8), (byte)(color >> 16), 255);
+            }
+            texture.Apply(false, true);
+            spikeGradients.Add(ramp.Hash, texture);
+            return texture;
         }
 
         private void Begin() { if (slots != null) foreach (var slot in slots) slot.Seen = false; }
@@ -147,6 +172,8 @@ namespace CrowdPunch.Mono.Player
                 {
                     var color = CombatOwnershipTint.Accent(sample.Redirected ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Boss, library);
                     spikeTint.SetColor("_BaseColor", color);
+                    spikeTint.SetFloat("_PlayerOwned", sample.Redirected ? 1f : 0f);
+                    spikeTint.SetTexture("_Gradient", SpikeGradient(sample));
                     slot.Spike.SetPropertyBlock(spikeTint);
                 }
             }
@@ -216,6 +243,11 @@ namespace CrowdPunch.Mono.Player
         }
         private void OnDestroy()
         {
+            foreach (var gradient in spikeGradients.Values)
+            {
+                if (Application.isPlaying) Destroy(gradient);
+                else DestroyImmediate(gradient);
+            }
             if (Application.isPlaying)
             {
                 if (root != null) Destroy(root.gameObject);

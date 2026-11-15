@@ -35,8 +35,9 @@ namespace CrowdPunch.Tests
                 "The death visual cannot extend its own pooling deadline each frame.");
         }
 
-        [Test]
-        public void Combat011DefeatedBodyStaysVisibleDuringImpact()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Combat011DefeatedBodyStaysVisibleDuringImpact(bool alienSpike)
         {
             using var world = new World("Landing lifetime test");
             var em = world.EntityManager;
@@ -53,17 +54,37 @@ namespace CrowdPunch.Tests
             em.SetComponentEnabled<KnockbackRecovery>(enemy, false);
             em.AddSharedComponent(enemy, new PhysicsWorldIndex());
             em.AddBuffer<CollisionDamageHistory>(enemy);
+            if (alienSpike)
+            {
+                em.AddComponent<AlienSpikeTuning>(enemy);
+                em.SetComponentData(enemy, new PhysicsVelocity { Linear = new float3(3, 0, 4) });
+            }
             world.SetTime(new TimeData(10d, 0.02f));
             world.GetOrCreateSystem<DefeatedEnemyLifecycleSystem>().Update(world.Unmanaged);
             Assert.That(em.GetComponentData<RespawnRequest>(enemy).PoolNotBefore, Is.EqualTo(11.4d).Within(0.0001d));
             Assert.That(em.IsComponentEnabled<DeathRequest>(enemy), Is.False);
-            world.SetTime(new TimeData(11d, 0.02f));
+            world.SetTime(new TimeData(10.8d, 0.02f));
             world.GetOrCreateSystem<EnemyRespawnSystem>().Update(world.Unmanaged);
             em.CompleteAllTrackedJobs();
             Assert.That(em.GetComponentData<RespawnRequest>(enemy).IsPooled, Is.Zero);
             Assert.That(em.GetSharedComponent<PhysicsWorldIndex>(enemy).Value, Is.Zero,
                 "The visible landing must still participate in physics.");
             Assert.That(em.GetComponentData<LocalTransform>(enemy).Position, Is.EqualTo(new float3(2f, 1f, 3f)));
+            if (alienSpike)
+            {
+                float3 sliding = em.GetComponentData<PhysicsVelocity>(enemy).Linear;
+                Assert.That(math.length(sliding), Is.InRange(0.05f, 4.99f));
+                Assert.That(math.distance(math.normalize(sliding), new float3(.6f, 0, .8f)), Is.LessThan(.0001f));
+                var respawn = world.GetOrCreateSystem<EnemyRespawnSystem>();
+                for (int tick = 1; tick <= 20; tick++)
+                {
+                    world.SetTime(new TimeData(10.8d + tick * .02d, .02f));
+                    respawn.Update(world.Unmanaged);
+                    em.CompleteAllTrackedJobs();
+                }
+                Assert.That(em.GetComponentData<PhysicsVelocity>(enemy).Linear, Is.EqualTo(float3.zero));
+                Assert.That(em.GetComponentData<RespawnRequest>(enemy).IsPooled, Is.Zero);
+            }
             world.SetTime(new TimeData(11.5d, 0.02f));
             world.GetOrCreateSystem<EnemyRespawnSystem>().Update(world.Unmanaged);
             em.CompleteAllTrackedJobs();

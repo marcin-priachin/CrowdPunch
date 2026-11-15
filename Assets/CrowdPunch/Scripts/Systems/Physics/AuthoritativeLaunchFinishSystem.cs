@@ -20,7 +20,7 @@ namespace CrowdPunch.Systems.Physics
         {
             var em = state.EntityManager;
             foreach (var (path, launch, velocity, pose, points, source) in
-                SystemAPI.Query<RefRW<AuthoritativeLaunchPath>, RefRO<EnemyLaunchState>, RefRW<PhysicsVelocity>,
+                SystemAPI.Query<RefRW<AuthoritativeLaunchPath>, RefRW<EnemyLaunchState>, RefRW<PhysicsVelocity>,
                     RefRO<LocalTransform>, DynamicBuffer<CommittedLaunchPathPoint>>().WithEntityAccess())
             {
                 if (launch.ValueRO.LaunchSequence != path.ValueRO.LaunchSequence || launch.ValueRO.Phase != EnemyLaunchPhase.Launched
@@ -67,8 +67,19 @@ namespace CrowdPunch.Systems.Physics
                     path.ValueRW.NextPoint++;
                     if (path.ValueRO.NextPoint >= points.Length)
                     {
-                        // The displayed endpoint is the end of this launch, including a budget-limited path.
-                        velocity.ValueRW.Linear = float3.zero;
+                        // The displayed endpoint ends the launch. A lethal Alien Spike hands its
+                        // remaining horizontal velocity back to physics for the defeat slide.
+                        if (em.HasComponent<AlienSpikeTuning>(source) && em.GetComponentData<Health>(source).Current <= 0f)
+                        {
+                            var damage = SystemAPI.GetComponentRW<EnemyDamageState>(source);
+                            EnemyRecoverySystem.MarkDefeated(ref launch.ValueRW, ref damage.ValueRW);
+                            SystemAPI.SetComponentEnabled<DeathRequest>(source, true);
+                            velocity.ValueRW.Linear.y = 0f;
+                        }
+                        else
+                        {
+                            velocity.ValueRW.Linear = float3.zero;
+                        }
                         velocity.ValueRW.Angular = float3.zero;
                         if (em.HasComponent<DasherState>(source))
                         {

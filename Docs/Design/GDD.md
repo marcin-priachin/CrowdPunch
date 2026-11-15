@@ -2110,6 +2110,9 @@ Status: Must
 Use the Alien Spike model and the Projectile Attack telegraph and release. Shots leave the
 model's individual spike tips along their horizontal outward axes at grounded target height.
 The enemy stays at ordinary grounded altitude in flight and recovery (COMBAT-018).
+On the transition from launched to defeated, the grounded Alien Spike carries its
+remaining horizontal momentum into a short slide that slows to rest. For a lethal
+committed launch, the slide starts at the displayed endpoint (PLAYER-003).
 The default moving timer and optional mid-range positioning both stop for a range-gated
 telegraph. A committed volley fires outside engagement range. Launch cancels it and recovery
 starts a full cooldown.
