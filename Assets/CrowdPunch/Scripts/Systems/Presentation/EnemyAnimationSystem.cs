@@ -863,7 +863,6 @@ namespace CrowdPunch.Systems.Presentation
                     return;
                 }
 
-                playback.WasLaunched = 0;
                 if (launch.Phase == EnemyLaunchPhase.Defeated)
                 {
                     playback.WasAttacking = 0;
@@ -879,11 +878,22 @@ namespace CrowdPunch.Systems.Presentation
                     }
                     float deathFrame = DefeatPhase(owner, playback.ImpactPhase, samples.FrameCount) * (samples.FrameCount - 1);
                     int from = (int)deathFrame;
-                    ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
-                        math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
+                    float deathSeconds = playback.ImpactPhase * samples.Durations[EnemyAnimationSamples.ImpactMotion];
+                    playback.DefeatFlightWeight = mushroom && playback.WasLaunched != 0
+                        ? 1f - math.smoothstep(0f, .22f, deathSeconds) : 0f;
+                    if (playback.DefeatFlightWeight > 0f)
+                        BlendFlightIntoDefeat(ref skin, ref samples, playback, deathFrame);
+                    else
+                    {
+                        playback.WasLaunched = 0;
+                        ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
+                            math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
+                    }
                     return;
                 }
 
+                playback.WasLaunched = 0;
+                playback.DefeatFlightWeight = 0f;
                 playback.Landing = 0;
                 if (launch.Phase != EnemyLaunchPhase.Active && launch.Phase != EnemyLaunchPhase.Recovering)
                     return;
@@ -914,6 +924,27 @@ namespace CrowdPunch.Systems.Presentation
                 float frame = playback.Phase * samples.FrameCount;
                 int a = (int)frame;
                 ApplyFrame(ref skin, ref samples, motion, a, (a + 1) % samples.FrameCount, math.frac(frame));
+            }
+
+            private static void BlendFlightIntoDefeat(ref DynamicBuffer<SkinMatrix> skin,
+                ref EnemyAnimationSamples samples, in EnemyAnimationPlayback playback, float deathFrame)
+            {
+                float flightFrame = playback.FlightPhase * samples.FrameCount;
+                int flightFrom = (int)flightFrame;
+                int flightTo = (flightFrom + 1) % samples.FrameCount;
+                int deathFrom = (int)deathFrame;
+                int deathTo = math.min(deathFrom + 1, samples.FrameCount - 1);
+                var rotation = new float3x3(quaternion.RotateX(playback.FlightPitch));
+                for (int bone = 0; bone < skin.Length; bone++)
+                {
+                    var flight = Sample(ref samples, EnemyAnimationSamples.FlyingMotion,
+                        flightFrom, flightTo, bone, math.frac(flightFrame));
+                    flight = RotatePose(flight, rotation, float3.zero);
+                    var death = Sample(ref samples, EnemyAnimationSamples.ImpactMotion,
+                        deathFrom, deathTo, bone, math.frac(deathFrame));
+                    skin[bone] = new SkinMatrix { Value = playback.DefeatFlightWeight >= 1f
+                        ? flight : BlendPose(flight, death, 1f - playback.DefeatFlightWeight, true) };
+                }
             }
 
             private void AnimateMushroom(Entity owner, ref EnemyAnimationPlayback playback,
@@ -1517,6 +1548,7 @@ namespace CrowdPunch.Systems.Presentation
                 playback.WasLaunched = 1;
                 playback.LaunchSequence = launch.LaunchSequence;
                 playback.Landing = 0;
+                playback.DefeatFlightWeight = 0f;
                 float pitch = sideways ? -math.PI * .5f : 0;
                 if (Velocities.HasComponent(owner))
                 {
@@ -1524,6 +1556,7 @@ namespace CrowdPunch.Systems.Presentation
                     if (math.lengthsq(velocity) > .01f)
                         pitch -= math.clamp(math.atan2(velocity.y, math.length(velocity.xz)), -.5f, .5f);
                 }
+                playback.FlightPitch = pitch;
                 float frame = playback.FlightPhase * samples.FrameCount;
                 int from = (int)frame;
                 ApplyRotatedFrame(ref skin, ref samples, motion, from, (from + 1) % samples.FrameCount,
@@ -1579,10 +1612,13 @@ namespace CrowdPunch.Systems.Presentation
                 for (int bone = 0; bone < skin.Length; bone++)
                 {
                     float3x4 pose = Sample(ref samples, motion, from, to, bone, blend);
-                    skin[bone] = new SkinMatrix { Value = new float3x4(math.mul(matrix, pose.c0),
-                        math.mul(matrix, pose.c1), math.mul(matrix, pose.c2), pivot + math.mul(matrix, pose.c3 - pivot)) };
+                    skin[bone] = new SkinMatrix { Value = RotatePose(pose, matrix, pivot) };
                 }
             }
+
+            private static float3x4 RotatePose(float3x4 pose, float3x3 rotation, float3 pivot)
+                => new float3x4(math.mul(rotation, pose.c0), math.mul(rotation, pose.c1),
+                    math.mul(rotation, pose.c2), pivot + math.mul(rotation, pose.c3 - pivot));
 
             private static float3x4 Sample(ref EnemyAnimationSamples data, int motion, int a, int b, int bone, float t)
             {

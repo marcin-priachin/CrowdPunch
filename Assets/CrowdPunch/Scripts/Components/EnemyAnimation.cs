@@ -52,6 +52,7 @@ namespace CrowdPunch.Components
         public uint LaunchSequence;
         public float FlightPhase;
         public float FlightPitch;
+        public float DefeatFlightWeight;
         public byte Landing;
         public float ImpactPhase;
         public float ImpactDuration;

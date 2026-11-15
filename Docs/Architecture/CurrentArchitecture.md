@@ -3334,8 +3334,10 @@ the preferred distance. Navigation resolves the path and enemy movement owns vel
 
 `MushroomShooterAttackSystem` runs after Physics, body collisions, and explosion resolution
 so that a launch on the release step still cancels the wind-up. The cooldown only advances
-while the Shooter is active. The warning tracks the player, then keeps its origin and
-direction as the same sphere sweep updates its length against solid cover. Presentation
+while the Shooter is active. The Enemy baker stores the prefab's `ShotSource` in owner
+space. The warning tracks the player from that source, then keeps its origin and
+direction as the same sphere sweep updates its length against solid cover. The shot
+starts at the locked source and keeps that height throughout its flight. Presentation
 reads the lane snapshot and animates the authored attack up to the release frame.
 
 `PunchDetectionSystem` checks redirectable shots before resolving enemy targets. A successful

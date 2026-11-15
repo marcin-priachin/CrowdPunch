@@ -34,6 +34,7 @@ namespace CrowdPunch.Systems.Combat
             var player = SystemAPI.GetSingleton<PlayerSnapshot>();
             var world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
             var enemies = SystemAPI.GetComponentLookup<Enemy>(true);
+            var sources = SystemAPI.GetComponentLookup<MushroomShotSource>(true);
             float ground = SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight;
             Entity arena = SystemAPI.GetSingletonEntity<ArenaGroundPlane>();
             float dt = SystemAPI.Time.DeltaTime;
@@ -72,15 +73,14 @@ namespace CrowdPunch.Systems.Combat
                 float height = ground + math.max(radius + .02f, tuning.Height);
                 float lockedSeconds = math.max(0f, tuning.LockedSeconds);
                 float trackingSeconds = math.max(0f, tuning.TrackingSeconds);
-                float3 origin = pose.ValueRO.Position;
-                origin.y = height;
-                float3 direction = MushroomShotGeometry.Horizontal(player.Position - origin,
-                    math.forward(pose.ValueRO.Rotation));
+                float3 direction = MushroomShotGeometry.Aim(pose.ValueRO, player.Position, height,
+                    sources.TryGetComponent(entity, out var source), source, out float3 origin);
                 if (attack.Phase == RangedAttackPhase.Ready)
                 {
                     float distance = math.distance(origin.xz, player.Position.xz);
                     if (distance > math.min(ranged.EngagementRange, range)
-                        || MushroomShotGeometry.FindCover(world, enemies, origin, direction, distance, radius, out _))
+                        || MushroomShotGeometry.FindCover(world, enemies, origin, direction,
+                            math.max(0f, math.dot(player.Position - origin, direction)), radius, ground, out _))
                         continue;
                     attack.Phase = RangedAttackPhase.WindUp;
                     attack.SecondsRemaining = trackingSeconds + lockedSeconds;
@@ -100,7 +100,7 @@ namespace CrowdPunch.Systems.Combat
 
                 // Keep checking cover, including moving cover, against the same frozen line after lock.
                 lane.Length = MushroomShotGeometry.ClearDistance(world, enemies, lane.Origin, lane.Direction,
-                    range, radius);
+                    range, radius, ground);
                 if (attack.SecondsRemaining > .00001f) continue;
                 var projectile = commands.CreateEntity();
                 commands.AddComponent(projectile, LocalTransform.FromPosition(lane.Origin));

@@ -7,8 +7,10 @@ scene list do not include this encounter (MUSHROOM-004, LOOP-006).
 
 The Shooter profile has a 0.30 s tracking warning, a 0.45 s locked warning, a
 2–3 s cooldown, a 12–22 m preferred band and a 32 m engagement range.
-The projectile travels at 32 m/s for up to 45 m per leg, 0.95 m above the floor,
-with a 1.10 m diameter. It does 10 damage to the player with 0.5 s of normal
+The projectile travels at 32 m/s for up to 45 m per leg with a 1.10 m diameter.
+The prefab's `ShotSource` sets the release point and the start of the warning lane.
+The current marker is 0.532 m above the floor when the Shooter is grounded.
+It does 10 damage to the player with 0.5 s of normal
 invulnerability and 5 damage to eligible enemies after redirect.
 
 The No Root Projectile Attack clip has no release event. In Unity, the mouth
@@ -17,7 +19,7 @@ The baked scene reported the first projectile at 32 m/s with its full 45 m range
 and the animation reported release progress 0.440 on that same rendered frame.
 The locked floor line was captured at the beginning of its 0.45 s hold.
 
-Seven focused EditMode cases verify cover and warning timing, cancellation in
+Eight focused EditMode cases verify the low muzzle, cover and warning timing, cancellation in
 both phases, cooldown after recovery, projectile priority, repeated punch
 rejection, harmless travel through enemies on the incoming leg, ordered piercing,
 armor immunity, and player contact after leaving the redirect overlap.
@@ -28,3 +30,8 @@ advancement and final completion. The live check is a wiring and system order
 check; natural input timing, difficulty, and larger crowd performance still need
 playtesting. The separate `dotnet build` returned unsuccessful without compiler
 errors; Unity compilation was clean.
+
+The launch pose uses the animated mesh to maintain floor clearance (COMBAT-018).
+A live Gauntlet 33 punch at the current 1.5× model scale kept the rendered mesh
+at least 0.011 m above the floor across 18 sampled frames. The collision body
+held its grounded height throughout the sample.

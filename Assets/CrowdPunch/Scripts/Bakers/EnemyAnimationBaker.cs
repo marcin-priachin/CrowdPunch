@@ -156,8 +156,10 @@ namespace CrowdPunch.Bakers
                     });
                 }
             }
-            if (authoring.Profile == EnemyAnimationProfile.Trail && owner != null)
+            bool mushroom = authoring.Profile == EnemyAnimationProfile.MushroomShooter;
+            if ((authoring.Profile == EnemyAnimationProfile.Trail || mushroom) && owner != null)
             {
+                DependsOn(animator);
                 using var groundingBuilder = new BlobBuilder(Allocator.Temp);
                 ref var grounding = ref groundingBuilder.ConstructRoot<EnemyGroundingMesh>();
                 var vertices = renderer.sharedMesh.vertices;
@@ -180,6 +182,7 @@ namespace CrowdPunch.Bakers
                     Root = GetEntity(animator, TransformUsageFlags.Dynamic),
                     Owner = GetEntity(owner, TransformUsageFlags.Dynamic),
                     Clearance = math.max(0, authoring.GroundClearance),
+                    LaunchedOnly = mushroom,
                     Mesh = groundingMesh
                 });
             }

@@ -58,7 +58,8 @@ namespace CrowdPunch.Systems.Combat
                     && MushroomShotGeometry.SweepPlayer(start, displacement, player.Position, playerRadius, out stopAt);
                 if (!playerHit) stopAt = 1f;
                 bool coverHit = MushroomShotGeometry.FindCover(world, enemies, start, shot.Direction,
-                    distance, shot.Radius, out var cover) && (!playerHit || cover.Fraction <= stopAt);
+                    distance, shot.Radius, em.GetComponentData<ArenaGroundPlane>(shot.Arena).SurfaceHeight, out var cover)
+                    && (!playerHit || cover.Fraction <= stopAt);
                 if (coverHit)
                 {
                     stopAt = cover.Fraction;

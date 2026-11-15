@@ -34,6 +34,7 @@ namespace CrowdPunch.Systems.AI
             float ground = SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight;
             var world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
             var enemies = SystemAPI.GetComponentLookup<Enemy>(true);
+            var sources = SystemAPI.GetComponentLookup<MushroomShotSource>(true);
             SystemAPI.TryGetSingleton<NavigationGrid>(out var grid);
             if (SystemAPI.TryGetSingleton<NavigationRuntimeSettings>(out var navigation) && navigation.Enabled == 0)
                 grid = default;
@@ -51,11 +52,14 @@ namespace CrowdPunch.Systems.AI
                 }
                 float radius = math.max(.01f, ranged.ValueRO.ProjectileRadius);
                 float shotY = ground + math.max(radius + .02f, shooter.ValueRO.Height);
-                if (!Blocked(world, enemies, pose.ValueRO.Position.xz, player.Position.xz, shotY, radius)) continue;
+                float3 direction = MushroomShotGeometry.Aim(pose.ValueRO, player.Position, shotY,
+                    sources.TryGetComponent(entity, out var source), source, out float3 origin);
+                float distance = math.max(0f, math.dot(player.Position - origin, direction));
+                if (!MushroomShotGeometry.FindCover(world, enemies, origin, direction, distance, radius, ground, out _)) continue;
                 float minimum = math.max(0f, math.min(ranged.ValueRO.PreferredMinimumDistance, ranged.ValueRO.PreferredMaximumDistance));
                 float maximum = math.max(minimum, math.max(ranged.ValueRO.PreferredMinimumDistance, ranged.ValueRO.PreferredMaximumDistance));
                 float3 destination = FindFiringAngle(world, enemies, grid, pose.ValueRO.Position, player.Position.xz,
-                    minimum, maximum, shotY, radius, agent.ValueRO.Radius);
+                    minimum, maximum, origin.y, radius, agent.ValueRO.Radius, ground);
                 float speed = math.max(0f, ranged.ValueRO.ApproachSpeed);
                 movement.ValueRW = new DesiredMovement
                 {
@@ -66,18 +70,18 @@ namespace CrowdPunch.Systems.AI
         }
 
         private static bool Blocked(in CollisionWorld world, ComponentLookup<Enemy> enemies, float2 origin,
-            float2 target, float y, float radius)
+            float2 target, float y, float radius, float ground)
         {
             float2 delta = target - origin;
             float distance = math.length(delta);
             if (distance <= .001f) return false;
             var direction = delta / distance;
             return MushroomShotGeometry.FindCover(world, enemies, new float3(origin.x, y, origin.y),
-                new float3(direction.x, 0f, direction.y), distance, radius, out _);
+                new float3(direction.x, 0f, direction.y), distance, radius, ground, out _);
         }
 
         private static float3 FindFiringAngle(in CollisionWorld world, ComponentLookup<Enemy> enemies, NavigationGrid nav,
-            float3 position, float2 player, float minimum, float maximum, float y, float radius, float agentRadius)
+            float3 position, float2 player, float minimum, float maximum, float y, float radius, float agentRadius, float ground)
         {
             // Probe both sides on the closest preferred spacing, then try a shorter range.
             float2 away = math.normalizesafe(position.xz - player, new float2(0f, 1f));
@@ -102,8 +106,8 @@ namespace CrowdPunch.Systems.AI
                     if (NavigationGeometry.Region(ref grid, NavigationGeometry.Anchor(ref grid, candidate, clearance), clearance) != region)
                         continue;
                 }
-                else if (Blocked(world, enemies, position.xz, candidate, y, agentRadius)) continue;
-                if (!Blocked(world, enemies, candidate, player, y, radius)) return new float3(candidate.x, position.y, candidate.y);
+                else if (Blocked(world, enemies, position.xz, candidate, y, agentRadius, ground)) continue;
+                if (!Blocked(world, enemies, candidate, player, y, radius, ground)) return new float3(candidate.x, position.y, candidate.y);
             }
             return new float3(player.x, position.y, player.y);
         }

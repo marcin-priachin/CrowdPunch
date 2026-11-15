@@ -2,6 +2,7 @@ using CrowdPunch.Components;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Combat
 {
@@ -17,9 +18,9 @@ namespace CrowdPunch.Systems.Combat
                && hit.Material.CollisionResponse != CollisionResponsePolicy.RaiseTriggerEvents;
 
         internal static bool FindCover(in CollisionWorld world, ComponentLookup<Enemy> enemies,
-            float3 origin, float3 direction, float distance, float radius, out ColliderCastHit hit)
+            float3 origin, float3 direction, float distance, float radius, float ground, out ColliderCastHit hit)
         {
-            var collector = new CoverCollector { Enemies = enemies, MaxFraction = 1f };
+            var collector = new CoverCollector { Enemies = enemies, MaxFraction = 1f, Ground = ground };
             if (distance > .00001f)
                 world.SphereCastCustom(origin, radius, direction, distance, ref collector, Filter);
             hit = collector.Hit;
@@ -27,9 +28,26 @@ namespace CrowdPunch.Systems.Combat
         }
 
         internal static float ClearDistance(in CollisionWorld world, ComponentLookup<Enemy> enemies,
-            float3 origin, float3 direction, float distance, float radius)
-            => FindCover(world, enemies, origin, direction, distance, radius, out var hit)
+            float3 origin, float3 direction, float distance, float radius, float ground)
+            => FindCover(world, enemies, origin, direction, distance, radius, ground, out var hit)
                 ? distance * hit.Fraction : distance;
+
+        internal static float3 Aim(in LocalTransform pose, float3 target, float fallbackHeight,
+            bool hasSource, in MushroomShotSource source, out float3 origin)
+        {
+            float3 toward = Horizontal(target - pose.Position, math.forward(pose.Rotation));
+            origin = pose.Position;
+            origin.y = fallbackHeight;
+            if (!hasSource) return toward;
+
+            float3 offset = source.LocalPosition * pose.Scale;
+            // Align the shot with the target even if the authored source is offset sideways.
+            float distance = math.distance(target.xz, pose.Position.xz);
+            float lateral = math.clamp(offset.x / math.max(.001f, distance), -1f, 1f);
+            float3 direction = toward * math.sqrt(1f - lateral * lateral) - math.cross(math.up(), toward) * lateral;
+            origin = pose.Position + math.mul(quaternion.LookRotationSafe(direction, math.up()), offset);
+            return direction;
+        }
 
         internal static float3 Horizontal(float3 direction, float3 fallback)
         {
@@ -53,6 +71,7 @@ namespace CrowdPunch.Systems.Combat
         private struct CoverCollector : ICollector<ColliderCastHit>
         {
             public ComponentLookup<Enemy> Enemies;
+            public float Ground;
             public ColliderCastHit Hit;
             public bool EarlyOutOnFirstHit => false;
             public float MaxFraction { get; set; }
@@ -60,7 +79,9 @@ namespace CrowdPunch.Systems.Combat
 
             public bool AddHit(ColliderCastHit hit)
             {
-                if (Enemies.HasComponent(hit.Entity) || !IsSolid(hit)) return false;
+                // The low muzzle can overlap the floor. Only the floor-facing surface is exempt.
+                if (Enemies.HasComponent(hit.Entity) || !IsSolid(hit)
+                    || hit.SurfaceNormal.y > .7f && hit.Position.y <= Ground + .015f) return false;
                 Hit = hit;
                 MaxFraction = hit.Fraction;
                 NumHits = 1;

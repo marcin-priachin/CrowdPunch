@@ -7,5 +7,7 @@ namespace CrowdPunch.Authoring
     /// </summary>
     public sealed class EnemyAuthoring : MonoBehaviour
     {
+        [Tooltip("Optional projectile origin for the Mushroom Shooter.")]
+        public Transform ShotSource;
     }
 }

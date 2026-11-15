@@ -222,6 +222,37 @@ namespace CrowdPunch.Tests
             Assert.That(em.Exists(shot), Is.False);
         }
 
+        [Test]
+        public void LowShotSourceAnchorsTheWarningAndReleaseWhileCoverStillStopsFlight()
+        {
+            var shooter = Shooter(new float3(0, 1, 0));
+            em.AddComponentData(shooter, new MushroomShotSource { LocalPosition = new float3(0, -.468f, .637f) });
+            MovePlayer(new float3(12, 1, 0));
+            var floor = Body(new float3(0, -.5f, 0), false);
+            using var floorShape = Unity.Physics.BoxCollider.Create(new BoxGeometry
+            {
+                Size = new float3(50, 1, 50), Orientation = quaternion.identity
+            });
+            RebuildCollision(floor, floorShape);
+            Attack(.05f);
+            var origin = Lane(shooter).Origin;
+            Assert.That(math.distance(origin, new float3(.637f, .532f, 0)), Is.LessThan(.00001f));
+            Attack(.30f);
+            Assert.That(Lane(shooter).Locked, Is.True);
+            Body(new float3(4, .532f, 0), false);
+            RebuildCollision(floor, floorShape);
+            Attack(.45f);
+            using var shots = em.CreateEntityQuery(typeof(MushroomProjectile));
+            var shot = shots.GetSingletonEntity();
+            Assert.That(em.GetComponentData<LocalTransform>(shot).Position, Is.EqualTo(origin));
+            Flight(.025f);
+            Assert.That(em.Exists(shot), Is.True);
+            Assert.That(em.GetComponentData<LocalTransform>(shot).Position.y, Is.EqualTo(origin.y));
+            Flight(.2f);
+            Assert.That(em.Exists(shot), Is.False);
+            Assert.That(playerHits, Is.Zero);
+        }
+
         private Entity Shooter(float3 position = default)
         {
             var entity = Body(position, true);
@@ -274,7 +305,7 @@ namespace CrowdPunch.Tests
             return entity;
         }
 
-        private void RebuildCollision()
+        private void RebuildCollision(Entity floor = default, BlobAssetReference<Unity.Physics.Collider> floorShape = default)
         {
             if (physics.Bodies.IsCreated) physics.Dispose();
             physics = new PhysicsWorld(bodies.Count, 0, 0);
@@ -282,7 +313,7 @@ namespace CrowdPunch.Tests
             for (int i = 0; i < bodies.Count; i++)
             {
                 var pose = em.GetComponentData<LocalTransform>(bodies[i]);
-                rigid[i] = new RigidBody { Entity = bodies[i], Collider = ball,
+                rigid[i] = new RigidBody { Entity = bodies[i], Collider = bodies[i] == floor ? floorShape : ball,
                     WorldFromBody = new RigidTransform(pose.Rotation, pose.Position), Scale = 1f };
             }
             physics.CollisionWorld.BuildBroadphase(ref physics, .05f, float3.zero, true);

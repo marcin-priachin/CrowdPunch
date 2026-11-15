@@ -23,6 +23,9 @@ namespace CrowdPunch.Editor
 
         internal static EnemySpawnSettings Rebuild()
         {
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            var existingSource = existing != null ? existing.GetComponent<EnemyAuthoring>().ShotSource : null;
+            var existingVisual = existing != null ? existing.GetComponentInChildren<Animator>() : null;
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(Source + "Prefabs/No Root/Mushroom Shooter 01.prefab");
             if (model == null) throw new InvalidOperationException("Mushroom Shooter model is missing.");
             var idle = Clip("Idle");
@@ -43,7 +46,13 @@ namespace CrowdPunch.Editor
                 capsule.providesContacts = true;
                 capsule.material = AssetDatabase.LoadAssetAtPath<PhysicsMaterial>(Root + "PhysicsMaterial/Enemy.physicMaterial");
                 root.AddComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
-                root.AddComponent<EnemyAuthoring>();
+                var enemy = root.AddComponent<EnemyAuthoring>();
+                var shotSource = new GameObject("ShotSource") { layer = root.layer }.transform;
+                shotSource.SetParent(root.transform, false);
+                shotSource.localPosition = existingSource != null
+                    ? existing.transform.InverseTransformPoint(existingSource.position)
+                    : new Vector3(0f, -.468f, .637f);
+                enemy.ShotSource = shotSource;
                 var visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
                 foreach (var bone in visual.GetComponentsInChildren<Transform>(true)) bone.gameObject.layer = 7;
                 var animator = visual.GetComponent<Animator>();
@@ -72,6 +81,7 @@ namespace CrowdPunch.Editor
                 var bounds = renderers[0].localBounds;
                 // Sampled vertices are in model space. The capsule floor is one metre below its root.
                 visual.transform.SetLocalPositionAndRotation(Vector3.down, Quaternion.identity);
+                if (existingVisual != null) visual.transform.localScale = existingVisual.transform.localScale;
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
                 Debug.Log($"Mushroom Shooter sampled bounds: {bounds}; Projectile Attack: {attack.length:0.###} s at {attack.frameRate} fps.");
             }

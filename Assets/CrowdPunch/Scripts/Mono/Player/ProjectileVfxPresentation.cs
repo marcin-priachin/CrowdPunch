@@ -31,6 +31,9 @@ namespace CrowdPunch.Mono.Player
         private Material mushroomCore;
         private MaterialPropertyBlock tint;
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
+        private static readonly int HighlightColor = Shader.PropertyToID("_HighlightColor");
+        private static readonly Color MushroomCap = new Color(.80f, .19f, .10f);
+        private static readonly Color MushroomCream = new Color(1f, .85f, .60f, .96f);
         private uint restart;
         internal int ActiveFlightCount => assigned.Count;
         internal int FlightCapacity => slots?.Length ?? 0;
@@ -57,7 +60,7 @@ namespace CrowdPunch.Mono.Player
                 Mathf.Clamp(library.SnakeCapacity, 1, 64), Mathf.Clamp(library.RangedCapacity, 1, 128), 16 };
             slots = new Slot[counts[0] + counts[1] + counts[2] + counts[3] + counts[4]];
             mushroomLanes = new MushroomLanePresentation(root);
-            mushroomCore = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+            mushroomCore = new Material(Resources.Load<Shader>("Shaders/MushroomProjectile"));
             tint = new MaterialPropertyBlock();
             int index = 0;
             for (int kind = 0; kind < counts.Length; kind++)
@@ -126,12 +129,16 @@ namespace CrowdPunch.Mono.Player
             bool newLaunch = fresh || slot.Sequence != sample.Sequence;
             slot.Sequence = sample.Sequence; slot.Seen = true;
             float diameter = Mathf.Max(.15f, sample.Radius * 2);
+            bool mushroom = sample.Kind == ProjectileVisualKind.MushroomEnemy;
+            Color ownership = CombatOwnershipTint.Accent(
+                sample.Redirected ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Enemy, library);
             if (slot.Core != null)
             {
-                slot.Core.transform.position = sample.Position;
+                slot.Core.transform.SetPositionAndRotation(sample.Position, Quaternion.LookRotation(
+                    sample.Velocity.sqrMagnitude > .001f ? sample.Velocity : Vector3.forward));
                 slot.Core.transform.localScale = Vector3.one * diameter;
-                tint.SetColor(BaseColor, CombatOwnershipTint.Accent(
-                    sample.Redirected ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Enemy, library));
+                tint.SetColor(BaseColor, sample.Redirected ? ownership : MushroomCap);
+                tint.SetColor(HighlightColor, sample.Redirected ? Color.Lerp(ownership, Color.white, .65f) : MushroomCream);
                 slot.Core.SetPropertyBlock(tint);
                 slot.Core.enabled = true;
             }
@@ -158,10 +165,11 @@ namespace CrowdPunch.Mono.Player
                 slot.Trail.transform.position = sample.Position;
                 if (newLaunch) slot.Trail.Clear();
                 slot.Trail.widthMultiplier = diameter * .65f;
-                Color color = sample.Kind == ProjectileVisualKind.Ranged ? new Color(.3f, .92f, 1, .85f)
-                    : CombatOwnershipTint.Accent(sample.Redirected ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Boss, library);
+                Color color = sample.Kind == ProjectileVisualKind.Ranged ? new Color(.3f, .92f, 1, .85f) : ownership;
                 if (sample.Kind == ProjectileVisualKind.Boss) color.a = sample.Redirected ? .95f : .9f;
-                slot.Trail.startColor = color; color.a = 0; slot.Trail.endColor = color;
+                slot.Trail.startColor = mushroom && !sample.Redirected ? MushroomCream : color;
+                color.a = 0;
+                slot.Trail.endColor = color;
                 slot.Trail.emitting = true;
             }
             if (fresh && sample.Kind == ProjectileVisualKind.Snake)

@@ -143,6 +143,7 @@ namespace CrowdPunch.Systems.Combat
             float3 forward = MushroomShotGeometry.Horizontal(punch.Direction, float3.zero);
             if (math.lengthsq(forward) < .001f) return false;
             bool hasWorld = SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physics);
+            float ground = SystemAPI.TryGetSingleton<ArenaGroundPlane>(out var floor) ? floor.SurfaceHeight : float.NegativeInfinity;
             var enemies = SystemAPI.GetComponentLookup<Enemy>(true);
             Entity chosen = Entity.Null;
             float distanceSq = float.MaxValue;
@@ -160,7 +161,7 @@ namespace CrowdPunch.Systems.Combat
                 float3 start = new float3(punch.Origin.x, center.y, punch.Origin.z);
                 float travel = math.distance(start, center);
                 if (hasWorld && travel > .001f && MushroomShotGeometry.FindCover(physics.CollisionWorld,
-                    enemies, start, (center - start) / travel, travel, .01f, out _)) continue;
+                    enemies, start, (center - start) / travel, travel, .01f, ground, out _)) continue;
                 chosen = shot;
                 distanceSq = sq;
             }
