@@ -26,7 +26,7 @@ namespace CrowdPunch.Tests
             player = world.EntityManager.CreateEntity(typeof(PlayerSnapshot));
             go = new GameObject("Splash bridge"); bridge = go.AddComponent<PlayerEcsBridge>();
             PlayerBridgeRegistry.TryGetBridge(out previous); PlayerBridgeRegistry.Register(bridge);
-            bridge.ProjectileBurstReceived += (kind, point, direction, scale) => { bursts++; contact = point; normal = direction; };
+            bridge.ProjectileBurstReceived += (kind, point, direction, scale, owner) => { bursts++; contact = point; normal = direction; };
             bridge.EnemyContactHitReceived += (damage, protection, push) => hits++;
             world.SetTime(new TimeData(1, 1));
         }

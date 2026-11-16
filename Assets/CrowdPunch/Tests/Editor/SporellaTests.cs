@@ -175,6 +175,13 @@ namespace CrowdPunch.Tests
             Body(new float3(0, .94f, 12f));
             var behindCover = Body(new float3(0, .94f, 14f), true);
             RebuildPhysics();
+            var contacts = new List<Vector3>();
+            bridge.ProjectileBurstReceived += (visual, point, _, _, owner) =>
+            {
+                contacts.Add(point);
+                Assert.That(visual, Is.EqualTo(ProjectileVisualKind.SporellaPlayer));
+                Assert.That(owner, Is.EqualTo(EnemyLaunchOwner.Player));
+            };
 
             var shot = Shot(new float3(0, .94f, .4f), -math.forward(), kind);
             Punch();
@@ -198,6 +205,8 @@ namespace CrowdPunch.Tests
             Assert.That(HealthOf(objective), Is.EqualTo(30f));
             Assert.That(HealthOf(behindCover), Is.EqualTo(30f));
             Assert.That(em.Exists(shot), Is.False);
+            Assert.That(contacts.Count, Is.EqualTo(3), "SPORELLA-003: two pierced enemies followed by cover.");
+            Assert.That(contacts[2].z, Is.EqualTo(11.55f).Within(.03f));
         }
 
         [TestCase(SporellaShotKind.EnemyShot)]

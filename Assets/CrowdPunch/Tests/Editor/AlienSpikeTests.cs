@@ -311,9 +311,19 @@ namespace CrowdPunch.Tests
             if (cover) BuildPhysics(new[] { enemy, wall }, new[] { 4f, 2f });
             else BuildPhysics(new[] { enemy }, new[] { 4f });
             em.SetComponentData(player, new PlayerSnapshot { IsAvailable = true, Radius = .5f, Position = new float3(8, 1, 0) });
+            int bursts = 0;
+            bridge.ProjectileBurstReceived += (kind, point, normal, _, owner) =>
+            {
+                bursts++;
+                Assert.That(kind, Is.EqualTo(ProjectileVisualKind.AlienSpike));
+                Assert.That(owner, Is.EqualTo(owned ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Enemy));
+                Assert.That(point.x, Is.EqualTo(cover ? 1.5f : owned ? 3.5f : 7.5f).Within(.03f));
+                Assert.That(normal.x, Is.LessThan(-.9f));
+            };
             var projectile = Fire(owned);
             Tick();
             Assert.That(em.Exists(projectile), Is.False);
+            Assert.That(bursts, Is.EqualTo(1), "SPIKE-003: one burst at the first solid or eligible contact.");
             Assert.That(em.GetComponentData<Health>(enemy).Current, Is.EqualTo(20 - expectedEnemyDamage));
             Assert.That(playerDamage, Is.EqualTo(expectedPlayerDamage));
             Assert.That(em.GetComponentData<PhysicsVelocity>(enemy).Linear, Is.EqualTo(new float3(1, 0, 0)));

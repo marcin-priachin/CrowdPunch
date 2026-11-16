@@ -4617,6 +4617,13 @@ Ranged and boss contact systems publish finite impact events. Boss re-punch and 
 accents follow presentation sequence changes, keeping managed callbacks outside Burst punch code.
 Defaults reserve 32 ranged, 16 boss and 16 Snake flight slots; each impact kind has 12 slots and
 accepts at most eight new bursts/frame. Exhaustion drops decoration, preserving ECS projectile cores.
+Alien Spike, Mushroom Shooter and Sporella publish contact position, normal and ownership
+through the same bridge (SPIKE-003/004, MUSHROOM-002/003, SPORELLA-003).
+Their separate pools use directional splinters, a short ring flash and a spore splash,
+respectively, tinted from the shared ownership palette. Mushroom's held beam publishes
+one burst per player or enemy hit and one whenever contact with a new cover body begins.
+Both Sporella ownership kinds share its splash budget. Burst prefab references live in
+`CombatVfxLibrary.asset`.
 Despawn, reuse, disable, restart and suspension clear flight trails and particles.
 
 Punch/player hits use short directional flashes and splinters, with smaller crowd-hit accents.

@@ -18,6 +18,7 @@ namespace CrowdPunch.Systems.Combat
         internal ComponentLookup<SnakeSegment> SnakeSegments;
         internal ComponentLookup<ExplosiveEnemyState> Exploders;
         internal Entity Emitter, Target;
+        internal float3 Position, Normal;
         internal bool PlayerOwned, Returned;
         internal AlienSpikeContactKind Kind;
         public bool EarlyOutOnFirstHit => false;
@@ -43,6 +44,9 @@ namespace CrowdPunch.Systems.Combat
                 contact.Kind = AlienSpikeContactKind.Player;
                 contact.MaxFraction = fraction;
                 contact.Target = Entity.Null;
+                float3 center = start + displacement * fraction;
+                contact.Normal = math.normalizesafe(center - player.Position, -displacement / length);
+                contact.Position = player.Position + contact.Normal * player.Radius;
             }
             return contact;
         }
@@ -72,6 +76,8 @@ namespace CrowdPunch.Systems.Combat
                 && ((byte)Kind < (byte)kind || Kind == kind && Target.Index <= hit.Entity.Index)) return false;
             MaxFraction = hit.Fraction;
             Target = hit.Entity;
+            Position = hit.Position;
+            Normal = hit.SurfaceNormal;
             Kind = kind;
             NumHits = 1;
             return true;

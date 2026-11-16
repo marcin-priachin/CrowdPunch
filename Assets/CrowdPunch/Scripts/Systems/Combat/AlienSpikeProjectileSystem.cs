@@ -57,7 +57,8 @@ namespace CrowdPunch.Systems.Combat
                     ApplyHit(em, contact.Target, shot, now);
 
                 if (contact.Kind != AlienSpikeContactKind.None)
-                    bridge?.ReceiveProjectileBurst(ProjectileVisualKind.AlienSpike, pose.ValueRO.Position, -shot.Velocity);
+                    bridge?.ReceiveProjectileBurst(ProjectileVisualKind.AlienSpike, contact.Position, contact.Normal,
+                        owner: shot.PlayerOwned != 0 ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Enemy);
 
                 if (contact.Kind != AlienSpikeContactKind.None || shot.Remaining <= 0)
                     commands.DestroyEntity(entity);

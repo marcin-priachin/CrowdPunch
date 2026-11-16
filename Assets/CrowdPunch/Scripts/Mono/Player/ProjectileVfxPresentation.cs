@@ -25,7 +25,7 @@ namespace CrowdPunch.Mono.Player
         private Slot[] slots;
         private CombatVfxLibrary library;
         private readonly Dictionary<ulong, Slot> assigned = new Dictionary<ulong, Slot>();
-        private ParticleBurstPool[] bursts;
+        private Dictionary<ProjectileVisualKind, ParticleBurstPool> bursts;
         private Transform root;
         private Mesh spikeMesh;
         private Material spikeMaterial;
@@ -82,9 +82,15 @@ namespace CrowdPunch.Mono.Player
                 slots[index++] = slot;
             }
             for (int i = 0; i < spikeCapacity; i++) slots[index++] = new Slot { Kind = ProjectileVisualKind.AlienSpike };
-            bursts = new[] { new ParticleBurstPool(root, library.RangedImpact, library.BurstCapacity),
-                new ParticleBurstPool(root, library.BossImpact, library.BurstCapacity),
-                new ParticleBurstPool(root, library.SnakeSever, library.BurstCapacity) };
+            bursts = new Dictionary<ProjectileVisualKind, ParticleBurstPool>
+            {
+                { ProjectileVisualKind.Ranged, new ParticleBurstPool(root, library.RangedImpact, library.BurstCapacity) },
+                { ProjectileVisualKind.Boss, new ParticleBurstPool(root, library.BossImpact, library.BurstCapacity) },
+                { ProjectileVisualKind.Snake, new ParticleBurstPool(root, library.SnakeSever, library.BurstCapacity) },
+                { ProjectileVisualKind.AlienSpike, new ParticleBurstPool(root, library.AlienSpikeImpact, library.BurstCapacity, true) },
+                { ProjectileVisualKind.MushroomBeam, new ParticleBurstPool(root, library.MushroomBeamImpact, library.BurstCapacity, true) },
+                { ProjectileVisualKind.SporellaEnemy, new ParticleBurstPool(root, library.SporellaImpact, library.BurstCapacity, true) }
+            };
         }
         private void CreateSeedCore(Slot slot, string name)
         {
@@ -277,13 +283,15 @@ namespace CrowdPunch.Mono.Player
                 if (slot.Trail != null) { slot.Trail.emitting = false; slot.Trail.Clear(); }
             }
         }
-        private void Burst(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale)
+        private void Burst(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale,
+            EnemyLaunchOwner owner = EnemyLaunchOwner.None)
         {
-            if (kind is ProjectileVisualKind.AlienSpike or ProjectileVisualKind.MushroomBeam
-                or ProjectileVisualKind.SporellaEnemy or ProjectileVisualKind.SporellaPlayer)
-                kind = ProjectileVisualKind.Boss;
-            if (isActiveAndEnabled && !FeedbackTimeController.IsSuspended && bursts != null && (int)kind < bursts.Length)
-                bursts[(int)kind].Show(position, direction, scale);
+            if (kind == ProjectileVisualKind.SporellaPlayer) kind = ProjectileVisualKind.SporellaEnemy;
+            if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended || bursts == null
+                || !bursts.TryGetValue(kind, out var pool)) return;
+
+            Color? accent = owner == EnemyLaunchOwner.None ? null : CombatOwnershipTint.Accent(owner, library);
+            pool.Show(position, direction, scale, accent);
         }
         private void Update()
         {
@@ -293,7 +301,7 @@ namespace CrowdPunch.Mono.Player
         public void Clear()
         {
             Begin(); End();
-            if (bursts != null) foreach (var pool in bursts) pool.Clear();
+            if (bursts != null) foreach (var pool in bursts.Values) pool.Clear();
         }
         private void OnDisable()
         {

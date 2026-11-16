@@ -116,7 +116,7 @@ namespace CrowdPunch.Mono.Player
             if (finaleFlight != null) bridge.FinaleFlightReceived += OnFinaleFlight;
             bridge.PillarImpactReceived += OnPillar;
             bridge.ExplosionReceived += OnExplosion;
-            bridge.ProjectileBurstReceived += OnProjectileImpact;
+            bridge.ProjectileImpactSoundReceived += OnProjectileImpact;
             bridge.GameplaySfxReceived += OnWorldCue;
             if (dasherRolls != null)
             {
@@ -166,7 +166,7 @@ namespace CrowdPunch.Mono.Player
                 if (finaleFlight != null) bridge.FinaleFlightReceived -= OnFinaleFlight;
                 bridge.PillarImpactReceived -= OnPillar;
                 bridge.ExplosionReceived -= OnExplosion;
-                bridge.ProjectileBurstReceived -= OnProjectileImpact;
+                bridge.ProjectileImpactSoundReceived -= OnProjectileImpact;
                 bridge.GameplaySfxReceived -= OnWorldCue;
                 if (dasherRolls != null)
                 {
@@ -341,7 +341,7 @@ namespace CrowdPunch.Mono.Player
             if (CanPlay) PlayWorld(profile.ExploderDetonation, position, .6f, 2f);
         }
 
-        private void OnProjectileImpact(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale)
+        private void OnProjectileImpact(ProjectileVisualKind kind, Vector3 position)
         {
             switch (kind)
             {

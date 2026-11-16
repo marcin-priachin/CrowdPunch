@@ -50,6 +50,7 @@ namespace CrowdPunch.Systems.Combat
                 }
 
                 bool playerOwned = shot.Kind != SporellaShotKind.EnemyShot;
+                var owner = playerOwned ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Enemy;
                 var visual = playerOwned ? ProjectileVisualKind.SporellaPlayer : ProjectileVisualKind.SporellaEnemy;
                 var history = playerOwned ? em.GetBuffer<BodyProjectileHit>(entity) : default;
                 float playerRadius = shot.Radius + math.max(0f, player.Radius);
@@ -94,7 +95,7 @@ namespace CrowdPunch.Systems.Combat
                             continue;
                         if (!BodyProjectileDamage.TryDamage(em, hit.Entity, entity, history, shot.EnemyDamage,
                             shot.PunchSequence, now, shot.ChainDepth)) continue;
-                        bridge?.ReceiveProjectileBurst(visual, hit.Position, hit.SurfaceNormal, .65f);
+                        bridge?.ReceiveProjectileBurst(visual, hit.Position, hit.SurfaceNormal, .55f, owner);
                         if (shot.Kind != SporellaShotKind.ImpactShot) continue;
                         enemyStop = true;
                         stopAt = hit.Fraction;
@@ -107,10 +108,14 @@ namespace CrowdPunch.Systems.Combat
                     shot.ExitingRedirectContact = false;
 
                 if (playerHit && !enemyStop)
+                {
                     bridge?.ReceiveEnemyHit(shot.PlayerDamage, shot.PlayerInvincibility, float3.zero);
-                if ((playerHit || coverHit) && !enemyStop)
-                    bridge?.ReceiveProjectileBurst(visual, pose.ValueRO.Position,
-                        coverHit ? cover.SurfaceNormal : -shot.Direction);
+                    float3 normal = math.normalizesafe(pose.ValueRO.Position - player.Position, -shot.Direction);
+                    bridge?.ReceiveProjectileBurst(visual, player.Position + normal * math.max(0f, player.Radius),
+                        normal, .8f, owner);
+                }
+                if (coverHit && !enemyStop)
+                    bridge?.ReceiveProjectileBurst(visual, cover.Position, cover.SurfaceNormal, .7f, owner);
                 if (playerHit || coverHit || enemyStop || shot.Distance >= shot.Range) commands.DestroyEntity(entity);
             }
             commands.Playback(em);

@@ -49,12 +49,17 @@ namespace CrowdPunch.Mono.Player
     {
         public event Action ProjectileVisualsBegan, ProjectileVisualsEnded;
         public event Action<ProjectileVisualSample> ProjectileVisualReceived;
-        public event Action<ProjectileVisualKind, Vector3, Vector3, float> ProjectileBurstReceived;
+        public event Action<ProjectileVisualKind, Vector3, Vector3, float, EnemyLaunchOwner> ProjectileBurstReceived;
+        internal event Action<ProjectileVisualKind, Vector3> ProjectileImpactSoundReceived;
         public void BeginProjectileVisuals() => ProjectileVisualsBegan?.Invoke();
         public void EndProjectileVisuals() => ProjectileVisualsEnded?.Invoke();
         public void ReceiveProjectileVisual(ProjectileVisualSample sample) => ProjectileVisualReceived?.Invoke(sample);
-        public void ReceiveProjectileBurst(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale = 1)
-            => ProjectileBurstReceived?.Invoke(kind, position, direction, scale);
+        public void ReceiveProjectileBurst(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale = 1,
+            EnemyLaunchOwner owner = EnemyLaunchOwner.None, bool playSound = true)
+        {
+            ProjectileBurstReceived?.Invoke(kind, position, direction, scale, owner);
+            if (playSound) ProjectileImpactSoundReceived?.Invoke(kind, position);
+        }
         public CrowdPunch.Configuration.CombatFeedbackSettings FeedbackSettings { get; set; }
         public event Action<CombatFeedbackMessage> ImpactReceived;
         internal GameplaySfx GameplayAudio { get; set; }

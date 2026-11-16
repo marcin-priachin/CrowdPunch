@@ -12,6 +12,8 @@ namespace CrowdPunch.Configuration
         public ParticleSystem RangedImpact, BossImpact, SnakeSever;
         [Min(1)] public int RangedCapacity = 32, BossCapacity = 16, SnakeCapacity = 16;
         [Min(1)] public int BurstCapacity = 12;
+        [Header("Enemy projectile impacts")]
+        public ParticleSystem AlienSpikeImpact, MushroomBeamImpact, SporellaImpact;
         [Header("Crowd accents")]
         public ParticleSystem LaunchDust, NinjaSmoke;
         public Material LaunchTrail, ArcaneTrail, BossTrail;

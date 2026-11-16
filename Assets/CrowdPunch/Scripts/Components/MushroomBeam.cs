@@ -5,7 +5,7 @@ namespace CrowdPunch.Components
 {
     public struct MushroomBeam : IComponentData
     {
-        public Entity Arena, Emitter;
+        public Entity Arena, Emitter, CoverContact;
         public float3 Origin, Direction;
         public float Radius, Range, Length;
         public float Damage, PlayerInvincibility;

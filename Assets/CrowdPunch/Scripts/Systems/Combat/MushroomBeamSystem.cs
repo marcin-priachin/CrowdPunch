@@ -49,6 +49,11 @@ namespace CrowdPunch.Systems.Combat
                     beam.Range, beam.Radius, ground, out var cover);
                 float end = blocked ? cover.Fraction : 1f;
                 beam.Length = beam.Range * end;
+                if (blocked && cover.Entity != beam.CoverContact)
+                    bridge?.ReceiveProjectileBurst(ProjectileVisualKind.MushroomBeam, cover.Position, cover.SurfaceNormal,
+                        owner: beam.Owner, playSound: false);
+                beam.CoverContact = blocked ? cover.Entity : Entity.Null;
+
                 if (hostile)
                 {
                     if (!beam.HitPlayer && player.IsAvailable && (beam.PlayerLayers & player.CollisionLayer) != 0
@@ -58,6 +63,11 @@ namespace CrowdPunch.Systems.Combat
                     {
                         beam.HitPlayer = true;
                         bridge?.ReceiveEnemyHit(beam.Damage, beam.PlayerInvincibility, float3.zero);
+                        float3 center = beam.Origin + beam.Direction * (beam.Range * fraction);
+                        float3 normal = math.normalizesafe(center - player.Position, -beam.Direction);
+                        bridge?.ReceiveProjectileBurst(ProjectileVisualKind.MushroomBeam,
+                            player.Position + normal * math.max(0f, player.Radius), normal, 1.2f,
+                            beam.Owner, playSound: false);
                     }
                     continue;
                 }
@@ -73,7 +83,8 @@ namespace CrowdPunch.Systems.Combat
                     if (hit.Entity == beam.Emitter) continue;
                     if (BodyProjectileDamage.TryDamage(em, hit.Entity, entity, history,
                         beam.Damage, beam.PunchSequence, now, beam.ChainDepth))
-                        bridge?.ReceiveProjectileBurst(ProjectileVisualKind.MushroomBeam, hit.Position, hit.SurfaceNormal, .65f);
+                        bridge?.ReceiveProjectileBurst(ProjectileVisualKind.MushroomBeam, hit.Position, hit.SurfaceNormal,
+                            .9f, beam.Owner);
                 }
             }
             commands.Playback(em);

@@ -170,6 +170,13 @@ namespace CrowdPunch.Tests
             var behindCover = Body(new float3(0, .95f, 10), true);
             RebuildCollision();
             var hostile = HostileBeam(shooter, new float3(0, .95f, 2), -math.forward());
+            int bursts = 0;
+            bridge.ProjectileBurstReceived += (kind, point, _, _, owner) =>
+            {
+                bursts++;
+                Assert.That(kind, Is.EqualTo(ProjectileVisualKind.MushroomBeam));
+                Assert.That(owner, Is.EqualTo(EnemyLaunchOwner.Player));
+            };
 
             em.SetComponentData(player, new PunchRequest
             {
@@ -205,6 +212,7 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<Health>(behindCover).Current, Is.EqualTo(5f));
 
             Beam(.05f);
+            Assert.That(bursts, Is.EqualTo(3), "MUSHROOM-003: two damaged enemies and one cover contact.");
             Assert.That(em.GetComponentData<Health>(second).Current, Is.EqualTo(5f));
             Assert.That(em.GetComponentData<EnemyLaunchState>(second).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
             Assert.That(playerHits, Is.Zero);
@@ -215,11 +223,19 @@ namespace CrowdPunch.Tests
         {
             var shooter = Shooter();
             var enemy = Body(new float3(0, 1, 5), true);
+            var contacts = new List<Vector3>();
+            bridge.ProjectileBurstReceived += (kind, point, _, _, owner) =>
+            {
+                contacts.Add(point);
+                Assert.That(kind, Is.EqualTo(ProjectileVisualKind.MushroomBeam));
+                Assert.That(owner, Is.EqualTo(EnemyLaunchOwner.Enemy));
+            };
             RebuildCollision();
             MovePlayer(new float3(2, 1, 12));
             var beam = HostileBeam(shooter, new float3(0, 1, 0), math.forward());
             Beam(.02f);
             Assert.That(playerHits, Is.Zero);
+            Assert.That(contacts, Is.Empty);
             MovePlayer(new float3(0, 1, 12));
             Beam(.02f);
             Beam(.02f);
@@ -228,6 +244,14 @@ namespace CrowdPunch.Tests
             Assert.That(playerHits, Is.EqualTo(1));
             Assert.That(playerDamage, Is.EqualTo(10f));
             Assert.That(playerProtection, Is.EqualTo(.5f));
+            Assert.That(contacts.Count, Is.EqualTo(1), "MUSHROOM-002: holding the beam does not repeat player VFX.");
+            Assert.That(contacts[0].z, Is.EqualTo(11.5f).Within(.03f));
+            Body(new float3(0, 1, 9), false);
+            RebuildCollision();
+            Beam(.02f);
+            Beam(.02f);
+            Assert.That(contacts.Count, Is.EqualTo(2), "MUSHROOM-002: cover contact emits once while blocked.");
+            Assert.That(contacts[1].z, Is.EqualTo(8.5f).Within(.03f));
             Beam(.20f);
             Assert.That(em.Exists(beam), Is.False);
         }
