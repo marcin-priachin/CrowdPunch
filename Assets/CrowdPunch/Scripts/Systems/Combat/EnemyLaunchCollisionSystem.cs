@@ -39,6 +39,7 @@ namespace CrowdPunch.Systems.Combat
                 SporellaTunings = SystemAPI.GetComponentLookup<SporellaSettings>(true),
                 SporellaContacts = SystemAPI.GetBufferLookup<SporellaImpactContact>(),
                 SporellaHistories = SystemAPI.GetBufferLookup<SporellaImpactHistory>(),
+                MushroomImpacts = SystemAPI.GetBufferLookup<MushroomBeamImpact>(),
                 SpikeBursts = SystemAPI.GetBufferLookup<AlienSpikeBurst>(),
                 SpikeHistory = SystemAPI.GetBufferLookup<AlienSpikeBurstHistory>(),
                 Lifetimes = SystemAPI.GetComponentLookup<EnemyLifetime>(true),
@@ -92,6 +93,7 @@ namespace CrowdPunch.Systems.Combat
             [ReadOnly] public ComponentLookup<SporellaSettings> SporellaTunings;
             public BufferLookup<SporellaImpactContact> SporellaContacts;
             public BufferLookup<SporellaImpactHistory> SporellaHistories;
+            public BufferLookup<MushroomBeamImpact> MushroomImpacts;
             public BufferLookup<AlienSpikeBurst> SpikeBursts;
             public BufferLookup<AlienSpikeBurstHistory> SpikeHistory;
             [ReadOnly] public ComponentLookup<EnemyLifetime> Lifetimes;
@@ -409,6 +411,17 @@ namespace CrowdPunch.Systems.Combat
                 targetState.LastPropagationImpulse = estimatedImpulse;
                 LaunchStateLookup[target] = targetState;
                 CorrectPropagatedDirection(source, target);
+                if (targetState.Owner == EnemyLaunchOwner.Player && MushroomImpacts.TryGetBuffer(target, out var impacts))
+                {
+                    float3 position = TransformLookup[target].Position;
+                    float3 outward = MushroomShotGeometry.Horizontal(position - TransformLookup[source].Position, math.forward());
+                    float3 direction = MushroomShotGeometry.Horizontal(VelocityLookup[target].Linear, outward);
+                    impacts.Add(new MushroomBeamImpact
+                    {
+                        Position = position, Direction = direction, PunchSequence = targetState.OriginatingPunchSequence,
+                        ChainDepth = targetState.FeedbackChainDepth
+                    });
+                }
                 if (PairEndpoints.HasComponent(target)) {
                     Entity record = PairEndpoints[target].Pair;
                     if (Pairs.HasComponent(record)) {

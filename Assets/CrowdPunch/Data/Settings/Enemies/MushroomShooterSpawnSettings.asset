@@ -53,7 +53,7 @@ MonoBehaviour:
   approachSpeed: 6
   initialAttackDelay: 1
   initialDelayVariation: 0.5
-  windUpDuration: 1
+  windUpDuration: 0.75
   projectileLaunchFrame: 11
   firingAnimationLastFrame: 25
   cooldown: 2
@@ -72,10 +72,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   mushroomShooter:
-    TrackingSeconds: 0.3
-    LockedSeconds: 0.45
     TravelRange: 45
     Height: 0.95
+    BeamDuration: 0.25
     EnemyDamage: 5
   explosionRadius: 5
   explosionDamage: 20

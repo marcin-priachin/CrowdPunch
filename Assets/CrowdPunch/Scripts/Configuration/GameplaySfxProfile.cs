@@ -49,7 +49,6 @@ namespace CrowdPunch.Configuration
         public AudioClip[] AlienSpikeBurst;
         public AudioClip[] AlienSpikeImpact;
         public AudioClip[] MushroomWindup;
-        public AudioClip[] MushroomLock;
         public AudioClip[] MushroomFire;
         public AudioClip[] SporellaWindup;
         public AudioClip[] SporellaFire;

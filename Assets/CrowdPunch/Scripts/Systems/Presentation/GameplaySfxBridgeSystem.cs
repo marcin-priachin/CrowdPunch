@@ -62,7 +62,6 @@ namespace CrowdPunch.Systems.Presentation
             EnemyAttackAudioKind.AlienSpikeVolley => GameplaySfxCue.AlienSpikeVolley,
             EnemyAttackAudioKind.AlienSpikeBurst => GameplaySfxCue.AlienSpikeBurst,
             EnemyAttackAudioKind.MushroomWindup => GameplaySfxCue.MushroomWindup,
-            EnemyAttackAudioKind.MushroomLock => GameplaySfxCue.MushroomLock,
             EnemyAttackAudioKind.MushroomFire => GameplaySfxCue.MushroomFire,
             EnemyAttackAudioKind.SporellaWindup => GameplaySfxCue.SporellaWindup,
             EnemyAttackAudioKind.SporellaFire => GameplaySfxCue.SporellaFire,

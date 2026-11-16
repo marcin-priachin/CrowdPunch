@@ -2161,34 +2161,37 @@ encounter. Retry resets shots, cooldowns and launch history. Keep this encounter
 Status: Must
 
 Maintain a preferred range and seek another angle when solid cover blocks the shot.
-Begin only from a clear angle. Plant the Shooter and track the player for 0.30 s by
-default, even if cover intervenes. Lock the origin and direction for a separately
-tunable 0.45 s by default, with a distinct lock cue. Truncate the floor warning at
-the first solid or maximum range. Fire once at the authored release pose even if
-the line is now obstructed. The warning does not deal damage. A launch before
-release cancels the warning and starts the normal cooldown after recovery.
+Begin only from a clear angle. Plant the Shooter and commit its aim at the start
+of a single tunable warning, 0.75 s by default. Show one translucent violet strip
+on the floor, clipped at the first solid or maximum range. Fire once along that
+line at the authored release pose even if cover moves into the way. The warning
+does not deal damage. A launch before release cancels the warning and starts the
+normal cooldown after recovery.
 
-### MUSHROOM-002 - Straight Shot And Return
+### MUSHROOM-002 - Laser Beam
 
 Status: Must
 
-Use the same straight, horizontal path, speed (default 32 m/s), and height on both
-legs. The incoming shot passes ordinary enemies harmlessly. A valid player punch
-prioritizes a redirectable shot over enemies in the same hit area. Redirect at most
-once, using horizontal punch aim and resetting the full range budget at contact.
-Either leg ends on the first solid, player contact, or maximum range. Use normal
-player damage and invulnerability (10 damage, 0.5 s by default), with safety during
-the redirect contact only.
+Fire a straight, horizontal beam from the locked muzzle. Hold the beam for a
+tunable duration, defaulting to 0.25 s. Solid cover clips its reach throughout
+the hold. The violet beam passes through enemies and can damage only the player,
+once per firing, using normal damage and invulnerability (10 damage, 0.5 s by
+default). Punches target the Shooter as an ordinary enemy. Being launched ends
+its hostile beam.
 
 ### MUSHROOM-003 - Damage And Readability
 
 Status: Must
 
-The returned shot pierces eligible enemies, including the Shooter, and deals
-player-owned damage (default 5) once per enemy per shot without launching them.
-Preserve armor, boss, and objective gates that require a launched-body hit. Use
-the shared projectile ownership colors and the authored No Root Mushroom Shooter
-clips and textures in Full Cel (VISION-005/006).
+A player punch or a body launched by the player sends an amber beam from the
+Shooter's muzzle when the hit launches it. The beam holds the horizontal launch
+direction from the impact position and uses the same duration, width, range, and
+cover rules. It pierces eligible enemies other than the emitter, dealing
+player-owned damage (default 5) once per enemy. Only enemies can take damage
+from this beam. Preserve movement and flight when applying its damage, along
+with armor, boss, and objective gates that require a launched-body hit. Use the
+shared ownership colors and the authored No Root Mushroom Shooter clips and
+textures in Full Cel (VISION-005/006).
 
 ### MUSHROOM-004 - Legacy Gauntlet_33
 
@@ -2240,7 +2243,8 @@ direction. Enemy shots pass enemies harmlessly. Impact shots stop on the first
 eligible enemy they damage. Punch returns pierce eligible enemies once per shot. Player-owned projectiles credit the player without launching
 targets. Preserve armor, boss, and objective gates. All three kinds stop at solid
 cover and can hurt the player under standard damage and invulnerability rules.
-Use Mushroom Shooter's redirect-contact protection. Sweep the traveled path
+After a punch redirect, protect the player from the shot until it leaves the
+redirect overlap. Sweep the traveled path
 and use the authored Sporella model, textures, and clips in Full Cel with shared
 ownership cues (VISION-005/006).
 

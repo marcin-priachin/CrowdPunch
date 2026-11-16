@@ -5,13 +5,10 @@ using UnityEngine.Rendering;
 
 namespace CrowdPunch.Mono.Player
 {
-    // One depth-tested mesh for all lanes; the bridge sends only geometry and lock state.
+    // Batch the floor warnings and the active beams in one depth-tested mesh.
     internal sealed class MushroomLanePresentation : IDisposable
     {
-        private static readonly Color Ink = new Color(.12f, .045f, .19f, .92f);
-        private static readonly Color Tracking = new Color(.74f, .33f, 1f, .40f);
-        private static readonly Color Locked = new Color(1f, .56f, .14f, .66f);
-        private static readonly Color Mark = new Color(1f, .95f, .72f, .95f);
+        private static readonly Color WarningColor = new Color(.74f, .33f, 1f, .24f);
         private readonly Mesh mesh;
         private readonly MeshRenderer renderer;
         private readonly Material material;
@@ -21,9 +18,9 @@ namespace CrowdPunch.Mono.Player
 
         internal MushroomLanePresentation(Transform parent)
         {
-            var go = new GameObject("Mushroom Shooter warning lanes");
+            var go = new GameObject("Mushroom Shooter beams and warnings");
             go.transform.SetParent(parent, false);
-            mesh = new Mesh { name = "Mushroom warning lanes", indexFormat = IndexFormat.UInt32 };
+            mesh = new Mesh { name = "Mushroom beams and warnings", indexFormat = IndexFormat.UInt32 };
             mesh.MarkDynamic();
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             renderer = go.AddComponent<MeshRenderer>();
@@ -32,6 +29,21 @@ namespace CrowdPunch.Mono.Player
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
             renderer.enabled = false;
+        }
+
+        internal void AddBeam(in ProjectileVisualSample beam, Color ownership)
+        {
+            Vector3 start = beam.Position, direction = beam.Velocity;
+            Vector3 end = start + direction * beam.LaneLength;
+            Vector3 horizontal = Vector3.Cross(Vector3.up, direction) * beam.Radius;
+            Vector3 vertical = Vector3.up * beam.Radius;
+            Color edge = ownership;
+            edge.a = .65f;
+            Color core = Color.Lerp(ownership, Color.white, .8f);
+            Strip(start, end, horizontal, edge);
+            Strip(start, end, vertical, edge);
+            Strip(start, end, horizontal * .23f, core);
+            Strip(start, end, vertical * .23f, core);
         }
 
         internal void Begin()
@@ -46,25 +58,7 @@ namespace CrowdPunch.Mono.Player
             Vector3 start = warning.Position, direction = warning.Velocity;
             Vector3 end = start + direction * warning.LaneLength;
             Vector3 half = Vector3.Cross(Vector3.up, direction) * warning.Radius;
-            Strip(start, end, half, Ink);
-            float inset = Mathf.Min(.09f, warning.LaneLength * .2f);
-            Vector3 lift = Vector3.up * .004f;
-            Strip(start + direction * inset + lift, end - direction * inset + lift,
-                half * .77f, warning.LaneLocked ? Locked : Tracking);
-            if (!warning.LaneLocked) return;
-            int marks = Mathf.Clamp(Mathf.CeilToInt(warning.LaneLength / 3.5f), 1, 20);
-            float length = Mathf.Min(.42f, warning.LaneLength / marks * .35f);
-            for (int i = 0; i < marks; i++)
-            {
-                Vector3 p = Vector3.Lerp(start, end, (i + .5f) / marks) + lift * 2;
-                Vector3 tip = p + direction * (length * .5f);
-                Vector3 tail = p - direction * (length * .5f);
-                int first = vertices.Count;
-                Vertex(tail - half * .59f, Mark); Vertex(tip, Mark);
-                Vertex(tail + half * .59f, Mark); Vertex(p, Mark);
-                indices.Add(first); indices.Add(first + 1); indices.Add(first + 3);
-                indices.Add(first + 1); indices.Add(first + 2); indices.Add(first + 3);
-            }
+            Strip(start, end, half, WarningColor);
         }
 
         internal void End()
@@ -91,8 +85,16 @@ namespace CrowdPunch.Mono.Player
 
         public void Dispose()
         {
-            UnityEngine.Object.Destroy(mesh);
-            if (material != null) UnityEngine.Object.Destroy(material);
+            if (Application.isPlaying)
+            {
+                UnityEngine.Object.Destroy(mesh);
+                UnityEngine.Object.Destroy(material);
+            }
+            else
+            {
+                UnityEngine.Object.DestroyImmediate(mesh);
+                UnityEngine.Object.DestroyImmediate(material);
+            }
         }
     }
 }

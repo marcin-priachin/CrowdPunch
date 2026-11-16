@@ -63,7 +63,7 @@ namespace CrowdPunch.Editor
                 var level = EditorSceneManager.OpenScene(Scenes + MushroomGauntlet + ".unity", OpenSceneMode.Single);
                 using (var data = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>()))
                 {
-                    data.FindProperty("openingHint").stringValue = "Sidestep when the lane locks. Use cover or punch the shot back through the crowd.";
+                    data.FindProperty("openingHint").stringValue = "Sidestep the violet warning lane. Punch the Shooter to fire its beam through the crowd.";
                     data.ApplyModifiedPropertiesWithoutUndo();
                 }
                 EditorSceneManager.MarkSceneDirty(level);

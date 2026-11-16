@@ -136,6 +136,7 @@ namespace CrowdPunch.Systems.Lifetime
                         });
                     }
                     SystemAPI.GetBuffer<CollisionDamageHistory>(enemy).Clear();
+                    if (SystemAPI.HasBuffer<MushroomBeamImpact>(enemy)) SystemAPI.GetBuffer<MushroomBeamImpact>(enemy).Clear();
                     if (SystemAPI.HasBuffer<SporellaImpactHistory>(enemy))
                     {
                         SystemAPI.GetBuffer<SporellaImpactHistory>(enemy).Clear();

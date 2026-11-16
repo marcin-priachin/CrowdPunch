@@ -6,7 +6,7 @@ namespace CrowdPunch.Components
     internal enum EnemyAttackAudioKind : byte
     {
         AlienSpikeWindup, AlienSpikeVolley, AlienSpikeBurst,
-        MushroomWindup, MushroomLock, MushroomFire,
+        MushroomWindup, MushroomFire,
         SporellaWindup, SporellaFire, SporellaImpactFire
     }
 

@@ -75,9 +75,8 @@ namespace CrowdPunch.Bakers
                     ApproachSpeed = settings.ApproachSpeed,
                     InitialAttackDelay = settings.InitialAttackDelay,
                     InitialDelayVariation = settings.InitialDelayVariation,
-                    WindUpDuration = settings.Archetype == Configuration.EnemyArchetype.MushroomShooter
-                        ? settings.MushroomShooter.TrackingSeconds + settings.MushroomShooter.LockedSeconds
-                        : settings.Archetype == Configuration.EnemyArchetype.Sporella ? settings.Sporella.Windup : settings.WindUpDuration,
+                    WindUpDuration = settings.Archetype == Configuration.EnemyArchetype.Sporella
+                        ? settings.Sporella.Windup : settings.WindUpDuration,
                     ProjectileLaunchProgress = settings.ProjectileLaunchProgress,
                     Cooldown = settings.Cooldown,
                     CooldownVariation = settings.CooldownVariation,

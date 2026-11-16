@@ -14,7 +14,7 @@ namespace CrowdPunch.Mono.Player
         FinaleLightningStrike, FinaleAirSweep, FinaleWingSweep, FinaleShockwave, FinaleAnchorOverload,
         FinaleLanding, FinaleTakeoff, FinaleHit, FinaleDefeat,
         AlienSpikeWindup, AlienSpikeVolley, AlienSpikeBurst, AlienSpikeImpact,
-        MushroomWindup, MushroomLock, MushroomFire,
+        MushroomWindup, MushroomFire,
         SporellaWindup, SporellaFire, SporellaImpactFire, FungalShotImpact, EnemyShotRedirect,
         Count
     }

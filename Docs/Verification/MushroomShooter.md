@@ -1,37 +1,42 @@
 # Mushroom Shooter verification
 
 Open **Window > Crowd Punch > Level Play**, select **Legacy**, and pick **33 Return Fire**.
-The level has three solid cover pieces and two wave-clear waves: 1 Shooter with 6
-Baselines, then 2 Shooters with 12 Baselines. The campaign catalog and player build
-scene list do not include this encounter (MUSHROOM-004, LOOP-006).
+The level has three solid cover pieces and two wave-clear waves. The first has one
+Shooter and six Baselines, and the second has two Shooters and twelve Baselines
+(MUSHROOM-004, LOOP-006).
 
-The Shooter profile has a 0.30 s tracking warning, a 0.45 s locked warning, a
-2–3 s cooldown, a 12–22 m preferred band and a 32 m engagement range.
-The projectile travels at 32 m/s for up to 45 m per leg with a 1.10 m diameter.
-The prefab's `ShotSource` sets the release point and the start of the warning lane.
-The current marker is 0.532 m above the floor when the Shooter is grounded.
-It does 10 damage to the player with 0.5 s of normal
-invulnerability and 5 damage to eligible enemies after redirect.
+## Authored settings
 
-The No Root Projectile Attack clip has no release event. In Unity, the mouth
-bone reaches its first forward extremum at frame 11 of 25 (30 fps).
-The baked scene reported the first projectile at 32 m/s with its full 45 m range,
-and the animation reported release progress 0.440 on that same rendered frame.
-The locked floor line was captured at the beginning of its 0.45 s hold.
+The Shooter aims at warning onset and displays one translucent lane for 0.75 s. The preferred range is
+12–22 m, the engagement range is 32 m, and the cooldown is 2–3 s.
+The laser holds for 0.25 s with a maximum range of 45 m and a width of 1.10 m.
+The prefab's grounded muzzle is 0.532 m above the floor. The No Root attack clip's
+release pose is frame 11 of 25 at 30 fps.
 
-Eight focused EditMode cases verify the low muzzle, cover and warning timing, cancellation in
-both phases, cooldown after recovery, projectile priority, repeated punch
-rejection, harmless travel through enemies on the incoming leg, ordered piercing,
-armor immunity, and player contact after leaving the redirect overlap.
+## Verified in Unity
 
-In a controlled live Editor run through the Level Play launch path, each Shooter
-fired in both authored waves. Injected enemy defeats demonstrated standard wave
-advancement and final completion. The live check is a wiring and system order
-check; natural input timing, difficulty, and larger crowd performance still need
-playtesting. The separate `dotnet build` returned unsuccessful without compiler
-errors; Unity compilation was clean.
+The 11 Mushroom Shooter EditMode cases cover translucent warning geometry, fixed
+aim and release timing, cover, once-per-beam damage, punch credit, launch
+interruption, and impacts through the Unity Physics solver. The 15 Sporella cases
+and four Combat VFX cases also passed.
+An isolated Return Fire preview produced a hostile beam and a punch-triggered
+beam through the normal bridge. Both reached the active beam mesh.
+A second preview sampled 61 warning frames with 24% opacity and confirmed that
+the beam followed the warning direction at release.
 
-The launch pose uses the animated mesh to maintain floor clearance (COMBAT-018).
-A live Gauntlet 33 punch at the current 1.5× model scale kept the rendered mesh
-at least 0.011 m above the floor across 18 sampled frames. The collision body
-held its grounded height throughout the sample.
+In a separate Editor preview, `MushroomBeamSystem` averaged 0.49 ms with 7
+authored enemies and 0.32 ms with 14, from 12 active hostile-beam frames per
+wave. The respective peaks were 1.96 ms and 0.62 ms. The second wave was
+reached by injecting first-wave defeats. These samples include Editor overhead.
+
+## Playtest checks
+
+- Sidestep as soon as the translucent lane appears. The violet beam should follow the lane and
+  pass through enemies. Crossing it during the hold should deal 10 player damage
+  once and grant the standard 0.5 s of invulnerability.
+- Punch the Shooter or launch a body into it. The amber beam should start at the
+  impact position and point along the launch. Line up several enemies to check that
+  each takes 5 damage once, intact armor is protected, and the player is safe.
+- Move behind cover and check that both beams end at its near face. Check that a
+  launch interrupts the warning or active hostile beam, and that retry clears any
+  active beams.

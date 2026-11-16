@@ -351,8 +351,7 @@ namespace CrowdPunch.Mono.Player
                 case ProjectileVisualKind.AlienSpike:
                     OnWorldCue(GameplaySfxCue.AlienSpikeImpact, position);
                     break;
-                case ProjectileVisualKind.MushroomEnemy:
-                case ProjectileVisualKind.MushroomPlayer:
+                case ProjectileVisualKind.MushroomBeam:
                 case ProjectileVisualKind.SporellaEnemy:
                 case ProjectileVisualKind.SporellaPlayer:
                     OnWorldCue(GameplaySfxCue.FungalShotImpact, position);
@@ -545,7 +544,6 @@ namespace CrowdPunch.Mono.Player
                 GameplaySfxCue.AlienSpikeBurst => (profile.AlienSpikeBurst, .78f, 3f),
                 GameplaySfxCue.AlienSpikeImpact => (profile.AlienSpikeImpact, .34f, 1f),
                 GameplaySfxCue.MushroomWindup => (profile.MushroomWindup, .53f, 2.5f),
-                GameplaySfxCue.MushroomLock => (profile.MushroomLock, .62f, 3f),
                 GameplaySfxCue.MushroomFire => (profile.MushroomFire, .72f, 3f),
                 GameplaySfxCue.SporellaWindup => (profile.SporellaWindup, .54f, 2.5f),
                 GameplaySfxCue.SporellaFire => (profile.SporellaFire, .48f, 2f),

@@ -209,6 +209,7 @@ namespace CrowdPunch.Systems.Initialization
                 {
                     commandBuffer.AddComponent(enemy, profile.MushroomShooter);
                     commandBuffer.AddComponent<MushroomWarningLane>(enemy);
+                    commandBuffer.AddBuffer<MushroomBeamImpact>(enemy);
                 }
                 else if (profile.Archetype == EnemyArchetypeKind.Sporella)
                 {

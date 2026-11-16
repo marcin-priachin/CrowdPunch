@@ -73,15 +73,18 @@ namespace CrowdPunch.Systems.Presentation
                     {
                         Kind = ProjectileVisualKind.MushroomLane, Position = origin, Velocity = warning.Direction,
                         Radius = math.max(.01f, tuning.ValueRO.ProjectileRadius),
-                        LaneLength = warning.Length, LaneLocked = warning.Locked
+                        LaneLength = warning.Length
                     });
                 }
-                foreach (var (shot, pose, entity) in SystemAPI.Query<RefRO<MushroomProjectile>, RefRO<LocalTransform>>().WithEntityAccess())
+                foreach (var shot in SystemAPI.Query<RefRO<MushroomBeam>>())
                 {
-                    var p = shot.ValueRO;
-                    bool returned = p.Owner == EnemyLaunchOwner.Player;
-                    Send(bridge, entity, ProjectileVisualKind.MushroomEnemy, returned ? 1u : 0u,
-                        pose.ValueRO.Position, p.Direction * p.Speed, p.Radius, returned);
+                    var beam = shot.ValueRO;
+                    if (beam.Length <= .001f) continue;
+                    bridge.ReceiveProjectileVisual(new ProjectileVisualSample
+                    {
+                        Kind = ProjectileVisualKind.MushroomBeam, Position = beam.Origin, Velocity = beam.Direction,
+                        Radius = beam.Radius, LaneLength = beam.Length, Redirected = beam.Owner == EnemyLaunchOwner.Player
+                    });
                 }
                 foreach (var (shot, pose, entity) in SystemAPI.Query<RefRO<SporellaProjectile>, RefRO<LocalTransform>>().WithEntityAccess())
                 {

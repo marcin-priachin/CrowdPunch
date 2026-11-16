@@ -47,8 +47,8 @@ namespace CrowdPunch.Editor
         private static readonly string[] MushroomProperties =
         {
             "mushroomShooter", "preferredMinimumDistance", "preferredMaximumDistance", "engagementRange",
-            "retreatSpeed", "approachSpeed", "initialAttackDelay", "initialDelayVariation", "projectileLaunchFrame",
-            "cooldown", "cooldownVariation", "projectileDamage", "playerInvincibilitySeconds", "projectileSpeed",
+            "retreatSpeed", "approachSpeed", "initialAttackDelay", "initialDelayVariation", "windUpDuration", "projectileLaunchFrame",
+            "cooldown", "cooldownVariation", "projectileDamage", "playerInvincibilitySeconds",
             "projectileRadius", "projectilePlayerLayers"
         };
 

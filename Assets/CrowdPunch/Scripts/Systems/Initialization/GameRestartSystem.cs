@@ -50,7 +50,8 @@ namespace CrowdPunch.Systems.Initialization
                     if (EntityManager.Exists(orb)) EntityManager.DestroyEntity(orb);
             // Fired shots are independent of their shooter and are not owned by a SubScene.
             EntityQuery oldProjectiles = SystemAPI.QueryBuilder().WithAll<RangedProjectile>().Build();
-            EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<MushroomProjectile>().Build());
+            EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<MushroomBeam>().Build());
+            foreach (var impacts in SystemAPI.Query<DynamicBuffer<MushroomBeamImpact>>()) impacts.Clear();
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<SporellaProjectile>().Build());
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<SporellaImpactBurst>().Build());
             foreach (var contacts in SystemAPI.Query<DynamicBuffer<SporellaImpactContact>>()) contacts.Clear();

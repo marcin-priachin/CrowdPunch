@@ -108,13 +108,13 @@ A quiet positional Wraith loop continues through airborne attacks, fades into th
 and returns near the end of takeoff (FINALE-003).
 The ranged projectile release uses a short swish and retains its separate contact splash.
 Alien Spike has a windup, a radial volley snap and a heavier player-owned impact burst
-(SPIKE-001/002). Mushroom Shooter's tracking, aim lock and release have distinct cues
+(SPIKE-001/002). Mushroom Shooter has a warning onset and a separate release cue
 (MUSHROOM-001). Sporella has a bubbling windup and one pop per emitted shot, with a
 lower pop for impact-triggered shots (SPORELLA-001/002). A bounded per-world buffer carries
 these simulation events to `GameplaySfxBridgeSystem` each frame and clears on retry.
 One event represents an entire Spike volley, including a burst whose shots hit immediately.
 Projectile contacts use the existing burst presentation event, and successful punch returns
-share a positional redirect cue (SPIKE-003/004, MUSHROOM-002/003, SPORELLA-003).
+share a positional redirect cue (SPIKE-003/004, SPORELLA-003).
 Pause and retry clear active combat sounds. The exploder fuse is an audition warning when an
 active exploder enters a small band outside player contact range.
 
@@ -3405,17 +3405,25 @@ the preferred distance. Navigation resolves the path and enemy movement owns vel
 `MushroomShooterAttackSystem` runs after Physics, body collisions, and explosion resolution
 so that a launch on the release step still cancels the wind-up. The cooldown only advances
 while the Shooter is active. The Enemy baker stores the prefab's `ShotSource` in owner
-space. The warning tracks the player from that source, then keeps its origin and
-direction as the same sphere sweep updates its length against solid cover. The shot
-starts at the locked source and keeps that height throughout its flight. Presentation
-reads the lane snapshot and animates the authored attack up to the release frame.
+space. The system commits the muzzle origin and direction at warning onset. The
+shared ranged wind-up duration drives both the single-phase warning and the
+release animation. A sphere sweep updates the warning length against moving
+cover. The normal beam begins at the committed origin on the authored release frame.
 
-`PunchDetectionSystem` checks redirectable shots before resolving enemy targets. A successful
-punch changes ownership and direction and resets the full range budget. The projectile
-system sweeps its travel, resolves the first cover or player contact, and applies ordinary
-player-owned damage to eligible enemies before that contact. Per-shot hit history deduplicates
-each enemy lifetime. Shots are independent of their Shooter and clean up on restart, arena
-unload, contact, or range expiry. They do not create launched-body hits.
+`PunchResolution` and `EnemyLaunchCollisionSystem` write launch origin, direction, and
+punch credit into the Shooter's `MushroomBeamImpact` buffer on accepted player launches.
+`MushroomShooterAttackSystem` drains those events into player-owned beam entities, using
+the muzzle offset oriented along the launch direction. This also works when the launch
+interrupts the windup or defeats the Shooter.
+
+`MushroomBeamSystem` clips each beam against solid cover before testing damage along
+its length. Hostile beams hit only the player and end early when their emitter is
+launched or removed. Player-owned beams pierce eligible enemies and use the shared
+projectile hit history to deduplicate damage per enemy lifetime. Both resolve in
+post-physics, expire after the configured hold, and clean up on restart or arena
+unload. `ProjectileVisualBridgeSystem` copies the resolved endpoints and ownership to the
+Mushroom presentation mesh. It draws the warning as one translucent violet strip
+and the two beams using the shared violet and amber palette.
 
 **Crowd Punch > Levels > Build Mushroom Shooter Gauntlet 33** rebuilds the legacy encounter
 and registers it for Editor Level Play. Campaign build registration remains catalog-driven.

@@ -108,16 +108,15 @@ namespace CrowdPunch.Editor
                 data.FindProperty("approachSpeed").floatValue = 6f;
                 data.FindProperty("cooldown").floatValue = 2f;
                 data.FindProperty("cooldownVariation").floatValue = 1f;
-                data.FindProperty("projectileSpeed").floatValue = 32f;
                 data.FindProperty("projectileDamage").floatValue = 10f;
                 data.FindProperty("playerInvincibilitySeconds").floatValue = .5f;
                 data.FindProperty("projectileRadius").floatValue = .55f;
                 var tuning = data.FindProperty("mushroomShooter");
                 var defaults = MushroomShooterSettings.Default;
-                tuning.FindPropertyRelative("TrackingSeconds").floatValue = defaults.TrackingSeconds;
-                tuning.FindPropertyRelative("LockedSeconds").floatValue = defaults.LockedSeconds;
+                data.FindProperty("windUpDuration").floatValue = .75f;
                 tuning.FindPropertyRelative("TravelRange").floatValue = defaults.TravelRange;
                 tuning.FindPropertyRelative("Height").floatValue = defaults.Height;
+                tuning.FindPropertyRelative("BeamDuration").floatValue = defaults.BeamDuration;
                 tuning.FindPropertyRelative("EnemyDamage").floatValue = defaults.EnemyDamage;
                 data.FindProperty("projectileLaunchFrame").intValue = Mathf.Clamp(ReleaseFrame(attack), 1, last);
             }

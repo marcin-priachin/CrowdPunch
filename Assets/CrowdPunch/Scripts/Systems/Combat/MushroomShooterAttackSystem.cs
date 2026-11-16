@@ -14,7 +14,6 @@ namespace CrowdPunch.Systems.Combat
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
     [UpdateAfter(typeof(EnemyLaunchCollisionSystem))]
     [UpdateAfter(typeof(ExplosionResolutionSystem))]
-    [UpdateAfter(typeof(MushroomProjectileSystem))]
     [UpdateBefore(typeof(EnemyRecoverySystem))]
     [UpdateBefore(typeof(EnemyFacingSystem))]
     public partial struct MushroomShooterAttackSystem : ISystem
@@ -39,16 +38,45 @@ namespace CrowdPunch.Systems.Combat
             float ground = SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight;
             Entity arena = SystemAPI.GetSingletonEntity<ArenaGroundPlane>();
             float dt = SystemAPI.Time.DeltaTime;
+            double now = SystemAPI.Time.ElapsedTime;
             using var commands = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (attackRef, laneRef, tuningRef, rangedRef, launch, pose, entity) in
+            foreach (var (attackRef, laneRef, tuningRef, rangedRef, launch, pose, impacts, entity) in
                 SystemAPI.Query<RefRW<RangedAttackState>, RefRW<MushroomWarningLane>, RefRO<MushroomShooterSettings>,
-                    RefRO<RangedEnemySettings>, RefRO<EnemyLaunchState>, RefRO<LocalTransform>>()
+                    RefRO<RangedEnemySettings>, RefRO<EnemyLaunchState>, RefRO<LocalTransform>, DynamicBuffer<MushroomBeamImpact>>()
                     .WithNone<RespawnRequest>().WithEntityAccess())
             {
                 ref var attack = ref attackRef.ValueRW;
                 ref var lane = ref laneRef.ValueRW;
                 var tuning = tuningRef.ValueRO;
                 var ranged = rangedRef.ValueRO;
+                float radius = math.max(.01f, ranged.ProjectileRadius);
+                float range = math.max(.01f, tuning.TravelRange);
+                float height = ground + math.max(radius + .02f, tuning.Height);
+                bool hasSource = sources.TryGetComponent(entity, out var source);
+                float duration = tuning.BeamDuration > 0f ? tuning.BeamDuration : MushroomShooterSettings.Default.BeamDuration;
+                var beam = new MushroomBeam
+                {
+                    Arena = arena, Emitter = entity, Radius = radius, Range = range, ExpiresAt = now + duration
+                };
+                foreach (var impact in impacts)
+                {
+                    float3 impactDirection = MushroomShotGeometry.Horizontal(impact.Direction,
+                        MushroomShotGeometry.Horizontal(math.forward(pose.ValueRO.Rotation), math.forward()));
+                    float3 impactOrigin = impact.Position;
+                    impactOrigin.y = height;
+                    if (hasSource)
+                        impactOrigin = impact.Position + math.mul(quaternion.LookRotationSafe(impactDirection, math.up()),
+                            source.LocalPosition * pose.ValueRO.Scale);
+                    beam.Origin = impactOrigin;
+                    beam.Direction = impactDirection;
+                    beam.Owner = EnemyLaunchOwner.Player;
+                    beam.Damage = tuning.EnemyDamage;
+                    beam.PunchSequence = impact.PunchSequence;
+                    beam.ChainDepth = impact.ChainDepth;
+                    Emit(commands, beam, audio);
+                }
+                impacts.Clear();
+
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Active || !player.IsAvailable)
                 {
                     if (attack.Phase == RangedAttackPhase.WindUp)
@@ -69,66 +97,52 @@ namespace CrowdPunch.Systems.Combat
                     attack.Phase = RangedAttackPhase.Ready;
                 }
 
-                float radius = math.max(.01f, ranged.ProjectileRadius);
-                float range = math.max(.01f, tuning.TravelRange);
-                float height = ground + math.max(radius + .02f, tuning.Height);
-                float lockedSeconds = math.max(0f, tuning.LockedSeconds);
-                float trackingSeconds = math.max(0f, tuning.TrackingSeconds);
-                float3 direction = MushroomShotGeometry.Aim(pose.ValueRO, player.Position, height,
-                    sources.TryGetComponent(entity, out var source), source, out float3 origin);
-                bool starting = attack.Phase == RangedAttackPhase.Ready;
-                bool wasLocked = !starting && lane.Locked;
-                if (starting)
+                if (attack.Phase == RangedAttackPhase.Ready)
                 {
+                    float3 direction = MushroomShotGeometry.Aim(pose.ValueRO, player.Position, height,
+                        hasSource, source, out float3 origin);
                     float distance = math.distance(origin.xz, player.Position.xz);
                     if (distance > math.min(ranged.EngagementRange, range)
                         || MushroomShotGeometry.FindCover(world, enemies, origin, direction,
                             math.max(0f, math.dot(player.Position - origin, direction)), radius, ground, out _))
                         continue;
                     attack.Phase = RangedAttackPhase.WindUp;
-                    attack.SecondsRemaining = trackingSeconds + lockedSeconds;
-                    lane = new MushroomWarningLane { Origin = origin, Direction = direction,
-                        GroundHeight = ground, Locked = trackingSeconds <= .00001f };
+                    attack.SecondsRemaining = math.max(0f, ranged.WindUpDuration);
+                    lane = new MushroomWarningLane { Origin = origin, Direction = direction, GroundHeight = ground };
+                    if (attack.SecondsRemaining > .00001f)
+                        audio.Record(EnemyAttackAudioKind.MushroomWindup, lane.Origin);
                 }
                 else
                 {
-                    if (!lane.Locked)
-                    {
-                        lane.Origin = origin;
-                        lane.Direction = direction;
-                    }
                     attack.SecondsRemaining -= dt;
-                    if (attack.SecondsRemaining <= lockedSeconds + .00001f) lane.Locked = true;
                 }
 
-                // Keep checking cover, including moving cover, against the same frozen line after lock.
-                lane.Length = MushroomShotGeometry.ClearDistance(world, enemies, lane.Origin, lane.Direction,
-                    range, radius, ground);
                 if (attack.SecondsRemaining > .00001f)
                 {
-                    if (lane.Locked && !wasLocked)
-                        audio.Record(EnemyAttackAudioKind.MushroomLock, lane.Origin);
-                    else if (starting)
-                        audio.Record(EnemyAttackAudioKind.MushroomWindup, lane.Origin);
+                    lane.Length = MushroomShotGeometry.ClearDistance(world, enemies, lane.Origin, lane.Direction,
+                        range, radius, ground);
                     continue;
                 }
-                var projectile = commands.CreateEntity();
-                commands.AddComponent(projectile, LocalTransform.FromPosition(lane.Origin));
-                commands.AddComponent(projectile, new MushroomProjectile
-                {
-                    Arena = arena, Direction = lane.Direction, Owner = EnemyLaunchOwner.Enemy,
-                    Radius = radius, Range = range, RangeRemaining = range,
-                    Speed = math.max(.01f, ranged.ProjectileSpeed), PlayerDamage = ranged.ProjectileDamage,
-                    PlayerInvincibility = ranged.PlayerInvincibilitySeconds, EnemyDamage = tuning.EnemyDamage,
-                    PlayerLayers = ranged.ProjectilePlayerLayers
-                });
-                commands.AddBuffer<BodyProjectileHit>(projectile);
-                audio.Record(EnemyAttackAudioKind.MushroomFire, lane.Origin);
+                beam.Origin = lane.Origin;
+                beam.Direction = lane.Direction;
+                beam.Owner = EnemyLaunchOwner.Enemy;
+                beam.Damage = ranged.ProjectileDamage;
+                beam.PlayerInvincibility = ranged.PlayerInvincibilitySeconds;
+                beam.PlayerLayers = ranged.ProjectilePlayerLayers;
+                Emit(commands, beam, audio);
                 attack.ProjectilesSpawned++;
                 SetCooldown(entity, ranged, ref attack);
                 lane.Length = 0f; // Facing keeps the last committed direction for the release frame.
             }
             commands.Playback(state.EntityManager);
+        }
+
+        private static void Emit(EntityCommandBuffer commands, in MushroomBeam beam, DynamicBuffer<EnemyAttackAudioEvent> audio)
+        {
+            var entity = commands.CreateEntity();
+            commands.AddComponent(entity, beam);
+            if (beam.Owner == EnemyLaunchOwner.Player) commands.AddBuffer<BodyProjectileHit>(entity);
+            audio.Record(EnemyAttackAudioKind.MushroomFire, beam.Origin);
         }
 
         private static void SetCooldown(Entity shooter, in RangedEnemySettings settings, ref RangedAttackState attack)

@@ -7,6 +7,5 @@ namespace CrowdPunch.Components
     {
         public float3 Origin, Direction;
         public float GroundHeight, Length;
-        public bool Locked;
     }
 }

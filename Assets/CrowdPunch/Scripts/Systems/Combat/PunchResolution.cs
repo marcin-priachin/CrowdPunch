@@ -139,6 +139,14 @@ namespace CrowdPunch.Systems.Combat
                     : Entity.Null;
                 launch.HomingSecondsRemaining = launch.HomingTarget != Entity.Null ? punch.HomingDuration : 0f;
                 manager.SetComponentData(target, launch);
+                if (punch.Cause == EnemyLaunchCause.PlayerPunch && manager.HasBuffer<MushroomBeamImpact>(target))
+                {
+                    manager.GetBuffer<MushroomBeamImpact>(target).Add(new MushroomBeamImpact
+                    {
+                        Position = position, Direction = impulseDirection, PunchSequence = punch.PunchSequence,
+                        ChainDepth = launch.FeedbackChainDepth
+                    });
+                }
                 CommittedLaunchPlan.Begin(manager, target, punch, launch);
                 if (paired) {
                     pair.LastPunchAt = punch.EventTime; manager.SetComponentData(pairEntity, pair);

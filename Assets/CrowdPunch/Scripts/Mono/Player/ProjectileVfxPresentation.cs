@@ -37,8 +37,6 @@ namespace CrowdPunch.Mono.Player
         private MaterialPropertyBlock tint;
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
         private static readonly int HighlightColor = Shader.PropertyToID("_HighlightColor");
-        private static readonly Color MushroomCap = new Color(.80f, .19f, .10f);
-        private static readonly Color MushroomCream = new Color(1f, .85f, .60f, .96f);
         private uint restart;
         internal int ActiveFlightCount => assigned.Count;
         internal int FlightCapacity => slots?.Length ?? 0;
@@ -60,11 +58,11 @@ namespace CrowdPunch.Mono.Player
             library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
             if (library == null) return;
             root = new GameObject("Arcane projectile VFX pool").transform;
-            var prefabs = new[] { library.RangedFlight, library.BossFlight, library.SnakeFlight, library.RangedCharge, null, null };
+            var prefabs = new[] { library.RangedFlight, library.BossFlight, library.SnakeFlight, library.RangedCharge, null };
             int[] counts = { Mathf.Clamp(library.RangedCapacity, 1, 128), Mathf.Clamp(library.BossCapacity, 1, 64),
-                Mathf.Clamp(library.SnakeCapacity, 1, 64), Mathf.Clamp(library.RangedCapacity, 1, 128), 16, 32 };
+                Mathf.Clamp(library.SnakeCapacity, 1, 64), Mathf.Clamp(library.RangedCapacity, 1, 128), 32 };
             const int spikeCapacity = 96;
-            slots = new Slot[counts[0] + counts[1] + counts[2] + counts[3] + counts[4] + counts[5] + spikeCapacity];
+            slots = new Slot[counts[0] + counts[1] + counts[2] + counts[3] + counts[4] + spikeCapacity];
             mushroomLanes = new MushroomLanePresentation(root);
             mushroomCore = new Material(Resources.Load<Shader>("Shaders/MushroomProjectile"));
             tint = new MaterialPropertyBlock();
@@ -72,18 +70,15 @@ namespace CrowdPunch.Mono.Player
             for (int kind = 0; kind < counts.Length; kind++)
             for (int i = 0; i < counts[kind]; i++)
             {
-                var slot = new Slot { Kind = kind switch
-                    { 4 => ProjectileVisualKind.MushroomEnemy, 5 => ProjectileVisualKind.SporellaEnemy, _ => (ProjectileVisualKind)kind } };
+                var slot = new Slot { Kind = kind == 4 ? ProjectileVisualKind.SporellaEnemy : (ProjectileVisualKind)kind };
                 if (prefabs[kind] != null)
                 {
                     slot.Flight = Instantiate(prefabs[kind], root);
                     slot.Flight.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 }
-                bool mushroom = slot.Kind == ProjectileVisualKind.MushroomEnemy;
-                if (mushroom) CreateSeedCore(slot, "Mushroom");
-                if (kind < 2 || mushroom)
-                    CreateTrail(slot, mushroom ? "Mushroom shot streak" : kind == 0 ? "Arcane comet streak" : "Archmage orb streak",
-                        kind == 0 ? library.ArcaneTrail : library.BossTrail, mushroom ? .085f : kind == 0 ? .16f : .23f);
+                if (kind < 2)
+                    CreateTrail(slot, kind == 0 ? "Arcane comet streak" : "Archmage orb streak",
+                        kind == 0 ? library.ArcaneTrail : library.BossTrail, kind == 0 ? .16f : .23f);
                 slots[index++] = slot;
             }
             for (int i = 0; i < spikeCapacity; i++) slots[index++] = new Slot { Kind = ProjectileVisualKind.AlienSpike };
@@ -182,6 +177,12 @@ namespace CrowdPunch.Mono.Player
                 mushroomLanes.Add(sample);
                 return;
             }
+            if (sample.Kind == ProjectileVisualKind.MushroomBeam)
+            {
+                var color = CombatOwnershipTint.Accent(sample.Redirected ? EnemyLaunchOwner.Player : EnemyLaunchOwner.Enemy, library);
+                mushroomLanes.AddBeam(sample, color);
+                return;
+            }
             bool fresh = !assigned.TryGetValue(sample.Key, out var slot);
             if (fresh)
             {
@@ -194,7 +195,6 @@ namespace CrowdPunch.Mono.Player
             bool newLaunch = fresh || slot.Sequence != sample.Sequence;
             slot.Sequence = sample.Sequence; slot.Seen = true;
             float diameter = Mathf.Max(.15f, sample.Radius * 2);
-            bool mushroom = sample.Kind == ProjectileVisualKind.MushroomEnemy;
             bool sporella = sample.Kind == ProjectileVisualKind.SporellaEnemy;
             if (sporella && slot.Core == null)
             {
@@ -207,9 +207,9 @@ namespace CrowdPunch.Mono.Player
             {
                 slot.Core.transform.SetPositionAndRotation(sample.Position, Quaternion.LookRotation(
                     sample.Velocity.sqrMagnitude > .001f ? sample.Velocity : Vector3.forward));
-                slot.Core.transform.localScale = (sporella ? new Vector3(.92f, .92f, 1.3f) : Vector3.one) * diameter;
-                tint.SetColor(BaseColor, sample.Redirected || sporella ? ownership : MushroomCap);
-                tint.SetColor(HighlightColor, sample.Redirected || sporella ? Color.Lerp(ownership, Color.white, .65f) : MushroomCream);
+                slot.Core.transform.localScale = new Vector3(.92f, .92f, 1.3f) * diameter;
+                tint.SetColor(BaseColor, ownership);
+                tint.SetColor(HighlightColor, Color.Lerp(ownership, Color.white, .65f));
                 slot.Core.SetPropertyBlock(tint);
                 slot.Core.enabled = true;
             }
@@ -253,7 +253,7 @@ namespace CrowdPunch.Mono.Player
                 slot.Trail.widthMultiplier = diameter * .65f;
                 Color color = sample.Kind == ProjectileVisualKind.Ranged ? new Color(.3f, .92f, 1, .85f) : ownership;
                 if (sample.Kind == ProjectileVisualKind.Boss) color.a = sample.Redirected ? .95f : .9f;
-                slot.Trail.startColor = mushroom && !sample.Redirected ? MushroomCream : color;
+                slot.Trail.startColor = color;
                 color.a = 0;
                 slot.Trail.endColor = color;
                 slot.Trail.emitting = true;
@@ -279,7 +279,7 @@ namespace CrowdPunch.Mono.Player
         }
         private void Burst(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale)
         {
-            if (kind is ProjectileVisualKind.AlienSpike or ProjectileVisualKind.MushroomEnemy or ProjectileVisualKind.MushroomPlayer
+            if (kind is ProjectileVisualKind.AlienSpike or ProjectileVisualKind.MushroomBeam
                 or ProjectileVisualKind.SporellaEnemy or ProjectileVisualKind.SporellaPlayer)
                 kind = ProjectileVisualKind.Boss;
             if (isActiveAndEnabled && !FeedbackTimeController.IsSuspended && bursts != null && (int)kind < bursts.Length)
