@@ -32,6 +32,8 @@ namespace CrowdPunch.Systems.Initialization
             }
 
             lastRestartSequence = restartSequence;
+            if (SystemAPI.TryGetSingletonBuffer<EnemyAttackAudioEvent>(out var attackAudio))
+                attackAudio.Clear();
             if (SystemAPI.TryGetSingletonRW<LevelClearScore>(out var score))
             {
                 score.ValueRW = default;

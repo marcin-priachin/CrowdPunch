@@ -91,6 +91,7 @@ namespace CrowdPunch.Tests
         [Test]
         public void FirstShotLocksTwoLeftToRightPassesOnTheSampledTarget()
         {
+            var audioEntity = em.CreateSingletonBuffer<EnemyAttackAudioEvent>();
             var shooter = Shooter();
             Tick<SporellaAttackSystem>(.05f);
             var sampled = new float3(2, .94f, 14f);
@@ -118,6 +119,11 @@ namespace CrowdPunch.Tests
                 }
 
                 Assert.That(CountShots(), Is.EqualTo(i + 1));
+                var audio = em.GetBuffer<EnemyAttackAudioEvent>(audioEntity);
+                Assert.That(audio.Length, Is.EqualTo(i + 2));
+                Assert.That(audio[0].Kind, Is.EqualTo(EnemyAttackAudioKind.SporellaWindup));
+                Assert.That(audio[i + 1].Kind, Is.EqualTo(EnemyAttackAudioKind.SporellaFire));
+                Assert.That(math.distance(audio[i + 1].Position, origin), Is.LessThan(.001f));
                 using var entities = query.ToEntityArray(Allocator.Temp);
                 foreach (var entity in entities)
                 {

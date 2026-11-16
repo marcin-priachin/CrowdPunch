@@ -35,6 +35,7 @@ namespace CrowdPunch.Systems.Combat
             var world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
             var enemies = SystemAPI.GetComponentLookup<Enemy>(true);
             var sources = SystemAPI.GetComponentLookup<MushroomShotSource>(true);
+            SystemAPI.TryGetSingletonBuffer<EnemyAttackAudioEvent>(out var audio);
             float ground = SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight;
             Entity arena = SystemAPI.GetSingletonEntity<ArenaGroundPlane>();
             float dt = SystemAPI.Time.DeltaTime;
@@ -75,7 +76,9 @@ namespace CrowdPunch.Systems.Combat
                 float trackingSeconds = math.max(0f, tuning.TrackingSeconds);
                 float3 direction = MushroomShotGeometry.Aim(pose.ValueRO, player.Position, height,
                     sources.TryGetComponent(entity, out var source), source, out float3 origin);
-                if (attack.Phase == RangedAttackPhase.Ready)
+                bool starting = attack.Phase == RangedAttackPhase.Ready;
+                bool wasLocked = !starting && lane.Locked;
+                if (starting)
                 {
                     float distance = math.distance(origin.xz, player.Position.xz);
                     if (distance > math.min(ranged.EngagementRange, range)
@@ -101,7 +104,14 @@ namespace CrowdPunch.Systems.Combat
                 // Keep checking cover, including moving cover, against the same frozen line after lock.
                 lane.Length = MushroomShotGeometry.ClearDistance(world, enemies, lane.Origin, lane.Direction,
                     range, radius, ground);
-                if (attack.SecondsRemaining > .00001f) continue;
+                if (attack.SecondsRemaining > .00001f)
+                {
+                    if (lane.Locked && !wasLocked)
+                        audio.Record(EnemyAttackAudioKind.MushroomLock, lane.Origin);
+                    else if (starting)
+                        audio.Record(EnemyAttackAudioKind.MushroomWindup, lane.Origin);
+                    continue;
+                }
                 var projectile = commands.CreateEntity();
                 commands.AddComponent(projectile, LocalTransform.FromPosition(lane.Origin));
                 commands.AddComponent(projectile, new MushroomProjectile
@@ -113,6 +123,7 @@ namespace CrowdPunch.Systems.Combat
                     PlayerLayers = ranged.ProjectilePlayerLayers
                 });
                 commands.AddBuffer<BodyProjectileHit>(projectile);
+                audio.Record(EnemyAttackAudioKind.MushroomFire, lane.Origin);
                 attack.ProjectilesSpawned++;
                 SetCooldown(entity, ranged, ref attack);
                 lane.Length = 0f; // Facing keeps the last committed direction for the release frame.

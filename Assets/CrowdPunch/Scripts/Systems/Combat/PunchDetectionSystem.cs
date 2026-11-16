@@ -148,6 +148,7 @@ namespace CrowdPunch.Systems.Combat
                     if (!punchRequest.RedirectedProjectile)
                     {
                         punchRequest.RedirectedProjectile = true;
+                        punchRequest.RedirectedEnemyShot = true;
                         punchRequest.ProjectileRedirectContact = position;
                     }
                 }
@@ -216,6 +217,7 @@ namespace CrowdPunch.Systems.Combat
                 redirect.ExitingRedirectContact = true;
                 SystemAPI.SetComponent(sporellaShot, redirect);
                 request.RedirectedProjectile = true;
+                request.RedirectedEnemyShot = true;
                 request.ProjectileRedirectContact = contact;
                 return true;
             }
@@ -223,6 +225,9 @@ namespace CrowdPunch.Systems.Combat
             var returned = SystemAPI.GetComponent<MushroomProjectile>(chosen);
             MushroomProjectilePunch.Redirect(ref returned, forward, punch.PunchSequence);
             SystemAPI.SetComponent(chosen, returned);
+            request.RedirectedProjectile = true;
+            request.RedirectedEnemyShot = true;
+            request.ProjectileRedirectContact = SystemAPI.GetComponent<LocalTransform>(chosen).Position;
             return true;
         }
 

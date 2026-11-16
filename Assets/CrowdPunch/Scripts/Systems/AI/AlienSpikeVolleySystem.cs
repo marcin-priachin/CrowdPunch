@@ -1,5 +1,6 @@
 using CrowdPunch.Authoring;
 using CrowdPunch.Components;
+using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
 using CrowdPunch.Utilities;
 using Unity.Burst;
@@ -27,6 +28,7 @@ namespace CrowdPunch.Systems.AI
         {
             var player = SystemAPI.GetSingleton<PlayerSnapshot>();
             SystemAPI.TryGetSingleton<NavigationGrid>(out var grid);
+            SystemAPI.TryGetSingletonBuffer<EnemyAttackAudioEvent>(out var audio);
             float dt = SystemAPI.Time.DeltaTime;
             foreach (var (tuning, launch, pose, agent, volley, movement, navigation, entity) in
                 SystemAPI.Query<RefRO<AlienSpikeTuning>, RefRO<EnemyLaunchState>, RefRO<LocalTransform>,
@@ -42,8 +44,11 @@ namespace CrowdPunch.Systems.AI
                 bool positioning = t.VolleyMode == AlienSpikeVolleyMode.MidRangePositioning;
                 bool inBand = distance >= minimum && distance <= maximum;
                 bool ready = player.IsAvailable && distance <= t.EngagementRadius && (!positioning || inBand);
+                var previousPhase = attack.Phase;
                 if (Advance(ref attack, t, launch.ValueRO.Phase, ready, dt))
                 {
+                    if (previousPhase != AlienSpikeVolleyPhase.Telegraph && attack.Phase == AlienSpikeVolleyPhase.Telegraph)
+                        audio.Record(EnemyAttackAudioKind.AlienSpikeWindup, position);
                     movement.ValueRW = default;
                     navigation.ValueRW = default;
                     continue;

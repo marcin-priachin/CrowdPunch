@@ -12,6 +12,10 @@ namespace CrowdPunch.Mono.Player
         GoblinWizardProjectileImpact, GoblinWizardProjectileDischarge, ArmoredBossClang, LinkedPairPlayerShock,
         DragonFlameBurst, DragonHit, NinjaTeleport, NinjaDash,
         FinaleLightningStrike, FinaleAirSweep, FinaleWingSweep, FinaleShockwave, FinaleAnchorOverload,
-        FinaleLanding, FinaleTakeoff, FinaleHit, FinaleDefeat, Count
+        FinaleLanding, FinaleTakeoff, FinaleHit, FinaleDefeat,
+        AlienSpikeWindup, AlienSpikeVolley, AlienSpikeBurst, AlienSpikeImpact,
+        MushroomWindup, MushroomLock, MushroomFire,
+        SporellaWindup, SporellaFire, SporellaImpactFire, FungalShotImpact, EnemyShotRedirect,
+        Count
     }
 }

@@ -27,6 +27,7 @@ namespace CrowdPunch.Systems.Combat
             bool hasArena = SystemAPI.TryGetSingleton<ArenaGroundPlane>(out var floor);
             Entity arena = hasArena ? SystemAPI.GetSingletonEntity<ArenaGroundPlane>() : Entity.Null;
             var lifetimes = SystemAPI.GetComponentLookup<EnemyLifetime>(true);
+            SystemAPI.TryGetSingletonBuffer<EnemyAttackAudioEvent>(out var audio);
             using var commands = new EntityCommandBuffer(Allocator.Temp);
             float dt = SystemAPI.Time.DeltaTime;
             foreach (var (burstRef, entity) in SystemAPI.Query<RefRW<SporellaImpactBurst>>().WithEntityAccess())
@@ -40,7 +41,7 @@ namespace CrowdPunch.Systems.Combat
                 burst.Wait -= dt;
                 while (burst.ShotsRemaining > 0 && burst.Wait <= .00001f)
                 {
-                    SporellaShotEmission.FireSweepShot(commands, burst.Shot, burst.Sweep, burst.ShotsRemaining);
+                    SporellaShotEmission.FireSweepShot(commands, burst.Shot, burst.Sweep, burst.ShotsRemaining, audio);
                     burst.ShotsRemaining--;
                     burst.Wait += burst.Interval;
                 }
@@ -65,7 +66,7 @@ namespace CrowdPunch.Systems.Combat
                             SporellaShotKind.ImpactShot, tuning, ranged.ValueRO);
                         shot.PunchSequence = contact.PunchSequence;
                         shot.ChainDepth = contact.ChainDepth;
-                        SporellaShotEmission.FireSweepShot(commands, shot, sweep, sweep.ShotCount);
+                        SporellaShotEmission.FireSweepShot(commands, shot, sweep, sweep.ShotCount, audio);
                         if (sweep.ShotCount <= 1) continue;
                         var entity = commands.CreateEntity();
                         float interval = SporellaShotEmission.Interval(tuning);

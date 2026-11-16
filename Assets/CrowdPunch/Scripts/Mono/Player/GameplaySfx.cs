@@ -343,7 +343,21 @@ namespace CrowdPunch.Mono.Player
 
         private void OnProjectileImpact(ProjectileVisualKind kind, Vector3 position, Vector3 direction, float scale)
         {
-            if (kind == ProjectileVisualKind.Ranged) OnWorldCue(GameplaySfxCue.RangerImpact, position);
+            switch (kind)
+            {
+                case ProjectileVisualKind.Ranged:
+                    OnWorldCue(GameplaySfxCue.RangerImpact, position);
+                    break;
+                case ProjectileVisualKind.AlienSpike:
+                    OnWorldCue(GameplaySfxCue.AlienSpikeImpact, position);
+                    break;
+                case ProjectileVisualKind.MushroomEnemy:
+                case ProjectileVisualKind.MushroomPlayer:
+                case ProjectileVisualKind.SporellaEnemy:
+                case ProjectileVisualKind.SporellaPlayer:
+                    OnWorldCue(GameplaySfxCue.FungalShotImpact, position);
+                    break;
+            }
         }
 
         private void OnDasherRoll(ulong id, Vector3 position, float rollSpeed, float intensity) =>
@@ -400,7 +414,7 @@ namespace CrowdPunch.Mono.Player
         {
             double now = Time.unscaledTimeAsDouble;
             if (!CanPlay || now < nextCue[(int)cue]) return;
-            if (TryHandleFinaleCue(cue, position, now)) return;
+            if (TryHandleEnemyShotCue(cue, position, now) || TryHandleFinaleCue(cue, position, now)) return;
             if (cue == GameplaySfxCue.LinkedPairPlayerShock)
             {
                 if (Play(hurtVoice, profile.LinkedPairShock, .85f))
@@ -521,6 +535,30 @@ namespace CrowdPunch.Mono.Player
 
         private float Attenuation(Vector3 position) =>
             Mathf.Clamp01(1f - Vector3.Distance(position, bridge.transform.position) / WorldRange);
+
+        private bool TryHandleEnemyShotCue(GameplaySfxCue cue, Vector3 position, double now)
+        {
+            var (clips, volume, priority) = cue switch
+            {
+                GameplaySfxCue.AlienSpikeWindup => (profile.AlienSpikeWindup, .52f, 2.5f),
+                GameplaySfxCue.AlienSpikeVolley => (profile.AlienSpikeVolley, .74f, 3f),
+                GameplaySfxCue.AlienSpikeBurst => (profile.AlienSpikeBurst, .78f, 3f),
+                GameplaySfxCue.AlienSpikeImpact => (profile.AlienSpikeImpact, .34f, 1f),
+                GameplaySfxCue.MushroomWindup => (profile.MushroomWindup, .53f, 2.5f),
+                GameplaySfxCue.MushroomLock => (profile.MushroomLock, .62f, 3f),
+                GameplaySfxCue.MushroomFire => (profile.MushroomFire, .72f, 3f),
+                GameplaySfxCue.SporellaWindup => (profile.SporellaWindup, .54f, 2.5f),
+                GameplaySfxCue.SporellaFire => (profile.SporellaFire, .48f, 2f),
+                GameplaySfxCue.SporellaImpactFire => (profile.SporellaImpactFire, .54f, 2f),
+                GameplaySfxCue.FungalShotImpact => (profile.FungalShotImpact, .38f, 1f),
+                GameplaySfxCue.EnemyShotRedirect => (profile.EnemyShotRedirect, .68f, 4f),
+                _ => (null, 0f, 0f)
+            };
+            if (clips == null) return false;
+            if (PlayWorld(clips, position, volume, priority, playerRelative: true))
+                nextCue[(int)cue] = now + (cue is GameplaySfxCue.SporellaFire or GameplaySfxCue.SporellaImpactFire ? .10 : .17);
+            return true;
+        }
 
         private bool TryHandleFinaleCue(GameplaySfxCue cue, Vector3 position, double now)
         {

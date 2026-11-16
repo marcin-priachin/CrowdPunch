@@ -69,11 +69,13 @@ namespace CrowdPunch.Tests
         [Test]
         public void ClearStartThenTrackingLockAndShotShareTheSameCoveredLine()
         {
+            var audioEntity = em.CreateSingletonBuffer<EnemyAttackAudioEvent>();
             var shooter = Shooter();
             var cover = Body(new float3(0, .95f, 5), false);
             RebuildCollision();
             Attack(.05f);
             Assert.That(AttackOf(shooter).Phase, Is.EqualTo(RangedAttackPhase.Ready));
+            Assert.That(em.GetBuffer<EnemyAttackAudioEvent>(audioEntity).IsEmpty, Is.True);
             Move(cover, new float3(8, .95f, 5));
             RebuildCollision();
             Attack(.05f);
@@ -99,6 +101,12 @@ namespace CrowdPunch.Tests
             var shot = q.GetSingleton<MushroomProjectile>();
             Assert.That(shot.Direction, Is.EqualTo(locked.Direction));
             Assert.That(shot.Speed, Is.EqualTo(32f));
+            var audio = em.GetBuffer<EnemyAttackAudioEvent>(audioEntity);
+            Assert.That(audio.Length, Is.EqualTo(3));
+            Assert.That(audio[0].Kind, Is.EqualTo(EnemyAttackAudioKind.MushroomWindup));
+            Assert.That(audio[1].Kind, Is.EqualTo(EnemyAttackAudioKind.MushroomLock));
+            Assert.That(audio[2].Kind, Is.EqualTo(EnemyAttackAudioKind.MushroomFire));
+            Assert.That(audio[2].Position, Is.EqualTo(locked.Origin));
             Flight(.25f);
             Assert.That(q.CalculateEntityCount(), Is.Zero);
             Assert.That(playerHits, Is.Zero);

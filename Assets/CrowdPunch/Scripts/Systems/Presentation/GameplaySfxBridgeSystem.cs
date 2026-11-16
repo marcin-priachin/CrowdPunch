@@ -20,9 +20,18 @@ namespace CrowdPunch.Systems.Presentation
         private PlayerEcsBridge bridge;
         private uint restart;
 
+        protected override void OnCreate() =>
+            EntityManager.CreateSingletonBuffer<EnemyAttackAudioEvent>("Enemy attack audio");
+
         protected override void OnUpdate()
         {
             bool hasAudio = PlayerBridgeRegistry.TryGetBridge(out var activeBridge) && activeBridge.GameplayAudio != null;
+            var attacks = SystemAPI.GetSingletonBuffer<EnemyAttackAudioEvent>();
+            if (hasAudio)
+                foreach (var attack in attacks)
+                    activeBridge.ReceiveGameplaySfx(AttackCue(attack.Kind), attack.Position);
+            attacks.Clear();
+
             if (SystemAPI.TryGetSingletonRW<LinkedPairEnemyShock>(out var shock) && shock.ValueRO.Pending != 0)
             {
                 if (hasAudio) activeBridge.ReceiveGameplaySfx(GameplaySfxCue.LinkedPairEnemyShock, shock.ValueRO.Position);
@@ -46,6 +55,20 @@ namespace CrowdPunch.Systems.Presentation
             ObserveBosses();
             (previous, current) = (current, previous);
         }
+
+        private static GameplaySfxCue AttackCue(EnemyAttackAudioKind kind) => kind switch
+        {
+            EnemyAttackAudioKind.AlienSpikeWindup => GameplaySfxCue.AlienSpikeWindup,
+            EnemyAttackAudioKind.AlienSpikeVolley => GameplaySfxCue.AlienSpikeVolley,
+            EnemyAttackAudioKind.AlienSpikeBurst => GameplaySfxCue.AlienSpikeBurst,
+            EnemyAttackAudioKind.MushroomWindup => GameplaySfxCue.MushroomWindup,
+            EnemyAttackAudioKind.MushroomLock => GameplaySfxCue.MushroomLock,
+            EnemyAttackAudioKind.MushroomFire => GameplaySfxCue.MushroomFire,
+            EnemyAttackAudioKind.SporellaWindup => GameplaySfxCue.SporellaWindup,
+            EnemyAttackAudioKind.SporellaFire => GameplaySfxCue.SporellaFire,
+            EnemyAttackAudioKind.SporellaImpactFire => GameplaySfxCue.SporellaImpactFire,
+            _ => throw new System.ArgumentOutOfRangeException(nameof(kind))
+        };
 
         private void ObserveEnemies()
         {

@@ -85,7 +85,8 @@ namespace CrowdPunch.Systems.Presentation
                     {
                         if (punch.HitArmor) bridge.ReceiveGameplaySfx(GameplaySfxCue.ArmorBlock, punch.ArmorContact);
                         if (punch.RedirectedProjectile)
-                            bridge.ReceiveGameplaySfx(GameplaySfxCue.GoblinWizardProjectileRedirect, punch.ProjectileRedirectContact);
+                            bridge.ReceiveGameplaySfx(punch.RedirectedEnemyShot ? GameplaySfxCue.EnemyShotRedirect
+                                : GameplaySfxCue.GoblinWizardProjectileRedirect, punch.ProjectileRedirectContact);
                     }
                     punch.IsResolved = false;
                     SystemAPI.SetComponent(playerEntity, punch);

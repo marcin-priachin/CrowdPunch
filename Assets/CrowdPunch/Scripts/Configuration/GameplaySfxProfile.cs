@@ -43,6 +43,20 @@ namespace CrowdPunch.Configuration
         public AudioClip[] ExploderWarning;
         public AudioClip[] ExploderDetonation;
 
+        [Header("Alien and fungal enemies")]
+        public AudioClip[] AlienSpikeWindup;
+        public AudioClip[] AlienSpikeVolley;
+        public AudioClip[] AlienSpikeBurst;
+        public AudioClip[] AlienSpikeImpact;
+        public AudioClip[] MushroomWindup;
+        public AudioClip[] MushroomLock;
+        public AudioClip[] MushroomFire;
+        public AudioClip[] SporellaWindup;
+        public AudioClip[] SporellaFire;
+        public AudioClip[] SporellaImpactFire;
+        public AudioClip[] FungalShotImpact;
+        public AudioClip[] EnemyShotRedirect;
+
         [Header("Bosses")]
         public AudioClip[] GatekeeperWindup;
         public AudioClip[] GatekeeperWindupGrunt;

@@ -19,7 +19,7 @@ namespace CrowdPunch.Systems.Combat
             };
 
         internal static void FireSweepShot(EntityCommandBuffer commands, SporellaProjectile shot,
-            in SporellaSweep sweep, int shotsRemaining)
+            in SporellaSweep sweep, int shotsRemaining, DynamicBuffer<EnemyAttackAudioEvent> audio)
         {
             shot.Direction = SporellaShotGeometry.ShotDirection(sweep, sweep.ShotCount - shotsRemaining, out _);
             var entity = commands.CreateEntity();
@@ -27,6 +27,8 @@ namespace CrowdPunch.Systems.Combat
             commands.AddComponent(entity, shot);
             if (shot.CanRedirect || shot.Kind != SporellaShotKind.EnemyShot)
                 commands.AddBuffer<BodyProjectileHit>(entity);
+            audio.Record(shot.Kind == SporellaShotKind.ImpactShot ? EnemyAttackAudioKind.SporellaImpactFire
+                : EnemyAttackAudioKind.SporellaFire, sweep.Origin);
         }
 
         internal static float Interval(in SporellaSettings settings) => math.max(.01f, settings.ShotInterval);

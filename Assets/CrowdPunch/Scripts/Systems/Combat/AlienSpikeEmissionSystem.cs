@@ -19,6 +19,7 @@ namespace CrowdPunch.Systems.Combat
         public void OnUpdate(ref SystemState state)
         {
             bool hasPlane = SystemAPI.TryGetSingleton<ArenaGroundPlane>(out var ground);
+            SystemAPI.TryGetSingletonBuffer<EnemyAttackAudioEvent>(out var audio);
             using var commands = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (tuning, volley, pose, launch, sockets, bursts, emitter) in
                 SystemAPI.Query<RefRO<AlienSpikeTuning>, RefRW<AlienSpikeVolley>, RefRO<LocalTransform>,
@@ -45,6 +46,7 @@ namespace CrowdPunch.Systems.Combat
                     shot.PunchSequence = burst.PunchSequence;
                     shot.ChainDepth = burst.ChainDepth;
                     Emit(commands, burst.Pose, sockets, shot, floor);
+                    if (!sockets.IsEmpty) audio.Record(EnemyAttackAudioKind.AlienSpikeBurst, burst.Pose.Position);
                 }
                 bursts.Clear();
 
@@ -56,6 +58,7 @@ namespace CrowdPunch.Systems.Combat
 
                 if (volley.ValueRO.Phase != AlienSpikeVolleyPhase.Release) continue;
                 Emit(commands, pose.ValueRO, sockets, template, floor);
+                if (!sockets.IsEmpty) audio.Record(EnemyAttackAudioKind.AlienSpikeVolley, pose.ValueRO.Position);
                 volley.ValueRW.Phase = AlienSpikeVolleyPhase.FollowThrough;
                 volley.ValueRW.Remaining = t.FollowThroughSeconds;
             }

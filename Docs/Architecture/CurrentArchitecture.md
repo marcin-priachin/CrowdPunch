@@ -107,6 +107,14 @@ landing cues. Anchor overloads, takeoff, accepted damage and defeat have separat
 A quiet positional Wraith loop continues through airborne attacks, fades into the landing,
 and returns near the end of takeoff (FINALE-003).
 The ranged projectile release uses a short swish and retains its separate contact splash.
+Alien Spike has a windup, a radial volley snap and a heavier player-owned impact burst
+(SPIKE-001/002). Mushroom Shooter's tracking, aim lock and release have distinct cues
+(MUSHROOM-001). Sporella has a bubbling windup and one pop per emitted shot, with a
+lower pop for impact-triggered shots (SPORELLA-001/002). A bounded per-world buffer carries
+these simulation events to `GameplaySfxBridgeSystem` each frame and clears on retry.
+One event represents an entire Spike volley, including a burst whose shots hit immediately.
+Projectile contacts use the existing burst presentation event, and successful punch returns
+share a positional redirect cue (SPIKE-003/004, MUSHROOM-002/003, SPORELLA-003).
 Pause and retry clear active combat sounds. The exploder fuse is an audition warning when an
 active exploder enters a small band outside player contact range.
 

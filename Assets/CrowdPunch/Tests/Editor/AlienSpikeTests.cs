@@ -129,6 +129,7 @@ namespace CrowdPunch.Tests
         [Test]
         public void PunchOnTheReleaseStepCancelsNormalVolley()
         {
+            var audioEntity = em.CreateSingletonBuffer<EnemyAttackAudioEvent>();
             var spike = em.CreateEntity(typeof(AlienSpikeTuning), typeof(AlienSpikeVolley),
                 typeof(EnemyLaunchState), typeof(LocalTransform));
             em.SetComponentData(spike, LocalTransform.Identity);
@@ -145,6 +146,7 @@ namespace CrowdPunch.Tests
 
             using var shots = em.CreateEntityQuery(typeof(AlienSpikeProjectile));
             Assert.That(shots.IsEmpty, Is.True);
+            Assert.That(em.GetBuffer<EnemyAttackAudioEvent>(audioEntity).IsEmpty, Is.True);
             var volley = em.GetComponentData<AlienSpikeVolley>(spike);
             Assert.That(volley.Phase, Is.EqualTo(AlienSpikeVolleyPhase.Moving));
             Assert.That(volley.Remaining, Is.EqualTo(3));
@@ -153,6 +155,7 @@ namespace CrowdPunch.Tests
         [Test]
         public void QueuedImpactEmitsFromItsRecordedPoseEvenAfterLethalImpact()
         {
+            var audioEntity = em.CreateSingletonBuffer<EnemyAttackAudioEvent>();
             var spike = em.CreateEntity(typeof(AlienSpikeTuning), typeof(AlienSpikeVolley),
                 typeof(EnemyLaunchState), typeof(LocalTransform));
             em.SetComponentData(spike, LocalTransform.FromPosition(new float3(10, 1, 10)));
@@ -182,6 +185,10 @@ namespace CrowdPunch.Tests
             Assert.That(shot.Velocity, Is.EqualTo(new float3(9, 0, 0)));
             var position = em.GetComponentData<LocalTransform>(projectiles.GetSingletonEntity()).Position;
             Assert.That(position, Is.EqualTo(new float3(2.4f, 1.45f, 3)));
+            var audio = em.GetBuffer<EnemyAttackAudioEvent>(audioEntity);
+            Assert.That(audio.Length, Is.EqualTo(1));
+            Assert.That(audio[0].Kind, Is.EqualTo(EnemyAttackAudioKind.AlienSpikeBurst));
+            Assert.That(audio[0].Position, Is.EqualTo(new float3(2, 1, 3)));
         }
 
         [TestCase(AlienSpikeAuthoring.SpawnMotion, TestName = "SpawnEmergesOnceAndStaysAboveTheFloor")]

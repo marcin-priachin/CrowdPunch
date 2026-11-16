@@ -36,6 +36,7 @@ namespace CrowdPunch.Systems.Combat
             var enemies = SystemAPI.GetComponentLookup<Enemy>(true);
             var lifetimes = SystemAPI.GetComponentLookup<EnemyLifetime>(true);
             var velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>();
+            SystemAPI.TryGetSingletonBuffer<EnemyAttackAudioEvent>(out var audio);
             float ground = SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight;
             Entity arena = SystemAPI.GetSingletonEntity<ArenaGroundPlane>();
             float dt = SystemAPI.Time.DeltaTime;
@@ -85,6 +86,7 @@ namespace CrowdPunch.Systems.Combat
                         attack.Phase = RangedAttackPhase.WindUp;
                         attack.IsAttackEligible = 1;
                         attack.SecondsRemaining = math.max(.01f, settings.Windup);
+                        audio.Record(EnemyAttackAudioKind.SporellaWindup, candidate.Origin);
                         continue;
                     }
 
@@ -109,7 +111,7 @@ namespace CrowdPunch.Systems.Combat
                 while (burst.ShotsRemaining > 0 && burst.Wait <= .00001f)
                 {
                     var shot = SporellaShotEmission.Create(arena, entity, lifetime, SporellaShotKind.EnemyShot, settings, shared);
-                    SporellaShotEmission.FireSweepShot(commands, shot, burst.Sweep, burst.ShotsRemaining);
+                    SporellaShotEmission.FireSweepShot(commands, shot, burst.Sweep, burst.ShotsRemaining, audio);
                     burst.ShotsRemaining--;
                     burst.Wait += interval;
                     attack.ProjectilesSpawned++;
