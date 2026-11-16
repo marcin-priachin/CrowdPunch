@@ -3,7 +3,9 @@ using CrowdPunch.Components;
 using CrowdPunch.Mono.Levels;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.Combat;
+using CrowdPunch.Systems.Groups;
 using CrowdPunch.Systems.Lifetime;
+using CrowdPunch.Systems.Physics;
 using CrowdPunch.Systems.Presentation;
 using NUnit.Framework;
 using Unity.Collections;
@@ -250,11 +252,11 @@ namespace CrowdPunch.Tests
             Assert.That(em.Exists(shot), Is.False);
         }
 
-        [TestCase(SporellaOwnershipInteractions.PunchRedirectOnly, SporellaImpactDirection.IncomingOrOutgoing, true, false, false)]
-        [TestCase(SporellaOwnershipInteractions.LaunchedEnemyTriggerOnly, SporellaImpactDirection.IncomingOrOutgoing, false, true, true)]
+        [TestCase(SporellaOwnershipInteractions.PunchRedirectOnly, SporellaImpactDirection.AnyPlayerLaunch, true, false, false)]
+        [TestCase(SporellaOwnershipInteractions.LaunchedEnemyTriggerOnly, SporellaImpactDirection.AnyPlayerLaunch, false, true, true)]
         [TestCase(SporellaOwnershipInteractions.Both, SporellaImpactDirection.IncomingOnly, true, true, false)]
         public void OwnershipAndDirectionSettingsAreIndependent(SporellaOwnershipInteractions interactions,
-            SporellaImpactDirection direction, bool canRedirect, bool canTriggerIncoming, bool canTriggerOutgoing)
+            SporellaImpactDirection direction, bool canRedirect, bool canFireOnPropagation, bool canFireOnPunch)
         {
             var settings = SporellaSettings.Default;
             settings.OwnershipInteractions = interactions;
@@ -265,46 +267,35 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<SporellaProjectile>(shot).Kind == SporellaShotKind.PunchReturn, Is.EqualTo(canRedirect));
 
             var shooter = Shooter(settings);
-            var history = em.GetBuffer<SporellaImpactHistory>(shooter);
-            var contacts = em.GetBuffer<SporellaImpactContact>(shooter);
-            Assert.That(SporellaImpactRecording.TryRecord(history, contacts, settings, true,
-                new SporellaImpactHistory { PunchSequence = 1 }, float3.zero, math.forward(), 2), Is.EqualTo(canTriggerOutgoing));
-            Assert.That(SporellaImpactRecording.TryRecord(history, contacts, settings, false,
-                new SporellaImpactHistory { PunchSequence = 2 }, float3.zero, math.forward(), 2), Is.EqualTo(canTriggerIncoming));
+            Launch(shooter, EnemyLaunchCause.PlayerPunch, 1);
+            Tick<SporellaImpactBurstSystem>(.02f);
+            int afterPunch = 1 + (canFireOnPunch ? 1 : 0);
+            Assert.That(CountShots(), Is.EqualTo(afterPunch));
+
+            Launch(shooter, EnemyLaunchCause.EnemyCollision, 2);
+            Tick<SporellaImpactBurstSystem>(.02f);
+            Assert.That(CountShots(), Is.EqualTo(afterPunch + (canFireOnPropagation ? 1 : 0)));
         }
 
         [Test]
-        public void PerEmitterHistoryDeduplicatesBothDirectionsAndLethalBurstOutlastsEmitter()
+        public void PlayerLaunchStartsSweepImmediatelyAndFollowsSporellaAtTheAuthoredCadence()
         {
             var shooter = Shooter();
-            var other = Shooter();
-            var settings = SporellaSettings.Default;
-            var chain = new SporellaImpactHistory { PunchSequence = 12 };
-            var center = new float3(3, 0, 1);
-            var direction = new float3(1, 0, 0);
+            var start = new float3(3, .94f, 1);
+            float3 direction = new float3(1, 0, 0);
+            Move(shooter, start);
+            em.SetComponentData(shooter, new PhysicsVelocity { Linear = direction * 8 });
 
-            bool Record(Entity entity, bool outgoing, SporellaImpactHistory key) => SporellaImpactRecording.TryRecord(
-                em.GetBuffer<SporellaImpactHistory>(entity), em.GetBuffer<SporellaImpactContact>(entity),
-                settings, outgoing, key, center, direction, 3);
+            Launch(shooter, EnemyLaunchCause.ElitePunch, 0, EnemyLaunchOwner.Enemy);
+            Tick<SporellaImpactBurstSystem>(.02f);
+            Assert.That(CountShots(), Is.Zero);
 
-            Assert.That(Record(shooter, false, chain), Is.True);
-            Assert.That(Record(shooter, true, chain), Is.False);
-            Assert.That(Record(other, true, chain), Is.True);
-            Assert.That(Record(other, false, new SporellaImpactHistory { PunchSequence = 13 }), Is.True);
-            // A sequence-less chain's key survives propagation and includes the source lifetime.
-            var fallback = new SporellaImpactHistory { Source = player, SourceLifetime = 1, LaunchSequence = 1 };
-            Assert.That(Record(other, true, fallback), Is.True);
-            Assert.That(Record(other, false, fallback), Is.False);
-            fallback.SourceLifetime++;
-            Assert.That(Record(other, false, fallback), Is.True);
-            em.DestroyEntity(other);
-
-            em.SetComponentData(shooter, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
-            em.SetComponentEnabled<RespawnRequest>(shooter, true);
+            Launch(shooter, EnemyLaunchCause.PlayerPunch, 12);
             Tick<SporellaImpactBurstSystem>(.02f);
             Assert.That(CountShots(), Is.EqualTo(1));
-            em.DestroyEntity(shooter);
 
+            var later = new float3(6, .94f, 1);
+            Move(shooter, later);
             Tick<SporellaImpactBurstSystem>(.179f);
             Assert.That(CountShots(), Is.EqualTo(1));
             Tick<SporellaImpactBurstSystem>(.001f);
@@ -314,19 +305,79 @@ namespace CrowdPunch.Tests
             using var shots = query.ToEntityArray(Allocator.Temp);
             Assert.That(shots.Length, Is.EqualTo(6));
             int[] laneCounts = new int[3];
+            int movedOriginShots = 0;
             float3 right = math.cross(math.up(), direction);
             foreach (var entity in shots)
             {
                 var shot = em.GetComponentData<SporellaProjectile>(entity);
                 Assert.That(shot.Kind, Is.EqualTo(SporellaShotKind.ImpactShot));
-                Assert.That(PositionOf(entity), Is.EqualTo(new float3(center.x, .94f, center.z)));
+                float3 origin = PositionOf(entity);
+                if (origin.Equals(later)) movedOriginShots++;
+                else Assert.That(origin, Is.EqualTo(start));
                 float offset = 10f * math.dot(shot.Direction, right) / math.dot(shot.Direction, direction);
                 int lane = (int)math.round(offset / 1.5f) + 1;
                 Assert.That(offset, Is.EqualTo((lane - 1) * 1.5f).Within(.001f));
                 laneCounts[lane]++;
                 Assert.That(shot.PunchSequence, Is.EqualTo(12u));
             }
+            Assert.That(movedOriginShots, Is.EqualTo(5));
             Assert.That(laneCounts, Is.EqualTo(new[] { 2, 2, 2 }));
+
+            Launch(shooter, EnemyLaunchCause.EnemyCollision, 12);
+            Tick<SporellaImpactBurstSystem>(.2f);
+            Assert.That(CountShots(), Is.EqualTo(6), "SPORELLA-002 allows one sweep per initiating chain.");
+            Launch(shooter, EnemyLaunchCause.PlayerPunch, 13);
+            Tick<SporellaImpactBurstSystem>(.02f);
+            Assert.That(CountShots(), Is.EqualTo(7));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void LaunchEndingOnTheShotTickCancelsUnfiredShots(bool lethalLaunch)
+        {
+            var shooter = Shooter();
+            if (lethalLaunch) em.SetComponentData(shooter, new Health { Current = 0, Max = 30 });
+            em.CreateSingleton(new EnemyLaunchSettings { UsefulMomentumSpeed = 1f, RecoveryDuration = .5f });
+            var postPhysics = world.GetOrCreateSystemManaged<GamePostPhysicsGroup>();
+            postPhysics.AddSystemToUpdateList(world.GetOrCreateSystem<SporellaImpactBurstSystem>());
+            postPhysics.AddSystemToUpdateList(world.GetOrCreateSystem<EnemyRecoverySystem>());
+            postPhysics.AddSystemToUpdateList(world.GetOrCreateSystem<EnemyLaunchCollisionSystem>());
+            postPhysics.SortSystems();
+
+            Launch(shooter, EnemyLaunchCause.PlayerPunch, 12);
+            em.SetComponentData(shooter, new PhysicsVelocity { Linear = math.forward() * 8 });
+            world.SetTime(new TimeData(.02d, .02f));
+            postPhysics.Update();
+            Assert.That(CountShots(), Is.EqualTo(1));
+
+            em.SetComponentData(shooter, default(PhysicsVelocity));
+            world.SetTime(new TimeData(.20d, .18f));
+            postPhysics.Update();
+            Assert.That(em.GetComponentData<EnemyLaunchState>(shooter).Phase,
+                Is.EqualTo(lethalLaunch ? EnemyLaunchPhase.Defeated : EnemyLaunchPhase.Recovering));
+            Assert.That(CountShots(), Is.EqualTo(1));
+            world.SetTime(new TimeData(1.2d, 1f));
+            postPhysics.Update();
+            Assert.That(CountShots(), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void PropagatedLaunchWithoutPunchSequenceDeduplicatesBySourceLifetime()
+        {
+            var shooter = Shooter();
+            var origin = new LaunchChainOrigin { Source = Body(float3.zero, true), Lifetime = 1, Sequence = 1 };
+            Launch(shooter, EnemyLaunchCause.EnemyCollision, 0, fallback: origin);
+            Tick<SporellaImpactBurstSystem>(.02f);
+            Assert.That(CountShots(), Is.EqualTo(1));
+
+            Launch(shooter, EnemyLaunchCause.EnemyCollision, 0, fallback: origin);
+            Tick<SporellaImpactBurstSystem>(.18f);
+            Assert.That(CountShots(), Is.EqualTo(1));
+
+            origin.Lifetime++;
+            Launch(shooter, EnemyLaunchCause.EnemyCollision, 0, fallback: origin);
+            Tick<SporellaImpactBurstSystem>(.02f);
+            Assert.That(CountShots(), Is.EqualTo(2));
         }
 
         [TestCase(SporellaShotKind.ImpactShot)]
@@ -367,9 +418,19 @@ namespace CrowdPunch.Tests
             em.AddComponentData(entity, RangedSettings());
             em.AddComponentData(entity, new RangedAttackState { Phase = RangedAttackPhase.Ready });
             em.AddComponent<SporellaNormalBurst>(entity);
+            em.AddComponent<SporellaImpactBurst>(entity);
             em.AddBuffer<SporellaImpactHistory>(entity);
-            em.AddBuffer<SporellaImpactContact>(entity);
+            em.AddComponent<PhysicsVelocity>(entity);
             return entity;
+        }
+
+        private void Launch(Entity entity, EnemyLaunchCause cause, uint punchSequence,
+            EnemyLaunchOwner owner = EnemyLaunchOwner.Player, LaunchChainOrigin fallback = default)
+        {
+            var launch = em.GetComponentData<EnemyLaunchState>(entity);
+            EnemyLaunchTransition.Begin(ref launch, cause, 5f, owner, punchSequence);
+            launch.FallbackChain = fallback;
+            em.SetComponentData(entity, launch);
         }
 
         private Entity Body(float3 position, bool enemy = false)

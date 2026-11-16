@@ -22,23 +22,13 @@ namespace CrowdPunch.Components
         public int ShotsRemaining;
     }
 
-    // Independent of the originating enemy once the first shot has fired.
     public struct SporellaImpactBurst : IComponentData
     {
         public SporellaProjectile Shot;
         public SporellaSweep Sweep;
+        public uint LaunchSequence;
         public int ShotsRemaining;
-        public float Interval;
         public float Wait;
-    }
-
-    [InternalBufferCapacity(1)]
-    public struct SporellaImpactContact : IBufferElementData
-    {
-        public float3 Position;
-        public float3 Direction;
-        public uint PunchSequence;
-        public int ChainDepth;
     }
 
     [InternalBufferCapacity(4)]

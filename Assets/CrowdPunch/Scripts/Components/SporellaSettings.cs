@@ -14,7 +14,7 @@ namespace CrowdPunch.Components
 
     public enum SporellaImpactDirection : byte
     {
-        IncomingOrOutgoing,
+        AnyPlayerLaunch,
         IncomingOnly
     }
 
@@ -22,6 +22,7 @@ namespace CrowdPunch.Components
     public struct SporellaSettings : IComponentData
     {
         public SporellaOwnershipInteractions OwnershipInteractions;
+        [Tooltip("Choose any player-owned launch or only a launch propagated by another enemy.")]
         public SporellaImpactDirection ImpactDirection;
         [FormerlySerializedAs("ShotsPerBurst"), Min(1)] public int ShotsPerPass;
         [Min(1)] public int SweepPasses;
@@ -35,13 +36,14 @@ namespace CrowdPunch.Components
         [Min(.01f)] public float EnemyDamage;
 
         public bool CanRedirect => OwnershipInteractions != SporellaOwnershipInteractions.LaunchedEnemyTriggerOnly;
-        public bool CanTrigger(bool outgoing) => OwnershipInteractions != SporellaOwnershipInteractions.PunchRedirectOnly
-            && (!outgoing || ImpactDirection == SporellaImpactDirection.IncomingOrOutgoing);
+        public bool CanEmitOnLaunch(EnemyLaunchCause cause) =>
+            OwnershipInteractions != SporellaOwnershipInteractions.PunchRedirectOnly
+            && (ImpactDirection == SporellaImpactDirection.AnyPlayerLaunch || cause == EnemyLaunchCause.EnemyCollision);
 
         public static SporellaSettings Default => new SporellaSettings
         {
             OwnershipInteractions = SporellaOwnershipInteractions.Both,
-            ImpactDirection = SporellaImpactDirection.IncomingOrOutgoing,
+            ImpactDirection = SporellaImpactDirection.AnyPlayerLaunch,
             ShotsPerPass = 3, SweepPasses = 2, ShotInterval = .18f, Windup = .65f, ForwardSpeed = 14f,
             SweepHalfWidth = 1.5f, Range = 26f, Height = .94f, EnemyDamage = 10f
         };

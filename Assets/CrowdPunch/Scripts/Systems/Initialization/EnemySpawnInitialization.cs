@@ -215,8 +215,8 @@ namespace CrowdPunch.Systems.Initialization
                 {
                     commandBuffer.AddComponent(enemy, profile.Sporella);
                     commandBuffer.AddComponent<SporellaNormalBurst>(enemy);
+                    commandBuffer.AddComponent<SporellaImpactBurst>(enemy);
                     commandBuffer.AddBuffer<SporellaImpactHistory>(enemy);
-                    commandBuffer.AddBuffer<SporellaImpactContact>(enemy);
                 }
                 else commandBuffer.AddComponent(enemy, new URPMaterialPropertyBaseColor
                 {

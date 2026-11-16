@@ -36,9 +36,6 @@ namespace CrowdPunch.Systems.Combat
                 .Build();
             EnemyCollisionJob job = new EnemyCollisionJob
             {
-                SporellaTunings = SystemAPI.GetComponentLookup<SporellaSettings>(true),
-                SporellaContacts = SystemAPI.GetBufferLookup<SporellaImpactContact>(),
-                SporellaHistories = SystemAPI.GetBufferLookup<SporellaImpactHistory>(),
                 MushroomImpacts = SystemAPI.GetBufferLookup<MushroomBeamImpact>(),
                 SpikeBursts = SystemAPI.GetBufferLookup<AlienSpikeBurst>(),
                 SpikeHistory = SystemAPI.GetBufferLookup<AlienSpikeBurstHistory>(),
@@ -90,9 +87,6 @@ namespace CrowdPunch.Systems.Combat
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
             public ComponentLookup<CommittedLaunchFlight> Commitments;
-            [ReadOnly] public ComponentLookup<SporellaSettings> SporellaTunings;
-            public BufferLookup<SporellaImpactContact> SporellaContacts;
-            public BufferLookup<SporellaImpactHistory> SporellaHistories;
             public BufferLookup<MushroomBeamImpact> MushroomImpacts;
             public BufferLookup<AlienSpikeBurst> SpikeBursts;
             public BufferLookup<AlienSpikeBurstHistory> SpikeHistory;
@@ -194,17 +188,6 @@ namespace CrowdPunch.Systems.Combat
 
                 EnemyLaunchPhase phaseA = LaunchStateLookup[entityA].Phase;
                 EnemyLaunchPhase phaseB = LaunchStateLookup[entityB].Phase;
-
-                if ((phaseA == EnemyLaunchPhase.Launched || phaseB == EnemyLaunchPhase.Launched)
-                    && phaseA != EnemyLaunchPhase.Defeated && phaseB != EnemyLaunchPhase.Defeated
-                    && (SporellaTunings.HasComponent(entityA) || SporellaTunings.HasComponent(entityB)))
-                {
-                    float impulse = collisionEvent.CalculateDetails(ref World).EstimatedImpulse;
-                    if (phaseA == EnemyLaunchPhase.Launched)
-                        RecordSporellaImpact(entityA, entityB, -collisionEvent.Normal, impulse);
-                    if (phaseB == EnemyLaunchPhase.Launched)
-                        RecordSporellaImpact(entityB, entityA, collisionEvent.Normal, impulse);
-                }
 
                 if (phaseA == EnemyLaunchPhase.Launched && phaseB != EnemyLaunchPhase.Launched)
                 {
@@ -351,33 +334,6 @@ namespace CrowdPunch.Systems.Combat
                         estimatedImpulse, significance, ElapsedTime);
                     FeedbackLookup[target] = feedback;
                 }
-            }
-
-            private void RecordSporellaImpact(Entity source, Entity target, float3 towardTarget, float impulse)
-            {
-                var launch = LaunchStateLookup[source];
-                if (launch.Owner != EnemyLaunchOwner.Player) return;
-                float threshold = Armors.HasComponent(target) && Armors[target].Stages > 0
-                    ? MinimumPropagationImpulse : math.min(MinimumDamageImpulse, MinimumPropagationImpulse);
-                if (impulse < math.max(.01f, threshold) || math.abs(towardTarget.y) >= .7f) return;
-
-                uint lifetime = Lifetimes.HasComponent(source) ? Lifetimes[source].Generation : 0;
-                var fallback = EnemyLaunchTransition.GetFallbackChain(source, lifetime, launch);
-                var chain = new SporellaImpactHistory
-                {
-                    PunchSequence = launch.OriginatingPunchSequence, Source = fallback.Source,
-                    SourceLifetime = fallback.Lifetime, LaunchSequence = fallback.Sequence
-                };
-                // Use travel into the solver. The velocity after a bounce may point backwards.
-                float3 direction = MushroomShotGeometry.Horizontal(
-                    FeedbackLookup.TryGetComponent(source, out var feedback) ? feedback.IncomingVelocity : float3.zero,
-                    MushroomShotGeometry.Horizontal(towardTarget, math.forward()));
-                if (SporellaTunings.TryGetComponent(target, out var incoming))
-                    SporellaImpactRecording.TryRecord(SporellaHistories[target], SporellaContacts[target],
-                        incoming, false, chain, TransformLookup[target].Position, direction, launch.FeedbackChainDepth + 1);
-                if (SporellaTunings.TryGetComponent(source, out var outgoing))
-                    SporellaImpactRecording.TryRecord(SporellaHistories[source], SporellaContacts[source],
-                        outgoing, true, chain, TransformLookup[source].Position, direction, launch.FeedbackChainDepth + 1);
             }
 
             private void RecordSpikeBurst(Entity spike, Entity source, in EnemyLaunchState launch, uint lifetime)

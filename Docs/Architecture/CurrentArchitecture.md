@@ -11,16 +11,15 @@ shots aimed at ordered lateral offsets across the locked target plane. The burst
 stops steering and supplies fixed facing until the last shot or cancellation.
 The authored front projectile clip provides the warning and release pose.
 
-The launch collision job records qualifying Sporella contacts before propagating
-launches and applying collision damage. Its per-enemy history uses the initiating
-punch or the fallback source entity, lifetime, and launch sequence carried across
-body propagation. Impact emission centers the sweep on the launch direction and
-copies the fixed sweep and remaining shots into
-an arena-scoped entity, so the ordinary defeat and pooling lifecycle does not
-interrupt it. Sporella bakes the authored Die clip duration for ordinary
-defeats, including projectile defeats without prior launch. The clear screen
-waits for the defeat and impact burst timers. Retry removes projectile and
-burst entities, and retry or respawn clears the enemy history.
+`SporellaImpactBurstSystem` reads Sporella's launch state after recovery updates.
+It starts one player-owned sweep per initiating punch or fallback source entity,
+lifetime, and launch sequence carried across body propagation. The sweep locks
+its initial direction and samples Sporella's current horizontal position when
+each shot fires. Sporella owns the emission timer, which stops when the matching
+launch ends. Fired projectiles have their own lifetime. Retry clears projectiles,
+and retry or respawn resets each Sporella's burst state and history. The clear
+screen waits for the authored Die clip on ordinary defeats, including projectile
+defeats without prior launch.
 
 Clearance and flight sweep a sphere along each shot's straight line.
 Punch detection considers eligible Sporella and Mushroom shots before enemy

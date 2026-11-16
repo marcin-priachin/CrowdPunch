@@ -8,7 +8,7 @@ namespace CrowdPunch.Systems.Combat
     internal static class SporellaShotGeometry
     {
         private const float MuzzleForward = 1.24f; // Grounded frame 10 at 2x model scale.
-        private const float ImpactAimDistance = 10f;
+        private const float LaunchAimDistance = 10f;
 
         internal static SporellaSweep Aim(float3 position, float3 target, float3 fallback, float shotHeight,
             in SporellaSettings settings)
@@ -20,11 +20,11 @@ namespace CrowdPunch.Systems.Combat
             return CreateSweep(position + forward * nozzle, forward, distance - nozzle, settings);
         }
 
-        internal static SporellaSweep AimAlongImpact(float3 position, float3 direction, float shotHeight,
+        internal static SporellaSweep AimAlongLaunch(float3 position, float3 direction, float shotHeight,
             in SporellaSettings settings)
         {
             position.y = shotHeight;
-            return CreateSweep(position, direction, ImpactAimDistance, settings);
+            return CreateSweep(position, direction, LaunchAimDistance, settings);
         }
 
         private static SporellaSweep CreateSweep(float3 origin, float3 forward, float distance, in SporellaSettings settings)

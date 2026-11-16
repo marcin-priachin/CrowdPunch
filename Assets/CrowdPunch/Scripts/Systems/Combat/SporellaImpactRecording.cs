@@ -1,16 +1,19 @@
 using CrowdPunch.Components;
 using Unity.Entities;
-using Unity.Mathematics;
 
 namespace CrowdPunch.Systems.Combat
 {
     internal static class SporellaImpactRecording
     {
-        internal static bool TryRecord(DynamicBuffer<SporellaImpactHistory> history,
-            DynamicBuffer<SporellaImpactContact> contacts, in SporellaSettings settings, bool outgoing,
-            in SporellaImpactHistory chain, float3 position, float3 direction, int depth)
+        internal static bool TryRecord(DynamicBuffer<SporellaImpactHistory> history, Entity emitter,
+            uint lifetime, in EnemyLaunchState launch)
         {
-            if (!settings.CanTrigger(outgoing)) return false;
+            var origin = EnemyLaunchTransition.GetFallbackChain(emitter, lifetime, launch);
+            var chain = new SporellaImpactHistory
+            {
+                PunchSequence = launch.OriginatingPunchSequence, Source = origin.Source,
+                SourceLifetime = origin.Lifetime, LaunchSequence = origin.Sequence
+            };
             foreach (var previous in history)
             {
                 bool same = chain.PunchSequence != 0 ? previous.PunchSequence == chain.PunchSequence
@@ -20,10 +23,6 @@ namespace CrowdPunch.Systems.Combat
             }
 
             history.Add(chain);
-            contacts.Add(new SporellaImpactContact
-            {
-                Position = position, Direction = direction, PunchSequence = chain.PunchSequence, ChainDepth = depth
-            });
             return true;
         }
     }

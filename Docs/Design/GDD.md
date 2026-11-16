@@ -2219,24 +2219,24 @@ warning. The aim point stays fixed after release. A launch cancels any unfired s
 Defaults are 2 passes of 3 shots, 1.5 m to either side of the aim point, 0.18 s
 between shots, a 0.65 s windup, and a shot speed of 14 m/s.
 
-### SPORELLA-002 - Player-Owned Impact Burst
+### SPORELLA-002 - Player-Owned Launch Burst
 
 Status: Must
 
-A player-owned launched body hitting Sporella can trigger a burst. The separate
-direction setting permits incoming only or incoming and outgoing (default);
-outgoing means player-owned launched Sporella hits another enemy. Use the launched
-body's travel direction as the center of the same sweep, and lock the origin on
-Sporella at contact. Count propagated
-launches. Emit at most once per Sporella per initiating player chain, using Alien
-Spike's punch sequence or source, lifetime, and launch sequence fallback. The
-first shot is immediate and the rest use the normal cadence, even on lethal hits.
+A player-owned launch starts Sporella's burst. The launch setting permits any
+player-owned launch (default) or only a propagated launch from another enemy.
+Center the sweep on Sporella's initial travel direction and emit each shot from
+Sporella's current horizontal position at the authored shot height. Emit at most
+one burst per Sporella per initiating player chain, using the punch sequence or
+the source, lifetime, and launch sequence fallback. The first shot is immediate
+and the rest use the normal cadence while that launch is active. Recovery or
+defeat cancels pending shots. Shots already emitted continue their flight.
 
 ### SPORELLA-003 - Ownership, Contact, And Damage
 
 Status: Must
 
-Provide punch redirect only, launched-body trigger only, and both (default).
+Provide punch redirect only, launch-triggered emission only, and both (default).
 Either kind of projectile can be redirected once if enabled. A valid punch
 prioritizes it over enemies in the same area and sends it straight in the punch
 direction. Enemy shots pass enemies harmlessly. Impact shots stop on the first

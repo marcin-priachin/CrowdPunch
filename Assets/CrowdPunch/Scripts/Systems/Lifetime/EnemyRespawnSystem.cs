@@ -140,7 +140,7 @@ namespace CrowdPunch.Systems.Lifetime
                     if (SystemAPI.HasBuffer<SporellaImpactHistory>(enemy))
                     {
                         SystemAPI.GetBuffer<SporellaImpactHistory>(enemy).Clear();
-                        SystemAPI.GetBuffer<SporellaImpactContact>(enemy).Clear();
+                        SystemAPI.SetComponent(enemy, default(SporellaImpactBurst));
                         SystemAPI.SetComponent(enemy, default(SporellaNormalBurst));
                     }
                     if (SystemAPI.HasBuffer<AlienSpikeBurstHistory>(enemy))

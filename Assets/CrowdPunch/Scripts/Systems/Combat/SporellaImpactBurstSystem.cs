@@ -5,20 +5,19 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Physics;
+using Unity.Transforms;
 
 namespace CrowdPunch.Systems.Combat
 {
     [BurstCompile]
     [UpdateInGroup(typeof(GamePostPhysicsGroup))]
-    [UpdateAfter(typeof(EnemyLaunchCollisionSystem))]
-    [UpdateAfter(typeof(SporellaProjectileSystem))]
-    [UpdateBefore(typeof(EnemyRecoverySystem))]
+    [UpdateAfter(typeof(EnemyRecoverySystem))]
     public partial struct SporellaImpactBurstSystem : ISystem
     {
         public void OnCreate(ref SystemState state)
         {
-            state.RequireAnyForUpdate(state.GetEntityQuery(ComponentType.ReadOnly<SporellaImpactContact>()),
-                state.GetEntityQuery(ComponentType.ReadOnly<SporellaImpactBurst>()));
+            state.RequireForUpdate<SporellaImpactBurst>();
         }
 
         [BurstCompile]
@@ -30,53 +29,53 @@ namespace CrowdPunch.Systems.Combat
             SystemAPI.TryGetSingletonBuffer<EnemyAttackAudioEvent>(out var audio);
             using var commands = new EntityCommandBuffer(Allocator.Temp);
             float dt = SystemAPI.Time.DeltaTime;
-            foreach (var (burstRef, entity) in SystemAPI.Query<RefRW<SporellaImpactBurst>>().WithEntityAccess())
+            foreach (var (burstRef, launchRef, settings, ranged, pose, velocity, history, emitter) in
+                SystemAPI.Query<RefRW<SporellaImpactBurst>, RefRO<EnemyLaunchState>, RefRO<SporellaSettings>,
+                    RefRO<RangedEnemySettings>, RefRO<LocalTransform>, RefRO<PhysicsVelocity>,
+                    DynamicBuffer<SporellaImpactHistory>>()
+                    .WithNone<RespawnRequest>().WithEntityAccess())
             {
                 ref var burst = ref burstRef.ValueRW;
-                if (!hasArena || burst.Shot.Arena != arena)
+                ref readonly var launch = ref launchRef.ValueRO;
+                var tuning = settings.ValueRO;
+                if (!hasArena || launch.Phase != EnemyLaunchPhase.Launched || launch.Owner != EnemyLaunchOwner.Player
+                    || !tuning.CanEmitOnLaunch(launch.LastCause))
                 {
-                    commands.DestroyEntity(entity);
+                    burst = default;
                     continue;
                 }
-                burst.Wait -= dt;
+
+                if (burst.LaunchSequence != launch.LaunchSequence || burst.Shot.Arena != arena)
+                {
+                    burst = new SporellaImpactBurst { LaunchSequence = launch.LaunchSequence };
+                    uint generation = lifetimes.TryGetComponent(emitter, out var life) ? life.Generation : 0;
+                    burst.Shot.Arena = arena;
+                    if (!SporellaImpactRecording.TryRecord(history, emitter, generation, launch)) continue;
+
+                    float3 facing = MushroomShotGeometry.Horizontal(math.forward(pose.ValueRO.Rotation), math.forward());
+                    float3 direction = MushroomShotGeometry.Horizontal(velocity.ValueRO.Linear, facing);
+                    float height = SporellaShotGeometry.Height(floor.SurfaceHeight, ranged.ValueRO.ProjectileRadius, tuning);
+                    burst.Sweep = SporellaShotGeometry.AimAlongLaunch(pose.ValueRO.Position, direction, height, tuning);
+                    burst.ShotsRemaining = burst.Sweep.ShotCount;
+                    burst.Shot = SporellaShotEmission.Create(arena, emitter, generation,
+                        SporellaShotKind.ImpactShot, tuning, ranged.ValueRO);
+                    burst.Shot.PunchSequence = launch.OriginatingPunchSequence;
+                    burst.Shot.ChainDepth = launch.FeedbackChainDepth;
+                }
+                else if (burst.ShotsRemaining > 0)
+                {
+                    burst.Wait -= dt;
+                }
+
+                if (burst.ShotsRemaining == 0 || burst.Wait > .00001f) continue;
+                burst.Sweep.Origin.xz = pose.ValueRO.Position.xz;
+                float interval = SporellaShotEmission.Interval(tuning);
                 while (burst.ShotsRemaining > 0 && burst.Wait <= .00001f)
                 {
                     SporellaShotEmission.FireSweepShot(commands, burst.Shot, burst.Sweep, burst.ShotsRemaining, audio);
                     burst.ShotsRemaining--;
-                    burst.Wait += burst.Interval;
+                    burst.Wait += interval;
                 }
-                if (burst.ShotsRemaining == 0) commands.DestroyEntity(entity);
-            }
-
-            // Deliberately include pending-defeat emitters. The collision job has already
-            // accepted the contact, and the remaining timers never depend on the emitter.
-            foreach (var (contacts, settings, ranged, emitter) in
-                SystemAPI.Query<DynamicBuffer<SporellaImpactContact>, RefRO<SporellaSettings>, RefRO<RangedEnemySettings>>()
-                    .WithEntityAccess())
-            {
-                if (hasArena)
-                {
-                    uint generation = lifetimes.TryGetComponent(emitter, out var life) ? life.Generation : 0;
-                    var tuning = settings.ValueRO;
-                    float height = SporellaShotGeometry.Height(floor.SurfaceHeight, ranged.ValueRO.ProjectileRadius, tuning);
-                    foreach (var contact in contacts)
-                    {
-                        var sweep = SporellaShotGeometry.AimAlongImpact(contact.Position, contact.Direction, height, tuning);
-                        var shot = SporellaShotEmission.Create(arena, emitter, generation,
-                            SporellaShotKind.ImpactShot, tuning, ranged.ValueRO);
-                        shot.PunchSequence = contact.PunchSequence;
-                        shot.ChainDepth = contact.ChainDepth;
-                        SporellaShotEmission.FireSweepShot(commands, shot, sweep, sweep.ShotCount, audio);
-                        if (sweep.ShotCount <= 1) continue;
-                        var entity = commands.CreateEntity();
-                        float interval = SporellaShotEmission.Interval(tuning);
-                        commands.AddComponent(entity, new SporellaImpactBurst
-                        {
-                            Shot = shot, Sweep = sweep, ShotsRemaining = sweep.ShotCount - 1, Interval = interval, Wait = interval
-                        });
-                    }
-                }
-                contacts.Clear();
             }
             commands.Playback(state.EntityManager);
         }

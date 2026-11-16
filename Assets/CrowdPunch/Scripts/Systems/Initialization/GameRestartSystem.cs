@@ -53,8 +53,7 @@ namespace CrowdPunch.Systems.Initialization
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<MushroomBeam>().Build());
             foreach (var impacts in SystemAPI.Query<DynamicBuffer<MushroomBeamImpact>>()) impacts.Clear();
             EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<SporellaProjectile>().Build());
-            EntityManager.DestroyEntity(SystemAPI.QueryBuilder().WithAll<SporellaImpactBurst>().Build());
-            foreach (var contacts in SystemAPI.Query<DynamicBuffer<SporellaImpactContact>>()) contacts.Clear();
+            foreach (var burst in SystemAPI.Query<RefRW<SporellaImpactBurst>>()) burst.ValueRW = default;
             foreach (var history in SystemAPI.Query<DynamicBuffer<SporellaImpactHistory>>()) history.Clear();
             foreach (var burst in SystemAPI.Query<RefRW<SporellaNormalBurst>>()) burst.ValueRW = default;
             using (NativeArray<Entity> projectileRoots = oldProjectiles.ToEntityArray(Allocator.Temp))
