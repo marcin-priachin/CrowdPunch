@@ -96,7 +96,7 @@ The player approaches or is pressured by a crowd, chooses position and launch di
 
 Status: Must
 
-The campaign contains 81 levels: the existing eight chapters of ten plus a one-level ninth chapter containing the final encounter (FINALE-001..007). Every tenth level in Chapters 1-8 is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce the original eight enemy archetypes, objectives and static hazards by level 40; the four additional enemies follow LOOP-009. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes, BARRICADE-007's room chains and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
+The campaign contains 81 levels: the existing eight chapters of ten plus a one-level ninth chapter containing the final encounter (FINALE-001..007). Every tenth level in Chapters 1-8 is a boss. Introduce Gatekeeper, Chicken, Rolling Blob and Dino in Chapters 1-4 and revisit them in that order in Chapters 5-8. Introduce the original eight enemy archetypes, objectives and static hazards by level 40; later enemies follow LOOP-009 and the three-shooter integration follows LOOP-011. Each level has one main objective. Use distinct authored enclosed layouts; retain each boss's existing arena geometry for introduction and rematch. Compact layouts are the default, with protected-point lanes, TRACK-006's progressive routes, BARRICADE-007's room chains and LOOP-008's large crowd arenas as exceptions. The accepted encounter table is [Campaign80Proposal.md](Campaign80Proposal.md); implementation proceeds in chapter batches.
 
 Existing numbered gauntlet placements and single-introduction restrictions elsewhere in this document describe the preserved legacy encounters. They do not constrain campaign placement or repetition. Mechanic eligibility, damage, ownership, ammunition and lifecycle rules remain mandatory. Preserve all 27 legacy encounters outside campaign progression and player builds; retain them in the existing Level Play Editor window without modifying campaign saves. Campaign wave and objective/boss tuning must not overwrite legacy assets or shared ordinary-enemy profiles.
 
@@ -156,9 +156,9 @@ Difficulty grows through composition, positioning, geometry, spawn directions, c
 
 Status: Must
 
-Introduce LinkedPair in Chapter 5 at level 41, Dragon in Chapter 6 at 52, Snake in Chapter 7 at 61 and Ninja in Chapter 8 at 71. Each remains present in every subsequent chapter. Use the accepted 2026-10-14 compositions and recurrence in [Campaign80Proposal.md](Campaign80Proposal.md): 15 finite wave-clear encounters, with Baselines as the only supporting archetype in the four introductions, followed by mixed practice and the chapter's large arena. Keep all 80 level identifiers, objectives, boss order, saves and unlocks intact.
+Introduce LinkedPair in Chapter 5 at level 41, Dragon in Chapter 6 at 52, Snake in Chapter 7 at 61 and Ninja in Chapter 8 at 71. Each remains present in every subsequent chapter. The 2026-10-14 compositions and recurrence in [Campaign80Proposal.md](Campaign80Proposal.md) establish the implemented baseline: 15 finite wave-clear encounters, with Baselines as the only supporting archetype in the four introductions, followed by mixed practice and the chapter's large arena. LOOP-011 revises later mixtures and cadence without moving these four introductions. Keep all level identifiers, objectives, boss order, saves and unlocks intact.
 
-Use the existing LINK-001..007, DRAGON-001..007, SNAKE-001..007 and NINJA-001..006 gameplay and shared settings. Count LinkedPair in pairs, with two independently defeated endpoints per pair. Count Snake in heads for clearance; its attached and detached orbs never become separate completion objectives. Mixed-wave composition replaces Baselines to preserve the previous initial physical-body budget, including current six-segment Snake tails. Keep the existing two-concurrent-ambush Ninja cap. Counts and duration targets remain playtest tuning under LOOP-003/008; no new completion waits, forced delays or shared stat escalation are introduced. The approved large waves at 48/58/68/78 spawn together and clear before the next begins.
+Use the existing LINK-001..007, DRAGON-001..007, SNAKE-001..007 and NINJA-001..006 gameplay and shared settings. Count LinkedPair in pairs, with two independently defeated endpoints per pair. Count Snake in heads for clearance; its attached and detached orbs never become separate completion objectives. Account for current six-segment Snake tails when replacing Baselines and budgeting concurrent physical bodies. Keep the existing two-concurrent-ambush Ninja cap. Counts and duration targets remain playtest tuning under LOOP-003/008; no new completion waits, forced delays or shared stat escalation are introduced. LOOP-011 supersedes the former simultaneous, clear-to-advance large waves at 48/58/68/78 as their chapter revisions are implemented.
 
 This campaign integration is additional scope to the original legacy-only enemy implementation slices. Preserve Gauntlet_24..27's recipes, assets, Level Play access and exclusion from campaign progression/player builds. Their original placement instructions do not exclude the four enemy prefabs from campaign encounters authorized here.
 
@@ -168,6 +168,63 @@ Status: Must
 
 The main menu and each campaign chapter have their own background music. Assign their
 tracks in a shared ScriptableObject.
+
+### LOOP-011 - Campaign Variety And Timed Reinforcements
+
+Status: Must
+
+The approved 2026-11-16 revision retains the 81-level structure, objectives, stable IDs,
+boss order, saves, layouts and existing introduction milestones. Introduce Mushroom
+Shooter at level 5, Alien Spike at 15 and Sporella at 43, then retain each in subsequent
+chapters. Preserve MUSHROOM-001..004, SPIKE-001..005 and SPORELLA-001..004 gameplay and
+their separate legacy encounters. Their legacy-only placement restrictions do not
+prohibit this separately authorized campaign integration.
+
+Use recognizable enemy combinations and replace Baselines with specialists rather
+than increasing every count. Starting Baseline shares for mixed wave-clear encounters
+are 65-75%, 55-65%, 50-60%, 45-55%, 40-50%, 40-50%, 35-45% and 35-45% in Chapters 1-8.
+Introductions and ammunition-dependent objectives/bosses are exceptions. Counts and
+percentages remain playtest tuning; preserve reliable launch ammunition and shared
+ordinary-enemy stats. Keep the original four later introductions isolated and preserve
+the two-concurrent-Ninja-ambush limit.
+
+Default to finite timed reinforcements followed by one cumulative survivor clear.
+Retain clear checkpoints for introductions and selected Elite encounters. Target
+75-85% timed intermediate transitions after Chapter 1. Early/middle/late combat starts
+from 4-6 enemies every 5-7s, 5-7 every 4-6s and 6-8 every 4-5s; large arenas use 8-12
+every 4-6s with at most one deliberate midpoint clear checkpoint. Preserve LOOP-008's
+duration targets through sustained combat, not empty waiting or a survival timer.
+Survivors and their attacks remain valid when a reinforcement phase begins. Final
+clearance includes every phase's survivors and preserves SCORE-001.
+
+Keep level 24's defense introduction clear-gated; later defenses use finite timed
+reinforcements and resolve remaining attackers, retaining PROTECT-001..003 and excluding
+Elites. This supersedes the campaign inter-wave pause default in PROTECT-004, not the
+legacy recipe. Objective/boss support remains bounded and objective-owned, with smaller
+initial batches and staggered replacement. No survivor cleanup is added to victory.
+
+Preserve ground-hazard introductions at 25/27. Increase distinct patches in later
+pressure encounters, stagger periodic activation, and retain connected safe routes,
+safe spawning and objective shooting space. Enemy-created hazards count toward
+readability pressure. Preserve BARRICADE-009's final-sector layouts/hazards and quieter
+pre-boss encounters. Chapter targets and affected encounters are recorded in
+[Campaign80Proposal.md](Campaign80Proposal.md). The finale introduces all three new
+specialists through substitutions within its existing 37/50/66 physical-body budgets,
+preserving anchor ammunition and without added blanket ground danger.
+
+Chapter 1's approved implementation: level 5 has 6B+1M, then 6B+2R+1M after clearance;
+level 8 has 28B+8R+4M, 42B+12R+6M, 52B+16R+8M and 64B+20R+10M (270 total);
+level 9 has 6B+2R followed by 6B+2R+1M. B/R/M denote Baseline/Ranged/Mushroom Shooter.
+Levels 2/8/9 use timed advancement and final cumulative clearance. Levels 1/3/5 retain
+introductory clear checkpoints. Initial batches are 4 every 6s, or 8 every 6s at level 8;
+timed phases advance 6s after their final batch with no additional next-phase delay.
+The first phase starts after 3s; clear-gated next phases retain their 3s pause. Objectives
+4/6/7 and boss 10 retain their support counts and 4s replenishment delay, with initial
+support delivered in batches of 4 every 6s. No Chapter 1 static hazards are added.
+
+Implementation is staged: Chapter 1 is authorized now; Chapters 2-9 retain their
+existing assets until their respective implementation requests. Hardware/performance
+acceptance remains OQ-001; the revision does not resolve unrelated open questions.
 
 ### SCORE-001 - Punch Efficiency
 

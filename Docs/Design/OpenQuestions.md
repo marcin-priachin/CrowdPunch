@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-11-06
+Last updated: 2026-11-16
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -61,6 +61,24 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ```
 
 ## Resolved Decisions
+
+### 2026-11-16 - Campaign variety and timed reinforcement revision
+
+Decision: approve the proposed campaign revision with Mushroom Shooter at 5,
+Alien Spike at 15 and Sporella at 43, recurring mixed compositions, reduced Baseline
+shares, more later-level hazard patches, and predominantly timed finite reinforcements.
+Keep the 81-level structure, objectives, original introduction milestones, boss order,
+ammunition rules, safe routes and breathers. Implement Chapter 1 now; later chapters
+retain existing assets until requested. Record their approved direction separately
+from implemented content in Campaign80Proposal.md.
+
+GDD rules: LOOP-002/008/009/011, MUSHROOM-001..004, SPIKE-001..005,
+SPORELLA-001..004, GROUND-001..007, FINALE-006. No active open question was resolved;
+OQ-001 target-hardware performance and unrelated weapon/effect/input questions remain.
+
+Source: user approved the proposed plan and requested Chapter 1 implementation and
+matching design-document updates. Exact Chapter 1 cadence/composition is initial
+authoring tuning under LOOP-011, with runtime verification distinguished from balance.
 
 ### 2026-11-06 - Sticky auto aim (PLAYER-003/004)
 

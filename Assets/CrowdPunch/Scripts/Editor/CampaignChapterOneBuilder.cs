@@ -21,19 +21,21 @@ namespace CrowdPunch.Editor
         private static readonly string[] ChapterOneHints =
         {
             "Line up an enemy with the crowd, then punch. The short line shows the launch direction.",
-            "Move around the rocks to find a clear angle. Dash to reposition.",
+            "Move around the rocks to find a clear angle. Reinforcements arrive from the other side; dash to reposition.",
             "Use nearby enemies to reach the shooters. Keep moving between shots.",
             "Launch bodies into the barricade, then reach the exit.",
-            "Step out of the firing lane and send a body back across it.",
+            "Step out of the Mushroom Shooter's warning line. Launch it through the crowd to turn its beam against them.",
             "Find an angle around the divider and break through.",
             "Send bodies through the rotating opening. Watch for returned shots.",
-            "Clear each large wave. Find a line through the crowd and reposition as the next wave arrives.",
-            "Set up a clear line through the crowd to the distant threat.",
+            "Mixed reinforcements keep arriving from changing sides. Launch Mushroom Shooters through the crowd, then clear the survivors.",
+            "One last small group is coming. Line up the Mushroom Shooter with the crowd.",
             "Launch enemies into the head. Dodge the hands and shoot through the openings."
         };
 
-        private static Level[] ChapterOneDesigns() => new[]
+        private static Level[] ChapterOneDesigns()
         {
+            var levels = new[]
+            {
             new Level { Name="First Line", Outline=Clipped(24,30,3), Spacing=new Vector2(18,24), Entry=new Vector2(0,-10), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("First Line",3,new[]{Range(0,1,8,8)}), W("Two Banks",6,new[]{Range(-5,5,5,8),Range(5,5,5,8)}), W("First Chains",8,new[]{Range(0,4,14,12)}) } },
             new Level { Name="Choose the Angle", Outline=new[]{new Vector2(-14,-16),new Vector2(14,-16),new Vector2(11,16),new Vector2(-11,16)}, Spacing=new Vector2(20,26), Entry=new Vector2(0,-11), Lanes=Array.Empty<Vector4>(), Waves=new[]{
@@ -43,17 +45,31 @@ namespace CrowdPunch.Editor
             new Level { Name="Break Through", Outline=new[]{new Vector2(-12,-19),new Vector2(12,-19),new Vector2(9,19),new Vector2(-9,19)}, Spacing=new Vector2(16,30), Entry=new Vector2(0,-13), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Gate Ammunition",8,new[]{Range(-5,-2,4,16),Range(5,-2,4,16)}) } },
             new Level { Name="Crossfire", Outline=Clipped(34,32,7), Spacing=new Vector2(24,22), Entry=new Vector2(0,-9), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("West Fire",12,new[]{Range(-8,3,5,12)},r:2), W("East Fire",16,new[]{Range(8,3,5,12)},r:3) } },
+                W("West Fire",6,new[]{Range(-8,3,5,12)},mushroom:1), W("East Fire",6,new[]{Range(8,3,5,12)},r:2,mushroom:1) } },
             new Level { Name="Open the Lane", Outline=new[]{new Vector2(-14,-20),new Vector2(10,-20),new Vector2(14,0),new Vector2(12,20),new Vector2(-12,20),new Vector2(-14,0)}, Spacing=new Vector2(18,32), Entry=new Vector2(0,-13), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Lane Ammunition",10,new[]{Range(-6,-1,4,20),Range(6,-1,4,20)}) } },
             new Level { Name="Through the Opening", Outline=Clipped(34,34,5), Spacing=new Vector2(28,28), Entry=new Vector2(0,-11), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Opening Ammunition",8,new[]{Range(-10,0,4,18),Range(0,-10,16,4)}) } },
             new Level { Name="Changing Sides", Outline=Rectangle(100,100), Spacing=new Vector2(96,96), Entry=new Vector2(0,-16), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("North Crowd",40,new[]{Range(0,18,34,16)}), W("West Crowd",56,new[]{Range(-25,0,16,36)},r:4),
-                W("East Crowd",72,new[]{Range(25,0,16,36)},r:4), W("Last Crowd",88,new[]{Range(22,24,28,24)},r:6) } },
+                W("North Crowd",28,new[]{Range(0,18,34,16)},r:8,mushroom:4), W("West Crowd",42,new[]{Range(-25,0,16,36)},r:12,mushroom:6),
+                W("East Crowd",52,new[]{Range(25,0,16,36)},r:16,mushroom:8), W("Last Crowd",64,new[]{Range(22,24,28,24)},r:20,mushroom:10) } },
             new Level { Name="One Good Shot", Outline=new[]{new Vector2(-9,-15),new Vector2(9,-15),new Vector2(15,8),new Vector2(10,15),new Vector2(-10,15),new Vector2(-15,8)}, Spacing=new Vector2(18,24), Entry=new Vector2(0,-10), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("Clear Line",10,new[]{Range(-5,5,5,10),Range(5,5,5,10)}), W("Distant Threat",12,new[]{Range(0,6,14,8)},r:1) } }
-        };
+                W("Clear Line",6,new[]{Range(-5,5,5,10),Range(5,5,5,10)},r:2), W("Distant Threat",6,new[]{Range(0,6,14,8)},r:2,mushroom:1) } }
+            };
+            // LOOP-011: introductions retain a clear checkpoint; practice uses a
+            // finite timed schedule and a final cumulative survivor clear.
+            for (int i = 0; i < levels.Length; i++)
+                for (int w = 0; w < levels[i].Waves.Length; w++)
+                {
+                    var wave = levels[i].Waves[w];
+                    wave.Batch = i == 7 ? 8 : 4;
+                    wave.Interval = 6;
+                    if (i != 1 && i != 7 && i != 8) continue;
+                    wave.Delay = w == 0 ? 3 : 0;
+                    wave.NextAfter = w < levels[i].Waves.Length - 1 ? 6 : -1;
+                }
+            return levels;
+        }
 
         [MenuItem("Crowd Punch/Campaign/Create Chapter One")]
         public static void BuildChapterOne()
@@ -280,7 +296,7 @@ namespace CrowdPunch.Editor
             tuning=AssetDatabase.LoadAssetAtPath<BossEncounterSettings>(CampaignData+"Settings/L10_Gatekeeper.asset");
             UnityEngine.Object.FindFirstObjectByType<BossEncounterAuthoring>().settings=tuning;
             profiles = ProfileNames.Select(n => AssetDatabase.LoadAssetAtPath<EnemySpawnSettings>(Root+"Data/Settings/Enemies/"+n+".asset")).ToArray();
-            var wave=WaveAsset("CP10_01_Gatekeeper",W("Gatekeeper",10,new[]{Range(0,0,22,22)}),profiles,CampaignData+"Waves/");
+            var wave=WaveAsset("CP10_01_Gatekeeper",W("Gatekeeper",10,new[]{Range(0,0,22,22)},batch:4,interval:6),profiles,CampaignData+"Waves/");
             var wd=new SerializedObject(wave); wd.FindProperty("bossReplenishDelay").floatValue=4; wd.ApplyModifiedPropertiesWithoutUndo();
             var crowd=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>());
             crowd.FindProperty("waves").arraySize=1; crowd.FindProperty("waves").GetArrayElementAtIndex(0).objectReferenceValue=wave; crowd.ApplyModifiedPropertiesWithoutUndo();

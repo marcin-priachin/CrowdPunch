@@ -23,13 +23,14 @@ namespace CrowdPunch.Editor
         {
             "EnemySpawnSettings", "RangedEnemySpawnSettings", "ExplosiveEnemySpawnSettings",
             "EnemyDasherSpawnSettings", "EliteEnemySpawnSettings", "ArmoredEnemySpawnSettings", "WizardEnemySpawnSettings", "TrailEnemySpawnSettings",
-            "DragonEnemySpawnSettings", "SnakeEnemySpawnSettings", "NinjaEnemySpawnSettings", "LinkedPairEnemySpawnSettings"
+            "DragonEnemySpawnSettings", "SnakeEnemySpawnSettings", "NinjaEnemySpawnSettings", "LinkedPairEnemySpawnSettings",
+            "MushroomShooterSpawnSettings"
         };
 
         private sealed class Wave
         {
             public string Name;
-            public int B, R, X, D, E, A, Wizard, Trail, Dragon, Snake, Ninja, LinkedPairs;
+            public int B, R, X, D, E, A, Wizard, Trail, Dragon, Snake, Ninja, LinkedPairs, Mushroom;
             public float Delay = 3f, NextAfter = -1f, Interval = 3f;
             public int Batch;
             public EnemyWaveSettings.SpawnRectangle[] Ranges;
@@ -50,9 +51,9 @@ namespace CrowdPunch.Editor
 
         private static Wave W(string name, int b, EnemyWaveSettings.SpawnRectangle[] ranges,
             int r = 0, int x = 0, int d = 0, int e = 0, float delay = 3f,
-            float next = -1f, int batch = 0, float interval = 3f)
+            float next = -1f, int batch = 0, float interval = 3f, int mushroom = 0)
             => new Wave { Name = name, B = b, R = r, X = x, D = d, E = e, Delay = delay,
-                NextAfter = next, Batch = batch, Interval = interval, Ranges = ranges };
+                NextAfter = next, Batch = batch, Interval = interval, Ranges = ranges, Mushroom = mushroom };
 
         private static Vector2[] Rectangle(float width, float depth)
             => new[] { new Vector2(-width/2, -depth/2), new Vector2(width/2, -depth/2),
@@ -340,8 +341,8 @@ namespace CrowdPunch.Editor
             bool created=asset==null;
             if(created) asset=ScriptableObject.CreateInstance<EnemyWaveSettings>();
             var data=new SerializedObject(asset);
-            int[] counts={recipe.B,recipe.R,recipe.X,recipe.D,0,recipe.A,recipe.Wizard,recipe.Trail,recipe.Dragon,recipe.Snake,recipe.Ninja};
-            data.FindProperty("totalEnemyCount").intValue=recipe.B+recipe.R+recipe.X+recipe.D+recipe.A+recipe.Wizard+recipe.Trail+recipe.Dragon+recipe.Snake+recipe.Ninja;
+            int[] counts={recipe.B,recipe.R,recipe.X,recipe.D,0,recipe.A,recipe.Wizard,recipe.Trail,recipe.Dragon,recipe.Snake,recipe.Ninja,0,recipe.Mushroom};
+            data.FindProperty("totalEnemyCount").intValue=recipe.B+recipe.R+recipe.X+recipe.D+recipe.A+recipe.Wizard+recipe.Trail+recipe.Dragon+recipe.Snake+recipe.Ninja+recipe.Mushroom;
             data.FindProperty("linkedPairCount").intValue=recipe.LinkedPairs;
             data.FindProperty("linkedPairProfile").objectReferenceValue=recipe.LinkedPairs>0?profiles[11]:null;
             data.FindProperty("wizardAmmunitionProfile").objectReferenceValue = recipe.Wizard > 0 ? profiles[0] : null;

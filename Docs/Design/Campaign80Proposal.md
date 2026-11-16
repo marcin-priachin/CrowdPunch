@@ -1,16 +1,114 @@
 # Crowd Punch: 80-level campaign proposal
 
-Date: 2026-10-10. Revised: 2026-10-14. Status: **Approved 80-level campaign and four-enemy revision implemented.** Includes the user's amendments requiring one large wave-clear level per chapter and introducing LinkedPair in Chapter 5, Dragon in Chapter 6, Snake in Chapter 7 and Ninja in Chapter 8, with each retained in subsequent chapters. Revised encounter numbers are starting tuning and remain subject to playtesting.
+Date: 2026-10-10. Revised: 2026-11-16. Status: **Original campaign and four-enemy revision implemented; three-shooter/variety revision approved, Chapter 1 implemented.** The campaign now includes the separate level-81 finale. Chapters 2-9 of the new revision are approved design only, pending their implementation requests. Encounter counts and cadence remain starting playtest tuning.
 
 Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2 through 8 in sequence. All 80 levels and their campaign infrastructure are authorized and implemented.
 
+## Approved variety and reinforcement revision (2026-11-16, LOOP-011)
+
+The user approved the three-shooter plan and requested Chapter 1 implementation plus
+design-document updates. This section supersedes conflicting composition/cadence
+rules in the original proposal and the 2026-10-14 revision. The Chapter 1 table below
+reflects the new saved content. Tables for Chapters 2-8 still document their existing
+assets; the changes listed here are approved future design, not already installed.
+Level 81 retains FINALE-001..007 and its separate design document.
+
+Preserve all 81 stable IDs, existing objectives, boss order, save/unlock behavior,
+boss arena geometry, track routes and barricade room chains. Ordinary enemy stats
+remain shared. Replace Baselines with meaningful combinations, reducing total counts
+where specialist pressure warrants it. Baseline percentages below apply to mixed
+wave-clear encounters, excluding introductions and ammunition-dependent support.
+
+| Chapter | Enemy integration and encounter emphasis | Baseline target | Static hazard target |
+|---|---|---|---|
+| 1 / 1-10 | Mushroom Shooter at 5, returning at 8/9. Preserve fundamentals at 1-4, target objectives and Gatekeeper. Timed practice at 2/8/9. | 65-75% | None; cover and firing lanes first. |
+| 2 / 11-20 | Preserve Exploder 11 and Dasher 14; introduce Alien Spike at 15. One Spike in 17 support; alternate Spike/Exploder and Shooter/Dasher groups at 18; 19 stays gentle. | 55-65% | None; retain hazard introduction order. |
+| 3 / 21-30 | Preserve Armor, Elite, defense and ground introductions. Add familiar Shooters/Spikes to 22/28; keep 25/27 focused on their hazard lessons. | 50-60% | Introduce permanent at 25, periodic at 27; about 3 patches at 28. |
+| 4 / 31-40 | Preserve Wizard 31 and Trail 33. Shooter/Trail at 35; varied established normals at defense 36. Rotate Shooter/Armor, Spike/Exploder and Wizard/Trail at 38. | 45-55% | 2-3 in pressure encounters 35/36, 4 at 38; 39 stays quiet. |
+| 5 / 41-50 | Preserve LinkedPair 41. Sporella introduction replaces 43's current mix; Sporella/Armor/LinkedPair practice at 45, varied defense at 47, all three shooter roles across groups at 48. Retain relief at 46/49. | 40-50% | 2-3 in pressure encounters, 4-5 at 48. |
+| 6 / 51-60 | Preserve Dragon 52. Modest Shooter/Sporella support at 53/54. Dragon/Sporella then Spike/Exploder at 55; alternate combinations at 58; 59 stays light. | 40-50% | 3-4 in pressure encounters, 5-6 at 58; clear rail corners. |
+| 7 / 61-70 | Preserve Snake 61. Shooter/Trail at 63; Snake/Sporella then Spike/Exploder at 65; limited Shooter/Dragon at 67. Change dominant threats between sectors at 68. | 35-45% | 3-5 in pressure encounters, 6 at 68; retain tail and rail access. |
+| 8 / 71-80 | Preserve Ninja 71. Shooter support at 72; Ninja/Sporella and Armor/Spike at 73; distinct normal mixtures at defenses 75/77. All archetypes across successive groups at 78; keep 76/79 as relief. | 35-45% | 4-5 in pressure encounters, 6-8 across 78; connected safe routes. |
+| 9 / 81 | Include the three shooters in staged specialist supply by substitution within existing 37/50/66 physical-body budgets. Preserve reliable Baseline/Exploder anchor and downing ammunition. | Objective-dependent | No additional blanket ground danger around anchors. |
+
+First encounters retain one clear-to-advance checkpoint and no static hazards:
+
+- Mushroom Shooter, 5: **6B+1M > 6B+2R+1M**. Read committed warning, cover clipping and the player-owned piercing launch beam.
+- Alien Spike, 15: **6B+1AS > 6B+2X+2AS**. Read radial volleys and exploit impact bursts beside explosive targets.
+- Sporella, 43: **6B+1SP > 8B+2SP**. Read fixed sweeps, redirect shots and discover launch emission.
+
+M = Mushroom Shooter, AS = Alien Spike, SP = Sporella. Existing later introductions
+41/52/61/71 and their chapter recurrence remain; Sporella at 43 replaces that one
+LinkedPair/Elite mixture without removing either archetype from the chapter.
+
+### Reinforcement cadence and completion
+
+Default to a finite reinforcement schedule followed by one cumulative survivor clear.
+After Chapter 1, target 75-85% timed intermediate transitions. Retain full-clear
+checkpoints for introductions and selected Elite encounters to contain replenishment.
+
+| Encounter | Starting cadence |
+|---|---|
+| Early mixed combat | 4-6 enemies every 5-7s |
+| Middle mixed combat | 5-7 every 4-6s; alternate directions |
+| Late mixed combat | 6-8 every 4-5s; distribute specialists |
+| Large arenas | 8-12 every 4-6s, distinct composition phases, at most one midpoint clear checkpoint |
+| Defense | Keep level 24 clear-gated; later levels use finite timed reinforcement and final resolution of all attackers |
+| Objectives/bosses | Bounded objective-owned supply, smaller initial batches and staggered replacement; victory does not require survivor cleanup |
+
+Keep breach rules, no Elites in defense, armor/Wizard ammunition, and shared boss and
+objective eligibility. Intermediate Wizard-zone waits must not accidentally turn a
+timed reinforcement into a full clear; final gates retain the applicable rules.
+Check Elite supply across overlapping survivors. Budget concurrent bodies including
+LinkedPair endpoints and Snake tails. No new adaptive spawn director is required.
+
+Increase distinct hazardous areas rather than expanding every patch. Use flanks,
+optional shortcuts and launch opportunities, stagger periodic offsets, and preserve
+safe spawning, clear objective shots and connected safe routes at every phase.
+Wizard zones, Trails and flames consume the same readability budget. Keep barricade
+final-sector geometry/hazards under BARRICADE-009, and do not use bosses or breathers
+to apply the ordinary-pressure patch targets indiscriminately.
+
+### Chapter 1 exact authored cadence
+
+All 19 existing wave asset GUIDs, spawn regions and scene geometry are retained.
+Levels 1/3/5 retain clear checkpoints. Levels 2/8/9 advance on time, even with surviving
+earlier enemies; their final phase waits for **all current and previous** survivors.
+The initial delay is 3s. Batches are 4 every 6s (8 every 6s at level 8). Between timed
+phases, wait 6s after the previous final successful batch, then use zero next-phase
+delay. Clear-gated phases retain a 3s next-wave delay. Placement rejection may delay
+a batch safely. Objective/boss initial support uses 4/6s and existing per-body 4s
+replacement, with unchanged bounded populations and completion ownership.
+
+Level 8 retains 40/60/76/94 enemies per phase, 270 total: **186B+56R+28M** (68.9%
+Baseline, formerly 94.8%). Eight-body batches yield 35 batches; with unobstructed
+placement the last arrives around 207s plus fixed-step overhead. That is a schedule,
+not a measured clear time or survival objective. Playtest fast-clear empty intervals,
+slow-clear accumulation, shooter readability and the 3.5-4.5 minute target separately.
+Level 9 is reduced from 23 to 17 enemies, with exactly one Mushroom Shooter.
+
+### Implementation and remaining work
+
+Chapter 1 uses existing batching, timed activation, interleaved exact profile allocation,
+cumulative defeat accounting and Mushroom beam lifecycle. The chapter recipe and
+in-place revision command update saved waves and hints together. No enemy stats,
+legacy assets, later chapter assets, catalog IDs, scenery or lighting are changed.
+Verification is recorded in [Chapter 1](../Verification/Chapter1.md).
+
+Before later chapters: Alien Spike currently invalidates shots on wave-index changes;
+preserve previous-phase attacks during overlap. Check ground-hazard cycle resets,
+Elite supply, Wizard waits/ammunition, defense targeting and cumulative completion.
+The local runtime already interleaves guaranteed normal profiles; the earlier remote
+inspection's sequential-profile concern is resolved in this checkout. Actual duration,
+overlap balance and OQ-001 target-hardware acceptance remain unverified design tuning.
+
 ## Reading the table
 
-- B = Baseline, R = Ranged, X = Exploder, D = Dasher, E = Elite, A = Armored, W = Wizard, T = Trail. Numbers are exact proposed spawn counts, not weights. Elite counts are additional to normal-enemy totals.
+- B = Baseline, R = Ranged, X = Exploder, D = Dasher, E = Elite, A = Armored, W = Wizard, T = Trail, M = Mushroom Shooter. Numbers are exact proposed spawn counts, not weights. Elite counts are additional to normal-enemy totals.
 - LP = LinkedPair (counted in pairs, two independently defeated endpoints per pair), F = Dragon (flame; D remains Dasher), S = Snake (counted in heads, not tail segments), N = Ninja. Each S starts with the shared settings asset's current six-segment tail: seven physical bodies initially, but only the head counts toward wave clearance. LP endpoints are additional to the ordinary normal-enemy count through `linkedPairCount`; F/S/N use ordinary exact profile counts. The tether record is not another enemy. See the 2026-10-14 revision below for population accounting.
-- `>` separates finite waves. Unless noted: first wave after 3 seconds, later waves 3 seconds after all current/previous enemies are defeated; spawn each wave together. Directions refer to safely inset spawn rectangles, not guaranteed exact enemy positions. Ordinary wave-clear encounters end after the final wave is defeated.
+- `>` separates clear-gated phases; `~>` separates timed reinforcement phases that can overlap survivors. Chapter 1 follows the exact cadence above. Unrevised chapter rows retain their previous clear-gated recipes. Directions refer to safely inset spawn rectangles, not guaranteed exact enemy positions. Final wave-clear completion includes all earlier survivors.
 - `Hold` means one bounded replenishing support population until the objective completes, with a proposed 4-second replacement delay. Counts describe the initial/target population, not an unlimited simultaneous crowd. Existing specialized replenishment rules take precedence; in particular Shell replaces its two Exploders only after both are gone, and stops replacing them once the shell breaks.
-- `Batch n/s` means batches of n enemies every s seconds within each finite wave. Defense waves use a 5-second cleared-wave pause. No timed overlap is required in this proposal; difficulty comes from geometry, directions, composition and within-wave cadence.
+- `Batch n/s` means batches of n enemies every s seconds within each finite phase. Unrevised defense assets retain their 5-second cleared-wave pause; LOOP-011 changes later campaign defense when implemented.
 - Dimensions are approximate playable width x length in metres, except the eight large wave arenas, which each require a 100 x 100m playable footprint. North is the objective/far edge; the player generally enters from the south. All non-boss arenas receive distinct authored floor/boundary/obstacle arrangements using the existing nature kit. Defense arenas retain the established 32 x 96m size and 8 x 4m end zone, with distinct approach geometry.
 - `G1` = one always-active circular patch, radius 2.5m. `G2` = two always-active 3 x 6m rectangles. `P1` = one periodic 3 x 8m strip. `P2` = two such strips with staggered offsets; `P3` = three. Periodic starting tune: inactive 4s, warning 1.5s, active 2.5s, with evenly staggered offsets. Damage/intervals retain the existing hazard defaults. Every layout retains safe routes and safe spawning throughout the cycle; strips never seal all routes.
 - Hazard column lists added static patches. Enemy-created Wizard zones/Trail sections, Dragon flames, LinkedPair tethers and boss attacks remain present whenever those enemies/bosses appear, even when static hazards are `None`.
@@ -28,7 +126,7 @@ Protected-zone levels exclude Elites (PROTECT-001, user clarification 2026-10-10
 
 The boss order moves from choosing exposed body-shot angles, to returning mobile projectiles, to reading protected movement cycles, to baiting a pursuing boss into falling pillars. Each introduction and rematch preserves its corresponding legacy arena geometry: Gatekeeper from Gauntlet_11, Chicken from _20, Rolling Blob from _21, Dino from _22. Rematches change existing settings/support/hazard placement only.
 
-Introduction order: fundamentals (1-2), Ranged (3), barricade (4), rotating cover (7), Gatekeeper (10); Exploder (11), shell (12), Dasher (14), track (16), Chicken (20); Armored (21), Elite (23), defense (24), always-active ground (25), periodic ground (27), Rolling Blob (30); Wizard (31), Trail (33), Dino/pillars (40); LinkedPair (41), Dragon (52, after the familiar shell breather at 51), Snake (61), Ninja (71). Each new introduction uses Baselines as its only supporting archetype, no static hazards and no more starting physical bodies per wave than the encounter it replaces. Wave-clear peaks alternate with smaller precision objectives and recovery encounters.
+Introduction order: fundamentals (1-2), Ranged (3), barricade (4), Mushroom Shooter (5), rotating cover (7), Gatekeeper (10); Exploder (11), shell (12), Dasher (14), Alien Spike (15), track (16), Chicken (20); Armored (21), Elite (23), defense (24), always-active ground (25), periodic ground (27), Rolling Blob (30); Wizard (31), Trail (33), Dino/pillars (40); LinkedPair (41), Sporella (43), Dragon (52, after the familiar shell breather at 51), Snake (61), Ninja (71). New shooter introductions follow the exact recipes above; the original four later introductions retain Baseline-only support. Wave-clear peaks alternate with smaller precision objectives and recovery encounters.
 
 ## Four-enemy campaign revision (2026-10-14)
 
@@ -65,27 +163,27 @@ Verification for implementation: check no early appearances and every recurrence
 | Level | Name / one main objective | Layout and spawn directions | Composition and waves | Static hazards | Teaching purpose / pacing | Target |
 |---|---|---|---|---|---|---|
 | 01 | First Line / clear waves | 24 x 30 open rounded court; far-centre then two far banks | 3B > 6B > 8B | None | Low-pressure aiming and body chains; fundamentals available immediately | 45-75s |
-| 02 | Choose the Angle / clear waves | 28 x 32 shallow trapezoid; one offset rock island; alternating north-west/north-east banks | 8B > 12B | None | Move around cover to line up a crowd; practice dash repositioning | 60-90s |
+| 02 | Choose the Angle / clear waves | 28 x 32 shallow trapezoid; one offset rock island; alternating north-west/north-east banks | 8B ~> 12B; batch 4/6s | None | First timed reinforcement; move around cover and dash to reposition | 60-90s |
 | 03 | Across the Court / clear waves | 30 x 36 elongated hexagon; two small side rocks; north then east bank | 6B+1R > 10B+2R | None | Introduce ranged pressure with nearby launch ammunition | 75-105s |
 | 04 | Break Through / break barricade and reach exit | 24 x 38 funnel with broad rear court; north exit; lateral support rectangles | Hold 8B; 3 barricade hits | None | Low-pressure deliberate shots at a solid target; cross the exposed exit | 60-90s |
-| 05 | Crossfire / clear waves | 34 x 32 offset diamond; two separated cover islands; west then east bank | 12B+2R > 16B+3R | None | First pressure peak: leave a firing lane and launch across it | 90-120s |
+| 05 | Crossfire / clear waves | 34 x 32 offset diamond; two separated cover islands; west then east bank | 6B+1M > 6B+2R+1M; batch 4/6s | None | Mushroom Shooter introduction: dodge the locked beam and launch a piercing counterattack | 75-105s |
 | 06 | Open the Lane / break barricade and reach exit | 28 x 40 bent perimeter, short central divider with broad side access; side-bank support | Hold 10B; 3 hits | None | Easier precision encounter; find a useful shot around an obstacle | 60-90s |
 | 07 | Through the Opening / destroy rotating-cover target | 34 x 34 octagon; open ring around enclosure; south/west support | Hold 8B; 3 hits; 100-degree opening, continuous 20 degrees/s | None | Introduce opening timing and dangerous returned bodies | 75-105s |
-| 08 | Changing Sides / clear waves | 100 x 100 broad court; two offset rock islands, connected open combat areas; north, west, east, north-east banks | 40B > 56B+4R > 72B+4R > 88B+6R | None | Chapter's large crowd encounter: sustain chains and reposition between directions | 3.5-4.5min |
-| 09 | One Good Shot / clear waves | 30 x 30 fan-shaped court, one side alcove; two broad far rectangles | 10B > 12B+1R | None | Breather and boss preparation: use bodies to reach a distant threat | 60-90s |
+| 08 | Changing Sides / clear waves | 100 x 100 broad court; two offset rock islands, connected open combat areas; north, west, east, north-east banks | 28B+8R+4M ~> 42B+12R+6M ~> 52B+16R+8M ~> 64B+20R+10M; batch 8/6s | None | Sustained mixed reinforcement; launch Shooters through crowds and change firing angles | 3.5-4.5min |
+| 09 | One Good Shot / clear waves | 30 x 30 fan-shaped court, one side alcove; two broad far rectangles | 6B+2R ~> 6B+2R+1M; batch 4/6s | None | Short familiar mixed breather before the boss | 60-90s |
 | 10 | The Gatekeeper / defeat boss | Preserve Gauntlet_11 round court and boss route; safe interior crowd rectangle | Hold 10B; three existing boss stages | None | Body shots into exposed head, dodge committed hands; campaign warning tune below | 2-3min |
 
 Chapter 1 opening hints, shown briefly without stopping play:
 
 1. "Line up an enemy with the crowd, then punch. The short line shows the launch direction."
-2. "Move around the rocks to find a clear angle. Dash to reposition."
+2. "Move around the rocks to find a clear angle. Reinforcements arrive from the other side; dash to reposition."
 3. "Use nearby enemies to reach the shooters. Keep moving between shots."
 4. "Launch bodies into the barricade, then reach the exit."
-5. "Step out of the firing lane and send a body back across it."
+5. "Step out of the Mushroom Shooter's warning line. Launch it through the crowd to turn its beam against them."
 6. "Find an angle around the divider and break through."
 7. "Send bodies through the rotating opening. Watch for returned shots."
-8. "Clear each large wave. Find a line through the crowd and reposition as the next wave arrives."
-9. "Set up a clear line through the crowd to the distant threat."
+8. "Mixed reinforcements keep arriving from changing sides. Launch Mushroom Shooters through the crowd, then clear the survivors."
+9. "One last small group is coming. Line up the Mushroom Shooter with the crowd."
 10. "Launch enemies into the head. Dodge the hands and shoot through the openings."
 
 Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 health, existing three stages and damage/ownership rules. Change slam/lunge/sweep anticipation from current 0.1s to 0.8/0.8/1.0s; retain current recovery 2.8/2.8/3.0s initially. Use 1.5s exposed opening and 4s crowd replacement delay. Durations require playtesting; do not pad fights with waits or modify shared enemy stats. Level 7 cover keeps reflection multiplier 1.0, no hit response, and existing enclosure solidity/target eligibility. Barricades retain three hits and existing launch-source eligibility. Later boss/settings proposals below are starting tunes, not changes to legacy assets.
@@ -231,7 +329,7 @@ room confinement also applies to specialist movement and newly started attacks.
 - Boss geometry remains exactly the corresponding existing arena; do not use rematches to change floor, perimeter, static obstacles or pillar positions. Static hazard placement is permitted separately. Dino remains pillar-only, with three pillars and at most three required successes. Gatekeeper remains player-owned body damage only; rematch support stays at most one live non-Baseline.
 - Later first bosses start from their existing settings except listed support counts; balance in their own chapter batch. Actual durations may require campaign-owned boss tuning. No forced pacing waits, altered damage eligibility or shared ordinary-enemy stat escalation to achieve them.
 
-## Chapter 1 implementation boundary after review
+## Original Chapter 1 implementation boundary (2026-10-10, historical)
 
 1. Add a campaign catalog with stable level identifiers and an 80-slot design mapping; create/load only the ten implemented scenes. Later levels are unavailable content, never dangling scene loads. Keep saved unlock progress distinct from installed/playable content.
 2. Add local saved completion/unlocks, Continue, chapter/level selection and confirmed New Campaign. Continue selects the next unfinished playable campaign level. An unfinished future chapter must not be presented as full campaign completion.

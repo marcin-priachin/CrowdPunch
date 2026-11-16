@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: CP01_02_Two_Banks
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
   totalEnemyCount: 6
+  linkedPairProfile: {fileID: 0}
+  linkedPairCount: 0
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
     MinimumCount: 6
@@ -31,8 +33,8 @@ MonoBehaviour:
   activationMode: 2
   duration: 0
   spawnMode: 1
-  batchSize: 3
-  batchInterval: 1
+  batchSize: 4
+  batchInterval: 6
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

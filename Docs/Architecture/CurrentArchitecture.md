@@ -1,5 +1,41 @@
 # Crowd Punch â€” Current Architecture
 
+## Chapter One encounter revision (2026-11-16, LOOP-011)
+
+The approved three-shooter campaign revision is implemented only for Chapter 1.
+`CampaignChapterOneBuilder` now introduces Mushroom Shooter at 5 and repeats it at
+8/9. `GauntletProgressionBuilder.Wave` supports an exact Mushroom count using the
+existing shared `MushroomShooterSpawnSettings`; its profile mapping leaves all earlier
+indices intact. Existing ordinary enemy profiles and runtime combat systems are unchanged.
+
+`CampaignChapterOneEncounterRevision` applies the recipe to all 19 existing wave
+assets in place after validating the ten scenes' wiring and required prefabs. It
+preserves wave GUIDs and authored safe spawn rectangles, updates opening hints at
+2/5/8/9, and restores the Editor scene setup. It does not rebuild scenery, lighting,
+navigation, objective settings, catalog entries or later chapters.
+
+Initial batches are four every six seconds, or eight every six seconds at level 8.
+The existing spawner's interleaved guaranteed profile allocation distributes specialists
+across those batches. Levels 2/8/9 use `DurationElapsed` for intermediate phases: six
+seconds after the final successful batch, then zero additional next-phase delay.
+Their final assets use `AllCurrentAndPreviousEnemiesDefeated`. Levels 1/3/5 retain
+cumulative clear checkpoints. Objective/boss ownership, bounded supply and existing
+per-body four-second replacement remain unchanged at 4/6/7/10.
+
+Level 8 retains 270 enemies across 40/60/76/94 allocations, now 186 Baselines,
+56 Ranged and 28 Mushroom Shooters. These are phase allocations, not concurrency
+caps; surviving enemies can overlap later phases. The Mushroom beam is owned by
+its arena/emitter and does not expire when a wave index advances. No Alien Spike
+or Sporella campaign assets are added in this chapter. Their later integration,
+particularly Spike projectile wave validity, remains future implementation work.
+
+`ChapterOneReinforcementCheck` is an explicit Editor-only integration probe with an
+isolated temporary save, injected enemy/objective defeat, and shortened waits except
+the first two batches at levels 2/8. It exercises baked settings, ten-level entry and
+completion, Mushroom retry, earlier-survivor overlap/final gates, and a mixed-crowd
+frame sample. These checks do not establish player difficulty or clear duration.
+Evidence: [Chapter 1 verification](../Verification/Chapter1.md).
+
 ## Alien Sporella (SPORELLA-001..004)
 
 Sporella uses the ranged distance-band steering and attack clock. Before movement,

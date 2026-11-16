@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: CP02_01_West_Bank
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
   totalEnemyCount: 8
+  linkedPairProfile: {fileID: 0}
+  linkedPairCount: 0
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
     MinimumCount: 8
@@ -25,11 +27,11 @@ MonoBehaviour:
   replenishWhileBossLives: 1
   bossReplenishDelay: 4
   delayBeforeWave: 3
-  activationMode: 2
-  duration: 0
+  activationMode: 1
+  duration: 6
   spawnMode: 1
   batchSize: 4
-  batchInterval: 1.5
+  batchInterval: 6
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

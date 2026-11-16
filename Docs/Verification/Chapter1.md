@@ -1,5 +1,78 @@
 # Chapter 1 implementation and verification
 
+## 2026-11-16 encounter revision
+
+Requirements: LOOP-011, LOOP-002/006/007/008, MUSHROOM-001..003, SCORE-001.
+The approved campaign revision is implemented for Chapter 1 only. Chapters 2-9 are
+documented future work in `Docs/Design/Campaign80Proposal.md`; their assets are unchanged.
+
+### Current authored content
+
+- Mushroom Shooter introduction at 5: 6B+1M, then 6B+2R+1M after a full clear.
+- Level 8: 28B+8R+4M, 42B+12R+6M, 52B+16R+8M, 64B+20R+10M. The 270 total now
+  contains 186 Baselines (68.9%), 56 Ranged and 28 Mushroom Shooters.
+- Level 9: 6B+2R, then 6B+2R+1M; 17 total and exactly one Mushroom Shooter.
+- Levels 2/8/9 advance intermediate phases on time; their final gate includes
+  survivors from every phase. Levels 1/3/5 keep introductory clear checkpoints.
+- Initial delay 3s; batches of 4 every 6s, or 8 every 6s at level 8. Timed phases
+  wait 6s after their final successful batch and have no next-phase pre-delay.
+  Clear-gated phases retain a 3s pause. Safe-placement rejection can delay spawning.
+- Objective/boss support counts at 4/6/7/10 and per-body 4s replacement are retained;
+  their initial populations now enter in batches of 4 every 6s. No static hazards.
+- All 19 wave GUIDs and spawn rectangles are retained. The only scene edits are
+  opening hints at 2/5/8/9. No catalog IDs, save files, shared enemy profiles,
+  legacy assets, geometry, materials, lighting or later chapter content change.
+
+Reapply the authored recipes with **Crowd Punch > Campaign > Apply Chapter One
+Encounter Revision**. This explicit command overwrites Chapter 1 encounter tuning
+after validating existing scene/wave wiring, and preserves the authored spawn regions.
+Use Level Play's Campaign tab or the normal campaign to play the revised levels.
+
+### Revision verification
+
+- Unity 6000.3.10f1 compilation passed, including the Editor authoring/probe scripts.
+- `dotnet build Assembly-CSharp.csproj --no-restore -v:q` passed with 0 errors and
+  309 existing package/reference/deprecation warnings. The initial sandboxed attempt
+  could not read the installed SDK directory; the permitted build completed outside it.
+- All 9 `CampaignTests` passed: saved progression/replay, scene references, objective
+  and boss geometry, campaign-owned settings, 81 installed IDs and level 8's 270
+  enemies/100 x 100m footprint.
+- All 11 `MushroomShooterTests` passed: authored prefab profile, locked warning/cover,
+  hostile beam damage, player launch beam, piercing/ownership behavior, launch
+  interruption and recovery cooldown.
+- `ChapterOneReinforcementCheck` uses a unique save under `Temp/ChapterOneRevision`,
+  injected enemy/objective/boss defeats and shortened waits. Its retained log records
+  the distinction from normal gameplay; it does not modify campaign save progress.
+- Controlled checks completed all ten encounters and exercised all 19 phase
+  definitions, including a retry of level 5 with an active, fully healthy baked
+  Mushroom Shooter. Levels 2/8 recorded natural first batch intervals of 6.00/6.01s.
+  Earlier survivors remained through timed reinforcement and blocked final completion
+  at 2/8/9 until explicitly defeated. Objective/boss completion at 4/6/7/10 remained
+  independent of clearing their support populations.
+- The first probe stopped at 9 because its overlap assertion required the earlier
+  enemy to be visible exactly on the phase boundary. Accelerated clocks can advance
+  while an earlier safe-spawn warning is still pending. The probe now checks ownership
+  after activation and moves its stationary player off blocked reservations. Levels
+  5-10 then passed on rerun; no runtime gameplay change was needed for this probe issue.
+- Two short level-8 samples reached 99/100 mixed enemy roots with median Editor frame
+  times of 29.15/21.65ms. These include rendering and tool overhead, use accelerated
+  spawning, and are not target-hardware acceptance or maximum-overlap measurements.
+  The level-5 screenshot was visually checked with Mushroom Shooter and Baselines
+  present. Local evidence: `Temp/ChapterOneRevision/live-check.txt`, `level05.png`,
+  `level08.png`. No gameplay exceptions were observed; the initial probe assertion
+  is retained in its log. Unity was returned to Edit mode with Bootstrap open.
+
+### Remaining balance work
+
+Human combat playtesting is still needed for Shooter readability, overlapping pressure,
+fast-clear empty intervals and the 3.5-4.5 minute level 8 target. The unobstructed
+authored schedule delivers its last batch around 207s plus fixed-step overhead; this
+does not establish a measured clear duration. OQ-001 target hardware/FPS remains open.
+No standalone player build is claimed. The historical evidence below describes the
+original campaign implementation, not the current composition or current build roster.
+
+## Original implementation evidence (historical)
+
 2026-10-10. Requirements: LOOP-002..008, PLAYER-001/003/004/005/010,
 VISION-001..005, BARRICADE-001..005, COVER-001..005, BOSS-001..007.
 
