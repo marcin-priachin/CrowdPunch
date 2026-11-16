@@ -29,6 +29,7 @@ namespace CrowdPunch.Systems.Presentation
                 LandingAnimations = SystemAPI.GetComponentLookup<EnemyLandingAnimation>(true),
                 Transforms = SystemAPI.GetComponentLookup<LocalTransform>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
+                Damage = SystemAPI.GetComponentLookup<EnemyDamageState>(true),
                 Respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true),
                 Velocities = SystemAPI.GetComponentLookup<PhysicsVelocity>(true),
                 Dashers = SystemAPI.GetComponentLookup<DasherState>(true),
@@ -83,6 +84,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<EnemyLandingAnimation> LandingAnimations;
             [ReadOnly] public ComponentLookup<LocalTransform> Transforms;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
+            [ReadOnly] public ComponentLookup<EnemyDamageState> Damage;
             [ReadOnly] public ComponentLookup<RespawnRequest> Respawns;
             [ReadOnly] public ComponentLookup<PhysicsVelocity> Velocities;
             [ReadOnly] public ComponentLookup<DasherState> Dashers;
@@ -299,10 +301,14 @@ namespace CrowdPunch.Systems.Presentation
                     || (launch.LaunchSequence != 0 && playback.LaunchSequence != launch.LaunchSequence);
                 if (launch.Phase == EnemyLaunchPhase.Recovering || launch.Phase == EnemyLaunchPhase.Defeated)
                 {
-                    if (endingLaunch || (launch.Phase == EnemyLaunchPhase.Defeated && playback.Landing == 0
+                    const byte defeatLanding = 2;
+                    bool startRequestedDefeat = launch.Phase == EnemyLaunchPhase.Defeated
+                        && playback.Landing != defeatLanding
+                        && Damage.TryGetComponent(owner, out var damage) && damage.PlayDefeatAnimation != 0;
+                    if (startRequestedDefeat || endingLaunch || (launch.Phase == EnemyLaunchPhase.Defeated && playback.Landing == 0
                         && LandingAnimations.HasComponent(owner) && LandingAnimations[owner].DefeatFramesToSkip > 0))
                     {
-                        playback.Landing = 1;
+                        playback.Landing = startRequestedDefeat ? defeatLanding : (byte)1;
                         playback.ImpactPhase = 0f;
                         float impactDuration = samples.Durations[EnemyAnimationSamples.ImpactMotion];
                         playback.ImpactDuration = launch.Phase == EnemyLaunchPhase.Recovering

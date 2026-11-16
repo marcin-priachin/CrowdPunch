@@ -8,7 +8,8 @@ namespace CrowdPunch.Systems.Combat
     {
         // Shared by pre-physics requests and same-step Wizard ticks before recovery.
         public static void ApplyPending(EntityManager em, Entity target, double now,
-            EnemyLaunchOwner owner = EnemyLaunchOwner.None, Entity source = default, int chainDepth = 0, uint sourceLifetime = 0)
+            EnemyLaunchOwner owner = EnemyLaunchOwner.None, Entity source = default, int chainDepth = 0,
+            uint sourceLifetime = 0, bool playDefeatAnimation = false)
         {
             if (!em.IsComponentEnabled<DamageRequest>(target)) return;
             var health = em.GetComponentData<Health>(target);
@@ -42,6 +43,7 @@ namespace CrowdPunch.Systems.Combat
                     damage.DefeatOwner = owner; damage.DefeatSource = source;
                     damage.DefeatSourceLifetime = sourceLifetime;
                     damage.DefeatChainDepth = damage.LastDamageChainDepth;
+                    damage.PlayDefeatAnimation = playDefeatAnimation ? (byte)1 : (byte)0;
                 }
                 em.SetComponentData(target, new EnemyHealthBarVisibility { SecondsRemaining = 1 });
                 em.SetComponentEnabled<EnemyHealthBarVisibility>(target, true);

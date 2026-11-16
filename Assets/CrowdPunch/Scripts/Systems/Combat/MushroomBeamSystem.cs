@@ -82,7 +82,7 @@ namespace CrowdPunch.Systems.Combat
                     if (blocked && hit.Fraction >= end) break;
                     if (hit.Entity == beam.Emitter) continue;
                     if (BodyProjectileDamage.TryDamage(em, hit.Entity, entity, history,
-                        beam.Damage, beam.PunchSequence, now, beam.ChainDepth))
+                        beam.Damage, beam.PunchSequence, now, beam.ChainDepth, playDefeatAnimation: true))
                         bridge?.ReceiveProjectileBurst(ProjectileVisualKind.MushroomBeam, hit.Position, hit.SurfaceNormal,
                             .9f, beam.Owner);
                 }

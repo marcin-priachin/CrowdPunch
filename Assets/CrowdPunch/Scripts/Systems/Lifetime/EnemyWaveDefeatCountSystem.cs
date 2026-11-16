@@ -41,6 +41,8 @@ namespace CrowdPunch.Systems.Lifetime
             var scoredDefeats = SystemAPI.GetSingletonBuffer<ScoredDefeat>();
             ComponentLookup<EnemyWaveSequence> sequences = SystemAPI.GetComponentLookup<EnemyWaveSequence>();
             var health = SystemAPI.GetComponentLookup<Health>(true);
+            var damage = SystemAPI.GetComponentLookup<EnemyDamageState>(true);
+            var animations = SystemAPI.GetComponentLookup<EnemyLandingAnimation>(true);
             var waves = SystemAPI.GetBufferLookup<EnemyWaveDefinition>(true);
             NativeList<Entity> pendingDefeats = default;
             NativeHashMap<Entity, int> pendingBySequence = default;
@@ -75,6 +77,11 @@ namespace CrowdPunch.Systems.Lifetime
                     || !waves.TryGetBuffer(owner, out var definitions) || wave != definitions.Length - 1
                     || definitions[wave].ActivationMode == (byte)EnemyWaveActivationMode.DurationElapsed)
                     continue;
+
+                // Laser defeats finish their existing flight before the visible defeat and level clear.
+                if (damage.TryGetComponent(enemy, out var hit) && hit.PlayDefeatAnimation != 0
+                    && animations.TryGetComponent(enemy, out var animation)
+                    && (animation.Duration > 0f || animation.OrdinaryDefeatDuration > 0f)) continue;
 
                 if (!pendingDefeats.IsCreated)
                 {

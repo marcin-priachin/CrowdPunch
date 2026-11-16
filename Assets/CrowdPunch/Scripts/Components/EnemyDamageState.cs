@@ -11,6 +11,7 @@ namespace CrowdPunch.Components
         public double DefeatedAt;
         public uint DefeatPunchSequence;
         public byte IsDefeatDeferred;
+        public byte PlayDefeatAnimation;
         public EnemyLaunchOwner LastDamageOwner, DefeatOwner;
         public Entity LastDamageSource, DefeatSource;
         public uint LastDamageSourceLifetime, DefeatSourceLifetime;

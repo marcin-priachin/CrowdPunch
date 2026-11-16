@@ -94,13 +94,16 @@ namespace CrowdPunch.Systems.Presentation
             foreach (var (boss, entity) in SystemAPI.Query<RefRO<FinaleBoss>>().WithEntityAccess())
                 SetBossResult(boss.ValueRO.Phase == FinalePhase.Defeated && boss.ValueRO.Remaining <= 0, entity);
 
-            // The Legacy clear screen pauses the game. Give a defeated Sporella its authored Die clip first.
+            // Let explicit defeat animations finish before the results screen slows or pauses play.
             if (isComplete && !completionReported)
             {
                 double now = SystemAPI.Time.ElapsedTime;
-                foreach (var respawn in SystemAPI.Query<RefRO<RespawnRequest>>().WithAll<SporellaSettings>())
+                foreach (var (respawn, entity) in SystemAPI.Query<RefRO<RespawnRequest>>().WithEntityAccess())
                 {
                     if (respawn.ValueRO.IsPooled != 0 || respawn.ValueRO.PoolNotBefore <= now) continue;
+                    if (!SystemAPI.HasComponent<SporellaSettings>(entity)
+                        && (!SystemAPI.HasComponent<EnemyDamageState>(entity)
+                            || SystemAPI.GetComponent<EnemyDamageState>(entity).PlayDefeatAnimation == 0)) continue;
                     isComplete = false;
                     break;
                 }

@@ -1,7 +1,11 @@
 using System.Collections.Generic;
 using CrowdPunch.Components;
+using CrowdPunch.Mono.Levels;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.Combat;
+using CrowdPunch.Systems.Lifetime;
+using CrowdPunch.Systems.Physics;
+using CrowdPunch.Systems.Presentation;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Core;
@@ -208,6 +212,7 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<EnemyDamageState>(first).DefeatOwner, Is.EqualTo(EnemyLaunchOwner.Player));
             Assert.That(em.GetComponentData<EnemyDamageState>(first).DefeatPunchSequence, Is.EqualTo(7u));
             Assert.That(em.GetComponentData<Health>(second).Current, Is.EqualTo(5f));
+            Assert.That(em.GetComponentData<EnemyDamageState>(second).PlayDefeatAnimation, Is.Zero);
             Assert.That(em.GetComponentData<Health>(armored).Current, Is.EqualTo(5f));
             Assert.That(em.GetComponentData<Health>(behindCover).Current, Is.EqualTo(5f));
 
@@ -216,6 +221,64 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<Health>(second).Current, Is.EqualTo(5f));
             Assert.That(em.GetComponentData<EnemyLaunchState>(second).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
             Assert.That(playerHits, Is.Zero);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void LethalBeamWaitsForDefeatAnimationBeforeLevelClear(bool launched)
+        {
+            var target = Body(new float3(0f, .95f, 4f), true);
+            em.AddComponentData(target, new EnemyLandingAnimation { Duration = .8f });
+            em.AddComponent<PhysicsVelocity>(target);
+            if (launched)
+                em.SetComponentData(target, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            var sequence = em.CreateEntity(typeof(EnemyWaveSequence), typeof(EnemyWaveEncounterComplete));
+            em.SetComponentData(sequence, new EnemyWaveSequence
+            {
+                RunGeneration = 1, UndefeatedCount = 1, Phase = EnemyWaveRuntimePhase.AwaitingActivation
+            });
+            em.SetComponentEnabled<EnemyWaveEncounterComplete>(sequence, false);
+            em.AddBuffer<EnemyWaveDefinition>(sequence).Add(default);
+            em.AddComponentData(target, new EnemyWaveOwnership { Sequence = sequence, RunGeneration = 1 });
+            RebuildCollision();
+
+            var beam = em.CreateEntity(typeof(MushroomBeam));
+            em.SetComponentData(beam, new MushroomBeam
+            {
+                Arena = arena, Origin = new float3(0f, .95f, 0f), Direction = math.forward(), Owner = EnemyLaunchOwner.Player,
+                Radius = .55f, Range = 20f, ExpiresAt = now + .25d, Damage = 5f, PunchSequence = 7
+            });
+            em.AddBuffer<BodyProjectileHit>(beam);
+            Beam(.02f);
+            Assert.That(em.GetComponentData<EnemyDamageState>(target).PlayDefeatAnimation, Is.EqualTo(1));
+
+            var count = world.GetOrCreateSystem<EnemyWaveDefeatCountSystem>();
+            if (launched)
+            {
+                Assert.That(em.GetComponentData<EnemyLaunchState>(target).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
+                count.Update(world.Unmanaged);
+                Assert.That(em.GetComponentData<EnemyWaveSequence>(sequence).UndefeatedCount, Is.EqualTo(1));
+                Beam(.3f);
+                Assert.That(em.Exists(beam), Is.False);
+                em.CreateSingleton(new EnemyLaunchSettings { UsefulMomentumSpeed = 1f });
+                world.GetOrCreateSystem<EnemyRecoverySystem>().Update(world.Unmanaged);
+            }
+            Assert.That(em.GetComponentData<EnemyLaunchState>(target).Phase, Is.EqualTo(EnemyLaunchPhase.Defeated));
+            count.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<EnemyWaveSequence>(sequence).UndefeatedCount, Is.Zero);
+            world.GetOrCreateSystem<DefeatedEnemyLifecycleSystem>().Update(world.Unmanaged);
+            var respawn = em.GetComponentData<RespawnRequest>(target);
+            Assert.That(respawn.PoolNotBefore, Is.EqualTo(now + .8d).Within(.0001d));
+
+            em.SetComponentEnabled<EnemyWaveEncounterComplete>(sequence, true);
+            var completion = world.GetOrCreateSystemManaged<GauntletCompletionSystem>();
+            uint before = GauntletCompletionRegistry.Sequence;
+            world.SetTime(new TimeData(now + .4d, .02f));
+            completion.Update();
+            Assert.That(GauntletCompletionRegistry.Sequence, Is.EqualTo(before));
+            world.SetTime(new TimeData(now + .82d, .02f));
+            completion.Update();
+            Assert.That(GauntletCompletionRegistry.Sequence, Is.EqualTo(before + 1));
         }
 
         [Test]

@@ -65,6 +65,26 @@ namespace CrowdPunch.Tests
 
         private float3 Pose => world.EntityManager.GetBuffer<SkinMatrix>(visual)[0].Value.c3;
 
+        [TestCase(EnemyLaunchPhase.Active)]
+        [TestCase(EnemyLaunchPhase.Recovering)]
+        public void MUSHROOM003RequestedDefeatStartsImpactClip(EnemyLaunchPhase from)
+        {
+            var em = world.EntityManager;
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = from });
+            em.SetComponentData(visual, new EnemyAnimationPlayback
+            {
+                Initialized = 1, Landing = (byte)(from == EnemyLaunchPhase.Recovering ? 1 : 0),
+                ImpactPhase = .5f, ImpactDuration = .5f
+            });
+            em.AddComponentData(owner, new EnemyDamageState { PlayDefeatAnimation = 1 });
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(EnemyAnimationSamples.ImpactMotion, 0, 0)));
+            Tick();
+            Assert.That(Pose, Is.EqualTo(new float3(EnemyAnimationSamples.ImpactMotion, .25f, 0)));
+        }
+
         [Test, Combinatorial]
         public void Info004DefeatSkipsFramesAndHoldsLastPose(
             [Values(EnemyAnimationProfile.Standard, EnemyAnimationProfile.Dasher,

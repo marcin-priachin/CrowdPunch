@@ -15,14 +15,19 @@ release pose is frame 11 of 25 at 30 fps.
 
 ## Verified in Unity
 
-The 11 Mushroom Shooter EditMode cases cover translucent warning geometry, fixed
+The 13 Mushroom Shooter EditMode cases cover translucent warning geometry, fixed
 aim and release timing, cover, once-per-beam damage, punch credit, launch
-interruption, and impacts through the Unity Physics solver. The 15 Sporella cases
-and four Combat VFX cases also passed.
+interruption, impacts through the Unity Physics solver, and defeat animation
+deadlines for standing and launched beam victims.
 An isolated Return Fire preview produced a hostile beam and a punch-triggered
 beam through the normal bridge. Both reached the active beam mesh.
 A second preview sampled 61 warning frames with 24% opacity and confirmed that
 the beam followed the warning direction at release.
+
+A scripted Campaign 05 preview injected a lethal beam into a standing Baseline.
+Its authored defeat pose advanced while the body remained visible, then the
+body pooled after its animation deadline. The animation, lifetime, Sporella,
+and level-score EditMode suites also passed.
 
 In a separate Editor preview, `MushroomBeamSystem` averaged 0.49 ms with 7
 authored enemies and 0.32 ms with 14, from 12 active hostile-beam frames per
@@ -37,6 +42,8 @@ reached by injecting first-wave defeats. These samples include Editor overhead.
 - Punch the Shooter or launch a body into it. The amber beam should start at the
   impact position and point along the launch. Line up several enemies to check that
   each takes 5 damage once, intact armor is protected, and the player is safe.
+- Defeat a standing enemy with the beam. Check that it plays its defeat animation
+  before pooling, including when it is the last enemy in the level.
 - Move behind cover and check that both beams end at its near face. Check that a
   launch interrupts the warning or active hostile beam, and that retry clears any
   active beams.

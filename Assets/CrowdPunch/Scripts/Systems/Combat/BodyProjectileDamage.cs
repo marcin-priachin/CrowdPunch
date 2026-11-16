@@ -6,7 +6,8 @@ namespace CrowdPunch.Systems.Combat
     internal static class BodyProjectileDamage
     {
         internal static bool TryDamage(EntityManager em, Entity target, Entity shotEntity,
-            DynamicBuffer<BodyProjectileHit> history, float enemyDamage, uint punchSequence, double now, int chainDepth)
+            DynamicBuffer<BodyProjectileHit> history, float enemyDamage, uint punchSequence, double now, int chainDepth,
+            bool playDefeatAnimation = false)
         {
             if (!em.HasComponent<Enemy>(target) || !em.HasComponent<EnemyTier>(target)
                 || em.GetComponentData<EnemyTier>(target).Value == EnemyCombatTier.Boss
@@ -32,7 +33,8 @@ namespace CrowdPunch.Systems.Combat
             damage.Add(enemyDamage, health.Current, punchSequence);
             em.SetComponentData(target, damage);
             em.SetComponentEnabled<DamageRequest>(target, true);
-            EnemyDamageResolution.ApplyPending(em, target, now, EnemyLaunchOwner.Player, shotEntity, chainDepth);
+            EnemyDamageResolution.ApplyPending(em, target, now, EnemyLaunchOwner.Player, shotEntity, chainDepth,
+                playDefeatAnimation: playDefeatAnimation);
             return true;
         }
     }

@@ -3460,6 +3460,13 @@ unload. `ProjectileVisualBridgeSystem` copies the resolved endpoints and ownersh
 Mushroom presentation mesh. It draws the warning as one translucent violet strip
 and the two beams using the shared violet and amber palette.
 
+Lethal beam damage records a defeat animation request in `EnemyDamageState`.
+`DefeatedEnemyLifecycleSystem` holds the victim for its baked defeat clip,
+including victims with no launch history. A victim already in flight completes
+the usual deferred-defeat lifecycle first. Final-wave accounting waits for these
+deferred defeats, and `GauntletCompletionSystem` waits for the resulting animation
+deadline before showing results (MUSHROOM-003, COMBAT-010/011).
+
 **Crowd Punch > Levels > Build Mushroom Shooter Gauntlet 33** rebuilds the legacy encounter
 and registers it for Editor Level Play. Campaign build registration remains catalog-driven.
 

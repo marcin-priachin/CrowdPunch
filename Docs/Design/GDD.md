@@ -2246,9 +2246,11 @@ direction from the impact position and uses the same duration, width, range, and
 cover rules. It pierces eligible enemies other than the emitter, dealing
 player-owned damage (default 5) once per enemy. Only enemies can take damage
 from this beam. Preserve movement and flight when applying its damage, along
-with armor, boss, and objective gates that require a launched-body hit. Use the
-shared ownership colors and the authored No Root Mushroom Shooter clips and
-textures in Full Cel (VISION-005/006).
+with armor, boss, and objective gates that require a launched-body hit. Lethal
+beam hits play the victim's authored defeat animation before pooling, after
+any remaining flight (COMBAT-010/011). Allow the animation to play before the
+level-clear transition. Use the shared ownership colors and the authored No Root
+Mushroom Shooter clips and textures in Full Cel (VISION-005/006).
 
 ### MUSHROOM-004 - Legacy Gauntlet_33
 

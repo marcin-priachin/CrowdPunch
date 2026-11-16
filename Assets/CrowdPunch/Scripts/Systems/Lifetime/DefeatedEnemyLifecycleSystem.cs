@@ -21,6 +21,7 @@ namespace CrowdPunch.Systems.Lifetime
         public void OnUpdate(ref SystemState state)
         {
             double elapsedTime = SystemAPI.Time.ElapsedTime;
+            var damage = SystemAPI.GetComponentLookup<EnemyDamageState>(true);
 
             foreach ((RefRW<RespawnRequest> respawnRequest,
                          EnabledRefRW<RespawnRequest> respawnRequestEnabled,
@@ -45,8 +46,9 @@ namespace CrowdPunch.Systems.Lifetime
                             && SystemAPI.GetComponent<ExplosiveEnemyState>(enemy).HasExploded != 0
                             ? animation.Duration : animation.OrdinaryDefeatDuration;
                     }
-                    else if (SystemAPI.HasComponent<EnemyLaunchState>(enemy)
-                        && SystemAPI.GetComponent<EnemyLaunchState>(enemy).LaunchSequence != 0)
+                    else if (damage.TryGetComponent(enemy, out var hit) && hit.PlayDefeatAnimation != 0
+                        || SystemAPI.HasComponent<EnemyLaunchState>(enemy)
+                            && SystemAPI.GetComponent<EnemyLaunchState>(enemy).LaunchSequence != 0)
                     {
                         landingDuration = animation.Duration;
                     }
