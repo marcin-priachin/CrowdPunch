@@ -124,7 +124,7 @@ namespace CrowdPunch.Editor
                     {
                         var recipe = waves[phase];
                         var asset = WaveAsset(ChapterTwoWaveName(level, phase, recipe), recipe, profiles, CampaignData+"Waves/");
-                        if (level == 36) ConfigureChapterFourDefenseWave(asset);
+                        if (level == 36) ConfigureFiniteDefenseWave(asset);
                     }
                 }
                 foreach (int level in new[] { 35,36,38 })
@@ -141,7 +141,7 @@ namespace CrowdPunch.Editor
             Debug.Log("LOOP-011: Chapter Four revised in place. Timed defense at 36; mixed arena at 38; pressure hazards at 35/36/38.");
         }
 
-        private static void ConfigureChapterFourDefenseWave(EnemyWaveSettings wave)
+        private static void ConfigureFiniteDefenseWave(EnemyWaveSettings wave)
         {
             // PROTECT-003/004: resolve finite attackers without replenishment or zone waits.
             var finite = new SerializedObject(wave);
@@ -254,7 +254,7 @@ namespace CrowdPunch.Editor
                     var defense=encounter.gameObject.AddComponent<ProtectedPointAuthoring>();
                     defense.settings=CampaignSettings<ProtectedPointSettings>("ProtectedPointSettings","L36_Defense");
                     defense.settings.breachThreshold=1; defense.settings.maximumPlayerAttackers=3; EditorUtility.SetDirty(defense.settings);
-                    foreach(var wave in encounter.Waves) ConfigureChapterFourDefenseWave(wave);
+                    foreach(var wave in encounter.Waves) ConfigureFiniteDefenseWave(wave);
                     Box("Protected Zone 8 x 4",encounter.transform,new Vector3(0,-.97f,-46),new Vector3(8,.035f,4),MaterialAsset("ProtectedPointZone",new Color(.15f,.75f,.68f)),false); break;
                 case 37:
                     CopyCampaignObjective(sub,arena,encounter,number,false,Vector3.zero);

@@ -1726,23 +1726,27 @@ three successful pillar hits and two local Baselines per unconsumed pillar in ad
 to eight general support enemies. Settings belong to the campaign, and shared mechanics,
 ordinary profiles, system ordering and boss arena geometry remain unchanged.
 
-Chapter 5 adds levels 41-50: a four-hit narrow gate (42), stop-and-go cover with an
-85-degree opening and 3s rotation/1s pause (44), diagonal five-hit rail (46), finite
-defense without Elites (47), and the Gatekeeper rematch (50). Level 48 spans 100 x 100m with
-70/86/94/110/128 initial enemies (488 including two Elites); ordinary Elite, armor
-and Wizard safeguards still apply, while Trail remnants do not gate completion.
+Chapter 5 covers levels 41-50, including four barricade rooms (42), stop-and-go cover
+with an 85-degree opening and 3s rotation/1s pause (44), a six-leg track (46), timed
+finite defense without Elites (47), and the Gatekeeper rematch (50). LOOP-011 uses
+shared profiles for Sporella at 43/45/48. Level 48 spans 100 x 100m with
+48/56/64/72/80 allocated enemies, including two Elites and 28 LinkedPair endpoints.
+Its checkpoints use the existing cumulative defeat mode after phase 3 and at
+completion. The final phase applies existing Wizard safeguards and the Elite phase
+applies armor safeguards. Trail remnants do not gate completion.
 Permanent 3 x 6m rectangular pairs sit in level 42's inner pockets and level 48's
-outer pockets. Level 45 has a periodic side crossing. Level 50 copies the original
+outer pockets. Levels 45/47/48 also have 2/2/3 periodic strips, using the existing
+ground-hazard policy and Necropolis appearance. Level 50 copies the original
 boss transforms and collision meshes, adds navigation authoring and two 3 x 8m
 periodic side sectors staggered by four seconds, and maintains 12 Baselines plus one
 Ranged enemy with four-second replenishment. Its campaign settings use 360 health,
 .65/.65/.85s warnings and unchanged 2.8/2.8/3s recoveries. The configurable baked
 warning floor defaults to .8s so legacy tuning retains its previous behavior.
-Protected-zone levels exclude Elites (PROTECT-001); level 47 has 24 Baselines and two
-Exploders in its final wave. Ordinary Elite AI is unchanged.
+Protected-zone levels exclude Elites (PROTECT-001).
 `EnemyWaveSpawnSystem` omits Elite replenishment tags in protected-point sequences;
 `EliteWaveReplenishmentSystem` also rejects those owners. This preserves finite
-22/26/26-enemy defense waves, arriving in batches up to four every three seconds.
+16/20/22-enemy defense groups at level 47, arriving in batches up to four every
+four seconds with timed overlaps. Victory requires cumulative attacker resolution.
 
 Chapter 6 adds levels 51-60 using existing runtime mechanics. Level 51 uses the shell
 and specialized Exploder pair, 53 reverses its 90-degree cover opening every five seconds

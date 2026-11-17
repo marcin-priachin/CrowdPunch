@@ -1,15 +1,15 @@
 # Crowd Punch: 80-level campaign proposal
 
-Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented in Chapters 1–4. Chapters 5–9 are approved for future implementation. Encounter counts and cadence are starting values for playtesting.
+Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented in Chapters 1–5. Chapters 6–9 are pending. Encounter counts and cadence are starting values for playtesting.
 
 Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2 through 8 in sequence. All 80 levels and their campaign infrastructure are authorized and implemented.
 
 ## Approved variety and reinforcement revision (2026-11-16, LOOP-011)
 
-The user approved the three-shooter plan, then requested Chapters 1 through 4.
+The user approved the three-shooter plan, then requested Chapters 1 through 5.
 This section supersedes conflicting composition and cadence rules in the original
-proposal and the 2026-10-14 revision. The Chapter 1–4 tables reflect the revised
-assets. The Chapter 5–8 tables describe the encounters in the current build.
+proposal and the 2026-10-14 revision. The Chapter 1–5 tables reflect the revised
+assets. The Chapter 6–8 tables describe the encounters in the current build.
 Level 81 retains FINALE-001..007 and its separate design document.
 
 Preserve all 81 stable IDs, existing objectives, boss order, save/unlock behavior,
@@ -152,6 +152,39 @@ Other encounters start with batches of four every five seconds and retain
 their existing objectives and support caps. The chapter keeps the
 level 39 breather and the Dino pillar-only victory.
 
+### Chapter 5 authored cadence
+
+Level 43 introduces Sporella with Baselines and existing cover. Both phases
+arrive in batches of four every five seconds. Clear the first phase to get a
+three-second pause before the second. Level 45 has 58 allocated enemies,
+including six LinkedPair endpoints and one Elite, with 27 Baselines (46.6%).
+It releases batches of six every five seconds. Each reinforcement phase starts
+six seconds after the preceding phase's last successful batch. Every phase
+retains the armor ammunition safeguard, and the final Elite's supply must be
+cleared. The original west strip and a southeast strip use 0s/4s offsets.
+
+Level 47 has finite groups of 16/20/22 in batches of four every four seconds,
+with each reinforcement starting six seconds after the preceding phase's last
+successful batch. Any breach fails the attempt. Complete the encounter by
+clearing all remaining attackers. Two 3 x 6m warning strips on the southern
+approach use 0s/4s offsets and leave a direct route to the protected zone.
+
+Level 48 has 320 allocated enemies (144 Baselines, 45%) across five phases,
+including 28 LinkedPair endpoints and two Elites. It releases up to eight
+enemies every six seconds. Phases 1, 2 and 4 advance six seconds after their last
+successful batch. Phase 3 clears all survivors and the Elite supply, then
+pauses three seconds before phase 4. The final clearance includes earlier
+survivors and persistent Wizard zones. The two permanent outer pockets and
+three periodic 3 x 8m strips leave routes between the side basins. The periodic
+strips use offsets of 0s, 2.67s and 5.33s. All new Chapter 5 strips have at least
+four metres of clearance from the nearest authored solid island.
+
+Level 49 is a smaller pre-boss breather, with four enemies every five seconds
+and one Wizard-zone clear checkpoint. Levels 42, 44, 46 and 50 retain their
+bounded objective support. Level 41 retains the original isolated LinkedPair
+introduction. The existing level 42 asset uses three hits per gate, while the
+BARRICADE-009 design default and the level's opening hint specify four.
+
 ### Implementation and remaining work
 
 Chapter 1 uses existing batching, timed activation, interleaved exact profile allocation,
@@ -165,8 +198,8 @@ Chapter 3 uses the same clocks for 25/27/28, including a cumulative checkpoint
 at 28 between the Elite encounter and the next timed group. Level 22's two
 shooters follow the barricade room bounds for pursuit and attack starts.
 Verification is recorded for [Chapter 1](../Verification/Chapter1.md),
-[Chapter 2](../Verification/Chapter2.md), [Chapter 3](../Verification/Chapter3.md)
-and [Chapter 4](../Verification/Chapter4.md).
+[Chapter 2](../Verification/Chapter2.md), [Chapter 3](../Verification/Chapter3.md),
+[Chapter 4](../Verification/Chapter4.md) and [Chapter 5](../Verification/Chapter5.md).
 
 Before later chapters, check ground-hazard cycle resets,
 Elite supply, Wizard waits/ammunition, defense targeting and cumulative completion.
@@ -178,7 +211,7 @@ overlap balance and OQ-001 target-hardware acceptance remain unverified design t
 
 - B = Baseline, R = Ranged, X = Exploder, D = Dasher, E = Elite, A = Armored, W = Wizard, T = Trail, M = Mushroom Shooter. Numbers are exact proposed spawn counts, not weights. Elite counts are additional to normal-enemy totals.
 - LP = LinkedPair (counted in pairs, two independently defeated endpoints per pair), F = Dragon (flame; D remains Dasher), S = Snake (counted in heads, not tail segments), N = Ninja. Each S starts with the shared settings asset's current six-segment tail: seven physical bodies initially, but only the head counts toward wave clearance. LP endpoints are additional to the ordinary normal-enemy count through `linkedPairCount`; F/S/N use ordinary exact profile counts. The tether record is not another enemy. See the 2026-10-14 revision below for population accounting.
-- `>` separates clear-gated phases and `~>` marks timed phases that can overlap survivors. Chapters 1–4 follow their authored cadence above. Directions refer to safely inset spawn rectangles. Final wave-clear completion includes all earlier survivors.
+- `>` separates clear-gated phases and `~>` marks timed phases that can overlap survivors. Chapters 1–5 follow their authored cadence above. Directions refer to safely inset spawn rectangles. Final wave-clear completion includes all earlier survivors.
 - `Hold` means one bounded replenishing support population until the objective completes, with a proposed 4-second replacement delay. Counts describe the initial/target population, not an unlimited simultaneous crowd. Existing specialized replenishment rules take precedence; in particular Shell replaces its two Exploders only after both are gone, and stops replacing them once the shell breaks.
 - `Batch n/s` means batches of n enemies every s seconds within each finite phase. Unrevised defense assets retain their 5-second cleared-wave pause; LOOP-011 changes later campaign defense when implemented.
 - Dimensions are approximate playable width x length in metres, except the eight large wave arenas, which each require a 100 x 100m playable footprint. North is the objective/far edge; the player generally enters from the south. All non-boss arenas receive distinct authored floor/boundary/obstacle arrangements using the existing nature kit. Defense arenas retain the established 32 x 96m size and 8 x 4m end zone, with distinct approach geometry.
@@ -206,7 +239,7 @@ The user specified the introduction chapters and continued appearances in later 
 
 | Enemy / requirements | First campaign encounter | Chapter 5 appearances | Chapter 6 appearances | Chapter 7 appearances | Chapter 8 appearances |
 |---|---|---|---|---|---|
-| LinkedPair / LINK-001..007 | 41: 6B+1LP > 12B+2LP | 41, 43, 45, 48 | 55, 58 | 63, 65, 68 | 73, 78 |
+| LinkedPair / LINK-001..007 | 41: 6B+1LP > 12B+2LP | 41, 45, 48 | 55, 58 | 63, 65, 68 | 73, 78 |
 | Dragon / DRAGON-001..007 | 52: 6B+1F > 12B+2F | Not introduced | 52, 55, 58 | 63, 65, 67, 68 | 73, 78 |
 | Snake / SNAKE-001..007 | 61: 6B+1S > 10B+1S | Not introduced | Not introduced | 61, 65, 67, 68 | 73, 78 |
 | Ninja / NINJA-001..006 | 71: 6B+1N > 12B+2N | Not introduced | Not introduced | Not introduced | 71, 73, 78 |
@@ -311,13 +344,13 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 |---|---|---|---|---|---|---|
 | 41 | Back to Bodies / clear waves | 34 x 32 open pentagon, one side rock crescent; far banks with room for both endpoints and broad flanking space | 6B+1LP > 12B+2LP | None | LinkedPair introduction: launch either endpoint to swing both; use cover against the dangerous tether | 75-105s |
 | 42 | Outer Route / break barricade and reach exit | 4 distinct ascending sectors, 34 x 176m total; final original central island; sealed 2m gates | Hold 8 > 10 > 13 > 16; final 11B+1R+2X+1D+1A; 4 gates x 4 hits | One reduced periodic fore-sector patch; final original G2 | Grow into the final pressured outer route | Fresh pacing playtest |
-| 43 | Turn the Shot / clear waves | 38 x 36 court with three widely spaced islands; west/east banks | 14B+2R+1E+1LP > 16B+2D+1E+1LP | None | Reuse paired sweeps to disrupt Elite shot setups; walking and recovering tethers remain dangerous | 90-120s |
+| 43 | Turn the Shot / clear waves | 38 x 36 court with three widely spaced islands; west/east banks | 6B+1SP > 8B+2SP; batch 4/5s | None | Read Sporella's windup from cover, redirect a shot and launch Sporella to sweep shots through the crowd | 90-120s |
 | 44 | Stop and Go / destroy rotating-cover target | 40 x 36 unequal outer bays around enclosure; side support | Hold 12B+2R+1X; 4 hits; 85-degree opening, rotate 3s at 30 degrees/s / pause 1s | None | Existing cover pause mode rewards planning a shot | 90-120s |
-| 45 | Armor in Motion / clear waves | 38 x 40 clipped corridor with cross lanes; north/east/west banks | 12B+2A+1LP > 14B+2D+2A+1LP > 16B+2R+1E+1LP; armor safeguard | P1 side crossing | Combine paired body chains with armor and changing routes; the tether itself cannot strip intact armor | 90-120s |
+| 45 | Armor in Motion / clear waves | 38 x 40 clipped corridor with cross lanes; north/east/west banks | 8B+2A+1LP+2SP+2X ~> 9B+2A+1LP+2SP+3D+2R ~> 10B+2A+1LP+2SP+5R+1E; batch 6/5s, armor safeguard | Two staggered 3m-wide warning strips, 8m west and 6m southeast | Launch bodies to crack armor and turn Sporella's fire against the crowd | 90-120s |
 | 46 | Measured Push / knock into place | 52 x 52 left-turn stair court; six 10m legs; clear corners and endpoints; outer side support | Hold 10B+2X; 30 net forward hits | None | Mid-chapter relief; control direction and rebound space | 75-105s |
-| 47 | Divided Approach / protect point through finite waves | 32 x 96 lane, long island splitting north approach, merged south half | 20B+2R > 24B+2D > 24B+2X; batch 4/3s | None | Reposition between separated defense approaches | 90-120s |
-| 48 | Firebreak / clear waves | 100 x 100 court with two broad side basins linked through a wide centre; north, west, east, split north, side banks | 60B+6X+2LP > 76B+4R+2T+2LP > 84B+4A+2E+2LP > 98B+4D+2W+3LP > 114B+6X+2T+3LP; safeguards | G2 in outer pockets | Large crowd encounter: swing paired projectiles through groups and reposition around dangerous recovery links | 4-5min |
-| 49 | Make Room / clear waves | 34 x 34 open fan with two boundary outcrops; far bank | 14B+1W > 18B+2R; Wizard safeguards | None | Breather before Gatekeeper rematch | 75-105s |
+| 47 | Divided Approach / protect point through finite waves | 32 x 96 lane, long island splitting north approach, merged south half | 10B+4R+2X ~> 12B+5D+3X ~> 13B+4R+3D+2X; batch 4/4s | Two staggered 3 x 6m approach strips | Intercept timed groups from the separated approaches and clear every remaining attacker | 90-120s |
+| 48 | Firebreak / clear waves | 100 x 100 court with two broad side basins linked through a wide centre; north, west, east, split north, side banks | 22B+14X+6AS+2D+2LP ~> 25B+12R+8M+5D+3LP ~> 29B+8A+5SP+8X+4D+2R+2E+3LP > 32B+12D+12X+6SP+4AS+3LP ~> 36B+12R+8M+8X+4T+4SP+2W+3LP; batch 8/6s | G2 outer pockets and P3 staggered strips | Alternate Spike, Mushroom Shooter and Sporella pressure by bank, then clear the Elite checkpoint and reposition through the warning gaps | 4-5min |
+| 49 | Make Room / clear waves | 34 x 34 open fan with two boundary outcrops; far bank | 8B+1W > 10B+2R; batch 4/5s, Wizard safeguards | None | Breather before Gatekeeper rematch | 75-105s |
 | 50 | Gatekeeper Returns / defeat boss | Exact Gatekeeper arena geometry; safe interior support | Hold 12B+1R; at most one live non-Baseline; three stages | P2 in side sectors, clear central shooting apron | Harder positioning; 0.65/0.65/0.85s warnings, retain recoveries; 360 health | 3-4min |
 
 ## Chapter 6: Deliberate Reactions

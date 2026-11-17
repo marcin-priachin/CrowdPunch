@@ -19,7 +19,9 @@ namespace CrowdPunch.Tests
             ["E"] = "EliteEnemySpawnSettings", ["A"] = "ArmoredEnemySpawnSettings",
             ["W"] = "WizardEnemySpawnSettings", ["T"] = "TrailEnemySpawnSettings",
             ["LP"] = "LinkedPairEnemySpawnSettings", ["F"] = "DragonEnemySpawnSettings",
-            ["S"] = "SnakeEnemySpawnSettings", ["N"] = "NinjaEnemySpawnSettings"
+            ["S"] = "SnakeEnemySpawnSettings", ["N"] = "NinjaEnemySpawnSettings",
+            ["M"] = "MushroomShooterSpawnSettings", ["AS"] = "AlienSpikeEnemySpawnSettings",
+            ["SP"] = "SporellaSpawnSettings"
         };
 
         // Wave clearance excludes Snake orbs and includes both LinkedPair endpoints.
@@ -33,11 +35,11 @@ namespace CrowdPunch.Tests
             .Select(g => AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(AssetDatabase.GUIDToAssetPath(g)))
             .OrderBy(w => w.name).ToArray();
 
-        [TestCase(41)] [TestCase(43)] [TestCase(45)] [TestCase(48)]
+        [TestCase(41)] [TestCase(43)] [TestCase(45)] [TestCase(47)] [TestCase(48)] [TestCase(49)]
         [TestCase(52)] [TestCase(55)] [TestCase(58)] [TestCase(61)]
         [TestCase(63)] [TestCase(65)] [TestCase(67)] [TestCase(68)]
         [TestCase(71)] [TestCase(73)] [TestCase(78)]
-        public void LinkDragonSnakeNinja_ExactAuthoredWavesMatchAcceptedProposal(int level)
+        public void Campaign_ExactAuthoredWavesMatchAcceptedProposal(int level)
         {
             string row = File.ReadLines("Docs/Design/Campaign80Proposal.md")
                 .Single(l => l.StartsWith($"| {level:00} |"));
@@ -47,7 +49,7 @@ namespace CrowdPunch.Tests
             for (int i = 0; i < waves.Length; i++)
             {
                 var wave = waves[i];
-                var counts = Regex.Matches(expected[i], @"(\d+)(LP|B|R|X|D|E|A|W|T|F|S|N)\b")
+                var counts = Regex.Matches(expected[i], @"(\d+)(LP|AS|SP|B|R|X|D|E|A|W|T|F|S|N|M)\b")
                     .Cast<Match>().ToDictionary(m => ProfileNames[m.Groups[2].Value], m => int.Parse(m.Groups[1].Value));
                 var actual = wave.Enemies.ToDictionary(e => e.Settings.name, e => e.MinimumCount);
                 foreach (var elite in wave.EliteEnemies) actual.Add(elite.Settings.name, elite.Count);
@@ -59,17 +61,25 @@ namespace CrowdPunch.Tests
                 Assert.That(actual, Is.EquivalentTo(counts), $"Level {level}, wave {i + 1}");
                 Assert.That(wave.Enemies.Sum(e => e.MinimumCount), Is.EqualTo(wave.TotalEnemyCount));
                 Assert.That(wave.Enemies.All(e => e.Weight == 0 && e.Settings.EnemyPrefab != null), Is.True);
-                Assert.That(wave.SpawnMode, Is.EqualTo(EnemyWaveSpawnMode.AllAtOnce));
-                Assert.That(wave.ActivationMode, Is.EqualTo(EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated));
-                Assert.That(wave.DelayBeforeWave, Is.EqualTo(3));
-                Assert.That(wave.Duration, Is.Zero);
+                bool batched = level is 43 or 45 or 47 or 48 or 49;
+                bool timed = expected[i].TrimEnd().EndsWith("~");
+                bool followsTimed = i > 0 && expected[i - 1].TrimEnd().EndsWith("~");
+                Assert.That(wave.SpawnMode, Is.EqualTo(batched ? EnemyWaveSpawnMode.Batched : EnemyWaveSpawnMode.AllAtOnce));
+                Assert.That(wave.ActivationMode, Is.EqualTo(timed ? EnemyWaveActivationMode.DurationElapsed : EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated));
+                Assert.That(wave.DelayBeforeWave, Is.EqualTo(followsTimed ? 0 : 3));
+                Assert.That(wave.Duration, Is.EqualTo(timed ? 6 : 0));
+                if (batched)
+                {
+                    Assert.That(wave.BatchSize, Is.EqualTo(level == 48 ? 8 : level == 45 ? 6 : 4));
+                    Assert.That(wave.BatchInterval, Is.EqualTo(level == 48 ? 6 : level == 47 ? 4 : 5));
+                }
                 Assert.That(wave.ReplenishWhileBossLives, Is.False);
                 Assert.That(wave.WaitForPersistentHazards, Is.EqualTo(counts.ContainsKey(ProfileNames["W"])));
                 Assert.That(wave.ArmoredAmmunitionProfile != null, Is.EqualTo(counts.ContainsKey(ProfileNames["A"])));
             }
         }
 
-        [TestCase("LP", "41,43,45,48,55,58,63,65,68,73,78")]
+        [TestCase("LP", "41,45,48,55,58,63,65,68,73,78")]
         [TestCase("F", "52,55,58,63,65,67,68,73,78")]
         [TestCase("S", "61,65,67,68,73,78")]
         [TestCase("N", "71,73,78")]

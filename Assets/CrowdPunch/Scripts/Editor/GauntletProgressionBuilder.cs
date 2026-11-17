@@ -24,13 +24,13 @@ namespace CrowdPunch.Editor
             "EnemySpawnSettings", "RangedEnemySpawnSettings", "ExplosiveEnemySpawnSettings",
             "EnemyDasherSpawnSettings", "EliteEnemySpawnSettings", "ArmoredEnemySpawnSettings", "WizardEnemySpawnSettings", "TrailEnemySpawnSettings",
             "DragonEnemySpawnSettings", "SnakeEnemySpawnSettings", "NinjaEnemySpawnSettings", "LinkedPairEnemySpawnSettings",
-            "MushroomShooterSpawnSettings", "AlienSpikeEnemySpawnSettings"
+            "MushroomShooterSpawnSettings", "AlienSpikeEnemySpawnSettings", "SporellaSpawnSettings"
         };
 
         private sealed class Wave
         {
             public string Name;
-            public int B, R, X, D, E, A, Wizard, Trail, Dragon, Snake, Ninja, LinkedPairs, Mushroom, AlienSpike;
+            public int B, R, X, D, E, A, Wizard, Trail, Dragon, Snake, Ninja, LinkedPairs, Mushroom, AlienSpike, Sporella;
             public float Delay = 3f, NextAfter = -1f, Interval = 3f;
             public int Batch;
             public EnemyWaveSettings.SpawnRectangle[] Ranges;
@@ -341,7 +341,7 @@ namespace CrowdPunch.Editor
             bool created=asset==null;
             if(created) asset=ScriptableObject.CreateInstance<EnemyWaveSettings>();
             var data=new SerializedObject(asset);
-            int[] counts={recipe.B,recipe.R,recipe.X,recipe.D,0,recipe.A,recipe.Wizard,recipe.Trail,recipe.Dragon,recipe.Snake,recipe.Ninja,0,recipe.Mushroom,recipe.AlienSpike};
+            int[] counts={recipe.B,recipe.R,recipe.X,recipe.D,0,recipe.A,recipe.Wizard,recipe.Trail,recipe.Dragon,recipe.Snake,recipe.Ninja,0,recipe.Mushroom,recipe.AlienSpike,recipe.Sporella};
             int total = 0;
             foreach (int count in counts) total += count;
             data.FindProperty("totalEnemyCount").intValue = total;

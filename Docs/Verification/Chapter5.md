@@ -1,7 +1,37 @@
 # Chapter 5 implementation and verification
 
-2026-10-10. Requirements: LOOP-002..008, BOSS-001..009, PROTECT-001..004,
+2026-10-10, revised 2026-11-17. Requirements: LOOP-002..011, BOSS-001..009, PROTECT-001..004,
 ENEMY-009/011, BARRICADE-006, TRACK-001..005, COVER-001..005, GROUND-001..007.
+
+## Chapter 5 variety revision
+
+The current encounter table and spawn cadence are in
+[Campaign80Proposal.md](../Design/Campaign80Proposal.md#chapter-5-better-angles).
+The revision updates the existing wave assets at 43, 45, 47, 48 and 49. It uses the
+shared Sporella profile and adds warning strips to levels 45, 47 and 48. In
+Firebreak, 40 batches place 320 allocated enemies. With clear spawn areas the
+last batch is scheduled around 234s plus the time spent clearing the Elite
+checkpoint. The 4–5 minute clear time is a playtest target.
+
+Unity compilation and the .NET build passed. The revised scene cases, exact
+wave recipes and cadence checks passed. The Sporella, LinkedPair, protected
+point and ground hazard suites passed. Two existing assertions remain open.
+Level 42's saved gates require three hits and the room test expects four.
+Level 50's Gatekeeper model transform differs from the legacy snapshot.
+
+An isolated Editor preview confirmed both Sporella groups on level 43 and
+projectile emission after a controlled launch. Levels 45, 47 and 48 advanced
+with earlier enemies still alive. Firebreak held at the midpoint for crowd
+clearance, then entered phase 4 after controlled defeats. The final phase reached
+its clearance gate with 60 phase-4 survivors and completed after cumulative
+clearance. The accelerated Firebreak preview recorded 477 Editor frames with at
+least 64 live bodies, peaking at 112. Median frame time was 24.04ms and the 95th
+percentile was 93.22ms, including Editor overhead, accelerated spawning and
+the observer. Target-device performance and normal clear times remain for playtesting.
+
+## Original chapter release (2026-10-10)
+
+The counts, timing and measurements below describe the original release.
 
 ## Playing and tuning
 

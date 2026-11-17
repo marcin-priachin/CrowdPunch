@@ -24,7 +24,7 @@ namespace CrowdPunch.Editor
     {
         private const string Key = "CrowdPunch.CampaignEnemyEncounterCheck";
         private const string Output = "Temp/CampaignEnemyValidation/live-check.txt";
-        private static readonly int[] Levels = { 41, 43, 45, 48, 52, 55, 58, 61, 63, 65, 67, 68, 71, 73, 78 };
+        private static readonly int[] Levels = { 41, 45, 48, 52, 55, 58, 61, 63, 65, 67, 68, 71, 73, 78 };
         private static int index = -1, wave = -1, checkedWaves, initialFrame, clearingFrame, frames;
         private static bool retried, retryPending, launched, clearing;
         private static double entered, observed;
