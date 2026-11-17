@@ -6,6 +6,7 @@ using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Levels;
 using CrowdPunch.Systems.Combat;
+using CrowdPunch.Systems.Lifetime;
 using CrowdPunch.Systems.Physics;
 using CrowdPunch.Systems.Presentation;
 using NUnit.Framework;
@@ -139,6 +140,23 @@ namespace CrowdPunch.Tests
             system.Update(); Assert.That(GauntletCompletionRegistry.Sequence,Is.EqualTo(before+1));
         }
 
+        [Test] public void Finale007_VictoryRemovesInFlightShooterEffects()
+        {
+            var effects=new[]{
+                em.CreateEntity(typeof(MushroomBeam)),
+                em.CreateEntity(typeof(AlienSpikeProjectile)),
+                em.CreateEntity(typeof(SporellaProjectile))
+            };
+            var system=world.GetOrCreateSystem<FinaleVictorySystem>();
+            Phase(FinalePhase.Flying);
+            system.Update(world.Unmanaged);
+            Assert.That(effects.All(e=>em.Exists(e)),Is.True);
+
+            Phase(FinalePhase.Defeated);
+            system.Update(world.Unmanaged);
+            Assert.That(effects.Any(e=>em.Exists(e)),Is.False);
+        }
+
         [Test] public void Finale002_RailPausesInMotionAndDownsOnlyOnPhysicalDocking()
         {
             em.AddComponentData(anchor,new TrackObject {Start=float3.zero,Direction=new float3(0,0,1),Length=8,RequiredNetHits=4,SlideDuration=1,PlayerBodiesOnly=1});
@@ -187,6 +205,28 @@ namespace CrowdPunch.Tests
                 Assert.That(supplies.Length,Is.EqualTo(16)); Assert.That(supplies.All(a=>a.finaleBoss!=null && a.barricade==null),Is.True);
                 Assert.That(supplies.All(a=>a.Waves.Count==1 && a.Waves[0].ReplenishWhileBossLives),Is.True);
                 Assert.That(supplies.Count(a=>a.GetComponent<FinaleSupplyAuthoring>().localAmmunition),Is.EqualTo(12));
+                var specialists=supplies.Where(a=>{
+                    var supply=a.GetComponent<FinaleSupplyAuthoring>();
+                    return !supply.localAmmunition && !supply.pairOnly;
+                }).OrderBy(a=>a.GetComponent<FinaleSupplyAuthoring>().minimumStage).ToArray();
+                string[][] stageProfiles={
+                    new[]{"MushroomShooterSpawnSettings","EnemyDasherSpawnSettings","ArmoredEnemySpawnSettings","WizardEnemySpawnSettings",
+                        "TrailEnemySpawnSettings","DragonEnemySpawnSettings","SnakeEnemySpawnSettings","NinjaEnemySpawnSettings"},
+                    new[]{"RangedEnemySpawnSettings","AlienSpikeEnemySpawnSettings","ArmoredEnemySpawnSettings","NinjaEnemySpawnSettings"},
+                    new[]{"RangedEnemySpawnSettings","EnemyDasherSpawnSettings","SporellaSpawnSettings"}
+                };
+                Assert.That(specialists.Length,Is.EqualTo(stageProfiles.Length));
+                for(int i=0;i<specialists.Length;i++) {
+                    var wave=specialists[i].Waves.Single();
+                    Assert.That(specialists[i].GetComponent<FinaleSupplyAuthoring>().minimumStage,Is.EqualTo(i+1));
+                    Assert.That(wave.Enemies.Select(e=>e.Settings.name),Is.EquivalentTo(stageProfiles[i]));
+                    Assert.That(wave.Enemies.All(e=>e.MinimumCount==1 && e.Weight==0 && e.Settings.EnemyPrefab!=null),Is.True);
+                    Assert.That(wave.EliteEnemies.Single().Count,Is.EqualTo(1));
+                    Assert.That(wave.DelayBeforeWave,Is.EqualTo(5));
+                    Assert.That(wave.BossReplenishDelay,Is.EqualTo(7));
+                    Assert.That(wave.ArmoredAmmunitionProfile,Is.Null);
+                    Assert.That(wave.WizardAmmunitionProfile,Is.Null);
+                }
                 foreach(int stage in new[]{1,2,3}) {
                     int population=supplies.Where(a=>a.GetComponent<FinaleSupplyAuthoring>().minimumStage<=stage)
                         .Sum(a=>CampaignEnemyRevisionTests.PhysicalPopulation(a.Waves[0]));

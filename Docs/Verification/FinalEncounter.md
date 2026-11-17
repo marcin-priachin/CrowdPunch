@@ -1,5 +1,24 @@
 # Final encounter verification
 
+## Chapter 9 roster revision (2026-11-17)
+
+The saved stage groups add Mushroom Shooter, Alien Spike and Sporella in
+stages 1, 2 and 3, respectively. The Unity scene check passed for the exact
+specialist groups, 37/50/66 physical-body caps and per-anchor Baseline and
+Exploder supply. Unity compilation and the .NET build passed. All 153 focused
+tests passed, including the victory cleanup check with all three in-flight
+shooter effects.
+
+The isolated Editor preview observed all three new enemies in their stages.
+It instantiated 37 opening bodies, verified the anchor-triggered fall, and
+recorded an injected launched-body hit from 400 to 388 boss health. After
+checking the authored landing and stun, the probe extended the live downed
+window to observe both grounded attacks. It verified the fourth-anchor reset,
+player-death retry and final campaign completion with no surviving enemies
+or shooter effects. The late-stage sample observed 64 physical bodies and
+616 Editor frames, with a 32.72ms mean and a 52.88ms 95th percentile. Clear
+times and target-device performance still need playtesting.
+
 ## Committed attack facing (2026-11-05)
 
 FINALE-003/007: visual facing is captured from the warning direction once per attack

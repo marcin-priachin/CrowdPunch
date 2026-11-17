@@ -1153,9 +1153,33 @@ Four `FinaleAnchor` entities reuse covered targets, shell/core resolution, physi
 
 Boss body impacts use swept Barricade contact detection; blasts use the existing explosion resolver. `FinaleHit` records separate impact/blast identities, pruned when their source or launch no longer exists. Grounded-body reflection keeps launch velocity magnitude, clears homing, and redirects player-facing rebounds sideways out of the contact face. `PunchAimAssist` excludes paused anchors and invulnerable boss phases.
 
-Sixteen finale-owned wave sequences reserve up to 37, 50 and 66 physical bodies across the three health stages. Each of four anchor banks starts with four Baselines and one Exploder, adds two Baselines at stage two, then two Baselines and one Exploder at stage three. Three specialist additions and one LinkedPair sequence retain their existing recipes. The former maximum remains 60 root enemies plus six Snake segments. Additive sequences use the existing `FinaleSupply.MinimumStage` gate, so active replenishment slots stay capped at each stage and retry returns to the smaller first-stage supply. Individual slots respawn through existing warning, spacing and placement checks. `FinaleSupplySystem` recycles a pair only after both endpoints finish, and recalls remote, active ammunition slots when the player returns to their bank. It does not allocate additional ammunition. A Snake head waits for old detached projectiles before respawning, bounding tail population. Exact compositions, replacement delays and safe rectangles are saved in `Data/Campaign/Finale`; bank/stage/recall settings are on the scene's supply authoring. Shared ordinary enemy profiles remain unchanged. `Apply Finale Phase Supply` updates the saved finale banks and adds any missing stage sequences without duplicating them.
+Sixteen finale-owned wave sequences reserve up to 37, 50 and 66 physical
+bodies across the three health stages. Each of four anchor banks starts with
+four Baselines and one Exploder, adds two Baselines in stage 2, then adds two
+Baselines and one Exploder in stage 3. LOOP-011 adds one Mushroom Shooter,
+Alien Spike and Sporella in successive specialist groups through slot
+substitution. The shared LinkedPair opens in stage 1. Stage 3 reserves 60 root
+enemies and up to six Snake segments.
 
-Boss death immediately suppresses hostile player damage through `PlayerEcsBridge.EncounterVictory`. `FinaleVictorySystem` then clears all enemy roots, pending spawn reservations, pairs and persistent hostile effects through an ECB. Spawn systems reject the defeated owner. `GauntletCompletionSystem` gives finale victory precedence over anchor and wave states, reporting completion after the short victory animation. The presentation bridge clears damage suppression on retry or scene exit.
+The additive sequences use `FinaleSupply.MinimumStage` to gate replenishment
+slots. Retry returns to the first-stage supply. Individual slots respawn
+through the existing warning, spacing and placement checks.
+`FinaleSupplySystem` recycles a pair after both endpoints finish and recalls
+remote, active ammunition slots when the player returns to their bank. A
+Snake head waits for its old detached projectiles before respawning. Finale
+wave assets in `Data/Campaign/Finale` store the compositions, replacement
+delays and spawn rectangles. The scene's supply authoring stores bank, stage
+and recall settings. `Apply Finale Phase Supply` writes the specialist recipes
+and updates or creates the staged anchor supplies.
+
+Boss death immediately suppresses hostile player damage through
+`PlayerEcsBridge.EncounterVictory`. `FinaleVictorySystem` clears enemy roots,
+pending spawn reservations, pairs and remaining hostile effects through an ECB,
+including Mushroom beams, Alien Spike projectiles and Sporella projectiles.
+Spawn systems reject the defeated owner. `GauntletCompletionSystem` gives finale
+victory precedence over anchor and wave states, reporting completion after the
+short victory animation. The presentation bridge clears damage suppression on
+retry or scene exit.
 
 `FinalePresentationSystem` copies only positions, phase, warning dimensions, health fraction and anchor statuses to `FinalePresentation`; the MonoBehaviour never reads/stores entities. The supplied Goleling FBX plays through a finale-owned Animator controller and copied looping flight clips. A temporary look-height offset on the existing TPP camera frames the flying giant and is restored on scene exit. Cyan/amber/dark floor rings show active/paused/spent anchors; existing target cracks, shell pieces and rail/socket visuals show progress. Main-scene presentation and ECS SubScene are both saved under `Scenes/Campaign/Campaign_81`.
 

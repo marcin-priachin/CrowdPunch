@@ -74,7 +74,8 @@ shooter mixes at 55/58, timed defense at 57 and spaced warning strips at
 54/55/57/58. Chapter 7 adds timed shooter mixes and staggered warning strips
 at 63/65/67/68, with room to reach Snake tails. Chapter 8 adds both timed
 defenses, incorporates all enemy archetypes at 78 and preserves the isolated
-Ninja introduction. The Chapter 9 finale revision is pending.
+Ninja introduction. Chapter 9 adds the three shooters to the finale's specialist
+stages within the existing 37/50/66 physical-body caps and anchor ammunition rules.
 OQ-001 remains open.
 
 Decision: approve the proposed campaign revision with Mushroom Shooter at 5,

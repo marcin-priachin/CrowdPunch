@@ -1,5 +1,5 @@
 # Crowd Punch — Level 81 Final Encounter
-Agreed design, 14 October 2026. Planning handoff; no repository changes performed.
+Agreed design, 14 October 2026. Authored supply updated 17 November 2026 under LOOP-011.
 
 ## Purpose and scope
 Add level 81 as the sole encounter in its own ninth chapter, after the existing 80-level campaign. A giant flying boss continuously pressures the player in a 100 × 100 metre arena containing every available enemy type. The player chooses among four familiar objective challenges to bring the boss down, then damages him using the crowd.
@@ -69,14 +69,30 @@ After the initial stun, alternate circular wing sweeps and radial shockwaves. Bo
 - Flight/transition colliders must not inadvertently create a ground obstruction or allow boss damage outside the vulnerability phase. Exact collision arrangement is delegated.
 
 ## Crowd and ammunition
-Continuous bounded replenishment throughout the active fight; no finite wave-clear or survivor-clear objective. All available enemy types appear over time:
-Baseline, Ranged, Exploder/Explosive, Dasher, Elite, Armored, Wizard, Trail, LinkedPair, Dragon, Snake and Ninja.
+Continuous bounded replenishment throughout the active fight, with victory awarded
+for defeating the boss. All 15 enemy types appear over time, including Mushroom
+Shooter, Alien Spike and Sporella. New health stages add to the existing supply.
+
+| Stage | Specialist slots added | Cumulative supply at each anchor bank | Arena physical-body cap |
+| --- | --- | --- | --- |
+| 1 | One each of Mushroom Shooter, Dasher, Elite, Armored, Wizard, Trail, Dragon, Snake and Ninja | 4 Baselines + 1 Exploder | 37 |
+| 2 | One each of Ranged, Alien Spike, Elite, Armored and Ninja | 6 Baselines + 1 Exploder | 50 |
+| 3 | One each of Ranged, Dasher, Elite and Sporella | 8 Baselines + 2 Exploders | 66 |
+
+The shared LinkedPair slot starts in stage 1. Caps include two LinkedPair
+endpoints and six Snake tail segments. Each specialist group uses the existing
+north and south banks, a five-second initial delay once its health stage
+opens, and seven-second per-slot replacements. Anchor banks use their existing
+two-second initial delay and three-second replacements. The three shooter
+substitutions use existing specialist slots and leave anchor approaches open.
 
 Keep reliable launchable Baselines and Exploders near unfinished installations. Do not allow elimination, boss area attacks, spatial distribution or specialist composition to make an anchor impossible to complete. Continue supplying suitable bodies during downed windows so boss damage remains achievable.
 
 Total population, per-type caps, stage mixes, timing and safe spawn banks are editable delegated tuning. Respect existing special lifecycle/counting semantics: LinkedPair has two endpoints per pair; Snake tail bodies add physical population beyond its head. Keep shared ordinary enemy stats intact. Profile representative finale populations; target hardware/FPS remains a wider project open question.
 
-Survivors remain hostile during normal cycles. No new supply after victory; cancel already pending allocations/respawns and neutralize survivors and remaining hostile effects.
+Survivors remain hostile during normal cycles. Victory stops supply, cancels
+pending allocations and respawns, and removes survivors and remaining effects,
+including Mushroom beams, Alien Spike projectiles and Sporella shots.
 
 ## Campaign and reset
 - Add stable level 81 in a separate ninth chapter. Unlock after level 80.

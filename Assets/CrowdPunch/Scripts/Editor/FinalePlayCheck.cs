@@ -66,8 +66,9 @@ namespace CrowdPunch.Editor
             if(step==0) {
                 Require(flow.EditorPreview && flow.CurrentLevelIndex==80,"Level Play preview did not select 81");
                 Require(anchors.Length==4,"Four baked anchors required");
-                if(enemies.Length<35) return;
+                if(enemies.Length<35 || !HasActiveShooter<MushroomShooterSettings>(em,enemies)) return;
                 Record("PASS level 81 baked, four anchors, all initial supply instantiated: "+enemies.Length+" physical bodies.");
+                Record("PASS stage 1 Mushroom Shooter active.");
                 frames.Clear(); mask=0; Next(1);
             }
             else if(step==1) {
@@ -100,6 +101,10 @@ namespace CrowdPunch.Editor
                 Require(b.Health<health,"Physical launched-body impact did not damage boss");
                 Require(em.GetComponentData<LocalTransform>(boss).Position.Equals(b.Landing),"Boss translated from impact");
                 Record("PASS physical swept impact damages stationary boss: "+health+" -> "+b.Health);
+                // The shipped window can end after one warning. Exercise both attacks after verifying the authored landing and stun.
+                b.Remaining=math.max(b.Remaining,20f);
+                em.SetComponentData(boss,b);
+                Record("Extended only the preview's remaining downed time to observe both grounded attacks.");
                 health=b.Health; mask=0; Next(4);
             }
             else if(step==4) {
@@ -136,20 +141,22 @@ namespace CrowdPunch.Editor
             }
             else if(step==9) {
                 SampleFrame();
-                if(EditorApplication.timeSinceStartup-since<12) return;
+                if(EditorApplication.timeSinceStartup-since<12 || !HasActiveShooter<AlienSpikeTuning>(em,enemies)) return;
                 Require(b.Stage==2,"Second health stage not applied");
                 Require(enemies.Count(e=>!em.HasComponent<SnakeSegment>(e)&&!em.HasComponent<LinkedPairEndpoint>(e))==42
                     && enemies.Count(e=>em.HasComponent<LinkedPairEndpoint>(e))<=2,"Stage 2 slot cap must be 44 including the recyclable pair");
                 Record("PASS stage 2 replenishing slot population: 44 roots, up to 50 physical bodies.");
+                Record("PASS stage 2 Alien Spike active.");
                 b.Health=t.Health*.2f; em.SetComponentData(boss,b); frames.Clear(); Next(11);
             }
             else if(step==11) {
                 SampleFrame();
-                if(EditorApplication.timeSinceStartup-since<12) return;
+                if(EditorApplication.timeSinceStartup-since<12 || !HasActiveShooter<SporellaSettings>(em,enemies)) return;
                 Require(b.Stage==3,"Third health stage not applied");
                 Require(enemies.Count(e=>!em.HasComponent<SnakeSegment>(e)&&!em.HasComponent<LinkedPairEndpoint>(e))==58
                     && enemies.Count(e=>em.HasComponent<LinkedPairEndpoint>(e))<=2,"Stage 3 slot cap must remain 60 including the recyclable pair");
                 Record("Stage 3 population: "+enemies.Length+"; editor frame samples "+frames.Count+", mean ms "+frames.Average().ToString("F2")+", p95 ms "+frames.OrderBy(x=>x).ElementAt((int)(frames.Count*.95f)).ToString("F2"));
+                Record("PASS stage 3 Sporella active.");
                 b.Phase=FinalePhase.Downed; em.SetComponentData(boss,b);
                 projectile=enemies.First(e=>!em.HasComponent<SnakeSegment>(e)); Launch(em,projectile,999);
                 FinaleHitResolution.Damage(em,boss,projectile,999999,false,world.Time.ElapsedTime); Next(10);
@@ -157,9 +164,20 @@ namespace CrowdPunch.Editor
             else if(step==10 && flow.Screen==CampaignScreen.CampaignComplete) {
                 Require(enemies.Length==0,"Survivors were not neutralized");
                 Require(b.Attack==FinaleAttack.None,"Attack survived victory");
+                using var effects=em.CreateEntityQuery(new EntityQueryDesc {Any=new[]{
+                    ComponentType.ReadOnly<MushroomBeam>(),ComponentType.ReadOnly<AlienSpikeProjectile>(),ComponentType.ReadOnly<SporellaProjectile>()
+                }});
+                Require(effects.IsEmpty,"Shooter effects survived victory");
                 Record("PASS immediate combat/supply stop, survivor cleanup and campaign completion without anchor/survivor clearance.");
                 Record("PASS controlled finale probe complete. Human duration, readability and difficulty playtest remains."); Stop();
             }
+        }
+        private static bool HasActiveShooter<T>(EntityManager em,NativeArray<Entity> enemies) where T:unmanaged,IComponentData
+        {
+            foreach(var enemy in enemies)
+                if(em.HasComponent<T>(enemy) && !em.IsComponentEnabled<RespawnRequest>(enemy)
+                    && em.GetComponentData<EnemyLaunchState>(enemy).Phase!=EnemyLaunchPhase.Defeated) return true;
+            return false;
         }
         private static void Launch(EntityManager em,Entity e,uint sequence) => em.SetComponentData(e,new EnemyLaunchState {
             Phase=EnemyLaunchPhase.Launched,Owner=EnemyLaunchOwner.Player,LastCause=EnemyLaunchCause.PlayerPunch,LaunchSequence=sequence,LaunchDamage=100 });

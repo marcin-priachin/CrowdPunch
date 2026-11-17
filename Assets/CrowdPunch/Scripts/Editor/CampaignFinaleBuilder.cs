@@ -104,11 +104,9 @@ namespace CrowdPunch.Editor
                 CreateFinaleSupply(boss,"North West",new Wave {Name="North West",B=8,X=2,Delay=2,Ranges=new[]{Range(-35,25,8,18)}},1,true,new Vector3(-35,2,25));
                 CreateFinaleSupply(boss,"North East",new Wave {Name="North East",B=8,X=2,Delay=2,Ranges=new[]{Range(35,25,8,18)}},1,true,new Vector3(35,2,25));
                 CreateFinaleSupply(boss,"South East",new Wave {Name="South East",B=8,X=2,Delay=2,Ranges=new[]{Range(35,-25,8,18)}},1,true,new Vector3(35,2,-25));
-                for(int stage=1;stage<=3;stage++) {
-                    CreateFinaleSupply(boss,"Specialists Stage "+stage,new Wave {Name="Specialists Stage "+stage,R=1,D=1,E=1,A=1,Wizard=stage==1?1:0,
-                        Trail=stage==1?1:0,Dragon=stage==1?1:0,Snake=stage==1?1:0,Ninja=stage<3?1:0,Delay=5,
-                        Ranges=new[]{Range(0,36,28,8),Range(0,-30,24,8)}},stage,false,Vector3.zero);
-                }
+                var specialistBanks = new[]{Range(0,36,28,8),Range(0,-30,24,8)};
+                for(int stage=1;stage<=3;stage++)
+                    CreateFinaleSupply(boss,"Specialists Stage "+stage,FinaleSpecialistWave(stage,specialistBanks),stage,false,Vector3.zero);
                 var pair=CreateFinaleSupply(boss,"Linked Pair",new Wave{Name="Linked Pair",LinkedPairs=1,Delay=6,Ranges=new[]{Range(0,28,28,8)}},1,false,Vector3.zero);
                 pair.GetComponent<FinaleSupplyAuthoring>().pairOnly=true;
                 AuthorFinalePhaseSupply(boss);
@@ -158,9 +156,57 @@ namespace CrowdPunch.Editor
                 var scene=EditorSceneManager.OpenScene(CampaignSub(81),OpenSceneMode.Single);
                 var boss=UnityEngine.Object.FindFirstObjectByType<FinaleBossAuthoring>();
                 if(boss==null) throw new InvalidOperationException("Finale boss is missing.");
+                ApplyFinaleSpecialistWaves(boss);
                 AuthorFinalePhaseSupply(boss);
-                EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();
+                if(scene.isDirty && !EditorSceneManager.SaveScene(scene))
+                    throw new InvalidOperationException("Could not save the finale supply scene.");
+                AssetDatabase.SaveAssets();
             } finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
+        }
+
+        private static Wave FinaleSpecialistWave(int stage, EnemyWaveSettings.SpawnRectangle[] banks)
+        {
+            // LOOP-011/FINALE-006: substitute a duplicate ordinary slot per stage without adding bodies.
+            var wave = stage switch
+            {
+                1 => new Wave { Mushroom=1, D=1, E=1, A=1, Wizard=1, Trail=1, Dragon=1, Snake=1, Ninja=1 },
+                2 => new Wave { R=1, AlienSpike=1, E=1, A=1, Ninja=1 },
+                3 => new Wave { R=1, D=1, E=1, Sporella=1 },
+                _ => throw new ArgumentOutOfRangeException(nameof(stage))
+            };
+            wave.Delay = 5;
+            wave.Ranges = banks;
+            return wave;
+        }
+
+        private static void ApplyFinaleSpecialistWaves(FinaleBossAuthoring boss)
+        {
+            var supplies = UnityEngine.Object.FindObjectsByType<FinaleSupplyAuthoring>(FindObjectsSortMode.None)
+                .Where(supply => !supply.localAmmunition && !supply.pairOnly)
+                .OrderBy(supply => supply.minimumStage).ToArray();
+            if (supplies.Length != 3)
+                throw new InvalidOperationException("Three finale specialist supplies are required.");
+            var waves = new EnemyWaveSettings[supplies.Length];
+            for (int i = 0; i < supplies.Length; i++)
+            {
+                var encounter = supplies[i].GetComponent<EnemyWaveSequenceAuthoring>();
+                var path = FinaleData + $"CP81_Specialists_Stage_{i+1}.asset";
+                if (supplies[i].minimumStage != i+1 || encounter == null || encounter.finaleBoss != boss
+                    || encounter.Waves.Count != 1 || AssetDatabase.GetAssetPath(encounter.Waves[0]) != path)
+                    throw new InvalidOperationException($"Missing or unexpected finale specialist supply for stage {i+1}.");
+                waves[i] = encounter.Waves[0];
+            }
+
+            var profiles = LoadCampaignProfiles();
+            foreach (int index in new[] { 1, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14 })
+                if (profiles[index].EnemyPrefab == null)
+                    throw new InvalidOperationException($"Missing prefab for {profiles[index].name}.");
+            for (int i = 0; i < waves.Length; i++)
+            {
+                var recipe = FinaleSpecialistWave(i+1, waves[i].SpawnRectangles.ToArray());
+                var wave = WaveAsset(waves[i].name, recipe, profiles, FinaleData);
+                ConfigureFinaleSupplyWave(wave, false);
+            }
         }
 
         private static void AuthorFinalePhaseSupply(FinaleBossAuthoring boss)
@@ -201,7 +247,12 @@ namespace CrowdPunch.Editor
             a.finaleBoss=boss; a.barricade=null;
             var supply=a.gameObject.AddComponent<FinaleSupplyAuthoring>(); supply.minimumStage=stage; supply.localAmmunition=ammunition; supply.bank=bank;
             var d=new SerializedObject(a); d.FindProperty("minimumPlayerDistance").floatValue=4; d.FindProperty("placementAttemptsPerEnemy").intValue=48; d.ApplyModifiedPropertiesWithoutUndo();
-            var wave=new SerializedObject(a.Waves[0]); wave.FindProperty("replenishWhileBossLives").boolValue=true;
+            ConfigureFinaleSupplyWave(a.Waves[0], ammunition);
+        }
+
+        private static void ConfigureFinaleSupplyWave(EnemyWaveSettings settings, bool ammunition)
+        {
+            var wave=new SerializedObject(settings); wave.FindProperty("replenishWhileBossLives").boolValue=true;
             wave.FindProperty("bossReplenishDelay").floatValue=ammunition?3:7;
             wave.FindProperty("armoredAmmunitionProfile").objectReferenceValue=null; wave.FindProperty("wizardAmmunitionProfile").objectReferenceValue=null;
             wave.ApplyModifiedPropertiesWithoutUndo();

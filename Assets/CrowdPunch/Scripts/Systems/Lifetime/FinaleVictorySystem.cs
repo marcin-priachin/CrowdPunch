@@ -20,6 +20,9 @@ namespace CrowdPunch.Systems.Lifetime
             using var enemies=SystemAPI.QueryBuilder().WithAll<Enemy>().WithOptions(EntityQueryOptions.IncludeDisabledEntities).Build().ToEntityArray(Allocator.Temp);
             foreach(var e in enemies) commands.DestroyEntity(e);
             Destroy<LinkedPair>(ref state,commands); Destroy<RangedProjectile>(ref state,commands);
+            Destroy<MushroomBeam>(ref state,commands);
+            Destroy<AlienSpikeProjectile>(ref state,commands);
+            Destroy<SporellaProjectile>(ref state,commands);
             Destroy<WizardZone>(ref state,commands); Destroy<TrailSection>(ref state,commands); Destroy<TrailSource>(ref state,commands);
             commands.Playback(state.EntityManager);
         }

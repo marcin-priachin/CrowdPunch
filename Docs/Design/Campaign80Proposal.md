@@ -1,16 +1,16 @@
 # Crowd Punch: 80-level campaign proposal
 
-Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented in Chapters 1–8. The Chapter 9 finale revision is pending. Encounter counts and cadence are starting values for playtesting.
+Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented across all nine chapters. Encounter counts and cadence are starting values for playtesting.
 
 Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2 through 8 in sequence. All 80 levels and their campaign infrastructure are authorized and implemented.
 
 ## Approved variety and reinforcement revision (2026-11-16, LOOP-011)
 
-The user approved the three-shooter plan, then requested Chapters 1 through 8.
+The user approved the three-shooter plan, then requested Chapters 1 through 9.
 This section supersedes conflicting composition and cadence rules in the original
 proposal and the 2026-10-14 revision. The Chapter 1–8 tables reflect the revised
 assets.
-Level 81 retains FINALE-001..007 and its separate design document.
+Level 81 follows FINALE-001..007 and the authored roster in [Final Encounter](FinalEncounter.md#crowd-and-ammunition).
 
 Preserve all 81 stable IDs, existing objectives, boss order, save/unlock behavior,
 boss arena geometry, track routes and barricade room chains. Ordinary enemy stats
@@ -299,6 +299,16 @@ bypass connects the combat areas and gives room to circle Snake tails. New
 and repositioned strips preserve at least four metres from the rock
 footprints and stay clear of spawn banks.
 
+### Chapter 9 authored supply
+
+Bring Down the Sky (81) adds one Mushroom Shooter in health stage 1, one Alien
+Spike in stage 2 and one Sporella in stage 3. The three substitutions use existing
+specialist slots. Earlier slots remain active in each later stage. Including
+the LinkedPair and six Snake tail segments, the stage caps are 37/50/66 physical
+bodies. Each anchor bank retains its Baseline/Exploder supply of 4/1, 6/1 and
+8/2 per successive stage. The same spawn banks and replenishment clocks serve
+both flight and downing. Victory ends supply and clears the new shooter effects.
+
 ### Implementation and remaining work
 
 Chapter 1 uses existing batching, timed activation, interleaved exact profile allocation,
@@ -315,13 +325,12 @@ Verification is recorded for [Chapter 1](../Verification/Chapter1.md),
 [Chapter 2](../Verification/Chapter2.md), [Chapter 3](../Verification/Chapter3.md),
 [Chapter 4](../Verification/Chapter4.md), [Chapter 5](../Verification/Chapter5.md)
 [Chapter 6](../Verification/Chapter6.md), [Chapter 7](../Verification/Chapter7.md)
-and [Chapter 8](../Verification/Chapter8.md).
+and [Chapter 8](../Verification/Chapter8.md). Level 81 verification is recorded
+in [Final Encounter](../Verification/FinalEncounter.md).
 
-Before later chapters, check ground-hazard cycle resets,
-Elite supply, Wizard waits/ammunition, defense targeting and cumulative completion.
-The local runtime already interleaves guaranteed normal profiles; the earlier remote
-inspection's sequential-profile concern is resolved in this checkout. Actual duration,
-overlap balance and OQ-001 target-hardware acceptance remain unverified design tuning.
+Actual duration, overlap balance and OQ-001 target-hardware acceptance remain
+unverified design tuning. The relevant chapter verification notes record the
+controlled Editor checks.
 
 ## Reading the table
 
