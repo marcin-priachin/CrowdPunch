@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: CP22_Room02_Ammunition
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
   totalEnemyCount: 14
+  linkedPairProfile: {fileID: 0}
+  linkedPairCount: 0
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 9
+    MinimumCount: 7
     Weight: 0
   - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
     MinimumCount: 1
@@ -27,6 +29,12 @@ MonoBehaviour:
     MinimumCount: 1
     Weight: 0
   - Settings: {fileID: 11400000, guid: 95d24fce27ef5144ca7ae5b439bbe692, type: 2}
+    MinimumCount: 1
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 4c36948c00432f34596d78189eec9970, type: 2}
+    MinimumCount: 1
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 12c3d79e809689b4cb3a8045a23c6552, type: 2}
     MinimumCount: 1
     Weight: 0
   eliteEnemies: []
@@ -44,7 +52,7 @@ MonoBehaviour:
   duration: 0
   spawnMode: 1
   batchSize: 4
-  batchInterval: 1.5
+  batchInterval: 5
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

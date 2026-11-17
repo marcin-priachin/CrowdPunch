@@ -232,7 +232,17 @@ same run. Clear checkpoints and encounter boundaries expire them. Other Chapter 
 initial batches are 4 every 5s, with the clear checkpoints at 11/14/15 and existing
 objective support replacement rules. Chapter 2 has no static hazards.
 
-Chapters 1–2 are implemented. Chapters 3–9 follow in their respective batches.
+Chapter 3 keeps the Armor, Elite and defense introduction gates at 21/23/24.
+Level 22 retains bounded populations of 8 and 14 and adds one Mushroom Shooter
+and one Alien Spike to the final room. At 25/27, familiar timed reinforcements
+arrive 8s after the previous last batch, with each level retaining its original
+hazard lesson. Level 28 uses four allocations of 48/56/72/88, including three
+Elites overall and 144 Baselines out of 264 enemies. Batches are 8 every 6s.
+Phases 1 and 3 advance after a 6s timer. Phase 2 requires cumulative clearance
+before phase 3, so its Elite's replenishing crowd drains. Phase 4 clears
+cumulatively. The existing three level 28 hazard patches follow GROUND-001.
+
+Chapters 1–3 are implemented. Chapters 4–9 follow in their respective batches.
 Hardware and performance acceptance remains OQ-001.
 
 ### SCORE-001 - Punch Efficiency

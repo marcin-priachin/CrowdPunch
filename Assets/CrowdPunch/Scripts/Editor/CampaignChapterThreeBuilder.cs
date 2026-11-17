@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using CrowdPunch.Authoring;
 using CrowdPunch.Components;
 using CrowdPunch.Configuration;
@@ -22,7 +23,7 @@ namespace CrowdPunch.Editor
             "Red ground hurts you and unprotected enemies. Launch bodies across it and take the safe route around.",
             "Hit the block from behind to reach the blue socket. Keep clear of the hot outer pocket.",
             "Amber ground warns before turning red. Use the other lane while the patch is active.",
-            "Clear the large waves. Break armor with bodies, disrupt Elites, and leave room around the hot crossings.",
+            "Reinforcements arrive from changing sides. Break armor with bodies, stop the Elite to halt replacements, and use the safe lanes around the hot crossings.",
             "Watch the moving opening and send bodies through to the target.",
             "Launch bodies into the Blob during its pauses and wind-up. Rolling protects it; punch scattered bodies to reclaim them."
         };
@@ -30,34 +31,122 @@ namespace CrowdPunch.Editor
         private static Level[] ChapterThreeDesigns() => new[]
         {
             new Level { Name="Peel the Armor", Outline=Clipped(32,34,3), Spacing=new Vector2(26,28), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                new Wave { Name="First Shields",B=8,A=1,Ranges=new[]{Range(-5,6,6,8),Range(5,6,6,8)} },
-                new Wave { Name="Paired Shields",B=12,A=2,Ranges=new[]{Range(-7,6,6,10),Range(7,6,6,10)} } } },
+                new Wave { Name="First Shields",B=8,A=1,Batch=4,Interval=5,Ranges=new[]{Range(-5,6,6,8),Range(5,6,6,8)} },
+                new Wave { Name="Paired Shields",B=12,A=2,Batch=4,Interval=5,Ranges=new[]{Range(-7,6,6,10),Range(7,6,6,10)} } } },
             new Level { Name="Heavy Traffic", Outline=new[]{new Vector2(-13,-20),new Vector2(15,-20),new Vector2(15,15),new Vector2(10,20),new Vector2(-10,20),new Vector2(-15,12)},
                 Spacing=new Vector2(24,34),Entry=new Vector2(0,-15),Lanes=Array.Empty<Vector4>(),Waves=new[]{
                 W("Gate Traffic",12,new[]{Range(-11,-3,4,18),Range(11,-3,4,18)},x:2) } },
             new Level { Name="Borrowed Fist",Outline=Clipped(36,36,4),Spacing=new Vector2(30,30),Entry=new Vector2(0,-13),Lanes=Array.Empty<Vector4>(),Waves=new[]{
-                W("Borrowed Fist",10,new[]{Range(0,8,24,8)},e:1),
-                W("Supported Fist",14,new[]{Range(-7,7,9,10),Range(7,7,9,10)},r:2,e:1) } },
+                W("Borrowed Fist",10,new[]{Range(0,8,24,8)},e:1,batch:4,interval:5),
+                W("Supported Fist",14,new[]{Range(-7,7,9,10),Range(7,7,9,10)},r:2,e:1,batch:4,interval:5) } },
             new Level { Name="Hold the Line",Outline=Rectangle(32,96),Spacing=new Vector2(30,94),Entry=new Vector2(0,-36),Lanes=Array.Empty<Vector4>(),Waves=new[]{
                 W("First Advance",12,new[]{Range(0,41,24,8)},batch:4,interval:4),
                 W("Second Advance",16,new[]{Range(0,41,24,8)},delay:5,batch:4,interval:4),
                 W("Final Advance",20,new[]{Range(0,41,24,8)},delay:5,batch:4,interval:4) } },
             new Level { Name="Hot Ground",Outline=Clipped(34,34,5),Spacing=new Vector2(28,28),Entry=new Vector2(0,-12),Lanes=Array.Empty<Vector4>(),Waves=new[]{
-                W("Hot Ground",10,new[]{Range(0,9,22,8)}),
-                W("Hot Crossfire",14,new[]{Range(10,-2,5,16)},r:2) } },
+                W("Hot Ground",10,new[]{Range(0,9,22,8)},next:8,batch:4,interval:5),
+                W("Hot Crossfire",14,new[]{Range(10,-2,5,16)},r:2,delay:0,batch:4,interval:5) } },
             new Level { Name="Safe Side",Outline=Clipped(34,40,3),Spacing=new Vector2(28,34),Entry=new Vector2(-3,-14),Lanes=Array.Empty<Vector4>(),Waves=new[]{
-                W("Safe Delivery",10,new[]{Range(-8,6,4,12),Range(8,-8,5,8)},x:2) } },
+                W("Safe Delivery",10,new[]{Range(-8,6,4,12),Range(8,-8,5,8)},x:2,batch:4,interval:5) } },
             new Level { Name="Wait for the Warning",Outline=Clipped(36,38,4),Spacing=new Vector2(30,32),Entry=new Vector2(4,-14),Lanes=Array.Empty<Vector4>(),Waves=new[]{
-                W("First Warning",10,new[]{Range(0,11,24,6)},d:1),
-                W("Cross the Warning",14,new[]{Range(-12,10,4,4),Range(12,-3,4,12)},r:2,d:2) } },
+                W("First Warning",10,new[]{Range(0,11,24,6)},d:1,next:8,batch:4,interval:5),
+                W("Cross the Warning",14,new[]{Range(-12,10,4,4),Range(12,-3,4,12)},r:2,d:2,delay:0,batch:4,interval:5) } },
             new Level { Name="Crowd Channels",Outline=Rectangle(100,100),Spacing=new Vector2(96,96),Entry=new Vector2(0,-16),Lanes=Array.Empty<Vector4>(),Waves=new[]{
-                new Wave {Name="North Shields",B=56,A=3,Ranges=new[]{Range(0,32,50,12)}},
-                W("West Command",72,new[]{Range(-30,0,16,36)},r:4,e:1),
-                W("East Charge",88,new[]{Range(30,0,16,36)},d:4,x:4),
-                new Wave {Name="Split Command",B=104,A=4,E=2,Ranges=new[]{Range(-30,0,16,44),Range(30,0,16,44)}} } },
+                new Wave { Name="North Shields",B=26,R=10,A=6,Mushroom=6,Batch=8,Interval=6,NextAfter=6,
+                    Ranges=new[]{Range(0,32,50,12)} },
+                new Wave { Name="West Command",B=30,R=15,A=4,Mushroom=6,E=1,Batch=8,Interval=6,Delay=0,
+                    Ranges=new[]{Range(-30,0,16,36)} },
+                W("East Charge",40,new[]{Range(30,0,16,36)},d:12,x:14,alienSpike:6,next:6,batch:8,interval:6),
+                new Wave { Name="Split Command",B=48,R=12,D=10,A=6,Mushroom=10,E=2,Batch=8,Interval=6,Delay=0,
+                    Ranges=new[]{Range(-30,0,16,44),Range(30,0,16,44)} } } },
             new Level { Name="Window of Safety",Outline=Clipped(38,36,5),Spacing=new Vector2(32,30),Entry=new Vector2(0,-12),Lanes=Array.Empty<Vector4>(),Waves=new[]{
-                W("Window Support",10,new[]{Range(0,-12,18,4),Range(13,5,4,12)}) } }
+                W("Window Support",10,new[]{Range(0,-12,18,4),Range(13,5,4,12)},batch:4,interval:5) } }
         };
+
+        private static Wave ChapterThreeRollingCrowd()
+            => W("Rolling Crowd",6,new[]{Range(-13,0,6,28),Range(13,0,6,28),Range(0,-9,16,6)},batch:4,interval:5);
+
+        private static Wave ChapterThreeGateCrowd(bool final, EnemyWaveSettings.SpawnRectangle[] ranges)
+            => final
+                ? new Wave { Name="Final Gate Traffic", B=7,R=1,X=2,D=1,A=1,Mushroom=1,AlienSpike=1,
+                    Batch=4,Interval=5,Ranges=ranges }
+                : W("Gate Traffic",7,ranges,x:1,batch:4,interval:5);
+
+        private static void WriteChapterThreeGateCrowd(EnemyWaveSettings existing, bool final, EnemySpawnSettings[] profiles)
+        {
+            WaveAsset(existing.name, ChapterThreeGateCrowd(final, existing.SpawnRectangles.ToArray()), profiles, CampaignData+"Waves/");
+            // The room's bounded crowd already replenishes launchable gate and armor ammunition.
+            var data = new SerializedObject(existing);
+            data.FindProperty("armoredAmmunitionProfile").objectReferenceValue = null;
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        [MenuItem("Crowd Punch/Campaign/Apply Chapter Three Encounter Revision")]
+        public static void ApplyChapterThreeEncounterRevision()
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before authoring.");
+            for (int i=0; i<SceneManager.sceneCount; i++)
+                if (SceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save open scenes before authoring.");
+            var catalog = AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CampaignBuildRegistration.CatalogPath);
+            if (catalog == null || catalog.Count < 30 || Enumerable.Range(20, 10).Any(i => !catalog.Get(i).Available))
+                throw new InvalidOperationException("An installed Chapter Three is required.");
+
+            var designs = ChapterThreeDesigns().Select(level => level.Waves).Append(new[] { ChapterThreeRollingCrowd() }).ToArray();
+            var setup = EditorSceneManager.GetSceneManagerSetup();
+            try
+            {
+                // Verify saved SubScene references and preserve their established spawn banks.
+                for (int level=21; level<=30; level++)
+                {
+                    if (level == 24) continue; // PROTECT-004 introduction uses its existing recipe.
+                    var scene = EditorSceneManager.OpenScene(CampaignSub(level), OpenSceneMode.Single);
+                    var crowds = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<EnemyWaveSequenceAuthoring>()).ToArray();
+                    if (level == 22)
+                    {
+                        var rooms = crowds.OrderBy(c => c.barricade.transform.position.z).ToArray();
+                        if (rooms.Length != 2 || rooms.Any(c => c.Waves.Count != 1)
+                            || !IsChapterThreeWave(rooms[0].Waves[0], "CP22_01_Gate_Traffic")
+                            || !IsChapterThreeWave(rooms[1].Waves[0], "CP22_Room02_Ammunition"))
+                            throw new InvalidOperationException("Unexpected barricade room wiring in level 22.");
+                        continue;
+                    }
+                    var recipes = designs[level-21];
+                    if (crowds.Length != 1 || crowds[0].Waves.Count != recipes.Length)
+                        throw new InvalidOperationException($"Unexpected wave wiring in level {level}.");
+                    for (int phase=0; phase<recipes.Length; phase++)
+                    {
+                        var recipe = recipes[phase];
+                        var existing = crowds[0].Waves[phase];
+                        if (!IsChapterThreeWave(existing, ChapterTwoWaveName(level, phase, recipe)))
+                            throw new InvalidOperationException($"Unexpected wave asset in level {level}.");
+                        recipe.Ranges = existing.SpawnRectangles.ToArray();
+                    }
+                }
+                var profiles = LoadCampaignProfiles();
+                foreach (int i in new[] { 0, 1, 2, 3, 4, 5, 12, 13 })
+                    if (profiles[i].EnemyPrefab == null) throw new InvalidOperationException("Missing prefab for " + profiles[i].name);
+                for (int level=21; level<=30; level++)
+                {
+                    if (level == 24) continue;
+                    if (level == 22)
+                    {
+                        WriteChapterThreeGateCrowd(AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(CampaignData+"Waves/CP22_01_Gate_Traffic.asset"), false, profiles);
+                        WriteChapterThreeGateCrowd(AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(CampaignData+"Waves/CP22_Room02_Ammunition.asset"), true, profiles);
+                        continue;
+                    }
+                    var recipes = designs[level-21];
+                    for (int phase=0; phase<recipes.Length; phase++)
+                        WaveAsset(ChapterTwoWaveName(level, phase, recipes[phase]), recipes[phase], profiles, CampaignData+"Waves/");
+                }
+                AssetDatabase.SaveAssets();
+                SetCampaignHint(28, ChapterThreeHints[7]);
+            }
+            finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
+            Debug.Log("LOOP-011: Chapter Three revised in place. Mixed crowds at 22/28 and timed reinforcements at 25/27/28.");
+        }
+
+        private static bool IsChapterThreeWave(EnemyWaveSettings wave, string name)
+            => wave != null && AssetDatabase.GetAssetPath(wave) == CampaignData + "Waves/" + name + ".asset";
 
         [MenuItem("Crowd Punch/Campaign/Create Chapter Three")]
         public static void BuildChapterThree()
@@ -88,7 +177,7 @@ namespace CrowdPunch.Editor
                 EditorUtility.SetDirty(catalog); AssetDatabase.SaveAssets(); CampaignBuildRegistration.Apply();
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
-            Debug.Log("Chapter Three authored: levels 21-30, defense, armor/Elites, ground hazards, 342-enemy crowd arena and preserved Rolling Blob arena.");
+            Debug.Log("Chapter Three authored: levels 21-30, defense, armor/Elites, ground hazards, 264-enemy crowd arena and preserved Rolling Blob arena.");
         }
 
         private static void AuthorChapterThreeInterior(int number)
@@ -172,7 +261,7 @@ namespace CrowdPunch.Editor
             var sub=EditorSceneManager.OpenScene(CampaignSub(30),OpenSceneMode.Single);
             var boss=UnityEngine.Object.FindFirstObjectByType<RollingBossAuthoring>();
             boss.settings=CampaignSettings<RollingBossSettings>("RollingBossSettings","L30_Rolling");
-            var wave=WaveAsset("CP30_01_Rolling_Crowd",W("Rolling Crowd",6,new[]{Range(-13,0,6,28),Range(13,0,6,28),Range(0,-9,16,6)}),LoadCampaignProfiles(),CampaignData+"Waves/");
+            var wave=WaveAsset("CP30_01_Rolling_Crowd",ChapterThreeRollingCrowd(),LoadCampaignProfiles(),CampaignData+"Waves/");
             var wd=new SerializedObject(wave); wd.FindProperty("replenishWhileBossLives").boolValue=true;
             wd.FindProperty("bossReplenishDelay").floatValue=4; wd.ApplyModifiedPropertiesWithoutUndo();
             var encounter=UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>(); encounter.rollingBoss=boss;

@@ -464,6 +464,31 @@ namespace CrowdPunch.Tests
                 Assert.That(em.GetComponentData<LocalTransform>(shot).Position.x, Is.EqualTo(12f).Within(.001f));
         }
 
+        [Test]
+        public void Barricade008_VolleyAndPursuitStartOnlyWhenPlayerIsInSpawnRoom()
+        {
+            var room = em.CreateEntity(typeof(BarricadeRoom));
+            em.SetComponentData(room, new BarricadeRoom { Minimum = new float2(-5), Maximum = new float2(5), Activated = 1 });
+            var spike = em.CreateEntity(typeof(AlienSpikeTuning), typeof(AlienSpikeVolley), typeof(EnemyLaunchState),
+                typeof(LocalTransform), typeof(NavigationAgent), typeof(EnemyMovementSettings),
+                typeof(DesiredMovement), typeof(NavigationIntent), typeof(EnemyWaveOwnership));
+            em.SetComponentData(spike, new EnemyWaveOwnership { Sequence = room });
+            em.SetComponentData(spike, new AlienSpikeTuning { EngagementRadius = 12, TelegraphSeconds = 1 });
+            em.SetComponentData(spike, LocalTransform.Identity);
+            var home = NavigationIntent.Travel(new float3(-2, 0, 0), 2, .2f, float3.zero);
+            em.SetComponentData(spike, home);
+            var system = world.GetOrCreateSystem<AlienSpikeVolleySystem>();
+
+            em.SetComponentData(player, new PlayerSnapshot { IsAvailable = true, Position = new float3(6, 0, 0) });
+            system.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<AlienSpikeVolley>(spike).Phase, Is.EqualTo(AlienSpikeVolleyPhase.Moving));
+            Assert.That(em.GetComponentData<NavigationIntent>(spike).Destination, Is.EqualTo(home.Destination));
+
+            em.SetComponentData(player, new PlayerSnapshot { IsAvailable = true, Position = new float3(4, 0, 0) });
+            system.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<AlienSpikeVolley>(spike).Phase, Is.EqualTo(AlienSpikeVolleyPhase.Telegraph));
+        }
+
         private void Tick() => world.GetOrCreateSystem<AlienSpikeProjectileSystem>().Update(world.Unmanaged);
     }
 }

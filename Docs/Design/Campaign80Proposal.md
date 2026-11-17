@@ -1,15 +1,15 @@
 # Crowd Punch: 80-level campaign proposal
 
-Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented in Chapters 1–2. Chapters 3–9 are approved for future implementation. Encounter counts and cadence are starting values for playtesting.
+Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented in Chapters 1–3. Chapters 4–9 are approved for future implementation. Encounter counts and cadence are starting values for playtesting.
 
 Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2 through 8 in sequence. All 80 levels and their campaign infrastructure are authorized and implemented.
 
 ## Approved variety and reinforcement revision (2026-11-16, LOOP-011)
 
-The user approved the three-shooter plan, then requested Chapters 1 and 2.
+The user approved the three-shooter plan, then requested Chapters 1 through 3.
 This section supersedes conflicting composition and cadence rules in the original
-proposal and the 2026-10-14 revision. The Chapter 1 and 2 tables reflect the revised
-assets. The Chapter 3–8 tables describe the encounters in the current build.
+proposal and the 2026-10-14 revision. The Chapter 1–3 tables reflect the revised
+assets. The Chapter 4–8 tables describe the encounters in the current build.
 Level 81 retains FINALE-001..007 and its separate design document.
 
 Preserve all 81 stable IDs, existing objectives, boss order, save/unlock behavior,
@@ -103,6 +103,26 @@ survivors. Final clearance includes every surviving attacker. With clear spawn
 regions, the 33rd batch arrives around 195s plus fixed-step overhead. The target
 is still 3.5–4.5 minutes, subject to playtesting of overlap and clear times.
 
+### Chapter 3 authored cadence
+
+Levels 21 and 23 retain the Armor and Elite introduction checkpoints. Level 24
+retains its three clear-gated defense waves, four enemies every four seconds, and
+first-breach failure. Levels 25 and 27 keep familiar rosters and a single patch
+each. The second phase begins eight seconds after the last successful batch of
+the first phase and final clearance counts all survivors. Other compact levels
+use initial batches of four every five seconds. Level 22's two rooms hold
+7B+1X and 7B+1R+2X+1D+1A+1M+1AS, respectively. Each begins its own supply on
+entry and follows the existing bounded replenishment rules.
+
+Level 28 delivers 264 enemies including three Elites, with 144 Baselines
+(54.5%). Spawn up to eight enemies every six seconds. Phases 1 and 3 advance
+six seconds after their final successful batch. After phase 2, clear all active
+enemies to drain its Elite's replenishing crowd, then wait the existing three
+seconds before phase 3. Phase 4 waits for survivors from the current and earlier
+phases. Armor ammunition remains available across the first overlap and through
+the final clear. One outer hot pocket and two staggered warning crossings remain
+in use. Their offsets reset at each wave boundary under GROUND-001.
+
 ### Implementation and remaining work
 
 Chapter 1 uses existing batching, timed activation, interleaved exact profile allocation,
@@ -112,8 +132,11 @@ legacy assets, later chapter assets, catalog IDs, scenery or lighting are change
 Chapter 2 uses the same timed and cumulative wave modes at 18. Alien Spike shots
 remain active across timed transitions during the same run. Clear checkpoints,
 completion, retry and unload expire them.
-Verification is recorded for [Chapter 1](../Verification/Chapter1.md) and
-[Chapter 2](../Verification/Chapter2.md).
+Chapter 3 uses the same clocks for 25/27/28, including a cumulative checkpoint
+at 28 between the Elite encounter and the next timed group. Level 22's two
+shooters follow the barricade room bounds for pursuit and attack starts.
+Verification is recorded for [Chapter 1](../Verification/Chapter1.md),
+[Chapter 2](../Verification/Chapter2.md) and [Chapter 3](../Verification/Chapter3.md).
 
 Before later chapters, check ground-hazard cycle resets,
 Elite supply, Wizard waits/ammunition, defense targeting and cumulative completion.
@@ -125,7 +148,7 @@ overlap balance and OQ-001 target-hardware acceptance remain unverified design t
 
 - B = Baseline, R = Ranged, X = Exploder, D = Dasher, E = Elite, A = Armored, W = Wizard, T = Trail, M = Mushroom Shooter. Numbers are exact proposed spawn counts, not weights. Elite counts are additional to normal-enemy totals.
 - LP = LinkedPair (counted in pairs, two independently defeated endpoints per pair), F = Dragon (flame; D remains Dasher), S = Snake (counted in heads, not tail segments), N = Ninja. Each S starts with the shared settings asset's current six-segment tail: seven physical bodies initially, but only the head counts toward wave clearance. LP endpoints are additional to the ordinary normal-enemy count through `linkedPairCount`; F/S/N use ordinary exact profile counts. The tether record is not another enemy. See the 2026-10-14 revision below for population accounting.
-- `>` separates clear-gated phases and `~>` marks timed phases that can overlap survivors. Chapters 1 and 2 follow their authored cadence above. Directions refer to safely inset spawn rectangles. Final wave-clear completion includes all earlier survivors.
+- `>` separates clear-gated phases and `~>` marks timed phases that can overlap survivors. Chapters 1–3 follow their authored cadence above. Directions refer to safely inset spawn rectangles. Final wave-clear completion includes all earlier survivors.
 - `Hold` means one bounded replenishing support population until the objective completes, with a proposed 4-second replacement delay. Counts describe the initial/target population, not an unlimited simultaneous crowd. Existing specialized replenishment rules take precedence; in particular Shell replaces its two Exploders only after both are gone, and stops replacing them once the shell breaks.
 - `Batch n/s` means batches of n enemies every s seconds within each finite phase. Unrevised defense assets retain their 5-second cleared-wave pause; LOOP-011 changes later campaign defense when implemented.
 - Dimensions are approximate playable width x length in metres, except the eight large wave arenas, which each require a 100 x 100m playable footprint. North is the objective/far edge; the player generally enters from the south. All non-boss arenas receive distinct authored floor/boundary/obstacle arrangements using the existing nature kit. Defense arenas retain the established 32 x 96m size and 8 x 4m end zone, with distinct approach geometry.
@@ -227,13 +250,13 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | Level | Name / one main objective | Layout and spawn directions | Composition and waves | Static hazards | Teaching purpose / pacing | Target |
 |---|---|---|---|---|---|---|
 | 21 | Peel the Armor / clear waves | 32 x 34 broad shooting court, one rear rock shelf; north banks | 8B+1A > 12B+2A; armor ammunition safeguard | None | Gentle post-boss armor introduction; body hits before direct launch | 75-105s |
-| 22 | Heavy Traffic / break barricade and reach exit | 2 distinct ascending sectors, 30 x 80m total; final original paired islands; sealed 2m gates | Hold 8 > 14; final 9B+1R+2X+1D+1A; 2 gates x 3 hits | None | Open first approach builds into the mixed final crowd | Fresh pacing playtest |
+| 22 | Heavy Traffic / break barricade and reach exit | 2 distinct ascending sectors, 30 x 80m total; final original paired islands; sealed 2m gates | Hold 7B+1X then 7B+1R+2X+1D+1A+1M+1AS on room entry; 2 gates x 3 hits | None | Open first approach builds into a mixed final crowd with both familiar shooters | Fresh pacing playtest |
 | 23 | Borrowed Fist / clear waves | 36 x 36 wide court with unobstructed diagonal; far-bank support | 10B+1E > 14B+2R+1E | None | Elite introduction: read and disrupt an enemy-owned body shot | 90-120s |
 | 24 | Hold the Line / protect point through finite waves | 32 x 96 lane, broad open middle, zone at south end; north spawns | 12B > 16B > 20B; batch 4/4s; first breach fails | None | Defense introduction; hit approaching bodies away from the zone | 90-120s |
-| 25 | Hot Ground / clear waves | 34 x 34 rounded rectangle, off-centre hot island; north/east banks | 10B > 14B+2R | G1 centre-left | Introduce permanent ground danger with a wide safe bypass | 75-105s |
+| 25 | Hot Ground / clear waves | 34 x 34 rounded rectangle, off-centre hot island; north/east banks | 10B ~> 14B+2R, batch 4/5s | G1 centre-left | Read permanent ground danger, then change angles on timed ranged support | 75-105s |
 | 26 | Safe Side / knock into place | 34 x 42 right-turn stair court; three 10m legs; clear corners and endpoints; outer side support | Hold 10B+2X; 15 net forward hits | G1 lower outer pocket | Use a hazard as an optional crowd opportunity without blocking the rail | 90-120s |
-| 27 | Wait for the Warning / clear waves | 36 x 38 two broad lanes around short island; north then side banks | 10B+1D > 14B+2R+2D | P1 west lane | Introduce periodic warning/active cycle; keep an always-safe route | 75-105s |
-| 28 | Crowd Channels / clear waves | 100 x 100 court, two staggered long islands with broad end gaps; north, west, east, split side banks | 56B+3A > 72B+4R+1E > 88B+4D+4X > 104B+4A+2E; armor safeguard | G1 outer pocket and P2 side crossings; continuous safe routes | Large crowd encounter: line up armor and elite threats through the crowd | 3.5-4.5min |
+| 27 | Wait for the Warning / clear waves | 36 x 38 two broad lanes around short island; north then side banks | 10B+1D ~> 14B+2R+2D, batch 4/5s | P1 west lane | Read the periodic crossing, then use the safe lane against familiar reinforcements | 75-105s |
+| 28 | Crowd Channels / clear waves | 100 x 100 court, two staggered long islands with broad end gaps; north, west, east, split side banks | 26B+10R+6A+6M ~> 30B+15R+4A+6M+1E > 40B+14X+12D+6AS ~> 48B+12R+10D+6A+10M+2E, batch 8/6s | G1 outer pocket and P2 side crossings at 0s/4s offsets | Break armor with bodies, stop the first Elite's replacements, then use Spike bursts on explosive groups | 3.5-4.5min |
 | 29 | Window of Safety / destroy rotating-cover target | 38 x 36 ring court, asymmetric outer rocks; south/east support | Hold 10B; 3 hits; 100-degree opening, continuous 20 degrees/s | None | Pre-boss breather: a familiar target with generous shot windows | 60-90s |
 | 30 | Rolling Blob / defeat boss | Preserve Gauntlet_21 arena, obstacles and broad lanes | Hold 6B; existing protected roll/vulnerable pause cycle | None | Read committed rolls, reclaim launched bodies and use pauses | 2-3min |
 

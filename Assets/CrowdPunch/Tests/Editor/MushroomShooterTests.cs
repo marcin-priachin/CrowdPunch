@@ -423,6 +423,23 @@ namespace CrowdPunch.Tests
             }
         }
 
+        [Test]
+        public void Barricade008_ShooterCannotStartWarningAcrossRoomBoundary()
+        {
+            var shooter = Shooter();
+            var room = em.CreateEntity(typeof(BarricadeRoom));
+            em.SetComponentData(room, new BarricadeRoom { Minimum = new float2(-8), Maximum = new float2(8), Activated = 1 });
+            em.AddComponentData(shooter, new EnemyWaveOwnership { Sequence = room });
+            RebuildCollision();
+            Attack(.05f);
+            Assert.That(AttackOf(shooter).Phase, Is.EqualTo(RangedAttackPhase.Ready));
+            Assert.That(Lane(shooter).Length, Is.Zero);
+
+            MovePlayer(new float3(0, 1, 6));
+            Attack(.05f);
+            Assert.That(AttackOf(shooter).Phase, Is.EqualTo(RangedAttackPhase.WindUp));
+        }
+
         private Entity Shooter(float3 position = default)
         {
             var entity = Body(position, true);

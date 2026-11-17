@@ -35,6 +35,8 @@ namespace CrowdPunch.Systems.AI
             var world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
             var enemies = SystemAPI.GetComponentLookup<Enemy>(true);
             var sources = SystemAPI.GetComponentLookup<MushroomShotSource>(true);
+            var owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true);
+            var rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true);
             SystemAPI.TryGetSingleton<NavigationGrid>(out var grid);
             if (SystemAPI.TryGetSingleton<NavigationRuntimeSettings>(out var navigation) && navigation.Enabled == 0)
                 grid = default;
@@ -44,6 +46,8 @@ namespace CrowdPunch.Systems.AI
                 .WithNone<RespawnRequest>().WithEntityAccess())
             {
                 if (SystemAPI.GetComponent<EnemyLaunchState>(entity).Phase != EnemyLaunchPhase.Active) continue;
+                if (BarricadeRoomMovement.TryGetRoom(entity, owners, rooms, out var room)
+                    && !BarricadeRoomMovement.Contains(room, player.Position)) continue;
                 if (attack.ValueRO.Phase == RangedAttackPhase.WindUp)
                 {
                     movement.ValueRW = default;

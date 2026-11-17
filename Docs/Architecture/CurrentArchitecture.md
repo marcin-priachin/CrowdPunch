@@ -50,6 +50,28 @@ existing replenishment systems, including level 12's paired Exploder supply.
 The chapter uses the existing layouts and introduces no static ground hazards.
 See [Chapter 2 verification](../Verification/Chapter2.md).
 
+## Chapter Three encounter revision (2026-11-17, LOOP-011)
+
+`CampaignChapterThreeBuilder` updates 17 campaign-owned wave assets and level 28's
+hint. It preserves the prefab references for existing archetypes and adds the
+shared Mushroom Shooter and Alien Spike profiles to levels 22 and 28. Level 22's
+final room remains bounded at 14 enemies, supported by seven replenishing
+Baselines. The barricade sector authoring command also applies this recipe.
+
+Alien Spike and Mushroom Shooter consult `BarricadeRoomMovement` before starting
+an attack or setting pursuit or firing-angle movement toward the player.
+Neighboring players leave the previous room's movement intent in control.
+Committed attacks and player-owned launch effects retain their normal lifecycle.
+
+Levels 25 and 27 use timed follow-ups with familiar enemies. Level 28 uses
+48/56/72/88 allocations including three Elites. The second phase waits for
+cumulative clearance and the third can overlap the fourth. The armor safeguard
+scans the whole sequence, so phase 2 can supply bodies for phase 1 survivors.
+The three existing ground patches use their authored offsets at each phase
+reset under GROUND-001. Level 24 retains its finite defense introduction,
+first-breach failure and no Elite attackers. See
+[Chapter 3 verification](../Verification/Chapter3.md).
+
 ## Alien Sporella (SPORELLA-001..004)
 
 Sporella uses the ranged distance-band steering and attack clock. Before movement,
@@ -1665,8 +1687,8 @@ completion. No runtime objective or enemy ownership/system ordering changed.
 Chapter 3 adds armor with ammunition safeguards (21/28), Elite support (23/28),
 finite protected-point defense (24), permanent ground patches (25/26/28), periodic
 patches (27/28), a narrow gate (22), track (26), cover target (29), and Rolling Blob (30).
-Level 28 is 100 x 100m with 59/77/96/110 initial enemies including three total Elites
-(342 total before existing supply/replenishment). Hazard cycles are 4s inactive,
+Level 28 is 100 x 100m with four allocations of 48/56/72/88 including three Elites
+(264 before supply/replenishment). Hazard cycles are 4s inactive,
 1.5s warning and 2.5s active; level 28's periodic pair has a four-second offset.
 The defense batches four Baselines every four seconds across 12/16/20-enemy waves,
 with five-second inter-wave delays and first-breach failure. `CampaignChapterThreeBuilder`

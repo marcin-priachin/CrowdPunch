@@ -110,6 +110,7 @@ namespace CrowdPunch.Editor
                     }
                 }
                 data.ApplyModifiedPropertiesWithoutUndo(); EditorUtility.SetDirty(wave);
+                if (level == 22) WriteChapterThreeGateCrowd(wave, last, profiles);
             }
         }
 

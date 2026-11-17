@@ -29,6 +29,8 @@ namespace CrowdPunch.Systems.AI
             var player = SystemAPI.GetSingleton<PlayerSnapshot>();
             SystemAPI.TryGetSingleton<NavigationGrid>(out var grid);
             SystemAPI.TryGetSingletonBuffer<EnemyAttackAudioEvent>(out var audio);
+            var owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true);
+            var rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true);
             float dt = SystemAPI.Time.DeltaTime;
             foreach (var (tuning, launch, pose, agent, volley, movement, navigation, entity) in
                 SystemAPI.Query<RefRO<AlienSpikeTuning>, RefRO<EnemyLaunchState>, RefRO<LocalTransform>,
@@ -43,7 +45,9 @@ namespace CrowdPunch.Systems.AI
                 float maximum = math.min(t.EngagementRadius, t.PreferredDistance + .65f);
                 bool positioning = t.VolleyMode == AlienSpikeVolleyMode.MidRangePositioning;
                 bool inBand = distance >= minimum && distance <= maximum;
-                bool ready = player.IsAvailable && distance <= t.EngagementRadius && (!positioning || inBand);
+                bool playerInRoom = !BarricadeRoomMovement.TryGetRoom(entity, owners, rooms, out var room)
+                    || BarricadeRoomMovement.Contains(room, player.Position);
+                bool ready = player.IsAvailable && playerInRoom && distance <= t.EngagementRadius && (!positioning || inBand);
                 var previousPhase = attack.Phase;
                 if (Advance(ref attack, t, launch.ValueRO.Phase, ready, dt))
                 {
@@ -54,7 +58,7 @@ namespace CrowdPunch.Systems.AI
                     continue;
                 }
 
-                if (!player.IsAvailable || launch.ValueRO.Phase != EnemyLaunchPhase.Active) continue;
+                if (!player.IsAvailable || !playerInRoom || launch.ValueRO.Phase != EnemyLaunchPhase.Active) continue;
                 if (positioning && inBand)
                 {
                     movement.ValueRW = default;

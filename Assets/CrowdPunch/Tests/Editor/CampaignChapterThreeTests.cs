@@ -42,12 +42,19 @@ namespace CrowdPunch.Tests
             var waves=AssetDatabase.FindAssets("t:EnemyWaveSettings",new[]{Data+"Waves"})
                 .Select(g=>AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(AssetDatabase.GUIDToAssetPath(g)))
                 .Where(w=>w.name.StartsWith("CP28_")).OrderBy(w=>w.name).ToArray();
-            Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{59,76,96,108}));
+            Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{48,55,72,86}));
             Assert.That(waves.Select(w=>w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(new[]{0,1,0,2}));
-            Assert.That(waves.Sum(w=>w.TotalEnemyCount+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(342));
-            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.Batched && w.BatchSize==8 && w.BatchInterval==2 && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
-            Assert.That(waves[0].ArmoredAmmunitionProfile,Is.Not.Null);
-            Assert.That(waves[3].ArmoredAmmunitionProfile,Is.Not.Null);
+            Assert.That(waves.Sum(w=>w.TotalEnemyCount+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(264));
+            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.Batched && w.BatchSize==8 && w.BatchInterval==6),Is.True);
+            for (int phase=0; phase<waves.Length; phase++)
+            {
+                bool timed = phase % 2 == 0;
+                Assert.That(waves[phase].ActivationMode, Is.EqualTo(timed ? EnemyWaveActivationMode.DurationElapsed
+                    : EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated));
+                Assert.That(waves[phase].Duration, Is.EqualTo(timed ? 6f : 0f));
+                Assert.That(waves[phase].DelayBeforeWave, Is.EqualTo(timed ? 3f : 0f));
+            }
+            Assert.That(new[]{waves[0], waves[1], waves[3]}.All(w=>w.ArmoredAmmunitionProfile!=null),Is.True);
             var floor=AssetDatabase.LoadAssetAtPath<Mesh>(Data+"Layouts/Campaign_28_Floor.asset");
             Assert.That(floor.bounds.size.x,Is.EqualTo(100)); Assert.That(floor.bounds.size.z,Is.EqualTo(100));
         }

@@ -1,5 +1,54 @@
 # Chapter 3 implementation and verification
 
+## 2026-11-17 encounter revision
+
+Chapter 3 now implements LOOP-011 across levels 21–30. Level 22's final room
+uses 7 Baselines, 2 Exploders and one each of Ranged, Dasher, Armored, Mushroom
+Shooter and Alien Spike. Both new specialists follow the room boundary when
+starting attacks and aiming pursuit, as required by BARRICADE-008.
+
+Level 25 and 27 follow-ups arrive eight seconds after the previous last batch.
+The first teaches permanent ground and the second teaches a periodic crossing.
+Level 28 uses 264 enemies across 48/56/72/88 allocations. Phases 1 and 3 use
+timed advancement. Phase 2 clears the remaining crowd after its Elite, and the
+final phase counts all survivors. Its three ground patches retain their geometry,
+damage and offsets. Initial batches are 4/5s in other compact encounters and
+8/6s at 28. Level 24 keeps its three clear-gated 4/4s defense waves under
+PROTECT-004. Levels 21 and 23 keep the clear checkpoints for Armor and Elites.
+
+Preview the levels through Level Play > Campaign. The explicit **Crowd Punch >
+Campaign > Apply Chapter Three Encounter Revision** command rewrites the saved
+encounter recipes using the existing GUIDs and spawn banks.
+
+### Revision verification
+
+- Unity compiled successfully. `dotnet build Assembly-CSharp.csproj --no-restore`
+  completed with zero errors and 309 existing warnings.
+- 84 tests passed across Alien Spike, Mushroom Shooter, defense, hazards,
+  campaign progression, scene wiring and barricade sector coverage.
+  The two new room cases exercise attack eligibility on each side of a room
+  boundary. The older Rolling Blob geometry test still compares asset paths
+  and fails against the existing Quarry baked mesh copies.
+- Compared all 17 revised wave assets with the prior commit. Spawn rectangles,
+  GUIDs and exact-count totals checked out. The level 24 defense assets and
+  level 28 hazard SubScene have no changes.
+- The isolated Play-mode probe observed both specialists in level 22's final
+  room, completed both gates, and exercised the level 24 first-breach failure
+  and retry. A late activation stalled the initial level 21 defeat injection.
+  The probe resumed after applying damage to the remaining enemy and monitored
+  subsequent late activations. Its milestone tally counts the retried first
+  defense wave once. The probe completed levels 21–30, unlocked Chapter 4,
+  and verified replay and full-health retry.
+- The hazard epochs synchronized at every phase boundary in 25, 27 and 28.
+  Level 28's first two batches arrived 6.00s apart. The observer shortened later
+  intervals within phases for the stress check. Levels 28.2 and 28.4 began with
+  surviving attackers. The checkpoint before 28.3 reached zero undefeated.
+  The final phase's 15-second Editor sample had a 78.4ms median frame with
+  probe and recording overhead. Natural overlap balance, player clear time
+  and target hardware performance still need playtesting.
+
+## Original implementation evidence
+
 2026-10-10. Requirements: LOOP-002..008, ENEMY-009..015, PROTECT-001..004,
 GROUND-001..007, BARRICADE-006, TRACK-001..005, COVER-001..005, ROLL-001..007.
 

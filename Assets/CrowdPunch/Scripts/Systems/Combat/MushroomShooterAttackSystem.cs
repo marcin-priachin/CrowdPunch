@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using CrowdPunch.Systems.AI;
 using CrowdPunch.Systems.Groups;
 using CrowdPunch.Systems.Physics;
 using Unity.Burst;
@@ -34,6 +35,8 @@ namespace CrowdPunch.Systems.Combat
             var world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
             var enemies = SystemAPI.GetComponentLookup<Enemy>(true);
             var sources = SystemAPI.GetComponentLookup<MushroomShotSource>(true);
+            var owners = SystemAPI.GetComponentLookup<EnemyWaveOwnership>(true);
+            var rooms = SystemAPI.GetComponentLookup<BarricadeRoom>(true);
             SystemAPI.TryGetSingletonBuffer<EnemyAttackAudioEvent>(out var audio);
             float ground = SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight;
             Entity arena = SystemAPI.GetSingletonEntity<ArenaGroundPlane>();
@@ -99,6 +102,8 @@ namespace CrowdPunch.Systems.Combat
 
                 if (attack.Phase == RangedAttackPhase.Ready)
                 {
+                    if (BarricadeRoomMovement.TryGetRoom(entity, owners, rooms, out var room)
+                        && !BarricadeRoomMovement.Contains(room, player.Position)) continue;
                     float3 direction = MushroomShotGeometry.Aim(pose.ValueRO, player.Position, height,
                         hasSource, source, out float3 origin);
                     float distance = math.distance(origin.xz, player.Position.xz);

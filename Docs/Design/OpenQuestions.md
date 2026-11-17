@@ -66,7 +66,8 @@ GDD rules: COMBAT-XXX, INFO-XXX
 
 Implementation update (2026-11-17): Chapter 2 now follows the approved plan.
 Level 18's crowd size and reinforcement intervals are initial playtest tuning.
-Chapters 3–9 are pending, and OQ-001 remains open.
+Chapter 3 is also implemented, including the mixed final room at 22 and timed
+reinforcement at 25/27/28. Chapters 4–9 are pending, and OQ-001 remains open.
 
 Decision: approve the proposed campaign revision with Mushroom Shooter at 5,
 Alien Spike at 15 and Sporella at 43, recurring mixed compositions, reduced Baseline

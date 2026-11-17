@@ -56,7 +56,11 @@ namespace CrowdPunch.Tests
                                 Assert.That(local[r].transform.position.z-crowd.barricade.transform.position.z,Is.EqualTo(expected.y).Within(.001f));
                                 Assert.That(local[r].Size,Is.EqualTo(new Vector2(expected.z,expected.w)));
                             }
-                            Assert.That(wave.Enemies.Select(e=>e.Settings.Archetype),Is.EquivalentTo(new[]{EnemyArchetype.Baseline,EnemyArchetype.Explosive,EnemyArchetype.Ranged,EnemyArchetype.Dasher,EnemyArchetype.Armored}));
+                            var coreTypes = new[]{EnemyArchetype.Baseline,EnemyArchetype.Explosive,EnemyArchetype.Ranged,EnemyArchetype.Dasher,EnemyArchetype.Armored};
+                            var expectedTypes = level == 22
+                                ? coreTypes.Concat(new[]{EnemyArchetype.MushroomShooter,EnemyArchetype.AlienSpike})
+                                : coreTypes;
+                            Assert.That(wave.Enemies.Select(e=>e.Settings.Archetype),Is.EquivalentTo(expectedTypes));
                             Assert.That(wave.Enemies.Single(e=>e.Settings.Archetype==EnemyArchetype.Explosive).MinimumCount,Is.EqualTo(2));
                         }
                         previousArea=area;previousPopulation=wave.TotalEnemyCount;previousTypes=wave.Enemies.Count;

@@ -178,7 +178,7 @@ namespace CrowdPunch.Editor
             if(observedOwner!=owner) {observedOwner=owner;wave=-1;}
             var sequence=em.GetComponentData<EnemyWaveSequence>(owner);
             Require(sequence.Phase!=EnemyWaveRuntimePhase.Invalid,"Invalid baked wave in level "+(level+1));
-            double encounterTimeout = level == 17 ? 300 : 160;
+            double encounterTimeout = level == 17 || level == 27 ? 300 : 160;
             Require(now-entered<encounterTimeout,"Encounter stalled in level "+(level+1));
             using var enemiesQuery=em.CreateEntityQuery(typeof(EnemyWaveOwnership),typeof(EnemyLaunchState));
             using var enemies=enemiesQuery.ToEntityArray(Allocator.Temp);
