@@ -242,7 +242,17 @@ Phases 1 and 3 advance after a 6s timer. Phase 2 requires cumulative clearance
 before phase 3, so its Elite's replenishing crowd drains. Phase 4 clears
 cumulatively. The existing three level 28 hazard patches follow GROUND-001.
 
-Chapters 1–3 are implemented. Chapters 4–9 follow in their respective batches.
+Chapter 4 keeps the Wizard and Trail introductions at 31/33. The rotating-cover
+target at 35 has 11B+1T+1M support and two periodic pockets. Level 36 defends
+against timed finite groups of 14/18/20 in batches of four every four seconds.
+It retains first-breach failure and resolves all attackers for victory. Level 38
+uses 48/56/72/88 allocations with 132 Baselines out of 264 enemies. Phases 1
+and 3 advance on time, phase 2 has an Elite clear checkpoint, and the final
+phase uses cumulative clearance with the Wizard safeguard. Levels 36/38 have
+two/four periodic patches away from rocks and spawn banks. Level 39 remains
+the quieter track encounter before Dino.
+
+Chapters 1–4 are implemented. Chapters 5–9 follow in their respective batches.
 Hardware and performance acceptance remains OQ-001.
 
 ### SCORE-001 - Punch Efficiency

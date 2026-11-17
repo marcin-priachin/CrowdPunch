@@ -223,8 +223,8 @@ namespace CrowdPunch.Editor
                     CampaignRock(arena,new Vector2(-12,4),new Vector2Int(6,30));
                     CampaignRock(arena,new Vector2(12,-6),new Vector2Int(6,30));
                     CampaignGround(encounter,number,"Outer hot pocket",new Vector2(-35,-30));
-                    CampaignGround(encounter,number,"West warning crossing",new Vector2(-19,0),true);
-                    CampaignGround(encounter,number,"East warning crossing",new Vector2(19,0),true,4); break;
+                    CampaignGround(encounter,number,"West warning crossing",new Vector2(-19,-22),true);
+                    CampaignGround(encounter,number,"North warning crossing",new Vector2(1,14),true,4); break;
                 case 29:
                     CampaignRock(arena,new Vector2(-14,3),new Vector2Int(3,6));
                     CampaignRock(arena,new Vector2(13,-5),new Vector2Int(3,5)); CampaignCover(arena,encounter,number,100,20); break;
@@ -236,7 +236,7 @@ namespace CrowdPunch.Editor
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub); AssetDatabase.SaveAssets();
         }
 
-        private static void CampaignGround(EnemyWaveSequenceAuthoring encounter,int number,string name,Vector2 position,bool periodic=false,float offset=0)
+        private static GroundHazardAuthoring CampaignGround(EnemyWaveSequenceAuthoring encounter,int number,string name,Vector2 position,bool periodic=false,float offset=0)
         {
             // GROUND-001/006: visible from wave one, safe spawn banks, independent resettable phases.
             var policy=encounter.GetComponent<GroundHazardPolicyAuthoring>();
@@ -249,6 +249,7 @@ namespace CrowdPunch.Editor
             patch.radius=2.5f; patch.width=3; patch.depth=8; patch.firstWave=0;
             patch.inactiveDuration=4; patch.warningDuration=1.5f; patch.activeDuration=2.5f; patch.cycleOffset=offset;
             patch.damage=12; patch.damageInterval=.75f;
+            return patch;
         }
 
         private static void CopyCampaignRolling()

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using CrowdPunch.Authoring;
+using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using Unity.Scenes;
 using UnityEditor;
@@ -19,10 +20,10 @@ namespace CrowdPunch.Editor
             "Send bodies into the block from behind. Reach the blue socket in five forward hits.",
             "Trails leave dangerous ground behind them. Launch them along a useful path and keep clear of their wake.",
             "Break the narrow gate with bodies or explosions. The inner crossing turns hot after its warning.",
-            "Watch the opening and the Trail. Move to clear ground before lining up your next shot.",
-            "Stop every wave before it reaches the turquoise zone. Watch the shooters and intercept the Wizard.",
+            "Watch the opening and the Trail. Dodge Mushroom Shooter beams and use the clear floor to line up a shot.",
+            "Intercept the timed groups before they reach the turquoise zone. One breach ends the attempt.",
             "Break the shell with three explosions, then hit the exposed core. Keep clear of the hot corner.",
-            "Clear each large wave. Disrupt Wizards and Elites, break armor with bodies, and redirect Trails through groups.",
+            "Reinforcements arrive from changing sides. Defeat the Elites to stop replacements, then use Spike bursts and Trails against the crowd.",
             "Work around the block to line up forward hits. The blue socket is the destination.",
             "Lure Dino near a pillar, then launch a body into the pillar. Only falling pillars can hurt him."
         };
@@ -30,32 +31,161 @@ namespace CrowdPunch.Editor
         private static Level[] ChapterFourDesigns() => new[]
         {
             new Level { Name="Purple Warning", Outline=Clipped(34,34,4), Spacing=new Vector2(28,28), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                new Wave {Name="Purple Warning",B=6,Wizard=1,Ranges=new[]{Range(0,8,22,8)}},
-                new Wave {Name="Paired Casters",B=12,Wizard=2,Ranges=new[]{Range(0,8,22,8)}} } },
+                new Wave {Name="Purple Warning",B=6,Wizard=1,Batch=4,Interval=5,Ranges=new[]{Range(0,8,22,8)}},
+                new Wave {Name="Paired Casters",B=12,Wizard=2,Batch=4,Interval=5,Ranges=new[]{Range(0,8,22,8)}} } },
             new Level { Name="Quiet Delivery", Outline=Clipped(34,38,3), Spacing=new Vector2(28,32), Entry=new Vector2(0,-14), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("Quiet Delivery",10,new[]{Range(-10,0,4,22),Range(10,0,4,22)}) } },
+                W("Quiet Delivery",10,new[]{Range(-10,0,4,22),Range(10,0,4,22)},batch:4,interval:5) } },
             new Level { Name="Leave a Trail", Outline=Clipped(36,36,12), Spacing=new Vector2(28,28), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                new Wave {Name="First Trail",B=6,Trail=1,Ranges=new[]{Range(0,8,18,6)}},
-                new Wave {Name="Crossing Trails",B=12,Trail=2,Ranges=new[]{Range(0,8,18,6)}} } },
+                new Wave {Name="First Trail",B=6,Trail=1,Batch=4,Interval=5,Ranges=new[]{Range(0,8,18,6)}},
+                new Wave {Name="Crossing Trails",B=12,Trail=2,Batch=4,Interval=5,Ranges=new[]{Range(0,8,18,6)}} } },
             new Level { Name="Break the Detour", Outline=Clipped(32,44,4), Spacing=new Vector2(26,38), Entry=new Vector2(0,-17), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("Detour Traffic",12,new[]{Range(-11,-4,3,22),Range(11,-4,3,22)},x:2) } },
+                W("Detour Traffic",12,new[]{Range(-11,-4,3,22),Range(11,-4,3,22)},x:2,batch:4,interval:5) } },
             new Level { Name="Moving Perimeter", Outline=Clipped(40,38,5), Spacing=new Vector2(34,32), Entry=new Vector2(0,-14), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                new Wave {Name="Moving Perimeter",B=12,Trail=1,Ranges=new[]{Range(-13,0,4,18),Range(13,0,4,18)}} } },
+                new Wave {Name="Moving Perimeter",B=11,Trail=1,Mushroom=1,Batch=4,Interval=5,
+                    Ranges=new[]{Range(-13,0,4,18),Range(13,0,4,18)}} } },
             new Level { Name="Distant Defense", Outline=Rectangle(32,96), Spacing=new Vector2(30,94), Entry=new Vector2(0,-36), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("Distant Fire",16,new[]{Range(0,41,24,8)},r:2,batch:4,interval:3),
-                W("Closing Charge",20,new[]{Range(0,41,24,8)},d:1,delay:5,batch:4,interval:3),
-                new Wave {Name="Caster Advance",B=20,R=2,Wizard=1,Delay=5,Batch=4,Interval=3,Ranges=new[]{Range(0,41,24,8)}} } },
+                W("Distant Fire",10,new[]{Range(0,41,24,8)},r:3,x:1,next:6,batch:4,interval:4),
+                W("Closing Charge",11,new[]{Range(0,41,24,8)},d:4,x:3,delay:0,next:6,batch:4,interval:4),
+                new Wave {Name="Caster Advance",B=12,R=4,D=3,Wizard=1,Delay=0,Batch=4,Interval=4,Ranges=new[]{Range(0,41,24,8)}} } },
             new Level { Name="Blast Shelter", Outline=new[]{new Vector2(-14,-17),new Vector2(14,-17),new Vector2(18,-10),new Vector2(15,0),new Vector2(18,10),new Vector2(14,17),new Vector2(-14,17),new Vector2(-18,10),new Vector2(-15,0),new Vector2(-18,-10)},
                 Spacing=new Vector2(28,28), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("Shelter Ammunition",12,new[]{Range(-10,-2,4,18),Range(10,-2,4,18)},x:2) } },
+                W("Shelter Ammunition",12,new[]{Range(-10,-2,4,18),Range(10,-2,4,18)},x:2,batch:4,interval:5) } },
             new Level { Name="The Crowd Moves", Outline=Rectangle(100,100), Spacing=new Vector2(96,96), Entry=new Vector2(0,-16), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                new Wave {Name="West Casters",B=64,R=4,Wizard=2,Ranges=new[]{Range(-28,0,16,38)}},
-                new Wave {Name="East Trails",B=80,D=4,Trail=2,Ranges=new[]{Range(28,0,16,38)}},
-                new Wave {Name="North Command",B=96,A=4,E=2,Ranges=new[]{Range(0,30,40,16)}},
-                new Wave {Name="Moving Crowd",B=112,X=4,Wizard=2,Trail=2,Ranges=new[]{Range(-28,0,16,42),Range(28,0,16,42)}} } },
+                new Wave {Name="West Casters",B=24,R=12,A=6,Mushroom=6,Batch=8,Interval=6,NextAfter=6,Ranges=new[]{Range(-28,0,16,38)}},
+                new Wave {Name="East Trails",B=28,D=12,A=6,Mushroom=8,E=2,Batch=8,Interval=6,Delay=0,Ranges=new[]{Range(28,0,16,38)}},
+                W("North Command",36,new[]{Range(0,30,40,16)},x:18,d:12,alienSpike:6,next:6,batch:8,interval:6),
+                new Wave {Name="Moving Crowd",B=44,R=16,X=10,D=10,Wizard=3,Trail=5,Batch=8,Interval=6,Delay=0,
+                    Ranges=new[]{Range(-28,0,16,42),Range(28,0,16,42)}} } },
             new Level { Name="Last Alignment", Outline=Clipped(34,42,4), Spacing=new Vector2(28,36), Entry=new Vector2(0,-15), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("Last Alignment",10,new[]{Range(-10,0,4,24),Range(10,0,4,24)}) } }
+                W("Last Alignment",10,new[]{Range(-10,0,4,24),Range(10,0,4,24)},batch:4,interval:5) } }
         };
+
+        private static Wave ChapterFourPillarCrowd(EnemyWaveSettings.SpawnRectangle[] ranges)
+            => W("Pillar Crowd", 8, ranges, batch:4, interval:5);
+
+        [MenuItem("Crowd Punch/Campaign/Apply Chapter Four Encounter Revision")]
+        public static void ApplyChapterFourEncounterRevision()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || Lightmapping.isRunning)
+                throw new InvalidOperationException("Stop Play mode and baking before authoring.");
+            for (int i=0; i<SceneManager.sceneCount; i++)
+                if (SceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save open scenes before authoring.");
+            var catalog = AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CampaignBuildRegistration.CatalogPath);
+            if (catalog == null || catalog.Count < 40 || Enumerable.Range(30, 10).Any(i => !catalog.Get(i).Available))
+                throw new InvalidOperationException("An installed Chapter Four is required.");
+
+            var recipes = ChapterFourDesigns().Select(level => level.Waves)
+                .Append(new[] { ChapterFourPillarCrowd(Array.Empty<EnemyWaveSettings.SpawnRectangle>()) }).ToArray();
+            var setup = EditorSceneManager.GetSceneManagerSetup();
+            var roomWavePaths = Array.Empty<string>();
+            try
+            {
+                for (int level=31; level<=40; level++)
+                {
+                    var scene = EditorSceneManager.OpenScene(CampaignSub(level), OpenSceneMode.Single);
+                    var crowds = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<EnemyWaveSequenceAuthoring>()).ToArray();
+                    if (level == 34)
+                    {
+                        roomWavePaths = crowds.Select(c => AssetDatabase.GetAssetPath(c.Waves.Single())).ToArray();
+                        if (roomWavePaths.Length != 3 || roomWavePaths.Distinct().Count() != 3
+                            || roomWavePaths.Any(path => !path.StartsWith(CampaignData + "Waves/CP34_", StringComparison.Ordinal)))
+                            throw new InvalidOperationException("Unexpected barricade room wiring in level 34.");
+                        continue;
+                    }
+                    var waves = recipes[level-31];
+                    if (crowds.Length != 1 || crowds[0].Waves.Count != waves.Length)
+                        throw new InvalidOperationException($"Unexpected wave wiring in level {level}.");
+                    for (int phase=0; phase<waves.Length; phase++)
+                    {
+                        var existing = crowds[0].Waves[phase];
+                        string name = ChapterTwoWaveName(level, phase, waves[phase]);
+                        if (existing == null || AssetDatabase.GetAssetPath(existing) != CampaignData + "Waves/" + name + ".asset")
+                            throw new InvalidOperationException($"Missing or unexpected wave asset {name}.");
+                        waves[phase].Ranges = existing.SpawnRectangles.ToArray();
+                    }
+                }
+                var profiles = LoadCampaignProfiles();
+                foreach (int i in new[] { 0,1,2,3,4,5,6,7,12,13 })
+                    if (profiles[i].EnemyPrefab == null) throw new InvalidOperationException("Missing prefab for " + profiles[i].name);
+
+                foreach (string path in roomWavePaths)
+                {
+                    var data = new SerializedObject(AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(path));
+                    data.FindProperty("batchSize").intValue = 4;
+                    data.FindProperty("batchInterval").floatValue = 5;
+                    data.FindProperty("spawnMode").intValue = (int)EnemyWaveSpawnMode.Batched;
+                    data.ApplyModifiedPropertiesWithoutUndo();
+                }
+                for (int level=31; level<=40; level++)
+                {
+                    if (level == 34) continue;
+                    var waves = recipes[level-31];
+                    for (int phase=0; phase<waves.Length; phase++)
+                    {
+                        var recipe = waves[phase];
+                        var asset = WaveAsset(ChapterTwoWaveName(level, phase, recipe), recipe, profiles, CampaignData+"Waves/");
+                        if (level == 36) ConfigureChapterFourDefenseWave(asset);
+                    }
+                }
+                foreach (int level in new[] { 35,36,38 })
+                {
+                    var scene = EditorSceneManager.OpenScene(CampaignSub(level), OpenSceneMode.Single);
+                    AuthorChapterFourPressureHazards(scene, level, UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>());
+                    EditorSceneManager.MarkSceneDirty(scene);
+                    EditorSceneManager.SaveScene(scene);
+                    SetCampaignHint(level, ChapterFourHints[level-31]);
+                }
+                AssetDatabase.SaveAssets();
+            }
+            finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
+            Debug.Log("LOOP-011: Chapter Four revised in place. Timed defense at 36; mixed arena at 38; pressure hazards at 35/36/38.");
+        }
+
+        private static void ConfigureChapterFourDefenseWave(EnemyWaveSettings wave)
+        {
+            // PROTECT-003/004: resolve finite attackers without replenishment or zone waits.
+            var finite = new SerializedObject(wave);
+            finite.FindProperty("replenishWhileBossLives").boolValue = false;
+            finite.FindProperty("armoredAmmunitionProfile").objectReferenceValue = null;
+            finite.FindProperty("wizardAmmunitionProfile").objectReferenceValue = null;
+            finite.FindProperty("waitForPersistentHazards").boolValue = false;
+            finite.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void AuthorChapterFourPressureHazards(Scene scene, int level, EnemyWaveSequenceAuthoring encounter)
+        {
+            void Patch(string name, float x, float z, float offset, float depth=8, float radius=0)
+            {
+                var patch = scene.GetRootGameObjects().SingleOrDefault(g => g.name == name)?.GetComponent<GroundHazardAuthoring>();
+                if (patch == null) patch = CampaignGround(encounter, level, name, new Vector2(x,z), true, offset);
+                patch.transform.position = new Vector3(x,-.965f,z);
+                patch.sequence = encounter;
+                patch.shape = radius > 0 ? GroundHazardShape.Circle : GroundHazardShape.Rectangle;
+                if (radius > 0) patch.radius = radius;
+                patch.depth = depth;
+                patch.cycleOffset = offset;
+            }
+
+            switch (level)
+            {
+                case 35:
+                    Patch("North warning pocket",0,11,0,radius:1.5f);
+                    Patch("Southwest warning pocket",-9,-15,4,radius:1.5f);
+                    break;
+                case 36:
+                    Patch("North approach warning",5,29,0,depth:6);
+                    Patch("South approach warning",-5,-18,4,depth:6);
+                    break;
+                case 38:
+                    Patch("Northwest warning strip",-10,8,0);
+                    Patch("East warning strip",10,-7,2);
+                    Patch("Southwest warning strip",-10,-22,4);
+                    Patch("Southeast warning strip",10,-34,6);
+                    break;
+                default: return;
+            }
+            ChapterFourObservatoryHazards.Apply(scene);
+        }
 
         [MenuItem("Crowd Punch/Campaign/Create Chapter Four")]
         public static void BuildChapterFour()
@@ -86,7 +216,7 @@ namespace CrowdPunch.Editor
                 EditorUtility.SetDirty(catalog); AssetDatabase.SaveAssets(); CampaignBuildRegistration.Apply();
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
-            Debug.Log("Chapter Four authored: levels 31-40, Wizard/Trail introductions, mixed defense, 378-enemy arena and preserved Dino pillars.");
+            Debug.Log("Chapter Four authored: levels 31-40, Wizard/Trail introductions, timed defense, 264-enemy arena and preserved Dino pillars.");
         }
 
         private static void AuthorChapterFourInterior(int number)
@@ -124,16 +254,7 @@ namespace CrowdPunch.Editor
                     var defense=encounter.gameObject.AddComponent<ProtectedPointAuthoring>();
                     defense.settings=CampaignSettings<ProtectedPointSettings>("ProtectedPointSettings","L36_Defense");
                     defense.settings.breachThreshold=1; defense.settings.maximumPlayerAttackers=3; EditorUtility.SetDirty(defense.settings);
-                    // PROTECT-001/003: finite waves; the caster cannot keep this objective supplied or gated.
-                    foreach(var wave in encounter.Waves)
-                    {
-                        var finite=new SerializedObject(wave);
-                        finite.FindProperty("replenishWhileBossLives").boolValue=false;
-                        finite.FindProperty("armoredAmmunitionProfile").objectReferenceValue=null;
-                        finite.FindProperty("wizardAmmunitionProfile").objectReferenceValue=null;
-                        finite.FindProperty("waitForPersistentHazards").boolValue=false;
-                        finite.ApplyModifiedPropertiesWithoutUndo();
-                    }
+                    foreach(var wave in encounter.Waves) ConfigureChapterFourDefenseWave(wave);
                     Box("Protected Zone 8 x 4",encounter.transform,new Vector3(0,-.97f,-46),new Vector3(8,.035f,4),MaterialAsset("ProtectedPointZone",new Color(.15f,.75f,.68f)),false); break;
                 case 37:
                     CopyCampaignObjective(sub,arena,encounter,number,false,Vector3.zero);
@@ -151,6 +272,7 @@ namespace CrowdPunch.Editor
                     CampaignRock(arena,new Vector2(-14,8),new Vector2Int(2,6));
                     CampaignRock(arena,new Vector2(14,-8),new Vector2Int(2,6)); break;
             }
+            AuthorChapterFourPressureHazards(sub, number, encounter);
             int trackIndex = Array.IndexOf(CampaignTrackLevels, number);
             if (trackIndex > 0) AuthorProgressiveTrackRoute(sub, number, trackIndex + 1);
             int gateIndex = Array.IndexOf(CampaignBarricadeLevels, number);
@@ -180,7 +302,7 @@ namespace CrowdPunch.Editor
             boss.settings=CampaignSettings<DinoBossSettings>("DinoBossSettings","L40_Dino");
             var encounter=UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>();
             // Preserve the legacy safe spawn banks around the pillars.
-            var wave=WaveAsset("CP40_01_Pillar_Crowd",W("Pillar Crowd",8,encounter.Waves[0].SpawnRectangles.ToArray()),LoadCampaignProfiles(),CampaignData+"Waves/");
+            var wave=WaveAsset("CP40_01_Pillar_Crowd",ChapterFourPillarCrowd(encounter.Waves[0].SpawnRectangles.ToArray()),LoadCampaignProfiles(),CampaignData+"Waves/");
             var wd=new SerializedObject(wave); wd.FindProperty("replenishWhileBossLives").boolValue=true;
             wd.FindProperty("bossReplenishDelay").floatValue=4; wd.ApplyModifiedPropertiesWithoutUndo();
             encounter.dinoBoss=boss;

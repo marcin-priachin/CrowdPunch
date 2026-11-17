@@ -1,5 +1,52 @@
 # Chapter 4 implementation and verification
 
+## 2026-11-17 encounter revision
+
+LOOP-011 revises the campaign-owned waves for levels 31–40. Wizard and Trail
+introductions keep their clear checkpoints. Level 35 has 11 Baselines, one
+Trail and one Mushroom Shooter. Level 36 has 14/18/20 finite defense attackers
+in batches of four every four seconds, with six seconds from the final batch
+of one group to the first batch of the next. Level 38 has 264 enemies across
+48/56/72/88 allocations. Batches are eight every six seconds, with one full
+clear after the Elites and final cumulative clearance with Wizard safeguards.
+
+New periodic patches use the existing Observatory visuals and standard cycle.
+Level 35 has pockets at X/Z (0,11) and (-9,-15). The defense strips at 36 sit
+at (5,29) and (-5,-18). The four level 38 strips sit at (-10,8), (10,-7),
+(-10,-22) and (10,-34). All stay clear of spawn banks. Level 39 remains the
+quieter track encounter before Dino.
+
+Preview through Level Play > Campaign. **Crowd Punch > Campaign > Apply
+Chapter Four Encounter Revision** reapplies the wave recipes and new patch
+positions to the installed chapter.
+
+### Revision verification
+
+- Unity compiled successfully and `dotnet build Assembly-CSharp.csproj --no-restore`
+  passed with zero errors and 279 warnings. Verified the counts and existing
+  spawn rectangles in all 19 revised assets.
+- 86 tests passed across Chapter 4, defense, ground hazards, Wizard and Trail
+  coverage. The scene checks cover new hazard counts, staggered offsets,
+  clearance from rocks and spawn banks, and cumulative defense completion.
+- Two existing assertions still fail. The saved level 34 barricade requires
+  three hits and the older test expects four. The Dino arena snapshot compares
+  all transforms and mesh asset paths and differs from the legacy scene after
+  the existing campaign art pass.
+- Save-isolated Play-mode previews completed 35, 36 and 38 using controlled
+  damage and shortened batch waits after the first natural interval.
+  Level 36 failed on the first forced breach, then resolved all three
+  overlapping groups after retry. Level 38 reached zero undefeated at its
+  Elite checkpoint, overlapped across its two timed transitions and completed
+  after the final Wizard and Trail group. The first probe checked Trail sources
+  on enemy bodies instead of emitters. The corrected probe confirmed all
+  archetypes and the four hazard resets on rerun.
+- First natural batch intervals were 5.00s, 4.00s and about 6s at 35/36/38.
+  The accelerated level 38 sample peaked at 153 undefeated enemies. A phase
+  3 Editor snapshot reported 84.5ms CPU and 5.5ms GPU frame times with observer
+  overhead. Natural cadence, balance and target hardware still need playtesting.
+
+## Original implementation evidence
+
 2026-10-10. Requirements: LOOP-002..008, WIZARD-001..007, TRAIL-001..007,
 PROTECT-001..004, BARRICADE-006, TRACK-001..005, COVER-001..005,
 SHELL-001..006, GROUND-001..007, PILLAR-001..006.

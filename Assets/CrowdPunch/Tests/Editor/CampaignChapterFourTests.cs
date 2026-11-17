@@ -42,28 +42,35 @@ namespace CrowdPunch.Tests
             var waves=AssetDatabase.FindAssets("t:EnemyWaveSettings",new[]{Data+"Waves"})
                 .Select(g=>AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(AssetDatabase.GUIDToAssetPath(g)))
                 .Where(w=>w.name.StartsWith("CP38_")).OrderBy(w=>w.name).ToArray();
-            Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{70,86,100,120}));
-            Assert.That(waves.Select(w=>w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(new[]{0,0,2,0}));
-            Assert.That(waves.Sum(w=>w.TotalEnemyCount+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(378));
-            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.Batched && w.BatchSize==8 && w.BatchInterval==2 && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
-            Assert.That(waves[2].ArmoredAmmunitionProfile,Is.Not.Null);
-            foreach(var w in new[]{waves[0],waves[3]})
+            Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{48,54,72,88}));
+            Assert.That(waves.Select(w=>w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(new[]{0,2,0,0}));
+            Assert.That(waves.Sum(w=>w.TotalEnemyCount+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(264));
+            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.Batched && w.BatchSize==8 && w.BatchInterval==6),Is.True);
+            Assert.That(waves.Take(2).All(w=>w.ArmoredAmmunitionProfile!=null),Is.True);
+            for(int phase=0; phase<waves.Length; phase++)
             {
-                Assert.That(w.WizardAmmunitionProfile,Is.Not.Null);
-                Assert.That(w.WaitForPersistentHazards,Is.True);
+                bool timed = phase % 2 == 0;
+                Assert.That(waves[phase].ActivationMode, Is.EqualTo(timed ? EnemyWaveActivationMode.DurationElapsed
+                    : EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated));
+                Assert.That(waves[phase].Duration, Is.EqualTo(timed ? 6f : 0f));
+                Assert.That(waves[phase].DelayBeforeWave, Is.EqualTo(timed ? 3f : 0f));
             }
-            Assert.That(waves[1].WizardAmmunitionProfile,Is.Null);
-            Assert.That(waves[1].WaitForPersistentHazards,Is.False,"Trails must not delay a cleared wave.");
+            Assert.That(waves.Take(3).All(w=>w.WizardAmmunitionProfile==null && !w.WaitForPersistentHazards),Is.True);
+            Assert.That(waves[3].WizardAmmunitionProfile,Is.Not.Null);
+            Assert.That(waves[3].WaitForPersistentHazards,Is.True);
             var floor=AssetDatabase.LoadAssetAtPath<Mesh>(Data+"Layouts/Campaign_38_Floor.asset");
             Assert.That(floor.bounds.size.x,Is.EqualTo(100)); Assert.That(floor.bounds.size.z,Is.EqualTo(100));
         }
 
-        [Test] public void Loop002_ChapterFourScenesWireObjectivesSafeNavigationAndFiniteDefense()
+        [TestCase(31,33)]
+        [TestCase(34,34)]
+        [TestCase(35,40)]
+        public void Loop002_ChapterFourScenesWireObjectivesSafeNavigationAndFiniteDefense(int first, int last)
         {
             var setup=EditorSceneManager.GetSceneManagerSetup();
             try
             {
-                for(int n=31;n<=40;n++)
+                for(int n=first;n<=last;n++)
                 {
                     EditorSceneManager.OpenScene($"{Scenes}Campaign_{n:00}.unity");
                     Assert.That(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>().OpeningHint,Is.Not.Empty);
@@ -97,18 +104,38 @@ namespace CrowdPunch.Tests
                         Assert.That(point.zoneSize,Is.EqualTo(new Vector2(8,4)));
                         Assert.That(point.zoneCenter,Is.EqualTo(new Vector2(0,-46)));
                         Assert.That(point.settings.breachThreshold,Is.EqualTo(1));
-                        Assert.That(crowd.Waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{18,21,23}));
+                        Assert.That(crowd.Waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{14,18,20}));
                         foreach(var w in crowd.Waves)
                         {
-                            Assert.That(w.BatchSize,Is.EqualTo(4)); Assert.That(w.BatchInterval,Is.EqualTo(3));
+                            Assert.That(w.BatchSize,Is.EqualTo(4)); Assert.That(w.BatchInterval,Is.EqualTo(4));
                             Assert.That(w.ReplenishWhileBossLives || w.WaitForPersistentHazards,Is.False);
                             Assert.That(w.WizardAmmunitionProfile,Is.Null); Assert.That(w.ArmoredAmmunitionProfile,Is.Null);
+                            Assert.That(w.EliteEnemies,Is.Empty);
                         }
-                        Assert.That(crowd.Waves.Skip(1).All(w=>w.DelayBeforeWave==5),Is.True);
+                        Assert.That(crowd.Waves.Take(2).All(w=>w.ActivationMode==EnemyWaveActivationMode.DurationElapsed && w.Duration==6),Is.True);
+                        Assert.That(crowd.Waves.Last().ActivationMode,Is.EqualTo(EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated));
                     }
                     if(n==37) Assert.That(crowd.barricade.GetComponent<ShellTargetAuthoring>().settings.requiredExplosions,Is.EqualTo(3));
                     var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);
-                    Assert.That(patches.Length,Is.EqualTo(n==34||n==37?1:0));
+                    int expectedPatches = n switch { 34 or 37 => 1, 35 or 36 => 2, 38 => 4, _ => 0 };
+                    Assert.That(patches.Length,Is.EqualTo(expectedPatches), $"Level {n}");
+                    if(n==35 || n==36 || n==38)
+                    {
+                        Assert.That(patches.Select(p=>p.cycleOffset).OrderBy(offset=>offset),
+                            Is.EqualTo(n==38 ? new[]{0f,2f,4f,6f} : new[]{0f,4f}));
+                        var rocks=UnityEngine.Object.FindObjectsByType<SolidObstacleAuthoring>(FindObjectsSortMode.None);
+                        foreach(var patch in patches)
+                        {
+                            var half = patch.shape==GroundHazardShape.Circle ? Vector2.one*patch.radius : new Vector2(patch.width,patch.depth)*.5f;
+                            foreach(var rock in rocks)
+                            {
+                                var delta = rock.transform.position-patch.transform.position;
+                                var gap = Vector2.Max(Vector2.zero,
+                                    new Vector2(Mathf.Abs(delta.x),Mathf.Abs(delta.z))-half-rock.Size*.5f);
+                                Assert.That(gap.magnitude,Is.GreaterThanOrEqualTo(4),$"Level {n}, {patch.name} clearance");
+                            }
+                        }
+                    }
                     foreach(var patch in patches)
                     {
                         Assert.That(UnityEngine.Object.FindObjectsByType<EnemyWaveSequenceAuthoring>(FindObjectsSortMode.None).Contains(patch.sequence),Is.True);

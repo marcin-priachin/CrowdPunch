@@ -72,6 +72,21 @@ reset under GROUND-001. Level 24 retains its finite defense introduction,
 first-breach failure and no Elite attackers. See
 [Chapter 3 verification](../Verification/Chapter3.md).
 
+## Chapter Four encounter revision (2026-11-17, LOOP-011)
+
+`CampaignChapterFourBuilder` applies the revised Chapter 4 recipes to 19 existing
+wave assets using their saved spawn banks. The in-place command also adds eight
+periodic patches across 35/36/38 and updates their opening hints. Each patch uses
+the existing ground hazard baker, sequence reset and Observatory appearance.
+
+Level 36 uses timed finite defense with cumulative final clearance. Ranged,
+Dasher and Wizard decisions use the existing protected-point attacker selection.
+Replenishment and Wizard zone completion checks are disabled for defense. At 38,
+the two Armor phases share the sequence-wide supply safeguard. The Elite phase
+ends at a cumulative checkpoint. The final Wizard and Trail phase overlaps the
+Spike group and retains Wizard supply and the persistent-zone completion gate.
+See [Chapter 4 verification](../Verification/Chapter4.md).
+
 ## Alien Sporella (SPORELLA-001..004)
 
 Sporella uses the ranged distance-band steering and attack clock. Before movement,
@@ -1699,13 +1714,14 @@ and sits behind the front of the gate so edge shots hit the gate before the rock
 
 Chapter 4 introduces Wizards (31) and Trails (33), mixes defense attackers (36), and
 copies the complete Dino/pillar arena (40). Levels 32/39 use tracks, 34 a four-hit narrow
-gate plus periodic shortcut, 35 a four-hit rotating target with a Trail, and 37 a shell
+gate plus periodic shortcut, 35 a four-hit rotating target with Trail and Mushroom
+Shooter support, and 37 a shell
 with a permanent hazard in the outer corner. Level 32 rotates rail, block, socket and
-markings together by -25 degrees. Level 38 has a 100 x 100m footprint and 70/86/102/120
-initial enemies (378 total including two Elites), with Wizard and armor supply safeguards.
+markings together by -25 degrees. Level 38 has a 100 x 100m footprint and 48/56/72/88
+enemy allocations (264 including two Elites), with Wizard and armor supply safeguards.
 Wizard wave-clear encounters wait for persistent Wizard zones; Trails alone do not gate
 completion. Level 36 explicitly disables replenishment and hazard completion gates;
-its 18/21/23-enemy waves arrive in batches of up to four every three seconds. Dino retains
+its 14/18/20-enemy groups arrive in batches of up to four every four seconds. Dino retains
 three successful pillar hits and two local Baselines per unconsumed pillar in addition
 to eight general support enemies. Settings belong to the campaign, and shared mechanics,
 ordinary profiles, system ordering and boss arena geometry remain unchanged.
