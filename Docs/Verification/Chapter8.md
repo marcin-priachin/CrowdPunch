@@ -1,8 +1,47 @@
 # Chapter 8 implementation and verification
 
-2026-10-10. Requirements: LOOP-002..008, COVER-001..005, BARRICADE-006,
+2026-10-10, revised 2026-11-17. Requirements: LOOP-002..011, COVER-001..005, BARRICADE-006,
 PROTECT-001..004, SHELL-001..006, PILLAR-001..006, GROUND-001..007,
 ENEMY-009/011/014/015, WIZARD-001..007, TRAIL-001..007.
+
+## Chapter 8 variety revision
+
+The current recipes are in
+[Campaign80Proposal.md](../Design/Campaign80Proposal.md#chapter-8-crowd-mastery).
+The revision adds a Mushroom Shooter at 72, timed groups at 73/75/77/78/79,
+and staggered warning strips at 73/75/77/78. With clear spawn areas, Claim the
+Ground allocates 336 enemies in 42 batches. The last batch is scheduled around
+246s plus time spent clearing the Elite checkpoint. Level 80 unlocks the
+existing finale at 81.
+
+Unity compilation and the .NET build passed. The targeted suites passed 239
+checks, including all revised scenes, exact wave recipes, the defense armor
+safeguards, the shared Ninja cap and hazard clearance. The pre-existing level
+74 gate-count assertion expects four hits per gate and the asset uses three.
+The level 80 snapshot differs from the legacy scene snapshot. Two in-memory
+Dino pillar supply cases also fail, expecting one and four bodies respectively
+and receiving zero. This revision leaves those scenes and the supply logic intact.
+
+The isolated Editor preview observed a timed reinforcement group at 77 while
+armor survived from the first phase, with the safeguard enabled into the final
+phase. Claim the Ground held its midpoint with 80 active enemies, then advanced
+after controlled defeats. Both north-bank Snakes in phase 4 assembled all six
+segments. The fifth phase had three active Ninjas and peaked at two concurrent
+ambushes. The final phase reached its clearance gate with 79 earlier-phase
+survivors and completed after cumulative clearance. The accelerated preview
+recorded 387 Editor frames with at least 64 live enemies, peaking at 142.
+Median frame time was 45.71ms and the 95th percentile was 120.30ms, including
+Editor overhead, accelerated spawning and the observer. Normal clear times
+and target-device performance remain for playtesting.
+
+The level 78 follow-up spread its seven warning strips across all four sectors
+and the central crossing. The level-specific Unity check passed for quadrant
+coverage, the outer east and west approaches, rock and spawn clearance, and
+the open central bypass.
+
+## Original chapter release (2026-10-10)
+
+The timings, populations and measurements below describe the original release.
 
 ## Playing and tuning
 

@@ -1789,26 +1789,29 @@ a vertex fan. Chapter 7's stepped/notched floor visuals (61/64/69) were rebuilt;
 chapter assets were not regenerated. The continuous convex floor collider remains in
 place to avoid triangle-edge deflections, with enclosing walls limiting playable space.
 
-Chapter 8 adds levels 71-80 using the same runtime ownership and system order. Level 72
-has a four-hit cover with a 100-degree opening, 30 degrees/s rotation and six-second
-reversals; its bounded support includes a Wizard and a Trail. Level 74 uses the four-hit
-2m gate with recessed sealed terrain and two permanent hazard pockets. Level 76 uses
-three shell explosions and the existing specialized Exploder pair. Protected-point
-levels 75/77 have no Elites, no Wizard supply and no persistent-zone completion gate;
-their finite waves arrive in batches of four every three seconds with five-second
-cleared-wave pauses. The approved armor ammunition safeguard remains enabled only in
-75 wave 2 and 77 wave 1. Its replacement bodies retain wave ownership and count toward
-clearance and protected-zone breaches. Level 78 spans 100 x 100m with six waves of
-76/96/102/108/128/148 initial enemies (658 including four Elites), broad crescent islands,
-armor/Wizard safeguards and two periodic outer strips. Levels 73/80 also have paired
-periodic strips with four-second stagger. The Dino rematch (80) preserves the original
-arena and all three pillar positions, requires three successful pillar hits, uses
+Chapter 8 covers levels 71-80 using the same runtime ownership and system order.
+Level 72's four-hit cover retains its 100-degree opening, 30 degrees/s rotation
+and six-second reversals. Its bounded support includes a Wizard, Trail and
+Mushroom Shooter. Level 74 retains seven barricade rooms and its final hazard
+pockets. Level 76 uses three shell explosions and the specialized Exploder pair.
+Protected-point levels 75/77 have finite groups of 18/20/24 and 20/22/24,
+respectively, in batches of four every four seconds with timed advances. They
+exclude Elites, Wizard supply and persistent-zone completion waits. Once armor
+appears, the fallback remains enabled through later phases so it can supply
+launchable enemies for surviving protected armor. Replacement bodies retain
+wave ownership and count toward clearance and breaches.
+
+Level 78 spans 100 x 100m with allocations of 40/48/56/56/64/72 enemies plus
+18 Snake tail segments. It uses a cumulative Elite checkpoint and final clear,
+including the existing Wizard-zone safeguard in the final phase. Levels
+73/75/77 have four periodic strips apiece and 78 has seven, all with the Citadel
+appearance. Level 80 retains the original two outer warning strips. The Dino
+rematch retains its pillar layout, requires three successful pillar hits, uses
 6/4.5/3.5s chase stages and a one-second warning, and keeps two local Baselines per
 pillar plus 10 Baselines, one Ranged enemy and one Dasher in general support.
-`CampaignChapterEightBuilder` creates these scenes/settings; all 155 campaign waves and
-81 build scenes (Bootstrap plus levels 1-80) are registered. `StartChapterEight` on
-`CampaignLifecycleCheck` exercises the preceding milestone through the final campaign
-screen using controlled injections and an isolated save.
+`CampaignChapterEightBuilder` owns the recipes and in-place revision.
+`CampaignLifecycleCheck.StartChapterEight` exercises the preceding milestone and
+Chapter 8 with controlled injections and an isolated save.
 
 The Chapter 4 multi-wave profile found hidden pooled bodies still generating contacts
 at their common storage position. `EnemyRespawnSystem` now queues a shared-component
@@ -1832,10 +1835,10 @@ project-root `LocalSaves/` folder. Absolute directories are also supported. Both
 configuration and `LocalSaves/` are ignored by Git. Empty or unreadable configurations fail
 rather than falling back to a personal save. Player builds never read the override. Worktrees
 keep the shared product name and ProjectSettings; window labels remain local Editor tooling.
-Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded;
-Chapters 1-7 completion offer Continue into the next implemented chapter.
-Chapter 8 ends on CampaignComplete; index 80 is the completed-save sentinel and cannot load a scene.
-Existing stable-ID saves need no migration.
+Replays cannot regress saves. Unavailable future chapters can be unlocked but never loaded.
+Chapter completion offers Continue into the next implemented chapter. Level 80 unlocks
+the level 81 finale. Finishing the finale opens CampaignComplete, with index 81 as the
+completed-save sentinel. Existing stable-ID saves need no migration.
 
 For LOOP-007, Bootstrap's `GauntletSequence` references the shared `GameRuntimeSettings` asset
 and passes `StartWithAllLevelsUnlocked` into `CampaignProgress` at startup. This optional,

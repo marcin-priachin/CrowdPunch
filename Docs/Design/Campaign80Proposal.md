@@ -1,15 +1,15 @@
 # Crowd Punch: 80-level campaign proposal
 
-Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented in Chapters 1–7. Chapters 8–9 are pending. Encounter counts and cadence are starting values for playtesting.
+Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented in Chapters 1–8. The Chapter 9 finale revision is pending. Encounter counts and cadence are starting values for playtesting.
 
 Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2 through 8 in sequence. All 80 levels and their campaign infrastructure are authorized and implemented.
 
 ## Approved variety and reinforcement revision (2026-11-16, LOOP-011)
 
-The user approved the three-shooter plan, then requested Chapters 1 through 7.
+The user approved the three-shooter plan, then requested Chapters 1 through 8.
 This section supersedes conflicting composition and cadence rules in the original
-proposal and the 2026-10-14 revision. The Chapter 1–7 tables reflect the revised
-assets. The Chapter 8 table describes the encounters in the current build.
+proposal and the 2026-10-14 revision. The Chapter 1–8 tables reflect the revised
+assets.
 Level 81 retains FINALE-001..007 and its separate design document.
 
 Preserve all 81 stable IDs, existing objectives, boss order, save/unlock behavior,
@@ -255,6 +255,50 @@ support. Level 62's shared gate asset requires three hits per gate.
 BARRICADE-009 specifies four as the design default. Level 69 keeps the
 hazard-free pre-boss track route.
 
+### Chapter 8 authored cadence
+
+Level 71 retains the isolated Ninja introduction. Level 72 replaces one
+Baseline with one Mushroom Shooter in its 16-enemy bounded support, maintaining
+batches of four every 1.5s. Level 73 opens with Ninja and Sporella, follows with
+Armor and Alien Spike, and brings in Snake and Dragon for the final group.
+Its 66 enemies and six tail segments include 27 Baselines (37.5% of physical
+bodies). It uses batches of six every five seconds and carries the armor
+safeguard through the final phase.
+
+Levels 75 and 77 use different finite groups of 18/20/24 and 20/22/24,
+respectively, in batches of four every four seconds. Level 75 moves from
+Ranged and Exploders to Armor and Dashers, then a Trail group. Level 77
+opens with Armor and Exploders and closes with Ranged, Dashers and Wizards.
+One breach fails the attempt and the final clear resolves every attacker.
+The existing armor fallback stays eligible in subsequent phases while
+protected armor survives. These defenses exclude Elites, Wizard ammunition
+and persistent-zone completion waits.
+
+Claim the Ground (78) allocates 336 enemies over six phases, including 129
+Baselines (38.4%), two Elites and 32 LinkedPair endpoints. Three Snakes add
+18 tail segments, for 354 physical bodies across the encounter. All 15 enemy
+archetypes appear across the six phases. The shared cap remains two concurrent
+Ninja ambushes. It uses batches of eight every six seconds. The midpoint after
+phase 3 clears all survivors and Elite support, then pauses three seconds.
+The final phase clears all survivors and persistent Wizard zones. Armor
+ammunition applies at the midpoint and final gates.
+
+Timed transitions at 73, 75, 77, 78 and 79 start six seconds after the last
+successful batch of the previous phase. Level 79 has two light groups of ten,
+delivered in batches of four every five seconds. Level 76 retains its familiar
+shell objective. Levels 74 and 80 retain their layouts, hazards and objectives.
+Level 74's saved gate setting is three hits, with four as the BARRICADE-009
+design default.
+
+Level 73 has four 3 x 4m strips. Levels 75 and 77 each have four 3 x 6m strips
+placed off the direct route to the zone. All three levels stagger their strips
+at 0/2/4/6s. Level 78 has seven 3 x 6m strips staggered evenly across eight
+seconds, with one in the central crossing and six in the approaches across
+all four sectors, including the outer northeast and southwest. Its central
+bypass connects the combat areas and gives room to circle Snake tails. New
+and repositioned strips preserve at least four metres from the rock
+footprints and stay clear of spawn banks.
+
 ### Implementation and remaining work
 
 Chapter 1 uses existing batching, timed activation, interleaved exact profile allocation,
@@ -270,7 +314,8 @@ shooters follow the barricade room bounds for pursuit and attack starts.
 Verification is recorded for [Chapter 1](../Verification/Chapter1.md),
 [Chapter 2](../Verification/Chapter2.md), [Chapter 3](../Verification/Chapter3.md),
 [Chapter 4](../Verification/Chapter4.md), [Chapter 5](../Verification/Chapter5.md)
-[Chapter 6](../Verification/Chapter6.md) and [Chapter 7](../Verification/Chapter7.md).
+[Chapter 6](../Verification/Chapter6.md), [Chapter 7](../Verification/Chapter7.md)
+and [Chapter 8](../Verification/Chapter8.md).
 
 Before later chapters, check ground-hazard cycle resets,
 Elite supply, Wizard waits/ammunition, defense targeting and cumulative completion.
@@ -282,7 +327,7 @@ overlap balance and OQ-001 target-hardware acceptance remain unverified design t
 
 - B = Baseline, R = Ranged, X = Exploder, D = Dasher, E = Elite, A = Armored, W = Wizard, T = Trail, M = Mushroom Shooter. Numbers are exact proposed spawn counts, not weights. Elite counts are additional to normal-enemy totals.
 - LP = LinkedPair (counted in pairs, two independently defeated endpoints per pair), F = Dragon (flame; D remains Dasher), S = Snake (counted in heads, not tail segments), N = Ninja. Each S starts with the shared settings asset's current six-segment tail: seven physical bodies initially, but only the head counts toward wave clearance. LP endpoints are additional to the ordinary normal-enemy count through `linkedPairCount`; F/S/N use ordinary exact profile counts. The tether record is not another enemy. See the 2026-10-14 revision below for population accounting.
-- `>` separates clear-gated phases and `~>` marks timed phases that can overlap survivors. Chapters 1–7 follow their authored cadence above. Directions refer to safely inset spawn rectangles. Final wave-clear completion includes all earlier survivors.
+- `>` separates clear-gated phases and `~>` marks timed phases that can overlap survivors. Chapters 1–8 follow their authored cadence above. Directions refer to safely inset spawn rectangles. Final wave-clear completion includes all earlier survivors.
 - `Hold` means one bounded replenishing support population until the objective completes, with a proposed 4-second replacement delay. Counts describe the initial/target population, not an unlimited simultaneous crowd. Existing specialized replenishment rules take precedence; in particular Shell replaces its two Exploders only after both are gone, and stops replacing them once the shell breaks.
 - `Batch n/s` means batches of n enemies every s seconds within each finite phase. Unrevised defense assets retain their 5-second cleared-wave pause; LOOP-011 changes later campaign defense when implemented.
 - Dimensions are approximate playable width x length in metres, except the eight large wave arenas, which each require a 100 x 100m playable footprint. North is the objective/far edge; the player generally enters from the south. All non-boss arenas receive distinct authored floor/boundary/obstacle arrangements using the existing nature kit. Defense arenas retain the established 32 x 96m size and 8 x 4m end zone, with distinct approach geometry.
@@ -459,14 +504,14 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | Level | Name / one main objective | Layout and spawn directions | Composition and waves | Static hazards | Teaching purpose / pacing | Target |
 |---|---|---|---|---|---|---|
 | 71 | Find Your Feet / clear waves | 36 x 36 open tapered octagon; one far island; north then west bank, broad connected floor for safe rear arrivals | 6B+1N > 12B+2N | None | Ninja introduction: read preparation and rear arrival, reposition or interrupt, then punish recovery | 75-105s |
-| 72 | Thread the Crowd / destroy rotating-cover target | 42 x 40 asymmetric ring with clear south apron; side support | Hold 14B+1W+1T; 4 hits; 100-degree opening, 30 degrees/s, reversals every 6s | None | Time a body shot while relocating around living hazards | 90-120s |
-| 73 | Committed Lines / clear waves | 44 x 40 slanted two-island court; east/west/north waves | 15B+2D+1E+1N+1LP > 11B+2A+2R+1S+2F > 11B+2X+2T+1S+1LP+2N; armor safeguard | P2 across optional side routes | Peak in committed attacks: interrupt Ninja ambushes while handling paired swings, exposed Snake tips and moving flame | 90-120s |
-| 74 | Open the Last Gate / break barricade and reach exit | 7 distinct ascending sectors, 38 x 322m total; final original two bends; sealed 2m gates | Hold 8 > 9 > 11 > 13 > 14 > 16 > 18; final 13B+1R+2X+1D+1A; 7 gates x 4 hits | Three reduced periodic fore-sector patches; final original G2 | Escalate crowd and angle pressure toward the last gate | Fresh pacing playtest |
-| 75 | Guard the Approach / protect point through finite waves | 32 x 96 alternating island pairs, three broad north approaches | 20B+2R > 24B+2A > 24B+2D+1W; batch 4/3s; armor safeguard | None | Defense peak with physical crowd control; no hazard-dependent victory | 90-120s |
+| 72 | Thread the Crowd / destroy rotating-cover target | 42 x 40 asymmetric ring with clear south apron; side support | Hold 13B+1W+1T+1M; 4 hits; 100-degree opening, 30 degrees/s, reversals every 6s | None | Time body shots through the reversing cover while reading the Mushroom Shooter's lane | 90-120s |
+| 73 | Committed Lines / clear waves | 44 x 40 slanted two-island court; east/west/north waves | 8B+2N+2SP+1LP+3R+3D ~> 9B+2A+3AS+5X+3D ~> 10B+2A+1S+1F+1N+1LP+4T+3R; batch 6/5s | Four staggered 3 x 4m strips | Interrupt Ninja ambushes, then adapt to armored targets and Spike bursts | 90-120s |
+| 74 | Open the Last Gate / break barricade and reach exit | 7 distinct ascending sectors, 38 x 322m total; final original two bends; sealed 2m gates | Hold 8 > 9 > 11 > 13 > 14 > 16 > 18; final 13B+1R+2X+1D+1A; 7 gates x 3 hits in saved asset | Three reduced periodic fore-sector patches; final original G2 | Escalate crowd and angle pressure toward the last gate | Fresh pacing playtest |
+| 75 | Guard the Approach / protect point through finite waves | 32 x 96 alternating island pairs, three broad north approaches | 10B+4R+4X ~> 12B+2A+6D ~> 13B+4R+4X+3T; batch 4/4s | Four staggered 3 x 6m switchback and approach strips | Break armor and keep attackers off the zone as fresh groups arrive | 90-120s |
 | 76 | A Clear Purpose / destroy shell and core target | 36 x 38 open target court, low boundary rock fans; side support | Hold 10B plus specialized pair of 2X; 3 shell explosions | None | Breather using a familiar readable target | 75-105s |
-| 77 | Final Stand / protect point through finite waves | 32 x 96 broad zigzag approaches, two long islands with generous end gaps | 24B+2A > 26B+2X > 26B+2R+2W; batch 4/3s; armor safeguard | None | Final short defense; use the approaching crowd to prevent breaches | 90-120s |
-| 78 | Claim the Ground / clear waves | 100 x 100 court, staggered rock crescents forming broad linked combat areas; north, west, east, split north, split sides, far banks | 66B+4R+2LP+2N > 82B+6X+2D+2LP+2F > 83B+4A+2E+1S+2LP+2N > 90B+2W+2T+1S+2LP+3F > 99B+4R+4D+2S+2LP+3N > 111B+4A+6X+2E+2S+3LP+3F+2N; safeguards | P2 outer lanes, safe central routes | Final large crowd encounter: combine all four later introductions through varied waves; keep Ninja ambushes capped at two | 4-5min |
-| 79 | Room to Breathe / clear waves | 38 x 34 open rounded trapezoid, isolated far rock; far banks | 14B+2X > 18B+2R+1A; armor safeguard | None | Short release before final boss; deliberate clean launches | 60-90s |
+| 77 | Final Stand / protect point through finite waves | 32 x 96 broad zigzag approaches, two long islands with generous end gaps | 10B+2A+4X+4D ~> 11B+5X+5D+1R ~> 12B+6R+4D+2W; batch 4/4s | Four staggered 3 x 6m side strips | Reposition around the islands to intercept early Exploders and late Wizards | 90-120s |
+| 78 | Claim the Ground / clear waves | 100 x 100 court, staggered rock crescents forming broad linked combat areas; north, west, east, split north, split sides, far banks | 15B+2N+6M+7R+6D+2LP ~> 18B+2F+6AS+13X+5D+2LP ~> 22B+8A+2E+9R+9X+3LP > 22B+2S+5SP+6T+1F+8D+6X+3LP ~> 25B+3N+5SP+7M+6R+8D+4X+3LP ~> 27B+1S+2F+4AS+6A+2W+8R+10X+6D+3LP; batch 8/6s | Seven staggered 3 x 6m strips across all four sectors and the central crossing | Shift launch angles with each bank and clear the Elite checkpoint before the final mixed groups | 4-5min |
+| 79 | Room to Breathe / clear waves | 38 x 34 open rounded trapezoid, isolated far rock; far banks | 8B+2X ~> 8B+2R; batch 4/5s | None | Short release before Dino. Line up clean launches as the shooters arrive | 60-90s |
 | 80 | Giants Fall Again / defeat Dino with pillars | Exact Dino arena and three pillar positions | Hold 10B+1R+1D general support plus 2B per unconsumed pillar | P2 between outer approaches; pillar setup areas remain safe | Three successful pillars; existing chase intervals 6/4.5/3.5s, 1s warning; toward-boss fall | 3-5min |
 
 2026-10-11 update: TRACK-006 replaces the former equal-length straight/diagonal rails with

@@ -17,17 +17,21 @@ MonoBehaviour:
   linkedPairCount: 1
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 15
+    MinimumCount: 8
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
+    MinimumCount: 3
     Weight: 0
   - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
-    MinimumCount: 2
+    MinimumCount: 3
     Weight: 0
   - Settings: {fileID: 11400000, guid: 528fbf671369ae34abd3baf9fcec4c90, type: 2}
-    MinimumCount: 1
+    MinimumCount: 2
     Weight: 0
-  eliteEnemies:
-  - Settings: {fileID: 11400000, guid: 4dd009e167a817e4d8e7746bdc822f1f, type: 2}
-    Count: 1
+  - Settings: {fileID: 11400000, guid: 042aec9e32837e642b7ae579124c5103, type: 2}
+    MinimumCount: 2
+    Weight: 0
+  eliteEnemies: []
   spawnRectangles:
   - Center: {x: 16, y: 2, z: 3}
     Width: 4
@@ -35,11 +39,11 @@ MonoBehaviour:
   replenishWhileBossLives: 0
   bossReplenishDelay: 4
   delayBeforeWave: 3
-  activationMode: 2
-  duration: 0
-  spawnMode: 0
-  batchSize: 1
-  batchInterval: 3
+  activationMode: 1
+  duration: 6
+  spawnMode: 1
+  batchSize: 6
+  batchInterval: 5
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

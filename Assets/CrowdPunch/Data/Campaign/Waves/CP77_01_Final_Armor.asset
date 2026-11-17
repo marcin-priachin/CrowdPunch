@@ -12,10 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP77_01_Final_Armor
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 26
+  totalEnemyCount: 20
+  linkedPairProfile: {fileID: 0}
+  linkedPairCount: 0
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 24
+    MinimumCount: 10
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
+    MinimumCount: 4
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
+    MinimumCount: 4
     Weight: 0
   - Settings: {fileID: 11400000, guid: 95d24fce27ef5144ca7ae5b439bbe692, type: 2}
     MinimumCount: 2
@@ -28,11 +36,11 @@ MonoBehaviour:
   replenishWhileBossLives: 0
   bossReplenishDelay: 4
   delayBeforeWave: 3
-  activationMode: 2
-  duration: 0
+  activationMode: 1
+  duration: 6
   spawnMode: 1
   batchSize: 4
-  batchInterval: 3
+  batchInterval: 4
   armoredAmmunitionProfile: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

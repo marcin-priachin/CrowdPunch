@@ -38,7 +38,7 @@ namespace CrowdPunch.Tests
         [TestCase(41)] [TestCase(43)] [TestCase(45)] [TestCase(47)] [TestCase(48)] [TestCase(49)]
         [TestCase(52)] [TestCase(55)] [TestCase(57)] [TestCase(58)] [TestCase(59)] [TestCase(61)]
         [TestCase(63)] [TestCase(65)] [TestCase(67)] [TestCase(68)]
-        [TestCase(71)] [TestCase(73)] [TestCase(78)]
+        [TestCase(71)] [TestCase(73)] [TestCase(75)] [TestCase(77)] [TestCase(78)] [TestCase(79)]
         public void Campaign_ExactAuthoredWavesMatchAcceptedProposal(int level)
         {
             string row = File.ReadLines("Docs/Design/Campaign80Proposal.md")
@@ -61,7 +61,7 @@ namespace CrowdPunch.Tests
                 Assert.That(actual, Is.EquivalentTo(counts), $"Level {level}, wave {i + 1}");
                 Assert.That(wave.Enemies.Sum(e => e.MinimumCount), Is.EqualTo(wave.TotalEnemyCount));
                 Assert.That(wave.Enemies.All(e => e.Weight == 0 && e.Settings.EnemyPrefab != null), Is.True);
-                bool batched = level is 43 or 45 or 47 or 48 or 49 or 55 or 57 or 58 or 59 or 63 or 65 or 67 or 68;
+                bool batched = level is 43 or 45 or 47 or 48 or 49 or 55 or 57 or 58 or 59 or 63 or 65 or 67 or 68 or 73 or 75 or 77 or 78 or 79;
                 bool timed = expected[i].TrimEnd().EndsWith("~");
                 bool followsTimed = i > 0 && expected[i - 1].TrimEnd().EndsWith("~");
                 Assert.That(wave.SpawnMode, Is.EqualTo(batched ? EnemyWaveSpawnMode.Batched : EnemyWaveSpawnMode.AllAtOnce));
@@ -70,12 +70,14 @@ namespace CrowdPunch.Tests
                 Assert.That(wave.Duration, Is.EqualTo(timed ? 6 : 0));
                 if (batched)
                 {
-                    Assert.That(wave.BatchSize, Is.EqualTo(level is 48 or 58 or 68 ? 8 : level is 45 or 55 or 63 or 65 or 67 ? 6 : 4));
-                    Assert.That(wave.BatchInterval, Is.EqualTo(level is 48 or 58 or 68 ? 6 : level is 47 or 57 ? 4 : 5));
+                    Assert.That(wave.BatchSize, Is.EqualTo(level is 48 or 58 or 68 or 78 ? 8 : level is 45 or 55 or 63 or 65 or 67 or 73 ? 6 : 4));
+                    Assert.That(wave.BatchInterval, Is.EqualTo(level is 48 or 58 or 68 or 78 ? 6 : level is 47 or 57 or 75 or 77 ? 4 : 5));
                 }
                 Assert.That(wave.ReplenishWhileBossLives, Is.False);
-                Assert.That(wave.WaitForPersistentHazards, Is.EqualTo(counts.ContainsKey(ProfileNames["W"])));
-                Assert.That(wave.ArmoredAmmunitionProfile != null, Is.EqualTo(counts.ContainsKey(ProfileNames["A"])));
+                bool defense = level is 75 or 77;
+                Assert.That(wave.WaitForPersistentHazards, Is.EqualTo(!defense && counts.ContainsKey(ProfileNames["W"])));
+                bool armorSafeguard = counts.ContainsKey(ProfileNames["A"]) || level == 75 && i >= 1 || level == 77;
+                Assert.That(wave.ArmoredAmmunitionProfile != null, Is.EqualTo(armorSafeguard));
             }
         }
 

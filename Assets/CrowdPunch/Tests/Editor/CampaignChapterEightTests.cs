@@ -38,106 +38,149 @@ namespace CrowdPunch.Tests
             finally { foreach(var suffix in new[]{"",".bak",".tmp"}) if(File.Exists(path+suffix)) File.Delete(path+suffix); }
         }
 
-        [Test] public void Loop008_ClaimTheGroundHasSixFiniteWavesAnd658Enemies()
+        [Test] public void Loop008And011_ClaimTheGroundHasSixBatchedPhasesAndAllArchetypes()
         {
             var waves=AssetDatabase.FindAssets("t:EnemyWaveSettings",new[]{Data+"Waves"})
                 .Select(g=>AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(AssetDatabase.GUIDToAssetPath(g)))
                 .Where(w=>w.name.StartsWith("CP78_")).OrderBy(w=>w.name).ToArray();
-            Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{72,92,90,98,112,128}));
-            Assert.That(waves.Select(w=>w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(new[]{0,0,2,0,0,2}));
-            Assert.That(waves.Sum(CampaignEnemyRevisionTests.PhysicalPopulation),Is.EqualTo(658));
-            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.AllAtOnce && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
+            Assert.That(waves.Select(CampaignEnemyRevisionTests.PhysicalPopulation),Is.EqualTo(new[]{40,48,56,68,64,78}));
+            Assert.That(waves.Select(w=>w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(new[]{0,0,2,0,0,0}));
+            Assert.That(waves.Sum(w=>w.TotalEnemyCount+w.LinkedPairCount*2+w.EliteEnemies.Sum(e=>e.Count)),Is.EqualTo(336));
+            Assert.That(waves.Sum(CampaignEnemyRevisionTests.PhysicalPopulation),Is.EqualTo(354));
+            Assert.That(waves.Sum(w=>w.Enemies.Where(e=>e.Settings.name=="EnemySpawnSettings").Sum(e=>e.MinimumCount)),Is.EqualTo(129));
+            var profiles=waves.SelectMany(w=>w.Enemies.Select(e=>e.Settings)
+                .Concat(w.EliteEnemies.Select(e=>e.Settings)).Append(w.LinkedPairProfile));
+            Assert.That(profiles.Where(p=>p!=null).Distinct().Count(),Is.EqualTo(15));
             Assert.That(waves[2].ArmoredAmmunitionProfile,Is.Not.Null); Assert.That(waves[5].ArmoredAmmunitionProfile,Is.Not.Null);
-            Assert.That(waves[3].WizardAmmunitionProfile,Is.Not.Null); Assert.That(waves[3].WaitForPersistentHazards,Is.True);
+            Assert.That(waves[5].WizardAmmunitionProfile,Is.Not.Null); Assert.That(waves[5].WaitForPersistentHazards,Is.True);
+            Assert.That(waves.Take(5).All(w=>!w.WaitForPersistentHazards),Is.True);
             var floor=AssetDatabase.LoadAssetAtPath<Mesh>(Data+"Layouts/Campaign_78_Floor.asset");
             Assert.That(floor.bounds.size.x,Is.EqualTo(100)); Assert.That(floor.bounds.size.z,Is.EqualTo(100));
         }
 
-        [Test] public void Loop002_ChapterEightWiresNavigationObjectivesAndSafeHazards()
+        [TestCase(71), TestCase(72), TestCase(73), TestCase(74), TestCase(75)]
+        [TestCase(76), TestCase(77), TestCase(78), TestCase(79), TestCase(80)]
+        public void Loop002_ChapterEightWiresNavigationObjectivesAndSafeHazards(int n)
         {
-            int[][] populations={new[]{7,14},new[]{16},new[]{21,24,26},new[]{8},new[]{22,26,27},new[]{12},new[]{26,28,30},new[]{76,96,102,108,128,148},new[]{16,21},new[]{12}};
+            int[][] populations={new[]{7,14},new[]{16},new[]{20,22,30},new[]{8},new[]{18,20,24},new[]{12},new[]{20,22,24},new[]{40,48,56,68,64,78},new[]{10,10},new[]{12}};
             var setup=EditorSceneManager.GetSceneManagerSetup();
             try
             {
-                for(int n=71;n<=80;n++)
+                EditorSceneManager.OpenScene($"{Scenes}Campaign_{n:00}.unity");
+                Assert.That(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>().OpeningHint,Is.Not.Empty);
+                var sub=UnityEngine.Object.FindFirstObjectByType<Unity.Scenes.SubScene>();
+                Assert.That(AssetDatabase.GetAssetPath(sub.SceneAsset),Is.EqualTo($"{Scenes}Campaign_{n:00}/Campaign_{n:00} Sub Scene.unity"));
+                EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(sub.SceneAsset));
+                var crowd=CampaignBarricadeRoomTests.FirstCrowd();
+                Assert.That(crowd.Waves.All(w=>AssetDatabase.GetAssetPath(w).StartsWith(Data)),Is.True);
+                Assert.That(crowd.Waves.Select(CampaignEnemyRevisionTests.PhysicalPopulation),Is.EqualTo(populations[n-71]),$"Level {n}");
+                Assert.That(crowd.Waves.All(w=>w.Enemies.Sum(e=>e.MinimumCount)==w.TotalEnemyCount && w.Enemies.All(e=>e.Weight==0)),Is.True);
+                CampaignChapterTwoTests.AssertNavigationClearance(UnityEngine.Object.FindFirstObjectByType<NavigationArenaAuthoring>(),n);
+                if(n==72)
                 {
-                    EditorSceneManager.OpenScene($"{Scenes}Campaign_{n:00}.unity");
-                    Assert.That(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>().OpeningHint,Is.Not.Empty);
-                    var sub=UnityEngine.Object.FindFirstObjectByType<Unity.Scenes.SubScene>();
-                    Assert.That(AssetDatabase.GetAssetPath(sub.SceneAsset),Is.EqualTo($"{Scenes}Campaign_{n:00}/Campaign_{n:00} Sub Scene.unity"));
-                    EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(sub.SceneAsset));
-                    var crowd=CampaignBarricadeRoomTests.FirstCrowd();
-                    Assert.That(crowd.Waves.All(w=>AssetDatabase.GetAssetPath(w).StartsWith(Data)),Is.True);
-                    Assert.That(crowd.Waves.Select(CampaignEnemyRevisionTests.PhysicalPopulation),Is.EqualTo(populations[n-71]),$"Level {n}");
-                    Assert.That(crowd.Waves.All(w=>w.Enemies.Sum(e=>e.MinimumCount)==w.TotalEnemyCount && w.Enemies.All(e=>e.Weight==0)),Is.True);
-                    CampaignChapterTwoTests.AssertNavigationClearance(UnityEngine.Object.FindFirstObjectByType<NavigationArenaAuthoring>(),n);
-                    if(n==72)
+                    var support=crowd.Waves.Single();
+                    Assert.That(support.Enemies.Single(e=>e.Settings.name=="MushroomShooterSpawnSettings").MinimumCount,Is.EqualTo(1));
+                    Assert.That(support.ReplenishWhileBossLives,Is.True);
+                    Assert.That(support.BatchSize,Is.EqualTo(4)); Assert.That(support.BatchInterval,Is.EqualTo(1.5f));
+                    Assert.That(crowd.barricade.settings.requiredHits,Is.EqualTo(4));
+                    var cover=crowd.barricade.cover.settings;
+                    Assert.That(cover.openingDegrees,Is.EqualTo(100)); Assert.That(cover.degreesPerSecond,Is.EqualTo(30));
+                    Assert.That(cover.rotationMode,Is.EqualTo(CoverRotationMode.ReversePeriodically));
+                    Assert.That(cover.reverseSeconds,Is.EqualTo(6)); Assert.That(cover.hitResponse,Is.EqualTo(CoverHitResponse.None));
+                }
+                if(n==74) CampaignBarricadeRoomTests.AssertRooms(n);
+                if(n==75 || n==77)
+                {
+                    var point=crowd.GetComponent<ProtectedPointAuthoring>();
+                    Assert.That(point.zoneSize,Is.EqualTo(new Vector2(8,4))); Assert.That(point.zoneCenter,Is.EqualTo(new Vector2(0,-46)));
+                    Assert.That(point.settings.breachThreshold,Is.EqualTo(1)); Assert.That(point.settings.maximumPlayerAttackers,Is.EqualTo(3));
+                    for(int i=0;i<crowd.Waves.Count;i++)
                     {
-                        Assert.That(crowd.barricade.settings.requiredHits,Is.EqualTo(4));
-                        var cover=crowd.barricade.cover.settings;
-                        Assert.That(cover.openingDegrees,Is.EqualTo(100)); Assert.That(cover.degreesPerSecond,Is.EqualTo(30));
-                        Assert.That(cover.rotationMode,Is.EqualTo(CoverRotationMode.ReversePeriodically));
-                        Assert.That(cover.reverseSeconds,Is.EqualTo(6)); Assert.That(cover.hitResponse,Is.EqualTo(CoverHitResponse.None));
+                        var w=crowd.Waves[i];
+                        Assert.That(w.EliteEnemies.Sum(e=>e.Count),Is.Zero);
+                        Assert.That(w.BatchSize,Is.EqualTo(4)); Assert.That(w.BatchInterval,Is.EqualTo(4));
+                        Assert.That(w.ReplenishWhileBossLives || w.WaitForPersistentHazards,Is.False);
+                        Assert.That(w.WizardAmmunitionProfile,Is.Null);
+                        Assert.That(w.ArmoredAmmunitionProfile!=null,Is.EqualTo(i>=(n==75?1:0)));
+                        if(i>0) Assert.That(w.DelayBeforeWave,Is.Zero);
                     }
-                    if(n==74) CampaignBarricadeRoomTests.AssertRooms(n);
-                    if(n==75 || n==77)
+                }
+                if(n==76)
+                {
+                    var shell=crowd.barricade.GetComponent<ShellTargetAuthoring>().settings;
+                    Assert.That(shell.requiredExplosions,Is.EqualTo(3)); Assert.That(shell.exploderReplacementDelay,Is.EqualTo(4));
+                    Assert.That(shell.coreMaxHealth,Is.GreaterThan(0));
+                }
+                var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);
+                bool revised=n is 73 or 75 or 77 or 78;
+                Assert.That(patches.Length,Is.EqualTo(n==74?5:n==78?7:revised?4:n==80?2:0));
+                foreach(var patch in patches)
+                {
+                    Assert.That(UnityEngine.Object.FindObjectsByType<EnemyWaveSequenceAuthoring>(FindObjectsSortMode.None).Contains(patch.sequence),Is.True); Assert.That(patch.shape,Is.EqualTo(GroundHazardShape.Rectangle));
+                    bool easier=n==74 && patch.sequence.barricade.exit==null;
+                    if(easier){Assert.That(patch.width,Is.GreaterThan(0).And.LessThan(3)); Assert.That(patch.depth,Is.GreaterThan(0).And.LessThan(6));}
+                    else {Assert.That(patch.width,Is.EqualTo(3)); Assert.That(patch.depth,Is.EqualTo(n==73?4:n==74||revised?6:8));}
+                    Assert.That(patch.operation,Is.EqualTo(n==74&&!easier?GroundHazardOperation.AlwaysActive:GroundHazardOperation.Periodic));
+                    Assert.That(patch.inactiveDuration,Is.EqualTo(easier?5:4)); Assert.That(patch.warningDuration,Is.EqualTo(1.5f)); Assert.That(patch.activeDuration,Is.EqualTo(easier?2:2.5f));
+                    if(revised) AssertHazardClearance(n,patch);
+                    foreach(var range in patch.sequence.Waves.SelectMany(w=>w.SpawnRectangles))
                     {
-                        var point=crowd.GetComponent<ProtectedPointAuthoring>();
-                        Assert.That(point.zoneSize,Is.EqualTo(new Vector2(8,4))); Assert.That(point.zoneCenter,Is.EqualTo(new Vector2(0,-46)));
-                        Assert.That(point.settings.breachThreshold,Is.EqualTo(1)); Assert.That(point.settings.maximumPlayerAttackers,Is.EqualTo(3));
-                        for(int i=0;i<crowd.Waves.Count;i++)
-                        {
-                            var w=crowd.Waves[i];
-                            Assert.That(w.EliteEnemies.Sum(e=>e.Count),Is.Zero);
-                            Assert.That(w.BatchSize,Is.EqualTo(4)); Assert.That(w.BatchInterval,Is.EqualTo(3));
-                            Assert.That(w.ReplenishWhileBossLives || w.WaitForPersistentHazards,Is.False);
-                            Assert.That(w.WizardAmmunitionProfile,Is.Null);
-                            Assert.That(w.ArmoredAmmunitionProfile!=null,Is.EqualTo(i==(n==75?1:0)));
-                            if(i>0) Assert.That(w.DelayBeforeWave,Is.EqualTo(5));
-                        }
+                        var d=new Vector2(Mathf.Abs(range.Center.x-patch.transform.position.x),Mathf.Abs(range.Center.z-patch.transform.position.z));
+                        Assert.That(d.x>range.Width*.5f+patch.width*.5f+.5f || d.y>range.Depth*.5f+patch.depth*.5f+.5f,Is.True,$"Level {n} spawn bank overlaps hazard.");
                     }
-                    if(n==76)
+                    if(n==80) foreach(var pillar in UnityEngine.Object.FindObjectsByType<FallingPillarAuthoring>(FindObjectsSortMode.None))
                     {
-                        var shell=crowd.barricade.GetComponent<ShellTargetAuthoring>().settings;
-                        Assert.That(shell.requiredExplosions,Is.EqualTo(3)); Assert.That(shell.exploderReplacementDelay,Is.EqualTo(4));
-                        Assert.That(shell.coreMaxHealth,Is.GreaterThan(0));
+                        var d=new Vector2(Mathf.Max(0,Mathf.Abs(pillar.transform.position.x-patch.transform.position.x)-patch.width*.5f),Mathf.Max(0,Mathf.Abs(pillar.transform.position.z-patch.transform.position.z)-patch.depth*.5f));
+                        Assert.That(d.magnitude,Is.GreaterThanOrEqualTo(crowd.dinoBoss.settings.pillarCrowdRadius+1));
+                        Assert.That(pillar.boss,Is.EqualTo(crowd.dinoBoss));
                     }
-                    var patches=UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None);
-                    Assert.That(patches.Length,Is.EqualTo(n==74?5:n==73||n==78||n==80?2:0));
-                    foreach(var patch in patches)
-                    {
-                        Assert.That(UnityEngine.Object.FindObjectsByType<EnemyWaveSequenceAuthoring>(FindObjectsSortMode.None).Contains(patch.sequence),Is.True); Assert.That(patch.shape,Is.EqualTo(GroundHazardShape.Rectangle));
-                        bool easier=n==74 && patch.sequence.barricade.exit==null;
-                        if(easier){Assert.That(patch.width,Is.GreaterThan(0).And.LessThan(3)); Assert.That(patch.depth,Is.GreaterThan(0).And.LessThan(6));}
-                        else {Assert.That(patch.width,Is.EqualTo(3)); Assert.That(patch.depth,Is.EqualTo(n==74?6:8));}
-                        Assert.That(patch.operation,Is.EqualTo(n==74&&!easier?GroundHazardOperation.AlwaysActive:GroundHazardOperation.Periodic));
-                        Assert.That(patch.inactiveDuration,Is.EqualTo(easier?5:4)); Assert.That(patch.warningDuration,Is.EqualTo(1.5f)); Assert.That(patch.activeDuration,Is.EqualTo(easier?2:2.5f));
-                        foreach(var range in patch.sequence.Waves.SelectMany(w=>w.SpawnRectangles))
-                        {
-                            var d=new Vector2(Mathf.Abs(range.Center.x-patch.transform.position.x),Mathf.Abs(range.Center.z-patch.transform.position.z));
-                            Assert.That(d.x>range.Width*.5f+patch.width*.5f+.5f || d.y>range.Depth*.5f+patch.depth*.5f+.5f,Is.True,$"Level {n} spawn bank overlaps hazard.");
-                        }
-                        if(n==80) foreach(var pillar in UnityEngine.Object.FindObjectsByType<FallingPillarAuthoring>(FindObjectsSortMode.None))
-                        {
-                            var d=new Vector2(Mathf.Max(0,Mathf.Abs(pillar.transform.position.x-patch.transform.position.x)-patch.width*.5f),Mathf.Max(0,Mathf.Abs(pillar.transform.position.z-patch.transform.position.z)-patch.depth*.5f));
-                            Assert.That(d.magnitude,Is.GreaterThanOrEqualTo(crowd.dinoBoss.settings.pillarCrowdRadius+1));
-                            Assert.That(pillar.boss,Is.EqualTo(crowd.dinoBoss));
-                        }
-                    }
-                    if(patches.Length==2 && n!=74) Assert.That(patches.Select(p=>p.cycleOffset).OrderBy(x=>x),Is.EqualTo(new[]{0f,4f}));
-                    if(n==80)
-                    {
-                        Assert.That(crowd.dinoBoss,Is.Not.Null);
-                        var tuning=crowd.dinoBoss.settings.BakeBoss();
-                        Assert.That(tuning.RequiredHits,Is.EqualTo(3)); Assert.That(tuning.EnemiesPerPillar,Is.EqualTo(2));
-                        Assert.That(tuning.ChaseDurations,Is.EqualTo(new Unity.Mathematics.float3(6,4.5f,3.5f)));
-                        Assert.That(tuning.WarningDuration,Is.EqualTo(1));
-                        Assert.That(crowd.dinoBoss.settings.fallDirection,Is.EqualTo(PillarFallDirection.TowardBoss));
-                        Assert.That(crowd.Waves.Single().ReplenishWhileBossLives,Is.True); Assert.That(crowd.Waves.Single().BossReplenishDelay,Is.EqualTo(4));
-                    }
+                }
+                if(patches.Length==2 && n!=74) Assert.That(patches.Select(p=>p.cycleOffset).OrderBy(x=>x),Is.EqualTo(new[]{0f,4f}));
+                if(revised)
+                {
+                    var offsets=n==78?Enumerable.Range(0,7).Select(i=>i*8f/7).ToArray():new[]{0f,2f,4f,6f};
+                    Assert.That(patches.Select(p=>p.cycleOffset).OrderBy(x=>x),Is.EqualTo(offsets));
+                }
+                if(n==78)
+                {
+                    var centers=patches.Select(p=>p.transform.position).ToArray();
+                    var sectors=centers.Where(p=>Mathf.Abs(p.x)>=6 && Mathf.Abs(p.z)>=10)
+                        .Select(p=>(East:p.x>0,North:p.z>0)).Distinct();
+                    Assert.That(sectors.Count(),Is.EqualTo(4),"Cover all four arena sectors.");
+                    Assert.That(centers.Min(p=>p.x),Is.LessThanOrEqualTo(-30),"Cover the outer west approach.");
+                    Assert.That(centers.Max(p=>p.x),Is.GreaterThanOrEqualTo(30),"Cover the outer east approach.");
+                    Assert.That(centers.Count(p=>Mathf.Abs(p.x)<6 && Mathf.Abs(p.z)<10),Is.EqualTo(1),"Leave one warning strip in the central crossing.");
+                }
+                if(n==80)
+                {
+                    Assert.That(crowd.dinoBoss,Is.Not.Null);
+                    var tuning=crowd.dinoBoss.settings.BakeBoss();
+                    Assert.That(tuning.RequiredHits,Is.EqualTo(3)); Assert.That(tuning.EnemiesPerPillar,Is.EqualTo(2));
+                    Assert.That(tuning.ChaseDurations,Is.EqualTo(new Unity.Mathematics.float3(6,4.5f,3.5f)));
+                    Assert.That(tuning.WarningDuration,Is.EqualTo(1));
+                    Assert.That(crowd.dinoBoss.settings.fallDirection,Is.EqualTo(PillarFallDirection.TowardBoss));
+                    Assert.That(crowd.Waves.Single().ReplenishWhileBossLives,Is.True); Assert.That(crowd.Waves.Single().BossReplenishDelay,Is.EqualTo(4));
                 }
             }
             finally { Restore(setup); }
+        }
+
+        private static void AssertHazardClearance(int level, GroundHazardAuthoring patch)
+        {
+            Assert.That(patch.GetComponent<GroundHazardAppearanceAuthoring>().style,Is.EqualTo(GroundHazardStyle.Citadel));
+            foreach(var rock in UnityEngine.Object.FindObjectsByType<SolidObstacleAuthoring>(FindObjectsSortMode.None).Where(o=>o.name=="Rock island"))
+            {
+                Vector3 d=patch.transform.position-rock.transform.position;
+                var gap=new Vector2(
+                    Mathf.Max(0,Mathf.Abs(d.x)-(patch.width+rock.footprint.x)*.5f),
+                    Mathf.Max(0,Mathf.Abs(d.z)-(patch.depth+rock.footprint.y)*.5f));
+                Assert.That(gap.magnitude,Is.GreaterThanOrEqualTo(4),$"Level {level}: {patch.name} is too close to the island at {rock.transform.position}.");
+            }
+            float x=patch.transform.position.x, halfWidth=patch.width*.5f;
+            if(level is 75 or 77)
+                Assert.That(Mathf.Abs(x)-halfWidth,Is.GreaterThan(4),"Keep the central route to the protected zone clear.");
+            if(level==78)
+                Assert.That(x+halfWidth<=1 || x-halfWidth>=5,Is.True,"Keep an open route through the central crossing.");
         }
 
         [Test] public void Pillar006_RematchPreservesOriginalArenaAndPillarPositions()

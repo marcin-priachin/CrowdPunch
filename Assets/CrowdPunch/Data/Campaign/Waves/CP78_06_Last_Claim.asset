@@ -12,31 +12,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP78_06_Last_Claim
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 128
+  totalEnemyCount: 66
   linkedPairProfile: {fileID: 11400000, guid: f3bcb5bec215bcc4a959c7f89a788377, type: 2}
   linkedPairCount: 3
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 111
+    MinimumCount: 27
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
+    MinimumCount: 8
     Weight: 0
   - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
+    MinimumCount: 10
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
     MinimumCount: 6
     Weight: 0
   - Settings: {fileID: 11400000, guid: 95d24fce27ef5144ca7ae5b439bbe692, type: 2}
-    MinimumCount: 4
+    MinimumCount: 6
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 151b152e600c71a4195b9e6143c1167f, type: 2}
+    MinimumCount: 2
     Weight: 0
   - Settings: {fileID: 11400000, guid: a64a5e2d2fd377f4a8d6e1a4f6b6c603, type: 2}
-    MinimumCount: 3
+    MinimumCount: 2
     Weight: 0
   - Settings: {fileID: 11400000, guid: 70cfe8c4f0768b44dba38bfd006d389e, type: 2}
-    MinimumCount: 2
+    MinimumCount: 1
     Weight: 0
-  - Settings: {fileID: 11400000, guid: 528fbf671369ae34abd3baf9fcec4c90, type: 2}
-    MinimumCount: 2
+  - Settings: {fileID: 11400000, guid: 12c3d79e809689b4cb3a8045a23c6552, type: 2}
+    MinimumCount: 4
     Weight: 0
-  eliteEnemies:
-  - Settings: {fileID: 11400000, guid: 4dd009e167a817e4d8e7746bdc822f1f, type: 2}
-    Count: 2
+  eliteEnemies: []
   spawnRectangles:
   - Center: {x: -15.25, y: 2, z: 34}
     Width: 64
@@ -46,14 +53,14 @@ MonoBehaviour:
     Depth: 24
   replenishWhileBossLives: 0
   bossReplenishDelay: 4
-  delayBeforeWave: 3
+  delayBeforeWave: 0
   activationMode: 2
   duration: 0
-  spawnMode: 0
-  batchSize: 1
-  batchInterval: 3
+  spawnMode: 1
+  batchSize: 8
+  batchInterval: 6
   armoredAmmunitionProfile: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-  wizardAmmunitionProfile: {fileID: 0}
+  wizardAmmunitionProfile: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
   wizardAmmunitionDelay: 2
-  waitForPersistentHazards: 0
+  waitForPersistentHazards: 1
   maximumWizardsAlive: 0
