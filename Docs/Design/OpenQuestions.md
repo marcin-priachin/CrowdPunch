@@ -1,6 +1,6 @@
 # Crowd Punch — Open Design Questions
 
-Last updated: 2026-11-16
+Last updated: 2026-11-17
 
 These questions are deliberately unresolved. Agents must not infer answers from prototype code, inspector values, placeholder assets, or genre convention.
 
@@ -63,6 +63,10 @@ GDD rules: COMBAT-XXX, INFO-XXX
 ## Resolved Decisions
 
 ### 2026-11-16 - Campaign variety and timed reinforcement revision
+
+Implementation update (2026-11-17): Chapter 2 now follows the approved plan.
+Level 18's crowd size and reinforcement intervals are initial playtest tuning.
+Chapters 3–9 are pending, and OQ-001 remains open.
 
 Decision: approve the proposed campaign revision with Mushroom Shooter at 5,
 Alien Spike at 15 and Sporella at 43, recurring mixed compositions, reduced Baseline

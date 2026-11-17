@@ -2,6 +2,7 @@ using CrowdPunch.Authoring;
 using System;
 using System.Linq;
 using CrowdPunch.Components;
+using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.AI;
 using CrowdPunch.Systems.Combat;
@@ -432,6 +433,35 @@ namespace CrowdPunch.Tests
                 PlayerOwned = (byte)(owned ? 1 : 0)
             });
             return shot;
+        }
+
+        [TestCase(EnemyWaveActivationMode.DurationElapsed, true, false, true)]
+        [TestCase(EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated, true, false, false)]
+        [TestCase(EnemyWaveActivationMode.DurationElapsed, false, false, false)]
+        [TestCase(EnemyWaveActivationMode.DurationElapsed, true, true, false)]
+        public void Loop011_ExistingShotSurvivesTimedOverlapButNotAnEncounterBoundary(
+            EnemyWaveActivationMode transition, bool sameRun, bool complete, bool survives)
+        {
+            BuildPhysics(Array.Empty<Entity>(), Array.Empty<float>());
+            var owner = em.CreateEntity(typeof(EnemyWaveSequence));
+            var definitions = em.AddBuffer<EnemyWaveDefinition>(owner);
+            definitions.Add(new EnemyWaveDefinition { ActivationMode = (byte)transition });
+            definitions.Add(default);
+            em.SetComponentData(owner, new EnemyWaveSequence
+            {
+                CurrentWaveIndex = 1, RunGeneration = 2,
+                Phase = complete ? EnemyWaveRuntimePhase.Complete : EnemyWaveRuntimePhase.Spawning
+            });
+            var shot = Fire(true);
+            var data = em.GetComponentData<AlienSpikeProjectile>(shot);
+            data.Wave = new EnemyWaveOwnership { Sequence = owner, RunGeneration = sameRun ? 2u : 1u };
+            em.SetComponentData(shot, data);
+
+            Tick();
+
+            Assert.That(em.Exists(shot), Is.EqualTo(survives));
+            if (survives)
+                Assert.That(em.GetComponentData<LocalTransform>(shot).Position.x, Is.EqualTo(12f).Within(.001f));
         }
 
         private void Tick() => world.GetOrCreateSystem<AlienSpikeProjectileSystem>().Update(world.Unmanaged);

@@ -222,9 +222,18 @@ The first phase starts after 3s; clear-gated next phases retain their 3s pause. 
 4/6/7 and boss 10 retain their support counts and 4s replenishment delay, with initial
 support delivered in batches of 4 every 6s. No Chapter 1 static hazards are added.
 
-Implementation is staged: Chapter 1 is authorized now; Chapters 2-9 retain their
-existing assets until their respective implementation requests. Hardware/performance
-acceptance remains OQ-001; the revision does not resolve unrelated open questions.
+Chapter 2 introduces Alien Spike at 15 with 6B+1AS, then 6B+2X+2AS after clearance.
+Level 17 holds 9B+2X+1AS for the rotating-cover target. Level 18 alternates
+Spike/Exploder and Mushroom Shooter/Dasher mixtures across 48/56/72/88 allocations
+with 160 Baselines out of 264 enemies. It uses 8 enemies every 6s and cumulative
+final clearance. Timed phases advance 6s after their last successful batch.
+Alien Spike shots from earlier phases continue through timed transitions in the
+same run. Clear checkpoints and encounter boundaries expire them. Other Chapter 2
+initial batches are 4 every 5s, with the clear checkpoints at 11/14/15 and existing
+objective support replacement rules. Chapter 2 has no static hazards.
+
+Chapters 1–2 are implemented. Chapters 3–9 follow in their respective batches.
+Hardware and performance acceptance remains OQ-001.
 
 ### SCORE-001 - Punch Efficiency
 

@@ -1,16 +1,15 @@
 # Crowd Punch: 80-level campaign proposal
 
-Date: 2026-10-10. Revised: 2026-11-16. Status: **Original campaign and four-enemy revision implemented; three-shooter/variety revision approved, Chapter 1 implemented.** The campaign now includes the separate level-81 finale. Chapters 2-9 of the new revision are approved design only, pending their implementation requests. Encounter counts and cadence remain starting playtest tuning.
+Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented in Chapters 1–2. Chapters 3–9 are approved for future implementation. Encounter counts and cadence are starting values for playtesting.
 
 Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2 through 8 in sequence. All 80 levels and their campaign infrastructure are authorized and implemented.
 
 ## Approved variety and reinforcement revision (2026-11-16, LOOP-011)
 
-The user approved the three-shooter plan and requested Chapter 1 implementation plus
-design-document updates. This section supersedes conflicting composition/cadence
-rules in the original proposal and the 2026-10-14 revision. The Chapter 1 table below
-reflects the new saved content. Tables for Chapters 2-8 still document their existing
-assets; the changes listed here are approved future design, not already installed.
+The user approved the three-shooter plan, then requested Chapters 1 and 2.
+This section supersedes conflicting composition and cadence rules in the original
+proposal and the 2026-10-14 revision. The Chapter 1 and 2 tables reflect the revised
+assets. The Chapter 3–8 tables describe the encounters in the current build.
 Level 81 retains FINALE-001..007 and its separate design document.
 
 Preserve all 81 stable IDs, existing objectives, boss order, save/unlock behavior,
@@ -87,16 +86,36 @@ not a measured clear time or survival objective. Playtest fast-clear empty inter
 slow-clear accumulation, shooter readability and the 3.5-4.5 minute target separately.
 Level 9 is reduced from 23 to 17 enemies, with exactly one Mushroom Shooter.
 
+### Chapter 2 authored cadence
+
+Levels 11, 14 and 15 keep a full-clear checkpoint between their introduction and
+practice groups. Their first group starts after 3s and the next starts 3s after
+clearance. Batches are 4 every 5s. Initial objective and boss support uses the
+same 4/5s cadence and the existing 4s replacement rules, including the paired
+Exploders at 12. Level 17 replaces one Baseline with one Alien Spike and retains
+two Exploders. Level 19 retains its bounded 8B+2X supply.
+
+Level 18 delivers 264 enemies in 48/56/72/88 allocations: 160 Baselines (60.6%),
+30 Exploders, 16 Alien Spikes, 16 Ranged, 26 Dashers and 16 Mushroom Shooters.
+The first batch starts after 3s, with up to 8 enemies every 6s. The next phase
+starts 6s after the previous phase's last successful batch, even if it has
+survivors. Final clearance includes every surviving attacker. With clear spawn
+regions, the 33rd batch arrives around 195s plus fixed-step overhead. The target
+is still 3.5–4.5 minutes, subject to playtesting of overlap and clear times.
+
 ### Implementation and remaining work
 
 Chapter 1 uses existing batching, timed activation, interleaved exact profile allocation,
 cumulative defeat accounting and Mushroom beam lifecycle. The chapter recipe and
 in-place revision command update saved waves and hints together. No enemy stats,
 legacy assets, later chapter assets, catalog IDs, scenery or lighting are changed.
-Verification is recorded in [Chapter 1](../Verification/Chapter1.md).
+Chapter 2 uses the same timed and cumulative wave modes at 18. Alien Spike shots
+remain active across timed transitions during the same run. Clear checkpoints,
+completion, retry and unload expire them.
+Verification is recorded for [Chapter 1](../Verification/Chapter1.md) and
+[Chapter 2](../Verification/Chapter2.md).
 
-Before later chapters: Alien Spike currently invalidates shots on wave-index changes;
-preserve previous-phase attacks during overlap. Check ground-hazard cycle resets,
+Before later chapters, check ground-hazard cycle resets,
 Elite supply, Wizard waits/ammunition, defense targeting and cumulative completion.
 The local runtime already interleaves guaranteed normal profiles; the earlier remote
 inspection's sequential-profile concern is resolved in this checkout. Actual duration,
@@ -106,7 +125,7 @@ overlap balance and OQ-001 target-hardware acceptance remain unverified design t
 
 - B = Baseline, R = Ranged, X = Exploder, D = Dasher, E = Elite, A = Armored, W = Wizard, T = Trail, M = Mushroom Shooter. Numbers are exact proposed spawn counts, not weights. Elite counts are additional to normal-enemy totals.
 - LP = LinkedPair (counted in pairs, two independently defeated endpoints per pair), F = Dragon (flame; D remains Dasher), S = Snake (counted in heads, not tail segments), N = Ninja. Each S starts with the shared settings asset's current six-segment tail: seven physical bodies initially, but only the head counts toward wave clearance. LP endpoints are additional to the ordinary normal-enemy count through `linkedPairCount`; F/S/N use ordinary exact profile counts. The tether record is not another enemy. See the 2026-10-14 revision below for population accounting.
-- `>` separates clear-gated phases; `~>` separates timed reinforcement phases that can overlap survivors. Chapter 1 follows the exact cadence above. Unrevised chapter rows retain their previous clear-gated recipes. Directions refer to safely inset spawn rectangles, not guaranteed exact enemy positions. Final wave-clear completion includes all earlier survivors.
+- `>` separates clear-gated phases and `~>` marks timed phases that can overlap survivors. Chapters 1 and 2 follow their authored cadence above. Directions refer to safely inset spawn rectangles. Final wave-clear completion includes all earlier survivors.
 - `Hold` means one bounded replenishing support population until the objective completes, with a proposed 4-second replacement delay. Counts describe the initial/target population, not an unlimited simultaneous crowd. Existing specialized replenishment rules take precedence; in particular Shell replaces its two Exploders only after both are gone, and stops replacing them once the shell breaks.
 - `Batch n/s` means batches of n enemies every s seconds within each finite phase. Unrevised defense assets retain their 5-second cleared-wave pause; LOOP-011 changes later campaign defense when implemented.
 - Dimensions are approximate playable width x length in metres, except the eight large wave arenas, which each require a 100 x 100m playable footprint. North is the objective/far edge; the player generally enters from the south. All non-boss arenas receive distinct authored floor/boundary/obstacle arrangements using the existing nature kit. Defense arenas retain the established 32 x 96m size and 8 x 4m end zone, with distinct approach geometry.
@@ -196,10 +215,10 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | 12 | Crack the Shell / destroy shell and core target | 32 x 32 clipped square, open central target; west/east support | Hold 8B plus specialized pair of 2X; 3 shell explosions; ordinary core health | None | Explosion-only shell, then a fresh attack on the exposed core | 75-120s |
 | 13 | Blast the Gate / break barricade and reach exit | 30 x 42 split approach merging before north exit; side support | Hold 10B+2X; 3 hits | None | Reuse explosions against a familiar objective | 75-105s |
 | 14 | Committed Charge / clear waves | 30 x 40 runway with wide side pockets; far end waves | 8B+1D > 12B+2D | None | Introduce committed Dasher direction in open space | 75-105s |
-| 15 | Crossed Threats / clear waves | 36 x 34 kite shape, diagonal island; alternating side banks | 12B+2R+1D > 16B+2R+2X+2D | None | Mid-chapter peak combining distant threats and launch ammunition | 90-120s |
+| 15 | Crossed Threats / clear waves | 36 x 34 kite shape, diagonal island; alternating side banks | 6B+1AS > 6B+2X+2AS, batch 4/5s | None | Read radial volleys, redirect spikes and launch a Spike into an Exploder group | 75-105s |
 | 16 | Push the Block / knock into place | 32 x 38 open court, longitudinal rail, ample end access; side support | Hold 8B; 5 net forward hits | None | Breather: direction determines forward or backward progress | 75-105s |
-| 17 | Moving Window / destroy rotating-cover target | 36 x 32 broad ring with two outside rock shelves; north/south support | Hold 10B+2X; 3 hits; 90-degree opening, continuous 25 degrees/s | None | Send Exploders through the opening; outside blasts cannot bypass cover | 90-120s |
-| 18 | Crowd Reaction / clear waves | 100 x 100 court with three widely separated rock clusters and long diagonal lanes; north, west, east, split north banks | 48B+4X > 64B+4R+2D > 80B+6X+2D > 96B+4R+4X+4D | None | Large crowd encounter: explosive chains and committed charges through dense groups | 3.5-4.5min |
+| 17 | Moving Window / destroy rotating-cover target | 36 x 32 broad ring with two outside rock shelves; north/south support | Hold 9B+2X+1AS, 3 hits, 90-degree opening at continuous 25 degrees/s | None | Use Spike bursts on the crowd and send Exploders through the opening | 90-120s |
+| 18 | Crowd Reaction / clear waves | 100 x 100 court with three widely separated rock clusters and long diagonal lanes; north, west, east, split north banks | 30B+12X+6AS ~> 34B+4R+12D+6M ~> 44B+18X+10AS ~> 52B+12R+14D+10M, batch 8/6s | None | Alternate explosive reaction groups with Mushroom Shooter lanes and Dasher pressure | 3.5-4.5min |
 | 19 | Push from Behind / knock into place | 34 x 40 left-turn court; two 10m legs; clear corners and endpoints; outer side support | Hold 8B+2X; 10 net forward hits | None | Pre-boss breather: place explosions on the useful side of the block | 60-90s |
 | 20 | Chicken Run / defeat boss | Preserve Gauntlet_20 open arena and solid perimeter | Hold 6B; existing single/paired shot stages | None | Return punchable shots while respecting dangerous rebounds | 2-3min |
 

@@ -2,7 +2,7 @@
 
 ## Chapter One encounter revision (2026-11-16, LOOP-011)
 
-The approved three-shooter campaign revision is implemented only for Chapter 1.
+Chapter 1 implements the Mushroom Shooter introduction in the approved campaign revision.
 `CampaignChapterOneBuilder` now introduces Mushroom Shooter at 5 and repeats it at
 8/9. `GauntletProgressionBuilder.Wave` supports an exact Mushroom count using the
 existing shared `MushroomShooterSpawnSettings`; its profile mapping leaves all earlier
@@ -25,9 +25,7 @@ per-body four-second replacement remain unchanged at 4/6/7/10.
 Level 8 retains 270 enemies across 40/60/76/94 allocations, now 186 Baselines,
 56 Ranged and 28 Mushroom Shooters. These are phase allocations, not concurrency
 caps; surviving enemies can overlap later phases. The Mushroom beam is owned by
-its arena/emitter and does not expire when a wave index advances. No Alien Spike
-or Sporella campaign assets are added in this chapter. Their later integration,
-particularly Spike projectile wave validity, remains future implementation work.
+its arena/emitter and does not expire when a wave index advances.
 
 `ChapterOneReinforcementCheck` is an explicit Editor-only integration probe with an
 isolated temporary save, injected enemy/objective defeat, and shortened waits except
@@ -35,6 +33,22 @@ the first two batches at levels 2/8. It exercises baked settings, ten-level entr
 completion, Mushroom retry, earlier-survivor overlap/final gates, and a mixed-crowd
 frame sample. These checks do not establish player difficulty or clear duration.
 Evidence: [Chapter 1 verification](../Verification/Chapter1.md).
+
+## Chapter Two encounter revision (2026-11-17, LOOP-011)
+
+`CampaignChapterTwoBuilder` adds the shared Alien Spike profile at 15, 17 and
+18. Level 17's Spike is an ordinary bounded barricade crowd member. Its
+projectiles follow ordinary enemy hit rules and the target still uses its
+existing body and explosion eligibility. Level 18 alternates four timed
+compositions, using the existing spawner's cumulative survivor count for
+the final clear. Levels 11, 14 and 15 retain a full-clear checkpoint.
+
+**Crowd Punch > Campaign > Apply Chapter Two Encounter Revision** validates the
+scene wiring, edits 16 existing wave assets, preserves their spawn rectangles
+and GUIDs, and writes opening hints at 15 and 18. Objective members retain their
+existing replenishment systems, including level 12's paired Exploder supply.
+The chapter uses the existing layouts and introduces no static ground hazards.
+See [Chapter 2 verification](../Verification/Chapter2.md).
 
 ## Alien Sporella (SPORELLA-001..004)
 
@@ -95,7 +109,10 @@ Each Spike settings asset bakes an RGB gradient into a sampled blob that travels
 Presentation caches the ramp texture and applies it from tip to base. Enemy shots use its RGB
 tint with the shared enemy accent. Player-owned bursts and returns use its brightness with the
 shared player accent so an authored enemy hue cannot obscure ownership.
-Wave transitions and retry invalidate previous shots, and retry clears each Spike's burst history.
+Alien Spike shots retain sequence, run generation and originating wave. A shot
+can cross wave boundaries when each intervening transition uses timed activation.
+Clear checkpoints, sequence completion, retry and unload expire shots. Retry
+also clears each Spike's burst history.
 
 ## Gameplay SFX (VISION-005, COMBAT-003, ENEMY-003, OQ-019)
 
@@ -1641,7 +1658,7 @@ BARRICADE-007 likewise supersedes their single-gate layouts; see Progressive bar
 
 Chapter 2 adds Exploder and Dasher combinations, a shell/core target in level 12, a barricade
 in 13, bidirectional tracks in 16/19, rotating cover in 17 and the Chicken boss in 20.
-Level 18 has a 100 x 100m floor and finite waves of 52/70/88/108 (318 total). The shell uses
+Level 18 has a 100 x 100m floor and timed phases of 48/56/72/88 (264 total). The shell uses
 the existing zero-surviving-Exploders pair replenishment; tracks use existing physical arrival
 completion. No runtime objective or enemy ownership/system ordering changed.
 

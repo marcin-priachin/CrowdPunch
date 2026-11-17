@@ -1,5 +1,61 @@
 # Chapter 2 implementation and verification
 
+## 2026-11-17 encounter revision
+
+The Chapter 2 implementation follows LOOP-011 and SPIKE-001..005.
+
+- Level 15 opens with 6 Baselines and 1 Alien Spike. A clear checkpoint leads to
+  6 Baselines, 2 Exploders and 2 Spikes. The opening hint explains the volley,
+  the launch burst and shot redirection.
+- Level 17 supports the rotating-cover target with 9 Baselines, 2 Exploders
+  and 1 Spike. The support cap remains 12.
+- Level 18 alternates Spike/Exploder and Mushroom Shooter/Dasher groups.
+  The four phases allocate 48, 56, 72 and 88 enemies, down from 318 to
+  264 total. Baselines account for 160 of 264. Batches of up to 8 arrive every 6s,
+  and reinforcement phases begin 6s after the previous last batch. All surviving
+  attackers count toward final clearance. Spike shots survive timed overlap
+  within the current run.
+- The other levels use batches of 4 every 5s. Levels 11, 14 and 15 keep their
+  introductory clear checkpoints, and objective and boss support keep their
+  existing counts or caps and replacement rules. Chapter 2 has no static hazards.
+
+Use Level Play's Campaign tab to preview levels 11–20. The Editor command
+**Crowd Punch > Campaign > Apply Chapter Two Encounter Revision** reapplies
+the recipes to the existing assets and keeps their spawn rectangles and GUIDs.
+
+### Revision verification
+
+- Unity compiled successfully. `dotnet build Assembly-CSharp.csproj --no-restore`
+  completed with 0 errors and 309 existing warnings.
+- All 28 Alien Spike tests passed. The new projectile cases cover timed overlap,
+  a clear checkpoint, stale run generation and encounter completion.
+- The revised level 18 asset test and campaign save test passed. In the same
+  four-test Chapter 2 suite, two assertions still fail against pre-existing
+  Chicken assets. The campaign fires on frame 12 and the legacy boss on frame
+  18. The Foundry's campaign arena references baked shadow mesh copies, while
+  the comparison expects identical mesh paths. Both differences predate this
+  revision.
+- Compared the 16 wave assets against the prior commit. Every serialized spawn
+  region and wave GUID was retained, and each total equals the sum of its
+  guaranteed enemy counts.
+- The controlled Editor lifecycle probe completed levels 11–20, observing
+  all 16 Chapter 2 wave definitions plus Gatekeeper at entry. It verified
+  retry, objective completion, both track arrivals, Chapter 3 unlock and
+  replay using an isolated save and injected defeats.
+- The level 18 observer measured 6.01s between the first two batches, then
+  shortened the remaining intra-phase waits for the probe. All three natural
+  phase timers advanced with earlier enemies remaining. The final gate reached
+  zero cumulative survivors before completion. Level 15 produced an active
+  baked Alien Spike.
+- The accelerated level 18 stress sample reached 264 roots, including 16
+  Spikes and 16 Mushroom Shooters. The last phase's 15-second Editor sample
+  had a 32.4ms median frame, including rendering and probe overhead. Natural
+  clear time, overlap balance and target-hardware performance remain open.
+
+The rest of this file records the original October implementation and its checks.
+
+## Original implementation evidence
+
 2026-10-10. Requirements: LOOP-002..008, ENEMY-004..008, SHELL-001..006,
 TRACK-001..005, BARRICADE-001..005, COVER-001..005, CHICKEN-001..008.
 

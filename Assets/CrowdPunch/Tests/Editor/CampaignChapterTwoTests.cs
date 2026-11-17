@@ -12,6 +12,7 @@ using Unity.Mathematics;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using EnemyArchetype = CrowdPunch.Configuration.EnemyArchetype;
 
 namespace CrowdPunch.Tests
 {
@@ -50,9 +51,12 @@ namespace CrowdPunch.Tests
             var waves = AssetDatabase.FindAssets("t:EnemyWaveSettings",new[]{Data+"Waves"})
                 .Select(g=>AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>(AssetDatabase.GUIDToAssetPath(g)))
                 .Where(w=>w.name.StartsWith("CP18_")).OrderBy(w=>w.name).ToArray();
-            Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{52,70,88,108}));
-            Assert.That(waves.Sum(w=>w.TotalEnemyCount),Is.EqualTo(318));
-            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.Batched && w.BatchSize==8 && w.BatchInterval==2 && w.DelayBeforeWave==3 && w.Duration==0),Is.True);
+            Assert.That(waves.Select(w=>w.TotalEnemyCount),Is.EqualTo(new[]{48,56,72,88}));
+            Assert.That(waves.Sum(w=>w.TotalEnemyCount),Is.EqualTo(264));
+            Assert.That(waves.All(w=>w.SpawnMode==EnemyWaveSpawnMode.Batched && w.BatchSize==8 && w.BatchInterval==6),Is.True);
+            Assert.That(waves.Select(w=>w.DelayBeforeWave),Is.EqualTo(new[]{3f,0f,0f,0f}));
+            Assert.That(waves.Take(3).All(w=>w.ActivationMode==EnemyWaveActivationMode.DurationElapsed && w.Duration==6),Is.True);
+            Assert.That(waves.Last().ActivationMode,Is.EqualTo(EnemyWaveActivationMode.AllCurrentAndPreviousEnemiesDefeated));
             Assert.That(waves.All(w=>w.Enemies.All(e=>e.Settings!=null && e.Weight==0)
                 && w.Enemies.Sum(e=>e.MinimumCount)==w.TotalEnemyCount),Is.True);
             var floor = AssetDatabase.LoadAssetAtPath<Mesh>(Data+"Layouts/Campaign_18_Floor.asset");
@@ -139,6 +143,8 @@ namespace CrowdPunch.Tests
                         Assert.That(wall.cover.settings.openingDegrees,Is.EqualTo(90));
                         Assert.That(wall.cover.settings.degreesPerSecond,Is.EqualTo(25));
                         Assert.That(wall.settings.requiredHits,Is.EqualTo(3));
+                        var spike = crowd.Waves.Single().Enemies.Single(e => e.Settings.Archetype == EnemyArchetype.AlienSpike);
+                        Assert.That(spike.MinimumCount, Is.EqualTo(1));
                     }
                     if (n==20)
                     {

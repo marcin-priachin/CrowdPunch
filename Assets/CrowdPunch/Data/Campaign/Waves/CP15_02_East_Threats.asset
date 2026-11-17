@@ -12,18 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP15_02_East_Threats
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 22
+  totalEnemyCount: 10
+  linkedPairProfile: {fileID: 0}
+  linkedPairCount: 0
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 16
-    Weight: 0
-  - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
-    MinimumCount: 2
+    MinimumCount: 6
     Weight: 0
   - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
     MinimumCount: 2
     Weight: 0
-  - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
+  - Settings: {fileID: 11400000, guid: 12c3d79e809689b4cb3a8045a23c6552, type: 2}
     MinimumCount: 2
     Weight: 0
   eliteEnemies: []
@@ -38,7 +37,7 @@ MonoBehaviour:
   duration: 0
   spawnMode: 1
   batchSize: 4
-  batchInterval: 1.5
+  batchInterval: 5
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

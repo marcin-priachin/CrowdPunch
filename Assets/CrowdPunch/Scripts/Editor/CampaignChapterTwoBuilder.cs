@@ -19,15 +19,15 @@ namespace CrowdPunch.Editor
             "Break the shell with three explosions. Then attack the exposed core again.",
             "Launch bodies or Exploders into the barricade, then reach the exit.",
             "Dashers commit to a direction. Step aside and send them into the crowd.",
-            "Move out of the firing lane. Use an Exploder to reach the grouped threats.",
+            "Use cover against Alien Spike's radial shots. Launch it into a crowd to fire a burst, or punch a flying spike back.",
             "Launch bodies into the block from behind to move it into the blue socket. Far-side hits push it back.",
             "Send Exploders through the moving opening. Blasts outside the cover cannot reach the target.",
-            "Clear the large waves. Place explosions in dense groups and leave room to dodge charges.",
+            "Reinforcements arrive from changing sides. Turn Spike bursts into explosions and aim Mushroom Shooters through the charging crowd.",
             "Blast behind the block to push it toward the socket. Use the outer lane to get into position.",
             "Punch the bouncing shots back, or launch enemies at the Chicken. Returned shots and launched bodies still hurt you."
         };
 
-        private static Level[] ChapterTwoDesigns() => new[]
+        private static Level[] ChapterTwoLayoutRecipes() => new[]
         {
             new Level { Name="First Fuse", Outline=OvalCourt(28,30), Spacing=new Vector2(22,24), Entry=new Vector2(0,-10), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("First Fuse",6,new[]{Range(-4,5,6,8),Range(4,5,6,8)},x:1),
@@ -40,20 +40,98 @@ namespace CrowdPunch.Editor
                 W("First Charge",8,new[]{Range(0,10,20,8)},d:1),
                 W("Paired Charge",12,new[]{Range(-6,10,6,9),Range(6,10,6,9)},d:2) } },
             new Level { Name="Crossed Threats", Outline=new[]{new Vector2(-9,-17),new Vector2(9,-17),new Vector2(18,2),new Vector2(0,17),new Vector2(-18,2)}, Spacing=new Vector2(24,26), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("West Threats",12,new[]{Range(-10,0,4,12)},r:2,d:1),
-                W("East Threats",16,new[]{Range(10,0,4,12)},r:2,x:2,d:2) } },
+                W("West Threats",6,new[]{Range(-10,0,4,12)},alienSpike:1),
+                W("East Threats",6,new[]{Range(10,0,4,12)},x:2,alienSpike:2) } },
             new Level { Name="Push the Block", Outline=Clipped(32,38,3), Spacing=new Vector2(26,32), Entry=new Vector2(0,-13), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Block Ammunition",8,new[]{Range(-9,0,5,24),Range(9,0,5,24)}) } },
             new Level { Name="Moving Window", Outline=Clipped(36,32,4), Spacing=new Vector2(30,26), Entry=new Vector2(0,-11), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("Window Ammunition",10,new[]{Range(0,10,18,4),Range(0,-10,18,4)},x:2) } },
+                W("Window Ammunition",9,new[]{Range(0,10,18,4),Range(0,-10,18,4)},x:2,alienSpike:1) } },
             new Level { Name="Crowd Reaction", Outline=Rectangle(100,100), Spacing=new Vector2(96,96), Entry=new Vector2(0,-16), Lanes=Array.Empty<Vector4>(), Waves=new[]{
-                W("North Reaction",48,new[]{Range(0,23,34,16)},x:4),
-                W("West Charges",64,new[]{Range(-27,0,16,36)},r:4,d:2),
-                W("East Fuses",80,new[]{Range(27,0,16,36)},x:6,d:2),
-                W("Split Reaction",96,new[]{Range(-22,28,20,20),Range(22,28,20,20)},r:4,x:4,d:4) } },
+                W("North Reaction",30,new[]{Range(0,23,34,16)},x:12,alienSpike:6),
+                W("West Charges",34,new[]{Range(-27,0,16,36)},r:4,d:12,mushroom:6),
+                W("East Fuses",44,new[]{Range(27,0,16,36)},x:18,alienSpike:10),
+                W("Split Reaction",52,new[]{Range(-22,28,20,20),Range(22,28,20,20)},r:12,d:14,mushroom:10) } },
             new Level { Name="Push from Behind", Outline=Clipped(30,42,4), Spacing=new Vector2(24,36), Entry=new Vector2(2,-15), Lanes=Array.Empty<Vector4>(), Waves=new[]{
                 W("Behind the Block",8,new[]{Range(-9,-2,4,24),Range(11,0,3,24)},x:2) } }
         };
+
+        private static Level[] ChapterTwoDesigns()
+        {
+            var levels = ChapterTwoLayoutRecipes();
+            for (int index = 0; index < levels.Length; index++)
+            {
+                var waves = levels[index].Waves;
+                bool largeArena = index + 11 == 18;
+                for (int phase = 0; phase < waves.Length; phase++)
+                {
+                    var wave = waves[phase];
+                    wave.Batch = largeArena ? 8 : 4;
+                    wave.Interval = largeArena ? 6 : 5;
+                    if (!largeArena) continue;
+                    wave.Delay = phase == 0 ? 3 : 0;
+                    wave.NextAfter = phase < waves.Length - 1 ? 6 : -1;
+                }
+            }
+            return levels;
+        }
+
+        private static Wave ChapterTwoChickenCrowd()
+            => W("Chicken Crowd", 6, new[] { Range(0, 0, 28, 28) }, batch: 4, interval: 5);
+
+        [MenuItem("Crowd Punch/Campaign/Apply Chapter Two Encounter Revision")]
+        public static void ApplyChapterTwoEncounterRevision()
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before authoring.");
+            for (int index = 0; index < SceneManager.sceneCount; index++)
+                if (SceneManager.GetSceneAt(index).isDirty)
+                    throw new InvalidOperationException("Save open scenes before authoring.");
+
+            var designs = ChapterTwoDesigns().Select(level => level.Waves)
+                .Append(new[] { ChapterTwoChickenCrowd() }).ToArray();
+            var setup = EditorSceneManager.GetSceneManagerSetup();
+            try
+            {
+                var catalog = AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CampaignBuildRegistration.CatalogPath);
+                if (catalog == null || catalog.Count < 20 || Enumerable.Range(10, 10).Any(i => !catalog.Get(i).Available))
+                    throw new InvalidOperationException("An installed Chapter Two is required.");
+
+                // Read the wired spawn regions before touching any saved wave.
+                for (int index = 0; index < designs.Length; index++)
+                {
+                    int level = index + 11;
+                    EditorSceneManager.OpenScene(CampaignSub(level), OpenSceneMode.Single);
+                    var encounter = UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>();
+                    if (encounter == null || encounter.Waves.Count != designs[index].Length)
+                        throw new InvalidOperationException($"Unexpected wave wiring in level {level}.");
+                    for (int phase = 0; phase < encounter.Waves.Count; phase++)
+                    {
+                        var existing = encounter.Waves[phase];
+                        var recipe = designs[index][phase];
+                        string name = ChapterTwoWaveName(level, phase, recipe);
+                        if (existing == null || AssetDatabase.GetAssetPath(existing) != CampaignData + "Waves/" + name + ".asset")
+                            throw new InvalidOperationException($"Missing or unexpected wave asset {name}.");
+                        recipe.Ranges = existing.SpawnRectangles.ToArray();
+                    }
+                }
+                var profiles = LoadCampaignProfiles();
+                foreach (int index in new[] { 0, 1, 2, 3, 12, 13 })
+                    if (profiles[index].EnemyPrefab == null)
+                        throw new InvalidOperationException("Missing prefab for " + profiles[index].name);
+                for (int index = 0; index < designs.Length; index++)
+                    for (int phase = 0; phase < designs[index].Length; phase++)
+                    {
+                        var recipe = designs[index][phase];
+                        WaveAsset(ChapterTwoWaveName(index + 11, phase, recipe), recipe, profiles, CampaignData + "Waves/");
+                    }
+                AssetDatabase.SaveAssets();
+                foreach (int level in new[] { 15, 18 }) SetCampaignHint(level, ChapterTwoHints[level - 11]);
+            }
+            finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
+            Debug.Log("LOOP-011: Chapter Two revised in place. Alien Spike at 15/17/18; timed reinforcements and 264 enemies at 18.");
+        }
+
+        private static string ChapterTwoWaveName(int level, int phase, Wave recipe)
+            => $"CP{level:00}_{phase + 1:00}_" + recipe.Name.Replace(' ', '_');
 
         private static Vector2[] OvalCourt(float width, float depth) => Enumerable.Range(0,12)
             .Select(i => new Vector2(Mathf.Cos(i*Mathf.PI/6)*width/2, Mathf.Sin(i*Mathf.PI/6)*depth/2)).ToArray();
@@ -93,7 +171,7 @@ namespace CrowdPunch.Editor
                 CampaignBuildRegistration.Apply();
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
-            Debug.Log("Chapter Two authored: levels 11-20, shell/track objectives, 318-enemy large arena and preserved Chicken arena.");
+            Debug.Log("Chapter Two authored: levels 11-20, shell/track objectives, 264-enemy large arena and preserved Chicken arena.");
         }
 
         private static EnemySpawnSettings[] LoadCampaignProfiles() => ProfileNames.Select(n =>
@@ -219,7 +297,7 @@ namespace CrowdPunch.Editor
             var sub = EditorSceneManager.OpenScene(CampaignSub(20),OpenSceneMode.Single);
             var chicken = UnityEngine.Object.FindFirstObjectByType<ChickenBossAuthoring>();
             chicken.settings = CampaignSettings<ChickenBossSettings>("ChickenBossSettings","L20_Chicken");
-            var wave = WaveAsset("CP20_01_Chicken_Crowd",W("Chicken Crowd",6,new[]{Range(0,0,28,28)}),LoadCampaignProfiles(),CampaignData+"Waves/");
+            var wave = WaveAsset("CP20_01_Chicken_Crowd",ChapterTwoChickenCrowd(),LoadCampaignProfiles(),CampaignData+"Waves/");
             var wd = new SerializedObject(wave);
             wd.FindProperty("replenishWhileBossLives").boolValue = true;
             wd.FindProperty("bossReplenishDelay").floatValue = 4;

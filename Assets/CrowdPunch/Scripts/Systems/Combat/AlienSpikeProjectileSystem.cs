@@ -1,4 +1,5 @@
 using CrowdPunch.Components;
+using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.Groups;
 using CrowdPunch.Systems.Physics;
@@ -37,7 +38,7 @@ namespace CrowdPunch.Systems.Combat
                 SystemAPI.Query<RefRW<AlienSpikeProjectile>, RefRW<LocalTransform>>().WithEntityAccess())
             {
                 ref var shot = ref projectile.ValueRW;
-                if (!WaveIsCurrent(em, shot.Wave))
+                if (!IsWaveShotActive(em, shot.Wave))
                 {
                     commands.DestroyEntity(entity);
                     continue;
@@ -90,13 +91,23 @@ namespace CrowdPunch.Systems.Combat
             };
         }
 
-        internal static bool WaveIsCurrent(EntityManager em, in EnemyWaveOwnership wave)
+        private static bool IsWaveShotActive(EntityManager em, in EnemyWaveOwnership wave)
         {
             if (wave.Sequence == Entity.Null) return true;
             if (!em.HasComponent<EnemyWaveSequence>(wave.Sequence)) return false;
             var sequence = em.GetComponentData<EnemyWaveSequence>(wave.Sequence);
-            return sequence.RunGeneration == wave.RunGeneration && sequence.CurrentWaveIndex == wave.WaveIndex
-                && sequence.Phase != EnemyWaveRuntimePhase.Complete;
+            if (sequence.RunGeneration != wave.RunGeneration || sequence.Phase == EnemyWaveRuntimePhase.Complete
+                || wave.WaveIndex > sequence.CurrentWaveIndex) return false;
+            if (wave.WaveIndex == sequence.CurrentWaveIndex) return true;
+
+            // Timed reinforcements overlap earlier combat. A clear checkpoint still
+            // removes shots left in flight, as in the legacy Alien Spike introduction.
+            if (!em.HasBuffer<EnemyWaveDefinition>(wave.Sequence)) return false;
+            var definitions = em.GetBuffer<EnemyWaveDefinition>(wave.Sequence, true);
+            if (wave.WaveIndex < 0 || sequence.CurrentWaveIndex >= definitions.Length) return false;
+            for (int index = wave.WaveIndex; index < sequence.CurrentWaveIndex; index++)
+                if (definitions[index].ActivationMode != (byte)EnemyWaveActivationMode.DurationElapsed) return false;
+            return true;
         }
 
         internal static void ApplyHit(EntityManager em, Entity target, in AlienSpikeProjectile shot, double now)
