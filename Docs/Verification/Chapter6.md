@@ -1,8 +1,44 @@
 # Chapter 6 implementation and verification
 
-2026-10-10. Requirements: LOOP-002..008, CHICKEN-001..006, PROTECT-001..004,
+2026-10-10, revised 2026-11-17. Requirements: LOOP-002..011, CHICKEN-001..006, PROTECT-001..004,
 BARRICADE-006, TRACK-001..005, COVER-001..005, SHELL-001..006, GROUND-001..007,
 ENEMY-009/011/014/015, WIZARD-001..007, TRAIL-001..007.
+
+## Chapter 6 variety revision
+
+The current wave recipes and timing are in
+[Campaign80Proposal.md](../Design/Campaign80Proposal.md#chapter-6-deliberate-reactions).
+The revision adds shooters to levels 53/54, changes reinforcement timing on
+55/57/58/59 and adds periodic warning strips to 54/55/57/58. With clear spawn
+areas, Moving Batteries schedules 41 batches and reaches the last batch
+around 240s plus time spent clearing the Elite checkpoint.
+
+Unity compilation and the .NET build passed. The targeted suites passed 182
+checks, including every revised Chapter 6 scene, exact wave recipes, spawn
+and obstacle clearance, the track route, Dragon and the three shooters.
+Two existing assertions fail. Level 56's saved gates require three hits and
+the room test expects four. The level 60 arena snapshot points to a Canyon
+baked mesh where the legacy snapshot expects a Gauntlet mesh path.
+
+The isolated Editor preview observed active Dragon and Sporella together at
+55, followed by Alien Spike while first-phase enemies remained. Level 57
+brought in a timed defense group while first-group attackers were still active.
+Moving Batteries held its midpoint with 110 active enemies and advanced after
+controlled defeats. Its final clearance held with 35 earlier-phase survivors
+and completed after the remaining crowd was cleared. The accelerated preview
+recorded 358 Editor frames with at least 64 live bodies, peaking at 111. Median
+frame time was 28.57ms and the 95th percentile was 125.67ms, including Editor
+overhead, accelerated spawning and the observer. Normal clear times and
+target-device performance remain for playtesting.
+
+The level 54 follow-up moved its three strips into the shot setup lanes for
+turns 2, 3 and 6. The level-specific and campaign track tests confirm clearance
+for the moving carrier, corners and spawn banks, and check that each strip
+intersects a direct approach to an outgoing leg.
+
+## Original chapter release (2026-10-10)
+
+The timings, populations and measurements below describe the original release.
 
 ## Playing and tuning
 

@@ -69,7 +69,10 @@ Level 18's crowd size and reinforcement intervals are initial playtest tuning.
 Chapter 3 is also implemented, including the mixed final room at 22 and timed
 reinforcement at 25/27/28. Chapter 4 adds timed defense, the revised level 38
 crowd, and hazard placement at 35/36/38. Chapter 5 adds Sporella at 43/45/48,
-timed defense at 47, and the mixed Firebreak arena. Chapters 6–9 are pending.
+timed defense at 47, and the mixed Firebreak arena. Chapter 6 adds rotating
+shooter mixes at 55/58, timed defense at 57 and spaced warning strips at
+54/55/57/58. Chapter 7 adds timed shooter mixes and staggered warning strips
+at 63/65/67/68, with room to reach Snake tails. Chapters 8–9 are pending.
 OQ-001 remains open.
 
 Decision: approve the proposed campaign revision with Mushroom Shooter at 5,

@@ -36,7 +36,7 @@ namespace CrowdPunch.Tests
             .OrderBy(w => w.name).ToArray();
 
         [TestCase(41)] [TestCase(43)] [TestCase(45)] [TestCase(47)] [TestCase(48)] [TestCase(49)]
-        [TestCase(52)] [TestCase(55)] [TestCase(58)] [TestCase(61)]
+        [TestCase(52)] [TestCase(55)] [TestCase(57)] [TestCase(58)] [TestCase(59)] [TestCase(61)]
         [TestCase(63)] [TestCase(65)] [TestCase(67)] [TestCase(68)]
         [TestCase(71)] [TestCase(73)] [TestCase(78)]
         public void Campaign_ExactAuthoredWavesMatchAcceptedProposal(int level)
@@ -61,7 +61,7 @@ namespace CrowdPunch.Tests
                 Assert.That(actual, Is.EquivalentTo(counts), $"Level {level}, wave {i + 1}");
                 Assert.That(wave.Enemies.Sum(e => e.MinimumCount), Is.EqualTo(wave.TotalEnemyCount));
                 Assert.That(wave.Enemies.All(e => e.Weight == 0 && e.Settings.EnemyPrefab != null), Is.True);
-                bool batched = level is 43 or 45 or 47 or 48 or 49;
+                bool batched = level is 43 or 45 or 47 or 48 or 49 or 55 or 57 or 58 or 59 or 63 or 65 or 67 or 68;
                 bool timed = expected[i].TrimEnd().EndsWith("~");
                 bool followsTimed = i > 0 && expected[i - 1].TrimEnd().EndsWith("~");
                 Assert.That(wave.SpawnMode, Is.EqualTo(batched ? EnemyWaveSpawnMode.Batched : EnemyWaveSpawnMode.AllAtOnce));
@@ -70,8 +70,8 @@ namespace CrowdPunch.Tests
                 Assert.That(wave.Duration, Is.EqualTo(timed ? 6 : 0));
                 if (batched)
                 {
-                    Assert.That(wave.BatchSize, Is.EqualTo(level == 48 ? 8 : level == 45 ? 6 : 4));
-                    Assert.That(wave.BatchInterval, Is.EqualTo(level == 48 ? 6 : level == 47 ? 4 : 5));
+                    Assert.That(wave.BatchSize, Is.EqualTo(level is 48 or 58 or 68 ? 8 : level is 45 or 55 or 63 or 65 or 67 ? 6 : 4));
+                    Assert.That(wave.BatchInterval, Is.EqualTo(level is 48 or 58 or 68 ? 6 : level is 47 or 57 ? 4 : 5));
                 }
                 Assert.That(wave.ReplenishWhileBossLives, Is.False);
                 Assert.That(wave.WaitForPersistentHazards, Is.EqualTo(counts.ContainsKey(ProfileNames["W"])));

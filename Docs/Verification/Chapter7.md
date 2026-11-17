@@ -1,8 +1,39 @@
 # Chapter 7 implementation and verification
 
-2026-10-10. Requirements: LOOP-002..008, ROLL-001..007, BARRICADE-006,
+2026-10-10, revised 2026-11-17. Requirements: LOOP-002..011, ROLL-001..007, BARRICADE-006,
 TRACK-001..005, COVER-001..005, SHELL-001..006, GROUND-001..007,
 ENEMY-009/011/014/015, WIZARD-001..007, TRAIL-001..007.
+
+## Chapter 7 variety revision
+
+The current recipes are in
+[Campaign80Proposal.md](../Design/Campaign80Proposal.md#chapter-7-control-the-ground).
+The revision adds timed groups and staggered warning strips to 63/65/67/68.
+With clear spawn areas, Shifting Front allocates 328 enemies in 41 batches.
+The last batch is scheduled around 240s plus time spent clearing the Elite
+checkpoint. Snake tails contribute 18 additional bodies across the encounter.
+
+Unity compilation and the .NET build passed. The targeted suites passed 201
+checks, including every revised Chapter 7 scene, exact wave schedules, spawn
+and rock clearance, Snake and the three new shooters. Two existing assertions
+fail. Level 62's saved gates require three hits and the room test expects four.
+The level 70 arena snapshot points to a Vault baked mesh where the legacy
+snapshot expects a Gauntlet mesh path.
+
+The isolated Editor preview observed Sporella and a fully assembled Snake at
+65, then Alien Spike arriving while the first phase still had survivors.
+Shifting Front held its midpoint with 57 active enemies and advanced after
+controlled defeats. Both south-bank Snakes assembled all six segments. The
+final phase reached its clearance gate with 59 earlier-phase survivors and
+completed after cumulative clearance. The accelerated preview recorded 429
+Editor frames with at least 64 live enemies, peaking at 114. Median frame time
+was 30.62ms and the 95th percentile was 74.58ms, including Editor overhead,
+accelerated spawning and the observer. Normal clear times and target-device
+performance remain for playtesting.
+
+## Original chapter release (2026-10-10)
+
+The timings, populations and measurements below describe the original release.
 
 ## Playing and tuning
 

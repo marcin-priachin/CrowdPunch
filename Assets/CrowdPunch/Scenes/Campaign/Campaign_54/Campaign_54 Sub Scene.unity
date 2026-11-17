@@ -12757,14 +12757,14 @@ MonoBehaviour:
   operation: 1
   firstWave: 0
   width: 3
-  depth: 8
+  depth: 4
   radius: 2.5
   damage: 12
   damageInterval: 0.75
   inactiveDuration: 4
   warningDuration: 1.5
   activeDuration: 2.5
-  cycleOffset: 0
+  cycleOffset: 2
 --- !u!4 &994835562
 Transform:
   m_ObjectHideFlags: 0
@@ -12774,7 +12774,7 @@ Transform:
   m_GameObject: {fileID: 994835560}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 20, y: -0.965, z: -25}
+  m_LocalPosition: {x: -10.5, y: -0.965, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -17698,7 +17698,7 @@ MonoBehaviour:
   operation: 1
   firstWave: 0
   width: 3
-  depth: 8
+  depth: 4
   radius: 2.5
   damage: 12
   damageInterval: 0.75
@@ -17715,7 +17715,7 @@ Transform:
   m_GameObject: {fileID: 1340056010}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -20, y: -0.965, z: 25}
+  m_LocalPosition: {x: 15, y: -0.965, z: 4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -30500,6 +30500,77 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2147350693}
   m_Mesh: {fileID: 4300000, guid: f707d569016b07a41a1e5f5b9866db31, type: 2}
+--- !u!1 &1318891062
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1318891065}
+  - component: {fileID: 1318891064}
+  - component: {fileID: 1318891063}
+  m_Layer: 0
+  m_Name: South warning pocket
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1318891063
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1318891062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1e80925cbc102b4f9aebd4cdd1b0996, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAppearanceAuthoring
+  style: 4
+--- !u!114 &1318891064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1318891062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63c474b1fb547c4438b63150e73fca57, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAuthoring
+  sequence: {fileID: 939620921}
+  shape: 0
+  operation: 1
+  firstWave: 0
+  width: 3
+  depth: 4
+  radius: 2.5
+  damage: 12
+  damageInterval: 0.75
+  inactiveDuration: 4
+  warningDuration: 1.5
+  activeDuration: 2.5
+  cycleOffset: 0
+--- !u!4 &1318891065
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1318891062}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5, y: -0.965, z: -16}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -30513,3 +30584,4 @@ SceneRoots:
   - {fileID: 1340056012}
   - {fileID: 103891667}
   - {fileID: 908803519}
+  - {fileID: 1318891065}

@@ -1748,37 +1748,41 @@ Protected-zone levels exclude Elites (PROTECT-001).
 16/20/22-enemy defense groups at level 47, arriving in batches up to four every
 four seconds with timed overlaps. Victory requires cumulative attacker resolution.
 
-Chapter 6 adds levels 51-60 using existing runtime mechanics. Level 51 uses the shell
-and specialized Exploder pair, 53 reverses its 90-degree cover opening every five seconds
-at 30 degrees/s, 54 has a six-hit diagonal rail, and 56 a four-hit narrow gate. The
-protected-point encounter (57) has 22/26/26 finite normal enemies, no Elites, batches of
-four every three seconds and five-second cleared-wave pauses. Wizard encounters in 55
-and 58 use their existing ammunition and persistent-zone safeguards; armor supply applies
-where armor appears. Level 58 spans 100 x 100m with five waves of 77/96/102/118/138 initial
-enemies (531 including three Elites). Levels 54/58/60 each have two periodic 3 x 8m strips
-with four-second stagger, 4/1.5/2.5s inactive/warning/active cycles and safe spawn banks.
+Chapter 6 covers levels 51-60 using existing runtime mechanics. Level 51 uses the
+shell and specialized Exploder pair, 53 reverses its 90-degree cover opening every
+five seconds at 30 degrees/s, 54 has a seven-leg track, and 56 has five barricade
+rooms. LOOP-011 adds one Mushroom Shooter to 53 and one Sporella to 54 via their
+existing bounded supplies. Level 57 has finite groups of 16/20/22 without Elites,
+batches of four every four seconds and timed advances. Levels 55 and 58 apply
+Wizard ammunition and persistent-zone waits in their final phases. Armor
+safeguards apply where armor appears. Level 58 spans 100 x 100m with allocations
+of 48/56/64/72/88, including two Elites and 28 LinkedPair endpoints. It uses
+existing timed advancement and cumulative clears at the midpoint and finish.
+Levels 54/55/57/58 have 3/3/3/5 periodic strips, respectively, using the Canyon
+appearance. Level 60 retains two side strips. All use 4/1.5/2.5s
+inactive/warning/active cycles.
 The Chicken rematch (60) preserves the original arena's transforms and collision meshes,
 with campaign-owned 2100 health, movement-leading shots, .8s wind-up, 1.5s shot spacing,
 and unchanged single/paired/paired stages. Its support is eight Baselines and two
 Exploders with four-second replacements. No runtime enemy ownership or system ordering
-changes are needed. `CampaignChapterSixBuilder` authors the new scenes and settings;
+changes are needed. `CampaignChapterSixBuilder` owns the recipes and the in-place revision.
 `CampaignLifecycleCheck.StartChapterSix` verifies the Chapter 5/6 boundary and progression
 using an isolated save and controlled completion injections.
 
-Chapter 7 adds levels 61-70 without changing runtime ownership or system order. Level 62
-places its four-hit, 2m gate and exit to the northeast; unequal solid terrain spans seal
-both sides behind the gate's front face. Level 64 takes four shell explosions, 66 pauses
-its 90-degree cover for one second on each successful hit (otherwise 25 degrees/s), and
-69 uses a straight five-hit rail. Levels 62/67 have paired periodic strips, 64 has two
-permanent rectangular pockets, and 65 has one optional periodic side strip. Level 68
-spans 100 x 100m with six finite waves of 68/86/94/102/118/138 initial enemies (606 total,
-including two Elites), four separated islands, and three outer periodic strips offset
-by thirds of the eight-second cycle. Armor and Wizard safeguards use the existing
-wave settings; Trail remnants alone never gate completion. The Rolling Blob rematch
+Chapter 7 covers levels 61-70 using existing runtime ownership and system order.
+Level 62 ends its six-room chain at the northeast gate and exit. Level 64 takes
+four shell explosions, 66 pauses its 90-degree cover for one second on each hit
+(otherwise 25 degrees/s), and 69 uses the eight-leg track. LOOP-011 adds timed
+shooter combinations and three periodic warning strips each to 63/65/67.
+Level 68 spans 100 x 100m with allocations of 40/48/56/56/64/64 enemies plus
+18 Snake tail segments. It uses six staggered periodic strips, timed overlaps,
+and cumulative clearance at the Elite checkpoint and finish. The existing
+armor and Wizard safeguards apply in their respective phases. Snake tails and
+Trail remnants have no independent clearance requirement. The Rolling Blob rematch
 (70) preserves the original arena geometry, uses 600 health, physical reflection and
 2.5/1.8/1.2s pauses with unchanged roll speeds, and maintains eight Baselines plus two
 Exploders. Two periodic outer pockets preserve its central space. All settings and
-waves are campaign-owned. `CampaignChapterSevenBuilder` creates the assets;
+waves are campaign-owned. `CampaignChapterSevenBuilder` owns the recipes and in-place revision.
 `CampaignLifecycleCheck.StartChapterSeven` probes the Chapter 6/7 boundary and progression.
 The authoring floor mesh now triangulates concave outlines with ear clipping instead of
 a vertex fan. Chapter 7's stepped/notched floor visuals (61/64/69) were rebuilt; existing

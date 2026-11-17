@@ -1,15 +1,15 @@
 # Crowd Punch: 80-level campaign proposal
 
-Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented in Chapters 1–5. Chapters 6–9 are pending. Encounter counts and cadence are starting values for playtesting.
+Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented in Chapters 1–7. Chapters 8–9 are pending. Encounter counts and cadence are starting values for playtesting.
 
 Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2 through 8 in sequence. All 80 levels and their campaign infrastructure are authorized and implemented.
 
 ## Approved variety and reinforcement revision (2026-11-16, LOOP-011)
 
-The user approved the three-shooter plan, then requested Chapters 1 through 5.
+The user approved the three-shooter plan, then requested Chapters 1 through 7.
 This section supersedes conflicting composition and cadence rules in the original
-proposal and the 2026-10-14 revision. The Chapter 1–5 tables reflect the revised
-assets. The Chapter 6–8 tables describe the encounters in the current build.
+proposal and the 2026-10-14 revision. The Chapter 1–7 tables reflect the revised
+assets. The Chapter 8 table describes the encounters in the current build.
 Level 81 retains FINALE-001..007 and its separate design document.
 
 Preserve all 81 stable IDs, existing objectives, boss order, save/unlock behavior,
@@ -185,6 +185,76 @@ bounded objective support. Level 41 retains the original isolated LinkedPair
 introduction. The existing level 42 asset uses three hits per gate, while the
 BARRICADE-009 design default and the level's opening hint specify four.
 
+### Chapter 6 authored cadence
+
+Level 52 retains the isolated Dragon introduction. Levels 53 and 54 each
+substitute one specialist for one Baseline, retaining 16 support enemies,
+batches of four every 1.5s and bounded objective replacements. Level 54's
+three 3 x 4m strips sit on the approach to turns 2, 3 and 6, lined up with
+the next leg. Their near edges are four metres from the rail centreline.
+Their 0/2/4s offsets vary which shot setup is under pressure, with room
+beside each strip and clearance for the carrier and socket.
+Levels 51, 56 and 60 retain their objective and boss support. Level 56's saved
+gate asset requires three hits per gate. BARRICADE-009 specifies four as the
+design default.
+
+Level 55 sends 66 allocated enemies across three banks, including 30 Baselines
+(45.5%) and four LinkedPair endpoints. Batches of six arrive every five seconds.
+The first two phases advance six seconds after their last successful batch.
+Armor ammunition, Wizard ammunition and persistent Wizard-zone clearance apply
+to the final phase. Three 3 x 6m warning strips leave routes on either side of
+the central strip.
+
+Level 57 releases finite groups of 16/20/22 in batches of four every four
+seconds. A single breach fails the attempt, and victory requires clearing every
+remaining attacker. No Elite or replenishing support enters the defense.
+Three 3 x 6m strips leave an open route to the protected zone. Levels 55 and
+57 stagger their strips at 0/2.67/5.33s.
+
+Moving Batteries (58) has 328 allocated enemies across five phases, including
+146 Baselines (44.5%), 28 LinkedPair endpoints and two Elites. Batches are eight
+every six seconds. Clear the crowd and Elite supply after phase 3, then wait
+three seconds before phase 4. The final phase clears all survivors and persistent
+Wizard zones. Five staggered 3 x 8m strips use offsets of 0/1.6/3.2/4.8/6.4s and
+leave connected cross-court routes. The new Chapter 6 strips have at least four
+metres of clearance from solid islands and stay clear of the rail and its corners.
+
+Level 59 keeps a familiar, hazard-free breather with 20 enemies across two
+phases and batches of four every five seconds. At 57, 58 and 59, timed phases
+advance six seconds after the last successful batch with zero next-phase delay.
+
+### Chapter 7 authored cadence
+
+Level 61 retains the isolated Snake introduction with one six-segment tail
+per clear-gated wave. Levels 63, 65 and 67 introduce timed groups from their
+existing banks in batches of up to six every five seconds. The next group
+arrives six seconds after the previous group's last successful batch.
+Level 63 combines Mushroom Shooters and Trails with LinkedPairs and a later
+Dragon. Level 65 opens with Snake and Sporella, switches to Alien Spike and
+Exploders, then brings in Armor and Wizards with their existing safeguards.
+Level 67 opens with one Mushroom Shooter and one Dragon, then brings in Armor,
+another Dragon and one Snake. Each encounter has three 3 x 6m strips at
+0/2.67/5.33s offsets and retains bypass space around its islands.
+
+Shifting Front (68) allocates 328 enemies for clearance across six sectors,
+including two Elites and 28 LinkedPair endpoints. Three Snakes contribute
+18 attached tail segments, for 346 physical bodies across the encounter.
+There are 133 Baselines, or 40.5% of clearance enemies and 38.4% of physical
+bodies. Up to eight enemies arrive every six seconds. Phases 1, 2, 4 and 5
+advance six seconds after their last successful batch. The midpoint waits
+for the Elite group and earlier survivors to be cleared, followed by a
+three-second pause. The final clear includes all survivors and persistent
+Wizard zones. Armor ammunition applies at the Elite checkpoint and at the
+finish. Six 3 x 6m warning strips stagger at one-sixth intervals of the
+eight-second cycle. They sit in the approaches between banks and the central
+cross, at least four metres from rock footprints. Open lanes around the
+strips leave space to circle the Snake heads and reach the tails.
+
+Levels 62, 64, 66, 69 and 70 retain their objective layouts and bounded
+support. Level 62's shared gate asset requires three hits per gate.
+BARRICADE-009 specifies four as the design default. Level 69 keeps the
+hazard-free pre-boss track route.
+
 ### Implementation and remaining work
 
 Chapter 1 uses existing batching, timed activation, interleaved exact profile allocation,
@@ -199,7 +269,8 @@ at 28 between the Elite encounter and the next timed group. Level 22's two
 shooters follow the barricade room bounds for pursuit and attack starts.
 Verification is recorded for [Chapter 1](../Verification/Chapter1.md),
 [Chapter 2](../Verification/Chapter2.md), [Chapter 3](../Verification/Chapter3.md),
-[Chapter 4](../Verification/Chapter4.md) and [Chapter 5](../Verification/Chapter5.md).
+[Chapter 4](../Verification/Chapter4.md), [Chapter 5](../Verification/Chapter5.md)
+[Chapter 6](../Verification/Chapter6.md) and [Chapter 7](../Verification/Chapter7.md).
 
 Before later chapters, check ground-hazard cycle resets,
 Elite supply, Wizard waits/ammunition, defense targeting and cumulative completion.
@@ -211,7 +282,7 @@ overlap balance and OQ-001 target-hardware acceptance remain unverified design t
 
 - B = Baseline, R = Ranged, X = Exploder, D = Dasher, E = Elite, A = Armored, W = Wizard, T = Trail, M = Mushroom Shooter. Numbers are exact proposed spawn counts, not weights. Elite counts are additional to normal-enemy totals.
 - LP = LinkedPair (counted in pairs, two independently defeated endpoints per pair), F = Dragon (flame; D remains Dasher), S = Snake (counted in heads, not tail segments), N = Ninja. Each S starts with the shared settings asset's current six-segment tail: seven physical bodies initially, but only the head counts toward wave clearance. LP endpoints are additional to the ordinary normal-enemy count through `linkedPairCount`; F/S/N use ordinary exact profile counts. The tether record is not another enemy. See the 2026-10-14 revision below for population accounting.
-- `>` separates clear-gated phases and `~>` marks timed phases that can overlap survivors. Chapters 1–5 follow their authored cadence above. Directions refer to safely inset spawn rectangles. Final wave-clear completion includes all earlier survivors.
+- `>` separates clear-gated phases and `~>` marks timed phases that can overlap survivors. Chapters 1–7 follow their authored cadence above. Directions refer to safely inset spawn rectangles. Final wave-clear completion includes all earlier survivors.
 - `Hold` means one bounded replenishing support population until the objective completes, with a proposed 4-second replacement delay. Counts describe the initial/target population, not an unlimited simultaneous crowd. Existing specialized replenishment rules take precedence; in particular Shell replaces its two Exploders only after both are gone, and stops replacing them once the shell breaks.
 - `Batch n/s` means batches of n enemies every s seconds within each finite phase. Unrevised defense assets retain their 5-second cleared-wave pause; LOOP-011 changes later campaign defense when implemented.
 - Dimensions are approximate playable width x length in metres, except the eight large wave arenas, which each require a 100 x 100m playable footprint. North is the objective/far edge; the player generally enters from the south. All non-boss arenas receive distinct authored floor/boundary/obstacle arrangements using the existing nature kit. Defense arenas retain the established 32 x 96m size and 8 x 4m end zone, with distinct approach geometry.
@@ -359,13 +430,13 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 |---|---|---|---|---|---|---|
 | 51 | Fresh Fuse / destroy shell and core target | 34 x 36 broad oval with one empty rear bay; side support | Hold 10B plus specialized pair of 2X; 3 shell explosions | None | Low-pressure return to deliberate explosives after boss | 75-105s |
 | 52 | Crossing Paths / clear waves | 38 x 40 S-edged court, two offset solid cover islands, broad flanking routes; west/east waves | 6B+1F > 12B+2F | None | Dragon introduction: flank the moving warning, use solid cover, then launch continuous flame through the crowd | 90-120s |
-| 53 | Reverse the Window / destroy rotating-cover target | 40 x 40 unequal octagon, north rock shelf; east/west support | Hold 14B+2X; 4 hits; 90-degree opening, 30 degrees/s, reversal every 5s | None | Existing reversal mode; read motion instead of memorizing a rhythm | 90-120s |
-| 54 | Push Under Pressure / knock into place | 52 x 62 right-turn stair court; seven 10m legs; clear corners and endpoints; outer side support | Hold 14B+2X; 35 net forward hits | P2 away from rail endpoints | Precision objective under alternating spatial pressure | 90-120s |
-| 55 | Disrupt the Casters / clear waves | 40 x 40 triangular-island court; north/east/west waves | 13B+2W+1F > 15B+2R+2W+1F+1LP > 15B+2A+1W+1F+1LP; safeguards | None | Chapter peak: send Dragon flame and paired bodies into caster groups; retain armor-specific hit rules | 90-120s |
-| 56 | Clean Break / break barricade and reach exit | 5 distinct ascending sectors, 32 x 210m total; final original offset island; sealed 2m gates | Hold 8 > 9 > 11 > 12 > 14; final 9B+1R+2X+1D+1A; 5 gates x 4 hits | None | Straightforward shots build into mixed final pressure | Fresh pacing playtest |
-| 57 | Long Watch / protect point through finite waves | 32 x 96 three staggered approach islands, broad recovery area before zone | 20B+2R > 24B+2D > 24B+2X; batch 4/3s | None | Familiar defense under mixed approach pressure; first breach fails | 90-120s |
-| 58 | Moving Batteries / clear waves | 100 x 100 court, three offset islands and wide cross-court shooting lanes; north, west, east, split sides, north banks | 68B+4R+1E+1LP+2F > 84B+6X+2D+2LP > 91B+4A+2E+2LP+1F > 106B+4R+2W+2LP+2F > 121B+6X+4D+2LP+3F; safeguards | P2 optional outer crossings | Large crowd encounter: redirect moving flames and paired swings, disrupt Elite setups and exploit explosive groups | 4-5min |
-| 59 | Open Air / clear waves | 36 x 32 wide shallow court with boundary alcoves; far banks | 12B+2X > 16B+2R | None | Deliberate relief after endurance and before boss | 60-90s |
+| 53 | Reverse the Window / destroy rotating-cover target | 40 x 40 unequal octagon, north rock shelf; east/west support | Hold 13B+2X+1M; 4 hits; 90-degree opening, 30 degrees/s, reversal every 5s | None | Read the cover reversal while avoiding the Mushroom Shooter's firing lane | 90-120s |
+| 54 | Push Under Pressure / knock into place | 52 x 62 right-turn stair court; seven 10m legs; clear corners and endpoints; outer side support | Hold 13B+2X+1SP; 35 net forward hits | Three staggered 3 x 4m strips behind turns 2, 3 and 6 | Time body-shot setups through the warnings or approach from the side while reading Sporella sweeps | 90-120s |
+| 55 | Disrupt the Casters / clear waves | 40 x 40 triangular-island court; north/east/west waves | 9B+1F+2SP+3R+3D+1LP ~> 10B+3AS+6X+3D ~> 11B+2A+1F+1LP+2M+2W+4R; batch 6/5s | Three staggered 3 x 6m warning strips | Redirect Dragon flames and Sporella shots, then use Spike bursts and Exploders as firing angles change | 90-120s |
+| 56 | Clean Break / break barricade and reach exit | 5 distinct ascending sectors, 32 x 210m total; final original offset island; sealed 2m gates | Hold 8 > 9 > 11 > 12 > 14; final 9B+1R+2X+1D+1A; 5 gates x 3 hits in saved asset | None | Straightforward shots build into mixed final pressure | Fresh pacing playtest |
+| 57 | Long Watch / protect point through finite waves | 32 x 96 three staggered approach islands, broad recovery area before zone | 10B+4R+2D ~> 12B+5D+3X ~> 12B+4R+4X+2T; batch 4/4s | Three staggered 3 x 6m side strips | Intercept timed groups and clear every attacker. First breach fails | 90-120s |
+| 58 | Moving Batteries / clear waves | 100 x 100 court, three offset islands and wide cross-court shooting lanes; north, west, east, split sides, north banks | 21B+2F+6SP+9R+6D+2LP ~> 25B+8AS+14X+3D+3LP ~> 29B+8A+6M+8X+5R+2E+3LP > 32B+3F+5SP+11D+7X+8R+3LP ~> 39B+2F+4AS+8M+12X+10R+5D+2W+3LP; batch 8/6s | Five staggered 3 x 8m strips, including two outer crossings | Alternate flame and projectile pressure by bank. Clear the Elite group midway | 4-5min |
+| 59 | Open Air / clear waves | 36 x 32 wide shallow court with boundary alcoves; far banks | 8B+2X ~> 8B+2R; batch 4/5s | None | Deliberate relief after endurance and before boss | 60-90s |
 | 60 | Chicken Crossfire / defeat boss | Exact Chicken arena geometry, no new interior blockers | Hold 8B+2X; existing single/paired patterns | P2 narrow edge sectors, broad central safe space | Movement-leading shot aim; retain readable 0.8s wind-up, 1.5s shot spacing; 2100 health | 3-4min |
 
 ## Chapter 7: Control the Ground
@@ -373,13 +444,13 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 | Level | Name / one main objective | Layout and spawn directions | Composition and waves | Static hazards | Teaching purpose / pacing | Target |
 |---|---|---|---|---|---|---|
 | 61 | Stable Footing / clear waves | 36 x 34 open stepped rectangle; north banks with clear rear tail space and a wide route around the head | 6B+1S > 10B+1S | None | Snake introduction: launch the highlighted tail tip one segment at a time, then defeat the exposed head | 75-105s |
-| 62 | Side Door / break barricade and reach exit | 6 distinct ascending sectors, 36 x 264m total; final original side approach; northeast 2m gates | Hold 8 > 9 > 11 > 12 > 14 > 16; final 11B+1R+2X+1D+1A; 6 gates x 4 hits | Two reduced periodic fore-sector patches; final original P2 | Read broader earlier routes before the final side gate | Fresh pacing playtest |
-| 63 | Draw a Line / clear waves | 42 x 38 three broad lanes around low rock islands; west/east waves | 13B+2T+1W+1LP+1F > 17B+2D+2T+1LP+1F; Wizard safeguards | None | Revisit paired swings and Dragon cover reads alongside living hazards; preserve retreat space | 90-120s |
+| 62 | Side Door / break barricade and reach exit | 6 distinct ascending sectors, 36 x 264m total; final original side approach; northeast 2m gates | Hold 8 > 9 > 11 > 12 > 14 > 16; final 11B+1R+2X+1D+1A; 6 gates x 3 hits in saved asset | Two reduced periodic fore-sector patches; final original P2 | Read broader earlier routes before the final side gate | Fresh pacing playtest |
+| 63 | Draw a Line / clear waves | 42 x 38 three broad lanes around low rock islands; west/east waves | 7B+2M+3T+2R+1LP ~> 8B+2M+2T+4D+1F+1LP+1R; batch 6/5s | Three staggered 3 x 6m strips with central bypass | Leave Mushroom Shooter firing lanes before Trails close off retreats | 90-120s |
 | 64 | Shell Island / destroy shell and core target | 38 x 38 central target, wide safe ring, four shallow boundary notches | Hold 14B plus specialized pair of 2X; 4 shell explosions | G2 in opposite outer pockets | Keep Exploders alive until they can reach the shell | 90-120s |
-| 65 | Three Approaches / clear waves | 42 x 42 three-sided court with wide linking bays; north/west/east waves | 9B+2A+1E+1S+1LP > 17B+2R+2W+1LP+1F > 14B+2D+2T+1S+1F; safeguards | P1 far side lane | Peak through changing mixtures: expose Snake tips while redirecting paired bodies and Dragon flame | 90-120s |
+| 65 | Three Approaches / clear waves | 42 x 42 three-sided court with wide linking bays; north/west/east waves | 8B+1S+2SP+1LP+3R+4D ~> 9B+3AS+6X+4D ~> 10B+2A+1F+1LP+5R+2T+2W; batch 6/5s | Three staggered 3 x 6m approach strips | Reach the Snake tip through Sporella sweeps, then redirect Spike bursts into Exploder groups | 90-120s |
 | 66 | Set the Pace / destroy rotating-cover target | 38 x 40 offset ring with broad southern bay; lateral support | Hold 12B+2X; 4 hits; 90-degree opening, 25 degrees/s, successful-hit pause 1s | None | Relief: exploit the existing hit-pause option | 75-105s |
-| 67 | Keep It Moving / clear waves | 42 x 40 staggered islands, continuous outside lane; north/east waves | 19B+2R+1E+1F > 14B+2A+2D+1S+1F; armor safeguard | P2 between islands, bypasses open | Keep clear angles to the Snake tip and Dragon as periodic safe lanes change | 90-120s |
-| 68 | Shifting Front / clear waves | 100 x 100 four-bay court with widely separated islands and a broad central cross; spawn bank changes each wave | 60B+4R+2LP > 76B+6X+2LP > 82B+4A+2E+2LP+2F > 86B+4D+2T+1S+1LP+1F > 100B+4R+2W+1S+1LP+3F > 105B+4A+6X+2S+3LP+3F; safeguards | P3 around outer islands, broad bypasses retained | Large crowd encounter: shift angles between linked swings, moving flame and sequential tail removal on safe ground | 4-5min |
+| 67 | Keep It Moving / clear waves | 42 x 40 staggered islands, continuous outside lane; north/east waves | 7B+1M+1F+3R+3D+3X ~> 9B+1F+1S+2A+4D+3X; batch 6/5s, armor safeguard | Three staggered 3 x 6m strips at island approaches | Read the Mushroom Shooter's lane and the Dragon sweep before changing sides to reach the Snake tip | 90-120s |
+| 68 | Shifting Front / clear waves | 100 x 100 four-bay court with widely separated islands and a broad central cross; north, west, east, south, split side, north banks | 16B+6M+6R+7D+1F+2LP ~> 19B+6AS+15X+4D+2LP ~> 23B+8A+6R+9X+2F+3LP+2E > 23B+2S+4SP+6T+10D+7X+2LP ~> 26B+1F+5SP+7M+5R+10D+6X+2LP ~> 26B+1S+2F+4AS+6X+5A+8R+4D+2W+3LP; batch 8/6s | Six staggered 3 x 6m approach strips with a broad central crossing | Change angles for each sector, clear the Elite checkpoint, then circle to exposed Snake tips | 4-5min |
 | 69 | Straighten Up / knock into place | 62 x 62 left-turn stair court; eight 10m legs; clear corners and endpoints; outer side support | Hold 10B+2X; 40 net forward hits | None | Pre-boss recovery with deliberate directional hits | 60-90s |
 | 70 | Rolling Pressure / defeat boss | Exact Rolling Blob arena and obstacle geometry | Hold 8B+2X; existing three stages | P2 in outer pockets, all broad boss lanes retained | Existing physical-reflection mode; 600 health; pause 2.5/1.8/1.2s, same roll speeds | 3-4min |
 

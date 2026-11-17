@@ -144,10 +144,16 @@ namespace CrowdPunch.Editor
                 }
                 serialized.ApplyModifiedPropertiesWithoutUndo();
             }
-            var patches = UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None).OrderBy(p=>p.cycleOffset).ToArray();
-            int hand = legs % 2 == 0 ? -1 : 1;
-            for (int i = 0; i < patches.Length; i++)
-                patches[i].transform.position = new Vector3((i==0?hand:-hand)*(width*.5f-6), patches[i].transform.position.y, (i==0?-1:1)*(depth*.5f-6));
+            if (number == 54)
+                AuthorChapterSixPressureHazards(scene, number, crowd);
+            else
+            {
+                var patches = UnityEngine.Object.FindObjectsByType<GroundHazardAuthoring>(FindObjectsSortMode.None)
+                    .OrderBy(p=>p.cycleOffset).ToArray();
+                int hand = legs % 2 == 0 ? -1 : 1;
+                for (int i = 0; i < patches.Length; i++)
+                    patches[i].transform.position = new Vector3((i==0?hand:-hand)*(width*.5f-6), patches[i].transform.position.y, (i==0?-1:1)*(depth*.5f-6));
+            }
             EditorSceneManager.MarkSceneDirty(scene);
         }
 

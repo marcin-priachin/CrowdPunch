@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP59_02_Open_Shooters
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 18
+  totalEnemyCount: 10
+  linkedPairProfile: {fileID: 0}
+  linkedPairCount: 0
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 16
+    MinimumCount: 8
     Weight: 0
   - Settings: {fileID: 11400000, guid: 127af3c7b4eb4f7ab21cb03ec6ed37ae, type: 2}
     MinimumCount: 2
@@ -25,14 +27,14 @@ MonoBehaviour:
   - Center: {x: 0, y: 2, z: 7.125}
     Width: 28
     Depth: 10.25
-  replenishWhileBossLives: 1
+  replenishWhileBossLives: 0
   bossReplenishDelay: 4
-  delayBeforeWave: 3
+  delayBeforeWave: 0
   activationMode: 2
   duration: 0
   spawnMode: 1
   batchSize: 4
-  batchInterval: 1.5
+  batchInterval: 5
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2

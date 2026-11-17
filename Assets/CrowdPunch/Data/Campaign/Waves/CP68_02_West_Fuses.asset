@@ -12,14 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546cfe8f6f5d9ee48a226933feb5a880, type: 3}
   m_Name: CP68_02_West_Fuses
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.EnemyWaveSettings
-  totalEnemyCount: 82
+  totalEnemyCount: 44
   linkedPairProfile: {fileID: 11400000, guid: f3bcb5bec215bcc4a959c7f89a788377, type: 2}
   linkedPairCount: 2
   enemies:
   - Settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000023, type: 2}
-    MinimumCount: 76
+    MinimumCount: 19
     Weight: 0
   - Settings: {fileID: 11400000, guid: d13d9e7c36234eb5a6b1e91f04546f31, type: 2}
+    MinimumCount: 15
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 7904f6ffb4b7dab4f9cd584321cb1cb3, type: 2}
+    MinimumCount: 4
+    Weight: 0
+  - Settings: {fileID: 11400000, guid: 12c3d79e809689b4cb3a8045a23c6552, type: 2}
     MinimumCount: 6
     Weight: 0
   eliteEnemies: []
@@ -29,12 +35,12 @@ MonoBehaviour:
     Depth: 50
   replenishWhileBossLives: 0
   bossReplenishDelay: 4
-  delayBeforeWave: 3
-  activationMode: 2
-  duration: 0
-  spawnMode: 0
-  batchSize: 1
-  batchInterval: 3
+  delayBeforeWave: 0
+  activationMode: 1
+  duration: 6
+  spawnMode: 1
+  batchSize: 8
+  batchInterval: 6
   armoredAmmunitionProfile: {fileID: 0}
   wizardAmmunitionProfile: {fileID: 0}
   wizardAmmunitionDelay: 2
