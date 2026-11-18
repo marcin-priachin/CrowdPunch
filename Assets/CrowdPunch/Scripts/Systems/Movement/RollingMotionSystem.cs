@@ -26,15 +26,15 @@ namespace CrowdPunch.Systems.Movement
                 ref var b=ref boss.ValueRW;
                 if(b.Phase==RollingPhase.Roll)
                 {
-                    // Sweep the baked solid shape against actual static geometry. Only entering
-                    // lateral surfaces redirect; an outgoing sustained contact cannot count again.
+                    // Low border edges can hit the underside of the capsule with an upward
+                    // normal. Accept a substantial horizontal component while rejecting floors.
                     hits.Clear();
                     float3 halfAxis=new float3(0,math.max(0,tuning.ValueRO.BodyHeight*.5f-tuning.ValueRO.BodyRadius),0);
                     world.CapsuleCastAll(pose.ValueRO.Position-halfAxis,pose.ValueRO.Position+halfAxis,tuning.ValueRO.BodyRadius,
                         b.Direction,b.Speed*SystemAPI.Time.DeltaTime+.08f,ref hits,collider.ValueRO.Value.Value.GetCollisionFilter());
                     float nearest=2; float3 normal=float3.zero;
                     foreach(var hit in hits)
-                        if(hit.RigidBodyIndex>=world.NumDynamicBodies && math.abs(hit.SurfaceNormal.y)<.5f
+                        if(hit.RigidBodyIndex>=world.NumDynamicBodies && math.lengthsq(hit.SurfaceNormal.xz)>=.25f
                             && math.dot(b.Direction,hit.SurfaceNormal)<-.01f && hit.Fraction<nearest)
                         { nearest=hit.Fraction; normal=hit.SurfaceNormal; }
                     if(nearest<=1)

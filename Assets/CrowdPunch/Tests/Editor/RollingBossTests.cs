@@ -92,6 +92,56 @@ namespace CrowdPunch.Tests
             Assert.Less(result.x,-.01f); Assert.AreEqual(1,math.length(result),.001f);
             if(mode==RollingAim.Reflect) Assert.AreEqual(new float3(-1,0,0),result);
         }
+        [TestCase(RollingAim.Reflect)]
+        [TestCase(RollingAim.ReaimOnCollision)]
+        public void Roll003_CampaignSizedBossBouncesOffLowBorderAndIgnoresFloor(RollingAim aim)
+        {
+            t.Aim = aim;
+            t.BodyRadius = 3.6f;
+            t.BodyHeight = 7.2f;
+            em.SetComponentData(boss, t);
+            using var capsule = Unity.Physics.CapsuleCollider.Create(new CapsuleGeometry { Radius = t.BodyRadius });
+            em.AddComponentData(boss, new PhysicsCollider { Value = capsule });
+            var rolling = em.GetComponentData<RollingBoss>(boss);
+            rolling.Phase = RollingPhase.Roll;
+            rolling.Direction = new float3(1, 0, 0);
+            rolling.Speed = 22;
+            em.SetComponentData(boss, rolling);
+            em.AddComponentData(em.CreateEntity(), new PlayerSnapshot { IsAvailable = true, Position = new float3(7, 0, 5) });
+
+            using var floor = Unity.Physics.BoxCollider.Create(new BoxGeometry
+            {
+                Center = new float3(0, -1.5f, 0), Size = new float3(40, 1, 40), Orientation = quaternion.identity
+            });
+            using var border = Unity.Physics.BoxCollider.Create(new BoxGeometry
+            {
+                Center = new float3(20.75f, -.25f, 0), Size = new float3(1.5f, 1.5f, 40), Orientation = quaternion.identity
+            });
+            using var physicsOwner = new PhysicsWorld(2, 0, 0);
+            var physics = physicsOwner;
+            var bodies = physics.Bodies;
+            bodies[0] = new RigidBody { Collider = floor, WorldFromBody = RigidTransform.identity, Scale = 1 };
+            bodies[1] = new RigidBody { Collider = border, WorldFromBody = RigidTransform.identity, Scale = 1 };
+            physics.CollisionWorld.BuildBroadphase(ref physics, .02f, float3.zero, true);
+            em.AddComponentData(em.CreateEntity(), new PhysicsWorldSingleton { PhysicsWorld = physics });
+
+            var motion = world.GetOrCreateSystem<RollingMotionSystem>();
+            em.SetComponentData(boss, LocalTransform.FromPosition(new float3(0, 2.6f, 0)));
+            motion.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<RollingBoss>(boss).Bounces, Is.Zero);
+
+            em.SetComponentData(boss, LocalTransform.FromPosition(new float3(17, 2.6f, 0)));
+            motion.Update(world.Unmanaged);
+            rolling = em.GetComponentData<RollingBoss>(boss);
+            var expected = aim == RollingAim.Reflect ? new float3(-1, 0, 0) : math.normalize(new float3(-10, 0, 5));
+            Assert.That(rolling.Bounces, Is.EqualTo(1));
+            Assert.That(math.distance(rolling.Direction, expected), Is.LessThan(.01f));
+            Assert.That(math.length(em.GetComponentData<PhysicsVelocity>(boss).Linear), Is.EqualTo(22).Within(.01f));
+
+            motion.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<RollingBoss>(boss).Bounces, Is.EqualTo(1));
+        }
+
         [TestCase(RollingBodyOwnership.PlayerOnly,EnemyLaunchOwner.Player,true)]
         [TestCase(RollingBodyOwnership.PlayerOnly,EnemyLaunchOwner.Boss,false)]
         [TestCase(RollingBodyOwnership.Any,EnemyLaunchOwner.Boss,true)]

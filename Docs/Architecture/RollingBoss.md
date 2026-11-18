@@ -15,7 +15,9 @@ rolling-only player danger, every-living-state targeting, and roll-direction cro
 damage; `CycleStage` updates only when the next pause starts. Wind-up tracks player position;
 rolling direction is fixed between redirects. `RollingMotionSystem` writes motor velocity
 and uses a shape-matched capsule sweep into the previous step's static collision world.
-Entering lateral normals redirect; outgoing contacts are ignored. Collision-time re-aim
+Entering contacts with a substantial horizontal normal redirect, including the top edges of
+the low perimeter rails in campaign levels 30 and 70 (ROLL-001/003). Floor contacts and
+outgoing contacts are ignored. Redirection uses the horizontal normal, and collision-time re-aim
 requires an outward component, preventing a player across the wall from repeatedly pulling
 the boss into it. The dynamic 250kg collider stays upright through zero inverse inertia;
 post-physics vertical projection constrains only height. No boss enters ordinary Enemy queries.
