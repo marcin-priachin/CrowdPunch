@@ -688,10 +688,12 @@ the selected projectile's staging position, and facing preserves the committed y
 The selected live projectile bypasses punch-volume and active/recovering/launched
 eligibility changes at contact; other area victims retain ordinary geometry and flags.
 Armor, defeat and pooling gates remain authoritative. Presentation reads sweep progress
-directly, so damage feedback cannot restart the committed animation or move contact.
-Wind Up Duration retimes anticipation to the original Enemy Launch Frame; the remaining
-Sweep Attack frames play at source rate before cooldown. The builder records the
-source clip's last frame and frame rate for the Inspector slider and baked timing.
+and the release flag directly. Damage queues the authored hurt pose during wind-up.
+An active hurt reaction takes over immediately after release and suppresses the rest of
+that sweep's visible follow-through. The AI advances its existing cooldown clock on
+schedule. Wind Up Duration retimes anticipation to the original Enemy Launch Frame.
+The builder records the clip's last frame and frame rate for the Inspector slider
+and baked timing.
 
 ## Chicken Proximity Cast And Teleport (2026-10-24, CHICKEN-002/006/007)
 
@@ -1678,14 +1680,15 @@ Per-archetype randomized preferences still control movement steering; spawn spac
 the common profile minimum. Successful reservations enter shared occupancy immediately,
 including across sequences before ECB playback. Failed candidates remain queued for retry.
 
-Both chase and ranged positioning include disabled warning positions as separation
-neighbors without admitting them as AI/attack targets. The enemy movement motor limits
-approach velocity using the reserved minimum distance and braking acceleration. This
-changes motor intent rather than teleporting enemies or overwriting launched momentum.
-Committed Dasher motion and launched bodies retain their physical behavior; if they enter
-a warning, activation waits for the space to clear. Warning activation checks current
-occupants and same-update activations, keeping the advertised location fixed; pending
-legacy authored warnings do not mutually block one another.
+While the warning timer is running, chase and ranged positioning use warning positions
+as separation neighbors and the movement motor limits approach velocity using the
+reserved minimum distance and braking acceleration. Committed Dasher motion and
+launched bodies retain their physical behavior. When the timer elapses, both separation
+and braking release so an overdue spawn cannot pin an enemy that is blocking activation.
+This resolves the Campaign 23 case where the Elite stopped just inside the seven-metre
+spacing radius of an overdue warning. The advertised location remains reserved.
+Activation waits for safe clearance and checks current occupants and same-update
+activations. Pending legacy authored warnings can activate independently.
 
 Verification on 2026-10-12: Unity compilation and all five spawn-spacing checks passed,
 including navigation/room-bank inspection across all 80 scenes. The broader campaign run
@@ -2428,6 +2431,15 @@ sources, launched victims, protected armor/Snake parts, unlaunchable tiers and a
 Dasher dashes keep their existing response. No minimum speed/range or recovery tuning
 is added. See Docs/Verification/PropagatedLaunchMomentum.md for the level-8 profile
 inspection, contact-timing reproduction, weak/glancing checks and crowd cost probes.
+
+Elite impact damage (COMBAT-012) checks current Player ownership in the solver
+collision, Dasher sweep and LinkedPair link paths. The authoritative motor recasts
+Elites at their current poses with relative travel. If an Elite moves clear of
+the saved rebound, the motor releases with the incoming velocity. A verified
+Elite sweep uses relative incoming speed and original masses for damage, including
+when the motor turns at a touching vertex without a solver event. The post-physics
+collision and sweep passes share the impulse damage curve and per-launch history.
+The Elite's motion stays solver-owned.
 
 The motor collider-casts each segment against live solids. Current cover/track
 poses are recast because the collision world can contain the prior pose. Boss parts,

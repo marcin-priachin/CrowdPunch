@@ -361,6 +361,158 @@ namespace CrowdPunch.Tests
                 "Protected contacts retain their existing physical response instead of receiving a launch-momentum repair.");
         }
 
+        [Test]
+        public void Combat012_EliteTakesDamageWhenTheMotorSlowsAtAContactVertex()
+        {
+            Entity elite = EliteAtContact();
+            em.AddComponent<EnemyImpactFeedback>(elite);
+            var launch = new EnemyLaunchState();
+            EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.PlayerPunch, 10);
+            em.SetComponentData(source, launch);
+            em.SetComponentData(source, new PhysicsVelocity { Linear = new float3(0, 0, .5f) });
+            em.SetComponentData(source, new PhysicsMassOverride { IsKinematic = 1 });
+            em.SetComponentData(source, new AuthoritativeLaunchPath { LaunchSequence = launch.LaunchSequence,
+                IncomingVelocity = new float3(0, 0, .5f), CrowdSurface = elite,
+                CrowdIncomingVelocity = new float3(0, 0, 12f) });
+            em.SetComponentEnabled<AuthoritativeLaunchPath>(source, true);
+
+            for (int i = 0; i < 3; i++) ResolveElitePhysicsStep();
+
+            Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(90));
+            Assert.That(em.GetBuffer<CollisionDamageHistory>(elite).Length, Is.EqualTo(1));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(elite).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(elite).Linear.z, Is.LessThan(1f));
+        }
+
+        [TestCase(EnemyLaunchOwner.Player, EnemyLaunchCause.PlayerPunch, 90)]
+        [TestCase(EnemyLaunchOwner.Player, EnemyLaunchCause.EnemyCollision, 90)]
+        [TestCase(EnemyLaunchOwner.Enemy, EnemyLaunchCause.ElitePunch, 100)]
+        [TestCase(EnemyLaunchOwner.Enemy, EnemyLaunchCause.EnemyCollision, 100)]
+        [TestCase(EnemyLaunchOwner.Boss, EnemyLaunchCause.BossAttack, 100)]
+        [TestCase(EnemyLaunchOwner.Environment, EnemyLaunchCause.EnvironmentImpact, 100)]
+        public void Combat012_EliteCollisionDamageFollowsCurrentLaunchOwner(
+            EnemyLaunchOwner owner, EnemyLaunchCause cause, int expectedHealth)
+        {
+            Entity elite = EliteAtContact();
+            var launch = new EnemyLaunchState();
+            EnemyLaunchTransition.Begin(ref launch, cause, 10, owner);
+            em.SetComponentData(source, launch);
+            em.SetComponentData(source, new PhysicsVelocity { Linear = new float3(0, 0, 12f) });
+
+            for (int i = 0; i < 3; i++) ResolveElitePhysicsStep();
+
+            Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(expectedHealth));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(elite).Linear.z, Is.GreaterThan(0f));
+        }
+
+        [TestCase(CollisionResponsePolicy.Collide)]
+        [TestCase(CollisionResponsePolicy.CollideRaiseCollisionEvents)]
+        public void Combat012_ConfirmedEliteReboundDamagesOnceWithOrWithoutSolverEvents(CollisionResponsePolicy collisionResponse)
+        {
+            var material = Unity.Physics.Material.Default;
+            material.CollisionResponse = collisionResponse;
+            material.Restitution = .75f;
+            var shape = Unity.Physics.SphereCollider.Create(
+                new SphereGeometry { Radius = .5f }, CollisionFilter.Default, material);
+            colliders.Add(shape);
+            em.SetComponentData(source, new PhysicsCollider { Value = shape });
+            Entity elite = EliteAtContact(3.95f);
+            em.SetComponentData(elite, new PhysicsCollider { Value = shape });
+
+            var savedRebound = CommitEliteRebound(elite);
+            int steps = 0;
+            while (steps++ < 30 && em.GetBuffer<CollisionDamageHistory>(elite).Length == 0) Step();
+            world.GetOrCreateSystem<DamageApplicationSystem>().Update(world.Unmanaged);
+
+            var path = em.GetComponentData<AuthoritativeLaunchPath>(source);
+            Assert.That(path.Contact, Is.EqualTo(elite));
+            Assert.That(math.distance(path.ScheduledPosition, savedRebound.Position), Is.LessThan(.001f));
+            Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(90f));
+            Assert.That(em.GetBuffer<CollisionDamageHistory>(elite).Length, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Combat012_MovedEliteDoesNotCauseAPhantomReboundOrDamage()
+        {
+            Entity elite = EliteAtContact(3.95f);
+            var savedRebound = CommitEliteRebound(elite);
+            int steps = 0;
+            while (steps++ < 30 && em.GetComponentData<AuthoritativeLaunchPath>(source).NextPoint <
+                em.GetBuffer<CommittedLaunchPathPoint>(source).Length)
+            {
+                var points = em.GetBuffer<CommittedLaunchPathPoint>(source);
+                int next = em.GetComponentData<AuthoritativeLaunchPath>(source).NextPoint;
+                if (points[next].Value.Surface == elite) break;
+                Step();
+            }
+            Assert.That(steps, Is.LessThan(30));
+            // Leave the physics broadphase stale on the step that would take the saved turn.
+            em.SetComponentData(elite, LocalTransform.FromPosition(new float3(4, 0, 3.95f)));
+            Assert.That(Step(), Is.False);
+            world.GetOrCreateSystem<DamageApplicationSystem>().Update(world.Unmanaged);
+
+            var path = em.GetComponentData<AuthoritativeLaunchPath>(source);
+            Assert.That(path.Contact, Is.EqualTo(Entity.Null));
+            Assert.That(math.distance(path.ScheduledPosition, savedRebound.Position), Is.LessThan(.001f));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(source).Linear.z, Is.GreaterThan(0f));
+            Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(100f));
+            Assert.That(em.GetBuffer<CollisionDamageHistory>(elite).Length, Is.Zero);
+        }
+
+        private LaunchPathPoint CommitEliteRebound(Entity elite)
+        {
+            Preview();
+            Punch();
+            foreach (var point in em.GetBuffer<CommittedLaunchPathPoint>(source))
+                if (point.Value.Surface == elite) return point.Value;
+            Assert.Fail("The displayed path must contain an Elite contact.");
+            return default;
+        }
+
+        private Entity EliteAtContact(float distance = 1f)
+        {
+            Entity elite = Body(new float3(0, 0, distance), colliders[0], true);
+            em.SetComponentData(elite, new EnemyTier { Value = EnemyCombatTier.Elite });
+            em.AddComponent<ElitePunchState>(elite);
+            em.SetComponentData(elite, PhysicsMass.CreateDynamic(colliders[0].Value.MassProperties, 8f));
+            using var query = em.CreateEntityQuery(typeof(EnemyLaunchSettings));
+            var settings = query.GetSingleton<EnemyLaunchSettings>();
+            settings.MinimumDamageImpulse = 5f;
+            em.SetComponentData(query.GetSingletonEntity(), settings);
+            return elite;
+        }
+
+        [TestCase(EnemyLaunchOwner.Player, 85)]
+        [TestCase(EnemyLaunchOwner.Enemy, 100)]
+        public void Combat012_LaunchedDasherOnlyDamagesEliteWithPlayerOwnership(EnemyLaunchOwner owner, int expectedHealth)
+        {
+            Entity elite = EliteAtContact();
+            em.AddComponentData(elite, new KnockbackResponse { Tier = KnockbackResponseTier.PlayerElite });
+            em.AddComponentData(elite, new EnemyContactDamageSettings { ContactRadius = .5f });
+            em.AddComponentData(source, new EnemyContactDamageSettings { ContactRadius = .5f });
+            em.AddComponentData(source, new DasherSettings { EliteDamage = 15f, EliteKnockback = 8f });
+            em.AddComponentData(source, new DasherState { PreviousPosition = new float3(0, 0, -1),
+                PreservedLaunchedVelocity = new float3(0, 0, 18f) });
+            em.AddBuffer<DasherHitHistory>(source);
+            var launch = new EnemyLaunchState();
+            EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.EnemyCollision, 10, owner);
+            em.SetComponentData(source, launch);
+
+            world.GetOrCreateSystem<DasherEnemyImpactSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<DamageApplicationSystem>().Update(world.Unmanaged);
+
+            Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(expectedHealth));
+            Assert.That(em.IsComponentEnabled<ExternalImpulse>(elite), Is.True);
+        }
+
+        private void ResolveElitePhysicsStep()
+        {
+            PhysicsStep();
+            world.GetOrCreateSystem<EnemyLaunchCollisionSystem>().Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+            world.GetOrCreateSystem<DamageApplicationSystem>().Update(world.Unmanaged);
+        }
+
         private BlobAssetReference<Unity.Physics.Collider> EmptyCollider()
         {
             var shape = Unity.Physics.SphereCollider.Create(new SphereGeometry { Radius = .5f }, new CollisionFilter());

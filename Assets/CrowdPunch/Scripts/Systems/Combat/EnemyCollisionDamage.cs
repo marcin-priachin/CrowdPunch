@@ -6,6 +6,9 @@ namespace CrowdPunch.Systems.Combat
     /// <summary>Shared impulse-to-damage rule for launched-body impacts.</summary>
     public static class EnemyCollisionDamage
     {
+        internal static bool CanDamage(EnemyCombatTier targetTier, EnemyLaunchOwner owner)
+            => targetTier != EnemyCombatTier.Elite || owner == EnemyLaunchOwner.Player;
+
         public static float Calculate(float launchDamage, float estimatedImpulse, EnemyLaunchSettings settings)
         {
             float minimumImpulse = math.max(0f, settings.MinimumDamageImpulse);

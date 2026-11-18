@@ -399,6 +399,47 @@ namespace CrowdPunch.Tests
             Assert.That(math.length(leg.c2), Is.EqualTo(1).Within(.0001f));
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void Enemy009EliteHurtImmediatelyReplacesReleasedSweep(bool releasedAtHit)
+        {
+            var em = world.EntityManager;
+            var sweep = new ElitePunchState { Phase = ElitePunchPhase.CommittedSweep,
+                SweepLaunched = (byte)(releasedAtHit ? 1 : 0), SweepProgress = releasedAtHit ? .5f : .2f };
+            em.AddComponentData(owner, sweep);
+            em.AddComponentData(owner, new Health { Current = 10, Max = 10 });
+            body.Value.Durations[5] = .25f;
+            Tick();
+
+            em.SetComponentData(owner, new Health { Current = 9, Max = 10 });
+            Tick();
+            if (!releasedAtHit)
+            {
+                Tick(.4f);
+                Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.EqualTo(4));
+                sweep.SweepLaunched = 1;
+                sweep.SweepProgress = .5f;
+                em.SetComponentData(owner, sweep);
+                Tick();
+            }
+
+            Assert.That(em.GetComponentData<ElitePunchState>(owner).Phase, Is.EqualTo(ElitePunchPhase.CommittedSweep));
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.EqualTo(5));
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[1].Value.c3.y, Is.Zero);
+            Tick();
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[1].Value.c3.y, Is.EqualTo(.5f).Within(.001f));
+            Tick();
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.Zero);
+            Tick();
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.Zero);
+
+            sweep.SweepLaunched = 0;
+            sweep.SweepProgress = .2f;
+            em.SetComponentData(owner, sweep);
+            Tick();
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.EqualTo(4));
+        }
+
         [Test]
         public void Info004ElitePrefabKeepsEveryAuthoredTransformScaleAndTexturedCelMaterials()
         {

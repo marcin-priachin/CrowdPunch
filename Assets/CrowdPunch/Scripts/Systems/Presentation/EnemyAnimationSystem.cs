@@ -1116,6 +1116,11 @@ namespace CrowdPunch.Systems.Presentation
             private void AnimateGoblin(Entity owner, ref EnemyAnimationPlayback playback,
                 ref DynamicBuffer<SkinMatrix> skin, ref EnemyAnimationSamples samples, EnemyLaunchState launch, float3 pivot)
             {
+                const int strikeMotion = 4;
+                bool elite = ElitePunches.TryGetComponent(owner, out var elitePunch);
+                bool sweeping = elite && elitePunch.Phase == ElitePunchPhase.CommittedSweep;
+                bool releasedSweep = sweeping && elitePunch.SweepLaunched != 0;
+                if (!releasedSweep) playback.EliteSweepInterrupted = 0;
                 var ranged = RangedAttacks.HasComponent(owner) ? RangedAttacks[owner] : default;
                 float release = RangedTuning.HasComponent(owner)
                     ? math.saturate(RangedTuning[owner].ProjectileLaunchProgress) : 0f;
@@ -1169,7 +1174,11 @@ namespace CrowdPunch.Systems.Presentation
                 else
                 {
                     playback.WasLaunched = 0;
-                    if (launch.Phase == EnemyLaunchPhase.Defeated) motion = EnemyAnimationSamples.ImpactMotion;
+                    if (launch.Phase == EnemyLaunchPhase.Defeated)
+                    {
+                        motion = EnemyAnimationSamples.ImpactMotion;
+                        if (elite) playback.HitActive = 0;
+                    }
                     else if (launch.Phase == EnemyLaunchPhase.Recovering)
                     {
                         if (playback.WasRecovering == 0)
@@ -1181,22 +1190,24 @@ namespace CrowdPunch.Systems.Presentation
                     else
                     {
                         if (hit) { playback.HitActive = 1; playback.HitPhase = 0; }
-                        else if (playback.HitActive != 0)
+                        // ENEMY-009: protect the release pose until the throw has happened.
+                        else if (playback.HitActive != 0 && (!sweeping || releasedSweep)
+                            && (!elite || playback.GoblinMotion != strikeMotion))
                         {
                             playback.HitPhase += DeltaTime / math.max(.01f, samples.Durations[5]);
                             if (playback.HitPhase >= 1f) playback.HitActive = 0;
                         }
+                        if (releasedSweep && playback.HitActive != 0) playback.EliteSweepInterrupted = 1;
                         var contact = Contacts.HasComponent(owner) ? Contacts[owner] : default;
                         if (shielded)
                         {
                             motion = 8; // Block owns the upper body until the shield is removed.
                             if (hit) playback.Phase = 0;
                         }
-                        else if (ElitePunches.HasComponent(owner) && ElitePunches[owner].Phase == ElitePunchPhase.CommittedSweep)
+                        else if (sweeping && playback.EliteSweepInterrupted == 0)
                         {
-                            motion = 4;
-                            progress = ElitePunches[owner].SweepProgress;
-                            playback.HitActive = 0;
+                            motion = strikeMotion;
+                            progress = elitePunch.SweepProgress;
                         }
                         else if (RangedAttacks.HasComponent(owner) && RangedTuning.HasComponent(owner)
                             && ranged.Phase == RangedAttackPhase.WindUp)
@@ -1208,19 +1219,19 @@ namespace CrowdPunch.Systems.Presentation
                         }
                         else if (playback.WasAttacking != 0)
                         {
-                            motion = 4;
+                            motion = strikeMotion;
                             progress = playback.AttackPhase;
                         }
-                        else if (contact.IsAttempting != 0 && !armored && !ElitePunches.HasComponent(owner))
+                        else if (contact.IsAttempting != 0 && !armored && !elite)
                         {
                             motion = 2;
                         }
                         else if (playback.HitActive != 0) { motion = 5; progress = playback.HitPhase; }
                         else
                         {
-                            float speed = (armored || ElitePunches.HasComponent(owner)) && Velocities.HasComponent(owner)
+                            float speed = (armored || elite) && Velocities.HasComponent(owner)
                                 ? math.length(Velocities[owner].Linear.xz) : Movement[owner].Speed;
-                            float idleThreshold = armored || ElitePunches.HasComponent(owner) ? .03f : .01f;
+                            float idleThreshold = armored || elite ? .03f : .01f;
                             motion = speed <= idleThreshold ? 0 : speed > Settings[owner].MoveSpeed * .65f ? 2 : 1;
                         }
                     }
@@ -1239,7 +1250,7 @@ namespace CrowdPunch.Systems.Presentation
                 int from = math.min((int)frame, samples.FrameCount - 1);
                 int to = motion == 0 || motion == 1 || motion == 2 || (armored && motion == 8) || motion == EnemyAnimationSamples.FlyingMotion
                     ? (from + 1) % samples.FrameCount : math.min(from + 1, samples.FrameCount - 1);
-                if (armored || ElitePunches.HasComponent(owner)) ApplyDasherFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
+                if (armored || elite) ApplyDasherFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
                 else ApplyFrame(ref skin, ref samples, motion, from, to, math.frac(frame));
             }
 

@@ -108,11 +108,12 @@ namespace CrowdPunch.Systems.Combat
             bool attached = SnakeHitRules.Attached(em, target);
             // Attached tips require a launch to detach; damage alone cannot bypass SNAKE-002.
             if (attached && t.Response == LinkedPairResponse.DamageAndPush) return false;
-            if (em.GetComponentData<EnemyTier>(target).Value == EnemyCombatTier.Boss) return false;
+            var tier = em.GetComponentData<EnemyTier>(target);
+            if (tier.Value == EnemyCombatTier.Boss) return false;
             var launch = em.GetComponentData<EnemyLaunchState>(target);
             if (launch.Phase == EnemyLaunchPhase.Defeated) return false;
             bool flying = launch.Phase == EnemyLaunchPhase.Launched;
-            bool normal = EnemyLaunchTransition.IsLaunchable(em.GetComponentData<EnemyTier>(target));
+            bool normal = EnemyLaunchTransition.IsLaunchable(tier);
             if (!flying) {
                 if (normal && t.Response == LinkedPairResponse.DamageAndLaunch) {
                     EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.EnemyCollision, source.LaunchDamage, source.Owner, source.OriginatingPunchSequence);
@@ -129,6 +130,7 @@ namespace CrowdPunch.Systems.Combat
             }
             if (em.HasComponent<ExplosiveEnemyState>(target) && em.GetComponentData<ExplosiveEnemyState>(target).HasExploded == 0)
                 ExplosionResolutionSystem.RequestDetonation(em, target, source.OriginatingPunchSequence);
+            if (!EnemyCollisionDamage.CanDamage(tier.Value, source.Owner)) return false;
             var damage = em.IsComponentEnabled<DamageRequest>(target) ? em.GetComponentData<DamageRequest>(target) : default;
             float previousHealth = em.GetComponentData<Health>(target).Current;
             damage.Add(t.EnemyDamage, previousHealth, source.OriginatingPunchSequence);

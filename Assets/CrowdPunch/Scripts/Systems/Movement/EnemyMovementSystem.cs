@@ -37,9 +37,12 @@ namespace CrowdPunch.Systems.Movement
             ArenaBounds arenaBounds = SystemAPI.GetSingleton<ArenaBounds>();
 
             var warnings = new NativeList<float4>(Allocator.TempJob);
+            // INFO-006: once the warning elapses, its activation can wait for clearance
+            // without holding the same enemy that needs to move out of the reserved area.
             foreach (var (warning, movement) in SystemAPI.Query<RefRO<EnemySpawnWarning>, RefRO<EnemyMovementSettings>>()
                          .WithOptions(EntityQueryOptions.IncludeDisabledEntities))
-                warnings.Add(new float4(warning.ValueRO.Position, EnemySpawnSpacing.Minimum(movement.ValueRO)));
+                if (warning.ValueRO.SecondsRemaining > 0f)
+                    warnings.Add(new float4(warning.ValueRO.Position, EnemySpawnSpacing.Minimum(movement.ValueRO)));
 
             state.Dependency = new EnemyMovementJob
             {

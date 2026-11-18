@@ -124,11 +124,12 @@ namespace CrowdPunch.Systems.AI
                 }
             }
 
-            // INFO-006: reservations repel movement without joining AI/attack eligibility.
+            // INFO-006: unelapsed warnings repel movement without joining AI/attack eligibility.
             foreach (var (warning, archetype) in SystemAPI.Query<RefRO<EnemySpawnWarning>, RefRO<EnemyArchetype>>()
                          .WithOptions(EntityQueryOptions.IncludeDisabledEntities))
-                activeEnemies.Add(new EnemySeparationNeighbor { Position = warning.ValueRO.Position,
-                    Archetype = archetype.ValueRO.Value });
+                if (warning.ValueRO.SecondsRemaining > 0f)
+                    activeEnemies.Add(new EnemySeparationNeighbor { Position = warning.ValueRO.Position,
+                        Archetype = archetype.ValueRO.Value });
 
             JobHandle chaseJob = new EnemyChaseJob
             {

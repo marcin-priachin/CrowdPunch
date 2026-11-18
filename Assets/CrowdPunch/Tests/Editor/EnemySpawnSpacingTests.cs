@@ -87,7 +87,7 @@ namespace CrowdPunch.Tests
             var em = world.EntityManager;
             em.AddComponentData(em.CreateEntity(), new ArenaBounds { Extents = new float3(50) });
             Entity pending = Enemy(em, new float3(3, 0, 0), 3);
-            em.AddComponentData(pending, new EnemySpawnWarning { Position = new float3(3, 0, 0) });
+            em.AddComponentData(pending, new EnemySpawnWarning { Position = new float3(3, 0, 0), SecondsRemaining = .5f });
             em.SetEnabled(pending, false);
             Entity active = Enemy(em, float3.zero, 3);
             em.AddComponent<RespawnRequest>(active); em.SetComponentEnabled<RespawnRequest>(active, false);
@@ -106,6 +106,38 @@ namespace CrowdPunch.Tests
             Assert.AreEqual(new float3(8, 0, 0), em.GetComponentData<PhysicsVelocity>(active).Linear);
             float2 lateral = EnemySpawnSpacing.LimitApproachVelocity(float2.zero, new float2(-8, 2), new float2(3, 0), 3, 10);
             Assert.AreEqual(new float2(-8, 2), lateral, "Retreat and tangential movement remain available.");
+        }
+
+        [Test]
+        public void Info006_ExpiredWarningCannotPinTheEliteBlockingItsSpawn()
+        {
+            using var world = new World("Campaign 23 Elite and overdue spawn");
+            var em = world.EntityManager;
+            em.AddComponentData(em.CreateEntity(), new ArenaBounds { Extents = new float3(15f) });
+            var warningPosition = new float3(11.01132f, 2f, 13.86607f);
+            Entity pending = Enemy(em, warningPosition, 4f);
+            em.AddComponentData(pending, new EnemySpawnWarning { Position = warningPosition, SecondsRemaining = -5.8f });
+            em.SetEnabled(pending, false);
+
+            Entity elite = Enemy(em, new float3(4.039505f, -.5f, 13.3569f), 7f);
+            em.AddComponent<RespawnRequest>(elite);
+            em.SetComponentEnabled<RespawnRequest>(elite, false);
+            em.AddComponentData(elite, new EnemyLaunchState { Phase = EnemyLaunchPhase.Active });
+            em.AddComponent<PhysicsVelocity>(elite);
+            em.AddComponent<PhysicsMass>(elite);
+            var direction = new float3(.9972215f, 0f, .07449355f);
+            em.AddComponentData(elite, new DesiredMovement { Direction = direction, Speed = 8.292886f });
+            var movement = em.GetComponentData<EnemyMovementSettings>(elite);
+            movement.Acceleration = 20f;
+            movement.BrakingAcceleration = 40f;
+            em.SetComponentData(elite, movement);
+
+            Tick(world, world.GetOrCreateSystem<EnemySpawnWarningSystem>(), 1);
+            Assert.That(em.HasComponent<Disabled>(pending), Is.True);
+            Assert.That(em.GetComponentData<EnemySpawnWarning>(pending).Position, Is.EqualTo(warningPosition));
+            Tick(world, world.GetOrCreateSystem<EnemyMovementSystem>(), 1);
+            float3 velocity = em.GetComponentData<PhysicsVelocity>(elite).Linear;
+            Assert.That(math.distance(velocity, math.normalize(direction) * 2f), Is.LessThan(.001f));
         }
 
         [Test]

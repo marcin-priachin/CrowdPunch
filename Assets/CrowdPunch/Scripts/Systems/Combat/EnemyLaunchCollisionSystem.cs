@@ -34,6 +34,13 @@ namespace CrowdPunch.Systems.Combat
             EntityQuery correctionCandidateQuery = SystemAPI.QueryBuilder()
                 .WithAll<LocalTransform>().WithAny<Enemy, Barricade>()
                 .Build();
+            var damage = new CollisionDamageQueue
+            {
+                Requests = SystemAPI.GetComponentLookup<DamageRequest>(),
+                History = SystemAPI.GetBufferLookup<CollisionDamageHistory>(),
+                Health = SystemAPI.GetComponentLookup<Health>(true),
+                Settings = settings
+            };
             EnemyCollisionJob job = new EnemyCollisionJob
             {
                 MushroomImpacts = SystemAPI.GetBufferLookup<MushroomBeamImpact>(),
@@ -42,6 +49,7 @@ namespace CrowdPunch.Systems.Combat
                 Lifetimes = SystemAPI.GetComponentLookup<EnemyLifetime>(true),
                 SnakeHeads = SystemAPI.GetComponentLookup<SnakeHead>(true),
                 Commitments = SystemAPI.GetComponentLookup<CommittedLaunchFlight>(),
+                AuthoritativePaths = SystemAPI.GetComponentLookup<AuthoritativeLaunchPath>(true),
                 PairEndpoints = SystemAPI.GetComponentLookup<LinkedPairEndpoint>(true),
                 Pairs = SystemAPI.GetComponentLookup<LinkedPair>(),
                 PairTuning = SystemAPI.GetComponentLookup<LinkedPairTuning>(true),
@@ -56,8 +64,7 @@ namespace CrowdPunch.Systems.Combat
                 EnemyLookup = SystemAPI.GetComponentLookup<Enemy>(true),
                 LaunchStateLookup = SystemAPI.GetComponentLookup<EnemyLaunchState>(),
                 RespawnLookup = SystemAPI.GetComponentLookup<RespawnRequest>(true),
-                DamageRequestLookup = SystemAPI.GetComponentLookup<DamageRequest>(),
-                DamageHistoryLookup = SystemAPI.GetBufferLookup<CollisionDamageHistory>(),
+                Damage = damage,
                 DasherSettingsLookup = SystemAPI.GetComponentLookup<DasherSettings>(true),
                 DasherStateLookup = SystemAPI.GetComponentLookup<DasherState>(true),
                 TierLookup = SystemAPI.GetComponentLookup<EnemyTier>(true),
@@ -74,19 +81,29 @@ namespace CrowdPunch.Systems.Combat
                 HomingDuration = settings.LaunchHomingDuration,
                 LeadSeconds = settings.AimLeadSeconds,
                 LeadMaximumDistance = settings.AimLeadMaximumDistance,
-                MinimumDamageImpulse = math.max(0f, settings.MinimumDamageImpulse),
-                BaseDamageMultiplier = math.max(0f, settings.BaseCollisionDamageMultiplier),
-                DamageMultiplierPerExcessImpulse = math.max(0f, settings.DamageMultiplierPerExcessImpulse),
-                MaximumDamageMultiplier = math.max(0f, settings.MaximumCollisionDamageMultiplier)
+                MinimumDamageImpulse = math.max(0f, settings.MinimumDamageImpulse)
             };
 
             state.Dependency = job.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
+
+            // The motor can turn at a verified sweep contact without a solver event at
+            // the touching vertex. Resolve that contact through the same damage history.
+            state.Dependency = new EliteSweepJob
+            {
+                Damage = damage,
+                Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
+                Tiers = SystemAPI.GetComponentLookup<EnemyTier>(true),
+                Respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true),
+                Feedbacks = SystemAPI.GetComponentLookup<EnemyImpactFeedback>(),
+                Now = SystemAPI.Time.ElapsedTime
+            }.Schedule(state.Dependency);
         }
 
         [BurstCompile]
         private struct EnemyCollisionJob : ICollisionEventsJob
         {
             public ComponentLookup<CommittedLaunchFlight> Commitments;
+            [ReadOnly] public ComponentLookup<AuthoritativeLaunchPath> AuthoritativePaths;
             public BufferLookup<MushroomBeamImpact> MushroomImpacts;
             public BufferLookup<AlienSpikeBurst> SpikeBursts;
             public BufferLookup<AlienSpikeBurstHistory> SpikeHistory;
@@ -106,8 +123,7 @@ namespace CrowdPunch.Systems.Combat
             [ReadOnly] public ComponentLookup<Enemy> EnemyLookup;
             public ComponentLookup<EnemyLaunchState> LaunchStateLookup;
             [ReadOnly] public ComponentLookup<RespawnRequest> RespawnLookup;
-            public ComponentLookup<DamageRequest> DamageRequestLookup;
-            public BufferLookup<CollisionDamageHistory> DamageHistoryLookup;
+            public CollisionDamageQueue Damage;
             [ReadOnly] public ComponentLookup<DasherSettings> DasherSettingsLookup;
             [ReadOnly] public ComponentLookup<DasherState> DasherStateLookup;
             [ReadOnly] public ComponentLookup<EnemyTier> TierLookup;
@@ -120,9 +136,6 @@ namespace CrowdPunch.Systems.Combat
             public float PropagationAimCorrectionRadius;
             public float PropagationAimMaximumAngleDegrees, HomingDuration, LeadSeconds, LeadMaximumDistance;
             public float MinimumDamageImpulse;
-            public float BaseDamageMultiplier;
-            public float DamageMultiplierPerExcessImpulse;
-            public float MaximumDamageMultiplier;
 
             public void Execute(CollisionEvent collisionEvent)
             {
@@ -289,10 +302,7 @@ namespace CrowdPunch.Systems.Combat
                     var armor = Armors[target];
                     if (armor.Stages > 0 && estimatedImpulse < math.max(.01f, MinimumPropagationImpulse)) return;
                     float damage = EnemyCollisionDamage.Calculate(LaunchStateLookup[source].LaunchDamage,
-                        estimatedImpulse, new EnemyLaunchSettings { MinimumDamageImpulse = MinimumDamageImpulse,
-                            BaseCollisionDamageMultiplier = BaseDamageMultiplier,
-                            DamageMultiplierPerExcessImpulse = DamageMultiplierPerExcessImpulse,
-                            MaximumCollisionDamageMultiplier = MaximumDamageMultiplier });
+                        estimatedImpulse, Damage.Settings);
                     var outcome = ArmorHitResolution.Resolve(ref armor, ArmorSettings[target], ArmorHistory[target],
                         source, LaunchStateLookup[source].LaunchSequence, ElapsedTime, damage);
                     Armors[target] = armor;
@@ -315,7 +325,7 @@ namespace CrowdPunch.Systems.Combat
                     PropagateLaunch(source, target, estimatedImpulse);
                 }
 
-                TryQueueDamage(source, target, estimatedImpulse);
+                TryQueueDamage(source, target, collisionEvent, estimatedImpulse);
                 if (FeedbackLookup.HasComponent(source) && FeedbackLookup.HasComponent(target))
                 {
                     var feedback = FeedbackLookup[target];
@@ -457,54 +467,96 @@ namespace CrowdPunch.Systems.Combat
                 VelocityLookup[launchedTarget] = velocity;
             }
 
-            private void TryQueueDamage(Entity source, Entity target, float estimatedImpulse)
+            private void TryQueueDamage(Entity source, Entity target, CollisionEvent contact, float estimatedImpulse)
             {
-                if (estimatedImpulse < MinimumDamageImpulse
-                    || !HealthLookup.HasComponent(target)
-                    || !DamageRequestLookup.HasComponent(target)
-                    || !DamageHistoryLookup.HasBuffer(target))
+                var launch = LaunchStateLookup[source];
+                if (TierLookup.TryGetComponent(target, out var tier) && tier.Value == EnemyCombatTier.Elite)
                 {
+                    if (!EnemyCollisionDamage.CanDamage(tier.Value, launch.Owner)) return;
+                    estimatedImpulse = math.max(estimatedImpulse, EstimateEliteImpact(source, target, launch, contact));
+                }
+
+                Damage.TryQueue(source, target, launch, estimatedImpulse);
+            }
+
+            private float EstimateEliteImpact(Entity source, Entity target, in EnemyLaunchState launch, CollisionEvent contact)
+            {
+                if (math.abs(contact.Normal.y) > .7f || !AuthoritativePaths.HasComponent(source)
+                    || !AuthoritativePaths.IsComponentEnabled(source)) return 0f;
+                var path = AuthoritativePaths[source];
+                if (path.LaunchSequence != launch.LaunchSequence) return 0f;
+                if (path.Contact == target && math.abs(path.ContactNormal.y) <= .7f) return path.ContactImpulse;
+                if (!MassLookup.HasComponent(source) || !MassLookup.HasComponent(target)
+                    || !FeedbackLookup.HasComponent(target)) return 0f;
+
+                // The motor can slow to reach a vertex. Recover the incoming impulse for damage
+                // on this real solver contact while leaving the elite's physical response alone.
+                float3 incoming = path.CrowdSurface == target ? path.CrowdIncomingVelocity : path.IncomingVelocity;
+                float3 towardTarget = source == contact.EntityA ? -contact.Normal : contact.Normal;
+                float closingSpeed = math.dot(incoming - FeedbackLookup[target].IncomingVelocity, towardTarget);
+                float inverseMass = MassLookup[source].InverseMass + MassLookup[target].InverseMass;
+                return math.max(0f, closingSpeed) / math.max(.0001f, inverseMass);
+            }
+        }
+
+        [BurstCompile]
+        [WithAll(typeof(Enemy))]
+        [WithNone(typeof(RespawnRequest), typeof(DasherSettings))]
+        private partial struct EliteSweepJob : IJobEntity
+        {
+            public CollisionDamageQueue Damage;
+            [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
+            [ReadOnly] public ComponentLookup<EnemyTier> Tiers;
+            [ReadOnly] public ComponentLookup<RespawnRequest> Respawns;
+            public ComponentLookup<EnemyImpactFeedback> Feedbacks;
+            public double Now;
+
+            private void Execute(Entity source, in EnemyLaunchState launch, in AuthoritativeLaunchPath path)
+            {
+                Entity target = path.Contact;
+                if (target == Entity.Null || path.LaunchSequence != launch.LaunchSequence
+                    || launch.Phase != EnemyLaunchPhase.Launched || math.abs(path.ContactNormal.y) > .7f
+                    || !Tiers.TryGetComponent(target, out var tier) || tier.Value != EnemyCombatTier.Elite
+                    || !EnemyCollisionDamage.CanDamage(tier.Value, launch.Owner)
+                    || !Launches.TryGetComponent(target, out var targetLaunch)
+                    || targetLaunch.Phase != EnemyLaunchPhase.Active && targetLaunch.Phase != EnemyLaunchPhase.Recovering
+                    || Respawns.HasComponent(target) && Respawns.IsComponentEnabled(target))
                     return;
-                }
 
-                uint sourceLaunchSequence = LaunchStateLookup[source].LaunchSequence;
-                DynamicBuffer<CollisionDamageHistory> history = DamageHistoryLookup[target];
-                for (int index = 0; index < history.Length; index++)
-                {
-                    CollisionDamageHistory entry = history[index];
-                    if (entry.Source == source && entry.SourceLaunchSequence == sourceLaunchSequence)
-                    {
-                        return;
-                    }
-                }
+                if (!Damage.TryQueue(source, target, launch, path.ContactImpulse) || !Feedbacks.HasComponent(target)) return;
+                var feedback = Feedbacks[target];
+                var significance = launch;
+                significance.FeedbackChainDepth = math.min(64, significance.FeedbackChainDepth + 1);
+                ImpactFeedbackRecording.Record(ref feedback, CombatImpactKind.EnemyCollision,
+                    path.ContactPoint, -path.ContactNormal, -math.dot(path.IncomingVelocity, path.ContactNormal),
+                    path.ContactImpulse, significance, Now);
+                Feedbacks[target] = feedback;
+            }
+        }
 
-                float damage = EnemyCollisionDamage.Calculate(
-                    LaunchStateLookup[source].LaunchDamage,
-                    estimatedImpulse,
-                    new EnemyLaunchSettings
-                    {
-                        MinimumDamageImpulse = MinimumDamageImpulse,
-                        BaseCollisionDamageMultiplier = BaseDamageMultiplier,
-                        DamageMultiplierPerExcessImpulse = DamageMultiplierPerExcessImpulse,
-                        MaximumCollisionDamageMultiplier = MaximumDamageMultiplier
-                    });
-                if (damage <= 0f)
-                {
-                    return;
-                }
+        private struct CollisionDamageQueue
+        {
+            public ComponentLookup<DamageRequest> Requests;
+            public BufferLookup<CollisionDamageHistory> History;
+            [ReadOnly] public ComponentLookup<Health> Health;
+            public EnemyLaunchSettings Settings;
 
-                history.Add(new CollisionDamageHistory
-                {
-                    Source = source,
-                    SourceLaunchSequence = sourceLaunchSequence
-                });
+            public bool TryQueue(Entity source, Entity target, in EnemyLaunchState launch, float impulse)
+            {
+                float damage = EnemyCollisionDamage.Calculate(launch.LaunchDamage, impulse, Settings);
+                if (damage <= 0f || !Health.HasComponent(target) || !Requests.HasComponent(target)
+                    || !History.HasBuffer(target)) return false;
 
-                DamageRequest pendingDamage = DamageRequestLookup.IsComponentEnabled(target)
-                    ? DamageRequestLookup[target]
-                    : default;
-                pendingDamage.Add(damage, HealthLookup[target].Current, LaunchStateLookup[source].OriginatingPunchSequence);
-                DamageRequestLookup[target] = pendingDamage;
-                DamageRequestLookup.SetComponentEnabled(target, true);
+                var history = History[target];
+                foreach (var entry in history)
+                    if (entry.Source == source && entry.SourceLaunchSequence == launch.LaunchSequence) return false;
+                history.Add(new CollisionDamageHistory { Source = source, SourceLaunchSequence = launch.LaunchSequence });
+
+                var request = Requests.IsComponentEnabled(target) ? Requests[target] : default;
+                request.Add(damage, Health[target].Current, launch.OriginatingPunchSequence);
+                Requests[target] = request;
+                Requests.SetComponentEnabled(target, true);
+                return true;
             }
         }
     }

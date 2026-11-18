@@ -23,7 +23,8 @@ namespace CrowdPunch.Systems.Physics
             state.RequireForUpdate<PhysicsWorldSingleton>();
             movingSolids = new EntityQueryBuilder(Allocator.Temp).WithAll<PhysicsCollider, LocalTransform>()
                 .WithAny<RotatingCover, TrackObject>().AddAdditionalQuery().WithAll<PhysicsCollider, LocalTransform>()
-                .WithAny<BossPart, ChickenBoss, RollingBoss, DinoBoss, FinaleBoss>().Build(ref state);
+                .WithAny<BossPart, ChickenBoss, RollingBoss, DinoBoss, FinaleBoss>()
+                .AddAdditionalQuery().WithAll<PhysicsCollider, LocalTransform, ElitePunchState>().Build(ref state);
         }
 
         public void OnUpdate(ref SystemState state)
@@ -97,6 +98,9 @@ namespace CrowdPunch.Systems.Physics
                         || hit.Material.CollisionResponse == CollisionResponsePolicy.RaiseTriggerEvents
                         || em.HasComponent<Barricade>(hit.Entity) && em.GetComponentData<Barricade>(hit.Entity).HitsRemaining <= 0)
                         continue;
+                    if (IsElite(em, hit.Entity) && (em.GetComponentData<EnemyLaunchState>(hit.Entity).Phase == EnemyLaunchPhase.Defeated
+                        || em.HasComponent<RespawnRequest>(hit.Entity) && em.IsComponentEnabled<RespawnRequest>(hit.Entity)))
+                        continue;
                     float3 travel = goal - pose.ValueRO.Position;
                     float3 relativeTravel = travel - (UsesCurrentPose(em, hit.Entity) && em.HasComponent<PhysicsVelocity>(hit.Entity)
                         ? em.GetComponentData<PhysicsVelocity>(hit.Entity).Linear * dt : float3.zero);
@@ -125,7 +129,9 @@ namespace CrowdPunch.Systems.Physics
                 path.ValueRW.ScheduledPosition = goal;
                 path.ValueRW.ReachedPoint = reached ? (byte)1 : (byte)0;
                 path.ValueRW.ExpectedContact = expected ? (byte)1 : (byte)0;
-                path.ValueRW.ReleaseAfterContact = blocked ? (byte)1 : (byte)0;
+                // The Elite can leave the saved contact point during the shot. Release along
+                // the incoming direction instead of playing a rebound with no live surface.
+                path.ValueRW.ReleaseAfterStep = blocked || reached && !expected && IsElite(em, end.Surface) ? (byte)1 : (byte)0;
                 path.ValueRW.ExitVelocity = reached
                     ? index + 1 < points.Length ? AuthoritativeLaunchPlan.ExitVelocity(end, points[index + 1].Value) : end.Velocity
                     : (end.Position - start.Position) / math.max(.000001f, end.Seconds - start.Seconds);
@@ -163,7 +169,10 @@ namespace CrowdPunch.Systems.Physics
             => em.HasComponent<RotatingCover>(entity) || em.HasComponent<TrackObject>(entity)
                 || em.HasComponent<BossPart>(entity) || em.HasComponent<ChickenBoss>(entity)
                 || em.HasComponent<RollingBoss>(entity) || em.HasComponent<DinoBoss>(entity)
-                || em.HasComponent<FinaleBoss>(entity);
+                || em.HasComponent<FinaleBoss>(entity) || em.HasComponent<ElitePunchState>(entity);
+
+        private static bool IsElite(EntityManager em, Entity entity)
+            => em.HasComponent<EnemyTier>(entity) && em.GetComponentData<EnemyTier>(entity).Value == EnemyCombatTier.Elite;
 
         private static bool TetherExceeded(EntityManager em, Entity source, float3 goal)
         {

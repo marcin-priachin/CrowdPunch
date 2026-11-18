@@ -32,6 +32,6 @@ namespace CrowdPunch.Components
         public Entity Contact;
         public float3 ContactPoint, ContactNormal;
         public float ContactImpulse;
-        public byte ReachedPoint, ExpectedContact, ReleaseAfterContact;
+        public byte ReachedPoint, ExpectedContact, ReleaseAfterStep;
     }
 }

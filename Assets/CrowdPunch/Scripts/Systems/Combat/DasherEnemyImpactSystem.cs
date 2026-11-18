@@ -170,7 +170,9 @@ namespace CrowdPunch.Systems.Combat
                     math.length(dash.PreservedLaunchedVelocity), knockback, significance, elapsed);
                 feedbacks[target] = feedback;
             }
-            if (damage > 0f && health.HasComponent(target) && damageRequests.HasComponent(target))
+            if (damage > 0f && health.HasComponent(target) && damageRequests.HasComponent(target)
+                && (!enemyTiers.TryGetComponent(target, out var targetTier)
+                    || EnemyCollisionDamage.CanDamage(targetTier.Value, launches[source].Owner)))
             {
                 DamageRequest pending = damageRequests.IsComponentEnabled(target) ? damageRequests[target] : default;
                 pending.Add(damage, health[target].Current, launches[source].OriginatingPunchSequence);

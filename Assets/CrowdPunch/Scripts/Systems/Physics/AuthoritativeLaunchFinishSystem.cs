@@ -36,7 +36,7 @@ namespace CrowdPunch.Systems.Physics
                 if (path.ValueRO.ExpectedContact != 0 && em.HasComponent<RotatingCover>(surface)
                     && math.distancesq(velocity.ValueRO.Linear.xz, desired.xz) > .000001f)
                 { AuthoritativeLaunchPlan.Release(em, source); continue; }
-                if (path.ValueRO.ReleaseAfterContact != 0)
+                if (path.ValueRO.ReleaseAfterStep != 0)
                 {
                     bool reflected = em.HasComponent<RotatingCover>(surface)
                         || em.HasComponent<Barricade>(surface) && em.GetComponentData<Barricade>(surface).HitsRemaining > 0;
@@ -56,7 +56,7 @@ namespace CrowdPunch.Systems.Physics
                     { velocity.ValueRW.Linear = safe; AuthoritativeLaunchPlan.Release(em, source); continue; }
                 }
                 velocity.ValueRW.Linear = desired;
-                if (path.ValueRO.ReleaseAfterContact != 0)
+                if (path.ValueRO.ReleaseAfterStep != 0)
                 { AuthoritativeLaunchPlan.Release(em, source); continue; }
                 if (path.ValueRO.ReachedPoint != 0)
                 {

@@ -80,10 +80,15 @@ namespace CrowdPunch.Tests
             Assert.That(Hp, Is.Zero); Assert.That(em.GetComponentData<EnemyLaunchState>(target), Is.EqualTo(original));
             Assert.That(em.GetComponentData<PhysicsVelocity>(target), Is.EqualTo(velocity)); Assert.That(em.IsComponentEnabled<DeathRequest>(target), Is.False);
         }
-        [Test] public void Link004_ArmorProtectionAndElitePush() {
-            Launch(a); em.AddComponentData(target, EnemyArmor.Fresh); Damage(); Assert.That(Hp, Is.EqualTo(100));
+        [TestCase(EnemyLaunchOwner.Player)]
+        [TestCase(EnemyLaunchOwner.Enemy)]
+        public void Link004_ArmorProtectionAndElitePush(EnemyLaunchOwner owner) {
+            Launch(a); var launch = em.GetComponentData<EnemyLaunchState>(a);
+            launch.Owner = owner; em.SetComponentData(a, launch);
+            em.AddComponentData(target, EnemyArmor.Fresh); Damage(); Assert.That(Hp, Is.EqualTo(100));
             em.RemoveComponent<EnemyArmor>(target); em.SetComponentData(target, new EnemyTier { Value = EnemyCombatTier.Elite }); Damage(1.6);
-            Assert.That(Hp, Is.LessThan(100)); Assert.That(em.GetComponentData<EnemyLaunchState>(target).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+            Assert.That(Hp, Is.EqualTo(owner == EnemyLaunchOwner.Player ? 100 - tuning.EnemyDamage : 100));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(target).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
             Assert.That(math.length(em.GetComponentData<PhysicsVelocity>(target).Linear), Is.GreaterThan(0));
         }
         [TestCase(LinkedPairResponse.DamageAndLaunch)] [TestCase(LinkedPairResponse.DamageAndPush)]
