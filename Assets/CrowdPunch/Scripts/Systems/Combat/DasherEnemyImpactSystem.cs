@@ -179,7 +179,7 @@ namespace CrowdPunch.Systems.Combat
                 damageRequests[target] = pending;
                 damageRequests.SetComponentEnabled(target, true);
             }
-            if (knockback > 0f)
+            if (knockback > 0f && tier != KnockbackResponseTier.PlayerElite)
             {
                 float3 travelDirection = math.normalizesafe(dash.PreservedLaunchedVelocity);
                 travelDirection.y = 0f;

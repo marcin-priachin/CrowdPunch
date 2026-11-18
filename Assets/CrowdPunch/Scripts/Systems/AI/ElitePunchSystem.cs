@@ -106,23 +106,26 @@ namespace CrowdPunch.Systems.AI
                             player.Position,
                             settings.ValueRO.DesiredPunchDistance);
                         cooldownDestination.y = transform.ValueRO.Position.y;
-                        float3 toCooldownDestination = cooldownDestination - transform.ValueRO.Position;
-                        toCooldownDestination.y = 0f;
-                        float cooldownSetupDistance = math.length(toCooldownDestination);
-                        movement.ValueRW.Direction = GetCollisionAvoidingApproachDirection(
-                            transform.ValueRO.Position,
-                            nextTransform.Position,
-                            cooldownDestination,
-                            math.max(settings.ValueRO.PunchRadius, settings.ValueRO.PositionTolerance));
+                        if (!TryGetApproach(elite, nextProjectile, transform.ValueRO.Position, nextTransform.Position,
+                                cooldownDestination, settings.ValueRO, out float3 waypoint))
+                        {
+                            movement.ValueRW = default;
+                            EntityManager.SetComponentData(elite, new NavigationIntent());
+                            continue;
+                        }
+                        float cooldownSetupDistance = math.distance(waypoint.xz, transform.ValueRO.Position.xz);
+                        float arrival = ApproachTolerance(cooldownDestination, waypoint, settings.ValueRO.PositionTolerance);
+                        movement.ValueRW.Direction = math.normalizesafe(waypoint - transform.ValueRO.Position);
                         movement.ValueRW.Speed = CalculateSetupSpeed(
                             cooldownSetupDistance,
-                            settings.ValueRO.PositionTolerance,
+                            arrival,
                             cooldownMovementSettings.MoveSpeed * math.max(0f, settings.ValueRO.SetupMovementSpeedMultiplier),
                             math.min(
                                 math.max(0f, cooldownMovementSettings.Acceleration),
                                 math.max(0f, cooldownMovementSettings.BrakingAcceleration)),
                             0f);
-                        SetNavigation(elite, transform.ValueRO.Position, cooldownDestination, movement.ValueRO.Direction, movement.ValueRO.Speed, settings.ValueRO.PositionTolerance, float3.zero);
+                        EntityManager.SetComponentData(elite, NavigationIntent.Travel(waypoint,
+                            movement.ValueRO.Speed, arrival, float3.zero, NavigationGoalKind.ExactSetup));
                         transform.ValueRW.Rotation = math.slerp(
                             transform.ValueRO.Rotation,
                             quaternion.LookRotationSafe(cooldownLaunchDirection, math.up()),
@@ -192,16 +195,20 @@ namespace CrowdPunch.Systems.AI
                     math.saturate(math.max(0f, movementSettings.TurnSpeed) * dt));
                 float3 desired = DesiredPosition(targetTransform.Position, player.Position, settings.ValueRO.DesiredPunchDistance);
                 desired.y = transform.ValueRO.Position.y;
-                float3 toDesired = desired - transform.ValueRO.Position; toDesired.y = 0f;
-                float3 setupDirection = GetCollisionAvoidingApproachDirection(
-                    transform.ValueRO.Position,
-                    targetTransform.Position,
-                    desired,
-                    math.max(settings.ValueRO.PunchRadius, settings.ValueRO.PositionTolerance));
+                bool linedUp = IsLinedUp(transform.ValueRO, targetTransform.Position, launchDirection, settings.ValueRO);
+                if (!TryGetApproach(elite, state.ValueRO.Target, transform.ValueRO.Position, targetTransform.Position,
+                        desired, settings.ValueRO, out float3 setupWaypoint) && !linedUp)
+                {
+                    movement.ValueRW = default;
+                    EntityManager.SetComponentData(elite, new NavigationIntent());
+                    continue;
+                }
+                float arrivalTolerance = ApproachTolerance(desired, setupWaypoint, settings.ValueRO.PositionTolerance);
+                float3 setupDirection = math.normalizesafe(setupWaypoint - transform.ValueRO.Position);
                 movement.ValueRW.Direction = settings.ValueRO.ApplySeparationDuringSetup != 0
                     ? math.normalizesafe(setupDirection + movement.ValueRO.Direction * 0.35f, setupDirection)
                     : setupDirection;
-                float setupDistance = math.length(toDesired);
+                float setupDistance = math.distance(setupWaypoint.xz, transform.ValueRO.Position.xz);
                 float maximumSetupSpeed = movementSettings.MoveSpeed
                     * math.max(0f, settings.ValueRO.SetupMovementSpeedMultiplier);
                 float setupBraking = math.min(
@@ -214,14 +221,13 @@ namespace CrowdPunch.Systems.AI
                     + math.sqrt(2f * setupBraking * math.max(0f, settings.ValueRO.PositionTolerance));
                 movement.ValueRW.Speed = CalculateSetupSpeed(
                     setupDistance,
-                    settings.ValueRO.PositionTolerance,
+                    arrivalTolerance,
                     maximumSetupSpeed,
                     setupBraking,
-                    minimumCatchupSpeed);
-                SetNavigation(elite, transform.ValueRO.Position, desired, setupDirection, movement.ValueRO.Speed,
-                    settings.ValueRO.PositionTolerance, settings.ValueRO.ApplySeparationDuringSetup != 0
-                        ? baselineNavigation.Separation * .35f : float3.zero);
-                bool linedUp = IsLinedUp(transform.ValueRO, targetTransform.Position, launchDirection, settings.ValueRO);
+                    math.distancesq(desired.xz, setupWaypoint.xz) < .0001f ? minimumCatchupSpeed : 0f);
+                EntityManager.SetComponentData(elite, NavigationIntent.Travel(setupWaypoint, movement.ValueRO.Speed,
+                    arrivalTolerance, settings.ValueRO.ApplySeparationDuringSetup != 0
+                        ? baselineNavigation.Separation * .35f : float3.zero, NavigationGoalKind.ExactSetup));
                 if (!linedUp)
                 {
                     if (state.ValueRO.Phase == ElitePunchPhase.WindUp) { state.ValueRW.Phase = ElitePunchPhase.Repositioning; state.ValueRW.TelegraphActive = 0; }
@@ -271,14 +277,22 @@ namespace CrowdPunch.Systems.AI
             return true;
         }
 
-        private void SetNavigation(Entity elite, float3 position, float3 destination, float3 sideDirection,
-            float speed, float tolerance, float3 separation)
+        private bool TryGetApproach(Entity elite, Entity projectile, float3 position, float3 targetPosition,
+            float3 destination, in ElitePunchSettings settings, out float3 waypoint)
         {
-            // Preserve the existing target-body side detour before routing around static terrain.
-            float3 direct = math.normalizesafe(destination - position);
-            if (math.dot(direct, sideDirection) < .99f) destination = position + sideDirection * math.min(2f, math.distance(position, destination));
-            EntityManager.SetComponentData(elite, NavigationIntent.Travel(destination, speed, tolerance, separation, NavigationGoalKind.ExactSetup));
+            var eliteRadius = EntityManager.HasComponent<NavigationAgent>(elite)
+                ? EntityManager.GetComponentData<NavigationAgent>(elite).Radius : 0f;
+            var targetRadius = EntityManager.HasComponent<NavigationAgent>(projectile)
+                ? EntityManager.GetComponentData<NavigationAgent>(projectile).Radius : 0f;
+            var grid = SystemAPI.HasSingleton<NavigationRuntimeSettings>() && SystemAPI.GetSingleton<NavigationRuntimeSettings>().Enabled != 0
+                && SystemAPI.TryGetSingleton<NavigationGrid>(out var navigation) ? navigation : default;
+            int clearanceClass = grid.Data.IsCreated ? NavigationGeometry.ClearanceClass(ref grid.Data.Value, eliteRadius) : -1;
+            return EliteApproachRoute.TryFind(position, targetPosition, destination,
+                math.max(settings.PunchRadius, eliteRadius + targetRadius), settings.PositionTolerance, grid, clearanceClass, out waypoint);
         }
+
+        private static float ApproachTolerance(float3 desired, float3 waypoint, float tolerance)
+            => math.distancesq(desired.xz, waypoint.xz) < .0001f ? tolerance : EliteApproachRoute.ArrivalTolerance;
 
         private void SelectTarget(Entity elite, float3 elitePosition, PlayerSnapshot player, ElitePunchSettings settings,
             NativeArray<Entity> all, ref ElitePunchState state)

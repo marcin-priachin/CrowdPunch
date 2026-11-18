@@ -41,6 +41,8 @@ namespace CrowdPunch.Tests
                 if (type.Namespace == "Unity.Physics.Systems") types.Add(type);
             types.Add(typeof(CoverEnclosureContactSystem));
             types.Add(typeof(AuthoritativeLaunchContactSystem));
+            types.Add(typeof(EliteImpactContactSystem));
+            types.Add(typeof(EliteImpactJacobianSystem));
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, types);
             var step = Unity.Physics.PhysicsStep.Default; step.Gravity = float3.zero;
             em.AddComponentData(em.CreateEntity(), step);
@@ -381,7 +383,7 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(90));
             Assert.That(em.GetBuffer<CollisionDamageHistory>(elite).Length, Is.EqualTo(1));
             Assert.That(em.GetComponentData<EnemyLaunchState>(elite).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
-            Assert.That(em.GetComponentData<PhysicsVelocity>(elite).Linear.z, Is.LessThan(1f));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(elite).Linear, Is.EqualTo(float3.zero));
         }
 
         [TestCase(EnemyLaunchOwner.Player, EnemyLaunchCause.PlayerPunch, 90)]
@@ -390,7 +392,7 @@ namespace CrowdPunch.Tests
         [TestCase(EnemyLaunchOwner.Enemy, EnemyLaunchCause.EnemyCollision, 100)]
         [TestCase(EnemyLaunchOwner.Boss, EnemyLaunchCause.BossAttack, 100)]
         [TestCase(EnemyLaunchOwner.Environment, EnemyLaunchCause.EnvironmentImpact, 100)]
-        public void Combat012_EliteCollisionDamageFollowsCurrentLaunchOwner(
+        public void Combat012_EliteCollisionDamageFollowsCurrentLaunchOwnerWithoutPush(
             EnemyLaunchOwner owner, EnemyLaunchCause cause, int expectedHealth)
         {
             Entity elite = EliteAtContact();
@@ -402,6 +404,20 @@ namespace CrowdPunch.Tests
             for (int i = 0; i < 3; i++) ResolveElitePhysicsStep();
 
             Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(expectedHealth));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(elite).Linear, Is.EqualTo(float3.zero));
+            Assert.That(em.GetComponentData<LocalTransform>(elite).Position, Is.EqualTo(new float3(0, 0, 1)));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(source).Linear.z, Is.LessThan(1f));
+        }
+
+        [Test]
+        public void Combat012_UnlaunchedCrowdContactKeepsNormalElitePhysics()
+        {
+            Entity elite = EliteAtContact();
+            em.SetComponentData(source, new PhysicsVelocity { Linear = new float3(0, 0, 12f) });
+
+            for (int i = 0; i < 3; i++) ResolveElitePhysicsStep();
+
+            Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(100f));
             Assert.That(em.GetComponentData<PhysicsVelocity>(elite).Linear.z, Is.GreaterThan(0f));
         }
 
@@ -429,6 +445,7 @@ namespace CrowdPunch.Tests
             Assert.That(math.distance(path.ScheduledPosition, savedRebound.Position), Is.LessThan(.001f));
             Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(90f));
             Assert.That(em.GetBuffer<CollisionDamageHistory>(elite).Length, Is.EqualTo(1));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(elite).Linear, Is.EqualTo(float3.zero));
         }
 
         [Test]
@@ -502,7 +519,7 @@ namespace CrowdPunch.Tests
             world.GetOrCreateSystem<DamageApplicationSystem>().Update(world.Unmanaged);
 
             Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(expectedHealth));
-            Assert.That(em.IsComponentEnabled<ExternalImpulse>(elite), Is.True);
+            Assert.That(em.IsComponentEnabled<ExternalImpulse>(elite), Is.False);
         }
 
         private void ResolveElitePhysicsStep()
@@ -994,12 +1011,13 @@ namespace CrowdPunch.Tests
         [TestCase(1000)]
         public void Combat003_ProfileContactRepairInATouchingCrowd(int count)
         {
-            for (int i = 1; i < count; i++) Body(new float3(30 + i % 32 * .98f, 0, i / 32 * .98f), colliders[0], true);
+            EliteAtContact(3.95f);
+            for (int i = 2; i < count; i++) Body(new float3(30 + i % 32 * .98f, 0, i / 32 * .98f), colliders[0], true);
             Preview(); Punch(); Step();
             var timer = System.Diagnostics.Stopwatch.StartNew();
             for (int i = 0; i < 20; i++) Step();
             timer.Stop();
-            TestContext.WriteLine($"Contact repair pipeline: {count} touching crowd bodies / one source, {timer.Elapsed.TotalMilliseconds / 20:F3} ms/update (warm Editor fixture, including real physics and assertions).");
+            TestContext.WriteLine($"Contact pipeline: {count} bodies including one Elite and one source, {timer.Elapsed.TotalMilliseconds / 20:F3} ms/update (warm Editor fixture, including real physics and assertions).");
         }
 
         [TestCase(100)]

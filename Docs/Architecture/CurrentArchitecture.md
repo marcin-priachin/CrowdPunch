@@ -647,6 +647,13 @@ individual health bars. Armor gameplay and collision ownership are unchanged.
 
 ## Goblin Giant Elite (2026-10-24, ENEMY-009, INFO-004/006, VISION-006)
 
+Elite defeat starts the Die motion at frame zero. The baked landing metadata links
+to the sampled visual and records the clip duration. Instantiation remaps that link
+to the spawned visual. Spawn profiles publish the optional frame offset separately.
+Pooling and level results wait
+for both that duration and confirmation that the animation has sampled its final
+pose, including when presentation starts late. Defeat accounting runs at zero health.
+
 `EnemyElitePrefabBuilder` retains `EliteEnemy.prefab` and its physics footprint while
 instantiating the supplied Goblin Giant Elite Variant at its authored scale. Translation
 aligns the visual floor with the capsule floor. The Humanoid Giant clips are sampled
@@ -2439,7 +2446,11 @@ the saved rebound, the motor releases with the incoming velocity. A verified
 Elite sweep uses relative incoming speed and original masses for damage, including
 when the motor turns at a touching vertex without a solver event. The post-physics
 collision and sweep passes share the impulse damage curve and per-launch history.
-The Elite's motion stays solver-owned.
+`EliteImpactContactSystem` marks contacts between Elites and launched enemies.
+`EliteImpactJacobianSystem` zeros inverse mass and inertia factors on the Elite
+side for each marked contact. The projectile still gets a solver response and can
+produce damage. Ordinary crowd contacts retain the Elite's dynamic mass. The
+dotted forecast uses the same immovable Elite response when predicting the rebound.
 
 The motor collider-casts each segment against live solids. Current cover/track
 poses are recast because the collision world can contain the prior pose. Boss parts,
@@ -2782,7 +2793,7 @@ Frequently toggled state is represented by enableable components to avoid archet
 - `RespawnRequest`
 - `EnemyHealthBarVisibility`
 
-Enemy lifecycle is represented by the non-enableable `EnemyLaunchState` component because every enemy is always in exactly one of `Active`, `Launched`, `Recovering`, or `Defeated`. Its phase, last launch cause, explicit `Player`/`Enemy` launch owner, and propagated-launch count remain visible in the Entities inspector. Any launched enemy, including one at zero health with deferred defeat, can be punched again; a recovering enemy must still be alive. Before applying a normal player-punch impulse in any eligible state, `PunchResolution` clears the body's linear and angular `PhysicsVelocity`, so old momentum cannot skew the previewed direction. Elite knockback remains additive. This experiment extends the original launched-body replacement rule to Active and Recovering bodies. The transition then increments its launch sequence and resets its cause, owner, damage, recovery timing, propagated-launch count, and last propagation impulse to the new launch. A player punch therefore replaces enemy ownership rather than leaving stale player-threat state on the body. `Health` exposes current and maximum health, while `EnemyDamageState` records the last applied damage and whether zero-health defeat is currently deferred for development inspection.
+Enemy lifecycle is represented by the non-enableable `EnemyLaunchState` component because every enemy is always in exactly one of `Active`, `Launched`, `Recovering`, or `Defeated`. Its phase, last launch cause, explicit `Player`/`Enemy` launch owner, and propagated-launch count remain visible in the Entities inspector. Any launched enemy, including one at zero health with deferred defeat, can be punched again; a recovering enemy must still be alive. Before applying a normal player-punch impulse in any eligible state, `PunchResolution` clears the body's linear and angular `PhysicsVelocity`, so old momentum cannot skew the previewed direction. This experiment extends the original launched-body replacement rule to Active and Recovering bodies. The transition then increments its launch sequence and resets its cause, owner, damage, recovery timing, propagated-launch count, and last propagation impulse to the new launch. A player punch therefore replaces enemy ownership rather than leaving stale player-threat state on the body. `Health` exposes current and maximum health, while `EnemyDamageState` records the last applied damage and whether zero-health defeat is currently deferred for development inspection.
 
 `DamageApplicationSystem` is the explicit pre-physics health stage after punch detection. Punch detection establishes `Launched` before damage is evaluated, so a same-frame lethal launching punch deterministically defers defeat and still receives its impulse. After physics and collision propagation, `EnemyRecoverySystem` chooses either normal recovery for a living projectile or direct defeat for a zero-health projectile. `DeathRequest` is enabled only on the transition to `Defeated`, making the lifetime handoff idempotent; `DefeatedEnemyLifecycleSystem` consumes it once and enables `RespawnRequest`.
 
@@ -2928,6 +2939,11 @@ search range and target-to-player distance fields do not filter this nearest-ene
 entity-index tie break when squared distances are exactly equal.
 
 During setup, the desired position is behind the projectile relative to the live player, on the elite's movement plane.
+`EliteApproachRoute` checks direct travel and both directions around the projectile using the combined
+body radii and the Elite's navigation clearance. It can use a clear standing point within the authored
+punch-position tolerance. Both cooldown and reserved approaches follow its waypoints, and crowd
+support uses the same clearance rule for staging. In Campaign 23 this avoids choosing the
+arena-edge side of a projectile when only the interior route has room.
 `ElitePunchSystem` runs after `EnemyChaseSystem` and before `EnemyNavigationSystem` and `EnemyMovementSystem`, making its tactical intent override
 explicit while leaving velocity integration in the existing movement system. It turns the elite toward the live
 target-to-player launch direction at the profile's existing `TurnSpeed`; ordinary chase facing is not used as a hidden
@@ -2952,7 +2968,7 @@ Every spawned enemy carries a small reservation record. An elite writes ownershi
 on execution or cancellation; stale owners and defeated/pooled targets are cleared independently each update. Shared
 reservations are an authored policy. Restart and pooling reset attack state, random state, target references, telegraph
 state, and reservations, while wave-owned destruction continues to remove the entire old generation. Elite tier gating is
-unchanged, so elites remain damageable and knockback-responsive but never enter `Launched`; normal replenishment remains
+unchanged, so elites remain damageable and stay outside the `Launched` phase; normal replenishment remains
 owned by the existing wave counters.
 
 `EliteCrowdSupportSystem` runs after elite target selection and before movement integration. For each active elite, its
@@ -3065,11 +3081,9 @@ through **Crowd Punch > Enemies > Rebuild Elite Prefab** (ENEMY-009, INFO-004).
 All enemy damage continues through `DamageRequest` and the shared health resolver; `DamageApplicationSystem`
 handles pre-physics requests and Wizard zones resolve their ticks before post-physics recovery. Punches, launched-body collision damage,
 explosions, and launched Dashers can therefore defeat an elite normally. `EnemyLaunchTransition` is gated by `EnemyTier`:
-normal targets enter the shared `Launched` lifecycle, while elite targets receive the applicable existing elite-tier
-impulse without changing launch phase. This preserves normal deferred-defeat and future boss-tier behavior.
-Player punches additionally carry `PlayerPunchSettings.EliteKnockbackMultiplier` through the existing Mono-to-ECS punch
-bridge. It scales normal- and dash-punch strength only for `EnemyTier.Elite`; punch damage and all non-punch impulse paths
-remain unchanged. The default multiplier is `1`, preserving existing tuning until explicitly authored.
+normal targets enter the shared `Launched` lifecycle. Direct punches, launched Dasher sweeps,
+and LinkedPair links can damage Elites according to COMBAT-012 without imparting movement.
+The existing Elite punch and Dasher impact strength tuning feeds presentation feedback.
 
 `EnemyHealthBarPolicy` is the per-entity presentation rule. Normal enemies retain temporary damage bars and existing
 state labels. Elites use `AlwaysWhileAlive`; `EnemyHealthBarBridgeSystem` explicitly bypasses the canvas's global normal
@@ -3146,7 +3160,7 @@ Launched-Dasher knockback direction blends its horizontal travel direction with 
 to the struck target. The authored `LaunchedImpactPositionWeight` controls the blend: `0` produces a straight-ahead push
 and `1` pushes directly toward the side on which the target was struck.
 
-Launched-Dasher impacts have independent normal-enemy, elite, and boss tuning. `KnockbackResponse` provides those existing
+Launched-Dasher impacts have independent normal-enemy, elite, and boss damage tuning. `KnockbackResponse` provides those existing
 three conceptual tiers without introducing elite or boss behavior: ordinary enemies are always momentum-transparent,
 while elite and boss momentum preservation is authored independently. Static geometry remains solver-owned. Grey-box
 feedback uses the existing per-entity material colour and post-transform overrides: warning pulse, bright elongated
@@ -3220,7 +3234,7 @@ The GDD remains the accepted baseline; this document records the implemented exp
 - `PunchResolution` now clears linear/angular velocity before all eligible **normal player launches**,
   including Active and Recovering bodies, so incoming momentum cannot skew the previewed direction
   (PLAYER-004, COMBAT-014). This intentionally revises the prior Active first-punch momentum rule;
-  elite additive knockback and enemy-originated punch semantics remain unchanged.
+  Elite impact response follows COMBAT-012.
   The punch pipeline, cooldown acknowledgement, bridge data and physics phase ordering are unchanged.
   Arrowheads are local preview presentation only. Authored assist is 18 m / 12 degrees;
   propagation correction and homing are disabled by their existing zero settings. The collision system

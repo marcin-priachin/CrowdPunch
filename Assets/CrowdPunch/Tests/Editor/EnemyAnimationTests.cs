@@ -98,7 +98,7 @@ namespace CrowdPunch.Tests
         {
             var em = world.EntityManager;
             em.SetComponentData(visual, new EnemyAnimation { Owner = owner, Samples = samples, Profile = (byte)profile });
-            em.AddComponentData(owner, new EnemyLandingAnimation { Duration = 1, DefeatFramesToSkip = skipped });
+            em.AddComponentData(owner, new EnemyDefeatFrameOffset { Frames = skipped });
             if (profile == EnemyAnimationProfile.Standard)
             {
                 em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
@@ -118,7 +118,7 @@ namespace CrowdPunch.Tests
         public void Info004DefeatSkipLeavesNonlethalLandingUnchanged()
         {
             var em = world.EntityManager;
-            em.AddComponentData(owner, new EnemyLandingAnimation { Duration = 1, DefeatFramesToSkip = 100 });
+            em.AddComponentData(owner, new EnemyDefeatFrameOffset { Frames = 100 });
             em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
             Tick();
             em.SetComponentData(owner, new EnemyLaunchState

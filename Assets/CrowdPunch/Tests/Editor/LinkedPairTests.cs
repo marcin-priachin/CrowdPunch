@@ -82,14 +82,14 @@ namespace CrowdPunch.Tests
         }
         [TestCase(EnemyLaunchOwner.Player)]
         [TestCase(EnemyLaunchOwner.Enemy)]
-        public void Link004_ArmorProtectionAndElitePush(EnemyLaunchOwner owner) {
+        public void Link004_ArmorProtectionAndEliteDamageWithoutPush(EnemyLaunchOwner owner) {
             Launch(a); var launch = em.GetComponentData<EnemyLaunchState>(a);
             launch.Owner = owner; em.SetComponentData(a, launch);
             em.AddComponentData(target, EnemyArmor.Fresh); Damage(); Assert.That(Hp, Is.EqualTo(100));
             em.RemoveComponent<EnemyArmor>(target); em.SetComponentData(target, new EnemyTier { Value = EnemyCombatTier.Elite }); Damage(1.6);
             Assert.That(Hp, Is.EqualTo(owner == EnemyLaunchOwner.Player ? 100 - tuning.EnemyDamage : 100));
             Assert.That(em.GetComponentData<EnemyLaunchState>(target).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
-            Assert.That(math.length(em.GetComponentData<PhysicsVelocity>(target).Linear), Is.GreaterThan(0));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(target).Linear, Is.EqualTo(float3.zero));
         }
         [TestCase(LinkedPairResponse.DamageAndLaunch)] [TestCase(LinkedPairResponse.DamageAndPush)]
         public void Link004_ExploderDetonatesInBothModes(LinkedPairResponse mode) {

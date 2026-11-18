@@ -24,7 +24,7 @@ namespace CrowdPunch.Tests
         [TestCase(EnemyLaunchPhase.Active)]
         [TestCase(EnemyLaunchPhase.Launched)]
         [TestCase(EnemyLaunchPhase.Recovering)]
-        public void Player004_MovingBodyUsesLockedDirectionWhileEliteKeepsAdditiveKnockback(EnemyLaunchPhase phase)
+        public void Player004_MovingBodyUsesLockedDirectionWhileEliteTakesDamageWithoutKnockback(EnemyLaunchPhase phase)
         {
             using var world = new World("Deliberate shot resolution test");
             var manager = world.EntityManager;
@@ -54,9 +54,11 @@ namespace CrowdPunch.Tests
             Assert.That(math.distance(launched.Linear, expected), Is.LessThan(0.001f));
             Assert.That(launched.Angular, Is.EqualTo(float3.zero));
             Assert.That(manager.GetComponentData<EnemyLaunchState>(body).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
-            Assert.That(manager.GetComponentData<PhysicsVelocity>(elite).Linear, Is.EqualTo(new float3(12f, 3f, 5f)));
+            Assert.That(manager.GetComponentData<PhysicsVelocity>(elite).Linear, Is.EqualTo(new float3(12f, 3f, -4f)));
             Assert.That(manager.GetComponentData<PhysicsVelocity>(elite).Angular, Is.EqualTo(new float3(0f, 2f, 0f)));
             Assert.That(manager.GetComponentData<EnemyLaunchState>(elite).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+            Assert.That(manager.IsComponentEnabled<ExternalImpulse>(elite), Is.False);
+            Assert.That(manager.GetComponentData<DamageRequest>(elite).Amount, Is.EqualTo(10f));
             Assert.That(manager.GetComponentData<PunchRequest>(player).HitEnemy, Is.True);
             Assert.That(manager.IsComponentEnabled<PunchRequest>(player), Is.False);
 

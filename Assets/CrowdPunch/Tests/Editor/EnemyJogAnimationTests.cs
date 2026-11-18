@@ -1,5 +1,8 @@
 using System.IO;
 using CrowdPunch.Components;
+using CrowdPunch.Mono.Levels;
+using CrowdPunch.Systems.Initialization;
+using CrowdPunch.Systems.Lifetime;
 using CrowdPunch.Systems.Presentation;
 using NUnit.Framework;
 using Unity.Collections;
@@ -438,6 +441,93 @@ namespace CrowdPunch.Tests
             em.SetComponentData(owner, sweep);
             Tick();
             Assert.That(em.GetComponentData<EnemyAnimationPlayback>(layered).GoblinMotion, Is.EqualTo(4));
+        }
+
+        [Test]
+        public void Info004SpawnedEliteUsesItsOwnDieClipBeforePoolingAndResults()
+        {
+            var em = world.EntityManager;
+            em.AddComponent<Enemy>(owner);
+            em.AddComponent<DeathRequest>(owner);
+            em.SetComponentEnabled<DeathRequest>(owner, false);
+            em.AddComponent<EnemyDamageState>(owner);
+            em.AddComponent<EnemyLifetime>(owner);
+            em.AddComponent<Health>(owner);
+            em.AddComponent<HealthBar>(owner);
+            em.AddComponent<NavigationAgent>(owner);
+            em.AddComponent<EnemyContactDamageSettings>(owner);
+            em.AddComponent<EnemyContactAttemptState>(owner);
+            em.AddComponent<EnemySeparationDistance>(owner);
+            em.AddComponent<EnemyArchetypeSeparationDistances>(owner);
+            em.AddComponent<KnockbackResponse>(owner);
+            em.AddComponent<KnockbackRecovery>(owner);
+            em.SetComponentEnabled<KnockbackRecovery>(owner, false);
+            em.AddBuffer<CollisionDamageHistory>(owner);
+            em.CreateEntity(typeof(ArenaBounds));
+            em.AddBuffer<Unity.Entities.Hybrid.Baking.AdditionalEntitiesBakingData>(layered);
+            world.GetOrCreateSystem<EnemyAnimationVisualBakingSystem>().Update(world.Unmanaged);
+            Entity prefab = owner;
+            Entity prefabVisual = layered;
+            Assert.That(em.GetComponentData<EnemyLandingAnimation>(prefab).Visual, Is.EqualTo(prefabVisual));
+            em.AddComponent<Prefab>(prefab);
+            em.AddComponent<Prefab>(prefabVisual);
+            em.AddComponent<Prefab>(original);
+            var linked = em.AddBuffer<LinkedEntityGroup>(prefab);
+            linked.Add(prefab);
+            linked.Add(prefabVisual);
+            linked.Add(original);
+            using (var commands = new EntityCommandBuffer(Allocator.Temp))
+            {
+                var profile = new EnemySpawnProfile { EnemyPrefab = prefab, Archetype = EnemyArchetypeKind.Elite,
+                    Health = new Health { Current = 10, Max = 10 }, DefeatAnimationFramesToSkip = 1 };
+                var random = new Unity.Mathematics.Random(1);
+                EnemySpawnInitialization.Create(commands, em, profile, new float3(2, 0, 3), ref random);
+                commands.Playback(em);
+            }
+            world.SetTime(new TimeData(2d, 1.1f));
+            world.GetOrCreateSystem<EnemySpawnWarningSystem>().Update(world.Unmanaged);
+            using var elites = em.CreateEntityQuery(typeof(ElitePunchState));
+            owner = elites.GetSingletonEntity();
+            layered = em.GetComponentData<EnemyLandingAnimation>(owner).Visual;
+            Assert.That(layered, Is.Not.EqualTo(prefabVisual));
+            Assert.That(em.GetComponentData<EnemyAnimation>(layered).Owner, Is.EqualTo(owner));
+            Assert.That(em.GetComponentData<EnemyDefeatFrameOffset>(owner).Frames, Is.EqualTo(1));
+
+            em.SetComponentData(owner, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
+            em.SetComponentData(owner, new PhysicsVelocity { Linear = new float3(2, 0, 0) });
+            em.SetComponentEnabled<DeathRequest>(owner, true);
+            world.SetTime(new TimeData(10d, .02f));
+            world.GetOrCreateSystem<DefeatedEnemyLifecycleSystem>().Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<RespawnRequest>(owner).PoolNotBefore, Is.EqualTo(11d));
+            var completion = world.GetOrCreateSystemManaged<GauntletCompletionSystem>();
+            em.CreateEntity(typeof(EnemyWaveSequence), typeof(EnemyWaveEncounterComplete));
+            uint reported = GauntletCompletionRegistry.Sequence;
+            var respawn = world.GetOrCreateSystem<EnemyRespawnSystem>();
+
+            // Delay the first render update past the scheduled lifetime. Both consumers must
+            // wait for the visual and the first sampled pose must still be frame zero.
+            world.SetTime(new TimeData(11.1d, .02f));
+            respawn.Update(world.Unmanaged);
+            completion.Update();
+            Assert.That(em.GetComponentData<RespawnRequest>(owner).IsPooled, Is.Zero);
+            Assert.That(GauntletCompletionRegistry.Sequence, Is.EqualTo(reported));
+            Tick();
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[1].Value.c3.y, Is.Zero);
+
+            Tick(.5f);
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[1].Value.c3.y, Is.EqualTo(.5f).Within(.001f));
+            respawn.Update(world.Unmanaged);
+            completion.Update();
+            Assert.That(em.GetComponentData<RespawnRequest>(owner).IsPooled, Is.Zero);
+            Assert.That(GauntletCompletionRegistry.Sequence, Is.EqualTo(reported));
+
+            Tick(.5f);
+            Assert.That(em.GetBuffer<SkinMatrix>(layered)[1].Value.c3.y, Is.EqualTo(1f).Within(.001f));
+            completion.Update();
+            Assert.That(GauntletCompletionRegistry.Sequence, Is.EqualTo(reported + 1));
+            respawn.Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<RespawnRequest>(owner).IsPooled, Is.EqualTo(1));
+            Assert.That(em.GetComponentData<EnemyAnimationPlayback>(prefabVisual).DefeatFinished, Is.Zero);
         }
 
         [Test]

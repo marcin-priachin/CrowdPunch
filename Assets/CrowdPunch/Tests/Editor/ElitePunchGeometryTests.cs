@@ -1,6 +1,7 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.AI;
 using CrowdPunch.Systems.Combat;
+using CrowdPunch.Systems.Movement;
 using CrowdPunch.Utilities;
 using NUnit.Framework;
 using Unity.Collections;
@@ -234,6 +235,96 @@ namespace CrowdPunch.Tests
             support.Update();
             Assert.AreEqual(1, em.GetComponentData<ElitePunchReservation>(target).IsStaged);
             Assert.AreEqual(0, em.GetComponentData<DesiredMovement>(target).Speed);
+        }
+
+        [Test]
+        public void Enemy009_Combat017_EliteRoutesAroundProjectileNearArenaEdge()
+        {
+            using var world = new World("Captured Campaign 23 Elite side-step failure");
+            Entity elite = CreateEliteAttempt(world, out Entity projectile);
+            var em = world.EntityManager;
+            float3 start = new float3(12.86278f, -.5f, 8.85488f);
+            float3 target = new float3(13.47648f, 0, 10.5181f);
+            float3 player = new float3(1.287464f, .5f, -9.952817f);
+            using var playerQuery = em.CreateEntityQuery(typeof(PlayerSnapshot));
+            em.SetComponentData(playerQuery.GetSingletonEntity(), new PlayerSnapshot { Position = player, IsAvailable = true });
+            em.SetComponentData(elite, LocalTransform.FromPosition(start));
+            em.SetComponentData(projectile, LocalTransform.FromPosition(target));
+            em.AddComponentData(elite, new NavigationAgent { Radius = .75f });
+            em.AddComponentData(projectile, new NavigationAgent { Radius = .5f });
+            em.AddComponent<RespawnRequest>(elite);
+            em.SetComponentEnabled<RespawnRequest>(elite, false);
+            em.AddBuffer<NavigationWaypoint>(elite);
+            em.AddComponent<Unity.Physics.PhysicsVelocity>(elite);
+            em.AddComponent<Unity.Physics.PhysicsMass>(elite);
+            em.SetComponentData(elite, new EnemyMovementSettings
+            {
+                MoveSpeed = 30f, Acceleration = 20f, BrakingAcceleration = 40f, TurnSpeed = 10f
+            });
+            em.AddComponentData(projectile, new EnemyMovementSettings { MoveSpeed = 8 });
+            em.AddComponent<DesiredMovement>(projectile);
+            em.AddComponent<NavigationIntent>(projectile);
+            em.AddComponent<EnemyContactAttemptState>(projectile);
+            em.AddComponent<EnemyContactDamageSettings>(projectile);
+            em.SetComponentData(projectile, new ElitePunchReservation());
+            em.SetComponentData(elite, new ElitePunchState { Phase = ElitePunchPhase.Cooldown, SecondsRemaining = 1.014f });
+            var settings = em.GetComponentData<ElitePunchSettings>(elite);
+            settings.PunchRadius = .75f;
+            settings.PunchRange = 1.5f;
+            settings.AffectActive = 1;
+            settings.MaximumSetupDuration = 5f;
+            settings.SetupMovementSpeedMultiplier = 1.25f;
+            settings.CrowdCorridorRadius = 1.5f;
+            settings.AimAngleToleranceDegrees = 8f;
+            settings.WindUpDuration = .8f;
+            settings.LaunchAnimationProgress = .4f;
+            em.SetComponentData(elite, settings);
+
+            using var obstacles = new NativeArray<NavigationRectangle>(0, Allocator.Temp);
+            using var blob = NavigationGridConstruction.Build(new float2(-15), new float2(15), 1f,
+                new float3(.62f, .97f, 1.62f), obstacles, Allocator.Persistent);
+            em.AddComponentData(em.CreateEntity(), new ArenaBounds { Extents = new float3(15) });
+            Entity arena = em.CreateEntity(typeof(NavigationGrid), typeof(NavigationRuntimeSettings), typeof(NavigationDiagnostics));
+            em.SetComponentData(arena, new NavigationGrid { Data = blob });
+            em.SetComponentData(arena, new NavigationRuntimeSettings
+            {
+                Enabled = 1, DirectInterval = .1f, RepathCooldown = .15f, StuckDuration = .6f,
+                MinimumProgress = .05f, FailureDelay = 3f, DestinationThreshold = .3f,
+                ConcurrentSearches = 4, MaxRequests = 16, GlobalBudget = 100, SearchLimit = 100, MaxPathLength = 40
+            });
+            Assert.That(NavigationGeometry.Anchor(ref blob.Value, new float2(14.24522f, 10.30016f), 1), Is.EqualTo(-1));
+
+            var punch = world.GetOrCreateSystemManaged<ElitePunchSystem>();
+            var support = world.GetOrCreateSystemManaged<EliteCrowdSupportSystem>();
+            var nav = world.GetOrCreateSystem<EnemyNavigationSystem>();
+            var motor = world.GetOrCreateSystem<EnemyMovementSystem>();
+            const float dt = 1f / 60f;
+            for (int tick = 1; tick <= 240; tick++)
+            {
+                world.SetTime(new TimeData(tick * (double)dt, dt));
+                punch.Update();
+                var attack = em.GetComponentData<ElitePunchState>(elite);
+                if (attack.Phase == ElitePunchPhase.CommittedSweep)
+                {
+                    Assert.That(attack.Target, Is.EqualTo(projectile));
+                    return;
+                }
+                support.Update();
+                nav.Update(world.Unmanaged);
+                Assert.That(em.GetComponentData<NavigationPathState>(elite).TravelState, Is.Not.EqualTo(NavigationTravelState.Failed));
+                motor.Update(world.Unmanaged);
+                em.CompleteAllTrackedJobs();
+                var pose = em.GetComponentData<LocalTransform>(elite);
+                pose.Position += em.GetComponentData<Unity.Physics.PhysicsVelocity>(elite).Linear * dt;
+                em.SetComponentData(elite, pose);
+                Assert.That(math.distance(pose.Position.xz, target.xz), Is.GreaterThanOrEqualTo(1.24f));
+            }
+            var lastAttack = em.GetComponentData<ElitePunchState>(elite);
+            var lastPose = em.GetComponentData<LocalTransform>(elite);
+            var lastIntent = em.GetComponentData<NavigationIntent>(elite);
+            var reservation = em.GetComponentData<ElitePunchReservation>(projectile);
+            Assert.Fail($"The Elite did not line up. Phase={lastAttack.Phase}, position={lastPose.Position}, "
+                + $"destination={lastIntent.Destination}, speed={lastIntent.Speed}, staged={reservation.IsStaged}.");
         }
 
         [Test]

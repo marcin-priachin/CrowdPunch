@@ -26,7 +26,7 @@ namespace CrowdPunch.Systems.Presentation
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
                 Movement = SystemAPI.GetComponentLookup<DesiredMovement>(true),
                 Settings = SystemAPI.GetComponentLookup<EnemyMovementSettings>(true),
-                LandingAnimations = SystemAPI.GetComponentLookup<EnemyLandingAnimation>(true),
+                DefeatOffsets = SystemAPI.GetComponentLookup<EnemyDefeatFrameOffset>(true),
                 Transforms = SystemAPI.GetComponentLookup<LocalTransform>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
                 Damage = SystemAPI.GetComponentLookup<EnemyDamageState>(true),
@@ -81,7 +81,7 @@ namespace CrowdPunch.Systems.Presentation
             [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<DesiredMovement> Movement;
             [ReadOnly] public ComponentLookup<EnemyMovementSettings> Settings;
-            [ReadOnly] public ComponentLookup<EnemyLandingAnimation> LandingAnimations;
+            [ReadOnly] public ComponentLookup<EnemyDefeatFrameOffset> DefeatOffsets;
             [ReadOnly] public ComponentLookup<LocalTransform> Transforms;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
             [ReadOnly] public ComponentLookup<EnemyDamageState> Damage;
@@ -120,6 +120,7 @@ namespace CrowdPunch.Systems.Presentation
                     playback.Initialized = 1;
                 }
                 EnemyLaunchState launch = Launches[owner];
+                if (launch.Phase != EnemyLaunchPhase.Defeated) playback.DefeatFinished = 0;
                 Entity spawnOwner = owner;
                 if (animation.Profile == (byte)EnemyAnimationProfile.SlimeSegment && SnakeSegments.HasComponent(owner)
                     && SnakeSegments[owner].Detached == 0) spawnOwner = SnakeSegments[owner].Head;
@@ -306,7 +307,7 @@ namespace CrowdPunch.Systems.Presentation
                         && playback.Landing != defeatLanding
                         && Damage.TryGetComponent(owner, out var damage) && damage.PlayDefeatAnimation != 0;
                     if (startRequestedDefeat || endingLaunch || (launch.Phase == EnemyLaunchPhase.Defeated && playback.Landing == 0
-                        && LandingAnimations.HasComponent(owner) && LandingAnimations[owner].DefeatFramesToSkip > 0))
+                        && DefeatOffsets.HasComponent(owner) && DefeatOffsets[owner].Frames > 0))
                     {
                         playback.Landing = startRequestedDefeat ? defeatLanding : (byte)1;
                         playback.ImpactPhase = 0f;
@@ -1063,6 +1064,7 @@ namespace CrowdPunch.Systems.Presentation
                     int from = (int)deathFrame;
                     ApplyFrame(ref skin, ref samples, EnemyAnimationSamples.ImpactMotion, from,
                         math.min(from + 1, samples.FrameCount - 1), math.frac(deathFrame));
+                    playback.DefeatFinished = (byte)(playback.ImpactPhase >= 1f ? 1 : 0);
                     return;
                 }
 
@@ -1238,13 +1240,19 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 playback.WasRecovering = (byte)(launch.Phase == EnemyLaunchPhase.Recovering ? 1 : 0);
                 bool oneShot = motion == EnemyAnimationSamples.ImpactMotion;
-                if (motion != playback.GoblinMotion) playback.Phase = 0;
+                bool defeated = launch.Phase == EnemyLaunchPhase.Defeated;
+                bool beginningEliteDefeat = elite && defeated && playback.Landing == 0;
+                if (elite) playback.Landing = (byte)(defeated ? 1 : 0);
+                if (motion != playback.GoblinMotion || beginningEliteDefeat) playback.Phase = 0;
                 else playback.Phase += DeltaTime / math.max(.01f, samples.Durations[motion]);
                 playback.Phase = oneShot ? math.saturate(playback.Phase) : math.frac(playback.Phase);
                 playback.GoblinMotion = (byte)motion;
                 if (progress < 0) progress = oneShot ? math.saturate(playback.Phase) : math.frac(playback.Phase);
-                if (launch.Phase == EnemyLaunchPhase.Defeated)
+                if (defeated)
+                {
                     progress = DefeatPhase(owner, progress, samples.FrameCount);
+                    playback.DefeatFinished = (byte)(progress >= 1f ? 1 : 0);
+                }
                 float frame = progress * (oneShot || motion == 3 || motion == 4 || motion == 5 || motion == 6
                     ? samples.FrameCount - 1 : samples.FrameCount);
                 int from = math.min((int)frame, samples.FrameCount - 1);
@@ -1256,9 +1264,10 @@ namespace CrowdPunch.Systems.Presentation
 
             private float DefeatPhase(Entity owner, float phase, int frameCount)
             {
+                if (ElitePunches.HasComponent(owner)) return phase;
                 // INFO-004: offset the visible defeat pose without changing gameplay/lifecycle clocks.
-                int skip = LandingAnimations.HasComponent(owner)
-                    ? math.clamp(LandingAnimations[owner].DefeatFramesToSkip, 0, frameCount - 1) : 0;
+                int skip = DefeatOffsets.TryGetComponent(owner, out var offset)
+                    ? math.clamp(offset.Frames, 0, frameCount - 1) : 0;
                 return math.saturate(phase + skip / (float)math.max(1, frameCount - 1));
             }
 

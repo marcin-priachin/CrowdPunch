@@ -221,7 +221,9 @@ namespace CrowdPunch.Systems.Presentation
                         impacts.Add(new LaunchTrajectoryImpact { Position = impact, Direction = math.normalizesafe(velocity) });
                     remaining *= 1f - closest.Fraction;
                     bool enemy = em.HasComponent<Enemy>(closest.Entity);
-                    float otherInverseMass = em.HasComponent<PhysicsMass>(closest.Entity)
+                    bool elite = em.HasComponent<EnemyTier>(closest.Entity)
+                        && em.GetComponentData<EnemyTier>(closest.Entity).Value == EnemyCombatTier.Elite;
+                    float otherInverseMass = !elite && em.HasComponent<PhysicsMass>(closest.Entity)
                         ? em.GetComponentData<PhysicsMass>(closest.Entity).InverseMass : 0f;
                     var material = SourceMaterial(collider);
                     float restitution = Unity.Physics.Material.GetCombinedRestitution(material, closest.Material);

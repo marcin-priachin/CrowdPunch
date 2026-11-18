@@ -606,7 +606,7 @@ Status: Must
 
 A sufficiently forceful collision from one `Launched` enemy into an `Active` or `Recovering` enemy deals damage scaled from the player punch damage that originated the launch chain. Solver-estimated impulse determines eligibility and increases the damage multiplier up to a cap. Launch propagation and damage use independent thresholds and outcomes. During one continuous source launch, a source-target pair may deal collision damage once, while that source may damage multiple different targets. Collisions between two already-launched enemies do not deal this damage. Propagated enemies inherit the originating punch damage, and propagation is established before collision damage is evaluated so lethal damage on the target follows deferred-defeat rules. Numerical thresholds and multipliers are provisional.
 
-Only player-owned launched-body impacts can damage Elites. This includes propagated player launches, launched Dashers, and links between launched LinkedPair endpoints. Use the current launch owner. Physical push and independent damage effects such as explosion splash follow their existing rules.
+Only player-owned launched-body impacts can damage Elites. This includes propagated player launches, launched Dashers, and links between launched LinkedPair endpoints. Use the current launch owner. Direct player punches, dash-punches, and launched-enemy hits of any ownership apply zero knockback to Elites. Launched bodies still collide with the Elite. Independent effects such as explosion splash follow their own rules.
 
 When an enemy becomes `Launched` through ordinary enemy-to-enemy propagation, use its solver-produced horizontal velocity as the initial direction and search within the configured propagation aim-correction radius and maximum forward angle for a living `Active` or `Recovering` enemy or an intact eligible barricade. Select the smallest planar angle, breaking ties by distance and entity index. Reject obstructed targets, the collision source and the newly launched enemy. Apply the same bounded movement lead and cap correction to the configured angle, preserving horizontal speed and vertical velocity. A radius or maximum angle of zero disables correction.
 
@@ -706,7 +706,7 @@ The walking, launched and recovering link damages the player regardless of launc
 
 Status: Must
 
-Walking/recovering links pass through enemies without effects. A launched link uses configurable DamageAndLaunch (default) or DamageAndPush on ordinary unlaunched victims. New flights inherit pair ownership and chain data. Already-launched victims receive damage only, preserving velocity and ownership. Intact armor ignores all link effects and never loses armor; preserve armor protection windows and existing protected Snake-part gates. Elites receive push and take damage only from player-owned launched links (COMBAT-012). The link never launches an Elite. Exploders detonate in either mode. Boss and puzzle targets receive no link effect; endpoint bodies keep their existing rules. Simultaneous endpoint hits and pair-on-pair propagation resolve coherently once per pair event.
+Walking/recovering links pass through enemies without effects. A launched link uses configurable DamageAndLaunch (default) or DamageAndPush on ordinary unlaunched victims. New flights inherit pair ownership and chain data. Already-launched victims receive damage only, preserving velocity and ownership. Intact armor ignores all link effects and never loses armor; preserve armor protection windows and existing protected Snake-part gates. Elites take damage only from player-owned launched links and receive zero knockback (COMBAT-012). Exploders detonate in either mode. Boss and puzzle targets receive no link effect; endpoint bodies keep their existing rules. Simultaneous endpoint hits and pair-on-pair propagation resolve coherently once per pair event.
 
 ### LINK-005 - Shared Flight And Recovery
 
@@ -1461,7 +1461,9 @@ authored transform scale and the supplied textures with Full Cel shading. Use th
 idle, locomotion, damage, Die and reverse-Die recovery poses instead of procedural
 recoloring, flashing, bobbing, shaking or squash. Blend the existing directional jogs
 on the legs while retaining the original upper-body pose. Ground spawn, recovery and
-defeat retain full-body animation. Expose Enemy Launch Frame in Elite spawn settings
+defeat retain full-body animation. On defeat, play the entire Die clip from its first
+frame through its final pose before hiding the Elite or showing level results.
+Expose Enemy Launch Frame in Elite spawn settings
 as a zero-based original Sweep Attack frame (ENEMY-009).
 
 During Elite setup/repositioning, directional leg motion and gait cadence follow actual

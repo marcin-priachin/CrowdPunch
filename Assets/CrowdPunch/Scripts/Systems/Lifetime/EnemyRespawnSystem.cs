@@ -75,7 +75,8 @@ namespace CrowdPunch.Systems.Lifetime
                         physicsVelocity.ValueRW.Linear.xz = math.lengthsq(slide) <= DefeatSlideStopSpeed * DefeatSlideStopSpeed
                             ? float2.zero : slide;
                     }
-                    if (!IsReadyToPool(
+                    if (DefeatedEnemyLifecycleSystem.IsEliteDefeatPlaying(state.EntityManager, enemy)
+                        || !IsReadyToPool(
                             elapsedTime,
                             respawnRequest.ValueRO,
                             SystemAPI.IsComponentEnabled<KnockbackRecovery>(enemy),

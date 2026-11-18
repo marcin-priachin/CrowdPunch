@@ -606,10 +606,10 @@ namespace CrowdPunch.Systems.AI
             NavigationGrid grid = SystemAPI.GetSingleton<NavigationGrid>();
             if (!grid.Data.IsCreated) return true;
             ref NavigationGridBlob geometry = ref grid.Data.Value;
-            int eliteClass = NavigationGeometry.ClearanceClass(ref geometry,
-                EntityManager.GetComponentData<NavigationAgent>(elite).Radius);
-            int projectileClass = NavigationGeometry.ClearanceClass(ref geometry,
-                EntityManager.GetComponentData<NavigationAgent>(projectile).Radius);
+            float eliteRadius = EntityManager.GetComponentData<NavigationAgent>(elite).Radius;
+            float projectileRadius = EntityManager.GetComponentData<NavigationAgent>(projectile).Radius;
+            int eliteClass = NavigationGeometry.ClearanceClass(ref geometry, eliteRadius);
+            int projectileClass = NavigationGeometry.ClearanceClass(ref geometry, projectileRadius);
             if (eliteClass < 0 || projectileClass < 0) return false;
 
             // ENEMY-009: a centre ray can pass where the elite's full body cannot.
@@ -617,20 +617,17 @@ namespace CrowdPunch.Systems.AI
             float2 projectilePosition = EntityManager.GetComponentData<LocalTransform>(projectile).Position.xz;
             int projectileStart = NavigationGeometry.Anchor(ref geometry, projectilePosition, projectileClass);
             int projectileEnd = NavigationGeometry.Anchor(ref geometry, stagingPosition.xz, projectileClass);
-            int eliteStart = NavigationGeometry.Anchor(ref geometry, elitePosition.xz, eliteClass);
-            int eliteEnd = NavigationGeometry.Anchor(ref geometry, desiredElitePosition.xz, eliteClass);
+            var settings = EntityManager.GetComponentData<ElitePunchSettings>(elite);
             return projectileStart >= 0
                 && projectileEnd >= 0
-                && eliteStart >= 0
-                && eliteEnd >= 0
                 && NavigationGeometry.Region(ref geometry, projectileStart, projectileClass)
                     == NavigationGeometry.Region(ref geometry, projectileEnd, projectileClass)
-                && NavigationGeometry.Region(ref geometry, eliteStart, eliteClass)
-                    == NavigationGeometry.Region(ref geometry, eliteEnd, eliteClass)
                 && (!requireDirectProjectilePath
                     || NavigationGeometry.Segment(ref geometry, projectilePosition, stagingPosition.xz,
                         geometry.Radii[projectileClass]))
-                && NavigationGeometry.Segment(ref geometry, elitePosition.xz, desiredElitePosition.xz, geometry.Radii[eliteClass]);
+                && EliteApproachRoute.TryFind(elitePosition, stagingPosition, desiredElitePosition,
+                    math.max(settings.PunchRadius, eliteRadius + projectileRadius), settings.PositionTolerance,
+                    grid, eliteClass, out _);
         }
 
         private bool HasWorldObstruction(float3 start, float3 end)

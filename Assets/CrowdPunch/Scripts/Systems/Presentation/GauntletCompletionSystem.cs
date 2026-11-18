@@ -1,6 +1,7 @@
 using CrowdPunch.Components;
 using CrowdPunch.Mono.Levels;
 using CrowdPunch.Systems.Groups;
+using CrowdPunch.Systems.Lifetime;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -10,6 +11,7 @@ namespace CrowdPunch.Systems.Presentation
 {
     /// <summary>Reports completion once when every wave sequence in the loaded gauntlet is complete.</summary>
     [UpdateInGroup(typeof(GamePresentationGroup))]
+    [UpdateAfter(typeof(EnemyAnimationSystem))]
     public partial class GauntletCompletionSystem : SystemBase
     {
         private EntityQuery allSequences;
@@ -100,10 +102,13 @@ namespace CrowdPunch.Systems.Presentation
                 double now = SystemAPI.Time.ElapsedTime;
                 foreach (var (respawn, entity) in SystemAPI.Query<RefRO<RespawnRequest>>().WithEntityAccess())
                 {
-                    if (respawn.ValueRO.IsPooled != 0 || respawn.ValueRO.PoolNotBefore <= now) continue;
-                    if (!SystemAPI.HasComponent<SporellaSettings>(entity)
-                        && (!SystemAPI.HasComponent<EnemyDamageState>(entity)
-                            || SystemAPI.GetComponent<EnemyDamageState>(entity).PlayDefeatAnimation == 0)) continue;
+                    if (respawn.ValueRO.IsPooled != 0) continue;
+                    bool waitingForClip = respawn.ValueRO.PoolNotBefore > now
+                        && (DefeatedEnemyLifecycleSystem.IsElite(EntityManager, entity)
+                            || SystemAPI.HasComponent<SporellaSettings>(entity)
+                            || SystemAPI.HasComponent<EnemyDamageState>(entity)
+                                && SystemAPI.GetComponent<EnemyDamageState>(entity).PlayDefeatAnimation != 0);
+                    if (!waitingForClip && !DefeatedEnemyLifecycleSystem.IsEliteDefeatPlaying(EntityManager, entity)) continue;
                     isComplete = false;
                     break;
                 }

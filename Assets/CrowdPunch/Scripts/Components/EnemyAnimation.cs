@@ -70,6 +70,7 @@ namespace CrowdPunch.Components
         public float RecoveryAge;
         public byte GoblinMotion;
         public byte EliteSweepInterrupted;
+        public byte DefeatFinished;
         public float JogPhase;
     }
 

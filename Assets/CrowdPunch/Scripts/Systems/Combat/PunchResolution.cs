@@ -94,7 +94,8 @@ namespace CrowdPunch.Systems.Combat
                 return true;
             }
             if (punch.Cause == EnemyLaunchCause.PlayerPunch && !SnakePunchOcclusion.CanReach(manager, target, punch.Origin)) return false;
-            if (punch.Cause == EnemyLaunchCause.PlayerPunch && manager.HasComponent<EnemyGroundConstraint>(target))
+            bool elite = tier.Value == EnemyCombatTier.Elite;
+            if (!elite && punch.Cause == EnemyLaunchCause.PlayerPunch && manager.HasComponent<EnemyGroundConstraint>(target))
             {
                 EnemyGroundConstraint ground = manager.GetComponentData<EnemyGroundConstraint>(target);
                 ground.SnapRequested = 1;
@@ -106,7 +107,6 @@ namespace CrowdPunch.Systems.Combat
                 ? math.normalizesafe(punch.AssistedLaunchDirection, positionDirection)
                 : math.normalizesafe(math.lerp(forward, positionDirection, math.saturate(punch.PositionWeight)), positionDirection);
             // PLAYER-004: normal launches follow the preview even when the body is moving.
-            // Non-launchable elites retain their existing additive knockback response.
             if (EnemyLaunchTransition.IsLaunchable(tier) && manager.HasComponent<PhysicsVelocity>(target))
             {
                 PhysicsVelocity replacementVelocity = manager.GetComponentData<PhysicsVelocity>(target);
@@ -128,8 +128,11 @@ namespace CrowdPunch.Systems.Combat
                     manager.SetComponentData(target, velocity);
                 }
             }
-            manager.SetComponentData(target, new ExternalImpulse { Value = impulseDirection * math.max(0f, punch.Strength) });
-            manager.SetComponentEnabled<ExternalImpulse>(target, true);
+            if (!elite)
+            {
+                manager.SetComponentData(target, new ExternalImpulse { Value = impulseDirection * math.max(0f, punch.Strength) });
+                manager.SetComponentEnabled<ExternalImpulse>(target, true);
+            }
             if (EnemyLaunchTransition.IsLaunchable(tier))
             {
                 EnemyLaunchTransition.Begin(ref launch, punch.Cause, punch.Damage,

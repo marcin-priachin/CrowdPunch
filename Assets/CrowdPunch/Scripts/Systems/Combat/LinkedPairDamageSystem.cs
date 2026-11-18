@@ -124,7 +124,7 @@ namespace CrowdPunch.Systems.Combat
                     em.SetComponentData(target, new PhysicsVelocity { Linear = direction * t.LaunchSpeed });
                     em.SetComponentEnabled<ExternalImpulse>(target, false);
                     LinkedPairLaunchResolution.Begin(em, target, launch, direction * t.LaunchSpeed);
-                } else {
+                } else if (normal) {
                     var velocity = em.GetComponentData<PhysicsVelocity>(target); velocity.Linear.xz += direction.xz * t.PushSpeed; em.SetComponentData(target, velocity);
                 }
             }

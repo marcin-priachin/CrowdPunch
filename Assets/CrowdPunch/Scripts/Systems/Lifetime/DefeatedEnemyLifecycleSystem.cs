@@ -36,10 +36,15 @@ namespace CrowdPunch.Systems.Lifetime
                 }
 
                 double landingDuration = 0d;
+                bool elite = IsElite(state.EntityManager, enemy);
                 if (SystemAPI.HasComponent<EnemyLandingAnimation>(enemy))
                 {
                     var animation = SystemAPI.GetComponent<EnemyLandingAnimation>(enemy);
-                    if (animation.OrdinaryDefeatDuration > 0f)
+                    if (elite)
+                    {
+                        landingDuration = animation.Duration;
+                    }
+                    else if (animation.OrdinaryDefeatDuration > 0f)
                     {
                         // Exploders use the detonation clip after an explosion and Die for ordinary defeats.
                         landingDuration = SystemAPI.HasComponent<ExplosiveEnemyState>(enemy)
@@ -55,12 +60,27 @@ namespace CrowdPunch.Systems.Lifetime
                 }
                 respawnRequest.ValueRW = new RespawnRequest
                 {
-                    ForcePoolAt = elapsedTime + MaximumDefeatTravelSeconds,
+                    ForcePoolAt = elapsedTime + (elite && landingDuration > 0d ? landingDuration : MaximumDefeatTravelSeconds),
                     PoolNotBefore = elapsedTime + landingDuration
                 };
                 respawnRequestEnabled.ValueRW = true;
                 deathRequestEnabled.ValueRW = false;
             }
         }
+
+        internal static bool IsEliteDefeatPlaying(EntityManager em, Entity enemy)
+        {
+            if (!IsElite(em, enemy) || !em.HasComponent<EnemyLandingAnimation>(enemy)
+                || !em.HasComponent<EnemyLaunchState>(enemy)
+                || em.GetComponentData<EnemyLaunchState>(enemy).Phase != EnemyLaunchPhase.Defeated) return false;
+
+            Entity visual = em.GetComponentData<EnemyLandingAnimation>(enemy).Visual;
+            return em.HasComponent<EnemyAnimation>(visual) && em.GetComponentData<EnemyAnimation>(visual).Owner == enemy
+                && em.HasComponent<EnemyAnimationPlayback>(visual) && !em.HasComponent<Disabled>(visual)
+                && em.GetComponentData<EnemyAnimationPlayback>(visual).DefeatFinished == 0;
+        }
+
+        internal static bool IsElite(EntityManager em, Entity enemy) => em.HasComponent<EnemyTier>(enemy)
+            && em.GetComponentData<EnemyTier>(enemy).Value == EnemyCombatTier.Elite;
     }
 }
