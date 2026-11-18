@@ -9,9 +9,10 @@ namespace CrowdPunch.Systems.Physics
 {
     [BurstCompile, UpdateInGroup(typeof(PhysicsSimulationGroup))]
     [UpdateAfter(typeof(PhysicsCreateJacobiansGroup)), UpdateBefore(typeof(PhysicsSolveAndIntegrateGroup))]
-    public partial struct EliteImpactJacobianSystem : ISystem
+    public partial struct LaunchImpactResistanceJacobianSystem : ISystem
     {
-        public void OnCreate(ref SystemState state) => state.RequireForUpdate<ElitePunchState>();
+        public void OnCreate(ref SystemState state) =>
+            LaunchImpactResistanceContactSystem.RequireResistantTargets(ref state);
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
@@ -20,6 +21,7 @@ namespace CrowdPunch.Systems.Physics
             state.Dependency = new ResistImpacts
             {
                 Tiers = SystemAPI.GetComponentLookup<EnemyTier>(true),
+                Dinos = SystemAPI.GetComponentLookup<DinoBoss>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true)
             }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), ref world, state.Dependency);
         }
@@ -28,20 +30,21 @@ namespace CrowdPunch.Systems.Physics
         private struct ResistImpacts : IJacobiansJob
         {
             [ReadOnly] public ComponentLookup<EnemyTier> Tiers;
+            [ReadOnly] public ComponentLookup<DinoBoss> Dinos;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
 
             public void Execute(ref ModifiableJacobianHeader header, ref ModifiableContactJacobian contact)
             {
                 if (!header.HasMassFactors || (header.Flags & JacobianFlags.Disabled) != 0) return;
-                // COMBAT-012: suppress the Elite's impulse and torque for this contact only.
-                // The projectile still gets the solver response and generates impact events.
+                // COMBAT-012 / PILLAR-001: keep the launched body's solver response and
+                // collision events while shielding the target from impulse and torque.
                 var factors = header.MassFactors;
-                if (EliteImpactContactSystem.Resists(header.EntityA, header.EntityB, Tiers, Launches))
+                if (LaunchImpactResistanceContactSystem.Resists(header.EntityA, header.EntityB, Tiers, Dinos, Launches))
                 {
                     factors.InverseMassFactorA = 0f;
                     factors.InverseInertiaFactorA = 0f;
                 }
-                if (EliteImpactContactSystem.Resists(header.EntityB, header.EntityA, Tiers, Launches))
+                if (LaunchImpactResistanceContactSystem.Resists(header.EntityB, header.EntityA, Tiers, Dinos, Launches))
                 {
                     factors.InverseMassFactorB = 0f;
                     factors.InverseInertiaFactorB = 0f;

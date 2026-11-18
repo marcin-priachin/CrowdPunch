@@ -2446,8 +2446,8 @@ the saved rebound, the motor releases with the incoming velocity. A verified
 Elite sweep uses relative incoming speed and original masses for damage, including
 when the motor turns at a touching vertex without a solver event. The post-physics
 collision and sweep passes share the impulse damage curve and per-launch history.
-`EliteImpactContactSystem` marks contacts between Elites and launched enemies.
-`EliteImpactJacobianSystem` zeros inverse mass and inertia factors on the Elite
+`LaunchImpactResistanceContactSystem` marks contacts between Elites or Dino and launched enemies.
+`LaunchImpactResistanceJacobianSystem` zeros inverse mass and inertia factors on the resistant
 side for each marked contact. The projectile still gets a solver response and can
 produce damage. Ordinary crowd contacts retain the Elite's dynamic mass. The
 dotted forecast uses the same immovable Elite response when predicting the rebound.
@@ -4272,6 +4272,9 @@ pillars. `DinoBossSettings.asset` is the dedicated tuning source; `DinoTuning` a
 `Health` measured in required pillar hits, dynamic Unity Physics capsule/mass/velocity and
 no ordinary enemy launch components. Ordinary punch/explosion/body-damage paths therefore
 cannot launch or damage it. `PillarDamageResolution` alone changes boss health and stagger.
+The launch-impact resistance systems suppress solver displacement on Dino's side of launched-enemy
+contacts. The launched body still collides and can trigger armor feedback, and the dotted path
+predicts the rebound using Dino's own velocity and zero inverse mass for the impact.
 
 `DinoCycleSystem` advances chase/warning/burst/stagger before physics. `DinoMotionSystem`
 turns toward the player, uses capsule sweeps and surface tangents around static obstacles,

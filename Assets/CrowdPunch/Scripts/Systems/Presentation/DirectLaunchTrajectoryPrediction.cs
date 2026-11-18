@@ -223,7 +223,8 @@ namespace CrowdPunch.Systems.Presentation
                     bool enemy = em.HasComponent<Enemy>(closest.Entity);
                     bool elite = em.HasComponent<EnemyTier>(closest.Entity)
                         && em.GetComponentData<EnemyTier>(closest.Entity).Value == EnemyCombatTier.Elite;
-                    float otherInverseMass = !elite && em.HasComponent<PhysicsMass>(closest.Entity)
+                    bool resistsImpact = elite || em.HasComponent<DinoBoss>(closest.Entity);
+                    float otherInverseMass = !resistsImpact && em.HasComponent<PhysicsMass>(closest.Entity)
                         ? em.GetComponentData<PhysicsMass>(closest.Entity).InverseMass : 0f;
                     var material = SourceMaterial(collider);
                     float restitution = Unity.Physics.Material.GetCombinedRestitution(material, closest.Material);

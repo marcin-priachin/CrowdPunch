@@ -22,7 +22,6 @@ namespace CrowdPunch.Systems.Combat
         {
             var player=SystemAPI.HasSingleton<PlayerSnapshot>()?SystemAPI.GetSingleton<PlayerSnapshot>():default;
             double now=SystemAPI.Time.ElapsedTime;
-            RecordArmorContacts(ref state, now);
             foreach(var (boss,tuning,pose,velocity) in SystemAPI.Query<RefRW<DinoBoss>,RefRO<DinoTuning>,RefRW<LocalTransform>,RefRW<PhysicsVelocity>>())
             {
                 ref var b=ref boss.ValueRW; var t=tuning.ValueRO;
@@ -51,6 +50,8 @@ namespace CrowdPunch.Systems.Combat
                     ev.ValueRW.Linear.xz+=away*math.max(0,t.CrowdPush-outward);
                 }
             }
+            // Armor feedback also writes DinoBoss, so schedule it after the main-thread contacts.
+            RecordArmorContacts(ref state, now);
         }
 
         private void RecordArmorContacts(ref SystemState state, double now)

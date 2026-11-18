@@ -41,8 +41,8 @@ namespace CrowdPunch.Tests
                 if (type.Namespace == "Unity.Physics.Systems") types.Add(type);
             types.Add(typeof(CoverEnclosureContactSystem));
             types.Add(typeof(AuthoritativeLaunchContactSystem));
-            types.Add(typeof(EliteImpactContactSystem));
-            types.Add(typeof(EliteImpactJacobianSystem));
+            types.Add(typeof(LaunchImpactResistanceContactSystem));
+            types.Add(typeof(LaunchImpactResistanceJacobianSystem));
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, types);
             var step = Unity.Physics.PhysicsStep.Default; step.Gravity = float3.zero;
             em.AddComponentData(em.CreateEntity(), step);
@@ -419,6 +419,40 @@ namespace CrowdPunch.Tests
 
             Assert.That(em.GetComponentData<Health>(elite).Current, Is.EqualTo(100f));
             Assert.That(em.GetComponentData<PhysicsVelocity>(elite).Linear.z, Is.GreaterThan(0f));
+        }
+
+        [TestCase(0f, false)]
+        [TestCase(-2f, false)]
+        [TestCase(0f, true)]
+        public void Pillar001_LaunchedImpactKeepsDinoOnItsOwnMotion(float dinoSpeed, bool kinematicSource)
+        {
+            var start = new float3(0, 0, 1);
+            var dino = Body(start, colliders[0], false);
+            var mass = PhysicsMass.CreateDynamic(colliders[0].Value.MassProperties, 300f);
+            mass.InverseInertia = float3.zero;
+            em.AddComponentData(dino, mass);
+            em.AddComponentData(dino, new DinoBoss { Phase = dinoSpeed == 0f ? DinoPhase.Stagger : DinoPhase.Burst });
+            em.AddComponentData(dino, new DinoTuning { BodyRadius = .5f, InitialPosition = start });
+            em.AddComponentData(dino, new Health { Current = 3, Max = 3 });
+            var dinoVelocity = new float3(0, 0, dinoSpeed);
+            em.AddComponentData(dino, new PhysicsVelocity { Linear = dinoVelocity });
+            var launch = new EnemyLaunchState();
+            EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.PlayerPunch, 10f);
+            em.SetComponentData(source, launch);
+            em.SetComponentData(source, new PhysicsVelocity { Linear = new float3(0, 0, 30f) });
+            if (kinematicSource) em.SetComponentData(source, new PhysicsMassOverride { IsKinematic = 1 });
+
+            PhysicsStep();
+            if (!kinematicSource)
+                Assert.That(em.GetComponentData<PhysicsVelocity>(source).Linear.z, Is.LessThan(30f));
+            world.GetOrCreateSystem<DinoContactSystem>().Update(world.Unmanaged);
+            em.CompleteAllTrackedJobs();
+
+            Assert.That(em.GetComponentData<PhysicsVelocity>(dino).Linear, Is.EqualTo(dinoVelocity));
+            Assert.That(math.distance(em.GetComponentData<LocalTransform>(dino).Position, start + dinoVelocity * Dt),
+                Is.LessThan(.00001f));
+            Assert.That(em.GetComponentData<Health>(dino).Current, Is.EqualTo(3));
+            Assert.That(em.GetComponentData<DinoBoss>(dino).ArmorContactSequence, Is.EqualTo(1));
         }
 
         [TestCase(CollisionResponsePolicy.Collide)]
