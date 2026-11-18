@@ -322,7 +322,7 @@ Status: Must
 
 Boss death immediately ends hostile combat, cancels attacks and replenishment including pending allocations, neutralizes survivors/effects, then presents a short victory before campaign completion. No survivor clear is required. Retry restores full player/boss health, flight, anchors, histories, cover clocks, rail state and supply. Scene exit cleans all encounter state. Provide a brief nonblocking opening instruction and in-world active/paused/spent/damaged feedback.
 
-The final boss has a long red health bar centered at the top of the screen, matching the player's thin bar style with no text or background. Keep the pulsing cyan ground ring for vulnerability. Use authored Wraith animations for flight, attack preparation/follow-through, hit reactions and defeat; do not apply scripted body tint, flashes, shaking or scale changes for readability. Preserve prefab proportions and use the established Full Cel shading. This supersedes the cyan body glow and procedural model feedback on 2026-10-25; the HUD exception was requested on 2026-10-14.
+The final boss uses the shared boss health bar (INFO-007). Keep the pulsing cyan ground ring for vulnerability. Use authored Wraith animations for flight, attack preparation/follow-through, hit reactions and defeat; do not apply scripted body tint, flashes, shaking or scale changes for readability. Preserve prefab proportions and use the established Full Cel shading. This supersedes the cyan body glow and procedural model feedback on 2026-10-25; the HUD exception was requested on 2026-10-14.
 
 ## Player And Controls
 
@@ -1509,7 +1509,7 @@ physics body stays grounded (COMBAT-018).
 
 Status: Must
 
-Every boss displays one long red health bar in the upper center of the screen, matching the final boss's thin bar, size and top margin, with no text or background. Boss health bars do not follow bosses above their heads. Hide the bar on defeat, encounter exit, pause and failure/completion screens. Elite and normal-enemy health presentation remains unchanged. This placement supersedes earlier elite-style boss-bar references (requested 2026-10-27).
+Every boss displays one long, thin health bar in the upper center of the screen, matching the final boss's size and top margin. The bar uses a red fill over the same dark, translucent background as the player's health bar and has no text. Boss health bars do not follow bosses above their heads. Hide the bar on defeat, encounter exit, pause and failure/completion screens. Elite and normal-enemy health presentation remains unchanged. This placement supersedes earlier elite-style boss-bar references (requested 2026-10-27).
 
 ## Progression And Weapons
 

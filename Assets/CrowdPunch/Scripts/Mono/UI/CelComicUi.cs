@@ -11,6 +11,7 @@ namespace CrowdPunch.Mono.UI
         internal static readonly Color Teal = new Color32(106, 222, 202, 255);
         internal static readonly Color Muted = new Color32(181, 182, 188, 255);
         internal static readonly Color Shade = new Color32(15, 19, 29, 178);
+        internal static readonly Color HealthBarTrack = new Color32(16, 19, 56, 175);
 
         [SerializeField] private Font display;
         [SerializeField] private Font body;

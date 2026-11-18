@@ -1,5 +1,6 @@
 using CrowdPunch.Mono.Levels;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CrowdPunch.Mono.UI
 {
@@ -49,7 +50,7 @@ namespace CrowdPunch.Mono.UI
         private void EnsureUi()
         {
             if (root != null) return;
-            root = new GameObject("Boss health", typeof(RectTransform), typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler));
+            root = new GameObject("Boss health", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
             root.transform.SetParent(transform, false);
             // Campaign bars are nested under GameCanvas; span its full screen rect.
             var rootRect = (RectTransform)root.transform;
@@ -60,12 +61,12 @@ namespace CrowdPunch.Mono.UI
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.overrideSorting = true;
             canvas.sortingOrder = 1;
-            var scaler = root.GetComponent<UnityEngine.UI.CanvasScaler>();
-            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            var scaler = root.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = .5f;
 
-            var bar = new GameObject("Boss health bar", typeof(RectTransform));
+            var bar = new GameObject("Boss health bar", typeof(RectTransform), typeof(Image));
             var rect = (RectTransform)bar.transform;
             rect.SetParent(root.transform, false);
             rect.anchorMin = rect.anchorMax = new Vector2(.5f, 1);
@@ -73,13 +74,15 @@ namespace CrowdPunch.Mono.UI
             rect.anchoredPosition = new Vector2(0, -60);
             // Match the player's 14-pixel fill height; extend its length at the same top margin.
             rect.sizeDelta = new Vector2(900, 14);
+            var background = bar.GetComponent<Image>();
+            background.color = CelComicUi.HealthBarTrack;
+            background.raycastTarget = false;
 
-            var fillObject = new GameObject("Health fill", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            var fillObject = new GameObject("Health fill", typeof(RectTransform), typeof(Image));
             fill = (RectTransform)fillObject.transform;
             fill.SetParent(rect, false);
-            fill.anchorMin = Vector2.zero; fill.anchorMax = Vector2.one;
-            fill.offsetMin = fill.offsetMax = Vector2.zero;
-            var image = fillObject.GetComponent<UnityEngine.UI.Image>();
+            CelComicUi.Stretch(fill);
+            var image = fillObject.GetComponent<Image>();
             image.color = new Color(.9f, .12f, .12f);
             image.raycastTarget = false;
         }

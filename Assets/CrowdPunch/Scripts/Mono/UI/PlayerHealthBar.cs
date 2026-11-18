@@ -36,7 +36,7 @@ namespace CrowdPunch.Mono.UI
             track.sizeDelta = new Vector2(360, 14);
             track.anchoredPosition = new Vector2(80, -53);
             if (TryGetComponent<Image>(out var background))
-                background.color = new Color32(16, 19, 56, 175);
+                background.color = CelComicUi.HealthBarTrack;
             CelComicUi.Stretch(fillImage.rectTransform);
             fillImage.color = new Color32(120, 220, 96, 255);
         }
