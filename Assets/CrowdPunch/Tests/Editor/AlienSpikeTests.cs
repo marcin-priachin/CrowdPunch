@@ -127,6 +127,50 @@ namespace CrowdPunch.Tests
                 Assert.That(em.GetComponentData<NavigationIntent>(spike).Destination.x, Is.LessThan(0));
         }
 
+        [TestCase(AlienSpikeVolleyMode.TimerWhileMoving, true)]
+        [TestCase(AlienSpikeVolleyMode.MidRangePositioning, true)]
+        [TestCase(AlienSpikeVolleyMode.TimerWhileMoving, false)]
+        public void Spike001_SolidCoverMakesSpikeRepositionBeforeTelegraph(AlienSpikeVolleyMode mode, bool solidCover)
+        {
+            var spike = em.CreateEntity(typeof(AlienSpikeTuning), typeof(EnemyLaunchState), typeof(LocalTransform),
+                typeof(NavigationAgent), typeof(EnemyMovementSettings), typeof(AlienSpikeVolley), typeof(DesiredMovement),
+                typeof(NavigationIntent));
+            em.SetComponentData(spike, new AlienSpikeTuning
+            {
+                VolleyMode = mode, EngagementRadius = 11, PreferredDistance = 7, TelegraphSeconds = 1,
+                Shot = new AlienSpikeShotTuning { Radius = .2f }
+            });
+            em.SetComponentData(spike, new NavigationAgent { Radius = .5f });
+            em.SetComponentData(spike, new EnemyMovementSettings { MoveSpeed = 3f });
+            em.SetComponentData(spike, LocalTransform.FromPosition(new float3(0, .9f, 0)));
+            em.SetComponentData(player, new PlayerSnapshot { IsAvailable = true, Position = new float3(7, 1, 0) });
+            var obstruction = solidCover ? em.CreateEntity() : Enemy();
+            BuildPhysics(new[] { obstruction }, new[] { 3f });
+            var system = world.GetOrCreateSystem<AlienSpikeVolleySystem>();
+
+            system.Update(world.Unmanaged);
+
+            if (solidCover)
+            {
+                Assert.That(em.GetComponentData<AlienSpikeVolley>(spike).Phase, Is.EqualTo(AlienSpikeVolleyPhase.Moving));
+                var goal = em.GetComponentData<NavigationIntent>(spike);
+                Assert.That(goal.Mode, Is.EqualTo(NavigationMode.Travel));
+                Assert.That(math.abs(goal.Destination.z), Is.GreaterThan(.5f));
+                Assert.That(em.GetComponentData<DesiredMovement>(spike).Speed, Is.EqualTo(3));
+
+                world.SetTime(new TimeData(1.02, .02f));
+                em.SetComponentData(spike, LocalTransform.FromPosition(new float3(0, .9f, .35f)));
+                system.Update(world.Unmanaged);
+                Assert.That(em.GetComponentData<NavigationIntent>(spike).Destination, Is.EqualTo(goal.Destination));
+
+                em.SetComponentData(spike, LocalTransform.FromPosition(goal.Destination));
+                system.Update(world.Unmanaged);
+            }
+
+            Assert.That(em.GetComponentData<AlienSpikeVolley>(spike).Phase, Is.EqualTo(AlienSpikeVolleyPhase.Telegraph));
+            Assert.That(em.GetComponentData<DesiredMovement>(spike).Speed, Is.Zero);
+        }
+
         [Test]
         public void PunchOnTheReleaseStepCancelsNormalVolley()
         {

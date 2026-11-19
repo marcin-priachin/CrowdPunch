@@ -2213,8 +2213,9 @@ On the transition from launched to defeated, the grounded Alien Spike carries it
 remaining horizontal momentum into a short slide that slows to rest. For a lethal
 committed launch, the slide starts at the displayed endpoint (PLAYER-003).
 The default moving timer and optional mid-range positioning both stop for a range-gated
-telegraph. A committed volley fires outside engagement range. Launch cancels it and recovery
-starts a full cooldown.
+telegraph. If solid cover blocks the line to the player, Alien Spike seeks a clear angle before
+starting the telegraph. A committed volley fires outside engagement range. Launch cancels it
+and recovery starts a full cooldown.
 
 ### SPIKE-002 - Player-owned impact burst
 

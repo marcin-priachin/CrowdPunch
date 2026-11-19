@@ -29,6 +29,9 @@ namespace CrowdPunch.Components
     {
         public AlienSpikeVolleyPhase Phase;
         public float Remaining, AnimationPhase;
+        public float2 CoverDestination;
+        public double NextCoverSearchAt;
+        public bool HasCoverDestination;
     }
 
     [InternalBufferCapacity(0)]

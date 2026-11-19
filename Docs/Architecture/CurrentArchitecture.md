@@ -123,6 +123,11 @@ independent of this encounter.
 ## Alien Spike (SPIKE-001..005)
 
 `AlienSpikeVolleySystem` writes the normal volley phase and navigation intent before movement.
+Before committing to a windup, it checks solid cover at grounded shot height with the shared
+projectile sweep. A blocked Spike seeks a clear firing angle within its engagement spacing
+and spawn-room bounds (BARRICADE-008), then submits the point to `EnemyNavigationSystem`.
+The volley state keeps that destination while it remains suitable. While cover persists, the
+system checks the current line each step and limits destination searches to once every 0.2 seconds.
 Presentation reads that phase to sample the authored attack. The prefab stores twelve socket
 positions and outward directions sampled from the skinned mesh in idle and at 40% of Projectile
 Attack. The grounded projection preserves the body's horizontal solver motion (COMBAT-018).
