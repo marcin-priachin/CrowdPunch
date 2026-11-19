@@ -100,10 +100,11 @@ The authored front projectile clip provides the warning and release pose.
 
 `SporellaImpactBurstSystem` reads Sporella's launch state after recovery updates.
 It starts one player-owned sweep per initiating punch or fallback source entity,
-lifetime, and launch sequence carried across body propagation. The sweep locks
-its initial direction and samples Sporella's current horizontal position when
-each shot fires. Sporella owns the emission timer, which stops when the matching
-launch ends. Fired projectiles have their own lifetime. Retry clears projectiles,
+lifetime, and launch sequence carried across body propagation. The sweep alternates
+around the two directions perpendicular to the initial horizontal launch velocity
+and samples Sporella's current horizontal position when each shot fires. Sporella
+owns the emission timer, which stops when the matching launch ends. Fired
+projectiles have their own lifetime. Retry clears projectiles,
 and retry or respawn resets each Sporella's burst state and history. The clear
 screen waits for the authored Die clip on ordinary defeats, including projectile
 defeats without prior launch.

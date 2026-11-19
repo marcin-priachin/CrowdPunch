@@ -278,11 +278,12 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void PlayerLaunchStartsSweepImmediatelyAndFollowsSporellaAtTheAuthoredCadence()
+        public void PlayerLaunchAlternatesSidewaysShotsFromSporellasCurrentPosition()
         {
             var shooter = Shooter();
             var start = new float3(3, .94f, 1);
-            float3 direction = new float3(1, 0, 0);
+            float3 direction = math.normalize(new float3(1, 0, 2));
+            float3 left = math.cross(direction, math.up());
             Move(shooter, start);
             em.SetComponentData(shooter, new PhysicsVelocity { Linear = direction * 8 });
 
@@ -294,34 +295,49 @@ namespace CrowdPunch.Tests
             Tick<SporellaImpactBurstSystem>(.02f);
             Assert.That(CountShots(), Is.EqualTo(1));
 
-            var later = new float3(6, .94f, 1);
-            Move(shooter, later);
+            var second = new float3(4, .94f, 3);
+            Move(shooter, second);
+            em.SetComponentData(shooter, new PhysicsVelocity { Linear = left * 8 });
             Tick<SporellaImpactBurstSystem>(.179f);
             Assert.That(CountShots(), Is.EqualTo(1));
             Tick<SporellaImpactBurstSystem>(.001f);
             Assert.That(CountShots(), Is.EqualTo(2));
+            var later = new float3(6, .94f, 1);
+            Move(shooter, later);
             Tick<SporellaImpactBurstSystem>(.72f);
             using var query = em.CreateEntityQuery(typeof(SporellaProjectile));
             using var shots = query.ToEntityArray(Allocator.Temp);
             Assert.That(shots.Length, Is.EqualTo(6));
-            int[] laneCounts = new int[3];
-            int movedOriginShots = 0;
-            float3 right = math.cross(math.up(), direction);
+            int[,] laneCounts = new int[2, 3];
+            int startShots = 0, secondShots = 0;
             foreach (var entity in shots)
             {
                 var shot = em.GetComponentData<SporellaProjectile>(entity);
                 Assert.That(shot.Kind, Is.EqualTo(SporellaShotKind.ImpactShot));
                 float3 origin = PositionOf(entity);
-                if (origin.Equals(later)) movedOriginShots++;
-                else Assert.That(origin, Is.EqualTo(start));
-                float offset = 10f * math.dot(shot.Direction, right) / math.dot(shot.Direction, direction);
+                bool isLeft = math.dot(shot.Direction, left) > 0f;
+                if (origin.Equals(start))
+                {
+                    Assert.That(isLeft, Is.True);
+                    startShots++;
+                }
+                else if (origin.Equals(second))
+                {
+                    Assert.That(isLeft, Is.False);
+                    secondShots++;
+                }
+                else Assert.That(origin, Is.EqualTo(later));
+                float3 side = isLeft ? left : -left;
+                float offset = 10f * math.dot(shot.Direction, math.cross(math.up(), side)) / math.dot(shot.Direction, side);
                 int lane = (int)math.round(offset / 1.5f) + 1;
+                Assert.That(lane, Is.InRange(0, 2));
                 Assert.That(offset, Is.EqualTo((lane - 1) * 1.5f).Within(.001f));
-                laneCounts[lane]++;
+                laneCounts[isLeft ? 0 : 1, lane]++;
                 Assert.That(shot.PunchSequence, Is.EqualTo(12u));
             }
-            Assert.That(movedOriginShots, Is.EqualTo(5));
-            Assert.That(laneCounts, Is.EqualTo(new[] { 2, 2, 2 }));
+            Assert.That(startShots, Is.EqualTo(1));
+            Assert.That(secondShots, Is.EqualTo(1));
+            Assert.That(laneCounts, Is.EqualTo(new[,] { { 1, 1, 1 }, { 1, 1, 1 } }));
 
             Launch(shooter, EnemyLaunchCause.EnemyCollision, 12);
             Tick<SporellaImpactBurstSystem>(.2f);

@@ -55,7 +55,7 @@ namespace CrowdPunch.Systems.Combat
                     float3 facing = MushroomShotGeometry.Horizontal(math.forward(pose.ValueRO.Rotation), math.forward());
                     float3 direction = MushroomShotGeometry.Horizontal(velocity.ValueRO.Linear, facing);
                     float height = SporellaShotGeometry.Height(floor.SurfaceHeight, ranged.ValueRO.ProjectileRadius, tuning);
-                    burst.Sweep = SporellaShotGeometry.AimAlongLaunch(pose.ValueRO.Position, direction, height, tuning);
+                    burst.Sweep = SporellaShotGeometry.AimAcrossLaunch(pose.ValueRO.Position, direction, height, tuning);
                     burst.ShotsRemaining = burst.Sweep.ShotCount;
                     burst.Shot = SporellaShotEmission.Create(arena, emitter, generation,
                         SporellaShotKind.ImpactShot, tuning, ranged.ValueRO);
@@ -73,6 +73,7 @@ namespace CrowdPunch.Systems.Combat
                 while (burst.ShotsRemaining > 0 && burst.Wait <= .00001f)
                 {
                     SporellaShotEmission.FireSweepShot(commands, burst.Shot, burst.Sweep, burst.ShotsRemaining, audio);
+                    burst.Sweep.Forward = -burst.Sweep.Forward;
                     burst.ShotsRemaining--;
                     burst.Wait += interval;
                 }

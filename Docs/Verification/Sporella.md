@@ -8,11 +8,12 @@ in Bootstrap's Legacy list and is absent from the campaign catalog and build
 scene list (SPORELLA-004, LOOP-006).
 
 Tune the encounter's `SporellaSpawnSettings.asset` in **Alien Sporella**.
-The stored profile uses both ownership interactions and both impact directions.
+The stored profile enables punch redirects and bursts from any player-owned launch.
 Each burst has two passes of three straight shots spaced 0.18 s apart. The
-default order in each pass is left, center, right. At the player's sampled
-distance, the outside shots aim 1.5 m to either side. Impact bursts use the
-launch direction as their centerline and a 10 m reference distance. The asset
+normal burst aims left, center, then right in each pass. At the player's sampled
+distance, the outside shots aim 1.5 m to either side. Impact bursts alternate left
+and right across the initial launch path, using a 10 m reference distance for the
+spread and Sporella's current position as each shot's origin (SPORELLA-002). The asset
 exposes the pass count, shots per pass, and width. The normal windup lasts
 0.65 s, and each projectile travels at 14 m/s. The starting projectile tuning
 is 26 m range, 0.94 m above the floor, a 0.38 m radius, and 10 damage to the player
@@ -45,3 +46,7 @@ final Sporella with a punch return. The live model sampled the authored Die clip
 through 98% and 99% of its playback before pooling. The Legacy clear screen
 followed the final animation. All 15 Sporella tests and four landing-lifetime
 tests passed.
+
+After the sideways launch change (SPORELLA-002), all 18 Sporella EditMode cases
+passed. The launch test checks left-first alternation, spread on both sides,
+cadence, moving shot origins, and aim that stays fixed when the launch turns.

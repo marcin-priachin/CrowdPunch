@@ -20,11 +20,12 @@ namespace CrowdPunch.Systems.Combat
             return CreateSweep(position + forward * nozzle, forward, distance - nozzle, settings);
         }
 
-        internal static SporellaSweep AimAlongLaunch(float3 position, float3 direction, float shotHeight,
+        internal static SporellaSweep AimAcrossLaunch(float3 position, float3 launchDirection, float shotHeight,
             in SporellaSettings settings)
         {
             position.y = shotHeight;
-            return CreateSweep(position, direction, LaunchAimDistance, settings);
+            float3 left = math.cross(launchDirection, math.up());
+            return CreateSweep(position, left, LaunchAimDistance, settings);
         }
 
         private static SporellaSweep CreateSweep(float3 origin, float3 forward, float distance, in SporellaSettings settings)

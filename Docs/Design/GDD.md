@@ -2327,9 +2327,11 @@ Status: Must
 
 A player-owned launch starts Sporella's burst. The launch setting permits any
 player-owned launch (default) or only a propagated launch from another enemy.
-Center the sweep on Sporella's initial travel direction and emit each shot from
-Sporella's current horizontal position at the authored shot height. Emit at most
-one burst per Sporella per initiating player chain, using the punch sequence or
+Alternate shots left and right across Sporella's initial horizontal travel direction,
+starting on the left. Apply the sweep spread around the perpendicular direction on
+each side. Emit each shot from Sporella's current horizontal position at the authored
+shot height. Emit at most one burst per Sporella per initiating player chain,
+using the punch sequence or
 the source, lifetime, and launch sequence fallback. The first shot is immediate
 and the rest use the normal cadence while that launch is active. Recovery or
 defeat cancels pending shots. Shots already emitted continue their flight.
