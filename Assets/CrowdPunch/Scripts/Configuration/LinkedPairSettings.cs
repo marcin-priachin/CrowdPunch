@@ -10,7 +10,7 @@ namespace CrowdPunch.Configuration
         public LinkedPairResponse response = LinkedPairResponse.DamageAndLaunch;
         [Min(.1f)] public float maximumLength = 7;
         [Tooltip("Spring acceleration per metre of excess length, in 1/s^2."), Min(0)] public float tension = 45;
-        [Tooltip("Damping of outward radial relative speed, in 1/s."), Min(0)] public float radialDamping = 8;
+        [Tooltip("Damping of outward radial speed, in 1/s. Walking partners use their relative speed."), Min(0)] public float radialDamping = 8;
         [Tooltip("Acceleration cap per endpoint, in m/s^2."), Min(0)] public float maximumTensionAcceleration = 100;
         [Min(0)] public float moveSpeed = 4, straddleDistance = 2.8f, sweepSpeed = 1.6f;
         [Tooltip("Full damaging diameter in metres."), Min(.05f)] public float width = .45f;
@@ -19,8 +19,10 @@ namespace CrowdPunch.Configuration
         [Tooltip("Initial link-victim horizontal velocity in m/s."), Min(0)] public float launchSpeed = 15;
         [Tooltip("Added horizontal speed in m/s; never starts a flight."), Min(0)] public float pushSpeed = 5;
         [Min(.1f)] public float flightLimit = 5;
-        [Min(0)] public float settleSpeed = 2, settlePeriod = .35f, recoveryDuration = 1.25f;
-        [Tooltip("Exponential speed decay when the link is blocked, in 1/s."), Min(0)] public float snagBraking = 12;
+        [Tooltip("Seconds below the shared Useful Momentum Speed before an endpoint starts recovery."), Min(0)]
+        public float settlePeriod = .35f;
+        [Min(0)] public float recoveryDuration = 1.25f;
+        [Tooltip("Exponential speed decay for launched endpoints when the link is blocked, in 1/s."), Min(0)] public float snagBraking = 12;
 
         [Header("Energy Streams")]
         [Range(1, 6)] public int streamCount = 3;
@@ -54,7 +56,7 @@ namespace CrowdPunch.Configuration
             MoveSpeed = Mathf.Max(0, moveSpeed), StraddleDistance = Mathf.Max(0, straddleDistance), SweepSpeed = Mathf.Max(0, sweepSpeed),
             Width = Mathf.Max(.05f, width), PlayerDamage = Mathf.Max(0, playerDamage), EnemyDamage = Mathf.Max(0, enemyDamage),
             TickInterval = Mathf.Max(.01f, tickInterval), LaunchSpeed = Mathf.Max(0, launchSpeed), PushSpeed = Mathf.Max(0, pushSpeed),
-            FlightLimit = Mathf.Max(.1f, flightLimit), SettleSpeed = Mathf.Max(0, settleSpeed), SettlePeriod = Mathf.Max(0, settlePeriod),
+            FlightLimit = Mathf.Max(.1f, flightLimit), SettlePeriod = Mathf.Max(0, settlePeriod),
             RecoveryDuration = Mathf.Max(0, recoveryDuration), SnagBraking = Mathf.Max(0, snagBraking) };
 
         public LinkedPairAppearance Appearance => new LinkedPairAppearance

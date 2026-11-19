@@ -150,7 +150,7 @@ namespace CrowdPunch.Editor
                     var position = em.GetComponentData<LocalTransform>(launchedBody).Position;
                     Require(PunchResolution.TryApply(em, launchedBody, new PunchSpecification {
                         Origin = position - math.forward(), Direction = math.forward(), Range = 2, Radius = .5f,
-                        Strength = 22, Damage = 0, EventTime = world.Time.ElapsedTime,
+                        Strength = 22, Damage = 0,
                         Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1
                     }), "Introductory special body rejected an eligible punch");
                     launched = true; initialFrame = Time.frameCount; return;
@@ -160,8 +160,9 @@ namespace CrowdPunch.Editor
                 if (em.HasComponent<LinkedPairEndpoint>(launchedBody))
                 {
                     var pair = em.GetComponentData<LinkedPair>(em.GetComponentData<LinkedPairEndpoint>(launchedBody).Pair);
-                    Require(em.GetComponentData<EnemyLaunchState>(pair.A).Phase == EnemyLaunchPhase.Launched
-                        && em.GetComponentData<EnemyLaunchState>(pair.B).Phase == EnemyLaunchPhase.Launched, "Partner did not launch");
+                    Entity partner = launchedBody == pair.A ? pair.B : pair.A;
+                    Require(em.GetComponentData<EnemyLaunchState>(partner).Phase == EnemyLaunchPhase.Active,
+                        "Punch launched the untouched partner");
                 }
                 if (em.HasComponent<SnakeSegment>(launchedBody))
                 {

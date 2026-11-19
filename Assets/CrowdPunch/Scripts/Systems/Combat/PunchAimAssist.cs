@@ -152,7 +152,8 @@ namespace CrowdPunch.Systems.Combat
         public static bool IsValidTarget(EntityManager manager, Entity source, Entity target)
         {
             if (target == Entity.Null || !manager.Exists(target)) return false;
-            if (SnakeProjectileCollision.IgnoresOwner(manager,source,target)) return false;
+            if (SnakeProjectileCollision.IgnoresOwner(manager,source,target)
+                || LinkedPairLaunchResolution.ArePartners(manager, source, target)) return false;
             if (target != Entity.Null && manager.HasComponent<DinoBoss>(target)) return false;
             if (target != Entity.Null && manager.HasComponent<FallingPillar>(target))
                 return manager.GetComponentData<FallingPillar>(target).Phase == PillarPhase.Upright;

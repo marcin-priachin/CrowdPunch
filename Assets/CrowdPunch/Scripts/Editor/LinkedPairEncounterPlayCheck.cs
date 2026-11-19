@@ -57,35 +57,35 @@ namespace CrowdPunch.Editor
                 Move(em, p.A, new float3(-10, 0, 0)); Move(em, p.B, new float3(-10, 0, -4)); Move(em, target, new float3(-10, 0, 3));
                 var pose = em.GetComponentData<LocalTransform>(p.A).Position;
                 Require(PunchResolution.TryApply(em, p.A, new PunchSpecification { Origin = pose - math.forward(), Direction = math.forward(),
-                    Range = 2, Radius = .5f, Strength = 22, Damage = 0, EventTime = world.Time.ElapsedTime,
+                    Range = 2, Radius = .5f, Strength = 22, Damage = 0,
                     Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1 }), "Initial punch failed");
                 Record("PASS exact 1 pair + 6 Baselines and baked Goblin endpoints"); Next(world, 1);
             } else if (stage == 1) {
                 var p = em.GetComponentData<LinkedPair>(pair);
-                Require(em.GetComponentData<EnemyLaunchState>(p.A).Phase == EnemyLaunchPhase.Launched && em.GetComponentData<EnemyLaunchState>(p.B).Phase == EnemyLaunchPhase.Launched, "Pair split launch phases");
+                Require(em.GetComponentData<EnemyLaunchState>(p.A).Phase == EnemyLaunchPhase.Launched
+                    && em.GetComponentData<EnemyLaunchState>(p.B).Phase == EnemyLaunchPhase.Active, "Punch affected the untouched partner");
                 var hit = em.GetComponentData<EnemyLaunchState>(target);
                 if (hit.LastPropagationImpulse <= 0 && world.Time.ElapsedTime - stepAt < 1.5) return;
                 Require(hit.LastPropagationImpulse > 0 && hit.Owner == EnemyLaunchOwner.Player, "Real endpoint-body collision did not propagate");
-                Record("PASS simultaneous pair flight and real body solver propagation");
+                Record("PASS independent flight and real body solver propagation");
                 float3 position = em.GetComponentData<LocalTransform>(p.B).Position;
                 initialSpan = em.GetComponentData<LocalTransform>(p.A).Position.xz - position.xz;
                 Require(PunchResolution.TryApply(em, p.B, new PunchSpecification { Origin = position - new float3(1, 0, 0), Direction = new float3(1, 0, 0),
-                    Range = 2, Radius = .5f, Strength = 15, Damage = 0, EventTime = world.Time.ElapsedTime,
-                    Cause = EnemyLaunchCause.PlayerPunch, AffectLaunched = 1 }), "Repunch failed"); Next(world, 2);
+                    Range = 2, Radius = .5f, Strength = 15, Damage = 0,
+                    Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1 }), "Punch on the partner failed"); Next(world, 2);
             } else if (stage == 2) {
-                if (world.Time.ElapsedTime - stepAt < .4) return;
-                var p = em.GetComponentData<LinkedPair>(pair); Require(p.Leader == p.B, "Repunch failed leader switch");
+                if (world.Time.ElapsedTime - stepAt < .15) return;
+                var p = em.GetComponentData<LinkedPair>(pair); Require(p.Leader == p.B, "Latest independently launched endpoint did not lead");
                 float2 span = em.GetComponentData<LocalTransform>(p.A).Position.xz - em.GetComponentData<LocalTransform>(p.B).Position.xz;
-                Require(math.abs(math.normalizesafe(span).x - math.normalizesafe(initialSpan).x) > .05f, "Partner did not visibly swing");
-                Record("PASS repunch switches leader and relative tether angle changes in real physics");
+                Require(math.abs(math.normalizesafe(span).x - math.normalizesafe(initialSpan).x) > .05f, "Tether angle did not change");
+                Record("PASS launching the second endpoint changes tether ownership and angle");
                 em.SetComponentData(p.A, new PhysicsVelocity()); em.SetComponentData(p.B, new PhysicsVelocity()); Next(world, 3);
             } else if (stage == 3) {
                 var p = em.GetComponentData<LinkedPair>(pair);
                 em.SetComponentData(p.A, new PhysicsVelocity()); em.SetComponentData(p.B, new PhysicsVelocity());
                 if (p.Phase == EnemyLaunchPhase.Launched) return;
-                Require(p.Phase == EnemyLaunchPhase.Recovering, "Flight did not enter shared recovery");
-                Require(em.GetComponentData<EnemyLaunchState>(p.A).Phase == EnemyLaunchPhase.Recovering && em.GetComponentData<EnemyLaunchState>(p.B).Phase == EnemyLaunchPhase.Recovering, "Recovery split");
-                Record("PASS shared settling/recovery retains tether"); Defeat(em, bodies); Next(world, 4);
+                Require(p.Phase == EnemyLaunchPhase.Recovering, "Last flight did not enter recovery");
+                Record("PASS independent settling and recovery retain tether"); Defeat(em, bodies); Next(world, 4);
             } else if (stage == 4) {
                 if (sequence.CurrentWaveIndex != 1 || sequence.Phase != EnemyWaveRuntimePhase.AwaitingActivation || records.Length != 2 || bodies.Length != 16) return;
                 Require(sequence.SpawnedCount == 16, "Second wave is not 4+12"); Record("PASS exact 2 pairs + 12 Baselines"); flow.RestartCurrentLevel(); Next(world, 5);

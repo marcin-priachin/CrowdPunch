@@ -24,26 +24,54 @@ namespace CrowdPunch.Systems.Physics
             foreach (var (pairRef, tuning) in SystemAPI.Query<RefRO<LinkedPair>, RefRO<LinkedPairTuning>>()) {
                 var pair = pairRef.ValueRO; var t = tuning.ValueRO;
                 if (!LinkedPairLaunchResolution.TryGet(em, pair.A, out _, out _) || !em.IsEnabled(pair.A) || !em.IsEnabled(pair.B)) continue;
+                var phaseA = em.GetComponentData<EnemyLaunchState>(pair.A).Phase;
+                var phaseB = em.GetComponentData<EnemyLaunchState>(pair.B).Phase;
+                bool walking = phaseA == EnemyLaunchPhase.Active && phaseB == EnemyLaunchPhase.Active;
+                bool flyingA = phaseA == EnemyLaunchPhase.Launched;
+                bool flyingB = phaseB == EnemyLaunchPhase.Launched;
+                if (!walking && !flyingA && !flyingB) continue;
+
                 float3 a = em.GetComponentData<LocalTransform>(pair.A).Position, b = em.GetComponentData<LocalTransform>(pair.B).Position;
                 var va = em.GetComponentData<PhysicsVelocity>(pair.A); var vb = em.GetComponentData<PhysicsVelocity>(pair.B);
                 if (LinkedPairGeometry.Blocked(world, enemies, a, b)) {
-                    // A blocked rope cannot apply tension through cover. Solver contacts still own body motion.
-                    if (pair.Phase == EnemyLaunchPhase.Launched) { float decay = math.exp(-t.SnagBraking * dt); va.Linear.xz *= decay; vb.Linear.xz *= decay; }
+                    float decay = math.exp(-t.SnagBraking * dt);
+                    if (flyingA) va.Linear.xz *= decay;
+                    if (flyingB) vb.Linear.xz *= decay;
                 } else {
                     float2 offset = b.xz - a.xz; float length = math.length(offset);
                     if (length > t.MaximumLength && length > .001f) {
                         float2 axis = offset / length;
-                        float acceleration = math.min(t.MaximumTensionAcceleration, t.Tension * (length - t.MaximumLength)
-                            + t.RadialDamping * math.max(0, math.dot(vb.Linear.xz - va.Linear.xz, axis)));
-                        float2 change = axis * acceleration * dt;
-                        va.Linear.xz += change; vb.Linear.xz -= change;
+                        float extension = length - t.MaximumLength;
+                        if (walking)
+                        {
+                            float change = TensionStep(t, extension, math.dot(vb.Linear.xz - va.Linear.xz, axis), dt);
+                            va.Linear.xz += axis * change;
+                            vb.Linear.xz -= axis * change;
+                        }
+                        else
+                        {
+                            // Each launched endpoint takes its own tether correction.
+                            if (flyingA) va.Linear.xz += axis * TensionStep(t, extension, -math.dot(va.Linear.xz, axis), dt);
+                            if (flyingB) vb.Linear.xz -= axis * TensionStep(t, extension, math.dot(vb.Linear.xz, axis), dt);
+                        }
                     }
                 }
                 // Velocity corrections are swept against solids; never project endpoint positions through a wall.
-                if (LinkedPairGeometry.Blocked(world, enemies, a, a + va.Linear * dt)) va.Linear.xz = float2.zero;
-                if (LinkedPairGeometry.Blocked(world, enemies, b, b + vb.Linear * dt)) vb.Linear.xz = float2.zero;
-                em.SetComponentData(pair.A, va); em.SetComponentData(pair.B, vb);
+                if (walking || flyingA)
+                {
+                    if (LinkedPairGeometry.Blocked(world, enemies, a, a + va.Linear * dt)) va.Linear.xz = float2.zero;
+                    em.SetComponentData(pair.A, va);
+                }
+                if (walking || flyingB)
+                {
+                    if (LinkedPairGeometry.Blocked(world, enemies, b, b + vb.Linear * dt)) vb.Linear.xz = float2.zero;
+                    em.SetComponentData(pair.B, vb);
+                }
             }
         }
+
+        private static float TensionStep(in LinkedPairTuning tuning, float extension, float outwardSpeed, float dt)
+            => math.min(tuning.MaximumTensionAcceleration,
+                tuning.Tension * extension + tuning.RadialDamping * math.max(0f, outwardSpeed)) * dt;
     }
 }

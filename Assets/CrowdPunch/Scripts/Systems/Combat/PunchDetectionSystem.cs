@@ -44,7 +44,6 @@ namespace CrowdPunch.Systems.Combat
                 Damage = punchRequest.Damage, PositionWeight = punchRequest.PushDirectionPositionWeight,
                 PunchSequence = punchRequest.Sequence,
                 Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1, AffectRecovering = 1,
-                EventTime = SystemAPI.Time.ElapsedTime,
                 AffectLaunched = 1, ApplyDamage = 1
             };
             punch.AimRevision = punchRequest.AimRevision;

@@ -213,6 +213,7 @@ namespace CrowdPunch.Systems.Presentation
                             || hit.Material.CollisionResponse == CollisionResponsePolicy.RaiseTriggerEvents
                             || hit.Material.CollisionResponse == CollisionResponsePolicy.None
                             || SnakeProjectileCollision.IgnoresOwner(em, source.Entity, hit.Entity)
+                            || LinkedPairLaunchResolution.ArePartners(em, source.Entity, hit.Entity)
                             || em.HasComponent<Barricade>(hit.Entity) && em.GetComponentData<Barricade>(hit.Entity).HitsRemaining <= 0)
                             continue;
                         float3 targetVelocity = LaunchImpactPrediction.Velocity(em, hit.Entity, punched, source.Speed);

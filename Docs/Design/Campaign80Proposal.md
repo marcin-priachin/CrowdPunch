@@ -369,7 +369,7 @@ The user specified the introduction chapters and continued appearances in later 
 | Snake / SNAKE-001..007 | 61: 6B+1S > 10B+1S | Not introduced | Not introduced | 61, 65, 67, 68 | 73, 78 |
 | Ninja / NINJA-001..006 | 71: 6B+1N > 12B+2N | Not introduced | Not introduced | Not introduced | 71, 73, 78 |
 
-Each first encounter isolates the new behavior. Level 41 teaches shared launch, tether swings and solid-cover protection. Level 52 retains two solid islands with broad flanking routes so the moving flame warning and cover blocking can be read before Dragon joins Wizard/LinkedPair mixtures at 55. Level 61 provides room to circle the protected head and approach the currently vulnerable tail tip; only one Snake appears at once in either introductory wave. Level 71 teaches preparation, safe rear arrival, committed dash and interruptible recovery with one Ninja, then two. Later level 78 can contain three Ninjas, while NINJA-004's shared maximum of two concurrent ambushes remains unchanged.
+Each first encounter isolates the new behavior. Level 41 teaches independent endpoint launches, tether danger and solid-cover protection. Level 52 retains two solid islands with broad flanking routes so the moving flame warning and cover blocking can be read before Dragon joins Wizard/LinkedPair mixtures at 55. Level 61 provides room to circle the protected head and approach the currently vulnerable tail tip; only one Snake appears at once in either introductory wave. Level 71 teaches preparation, safe rear arrival, committed dash and interruptible recovery with one Ninja, then two. Later level 78 can contain three Ninjas, while NINJA-004's shared maximum of two concurrent ambushes remains unchanged.
 
 The large encounters at 48/58/68/78 consolidate respectively one/two/three/four new enemy types. Their waves vary the combinations rather than requiring every learned enemy in every wave. Other follow-ups build from familiar threats: paired endpoint bodies help create launch chains, Dragons reward cover and redirection, Snakes demand repeated exposed-tip shots, and Ninjas add interruption and repositioning decisions. Tethers and flames retain their existing restrictions against intact armor, protected Snake parts, bosses and puzzle targets; they do not acquire new damage privileges for campaign combinations.
 
@@ -379,7 +379,7 @@ Keep the existing level names, objective allocation, static hazard schedules, bo
 
 Proposed brief opening hints, using the existing hint system without stopping play or adding HUD:
 
-- 41: "Punch either linked enemy to launch both. Keep clear of the tether, even while they recover."
+- 41: "Linked enemies launch independently. Keep clear of the tether, even while they recover."
 - 52: "Use rocks to block the flame. Launch a Dragon to sweep its fire through the crowd."
 - 61: "Launch the highlighted tail tip. Strip each segment, then attack the exposed head."
 - 71: "Watch the Ninja prepare and appear behind you. Move aside or interrupt, then strike during recovery."
@@ -467,7 +467,7 @@ Chapter 1 proposals specific to campaign-owned assets: Gatekeeper retains 300 he
 
 | Level | Name / one main objective | Layout and spawn directions | Composition and waves | Static hazards | Teaching purpose / pacing | Target |
 |---|---|---|---|---|---|---|
-| 41 | Back to Bodies / clear waves | 34 x 32 open pentagon, one side rock crescent; far banks with room for both endpoints and broad flanking space | 6B+1LP > 12B+2LP | None | LinkedPair introduction: launch either endpoint to swing both; use cover against the dangerous tether | 75-105s |
+| 41 | Back to Bodies / clear waves | 34 x 32 open pentagon, one side rock crescent; far banks with room for both endpoints and broad flanking space | 6B+1LP > 12B+2LP | None | LinkedPair introduction. Launch enemies independently and use cover against the tether. | 75-105s |
 | 42 | Outer Route / break barricade and reach exit | 4 distinct ascending sectors, 34 x 176m total; final original central island; sealed 2m gates | Hold 8 > 10 > 13 > 16; final 11B+1R+2X+1D+1A; 4 gates x 4 hits | One reduced periodic fore-sector patch; final original G2 | Grow into the final pressured outer route | Fresh pacing playtest |
 | 43 | Turn the Shot / clear waves | 38 x 36 court with three widely spaced islands; west/east banks | 6B+1SP > 8B+2SP; batch 4/5s | None | Read Sporella's windup from cover, redirect a shot and launch Sporella to sweep shots through the crowd | 90-120s |
 | 44 | Stop and Go / destroy rotating-cover target | 40 x 36 unequal outer bays around enclosure; side support | Hold 12B+2R+1X; 4 hits; 85-degree opening, rotate 3s at 30 degrees/s / pause 1s | None | Existing cover pause mode rewards planning a shot | 90-120s |

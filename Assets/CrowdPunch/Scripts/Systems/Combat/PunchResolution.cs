@@ -20,7 +20,6 @@ namespace CrowdPunch.Systems.Combat
         public float HomingDuration;
         public uint AimRevision;
         public EnemyLaunchCause Cause;
-        public double EventTime;
         public byte AffectActive, AffectRecovering, AffectLaunched, ApplyDamage, HasAssistedLaunchDirection;
         public byte CommitDisplayedPlan;
     }
@@ -84,15 +83,6 @@ namespace CrowdPunch.Systems.Combat
             if (committed ? launch.Phase == EnemyLaunchPhase.Defeated || health.Current <= 0f && launch.Phase != EnemyLaunchPhase.Launched
                 : !IsEligible(launch, health, punch) || !Contains(manager, target, position, punch)) return false;
             if (ArmorHitResolution.IsProtected(manager, target)) return false;
-            bool paired = LinkedPairLaunchResolution.TryGet(manager, target, out var pairEntity, out var pair);
-            bool repeatPairPunch = paired && punch.Cause == EnemyLaunchCause.PlayerPunch && pair.LastPunchAt == punch.EventTime;
-            if (repeatPairPunch) {
-                if (punch.ApplyDamage != 0) {
-                    var damage = manager.IsComponentEnabled<DamageRequest>(target) ? manager.GetComponentData<DamageRequest>(target) : default;
-                    damage.Add(punch.Damage, health.Current, punch.PunchSequence); manager.SetComponentData(target, damage); manager.SetComponentEnabled<DamageRequest>(target, true);
-                }
-                return true;
-            }
             if (punch.Cause == EnemyLaunchCause.PlayerPunch && !SnakePunchOcclusion.CanReach(manager, target, punch.Origin)) return false;
             bool elite = tier.Value == EnemyCombatTier.Elite;
             if (!elite && punch.Cause == EnemyLaunchCause.PlayerPunch && manager.HasComponent<EnemyGroundConstraint>(target))
@@ -152,10 +142,6 @@ namespace CrowdPunch.Systems.Combat
                     });
                 }
                 CommittedLaunchPlan.Begin(manager, target, punch, launch);
-                if (paired) {
-                    pair.LastPunchAt = punch.EventTime; manager.SetComponentData(pairEntity, pair);
-                    LinkedPairLaunchResolution.Begin(manager, target, launch, impulseDirection * math.max(0, punch.Strength));
-                }
             }
             if (punch.ApplyDamage != 0 && punch.Damage > 0f)
             {

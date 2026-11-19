@@ -241,7 +241,8 @@ namespace CrowdPunch.Systems.Combat
                     || SnakeHitRules.Protected(em, hit.Entity)
                     || hit.Material.CollisionResponse == CollisionResponsePolicy.RaiseTriggerEvents
                     || hit.Material.CollisionResponse == CollisionResponsePolicy.None
-                    || SnakeProjectileCollision.IgnoresOwner(em, source, hit.Entity)) continue;
+                    || SnakeProjectileCollision.IgnoresOwner(em, source, hit.Entity)
+                    || LinkedPairLaunchResolution.ArePartners(em, source, hit.Entity)) continue;
                 closest = hit.Entity; fraction = hit.Fraction;
             }
             return closest;

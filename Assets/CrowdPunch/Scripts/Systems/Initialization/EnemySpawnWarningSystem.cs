@@ -48,9 +48,8 @@ namespace CrowdPunch.Systems.Initialization
                 float spawnDuration = math.max(Activate(p.A, a), Activate(p.B, b));
                 if (spawnDuration > 0)
                 {
-                    // Ordinary recovery skips intact pairs; their shared clock must own Spawn too.
+                    // Show the pair's recovery phase while its endpoints play Spawn.
                     p.Phase = EnemyLaunchPhase.Recovering;
-                    p.RecoveryRemaining = spawnDuration;
                     pair.ValueRW = p;
                 }
                 Reserve(p.A, a); Reserve(p.B, b);

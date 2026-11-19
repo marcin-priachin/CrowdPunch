@@ -97,7 +97,8 @@ namespace CrowdPunch.Systems.Presentation
                     if (hit.Entity == source.Entity || hit.Fraction > fraction
                         || hit.Material.CollisionResponse == CollisionResponsePolicy.RaiseTriggerEvents
                         || hit.Material.CollisionResponse == CollisionResponsePolicy.None
-                        || SnakeProjectileCollision.IgnoresOwner(em, source.Entity, hit.Entity)) continue;
+                        || SnakeProjectileCollision.IgnoresOwner(em, source.Entity, hit.Entity)
+                        || LinkedPairLaunchResolution.ArePartners(em, source.Entity, hit.Entity)) continue;
                     float3 targetVelocity = Velocity(em, hit.Entity, punched, strength);
                     if (math.dot(velocity - targetVelocity, hit.SurfaceNormal) >= -.001f) continue;
                     if (em.HasComponent<Barricade>(hit.Entity) && em.GetComponentData<Barricade>(hit.Entity).HitsRemaining <= 0) continue;
@@ -279,6 +280,7 @@ namespace CrowdPunch.Systems.Presentation
                         settings.PropagationAimMaximumAngleDegrees, candidate.Index, best == Entity.Null ? int.MaxValue : best.Index,
                         bestDot, bestDistanceSq, out float dot, out float distanceSq)) continue;
                 if (SnakeProjectileCollision.IgnoresOwner(em, victim, candidate) || SnakeHitRules.Protected(em, candidate)
+                    || LinkedPairLaunchResolution.ArePartners(em, victim, candidate)
                     || em.HasComponent<RespawnRequest>(candidate) && em.IsComponentEnabled<RespawnRequest>(candidate)) continue;
                 bool wall = em.HasComponent<Barricade>(candidate) && em.GetComponentData<Barricade>(candidate).HitsRemaining > 0;
                 if (!wall)

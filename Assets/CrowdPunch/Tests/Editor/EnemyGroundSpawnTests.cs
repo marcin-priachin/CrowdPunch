@@ -67,7 +67,7 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Link005PairSpawnUsesSharedClockAndBothEndpointsResume()
+        public void Link005PairSpawnStartsBothEndpointsAndBothResume()
         {
             var em = world.EntityManager;
             var partner = em.Instantiate(enemy);
@@ -87,7 +87,8 @@ namespace CrowdPunch.Tests
             }
             Activate();
             Assert.That(em.GetComponentData<LinkedPair>(pair).Phase, Is.EqualTo(EnemyLaunchPhase.Recovering));
-            Assert.That(em.GetComponentData<LinkedPair>(pair).RecoveryRemaining, Is.EqualTo(.8f));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(enemy).RecoverySecondsRemaining, Is.EqualTo(.8f));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(partner).RecoverySecondsRemaining, Is.EqualTo(.8f));
             var lifecycle = world.GetOrCreateSystem<LinkedPairLifecycleSystem>();
             for (int step = 0; step < 2; step++)
             {

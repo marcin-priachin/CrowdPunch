@@ -32,7 +32,6 @@ namespace CrowdPunch.Systems.Combat
                 bridge.ReceiveEnemyHit(t.PlayerDamage,.6f,Direction(b,player.Position)*t.PushSpeed);
             using var query=em.CreateEntityQuery(typeof(Enemy),typeof(EnemyLaunchState),typeof(LocalTransform),typeof(PhysicsVelocity));
             using var enemies=query.ToEntityArray(Allocator.Temp);
-            using var pairs=new NativeHashSet<Entity>(math.max(1,enemies.Length),Allocator.Temp);
             foreach (var e in enemies) {
                 var launch=em.GetComponentData<EnemyLaunchState>(e);
                 var p=em.GetComponentData<LocalTransform>(e).Position;
@@ -49,10 +48,6 @@ namespace CrowdPunch.Systems.Combat
                 bool normal=em.GetComponentData<EnemyTier>(e).Value==EnemyCombatTier.Normal;
                 if (normal && armor==ArmorHitOutcome.Ordinary && !ArmorHitResolution.IsProtected(em,e)) {
                     EnemyLaunchTransition.Begin(ref launch,EnemyLaunchCause.BossAttack,t.EnemyDamage);
-                    if (LinkedPairLaunchResolution.TryGet(em,e,out var pair,out _)) {
-                        if (!pairs.Add(pair)) continue;
-                        LinkedPairLaunchResolution.Begin(em,e,launch,velocity); continue;
-                    }
                     em.SetComponentData(e,launch);
                 }
                 var v=em.GetComponentData<PhysicsVelocity>(e); v.Linear.xz=velocity.xz; em.SetComponentData(e,v);

@@ -61,7 +61,7 @@ namespace CrowdPunch.Systems.Combat
                 cells.Add((int2)math.floor(pose.ValueRO.Position.xz / 4), index);
                 padding = math.max(padding, agent.ValueRO.Radius + math.distance(old.xz, pose.ValueRO.Position.xz));
             }
-            foreach (var (pairRef, tuning, clocks, record) in SystemAPI.Query<RefRW<LinkedPair>, RefRO<LinkedPairTuning>, DynamicBuffer<LinkedPairClock>>().WithEntityAccess()) {
+            foreach (var (pairRef, tuning, clocks) in SystemAPI.Query<RefRW<LinkedPair>, RefRO<LinkedPairTuning>, DynamicBuffer<LinkedPairClock>>()) {
                 var pair = pairRef.ValueRO; var t = tuning.ValueRO;
                 if (!LinkedPairLaunchResolution.TryGet(em, pair.A, out _, out _) || !em.IsEnabled(pair.A) || !em.IsEnabled(pair.B)) continue;
                 float3 a = em.GetComponentData<LocalTransform>(pair.A).Position, b = em.GetComponentData<LocalTransform>(pair.B).Position;
@@ -70,7 +70,11 @@ namespace CrowdPunch.Systems.Combat
                     player.Position, t.Width * .5f + player.Radius, world, enemies, out var playerContact, out _) &&
                     LinkedPairGeometry.Tick(clocks, Entity.Null, 0, now, t.TickInterval))
                     hits.Add(new LinkedPairPlayerHit { Damage = t.PlayerDamage, Position = playerContact });
-                if (pair.Phase == EnemyLaunchPhase.Launched) {
+                Entity leader = LinkedPairLaunchResolution.FlyingLeader(pair,
+                    em.GetComponentData<EnemyLaunchState>(pair.A), em.GetComponentData<EnemyLaunchState>(pair.B));
+                if (leader != Entity.Null) {
+                    var source = em.GetComponentData<EnemyLaunchState>(leader);
+                    float3 flightDirection = math.normalizesafe(em.GetComponentData<PhysicsVelocity>(leader).Linear, math.forward());
                     float reach = padding + t.Width * .5f;
                     float2 lo = math.min(math.min(a.xz, b.xz), math.min(oldA.xz, oldB.xz)) - reach;
                     float2 hi = math.max(math.max(a.xz, b.xz), math.max(oldA.xz, oldB.xz)) + reach;
@@ -81,10 +85,9 @@ namespace CrowdPunch.Systems.Combat
                         if (c.Entity == pair.A || c.Entity == pair.B || !LinkedPairGeometry.Sweep(oldA, oldB, a, b,
                             c.OldPosition, c.Position, t.Width * .5f + c.Radius, world, enemies, out var point, out var motion)) continue;
                         if (!LinkedPairGeometry.Tick(clocks, c.Entity, c.Lifetime, now, t.TickInterval)) continue;
-                        var source = em.GetComponentData<EnemyLaunchState>(pair.Leader);
-                        float3 direction = math.normalizesafe(motion, math.normalizesafe(c.Position - point,
-                            math.normalizesafe(em.GetComponentData<PhysicsVelocity>(pair.Leader).Linear, new float3(0, 0, 1)))); direction.y = 0;
-                        bool damaged = Hit(em, c.Entity, source, pair.Leader, direction, t, now);
+                        float3 direction = math.normalizesafe(motion, math.normalizesafe(c.Position - point, flightDirection));
+                        direction.y = 0;
+                        bool damaged = Hit(em, c.Entity, source, leader, direction, t, now);
                         float distance = math.distancesq(point.xz, player.Position.xz);
                         if (damaged && distance < nearestShock)
                         {
@@ -93,8 +96,7 @@ namespace CrowdPunch.Systems.Combat
                         }
                     }
                 }
-                // Other pairs may have changed this record while resolving pair-on-pair propagation.
-                pair = em.GetComponentData<LinkedPair>(record); pair.PreviousA = a; pair.PreviousB = b; pair.HasPrevious = 1;
+                pair.PreviousA = a; pair.PreviousB = b; pair.HasPrevious = 1;
                 pairRef.ValueRW = pair;
                 for (int i = clocks.Length - 1; i >= 0; i--) if (now >= clocks[i].NextHitAt) clocks.RemoveAt(i);
             }
@@ -123,7 +125,6 @@ namespace CrowdPunch.Systems.Combat
                     em.SetComponentData(target, launch);
                     em.SetComponentData(target, new PhysicsVelocity { Linear = direction * t.LaunchSpeed });
                     em.SetComponentEnabled<ExternalImpulse>(target, false);
-                    LinkedPairLaunchResolution.Begin(em, target, launch, direction * t.LaunchSpeed);
                 } else if (normal) {
                     var velocity = em.GetComponentData<PhysicsVelocity>(target); velocity.Linear.xz += direction.xz * t.PushSpeed; em.SetComponentData(target, velocity);
                 }

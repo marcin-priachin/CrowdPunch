@@ -16,7 +16,7 @@ namespace CrowdPunch.Editor
     {
         private static readonly string[] ChapterFiveHints =
         {
-            "Punch either linked enemy to launch both. Keep clear of the tether, even while they recover.",
+            "Linked enemies launch independently. Keep clear of the tether, even while they recover.",
             "Circle the island and break the narrow gate with four hits. Keep clear of the hot inner pockets.",
             "Watch Sporella wind up. Use cover, punch a shot back, or launch Sporella to sweep shots through the crowd.",
             "The cover pauses between turns. Line up four hits through its opening.",

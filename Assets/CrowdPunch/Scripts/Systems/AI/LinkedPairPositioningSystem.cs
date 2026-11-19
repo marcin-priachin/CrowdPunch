@@ -26,7 +26,9 @@ namespace CrowdPunch.Systems.AI
             float now = (float)SystemAPI.Time.ElapsedTime;
             foreach (var (pairRef, tuning) in SystemAPI.Query<RefRO<LinkedPair>, RefRO<LinkedPairTuning>>()) {
                 var pair = pairRef.ValueRO; var t = tuning.ValueRO;
-                if (!LinkedPairLaunchResolution.TryGet(em, pair.A, out _, out _) || !em.IsEnabled(pair.A) || !em.IsEnabled(pair.B) || pair.Phase != EnemyLaunchPhase.Active) continue;
+                if (!LinkedPairLaunchResolution.TryGet(em, pair.A, out _, out _) || !em.IsEnabled(pair.A) || !em.IsEnabled(pair.B)
+                    || em.GetComponentData<EnemyLaunchState>(pair.A).Phase != EnemyLaunchPhase.Active
+                    || em.GetComponentData<EnemyLaunchState>(pair.B).Phase != EnemyLaunchPhase.Active) continue;
                 float3 a = em.GetComponentData<LocalTransform>(pair.A).Position, b = em.GetComponentData<LocalTransform>(pair.B).Position;
                 float2 axis = math.normalizesafe(a.xz - b.xz, new float2(1, 0));
                 // Stable opposite sides with a slowly sweeping offset cross the player's current position.

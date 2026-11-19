@@ -44,6 +44,7 @@ namespace CrowdPunch.Tests
             types.Add(typeof(AuthoritativeLaunchContactSystem));
             types.Add(typeof(LaunchImpactResistanceContactSystem));
             types.Add(typeof(LaunchImpactResistanceJacobianSystem));
+            types.Add(typeof(LinkedPairContactSystem));
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, types);
             var step = Unity.Physics.PhysicsStep.Default; step.Gravity = float3.zero;
             em.AddComponentData(em.CreateEntity(), step);
@@ -113,6 +114,37 @@ namespace CrowdPunch.Tests
         {
             world.SetTime(new TimeData(++tick * Dt, Dt));
             world.GetOrCreateSystemManaged<Unity.Physics.Systems.PhysicsSystemGroup>().Update(); em.CompleteAllTrackedJobs();
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Link002_SolverOnlyPropagatesToTheEnemyActuallyHit(bool sourceIsPaired)
+        {
+            Entity hit = Body(new float3(0, 0, sourceIsPaired ? 4 : 2), colliders[0], true);
+            float3 partnerPosition = sourceIsPaired ? new float3(0, 0, 2) : new float3(3, 0, 2);
+            Entity partner = Body(partnerPosition, colliders[0], true);
+            Entity endpoint = sourceIsPaired ? source : hit;
+            Entity pair = em.CreateEntity(typeof(LinkedPair), typeof(LinkedPairTuning));
+            em.SetComponentData(pair, new LinkedPair { A = endpoint, B = partner });
+            em.AddComponentData(endpoint, new LinkedPairEndpoint { Pair = pair });
+            em.AddComponentData(partner, new LinkedPairEndpoint { Pair = pair });
+
+            var launch = new EnemyLaunchState();
+            EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.PlayerPunch, 20);
+            em.SetComponentData(source, launch);
+            em.SetComponentData(source, new PhysicsVelocity { Linear = new float3(0, 0, 12) });
+            var collisions = world.GetOrCreateSystem<EnemyLaunchCollisionSystem>();
+            for (int i = 0; i < 30; i++)
+            {
+                PhysicsStep();
+                collisions.Update(world.Unmanaged);
+                em.CompleteAllTrackedJobs();
+            }
+
+            Assert.That(em.GetComponentData<EnemyLaunchState>(hit).LastPropagationImpulse, Is.GreaterThan(0));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(partner).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+            Assert.That(em.GetComponentData<LocalTransform>(partner).Position, Is.EqualTo(partnerPosition));
+            Assert.That(em.IsComponentEnabled<DamageRequest>(partner), Is.False);
         }
 
         private void Preview()

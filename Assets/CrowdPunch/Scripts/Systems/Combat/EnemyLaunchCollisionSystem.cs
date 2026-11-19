@@ -51,8 +51,6 @@ namespace CrowdPunch.Systems.Combat
                 Commitments = SystemAPI.GetComponentLookup<CommittedLaunchFlight>(),
                 AuthoritativePaths = SystemAPI.GetComponentLookup<AuthoritativeLaunchPath>(true),
                 PairEndpoints = SystemAPI.GetComponentLookup<LinkedPairEndpoint>(true),
-                Pairs = SystemAPI.GetComponentLookup<LinkedPair>(),
-                PairTuning = SystemAPI.GetComponentLookup<LinkedPairTuning>(true),
                 SnakeSegments = SystemAPI.GetComponentLookup<SnakeSegment>(),
                 Armors = SystemAPI.GetComponentLookup<EnemyArmor>(),
                 Barricades = SystemAPI.GetComponentLookup<Barricade>(true),
@@ -110,8 +108,6 @@ namespace CrowdPunch.Systems.Combat
             [ReadOnly] public ComponentLookup<EnemyLifetime> Lifetimes;
             [ReadOnly] public ComponentLookup<SnakeHead> SnakeHeads;
             [ReadOnly] public ComponentLookup<LinkedPairEndpoint> PairEndpoints;
-            public ComponentLookup<LinkedPair> Pairs;
-            [ReadOnly] public ComponentLookup<LinkedPairTuning> PairTuning;
             public ComponentLookup<SnakeSegment> SnakeSegments;
             public ComponentLookup<EnemyArmor> Armors;
             [ReadOnly] public ComponentLookup<Barricade> Barricades;
@@ -141,6 +137,7 @@ namespace CrowdPunch.Systems.Combat
             {
                 Entity entityA = collisionEvent.EntityA;
                 Entity entityB = collisionEvent.EntityB;
+                if (LinkedPairLaunchResolution.ArePartners(PairEndpoints, entityA, entityB)) return;
                 RecordCommittedContact(collisionEvent, entityA, entityB, collisionEvent.Normal);
                 RecordCommittedContact(collisionEvent, entityB, entityA, -collisionEvent.Normal);
                 StopHomingOnImpact(collisionEvent, entityA);
@@ -388,23 +385,6 @@ namespace CrowdPunch.Systems.Combat
                         ChainDepth = targetState.FeedbackChainDepth
                     });
                 }
-                if (PairEndpoints.HasComponent(target)) {
-                    Entity record = PairEndpoints[target].Pair;
-                    if (Pairs.HasComponent(record)) {
-                        var pair = Pairs[record]; Entity partner = target == pair.A ? pair.B : pair.A;
-                        if (LaunchStateLookup.HasComponent(partner) && !IsUnavailable(partner)
-                            && LaunchStateLookup[partner].Phase != EnemyLaunchPhase.Defeated) {
-                            var follower = LaunchStateLookup[partner];
-                            EnemyLaunchTransition.Begin(ref follower, targetState.LastCause, targetState.LaunchDamage, targetState.Owner, targetState.OriginatingPunchSequence);
-                            follower.FallbackChain = targetState.FallbackChain;
-                            follower.FeedbackChainDepth = targetState.FeedbackChainDepth; LaunchStateLookup[partner] = follower;
-                            VelocityLookup[partner] = new PhysicsVelocity { Linear = VelocityLookup[target].Linear * .35f };
-                            pair.Leader = target; pair.Phase = EnemyLaunchPhase.Launched;
-                            pair.FlightRemaining = PairTuning[record].FlightLimit; pair.SettledFor = pair.RecoveryRemaining = 0;
-                            Pairs[record] = pair;
-                        }
-                    }
-                }
             }
 
             private void CorrectPropagatedDirection(Entity source, Entity launchedTarget)
@@ -426,7 +406,8 @@ namespace CrowdPunch.Systems.Combat
                 for (int i = 0; i < CorrectionCandidates.Length; i++)
                 {
                     Entity candidate = CorrectionCandidates[i];
-                    if (candidate == source || candidate == launchedTarget || !TransformLookup.HasComponent(candidate)) continue;
+                    if (candidate == source || candidate == launchedTarget || !TransformLookup.HasComponent(candidate)
+                        || LinkedPairLaunchResolution.ArePartners(PairEndpoints, launchedTarget, candidate)) continue;
                     float3 offset = TransformLookup[candidate].Position - launchedPosition;
                     if (!LaunchAimPrediction.BetterCorrection(initialDirection, offset, PropagationAimCorrectionRadius,
                             PropagationAimMaximumAngleDegrees, candidate.Index, best == Entity.Null ? int.MaxValue : best.Index,

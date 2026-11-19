@@ -21,12 +21,13 @@ namespace CrowdPunch.Tests
         private BlobAssetReference<Unity.Physics.Collider> solid;
         [SetUp] public void Setup() {
             world = new World("LINK-001..007"); em = world.EntityManager; world.SetTime(new TimeData(1, .05f));
+            em.AddComponentData(em.CreateEntity(), new EnemyLaunchSettings { UsefulMomentumSpeed = 4f });
             tuning = AssetDatabase.LoadAssetAtPath<LinkedPairSettings>("Assets/CrowdPunch/Data/Settings/LinkedPairSettings.asset").Tuning;
             a = Body(new float3(-2, 0, 0)); b = Body(new float3(2, 0, 0)); target = Body(float3.zero);
             var sequence = em.CreateEntity(typeof(EnemyWaveSequence)); em.SetComponentData(sequence, new EnemyWaveSequence { RunGeneration = 1 });
             pair = em.CreateEntity(typeof(LinkedPair), typeof(LinkedPairTuning)); em.AddBuffer<LinkedPairClock>(pair);
             em.SetComponentData(pair, tuning); em.SetComponentData(pair, new LinkedPair { A = a, B = b, Leader = a, Sequence = sequence,
-                RunGeneration = 1, LifetimeA = 1, LifetimeB = 1, LastPunchAt = -1 });
+                RunGeneration = 1, LifetimeA = 1, LifetimeB = 1 });
             em.AddComponentData(a, new LinkedPairEndpoint { Pair = pair }); em.AddComponentData(b, new LinkedPairEndpoint { Pair = pair });
             player = em.CreateEntity(typeof(PlayerSnapshot));
             physics = new PhysicsWorld(0, 0, 0); physics.CollisionWorld.BuildBroadphase(ref physics, .05f, float3.zero, true);
@@ -47,7 +48,8 @@ namespace CrowdPunch.Tests
         private void Lifecycle(double now = 1) { world.SetTime(new TimeData(now, .05f)); world.GetOrCreateSystem<LinkedPairLifecycleSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs(); }
         private void Launch(Entity endpoint) {
             var l = em.GetComponentData<EnemyLaunchState>(endpoint); EnemyLaunchTransition.Begin(ref l, EnemyLaunchCause.PlayerPunch, 20);
-            em.SetComponentData(endpoint, l); LinkedPairLaunchResolution.Begin(em, endpoint, l, new float3(0, 0, 20));
+            em.SetComponentData(endpoint, l);
+            em.SetComponentData(endpoint, new PhysicsVelocity { Linear = new float3(0, 0, 20) });
         }
         private float Hp => em.GetComponentData<Health>(target).Current;
 
@@ -80,6 +82,20 @@ namespace CrowdPunch.Tests
             Assert.That(Hp, Is.Zero); Assert.That(em.GetComponentData<EnemyLaunchState>(target), Is.EqualTo(original));
             Assert.That(em.GetComponentData<PhysicsVelocity>(target), Is.EqualTo(velocity)); Assert.That(em.IsComponentEnabled<DeathRequest>(target), Is.False);
         }
+        [Test] public void Link004_LaunchedTetherHitsAnotherPairEndpointIndependently() {
+            Launch(a);
+            var partner = Body(new float3(5, 0, 0));
+            var otherPair = em.CreateEntity(typeof(LinkedPair), typeof(LinkedPairTuning));
+            em.SetComponentData(otherPair, tuning);
+            em.SetComponentData(otherPair, new LinkedPair { A = target, B = partner });
+            em.AddComponentData(target, new LinkedPairEndpoint { Pair = otherPair });
+            em.AddComponentData(partner, new LinkedPairEndpoint { Pair = otherPair });
+            Assert.That(LinkedPairDamageSystem.Hit(em, target, em.GetComponentData<EnemyLaunchState>(a),
+                a, math.forward(), tuning, 1), Is.True);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(target).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(partner).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(partner).Linear, Is.EqualTo(float3.zero));
+        }
         [TestCase(EnemyLaunchOwner.Player)]
         [TestCase(EnemyLaunchOwner.Enemy)]
         public void Link004_ArmorProtectionAndEliteDamageWithoutPush(EnemyLaunchOwner owner) {
@@ -97,30 +113,36 @@ namespace CrowdPunch.Tests
             em.AddComponent<ExplosiveDetonationRequest>(target); em.SetComponentEnabled<ExplosiveDetonationRequest>(target, false); Damage();
             Assert.That(em.IsComponentEnabled<ExplosiveDetonationRequest>(target), Is.True);
         }
-        [Test] public void Link002_PunchEitherEndpointAndRepunchSwitchesLeader() {
-            Launch(a); var first = em.GetComponentData<LinkedPair>(pair); Assert.That(first.Leader, Is.EqualTo(a));
-            Assert.That(em.GetComponentData<EnemyLaunchState>(b).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
-            Assert.That(math.length(em.GetComponentData<PhysicsVelocity>(b).Linear), Is.LessThan(math.length(em.GetComponentData<PhysicsVelocity>(a).Linear)));
-            Launch(b); Assert.That(em.GetComponentData<LinkedPair>(pair).Leader, Is.EqualTo(b)); Assert.That(em.GetComponentData<EnemyLaunchState>(a).Owner, Is.EqualTo(EnemyLaunchOwner.Player));
-        }
-        [Test] public void Link002_SimultaneousPunchHasOneLeaderAndIndependentEndpointDamage() {
-            var punch = new PunchSpecification { Origin = new float3(0, 0, -1), Direction = math.forward(), Range = 4, Radius = 3,
-                Strength = 20, Damage = 10, Cause = EnemyLaunchCause.PlayerPunch, EventTime = 1, AffectActive = 1, AffectLaunched = 1, ApplyDamage = 1 };
-            Assert.That(PunchResolution.TryApply(em, a, punch), Is.True); Assert.That(PunchResolution.TryApply(em, b, punch), Is.True);
+        [Test] public void Link002_PunchOnlyLaunchesTheEndpointInReach() {
+            var punch = new PunchSpecification { Origin = new float3(-2, 0, -1), Direction = math.forward(), Range = 4, Radius = .5f,
+                Strength = 20, Damage = 10, Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1, ApplyDamage = 1 };
+            Assert.That(PunchResolution.TryApply(em, a, punch), Is.True);
+            Assert.That(PunchResolution.TryApply(em, b, punch), Is.False);
+            world.GetOrCreateSystem<ApplyImpulseSystem>().Update(world.Unmanaged);
+            Lifecycle();
             Assert.That(em.GetComponentData<LinkedPair>(pair).Leader, Is.EqualTo(a));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(b).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(b).Linear, Is.EqualTo(float3.zero));
+            Assert.That(em.IsComponentEnabled<DamageRequest>(b), Is.False);
+            Assert.That(em.GetComponentData<EnemyGroundConstraint>(b).SnapRequested, Is.Zero);
+        }
+        [Test] public void Link002_PunchThatCoversBothEndpointsLaunchesAndDamagesEach() {
+            var punch = new PunchSpecification { Origin = new float3(0, 0, -1), Direction = math.forward(), Range = 4, Radius = 3,
+                Strength = 20, Damage = 10, Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1, AffectLaunched = 1, ApplyDamage = 1 };
+            Assert.That(PunchResolution.TryApply(em, a, punch), Is.True); Assert.That(PunchResolution.TryApply(em, b, punch), Is.True);
+            Assert.That(em.IsComponentEnabled<ExternalImpulse>(a), Is.True); Assert.That(em.IsComponentEnabled<ExternalImpulse>(b), Is.True);
             Assert.That(em.GetComponentData<EnemyLaunchState>(a).LaunchSequence, Is.EqualTo(1)); Assert.That(em.GetComponentData<EnemyLaunchState>(b).LaunchSequence, Is.EqualTo(1));
             EnemyDamageResolution.ApplyPending(em, a, 1); EnemyDamageResolution.ApplyPending(em, b, 1);
             Assert.That(em.GetComponentData<Health>(a).Current, Is.EqualTo(90)); Assert.That(em.GetComponentData<Health>(b).Current, Is.EqualTo(90));
-            punch.EventTime = 2; PunchResolution.TryApply(em, b, punch); Assert.That(em.GetComponentData<LinkedPair>(pair).Leader, Is.EqualTo(b));
         }
-        [Test] public void Link002_ExplosionChoosesNearestLeaderAndIndependentSplash() {
+        [Test] public void Link002_ExplosionOnlyLaunchesEndpointInBlastRadius() {
             var blast = Body(new float3(2, 0, 0));
             em.AddComponentData(blast, new ExplosiveEnemySettings { Radius = 1, Damage = 20, NormalEnemyKnockbackForce = 15 });
             em.AddComponent<EnemyContactDamageSettings>(blast); em.AddComponent<ExplosiveEnemyState>(blast); em.AddComponent<ExplosiveDetonationRequest>(blast);
             world.GetOrCreateSystemManaged<ExplosionResolutionSystem>().Update(); em.CompleteAllTrackedJobs();
-            Assert.That(em.GetComponentData<LinkedPair>(pair).Leader, Is.EqualTo(b));
-            Assert.That(em.GetComponentData<EnemyLaunchState>(a).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
-            Assert.That(em.GetComponentData<EnemyLaunchState>(b).LaunchSequence, Is.EqualTo(1)); Assert.That(em.GetComponentData<EnemyLaunchState>(a).LaunchSequence, Is.EqualTo(1));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(a).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+            Assert.That(em.IsComponentEnabled<ExternalImpulse>(a), Is.False);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(b).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
             EnemyDamageResolution.ApplyPending(em, a, 1); EnemyDamageResolution.ApplyPending(em, b, 1);
             Assert.That(em.GetComponentData<Health>(a).Current, Is.EqualTo(100)); Assert.That(em.GetComponentData<Health>(b).Current, Is.EqualTo(80));
         }
@@ -129,17 +151,47 @@ namespace CrowdPunch.Tests
             Assert.That(Hp, Is.EqualTo(100)); Assert.That(em.GetComponentData<EnemyLaunchState>(target).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
             Damage(2.1); Assert.That(Hp, Is.LessThan(100));
         }
-        [Test] public void Link005_EitherMomentumKeepsFlightAliveThenBothRecoverTogether() {
-            Launch(a); em.SetComponentData(a, new PhysicsVelocity()); Lifecycle();
-            Assert.That(em.GetComponentData<LinkedPair>(pair).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
-            em.SetComponentData(b, new PhysicsVelocity());
+        [Test] public void Link005_EndpointsSettleIndependentlyAndLinkUsesRemainingFlight() {
+            Launch(a); Lifecycle();
+            var original = em.GetComponentData<EnemyLaunchState>(a);
+            var velocity = em.GetComponentData<PhysicsVelocity>(a);
+            var punch = new PunchSpecification { Origin = new float3(2, 0, -1), Direction = math.forward(), Range = 4, Radius = .5f,
+                Strength = 20, Damage = 10, Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1 };
+            Assert.That(PunchResolution.TryApply(em, b, punch), Is.True);
+            world.GetOrCreateSystem<ApplyImpulseSystem>().Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(a), Is.EqualTo(original));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(a), Is.EqualTo(velocity));
+            Lifecycle(1.05);
+            Assert.That(em.GetComponentData<LinkedPair>(pair).Leader, Is.EqualTo(b));
+            em.SetComponentData(a, new PhysicsVelocity());
             for (int i = 0; i < 9; i++) Lifecycle(1.1 + i * .05);
             Assert.That(em.GetComponentData<EnemyLaunchState>(a).Phase, Is.EqualTo(EnemyLaunchPhase.Recovering));
-            Assert.That(em.GetComponentData<EnemyLaunchState>(b).Phase, Is.EqualTo(EnemyLaunchPhase.Recovering)); Assert.That(em.Exists(pair), Is.True);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(b).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
+            Assert.That(em.GetComponentData<LinkedPair>(pair).Leader, Is.EqualTo(b));
+        }
+        [Test] public void Link005_SettlingUsesSharedHorizontalSpeedAndRequiresContinuousLowMomentum() {
+            tuning.SettlePeriod = .125f;
+            em.SetComponentData(pair, tuning);
+            Launch(a);
+            var slow = new PhysicsVelocity { Linear = new float3(0, 9, 3) };
+            em.SetComponentData(a, slow);
+            Lifecycle(1); Lifecycle(1.05);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(a).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
+
+            em.SetComponentData(a, new PhysicsVelocity { Linear = new float3(0, 0, 4) });
+            Lifecycle(1.1);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(a).BelowUsefulMomentumSeconds, Is.Zero);
+
+            em.SetComponentData(a, slow);
+            Lifecycle(1.15); Lifecycle(1.2);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(a).Phase, Is.EqualTo(EnemyLaunchPhase.Launched));
+            Lifecycle(1.25);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(a).Phase, Is.EqualTo(EnemyLaunchPhase.Recovering));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(b).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
         }
         [Test] public void Link005_ZeroHealthRemainsAttachedUntilFlightEndsThenSurvivorIsIndependent() {
             Launch(a); em.SetComponentData(a, new Health { Max = 100 }); Lifecycle(); Assert.That(em.Exists(pair), Is.True);
-            var p = em.GetComponentData<LinkedPair>(pair); p.FlightRemaining = 0; em.SetComponentData(pair, p); Lifecycle(1.1);
+            var p = em.GetComponentData<LinkedPair>(pair); p.FlightA.Remaining = 0; em.SetComponentData(pair, p); Lifecycle(1.1);
             Assert.That(em.Exists(pair), Is.False); Assert.That(em.GetComponentData<EnemyLaunchState>(a).Phase, Is.EqualTo(EnemyLaunchPhase.Defeated));
             Assert.That(em.GetComponentData<LinkedPairEndpoint>(b).Pair, Is.EqualTo(Entity.Null)); Assert.That(em.GetComponentData<Health>(b).Current, Is.EqualTo(100));
         }
@@ -183,8 +235,18 @@ namespace CrowdPunch.Tests
         }
         [Test] public void Link006_FlyingSnagRetainsPairAndDissipatesSpeed() {
             Launch(a); Wall(float3.zero); float before = math.length(em.GetComponentData<PhysicsVelocity>(a).Linear);
+            var walking = new PhysicsVelocity { Linear = new float3(0, 0, 2) };
+            em.SetComponentData(b, walking);
             world.GetOrCreateSystem<LinkedPairConstraintSystem>().Update(world.Unmanaged); em.CompleteAllTrackedJobs();
             Assert.That(em.Exists(pair), Is.True); Assert.That(math.length(em.GetComponentData<PhysicsVelocity>(a).Linear), Is.LessThan(before));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(b), Is.EqualTo(walking));
+        }
+        [Test] public void Link002_StretchedTetherOnlyCorrectsTheFlyingEndpoint() {
+            Launch(a);
+            em.SetComponentData(b, LocalTransform.FromPosition(new float3(tuning.MaximumLength + 2, 0, 0)));
+            world.GetOrCreateSystem<LinkedPairConstraintSystem>().Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<PhysicsVelocity>(a).Linear.x, Is.GreaterThan(0));
+            Assert.That(em.GetComponentData<PhysicsVelocity>(b).Linear, Is.EqualTo(float3.zero));
         }
         [Test] public void Link007_ExactAuthoredWavesAndDefaults() {
             var first = AssetDatabase.LoadAssetAtPath<EnemyWaveSettings>("Assets/CrowdPunch/Data/Settings/Waves/Progression/CP27_01_First_Tether.asset");

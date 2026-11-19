@@ -39,7 +39,7 @@ namespace CrowdPunch.Systems.Initialization
                 var record = commands.CreateEntity();
                 commands.AddComponent(record, new LinkedPair { A = first, B = second, Leader = first,
                     Sequence = sequenceEntity, RunGeneration = sequence.RunGeneration, LifetimeA = 1, LifetimeB = 1,
-                    PreviousA = a, PreviousB = b, LastPunchAt = -1 });
+                    PreviousA = a, PreviousB = b });
                 commands.AddComponent(record, tuning); commands.AddBuffer<LinkedPairClock>(record);
                 var owner = new EnemyWaveOwnership { Sequence = sequenceEntity, RunGeneration = sequence.RunGeneration, WaveIndex = sequence.CurrentWaveIndex };
                 commands.SetComponent(first, new LinkedPairEndpoint { Pair = record });

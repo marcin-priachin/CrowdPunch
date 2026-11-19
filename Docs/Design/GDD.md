@@ -694,35 +694,35 @@ Status: Must
 
 Two normal endpoints have independent Baseline health from their spawn profile and a visible flexible tether. They straddle and sweep the player using normal obstacle navigation and crowd physics. The tether shortens freely; tension acts at its maximum length. Intact endpoints have no ordinary walking/recovery contact attack. Actual endpoint defeat breaks the tether and leaves the survivor as an ordinary independent enemy.
 
-### LINK-002 - Shared Launch
+### LINK-002 - Independent Endpoint Launches
 
 Status: Must
 
-A punch (including dash-punch), qualifying incoming launched body, or explosion launches both endpoints together. The struck endpoint leads and its partner trails and swings; both inherit the triggering launch ownership. Re-punching either flying endpoint switches the leader and replaces the pair's launch with player ownership. An explosion selects the endpoint nearest the blast as leader, travelling away from it; each endpoint takes its own eligible splash damage. Bodies keep existing collision-chain and target-specific interactions, aim assistance and initial-direction preview. Do not prescribe side-by-side translation, centre spinning, or a full swing-path preview.
+A punch (including dash-punch), qualifying incoming launched body, or explosion launches each endpoint it hits independently. Each endpoint retains its own momentum, damage, launch ownership and recovery. A flying body passes through its own partner without a hit. Bodies keep existing collision-chain and target-specific interactions, aim assistance and initial-direction preview against other enemies.
 
 ### LINK-003 - Link Contact And Cover
 
 Status: Must
 
-The walking, launched and recovering link damages the player regardless of launch ownership. First contact is immediate, followed by interval ticks. One per-pair, per-victim clock controls all link hits, including bypass of ordinary player hit invulnerability. Endpoint-body damage keeps its own ordinary rules. Fast sweeps must not tunnel through victims. Solid obstacles block link damage; walking endpoints reposition to clear the connection. A flying snag keeps the tether and dissipates momentum; constraints must never pull bodies through solids.
+The walking, launched and recovering link damages the player regardless of launch ownership. First contact is immediate, followed by interval ticks. One per-pair, per-victim clock controls all link hits, including bypass of ordinary player hit invulnerability. Endpoint-body damage keeps its ordinary rules against other targets. Fast sweeps must not tunnel through victims. Solid obstacles block link damage. Walking endpoints reposition to clear the connection. During flight, only launched endpoints receive tension or snag braking. Constraints must never pull bodies through solids.
 
 ### LINK-004 - Launched Link Enemy Responses
 
 Status: Must
 
-Walking/recovering links pass through enemies without effects. A launched link uses configurable DamageAndLaunch (default) or DamageAndPush on ordinary unlaunched victims. New flights inherit pair ownership and chain data. Already-launched victims receive damage only, preserving velocity and ownership. Intact armor ignores all link effects and never loses armor; preserve armor protection windows and existing protected Snake-part gates. Elites take damage only from player-owned launched links and receive zero knockback (COMBAT-012). Exploders detonate in either mode. Boss and puzzle targets receive no link effect; endpoint bodies keep their existing rules. Simultaneous endpoint hits and pair-on-pair propagation resolve coherently once per pair event.
+Walking/recovering links pass through enemies without effects. While either endpoint is flying, the link uses configurable DamageAndLaunch (default) or DamageAndPush on ordinary unlaunched victims. New flights inherit ownership and chain data from the latest launch among the endpoints still in flight. Already-launched victims receive damage only, preserving velocity and ownership. Intact armor ignores all link effects and never loses armor. Preserve armor protection windows and existing protected Snake-part gates. Elites take damage only from player-owned launched links and receive zero knockback (COMBAT-012). Exploders detonate in either mode. Boss and puzzle targets receive no link effect. The link shares one clock per victim, and a launched link can hit an endpoint of a different pair independently.
 
-### LINK-005 - Shared Flight And Recovery
+### LINK-005 - Independent Flight And Recovery
 
 Status: Must
 
-The pair remains flying while either endpoint retains useful momentum, until both settle or the shared flight limit expires. Both recover together; surviving pairs remain connected and resume their attack. Zero-health endpoints remain attached while launch defeat is deferred, and defeat only when flight ends. The recovering link remains dangerous to the player.
+Each launched endpoint settles after its horizontal speed stays below the shared Useful Momentum Speed for the pair's configured settling period. It leaves flight when it settles or reaches its flight limit, then recovers independently. Surviving endpoints stay connected and resume the paired attack once both are active. A zero-health endpoint remains attached while its launch defeat is deferred, then breaks the tether when its flight ends. The recovering link remains dangerous to the player.
 
 ### LINK-006 - Configurable Tuning And Presentation
 
 Status: Must
 
-Use dedicated pair settings for maximum length, tension, movement and straddle/sweep positioning, damaging width, player/enemy damage, tick interval, launch/push strength, shared flight limit/settling and recovery. Initial numeric values, visuals, effects and animations are delegated tuning. Use `Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Linked Variant.prefab` at its authored scale with Full Cel shading. Use Trooper authored Spawn, hit, launch and recovery/defeat animation; blend the shared directional jogs on legs while retaining Giant movement animation on the upper body. Enable ground spawning. Body readability uses authored animation without scripted tint, shaking or scale changes. Attach the visible tether to the animated `+ L Hand` or `+ R Hand` marker facing the partner (presentation amendment requested 2026-10-25). Endpoint health remains in the spawn profile. Only launch/push are agreed alternate behavior modes.
+Use dedicated pair settings for maximum length, tension, movement and straddle/sweep positioning, damaging width, player/enemy damage, tick interval, launch/push strength, and each endpoint's flight limit, settling period and recovery duration. Initial numeric values, visuals, effects and animations are delegated tuning. Use `Assets/CrowdPunch/Prefabs/Enemies/Goblin Trooper Linked Variant.prefab` at its authored scale with Full Cel shading. Use Trooper authored Spawn, hit, launch and recovery/defeat animation, and blend the shared directional jogs on legs while retaining Giant movement animation on the upper body. Enable ground spawning. Body readability uses authored animation without scripted tint, shaking or scale changes. Attach the visible tether to the animated `+ L Hand` or `+ R Hand` marker facing the partner (presentation amendment requested 2026-10-25). Endpoint health remains in the spawn profile. Only launch/push are agreed alternate behavior modes.
 
 ### LINK-007 - Legacy Gauntlet_27
 
