@@ -441,6 +441,10 @@ coasting. Re-punch,
 reset, respawn and launch replacement release the old motor. Arrow mode retains
 its previous initial-point guidance; indirectly launched bodies stay dynamic.
 
+Dasher exception (ENEMY-007): the displayed initial direction starts the committed
+dash. The dotted path forecasts the dash distance and bounces. Live contacts turn
+the dash, and its authored travel budget determines when it ends.
+
 ### PLAYER-004 — Directional Certainty
 
 Status: Must
@@ -1128,7 +1132,7 @@ Except for distance-keeping and its ranged attack, the ranged enemy follows the 
 
 Status: Must
 
-The Dasher maintains distance, stops for a readable configurable telegraph, samples and locks its direction when the dash begins, and travels without steering until its maximum distance. Static-obstruction contacts redirect the committed dash through the same physics response used while launched; the resolved direction becomes the new locked dash direction instead of ending the dash. Player and ordinary-enemy contact does not end the dash. It then enters a readable recovery window. Dash-path enemy avoidance is one authored policy: none, between the Dasher and player, or between and behind the player.
+The Dasher maintains distance, stops for a readable configurable telegraph, samples and locks its direction when the dash begins, and travels without steering until its maximum distance. Solid obstructions redirect the committed dash using the solved horizontal direction, with a reflected direction if the solver stops horizontal motion. It keeps its dash speed and remaining travel distance. Player and ordinary-enemy contact does not end the dash. It then enters a readable recovery window. Dash-path enemy avoidance is one authored policy: none, between the Dasher and player, or between and behind the player.
 
 ### ENEMY-006 — Dasher Impacts
 
@@ -1140,7 +1144,7 @@ An intentional dash passes through enemies without damaging, knocking back, laun
 
 Status: Must
 
-A player punch takes priority over every Dasher phase and enters the normal `Launched` lifecycle. While launched, the Dasher uses its own readable dash motion language, deals separately configured collision damage and knockback, launches ordinary targets into the shared chain pipeline, and preserves its trajectory through ordinary enemies. Static geometry still resolves through normal launched physics. Elite and boss momentum preservation is separately configurable.
+A player punch takes priority over every Dasher phase and immediately starts a player-owned dash in the launch direction. Player-owned propagated launches also start this dash. The roll, sound, speed, distance budget, obstruction reaction and recovery match the intentional dash. A player-ownership VFX accent distinguishes it. It retains the shared `Launched` lifecycle for ownership, chain credit, deferred defeat and COMBAT-015. Its swept contacts deal the configured launched-Dasher damage and knockback, launch eligible ordinary targets with inherited ownership, and preserve the dash through them. Elite and boss damage retain their existing eligibility. Enemy- and boss-owned launches retain the ordinary launch lifecycle and their existing Dasher impact rules.
 
 ### ENEMY-008 — Dasher Baseline Rules
 

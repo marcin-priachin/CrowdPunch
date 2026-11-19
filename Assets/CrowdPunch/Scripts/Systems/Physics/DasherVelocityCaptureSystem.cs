@@ -1,6 +1,6 @@
 using CrowdPunch.Components;
-using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
+using CrowdPunch.Systems.Movement;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Physics;
@@ -9,7 +9,7 @@ using Unity.Mathematics;
 
 namespace CrowdPunch.Systems.Physics
 {
-    [BurstCompile, UpdateInGroup(typeof(GamePrePhysicsGroup)), UpdateAfter(typeof(ApplyImpulseSystem))]
+    [BurstCompile, UpdateInGroup(typeof(GamePrePhysicsGroup)), UpdateAfter(typeof(DasherMovementSystem))]
     public partial struct DasherVelocityCaptureSystem : ISystem
     {
         [BurstCompile] public void OnUpdate(ref SystemState state)
@@ -21,12 +21,16 @@ namespace CrowdPunch.Systems.Physics
                 dash.ValueRW.PreviousPosition = transform.ValueRO.Position;
                 if (launch.ValueRO.Phase == EnemyLaunchPhase.Launched)
                 {
-                    if (dash.ValueRO.NormalizedLaunchSequence != launch.ValueRO.LaunchSequence)
+                    if (launch.ValueRO.Owner != EnemyLaunchOwner.Player)
                     {
-                        float2 fallback = math.normalizesafe(dash.ValueRO.LockedDirection.xz, new float2(0f, 1f));
-                        float2 direction = math.normalizesafe(velocity.ValueRO.Linear.xz, fallback);
-                        velocity.ValueRW.Linear.xz = direction * math.max(0f, settings.ValueRO.DashSpeed);
-                        dash.ValueRW.NormalizedLaunchSequence = launch.ValueRO.LaunchSequence;
+                        dash.ValueRW.Phase = DasherPhase.Positioning;
+                        if (dash.ValueRO.NormalizedLaunchSequence != launch.ValueRO.LaunchSequence)
+                        {
+                            float2 fallback = math.normalizesafe(dash.ValueRO.LockedDirection.xz, new float2(0f, 1f));
+                            float2 direction = math.normalizesafe(velocity.ValueRO.Linear.xz, fallback);
+                            velocity.ValueRW.Linear.xz = direction * math.max(0f, settings.ValueRO.DashSpeed);
+                            dash.ValueRW.NormalizedLaunchSequence = launch.ValueRO.LaunchSequence;
+                        }
                     }
                     if (dash.ValueRO.HasLockedRotation == 0)
                     {

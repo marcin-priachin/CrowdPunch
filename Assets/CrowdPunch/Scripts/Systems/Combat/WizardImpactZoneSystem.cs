@@ -36,6 +36,8 @@ namespace CrowdPunch.Systems.Combat
                     RefRO<EnemyLaunchState>>().WithAll<DasherSettings>().WithNone<RespawnRequest>().WithEntityAccess())
             {
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Launched) continue;
+                if (launch.ValueRO.Owner == EnemyLaunchOwner.Player
+                    && !Movement.DasherMovementSystem.IsPlayerDash(dash.ValueRO, launch.ValueRO)) continue;
                 float3 start = dash.ValueRO.PreviousPosition;
                 float3 end = pose.ValueRO.Position;
                 start.y = end.y;

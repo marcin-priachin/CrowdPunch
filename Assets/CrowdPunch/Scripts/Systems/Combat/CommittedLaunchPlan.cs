@@ -40,6 +40,11 @@ namespace CrowdPunch.Systems.Combat
 
         public static void Begin(EntityManager em, Entity source, in PunchSpecification punch, in EnemyLaunchState launch)
         {
+            if (launch.Owner == EnemyLaunchOwner.Player && em.HasComponent<DasherSettings>(source))
+            {
+                Reset(em, source);
+                return;
+            }
             bool authoritative = AuthoritativeLaunchPlan.Begin(em, source, punch, launch);
             if (!em.HasComponent<CommittedLaunchFlight>(source)) return;
             em.SetComponentEnabled<CommittedLaunchFlight>(source, false);

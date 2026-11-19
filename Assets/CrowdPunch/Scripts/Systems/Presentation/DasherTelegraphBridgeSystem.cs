@@ -2,6 +2,7 @@ using CrowdPunch.Components;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Mono.UI;
 using CrowdPunch.Systems.Groups;
+using CrowdPunch.Systems.Movement;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -28,20 +29,24 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     ulong id = ((ulong)(uint)entity.Version << 32) | (uint)entity.Index;
                     float3 position = transform.ValueRO.Position;
-                    if (launch.ValueRO.Phase == EnemyLaunchPhase.Launched)
+                    bool playerDash = launch.ValueRO.Phase == EnemyLaunchPhase.Launched
+                        && launch.ValueRO.Owner == EnemyLaunchOwner.Player;
+                    if (launch.ValueRO.Phase == EnemyLaunchPhase.Launched && !playerDash)
                     {
                         // The launched roll animation plays at its base speed.
                         bridge.ReceiveDasherRoll(id, position, 1f, 1f);
                         continue;
                     }
-                    if ((dash.ValueRO.Phase != DasherPhase.Preparing && dash.ValueRO.Phase != DasherPhase.Dashing)
-                        || launch.ValueRO.Phase != EnemyLaunchPhase.Active)
+                    if (playerDash
+                        ? !DasherMovementSystem.IsPlayerDash(dash.ValueRO, launch.ValueRO)
+                        : launch.ValueRO.Phase != EnemyLaunchPhase.Active
+                            || (dash.ValueRO.Phase != DasherPhase.Preparing && dash.ValueRO.Phase != DasherPhase.Dashing))
                         continue;
                     float duration = math.max(0.0001f, settings.ValueRO.TelegraphDuration);
                     float progress = dash.ValueRO.Phase == DasherPhase.Dashing ? 1f
                         : math.saturate(1f - dash.ValueRO.SecondsRemaining / duration);
                     bridge.ReceiveDasherTelegraph(id, position,
-                        math.normalizesafe(dash.ValueRO.LockedDirection, math.forward()), progress);
+                        math.normalizesafe(dash.ValueRO.LockedDirection, math.forward()), progress, playerDash);
                     bridge.ReceiveDasherRoll(id, position, math.lerp(1f, 3f, progress), progress);
                 }
             }

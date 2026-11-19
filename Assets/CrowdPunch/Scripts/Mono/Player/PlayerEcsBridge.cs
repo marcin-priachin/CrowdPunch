@@ -77,7 +77,7 @@ namespace CrowdPunch.Mono.Player
         public event Action<ulong, uint, Vector3, float, int, Vector3, float, EnemyLaunchOwner> TrailReceived;
         public event Action<Vector3, Vector3, Vector3> LaunchReceived;
         public event Action DasherTelegraphsBegan, DasherTelegraphsEnded;
-        public event Action<ulong, Vector3, Vector3, float> DasherTelegraphReceived;
+        public event Action<ulong, Vector3, Vector3, float, bool> DasherTelegraphReceived;
         internal event Action<ulong, Vector3, float, float> DasherRollReceived;
         internal event Action RollingBossRollsBegan, RollingBossRollsEnded;
         internal event Action<ulong, Vector3> RollingBossRollReceived;
@@ -93,8 +93,8 @@ namespace CrowdPunch.Mono.Player
             => LaunchReceived?.Invoke(position, direction, modelSize);
         public void BeginDasherTelegraphs() => DasherTelegraphsBegan?.Invoke();
         public void EndDasherTelegraphs() => DasherTelegraphsEnded?.Invoke();
-        public void ReceiveDasherTelegraph(ulong id, Vector3 position, Vector3 direction, float progress)
-            => DasherTelegraphReceived?.Invoke(id, position, direction, progress);
+        public void ReceiveDasherTelegraph(ulong id, Vector3 position, Vector3 direction, float progress, bool playerOwned)
+            => DasherTelegraphReceived?.Invoke(id, position, direction, progress, playerOwned);
         internal void ReceiveDasherRoll(ulong id, Vector3 position, float rollSpeed, float intensity)
             => DasherRollReceived?.Invoke(id, position, rollSpeed, intensity);
         internal void BeginRollingBossRolls() => RollingBossRollsBegan?.Invoke();

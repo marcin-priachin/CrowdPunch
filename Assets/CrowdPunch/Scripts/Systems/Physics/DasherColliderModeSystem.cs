@@ -41,7 +41,8 @@ namespace CrowdPunch.Systems.Physics
                     mode.ValueRW.IsInitialized = 1;
                 }
                 bool ignoreEnemies = dash.ValueRO.Phase == DasherPhase.Dashing
-                    || launch.ValueRO.Phase == EnemyLaunchPhase.Launched;
+                    || launch.ValueRO.Phase == EnemyLaunchPhase.Launched
+                        && launch.ValueRO.Owner != EnemyLaunchOwner.Player;
                 if ((mode.ValueRO.IsIgnoringEnemies != 0) == ignoreEnemies) continue;
                 CollisionFilter filter = mode.ValueRO.SolidFilter;
                 if (ignoreEnemies) filter.CollidesWith &= ~EnemyCategory;

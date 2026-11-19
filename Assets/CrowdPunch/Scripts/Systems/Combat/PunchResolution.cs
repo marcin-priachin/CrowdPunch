@@ -138,6 +138,7 @@ namespace CrowdPunch.Systems.Combat
                 EnemyLaunchTransition.Begin(ref launch, punch.Cause, punch.Damage,
                     EnemyLaunchOwnership.FromCause(punch.Cause), punch.PunchSequence);
                 launch.HomingTarget = punch.HasAssistedLaunchDirection != 0
+                    && !(launch.Owner == EnemyLaunchOwner.Player && manager.HasComponent<DasherSettings>(target))
                     ? punch.AssistedLaunchTarget
                     : Entity.Null;
                 launch.HomingSecondsRemaining = launch.HomingTarget != Entity.Null ? punch.HomingDuration : 0f;

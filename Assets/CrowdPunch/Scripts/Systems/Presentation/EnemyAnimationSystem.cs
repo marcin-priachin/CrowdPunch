@@ -1,5 +1,6 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
+using CrowdPunch.Systems.Movement;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Deformations;
@@ -377,6 +378,7 @@ namespace CrowdPunch.Systems.Presentation
                 float rollSpeed = 1f;
                 bool restart = false;
                 bool hit = false;
+                bool playerDash = DasherMovementSystem.IsPlayerDash(dash, launch);
                 if (Health.HasComponent(owner))
                 {
                     float health = Health[owner].Current;
@@ -386,13 +388,20 @@ namespace CrowdPunch.Systems.Presentation
                 }
                 if (launch.Phase == EnemyLaunchPhase.Launched)
                 {
-                    motion = EnemyAnimationSamples.FlyingMotion;
+                    motion = playerDash ? dashMotion : EnemyAnimationSamples.FlyingMotion;
+                    if (playerDash) rollSpeed = 3f;
                     restart = playback.WasLaunched == 0 || playback.LaunchSequence != launch.LaunchSequence;
                     playback.WasLaunched = 1;
                     playback.LaunchSequence = launch.LaunchSequence;
                     playback.HitActive = 0;
                 }
                 else if (launch.Phase == EnemyLaunchPhase.Defeated) motion = EnemyAnimationSamples.ImpactMotion;
+                else if (launch.Phase == EnemyLaunchPhase.Recovering && launch.Owner == EnemyLaunchOwner.Player
+                    && dash.Phase == DasherPhase.Recovering)
+                {
+                    motion = dashRecoveryMotion;
+                    progress = math.saturate(1 - launch.RecoverySecondsRemaining / math.max(.001f, tuning.RecoveryDuration));
+                }
                 else if (launch.Phase == EnemyLaunchPhase.Recovering)
                 {
                     if (playback.WasRecovering == 0)

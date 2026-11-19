@@ -13,7 +13,7 @@ namespace CrowdPunch.Tests
     public sealed class CombatVfxTests
     {
         [Test]
-        public void Info004DasherBridgeKeepsEffectsThroughDashAndStopsOnRecoveryOrLaunch()
+        public void Enemy007DasherBridgeUsesSameRollForBothDashesAndAddsOwnership()
         {
             using var world = new World("Dasher effect phases");
             var em = world.EntityManager;
@@ -23,7 +23,10 @@ namespace CrowdPunch.Tests
             PlayerBridgeRegistry.TryGetBridge(out var previous);
             PlayerBridgeRegistry.Register(bridge);
             int samples = 0; float progress = -1;
-            bridge.DasherTelegraphReceived += (_, __, ___, value) => { samples++; progress = value; };
+            bool playerOwned = false;
+            float rollSpeed = 0, rollIntensity = 0;
+            bridge.DasherTelegraphReceived += (_, __, ___, value, owned) => { samples++; progress = value; playerOwned = owned; };
+            bridge.DasherRollReceived += (_, __, speed, intensity) => { rollSpeed = speed; rollIntensity = intensity; };
             try
             {
                 var enemy = em.CreateEntity(typeof(Enemy), typeof(DasherState), typeof(DasherSettings),
@@ -44,6 +47,17 @@ namespace CrowdPunch.Tests
                 em.SetComponentData(enemy, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
                 system.Update(world.Unmanaged);
                 Assert.That(samples, Is.EqualTo(2), "Shared launch effects take over on interruption.");
+                Assert.That(rollSpeed, Is.EqualTo(1));
+                em.SetComponentData(enemy, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, Owner = EnemyLaunchOwner.Player });
+                system.Update(world.Unmanaged);
+                Assert.That(samples, Is.EqualTo(3));
+                Assert.That(playerOwned, Is.True);
+                Assert.That(progress, Is.EqualTo(1));
+                Assert.That(rollSpeed, Is.EqualTo(3));
+                Assert.That(rollIntensity, Is.EqualTo(1));
+                em.SetComponentData(enemy, new DasherState { Phase = DasherPhase.Recovering });
+                system.Update(world.Unmanaged);
+                Assert.That(samples, Is.EqualTo(3));
             }
             finally
             {
@@ -68,7 +82,11 @@ namespace CrowdPunch.Tests
                 var layers = effect.GetComponentsInChildren<ParticleSystem>();
                 Assert.That(layers.Length, Is.EqualTo(2));
                 float initialRate = effect.emission.rateOverTimeMultiplier;
-                pool.Begin(); pool.Show(1, new Vector3(4, 1, 2), Vector3.right, 1); pool.End();
+                Color original = layers[1].main.startColor.color;
+                pool.Begin(); pool.Show(1, new Vector3(4, 1, 2), Vector3.right, 1, playerOwned: true); pool.End();
+                Color owned = layers[1].main.startColor.color;
+                Assert.That(owned, Is.Not.EqualTo(original));
+                Assert.That(owned.a, Is.EqualTo(original.a));
                 Assert.That(effect.emission.rateOverTimeMultiplier, Is.GreaterThan(initialRate));
                 Assert.That(Vector3.Distance(effect.transform.position, new Vector3(4, .1f, 2)), Is.LessThan(.0001f));
                 Assert.That(effect.transform.localScale, Is.EqualTo(Vector3.one));
@@ -85,6 +103,7 @@ namespace CrowdPunch.Tests
                 pool.Begin(); pool.Show(2, Vector3.up, Vector3.forward, 0); pool.End();
                 Assert.That(go.transform.childCount, Is.EqualTo(1));
                 Assert.That(effect.emission.rateOverTimeMultiplier, Is.EqualTo(initialRate));
+                Assert.That(layers[1].main.startColor.color, Is.EqualTo(original));
                 pool.Clear();
                 Assert.That(effect.IsAlive(true), Is.False);
             }

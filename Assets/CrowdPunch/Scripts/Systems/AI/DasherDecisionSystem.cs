@@ -75,6 +75,8 @@ namespace CrowdPunch.Systems.AI
                 if (launch.Phase != EnemyLaunchPhase.Active || !Player.IsAvailable)
                 {
                     movement = default;
+                    if (launch.Owner == EnemyLaunchOwner.Player && launch.Phase != EnemyLaunchPhase.Active)
+                        return;
                     state.Phase = DasherPhase.Positioning;
                     state.SecondsRemaining = 0f;
                     return;
@@ -130,15 +132,7 @@ namespace CrowdPunch.Systems.AI
                     state.SecondsRemaining -= DeltaTime;
                     if (state.SecondsRemaining <= 0f)
                     {
-                        state.Phase = DasherPhase.Dashing;
-                        state.LockedDirection = toward; // sampled at commitment, never during telegraph
-                        state.LockedRotation = quaternion.LookRotationSafe(toward, math.up());
-                        state.HasLockedRotation = 1;
-                        state.DashStartPosition = transform.Position;
-                        state.PreviousPosition = transform.Position;
-                        state.DashDistanceTravelled = 0f;
-                        state.DashSequence++;
-                        state.HasHitPlayer = 0;
+                        Movement.DasherMovementSystem.BeginDash(ref state, transform.Position, toward);
                     }
                 }
                 else if (state.Phase == DasherPhase.Recovering)

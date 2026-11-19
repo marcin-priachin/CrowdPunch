@@ -28,6 +28,7 @@ namespace CrowdPunch.Systems.Physics
             float deltaTime = SystemAPI.Time.DeltaTime;
             EnemyLaunchSettings settings = SystemAPI.GetSingleton<EnemyLaunchSettings>();
             var paths = SystemAPI.GetComponentLookup<AuthoritativeLaunchPath>(true);
+            var dashers = SystemAPI.GetComponentLookup<DasherState>();
 
             foreach ((RefRW<EnemyLaunchState> launchState,
                          RefRO<PhysicsVelocity> velocity,
@@ -50,21 +51,33 @@ namespace CrowdPunch.Systems.Physics
                     continue;
                 }
 
+                bool playerDasher = launchState.ValueRO.Owner == EnemyLaunchOwner.Player
+                    && dashers.HasComponent(enemy);
                 if (launchState.ValueRO.Phase == EnemyLaunchPhase.Launched)
                 {
                     if (paths.HasComponent(enemy) && paths.IsComponentEnabled(enemy)
                         && paths[enemy].LaunchSequence == launchState.ValueRO.LaunchSequence) continue;
-                    float horizontalSpeed = math.length(velocity.ValueRO.Linear.xz);
-                    if (horizontalSpeed >= math.max(0f, settings.UsefulMomentumSpeed))
+                    float recoveryDuration = math.max(0f, settings.RecoveryDuration);
+                    if (playerDasher)
                     {
-                        launchState.ValueRW.BelowUsefulMomentumSeconds = 0f;
-                        continue;
+                        var dash = dashers[enemy];
+                        // A launch propagated after physics has yet to enter the dash motor.
+                        if (dash.NormalizedLaunchSequence != launchState.ValueRO.LaunchSequence
+                            || dash.Phase != DasherPhase.Recovering) continue;
+                        recoveryDuration = dash.SecondsRemaining;
                     }
-
-                    launchState.ValueRW.BelowUsefulMomentumSeconds += deltaTime;
-                    if (launchState.ValueRO.BelowUsefulMomentumSeconds < math.max(0f, settings.LowMomentumPeriod))
+                    else
                     {
-                        continue;
+                        float horizontalSpeed = math.length(velocity.ValueRO.Linear.xz);
+                        if (horizontalSpeed >= math.max(0f, settings.UsefulMomentumSpeed))
+                        {
+                            launchState.ValueRW.BelowUsefulMomentumSeconds = 0f;
+                            continue;
+                        }
+
+                        launchState.ValueRW.BelowUsefulMomentumSeconds += deltaTime;
+                        if (launchState.ValueRO.BelowUsefulMomentumSeconds < math.max(0f, settings.LowMomentumPeriod))
+                            continue;
                     }
 
                     if (health.ValueRO.Current <= 0f || SystemAPI.HasComponent<SnakeSegment>(enemy))
@@ -75,7 +88,7 @@ namespace CrowdPunch.Systems.Physics
                     }
 
                     launchState.ValueRW.Phase = EnemyLaunchPhase.Recovering;
-                    launchState.ValueRW.RecoverySecondsRemaining = math.max(0f, settings.RecoveryDuration);
+                    launchState.ValueRW.RecoverySecondsRemaining = recoveryDuration;
                     continue;
                 }
 
@@ -86,6 +99,14 @@ namespace CrowdPunch.Systems.Physics
                     launchState.ValueRW.LastCause = EnemyLaunchCause.None;
                     launchState.ValueRW.BelowUsefulMomentumSeconds = 0f;
                     launchState.ValueRW.RecoverySecondsRemaining = 0f;
+                    if (playerDasher)
+                    {
+                        var dash = dashers[enemy];
+                        dash.Phase = DasherPhase.Positioning;
+                        dash.SecondsRemaining = 0f;
+                        dash.HasLockedRotation = 0;
+                        dashers[enemy] = dash;
+                    }
                     if (SystemAPI.HasComponent<EnemySpawnAnimation>(enemy))
                         SystemAPI.SetComponentEnabled<EnemySpawnAnimation>(enemy, false);
                 }

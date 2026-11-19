@@ -766,12 +766,19 @@ twice (preparation/dash), Take Damage, reverse Die (rise), Spawn, Look Around (d
 recovery), Roll Forward In Place (launched) and Die. Preparation loops with playback increasing
 from 1x to 3x through the telegraph clock; the committed dash keeps the continuous roll phase
 and 3x speed, including obstruction redirects. These are presentation rates only.
-The Dasher audio pool consumes roll samples from the telegraph bridge. It raises pitch and volume
-with charge progress and keeps the same voice through the committed dash and into a launch.
-Launched Dashers use the flying animation's base roll rate at full volume before distance
-falloff, then fade out on recovery or defeat. Four voices cover the nearest audible Dashers
-(ENEMY-005/007, VISION-005).
-Launch loops Roll Forward In Place and repunch restarts it. Shared recovery uses Die then rise.
+The Dasher audio pool consumes roll samples from the telegraph bridge. The intentional dash
+ramps to full intensity and the 3x roll rate during preparation. Player-owned launches play the
+same full-intensity roll and motion immediately and color the existing speed streaks with the
+shared player accent. Enemy- and boss-owned launches use the base-rate roll and shared defeat/rise
+recovery. Four voices cover the nearest audible Dashers (ENEMY-005/007, VISION-005).
+
+`DasherMovementSystem` applies both committed dashes after combat impulses. A new player launch
+locks its direction from the launch impulse and resets the distance budget. Both modes use the
+same speed, travel distance, room limits and post-solver obstruction redirect. The launch's
+ownership and sequence enable the swept enemy hits, while ordinary enemy solver contacts stay
+disabled. The trajectory preview forecasts that same committed dash, with Unity Physics resolving
+actual obstructions. When the dash stops, `EnemyRecoverySystem` resolves deferred defeat or
+uses the authored dash recovery duration. Fresh punches restart the dash and its hit eligibility.
 Animation writes only skin matrices. Dasher pose interpolation uses quaternion slerp
 and retains the sampled bone scales, avoiding the shrinking caused by linearly
 blending rotated matrix axes. Runtime spawning preserves the game prefab's authored proportions,

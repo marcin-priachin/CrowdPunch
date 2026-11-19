@@ -38,6 +38,7 @@ namespace CrowdPunch.Systems.Physics
                 launch.ValueRW.RicochetNormal = default;
                 if (CommittedLaunchPlan.Owns(state.EntityManager, source, launch.ValueRO)) continue;
                 if (launch.ValueRO.Phase != EnemyLaunchPhase.Launched || launch.ValueRO.Owner != EnemyLaunchOwner.Player) continue;
+                if (SystemAPI.HasComponent<DasherState>(source)) continue;
                 var corrected = velocity.ValueRO.Linear;
                 if (!RicochetAimCorrection.TryCorrect(state.EntityManager, world, source, surface, pose.ValueRO.Position,
                     normal, ref corrected, settings, ref nearby, ref rays, out Entity target)) continue;

@@ -80,11 +80,9 @@ namespace CrowdPunch.Systems.Physics
                 bool committedDash = Dashers.HasComponent(entity)
                     && Dashers[entity].Phase == DasherPhase.Dashing;
                 bool committedSweep = Elites.HasComponent(entity) && Elites[entity].Phase == ElitePunchPhase.CommittedSweep;
-                float3 toward = launched
-                    ? velocity.Linear
-                    : committedDash
-                        ? Dashers[entity].LockedDirection
-                        : PlayerPosition - transform.Position;
+                float3 toward = committedDash
+                    ? Dashers[entity].LockedDirection
+                    : launched ? velocity.Linear : PlayerPosition - transform.Position;
                 toward.y = 0f;
                 if (!launched && committedSweep) toward = Elites[entity].CommittedDirection;
                 if (charging)

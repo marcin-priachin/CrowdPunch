@@ -172,7 +172,8 @@ namespace CrowdPunch.Tests
             em.SetComponentData(source, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1, Owner = owner,
                 HomingTarget = armored, HomingSecondsRemaining = .25f });
             em.AddComponentData(source, new DasherSettings { LaunchedEnemyDamage = 15, LaunchedEnemyKnockback = 18 });
-            em.AddComponentData(source, new DasherState { PreviousPosition = new float3(0, 0, 2), PreservedLaunchedVelocity = new float3(0, 0, 18) });
+            em.AddComponentData(source, new DasherState { Phase = DasherPhase.Dashing, NormalizedLaunchSequence = 1,
+                PreviousPosition = new float3(0, 0, 2), PreservedLaunchedVelocity = new float3(0, 0, 18) });
             em.AddBuffer<DasherHitHistory>(source);
             world.GetOrCreateSystem<DasherEnemyImpactSystem>().Update(world.Unmanaged); Damage();
             Assert.That(em.GetComponentData<EnemyArmor>(armored).Stages, Is.EqualTo(1));

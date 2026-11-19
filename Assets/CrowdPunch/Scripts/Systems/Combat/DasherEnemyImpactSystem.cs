@@ -1,5 +1,6 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Groups;
+using CrowdPunch.Systems.Movement;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -60,6 +61,8 @@ namespace CrowdPunch.Systems.Combat
                          .WithNone<RespawnRequest>().WithEntityAccess())
             {
                 if (sourceLaunch.ValueRO.Phase != EnemyLaunchPhase.Launched) continue;
+                if (sourceLaunch.ValueRO.Owner == EnemyLaunchOwner.Player
+                    && !DasherMovementSystem.IsPlayerDash(dash.ValueRO, sourceLaunch.ValueRO)) continue;
 
                 float3 start = dash.ValueRO.PreviousPosition;
                 float3 end = sourceTransform.ValueRO.Position;

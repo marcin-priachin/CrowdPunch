@@ -79,6 +79,23 @@ MonoBehaviour:
   projectilePlayerLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  mushroomShooter:
+    TravelRange: 45
+    Height: 0.95
+    BeamDuration: 0.25
+    EnemyDamage: 5
+  sporella:
+    OwnershipInteractions: 0
+    ImpactDirection: 0
+    ShotsPerPass: 3
+    SweepPasses: 2
+    ShotInterval: 0.18
+    Windup: 0.65
+    ForwardSpeed: 14
+    SweepHalfWidth: 1.5
+    Range: 26
+    Height: 0.94
+    EnemyDamage: 10
   explosionRadius: 5
   explosionDamage: 20
   normalEnemyKnockbackForce: 16
@@ -94,7 +111,7 @@ MonoBehaviour:
   dasherPreparationMovement: 0
   dasherTelegraphDuration: 0.8
   dasherDashSpeed: 36
-  dasherMaximumDistance: 24
+  dasherMaximumDistance: 48
   dasherRecoveryDuration: 1.6
   dasherAvoidancePolicy: 2
   dasherCorridorWidth: 1.5
@@ -154,6 +171,9 @@ MonoBehaviour:
   elitePlayerPush: 8
   elitePlayerInvincibilityDuration: 0.5
   eliteWindUpDuration: 0
+  eliteEnemyLaunchFrame: 12
+  eliteSweepAnimationLastFrame: 30
+  eliteSweepAnimationFrameRate: 30
   eliteEnableTelegraph: 0
   eliteTelegraphDuration: 0.25
   armorStaggerDuration: 0.3
@@ -190,4 +210,5 @@ MonoBehaviour:
     MovementMode: 0
     ForceMode: 1
     AlwaysReserveRadius: 0
+    AnimationGroundClearance: 0.1
   trailSettings: {fileID: 0}

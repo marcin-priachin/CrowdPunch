@@ -5,6 +5,7 @@ using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Groups;
 using CrowdPunch.Systems.InputBridge;
+using CrowdPunch.Systems.Movement;
 using CrowdPunch.Systems.Physics;
 using CrowdPunch.Systems.Presentation;
 using CrowdPunch.Utilities;
@@ -119,7 +120,7 @@ namespace CrowdPunch.Tests
             PhysicsStep(); world.GetOrCreateSystem<PresentationBridgeSystem>().Update(world.Unmanaged);
         }
 
-        private void Punch(float strength = 12)
+        private void Punch(float strength = 12, bool expectsAuthoritativePath = true)
         {
             Assert.That(PunchAimAssist.TryGetCommittedDirection(em, source, bridge.TrajectoryPreviewRevision, out _, out _), Is.True,
                 "The displayed snapshot must remain consumable before input is bridged.");
@@ -129,7 +130,7 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<PunchRequest>(requestQuery.GetSingletonEntity()).AimRevision, Is.EqualTo(bridge.PunchAimRevision));
             world.GetOrCreateSystem<PunchDetectionSystem>().Update(world.Unmanaged);
             world.GetOrCreateSystem<ApplyImpulseSystem>().Update(world.Unmanaged);
-            Assert.That(em.IsComponentEnabled<AuthoritativeLaunchPath>(source), Is.True,
+            Assert.That(em.IsComponentEnabled<AuthoritativeLaunchPath>(source), Is.EqualTo(expectsAuthoritativePath),
                 $"shown={em.GetComponentData<PunchAimAssistTarget>(source).PreviewRevision}, click={bridge.PunchAimRevision}, "
                 + $"points={em.GetBuffer<DisplayedLaunchPathPoint>(source).Length}/{em.GetBuffer<CommittedLaunchPathPoint>(source).Length}, "
                 + $"direction={em.GetComponentData<PunchAimAssistTarget>(source).PreviewDirection}, flight={em.IsComponentEnabled<CommittedLaunchFlight>(source)}, phase={em.GetComponentData<EnemyLaunchState>(source).Phase}");
@@ -138,6 +139,13 @@ namespace CrowdPunch.Tests
         private bool Step(bool recovery = false)
         {
             world.SetTime(new TimeData((tick + 1) * Dt, Dt));
+            bool dasher = em.HasComponent<DasherState>(source);
+            if (dasher)
+            {
+                world.GetOrCreateSystem<DasherMovementSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<DasherVelocityCaptureSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<DasherColliderModeSystem>().Update(world.Unmanaged);
+            }
             world.GetOrCreateSystem<CommittedLaunchValidationSystem>().Update(world.Unmanaged);
             world.GetOrCreateSystem<EnemyLaunchHomingSystem>().Update(world.Unmanaged);
             world.GetOrCreateSystem<RotatingCoverSystem>().Update(world.Unmanaged);
@@ -155,6 +163,7 @@ namespace CrowdPunch.Tests
             world.GetOrCreateSystem<BarricadeReboundSystem>().Update(world.Unmanaged);
             world.GetOrCreateSystem<CoverReflectionSystem>().Update(world.Unmanaged);
             world.GetOrCreateSystem<EnemyLaunchCollisionSystem>().Update(world.Unmanaged);
+            if (dasher) world.GetOrCreateSystem<DasherObstacleRedirectSystem>().Update(world.Unmanaged);
             world.GetOrCreateSystem<CommittedLaunchReboundSystem>().Update(world.Unmanaged);
             world.GetOrCreateSystem<EnemyRicochetAimSystem>().Update(world.Unmanaged);
             world.GetOrCreateSystem<AuthoritativeLaunchFinishSystem>().Update(world.Unmanaged);
@@ -164,6 +173,98 @@ namespace CrowdPunch.Tests
             Assert.That(em.GetComponentData<PhysicsMass>(source).InverseMass, Is.EqualTo(1), "Gameplay mass data stays intact.");
             if (recovery) world.GetOrCreateSystem<EnemyRecoverySystem>().Update(world.Unmanaged);
             return em.IsComponentEnabled<AuthoritativeLaunchPath>(source);
+        }
+
+        [Test]
+        public void Enemy007PunchedDasherMatchesHostileDashThroughCrowdAndWall()
+        {
+            Wall(4f);
+            var filter = CollisionFilter.Default;
+            filter.BelongsTo = 1u << 7;
+            var material = Unity.Physics.Material.Default;
+            material.Friction = 0;
+            material.CollisionResponse = CollisionResponsePolicy.CollideRaiseCollisionEvents;
+            var collider = Unity.Physics.SphereCollider.Create(new SphereGeometry { Radius = .5f }, filter, material);
+            colliders.Add(collider);
+            em.SetComponentData(source, new PhysicsCollider { Value = collider });
+            Entity hostile = Body(new float3(4f, 0f, 0f), collider, true);
+            Entity victim = Body(new float3(0f, 0f, 1.5f), collider, true);
+            Entity hostileLane = Body(new float3(4f, 0f, 1.5f), collider, true);
+            var tuning = new DasherSettings { DashSpeed = 12f, MaximumDistance = 6f, RecoveryDuration = .4f,
+                LaunchedEnemyDamage = 25f, LaunchedEnemyKnockback = 18f };
+            foreach (var dasher in new[] { source, hostile })
+            {
+                em.AddComponentData(dasher, tuning);
+                em.AddComponent<DasherState>(dasher);
+                em.AddComponent<DasherColliderState>(dasher);
+                em.AddBuffer<DasherHitHistory>(dasher);
+            }
+            foreach (var enemy in new[] { source, hostile, victim, hostileLane })
+            {
+                em.AddComponent<KnockbackResponse>(enemy);
+                em.AddComponentData(enemy, new EnemyContactDamageSettings { ContactRadius = .5f });
+            }
+            var dash = new DasherState();
+            DasherMovementSystem.BeginDash(ref dash, new float3(4f, 0f, 0f), math.forward());
+            em.SetComponentData(hostile, dash);
+            Assert.That(PunchResolution.TryApply(em, source, new PunchSpecification
+            {
+                Origin = new float3(0f, 0f, -1f), Direction = math.forward(), Range = 2f, Radius = 1f,
+                Strength = 5f, Cause = EnemyLaunchCause.PlayerPunch, AffectActive = 1, PunchSequence = 7,
+                CommitDisplayedPlan = 1, HasAssistedLaunchDirection = 1, AssistedLaunchDirection = math.forward(),
+                AssistedLaunchTarget = victim, HomingDuration = 1f
+            }), Is.True);
+            world.GetOrCreateSystem<ApplyImpulseSystem>().Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<EnemyLaunchState>(source).HomingTarget, Is.EqualTo(Entity.Null));
+            Assert.That(em.IsComponentEnabled<AuthoritativeLaunchPath>(source), Is.False);
+
+            bool redirected = false, victimHit = false;
+            for (int i = 0; i < 60; i++)
+            {
+                world.SetTime(new TimeData((tick + 1) * Dt, Dt));
+                world.GetOrCreateSystem<DamageApplicationSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<ApplyImpulseSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<DasherMovementSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<DasherVelocityCaptureSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<DasherColliderModeSystem>().Update(world.Unmanaged);
+                PhysicsStep();
+                world.GetOrCreateSystem<DasherEnemyImpactSystem>().Update(world.Unmanaged);
+                var inherited = em.GetComponentData<EnemyLaunchState>(victim);
+                if (!victimHit && inherited.Phase == EnemyLaunchPhase.Launched)
+                {
+                    Assert.That(inherited.Owner, Is.EqualTo(EnemyLaunchOwner.Player));
+                    Assert.That(inherited.OriginatingPunchSequence, Is.EqualTo(7));
+                    Assert.That(em.IsComponentEnabled<ExternalImpulse>(victim), Is.True);
+                    victimHit = true;
+                }
+                world.GetOrCreateSystem<DasherObstacleRedirectSystem>().Update(world.Unmanaged);
+                world.GetOrCreateSystem<EnemyRecoverySystem>().Update(world.Unmanaged);
+                em.CompleteAllTrackedJobs();
+
+                var launchedDash = em.GetComponentData<DasherState>(source);
+                var hostileDash = em.GetComponentData<DasherState>(hostile);
+                Assert.That(launchedDash.Phase, Is.EqualTo(hostileDash.Phase));
+                Assert.That(math.distance(launchedDash.LockedDirection, hostileDash.LockedDirection), Is.LessThan(.001f));
+                Assert.That(launchedDash.DashDistanceTravelled, Is.EqualTo(hostileDash.DashDistanceTravelled).Within(.001f));
+                if (launchedDash.Phase == DasherPhase.Dashing)
+                {
+                    redirected |= launchedDash.LockedDirection.z < -.99f;
+                    continue;
+                }
+
+                var launch = em.GetComponentData<EnemyLaunchState>(source);
+                Assert.That(launch.Phase, Is.EqualTo(EnemyLaunchPhase.Recovering));
+                Assert.That(launch.RecoverySecondsRemaining, Is.EqualTo(tuning.RecoveryDuration));
+                break;
+            }
+
+            Assert.That(redirected, Is.True, "Both dashes must redirect from a real solver contact and keep rolling.");
+            Assert.That(em.GetComponentData<EnemyLaunchState>(source).Phase, Is.EqualTo(EnemyLaunchPhase.Recovering));
+            Assert.That(victimHit, Is.True);
+            world.GetOrCreateSystem<DamageApplicationSystem>().Update(world.Unmanaged);
+            Assert.That(em.GetComponentData<Health>(victim).Current, Is.EqualTo(75));
+            Assert.That(em.GetComponentData<EnemyLaunchState>(hostileLane).Phase, Is.EqualTo(EnemyLaunchPhase.Active));
+            Assert.That(em.GetComponentData<Health>(hostileLane).Current, Is.EqualTo(100));
         }
 
         [TestCase(-.75f, false)]
@@ -542,7 +643,8 @@ namespace CrowdPunch.Tests
             em.AddComponentData(elite, new EnemyContactDamageSettings { ContactRadius = .5f });
             em.AddComponentData(source, new EnemyContactDamageSettings { ContactRadius = .5f });
             em.AddComponentData(source, new DasherSettings { EliteDamage = 15f, EliteKnockback = 8f });
-            em.AddComponentData(source, new DasherState { PreviousPosition = new float3(0, 0, -1),
+            em.AddComponentData(source, new DasherState { Phase = DasherPhase.Dashing, NormalizedLaunchSequence = 1,
+                PreviousPosition = new float3(0, 0, -1),
                 PreservedLaunchedVelocity = new float3(0, 0, 18f) });
             em.AddBuffer<DasherHitHistory>(source);
             var launch = new EnemyLaunchState();
@@ -826,7 +928,9 @@ namespace CrowdPunch.Tests
             em.AddComponentData(boss, new Health { Current = 100, Max = 100 });
             if (dasher)
             {
-                em.AddComponentData(source, new DasherSettings { BossDamage = 23, DashSpeed = 12 }); em.AddComponent<DasherState>(source);
+                em.AddComponentData(source, new DasherSettings { BossDamage = 23, DashSpeed = 12, MaximumDistance = 6 });
+                em.AddComponent<DasherState>(source);
+                em.AddComponent<DasherColliderState>(source);
             }
             em.AddComponent<ExplosiveEnemyState>(source); em.AddComponent<ExplosiveDetonationRequest>(source);
             em.SetComponentEnabled<ExplosiveDetonationRequest>(source, false);
@@ -843,14 +947,19 @@ namespace CrowdPunch.Tests
             }
             else Preview();
             var shown = em.GetBuffer<DisplayedLaunchPathPoint>(source);
+            if (dasher)
+                Assert.That(shown.Length, Is.GreaterThan(2), "The preview still forecasts the committed dash and its bounce.");
             float3 endpoint = shown[shown.Length - 1].Value.Position;
-            Punch();
+            Punch(expectsAuthoritativePath: !dasher);
             if (safety != 0)
             {
                 using var query = em.CreateEntityQuery(typeof(PlayerSnapshot));
                 em.SetComponentData(query.GetSingletonEntity(), new PlayerSnapshot { IsAvailable = true, Position = new float3(0,0,-10) });
             }
-            int steps = 0; while (em.IsComponentEnabled<AuthoritativeLaunchPath>(source) && steps++ < 250) Step();
+            int steps = 0;
+            while ((dasher ? em.GetComponentData<EnemyLaunchState>(source).Phase == EnemyLaunchPhase.Launched
+                       : em.IsComponentEnabled<AuthoritativeLaunchPath>(source)) && steps++ < 250)
+                Step(recovery: dasher);
             Assert.That(steps, Is.LessThan(250));
             if (kind == "head" || kind == "chicken" || kind == "rolling")
                 Assert.That(em.GetComponentData<Health>(boss).Current, Is.EqualTo(dasher ? 77 : 90));

@@ -1,4 +1,6 @@
+using CrowdPunch.Components;
 using CrowdPunch.Configuration;
+using CrowdPunch.Systems.Presentation;
 using UnityEngine;
 
 namespace CrowdPunch.Mono.Player
@@ -7,6 +9,7 @@ namespace CrowdPunch.Mono.Player
     internal sealed class DasherTelegraphParticlePool
     {
         private readonly Entry[] entries;
+        private readonly CombatVfxLibrary vfxLibrary;
 
         private struct Entry
         {
@@ -14,6 +17,8 @@ namespace CrowdPunch.Mono.Player
             public ParticleSystem Effect;
             public ParticleSystem[] Layers;
             public float[] Rates;
+            public ParticleSystem Accent;
+            public ParticleSystem.MinMaxGradient AccentColor;
             public bool Seen;
         }
 
@@ -21,6 +26,7 @@ namespace CrowdPunch.Mono.Player
         {
             int capacity = Mathf.Clamp(settings.ParticlePoolSizePerEffect, 1, 64);
             entries = new Entry[capacity];
+            vfxLibrary = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
             for (int index = 0; index < capacity; index++)
             {
                 ParticleSystem effect = settings.DasherTelegraphParticles != null
@@ -31,6 +37,10 @@ namespace CrowdPunch.Mono.Player
                 entries[index].Effect = effect;
                 entries[index].Layers = effect.GetComponentsInChildren<ParticleSystem>(true);
                 entries[index].Rates = new float[entries[index].Layers.Length];
+                // The authored child is the speed-streak layer. The fallback has only one layer.
+                var accent = entries[index].Layers.Length > 1 ? entries[index].Layers[1] : effect;
+                entries[index].Accent = accent;
+                entries[index].AccentColor = accent.main.startColor;
                 for (int layer = 0; layer < entries[index].Layers.Length; layer++)
                     entries[index].Rates[layer] = entries[index].Layers[layer].emission.rateOverTimeMultiplier;
             }
@@ -41,7 +51,7 @@ namespace CrowdPunch.Mono.Player
             for (int index = 0; index < entries.Length; index++) entries[index].Seen = false;
         }
 
-        public void Show(ulong id, Vector3 position, Vector3 direction, float progress)
+        public void Show(ulong id, Vector3 position, Vector3 direction, float progress, bool playerOwned = false)
         {
             int slot = Find(id);
             if (slot < 0) slot = Find(0);
@@ -54,6 +64,11 @@ namespace CrowdPunch.Mono.Player
             entry.Effect.transform.SetPositionAndRotation(position + Vector3.down * 0.9f,
                 Quaternion.LookRotation(forward, Vector3.up));
             entry.Effect.transform.localScale = Vector3.one;
+            var accent = entry.Accent.main;
+            accent.startColor = playerOwned
+                ? new ParticleSystem.MinMaxGradient(CombatOwnershipTint.Blend(entry.AccentColor.color,
+                    CombatOwnershipTint.Accent(EnemyLaunchOwner.Player, vfxLibrary), 1f))
+                : entry.AccentColor;
             for (int layer = 0; layer < entry.Layers.Length; layer++)
             {
                 var emission = entry.Layers[layer].emission;

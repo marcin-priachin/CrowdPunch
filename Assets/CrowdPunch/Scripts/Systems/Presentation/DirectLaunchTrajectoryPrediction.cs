@@ -1,5 +1,6 @@
 using CrowdPunch.Components;
 using CrowdPunch.Systems.Combat;
+using CrowdPunch.Systems.Movement;
 using CrowdPunch.Systems.Physics;
 using Unity.Collections;
 using Unity.Entities;
@@ -115,6 +116,19 @@ namespace CrowdPunch.Systems.Presentation
                 velocity.y = 0f;
             }
             bool dasher = em.HasComponent<DasherSettings>(source.Entity);
+            DasherSettings dashSettings = dasher ? em.GetComponentData<DasherSettings>(source.Entity) : default;
+            float dashSpeed = math.max(0f, dashSettings.DashSpeed);
+            float3 dashDirection = math.normalizesafe(new float3(source.Direction.x, 0f, source.Direction.z), math.forward());
+            float dashDistance = 0f;
+            BarricadeRoom dashRoom = default;
+            bool dashHasRoom = false;
+            if (dasher && em.HasComponent<EnemyWaveOwnership>(source.Entity))
+            {
+                Entity owner = em.GetComponentData<EnemyWaveOwnership>(source.Entity).Sequence;
+                dashHasRoom = em.HasComponent<BarricadeRoom>(owner);
+                if (dashHasRoom) dashRoom = em.GetComponentData<BarricadeRoom>(owner);
+            }
+            if (dasher) velocity.xz = dashDirection.xz * dashSpeed;
             float damping = em.HasComponent<PhysicsDamping>(source.Entity)
                 ? math.max(0f, em.GetComponentData<PhysicsDamping>(source.Entity).Linear) : 0f;
             float inverseMass = em.GetComponentData<PhysicsMass>(source.Entity).InverseMass;
@@ -123,6 +137,7 @@ namespace CrowdPunch.Systems.Presentation
                 ? em.GetComponentData<PhysicsGravityFactor>(source.Entity).Value : 1f;
             Entity homing = source.HasAimPoint != 0 ? source.AimTarget : em.HasComponent<PunchAimAssistTarget>(source.Entity)
                 ? em.GetComponentData<PunchAimAssistTarget>(source.Entity).Target : Entity.Null;
+            if (dasher) homing = Entity.Null;
             float3 frozenPoint = source.AimPoint;
             if (source.HasAimPoint == 0 && homing != Entity.Null && em.HasComponent<LocalTransform>(homing))
                 frozenPoint = LaunchAimPrediction.Point(pose.Position, em.GetComponentData<LocalTransform>(homing).Position,
@@ -149,6 +164,15 @@ namespace CrowdPunch.Systems.Presentation
             {
                 // A partial final step would have a different damping/guidance/contact order.
                 if (elapsed + dt > duration + .00001f) break;
+                float2 dashStart = pose.Position.xz;
+                float3 dashWallNormal = default;
+                if (dasher)
+                {
+                    velocity.xz = dashDirection.xz * dashSpeed;
+                    if (dashSpeed <= 0f || dashDistance >= math.max(0f, dashSettings.MaximumDistance)
+                        || dashHasRoom && DasherMovementSystem.LeavesRoom(dashStart + velocity.xz * dt, dashRoom))
+                        break;
+                }
                 Entity pendingSurface = Entity.Null, contactEntity = Entity.Null;
                 float3 pendingNormal = default, pendingIncoming = default, contactCenter = default, firstContactNormal = default;
                 bool authoredRebound = false;
@@ -253,11 +277,13 @@ namespace CrowdPunch.Systems.Presentation
                             pendingIncoming = velocity; contactCenter = impact; authoredRebound = forced;
                         }
                     }
-                    // Dasher's launched motor passes through ordinary crowds; geometry still deflects it.
-                    bool passThrough = dasher && enemy && em.HasComponent<EnemyTier>(closest.Entity)
-                        && EnemyLaunchTransition.IsLaunchable(em.GetComponentData<EnemyTier>(closest.Entity));
+                    // Dashers sweep ordinary enemies for damage without solving their contacts.
+                    bool passThrough = dasher && enemy && (!em.HasComponent<KnockbackResponse>(closest.Entity)
+                        || em.GetComponentData<KnockbackResponse>(closest.Entity).Tier != KnockbackResponseTier.Boss);
                     if (!passThrough)
                     {
+                        if (dasher && math.abs(closest.SurfaceNormal.y) <= DasherObstacleRedirectSystem.MaximumWallNormalY)
+                            dashWallNormal = closest.SurfaceNormal;
                         velocity += closest.SurfaceNormal * (impulse * inverseMass);
                         float3 relative = velocity - hitVelocity;
                         float3 tangent = relative - closest.SurfaceNormal * math.dot(relative, closest.SurfaceNormal);
@@ -298,7 +324,7 @@ namespace CrowdPunch.Systems.Presentation
                                     em.GetComponentData<FinaleTuning>(pendingSurface).ReboundSafetyDegrees);
                         }
                     }
-                    if (canCommitRebounds && RicochetAimCorrection.TryCorrect(em, world, source.Entity, pendingSurface, pose.Position,
+                    if (!dasher && canCommitRebounds && RicochetAimCorrection.TryCorrect(em, world, source.Entity, pendingSurface, pose.Position,
                         pendingNormal, ref velocity, settings, ref nearby, ref rays, out Entity reboundTarget,
                         out frozenPoint, elapsed, assistExcluded))
                     {
@@ -310,7 +336,16 @@ namespace CrowdPunch.Systems.Presentation
                         || em.HasComponent<BossPart>(contactEntity) && em.GetComponentData<BossPart>(contactEntity).Kind == BossPartKind.Head))
                     velocity = BossHeadBounceSystem.Redirect(velocity, pose.Position,
                         em.GetComponentData<LocalTransform>(contactEntity).Position, player.Position, source.Entity.Index);
-                if (rebounds.IsCreated && canCommitRebounds && pendingSurface != Entity.Null
+                if (dasher)
+                {
+                    dashDistance += math.distance(dashStart, pose.Position.xz);
+                    if (authoredRebound) dashWallNormal = pendingNormal;
+                    if (math.lengthsq(dashWallNormal) > 0f)
+                        dashDirection = DasherObstacleRedirectSystem.ResolveRedirectedDirection(
+                            dashDirection, velocity, dashWallNormal);
+                    velocity.xz = dashDirection.xz * dashSpeed;
+                }
+                if (!dasher && rebounds.IsCreated && canCommitRebounds && pendingSurface != Entity.Null
                     && rebounds.Length < CommittedLaunchPlan.MaximumRebounds && math.lengthsq(velocity.xz) > .000001f)
                     rebounds.Add(new LaunchReboundPlan { Surface = pendingSurface, Normal = pendingNormal,
                         Direction = math.normalizesafe(velocity), Target = homing, AimPoint = frozenPoint,

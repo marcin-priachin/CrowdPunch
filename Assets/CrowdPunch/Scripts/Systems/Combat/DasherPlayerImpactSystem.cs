@@ -17,11 +17,13 @@ namespace CrowdPunch.Systems.Combat
             PlayerSnapshot player = SystemAPI.GetSingleton<PlayerSnapshot>();
             if (!player.IsAvailable) return;
             foreach ((RefRW<DasherState> dash, RefRO<DasherSettings> settings, RefRO<EnemyContactDamageSettings> contact,
-                         RefRO<LocalTransform> transform) in
-                     SystemAPI.Query<RefRW<DasherState>, RefRO<DasherSettings>, RefRO<EnemyContactDamageSettings>, RefRO<LocalTransform>>()
+                         RefRO<LocalTransform> transform, RefRO<EnemyLaunchState> launch) in
+                     SystemAPI.Query<RefRW<DasherState>, RefRO<DasherSettings>, RefRO<EnemyContactDamageSettings>,
+                             RefRO<LocalTransform>, RefRO<EnemyLaunchState>>()
                          .WithAll<Enemy>().WithNone<RespawnRequest>())
             {
-                if (dash.ValueRO.Phase != DasherPhase.Dashing || dash.ValueRO.HasHitPlayer != 0) continue;
+                if (launch.ValueRO.Phase != EnemyLaunchPhase.Active
+                    || dash.ValueRO.Phase != DasherPhase.Dashing || dash.ValueRO.HasHitPlayer != 0) continue;
                 float3 delta = player.Position - transform.ValueRO.Position; delta.y = 0f;
                 float radius = player.Radius + math.max(0f, contact.ValueRO.ContactRadius);
                 if (math.lengthsq(delta) > radius * radius) continue;
