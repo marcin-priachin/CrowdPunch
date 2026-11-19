@@ -26,9 +26,14 @@ namespace CrowdPunch.Systems.Physics
         {
             var player = SystemAPI.GetSingleton<PlayerSnapshot>();
             if (!player.IsAvailable) return;
+            double now = SystemAPI.Time.ElapsedTime;
             bool pending = false;
-            foreach (var ninja in SystemAPI.Query<RefRO<NinjaState>>().WithNone<RespawnRequest>())
-                if (ninja.ValueRO.Phase == NinjaPhase.TeleportPending) { pending = true; break; }
+            foreach (var (ninja, launch) in SystemAPI.Query<RefRO<NinjaState>, RefRO<EnemyLaunchState>>().WithNone<RespawnRequest>())
+            {
+                if (launch.ValueRO.Phase != EnemyLaunchPhase.Active || !ReadyToTeleport(ninja.ValueRO, now)) continue;
+                pending = true;
+                break;
+            }
             if (!pending) return;
             var grid = SystemAPI.HasSingleton<NavigationGrid>() ? SystemAPI.GetSingleton<NavigationGrid>() : default;
             var bounds = SystemAPI.GetSingleton<ArenaBounds>();
@@ -53,7 +58,7 @@ namespace CrowdPunch.Systems.Physics
             foreach (var trail in SystemAPI.Query<RefRO<TrailSection>>())
             {
                 var section = trail.ValueRO;
-                if (section.DamagesEnemies == 0 || section.ExpiresAt <= SystemAPI.Time.ElapsedTime) continue;
+                if (section.DamagesEnemies == 0 || section.ExpiresAt <= now) continue;
                 float2 delta = section.End.xz - section.Start.xz;
                 hazards.Add(new GroundHazard { Shape = GroundHazardShape.Rectangle, Position = (section.Start + section.End) * .5f,
                     HalfSize = new float2((math.length(delta) + section.Width) * .5f, section.Width * .5f), Angle = -math.atan2(delta.y, delta.x) });
@@ -62,7 +67,7 @@ namespace CrowdPunch.Systems.Physics
                      SystemAPI.Query<RefRW<NinjaState>, RefRO<NinjaTuning>, RefRO<EnemyLaunchState>, RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRO<NavigationAgent>>()
                          .WithNone<RespawnRequest>().WithEntityAccess())
             {
-                if (launch.ValueRO.Phase != EnemyLaunchPhase.Active || ninja.ValueRO.Phase != NinjaPhase.TeleportPending) continue;
+                if (launch.ValueRO.Phase != EnemyLaunchPhase.Active || !ReadyToTeleport(ninja.ValueRO, now)) continue;
                 ref var n = ref ninja.ValueRW;
                 float radius = agent.ValueRO.Radius;
                 float3 origin = transform.ValueRO.Position;
@@ -84,6 +89,7 @@ namespace CrowdPunch.Systems.Physics
                     n.DistanceTravelled = 0; n.HasHitPlayer = 0; n.HasDashSegment = 0;
                     n.TeleportSequence++;
                     n.Phase = NinjaPhase.ArrivalWarning;
+                    n.RetryAt = 0;
                     n.SecondsRemaining = math.max(0, tuning.ValueRO.ArrivalWarningDuration);
                     transform.ValueRW.Position = candidate; // The sole discontinuity, after validating the full destination.
                     transform.ValueRW.Rotation = quaternion.LookRotationSafe(direction, math.up());
@@ -99,11 +105,14 @@ namespace CrowdPunch.Systems.Physics
                     break;
                 }
                 if (found) continue;
-                n.Phase = NinjaPhase.Positioning;
-                n.RetryAt = SystemAPI.Time.ElapsedTime + NinjaScheduling.RandomDelay(ref n,
+                // A blocked landing delays this ambush while the Ninja holds the end of its windup.
+                n.RetryAt = now + NinjaScheduling.RandomDelay(ref n,
                     tuning.ValueRO.DestinationRetryMinimum, tuning.ValueRO.DestinationRetryMaximum);
             }
         }
+
+        private static bool ReadyToTeleport(in NinjaState ninja, double now)
+            => ninja.Phase == NinjaPhase.TeleportPending && now >= ninja.RetryAt;
     }
 }
 

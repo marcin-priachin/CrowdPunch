@@ -197,7 +197,7 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
-        public void Ninja002_WarningHazardsCancelAndRetryRepeatsFullPreparationBeforeLockedArrival()
+        public void Ninja002_BlockedLandingHoldsCommitmentUntilSafeTeleportAndDash()
         {
             using var rectangles = new NativeArray<NavigationRectangle>(0, Allocator.Temp);
             using var blob = NavigationGridConstruction.Build(new float2(-10), new float2(10), .5f, new float3(.6f, 1, 1.8f), rectangles, Allocator.Persistent);
@@ -205,35 +205,71 @@ namespace CrowdPunch.Tests
             em.SetComponentData(em.CreateEntity(typeof(ArenaBounds)), new ArenaBounds { Extents = new float3(10) });
             var physics = new PhysicsWorld(0, 0, 0); physics.CollisionWorld.BuildBroadphase(ref physics, .05f, float3.zero, true);
             em.SetComponentData(em.CreateEntity(typeof(PhysicsWorldSingleton)), new PhysicsWorldSingleton { PhysicsWorld = physics });
-            var e = Ninja(new float3(0, 0, 8)); var n = State(e); n.Phase = NinjaPhase.TeleportPending; em.SetComponentData(e, n);
+            var e = Ninja(new float3(0, 0, 8));
             var hazard = em.CreateEntity(typeof(GroundHazard), typeof(GroundHazardState));
             em.SetComponentData(hazard, new GroundHazard { Shape = GroundHazardShape.Circle, Radius = 5 });
             em.SetComponentData(hazard, new GroundHazardState { Introduced = 1, Phase = GroundHazardPhase.Warning });
             try
             {
-                world.GetOrCreateSystem<NinjaTeleportSystem>().Update(world.Unmanaged);
-                n = State(e); Assert.That(n.Phase, Is.EqualTo(NinjaPhase.Positioning));
-                Assert.That(n.RetryAt, Is.InRange(1.35, 1.65)); Assert.That(n.PeriodicAt, Is.Zero);
-                Assert.That(em.GetComponentData<LocalTransform>(e).Position.z, Is.EqualTo(8));
+                var teleport = world.GetOrCreateSystem<NinjaTeleportSystem>();
+                Decide();
+                Assert.That(State(e).Phase, Is.EqualTo(NinjaPhase.Preparing));
+                Time(1.75, .75f);
+                Decide();
+                teleport.Update(world.Unmanaged);
+                var n = State(e);
+                Assert.That(n.Phase, Is.EqualTo(NinjaPhase.TeleportPending));
+                Assert.That(n.OccupiesAmbushSlot, Is.True);
+                Assert.That(n.RetryAt, Is.InRange(2.10, 2.40));
+                Assert.That(n.TeleportSequence, Is.Zero);
+
+                Time(n.RetryAt);
+                Decide();
+                teleport.Update(world.Unmanaged);
+                var retry = State(e);
+                Assert.That(retry.Phase, Is.EqualTo(NinjaPhase.TeleportPending));
+                Assert.That(retry.RetryAt, Is.GreaterThan(n.RetryAt));
+                Assert.That(retry.TeleportSequence, Is.Zero);
+
                 em.SetComponentData(hazard, new GroundHazardState { Introduced = 1, Phase = GroundHazardPhase.Inactive });
-                Time(2); Decide(); Assert.That(State(e).Phase, Is.EqualTo(NinjaPhase.Preparing));
-                Assert.That(State(e).SecondsRemaining, Is.EqualTo(.75f));
-                for (int i = 1; i <= 15; i++) { Time(2 + i * .05); Decide(); }
-                world.GetOrCreateSystem<NinjaTeleportSystem>().Update(world.Unmanaged);
-                n = State(e); Assert.That(n.Phase, Is.EqualTo(NinjaPhase.ArrivalWarning));
-                Assert.That(n.SecondsRemaining, Is.EqualTo(.2f));
-                Assert.That(em.GetComponentData<LocalTransform>(e).Position.z, Is.EqualTo(-2).Within(.001));
-                Assert.That(n.LockedDirection, Is.EqualTo(math.forward()));
-                var p = em.GetComponentData<PlayerSnapshot>(player); p.Position = new float3(5, 0, 3); p.Forward = new float3(1, 0, 0);
+                var p = em.GetComponentData<PlayerSnapshot>(player);
+                p.Position = new float3(5, 0, 3);
+                p.Forward = new float3(1, 0, 0);
                 em.SetComponentData(player, p);
+                Time(retry.RetryAt - .05);
+                Decide();
+                teleport.Update(world.Unmanaged);
+                Assert.That(State(e).Phase, Is.EqualTo(NinjaPhase.TeleportPending));
+                Assert.That(em.GetComponentData<LocalTransform>(e).Position.z, Is.EqualTo(8));
+
+                double arrivalTime = retry.RetryAt;
+                Time(arrivalTime);
+                Decide();
+                teleport.Update(world.Unmanaged);
+                n = State(e);
+                Assert.That(n.Phase, Is.EqualTo(NinjaPhase.ArrivalWarning));
+                Assert.That(n.TeleportSequence, Is.EqualTo(1));
+                Assert.That(n.SecondsRemaining, Is.EqualTo(.2f));
+                Assert.That(em.GetComponentData<LocalTransform>(e).Position, Is.EqualTo(new float3(3, 0, 3)));
+                Assert.That(n.LockedDirection, Is.EqualTo(p.Forward));
+                p.Position = float3.zero;
+                p.Forward = math.forward();
+                em.SetComponentData(player, p);
+                var movement = world.GetOrCreateSystem<NinjaMovementSystem>();
                 for (int i = 1; i <= 3; i++)
                 {
-                    Time(2.75 + i * .05); Decide(); world.GetOrCreateSystem<NinjaMovementSystem>().Update(world.Unmanaged);
+                    Time(arrivalTime + i * .05);
+                    Decide();
+                    movement.Update(world.Unmanaged);
                     Assert.That(State(e).Phase, Is.EqualTo(NinjaPhase.ArrivalWarning));
                     Assert.That(em.GetComponentData<PhysicsVelocity>(e).Linear.xz, Is.EqualTo(float2.zero));
                 }
-                Time(2.95); Decide(); Assert.That(State(e).Phase, Is.EqualTo(NinjaPhase.Dashing));
-                Assert.That(State(e).LockedDirection, Is.EqualTo(math.forward()));
+                Time(arrivalTime + .20);
+                Decide();
+                movement.Update(world.Unmanaged);
+                Assert.That(State(e).Phase, Is.EqualTo(NinjaPhase.Dashing));
+                Assert.That(State(e).LockedDirection, Is.EqualTo(new float3(1, 0, 0)));
+                Assert.That(em.GetComponentData<PhysicsVelocity>(e).Linear.x, Is.EqualTo(tuning.DashSpeed).Within(.001));
             }
             finally { physics.Dispose(); }
         }
@@ -259,7 +295,8 @@ namespace CrowdPunch.Tests
             try
             {
                 world.GetOrCreateSystem<NinjaTeleportSystem>().Update(world.Unmanaged);
-                Assert.That(State(e).Phase, Is.EqualTo(NinjaPhase.Positioning));
+                Assert.That(State(e).Phase, Is.EqualTo(NinjaPhase.TeleportPending));
+                Assert.That(State(e).TeleportSequence, Is.Zero);
                 Assert.That(em.GetComponentData<LocalTransform>(e).Position.z, Is.EqualTo(8));
             }
             finally { physics.Dispose(); }
@@ -320,16 +357,23 @@ namespace CrowdPunch.Tests
             finally { PlayerBridgeRegistry.Unregister(bridge); UnityEngine.Object.DestroyImmediate(go); }
         }
 
-        [TestCase(NinjaPhase.Preparing), TestCase(NinjaPhase.ArrivalWarning), TestCase(NinjaPhase.Dashing)]
+        [TestCase(NinjaPhase.Preparing), TestCase(NinjaPhase.TeleportPending)]
+        [TestCase(NinjaPhase.ArrivalWarning), TestCase(NinjaPhase.Dashing)]
         public void Ninja005_PunchInterruptsEachPhaseAndUsesOrdinaryLaunchData(NinjaPhase phase)
         {
-            var e = Ninja(float3.zero); var n = State(e); n.Phase = phase; n.HasDashSegment = 1; em.SetComponentData(e, n);
+            var e = Ninja(float3.zero);
+            var n = State(e);
+            n.Phase = phase;
+            n.RetryAt = phase == NinjaPhase.TeleportPending ? 2 : 0;
+            n.HasDashSegment = 1;
+            em.SetComponentData(e, n);
             var punch = new PunchSpecification { Origin = new float3(0, 0, -1), Direction = math.forward(), Range = 3, Radius = 2,
                 Strength = 20, Damage = 20, AffectActive = 1, ApplyDamage = 1, Cause = EnemyLaunchCause.PlayerPunch };
             Assert.That(PunchResolution.TryApply(em, e, punch), Is.True);
             world.GetOrCreateSystem<NinjaInterruptSystem>().Update(world.Unmanaged);
             n = State(e); Assert.That(n.Phase, Is.EqualTo(NinjaPhase.Positioning)); Assert.That(n.HasDashSegment, Is.Zero);
-            Assert.That(n.ReadyAt, Is.EqualTo(7));
+            Assert.That(n.RetryAt, Is.Zero);
+            Assert.That(n.ReadyAt, Is.EqualTo(world.Time.ElapsedTime + tuning.MinimumCooldown));
             var launch = em.GetComponentData<EnemyLaunchState>(e);
             Assert.That(launch.Owner, Is.EqualTo(EnemyLaunchOwner.Player)); Assert.That(launch.LaunchDamage, Is.EqualTo(20));
             Assert.That(em.HasComponent<DasherSettings>(e), Is.False);

@@ -1426,15 +1426,18 @@ retained across these retries. A new enemy lifetime resets all Ninja scheduling;
 shared launch phases suppress attacks and reactivation receives a fresh cooldown.
 
 `NinjaTeleportSystem` runs after the normal movement motor. Only a pending teleport
-captures crowd/spawn reservations and warning/active patches. It tries the direct
-rear point, then alternating 10-degree offsets up to +/-60 degrees. Navigation
+whose retry time has elapsed triggers collection of crowd/spawn reservations and
+warning/active patches. It tries the direct rear point, then alternating 10-degree
+offsets up to +/-60 degrees. Navigation
 physical-radius anchors/region IDs and room ownership reject disconnected sections; continuous
 geometry, capsule-height static sweeps and occupancy reject unsafe destinations or
 blocked attack paths. No navigation topology fails closed. The single validated
 teleport writes position, clears cached navigation, locks the attack direction,
 and enters stationary arrival warning. The .45m-radius, 2m-tall capsule fits the
 2m rear offset beside the player's 1.5m radius; configurable larger victims/bodies
-increase the offset only enough to prevent overlap.
+increase the offset only enough to prevent overlap. When every candidate is blocked,
+the Ninja stays in `TeleportPending`, holding the final windup pose and its ambush slot.
+The next attempt samples the current player pose after the destination retry delay.
 
 `NinjaMovementSystem` writes intentional dash velocity, caps the final step at the
 remaining distance, and sweeps solids to stop before obstruction. In the physics
@@ -1477,7 +1480,7 @@ from the grid's coarser clearance classes without relaxing obstacle sweeps.
 
 `NinjaEnemyTests` covers authored defaults, all scheduling modes, concurrency,
 initial/cooldown/lifetime behavior, teleport topology/occupancy/hazard rejection,
-full-warning retries, locked arrival, static swept obstruction, player hit and
+committed retries, locked arrival, static swept obstruction, player hit and
 invulnerability, ordinary punch launches, and legacy/build isolation.
 `NinjaEncounterPlayCheck` runs controlled real-solver/lifecycle checks with injected
 launches and wave defeat; it is not a balance playtest.

@@ -2051,9 +2051,11 @@ Status: Must
 Prefer directly behind the player; search a limited configurable rear arc if blocked.
 Reject obstacle/boundary intersections, occupied space, active or warning ground hazards,
 blocked destination-to-player dash paths, and disconnected arena sections. Sample the
-destination only after preparation completes. An invalid destination returns to positioning
-and retries after a short randomized delay without consuming the full attack cooldown.
-Every retry repeats the complete preparation warning. Validation/search details are delegated.
+destination after preparation completes. If all destinations are blocked, hold the final
+preparation pose and keep the ambush slot. Retry from the player's current position and
+facing after short randomized delays, then teleport and dash as soon as a retry finds a safe
+landing. The commitment remains interruptible under NINJA-005. Validation/search details
+are delegated.
 
 ### NINJA-003 - Intentional Dash And Player Risk
 
@@ -2083,9 +2085,10 @@ defeat and restart. Retry ranges and initialization/cooldown staggering are dele
 
 Status: Must
 
-Punches and launched-body impacts interrupt either warning or the dash. A launched Ninja uses
-Baseline projectile damage, knockback, chain propagation, ownership, recovery and defeat rules,
-with no enhanced Dasher impacts. Use `Assets/CrowdPunch/Prefabs/Enemies/Fair Black Male Ninja 03 Variant.prefab`
+Punches and launched-body impacts interrupt preparation, a pending teleport, arrival warning,
+or the dash. A launched Ninja uses Baseline projectile damage, knockback, chain propagation,
+ownership, recovery and defeat rules, with no enhanced Dasher impacts.
+Use `Assets/CrowdPunch/Prefabs/Enemies/Fair Black Male Ninja 03 Variant.prefab`
 at its authored scale, retargeting suitable existing humanoid animations for preparation, arrival,
 dash, recovery, launch and defeat (model amendment requested 2026-10-25). Use authored animation
 instead of scripted body tints, flashes, shaking or scale deformation, with established Full Cel
