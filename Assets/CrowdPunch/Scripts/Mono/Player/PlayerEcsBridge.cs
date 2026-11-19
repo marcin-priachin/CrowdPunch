@@ -47,6 +47,27 @@ namespace CrowdPunch.Mono.Player
     /// </summary>
     public sealed class PlayerEcsBridge : MonoBehaviour
     {
+        private Transform[] shadowFeet;
+
+        internal int CopyShadowFeet(Span<float3> positions)
+        {
+            if (shadowFeet == null)
+            {
+                var animator = GetComponentInChildren<Animator>(true);
+                shadowFeet = animator != null && animator.isHuman
+                    ? new[] { animator.GetBoneTransform(HumanBodyBones.LeftFoot),
+                        animator.GetBoneTransform(HumanBodyBones.LeftToes),
+                        animator.GetBoneTransform(HumanBodyBones.RightFoot),
+                        animator.GetBoneTransform(HumanBodyBones.RightToes) }
+                    : Array.Empty<Transform>();
+            }
+
+            int count = 0;
+            foreach (Transform foot in shadowFeet)
+                if (foot != null) positions[count++] = foot.position;
+            return count;
+        }
+
         public event Action ProjectileVisualsBegan, ProjectileVisualsEnded;
         public event Action<ProjectileVisualSample> ProjectileVisualReceived;
         public event Action<ProjectileVisualKind, Vector3, Vector3, float, EnemyLaunchOwner> ProjectileBurstReceived;

@@ -131,7 +131,8 @@ The volley state keeps that destination while it remains suitable. While cover p
 system checks the current line each step and limits destination searches to once every 0.2 seconds.
 Presentation reads that phase to sample the authored attack. The prefab stores twelve socket
 positions and outward directions sampled from the skinned mesh in idle and at 40% of Projectile
-Attack. The grounded projection preserves the body's horizontal solver motion (COMBAT-018).
+Attack. The instanced ground shadow projects the animated hub onto the floor (VISION-006).
+The grounded projection preserves the body's horizontal solver motion (COMBAT-018).
 The Die samples align the mesh with the capsule floor from the first defeat pose. On defeat,
 `EnemyAnimationGroundingSystem` keeps the interpolated pose at floor level (INFO-004).
 When a lethal committed launch reaches its displayed endpoint, it starts defeat with the
@@ -4756,6 +4757,20 @@ Rebake after scenery, sun or fixed-layout changes with `Crowd Punch > Art Direct
 Bake Chapter One Shadows`. The village dressing command invalidates its old baked-only
 policy and restores realtime fallback until the explicit bake completes. Other chapters
 keep their existing lighting policy. No ECS runtime system or enemy query was added.
+
+### Character ground shadows (VISION-006)
+
+`CharacterGroundShadowSystem` submits a shared unlit disc in instanced batches from
+`GamePresentationGroup`. It uses the live player bridge position and the enemy render-root
+positions. Each disc is centred under and oriented to the character. Navigation radius
+sizes the crowd shadows, while dedicated boss bodies use their collider footprint. The
+player bridge exposes the live foot and toe positions. `EnemyAnimationBaker` records foot
+anchors for legged rigs, and the shadow system reads their sampled skin matrices to extend
+the footprint through steps and turns. The system places discs on `ArenaGroundPlane`, fades
+elevated bodies, and omits off-camera, disabled and pooling enemies. Chapter ambient
+colour subtly tints the multiply blend. The material draws before
+transparent combat cues. The shadows work with the baked-only lighting policy and require
+no additional GameObjects, physics queries or character shadow-map passes.
 
 ## Dragon Fire authored presentation (2026-10-25)
 

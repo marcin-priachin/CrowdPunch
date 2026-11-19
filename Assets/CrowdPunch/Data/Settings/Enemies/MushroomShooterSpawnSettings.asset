@@ -72,10 +72,22 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   mushroomShooter:
-    TravelRange: 45
+    TravelRange: 999
     Height: 0.95
     BeamDuration: 0.25
     EnemyDamage: 5
+  sporella:
+    OwnershipInteractions: 0
+    ImpactDirection: 0
+    ShotsPerPass: 3
+    SweepPasses: 2
+    ShotInterval: 0.18
+    Windup: 0.65
+    ForwardSpeed: 14
+    SweepHalfWidth: 1.5
+    Range: 26
+    Height: 0.94
+    EnemyDamage: 10
   explosionRadius: 5
   explosionDamage: 20
   normalEnemyKnockbackForce: 16

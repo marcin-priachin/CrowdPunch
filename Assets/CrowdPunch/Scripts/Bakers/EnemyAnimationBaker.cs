@@ -83,6 +83,19 @@ namespace CrowdPunch.Bakers
                         + owner.transform.up * authoring.LaunchPivotHeight) : float3.zero
             });
             AddComponent<EnemyAnimationPlayback>(entity);
+            BakeShadowFeet(entity, animator, renderer);
+            if (authoring.Profile == EnemyAnimationProfile.AlienSpike)
+            {
+                // SPIKE-001: Projectile Attack moves the visual hub independently of the collider.
+                int hub = System.Array.FindIndex(renderer.bones, bone => bone.name == "RigHub");
+                if (hub >= 0)
+                    AddComponent(entity, new EnemyShadowAnchor
+                    {
+                        Root = GetEntity(animator, TransformUsageFlags.Dynamic),
+                        Bone = hub,
+                        BindPosition = (Vector3)renderer.sharedMesh.bindposes[hub].inverse.GetColumn(3)
+                    });
+            }
             if (owner != null && authoring.Profile == EnemyAnimationProfile.Wizard)
             {
                 // Bud's outlet sits just beyond the terminal cannon joint along its local -X axis.
@@ -221,6 +234,48 @@ namespace CrowdPunch.Bakers
                 AddComponent(entity, new BossAnimationAnchor { Floor = animator.transform.InverseTransformPoint(root.position - root.up * halfHeight) });
             }
             if (rolling != null) AddComponent<RollingAnimationState>(entity);
+        }
+
+        private void BakeShadowFeet(Entity entity, Animator animator, SkinnedMeshRenderer renderer)
+        {
+            var bones = renderer.bones;
+            if (bones.Length < 2) return;
+            var bindPoses = renderer.sharedMesh.bindposes;
+            var feet = new FixedList128Bytes<ShadowFoot>();
+            if (animator.isHuman)
+            {
+                AddFoot(animator.GetBoneTransform(HumanBodyBones.LeftFoot));
+                AddFoot(animator.GetBoneTransform(HumanBodyBones.LeftToes));
+                AddFoot(animator.GetBoneTransform(HumanBodyBones.RightFoot));
+                AddFoot(animator.GetBoneTransform(HumanBodyBones.RightToes));
+            }
+            else
+            {
+                // The generic creature rigs name their support joints directly, including Sporella's middle leg.
+                foreach (Transform bone in bones)
+                {
+                    string name = bone.name;
+                    if (name.EndsWith("LegAnkle", System.StringComparison.Ordinal)
+                        || name.EndsWith("LegToes1", System.StringComparison.Ordinal)
+                        || name.EndsWith("LegFoot1", System.StringComparison.Ordinal))
+                        AddFoot(bone);
+                }
+            }
+
+            if (feet.Length != 0)
+                AddComponent(entity, new EnemyShadowFeet
+                {
+                    Root = GetEntity(animator, TransformUsageFlags.Dynamic),
+                    Feet = feet
+                });
+
+            void AddFoot(Transform foot)
+            {
+                if (foot == null || feet.Length == feet.Capacity) return;
+                int index = System.Array.IndexOf(bones, foot);
+                if (index < 0) return;
+                feet.Add(new ShadowFoot { Bone = index, BindPosition = (Vector3)bindPoses[index].inverse.GetColumn(3) });
+            }
         }
 
         private BlobAssetReference<EnemyJogSamples> ReadJogSamples(EnemyAnimationAuthoring authoring,
