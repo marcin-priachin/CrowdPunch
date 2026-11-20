@@ -45,9 +45,27 @@ half4 ArtLabFragment(InputData inputData, SurfaceData surface)
             * light.distanceAttenuation * light.shadowAttenuation * .5;
     LIGHT_LOOP_END
     #if defined(CROWD_PUNCH_ENEMY_BANDS)
-        result *= lerp(half3(.64,.72,.87), half3(1.05,1.035,1), smoothstep(.25,.95,band));
+        half litBand = smoothstep(.25,.95,band);
+        result *= lerp(half3(.86,.90,.97), half3(1.05,1.035,1), litBand);
+        // Bring back face and costume detail in shadow using the enemy's own paint.
+        result += sqrt(saturate(surface.albedo)) * (.17h * (1-litBand));
     #endif
     result += surface.emission;
+    #if defined(_PLAYER_RIM) || (defined(CROWD_PUNCH_ENEMY_BANDS) && !defined(_PLAIN_ENEMY))
+        // Keep the rim on the mesh contour so normal map detail cannot create bright flecks.
+        half3 rimNormal = n;
+        #if defined(_NORMALMAP)
+            rimNormal = normalize(inputData.tangentToWorld[2]);
+        #endif
+        half grazing = 1 - saturate(dot(rimNormal,v));
+        half upperEdge = grazing*grazing*grazing * smoothstep(-.38,.62,rimNormal.y+.32*rimNormal.x);
+        half3 paint = lerp(.28,1,sqrt(saturate(surface.albedo)));
+        #if defined(_PLAYER_RIM)
+            result += upperEdge * paint * half3(.38,.27,.16);
+        #else
+            result += upperEdge * paint * half3(.13,.15,.18);
+        #endif
+    #endif
     if (style < 1.5)
     {
         #if defined(ART_LAB_CHARACTER)

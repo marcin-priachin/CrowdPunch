@@ -172,6 +172,7 @@ namespace CrowdPunch.Editor
                     AssetDatabase.CreateAsset(material, path);
                 }
                 material.shader = template.shader;
+                EnemyAppearanceMaterials.SetPlainEnemy(material, true);
                 Texture texture = source != null ? source.mainTexture : null;
                 Color color = source != null && source.HasProperty("_BaseColor")
                     ? source.GetColor("_BaseColor")

@@ -32,6 +32,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         _MarbleSlabStrength("Marble paving joints", Range(0,1)) = 0
         _MarbleSlabSize("Marble slab metres", Float) = 6
         [ToggleUI] _CameraCutaway("Camera-side decoration cutaway", Float) = 0
+        [HideInInspector] _ArenaDepthRole("Arena depth role", Float) = 0
         [Enum(None,0,Scenery,1,ExteriorGround,2,SilhouetteScenery,3)] _SceneryHaze("Arena exterior haze", Float) = 0
         [ToggleUI] _ObjectSpacePaint("Paint follows moving parts", Float) = 0
         [ToggleUI] _UseEntityColor("Animated entity tint", Float) = 0
@@ -58,6 +59,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float _TextureScale, _TextureStrength, _Meadow, _Variation, _ReceiveShadows, _PlasterGrain;
             float _UseBakedShadowMask;
             float _CameraCutaway;
+            float _ArenaDepthRole;
             float _SceneryHaze;
             float _ObjectSpacePaint;
             float _UseEntityColor, _MultiplyEntityColor;
@@ -70,6 +72,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         #ifdef UNITY_DOTS_INSTANCING_ENABLED
             UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
                 UNITY_DOTS_INSTANCED_PROP(float4, _BaseColor)
+                UNITY_DOTS_INSTANCED_PROP(float, _ArenaDepthRole)
             UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
         #endif
         TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
@@ -97,6 +100,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float2 uv : TEXCOORD5;
             float3 paintPosition : TEXCOORD6;
             half3 paintNormal : TEXCOORD7;
+            nointerpolation half depthRole : TEXCOORD8;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -116,6 +120,10 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             output.lightmapUV=input.lightmapUV*unity_LightmapST.xy+unity_LightmapST.zw;
             output.receiverUV=input.lightmapUV*_BakedShadowST.xy+_BakedShadowST.zw;
             output.fog = ComputeFogFactor(pos.positionCS.z);
+            output.depthRole = _CameraCutaway * 2;
+            #ifdef UNITY_DOTS_INSTANCING_ENABLED
+                output.depthRole = max(output.depthRole, UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _ArenaDepthRole));
+            #endif
             return output;
         }
         float Hash(float2 p) { return frac(sin(dot(p,float2(127.1,311.7)))*43758.5453); }
@@ -291,7 +299,17 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                 if (_CourtPaintBounds.z > 0 && _CourtPaintBounds.w > 0)
                     color *= CourtPaving(p.xz);
                 color=MixFog(color,input.fog);
-                return half4(ApplyArenaSceneryHaze(color,p,_SceneryHaze),1);
+                color=ApplyArenaSceneryHaze(color,p,_SceneryHaze);
+                if (input.depthRole > 1.5)
+                {
+                    half distanceFade = smoothstep(13,56,length(p.xz-_WorldSpaceCameraPos.xz));
+                    half luminance = dot(color,half3(.213,.715,.072));
+                    half3 distant = lerp(color,luminance.xxx,.12) * half3(.76,.82,.93);
+                    color += (distant-color) * (2*distanceFade);
+                }
+                else if (input.depthRole > .5)
+                    color *= lerp(half3(.28,.42,.60),half3(1.24,1.15,1.06),smoothstep(.18,.83,band*visibility));
+                return half4(color,1);
             }
             ENDHLSL
         }

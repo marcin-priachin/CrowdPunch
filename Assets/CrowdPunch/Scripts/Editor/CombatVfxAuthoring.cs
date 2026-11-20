@@ -36,6 +36,7 @@ namespace CrowdPunch.Editor
             streak.SetFloat("_Ribbon",1);
             library.LaunchTrail=streak;
             library.ArcaneTrail=Sprite("ArcaneStreak",Trails+"T_VFX_Trail_01.tga",true);
+            library.ArcaneTrail.SetFloat("_Glow",1.48f);
             library.BossTrail=Sprite("ArchmageStreak",Trails+"T_VFX_Trail_03.tga",true);
             library.SporeCloud=Sprite("SporeCloud",Kenney+"smoke_07.png");
             library.SporeCloud.SetFloat("_Erosion",0);
@@ -53,6 +54,7 @@ namespace CrowdPunch.Editor
             var punchFlash=Sprite("PunchFlash",flashTexture);
             punchFlash.SetFloat("_Glow",2);
             var ring=Sprite("ArcaneOrbit",Kenney+"circle_02.png");
+            ring.SetFloat("_Glow",1.48f);
             var droplet=Sprite("SnakeDroplet",Kenney+"circle_05.png");
             library.RangedFlight=CombatVfxParticles.Flight("ArcaneComet",library.Pollen,ring,false,false);
             library.RangedCharge=CombatVfxParticles.Charge(library.Pollen,ring);
@@ -71,7 +73,7 @@ namespace CrowdPunch.Editor
             settings.TrailWidthInModels=1; settings.TrailLengthInModels=2.5f;
             settings.TrailColor=new Color(.97f,.99f,1,1);
             RefineExplosion(settings.ExplosionParticles);
-            SetProjectileMaterial("Assets/CrowdPunch/Prefabs/RangedProjectile.prefab","ArcaneCore",new Color(.16f,.8f,1));
+            SetProjectileMaterial("Assets/CrowdPunch/Prefabs/RangedProjectile.prefab","ArcaneCore",new Color(.16f,.8f,1),.77f);
             SetProjectileMaterial("Assets/CrowdPunch/Data/ChickenBoss/ChickenProjectile.prefab","ArchmageCore",new Color(.7f,.22f,1));
             var savedSettings=Load<CombatFeedbackSettings>("Assets/CrowdPunch/Resources/CombatFeedbackSettings.asset");
             var savedLibrary=Load<CombatVfxLibrary>("Assets/CrowdPunch/Resources/CombatVfxLibrary.asset");
@@ -120,13 +122,13 @@ namespace CrowdPunch.Editor
             Nova.Editor.Core.Scripts.ParticlesUberUnlitMaterialPostProcessor.SetupMaterialBlendMode(material);
             return material;
         }
-        private static void SetProjectileMaterial(string path,string name,Color tint)
+        private static void SetProjectileMaterial(string path,string name,Color tint,float emission=.35f)
         {
             string materialPath=Materials+name+".mat";
             var material=AssetDatabase.LoadAssetAtPath<Material>(materialPath);
             if(material==null) { material=new Material(Shader.Find("CrowdPunch/Cel/Environment"));AssetDatabase.CreateAsset(material,materialPath); }
             material.enableInstancing=true;material.SetColor("_BaseColor",tint);
-            material.SetColor("_EmissionColor",tint*.35f);material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor",tint*emission);material.EnableKeyword("_EMISSION");
             var root=PrefabUtility.LoadPrefabContents(path);
             try { root.GetComponent<MeshRenderer>().sharedMaterial=material; PrefabUtility.SaveAsPrefabAsset(root,path); }
             finally { PrefabUtility.UnloadPrefabContents(root); }

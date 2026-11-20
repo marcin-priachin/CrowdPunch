@@ -142,6 +142,8 @@ namespace CrowdPunch.Editor
             material.SetFloat("_Metallic", 0f);
             material.SetFloat("_SpecularHighlights", 0f);
             material.SetFloat("_EnvironmentReflections", 0f);
+            material.SetFloat("_PlayerRim", 1f);
+            material.EnableKeyword("_PLAYER_RIM");
             material.EnableKeyword("_NORMALMAP");
             material.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
             material.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");

@@ -40,7 +40,7 @@ Shader "CrowdPunch/MushroomProjectile"
             {
                 half depth = lerp(0.55h, 1.0h, smoothstep(0.0h, 0.55h, input.gradient));
                 half highlight = smoothstep(0.58h, 0.96h, input.gradient);
-                return half4(lerp(_BaseColor.rgb * depth, _HighlightColor.rgb, highlight), 1.0h);
+                return half4(lerp(_BaseColor.rgb * depth, _HighlightColor.rgb * (1 + .84h * highlight), highlight), 1.0h);
             }
             ENDHLSL
         }

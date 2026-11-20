@@ -85,12 +85,17 @@ Moving characters, rotating cover and destructible objects must not leave baked 
 shadows behind when their state changes.
 
 Across the campaign, retain each chapter's pigments and give the playable floor broad
-staggered paving, a warmer centre and a cooler perimeter. Use a cooler shaded band on
-enemies and readable instanced contact shadows beneath the player, enemies and bosses.
+staggered paving, a warmer centre and a cooler perimeter. Keep enemy faces and costume
+details readable in the cooler shaded bands. Use readable instanced contact shadows
+beneath the player, enemies and bosses.
 Ground shadows follow the feet and fade as a body rises. Give direct punches a brief
 white-gold flash, strong chain contacts a smaller spark, and explosions a bright core
 followed by a glowing ring that marks the actual blast radius. The Bomb's painted stripe
 and Alien spike tips retain their glow. Keep ownership colours and ground warnings legible.
+Use the stronger Level 78 treatment across all chapters. Give the player a warm upper rim,
+special enemies a soft cool rim tinted by their paint, and ranged shots a clearer
+core and streak. Deepen the contact shadows and rock undersides, and cool distant walls
+and scenery as they recede from the camera.
 
 ## Core Loop And Run Structure
 

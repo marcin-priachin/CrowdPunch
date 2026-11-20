@@ -187,7 +187,7 @@ namespace CrowdPunch.Systems.Presentation
                 if (Vector3.Dot(plane.normal, center) + plane.distance < -maxRadius) return;
 
             strength *= 1f - .78f * math.saturate(lift / math.max(2f, radii.x * 4f));
-            strength = math.saturate(strength * 1.12f);
+            strength = math.saturate(strength * (1.12f * 1.19f));
             transforms[instanceCount] = new Matrix4x4(
                 new Vector4(forward.y * radii.x, 0f, -forward.x * radii.x, 0f),
                 new Vector4(0f, 1f, 0f, 0f),

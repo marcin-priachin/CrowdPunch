@@ -4,6 +4,7 @@ Shader "CrowdPunch/Cel/Environment"
     {
         // Specular vs Metallic workflow
         _WorkflowMode("WorkflowMode", Float) = 1.0
+        [Toggle(_PLAYER_RIM)] _PlayerRim("Player rim", Float) = 0
 
         [MainTexture] _BaseMap("Albedo", 2D) = "white" {}
         [MainColor] _BaseColor("Color", Color) = (1,1,1,1)
@@ -115,6 +116,7 @@ Shader "CrowdPunch/Cel/Environment"
             // Shader Stages
             #pragma vertex LitPassVertex
             #pragma fragment LitPassFragment
+            #pragma shader_feature_local_fragment _PLAYER_RIM
 
             // -------------------------------------
             // Material Keywords

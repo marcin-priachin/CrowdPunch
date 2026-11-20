@@ -15,6 +15,7 @@ _DirtAmount("DirtAmount", Range(0, 1)) = 0
 _EyelinerAmount("EyelinerAmount", Range(0, 1)) = 0
 [MainColor]_BaseColor("Enemy Body Tint", Color) = (1, 1, 1, 1)
 _BombStripeEmission("Bomb stripe emission", Range(0,1)) = 0
+[Toggle(_PLAIN_ENEMY)] _PlainEnemy("Omit special enemy accents", Float) = 0
 _ExploderPulse("Exploder Pulse", Range(0, 3)) = 0
 [HideInInspector]_ComputeMeshIndex("Compute Mesh Buffer Index Offset", Float) = 0
 [HideInInspector]_QueueOffset("_QueueOffset", Float) = 0
@@ -65,6 +66,7 @@ HLSLPROGRAM
 #pragma instancing_options renderinglayer
 #pragma vertex vert
 #pragma fragment frag
+#pragma shader_feature_local_fragment _PLAIN_ENEMY
 
 // Keywords
 #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION

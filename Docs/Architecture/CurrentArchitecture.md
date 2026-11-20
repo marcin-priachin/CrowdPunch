@@ -4792,6 +4792,16 @@ brightens the leading portion of the existing ownership gradient (VISION-005/006
 Alien spike projectiles inherit the emitter's streamed scene tag so their render samples
 expire with the section that owns the gradient blob.
 
+Campaign depth styling (VISION-005/006) uses the existing forward draws. The arena depth
+baker assigns rock and perimeter roles to the rendered submeshes at bake time, so a shared
+stone material can serve both roles. Painted Foundry applies rock contrast to the existing
+shaded band and fades perimeter walls and cutaway scenery toward a cooler pigment over
+13–56 metres of horizontal camera distance. The player material selects a warm rim shaded
+from the mesh normal and paint colour. The normal map still supplies the cel lighting detail.
+Enemy cel shading adds a paint-coloured fill to the lower bands. Special enemy bodies use
+a softer, paint-tinted rim from the mesh normal, with baseline goblins and weapon materials
+opting out. Character shadows keep their instanced, height-faded draw.
+
 ## Dragon Fire authored presentation (2026-10-25)
 
 DRAGON-001/002/006, VISION-005/006: EnemyDragonPrefabBuilder nests Dragon Fire.prefab at its

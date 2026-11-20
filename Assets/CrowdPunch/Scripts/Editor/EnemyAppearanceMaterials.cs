@@ -9,6 +9,13 @@ namespace CrowdPunch.Editor
     {
         public const string AtlasPath = "Assets/CrowdPunch/Models/UltimateMonsters/Atlas_Monsters.png";
 
+        internal static void SetPlainEnemy(Material material, bool plain)
+        {
+            material.SetFloat("_PlainEnemy", plain ? 1 : 0);
+            if (plain) material.EnableKeyword("_PLAIN_ENEMY");
+            else material.DisableKeyword("_PLAIN_ENEMY");
+        }
+
         public static void Configure(Material material)
         {
             string path = AssetDatabase.GetAssetPath(material);
