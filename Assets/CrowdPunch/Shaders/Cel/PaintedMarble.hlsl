@@ -22,7 +22,8 @@ half3 ApplyPaintedMarble(half3 albedo, float3 position)
     albedo*=1+(broad-.5)*.045*_MarbleStrength;
     albedo=lerp(albedo,albedo*_MarbleVeinColor.rgb,saturate((ink+wash*.12*_MarbleStrength*fade)));
 
-    if(_MarbleSlabStrength>.001)
+    // Playable courts get their staggered joints in the floor pass.
+    if(_MarbleSlabStrength>.001 && _CourtPaintBounds.z<=0)
     {
         float2 uv=position.xz/max(_MarbleSlabSize,.1);
         float2 local=frac(uv);

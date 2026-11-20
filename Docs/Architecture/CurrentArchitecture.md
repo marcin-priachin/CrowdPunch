@@ -4772,6 +4772,16 @@ colour subtly tints the multiply blend. The material draws before
 transparent combat cues. The shadows work with the baked-only lighting policy and require
 no additional GameObjects, physics queries or character shadow-map passes.
 
+The campaign floor receiver stores its world XZ centre and half-size in
+`_CourtPaintBounds`. The painted surface shader uses these bounds for the perimeter
+colour and world coordinates for stable six-by-four-metre slabs. Chapter surface
+refreshes preserve the receiver's bounds and baked shadow chart. Each chapter's
+post profile uses bloom intensity 0.12. The direct punch has its own flash material,
+the Bomb material enables emission on its atlas stripe, and the Alien spike shader
+brightens the leading portion of the existing ownership gradient (VISION-005/006).
+Alien spike projectiles inherit the emitter's streamed scene tag so their render samples
+expire with the section that owns the gradient blob.
+
 ## Dragon Fire authored presentation (2026-10-25)
 
 DRAGON-001/002/006, VISION-005/006: EnemyDragonPrefabBuilder nests Dragon Fire.prefab at its

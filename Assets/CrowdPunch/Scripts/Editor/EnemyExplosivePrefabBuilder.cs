@@ -188,6 +188,8 @@ namespace CrowdPunch.Editor
                 if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
                 foreach (string property in new[] { "_SkinColorAmount", "_DarkAmount", "_DirtAmount", "_EyelinerAmount", "_ExploderPulse" })
                     if (material.HasProperty(property)) material.SetFloat(property, 0f);
+                if (material.HasProperty("_BombStripeEmission"))
+                    material.SetFloat("_BombStripeEmission", name == "Bomb" ? 1f : 0f);
                 material.enableInstancing = true;
                 EditorUtility.SetDirty(material);
                 results[index] = material;

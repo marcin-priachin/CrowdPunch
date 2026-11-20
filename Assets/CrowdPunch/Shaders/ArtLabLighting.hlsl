@@ -44,6 +44,9 @@ half4 ArtLabFragment(InputData inputData, SurfaceData surface)
         result += surface.albedo * light.color * saturate(dot(n,light.direction))
             * light.distanceAttenuation * light.shadowAttenuation * .5;
     LIGHT_LOOP_END
+    #if defined(CROWD_PUNCH_ENEMY_BANDS)
+        result *= lerp(half3(.64,.72,.87), half3(1.05,1.035,1), smoothstep(.25,.95,band));
+    #endif
     result += surface.emission;
     if (style < 1.5)
     {

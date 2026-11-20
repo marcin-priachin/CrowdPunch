@@ -126,7 +126,7 @@ namespace CrowdPunch.Editor
                     if(path==AssetDatabase.GetAssetPath(material))throw new InvalidOperationException("Receiver source points to itself: "+path);
                     var source=AssetDatabase.LoadAssetAtPath<Material>(path);
                     if(source==null)throw new InvalidOperationException("Missing receiver source: "+path);
-                    CopyReceiverSurface(material,source);
+                    ChapterOneShadowReceivers.RefreshSurface(material,source);
                 }
                 for(int stage=41;stage<=50;stage++)foreach(string path in new[]{MainPath(stage),SubPath(stage)})
                 {
@@ -142,7 +142,7 @@ namespace CrowdPunch.Editor
                         {
                             var current=materials[i];
                             if(current!=null && current.HasProperty("_UseBakedShadowMask") && current.GetFloat("_UseBakedShadowMask")>.5f)
-                                CopyReceiverSurface(current,surface);
+                                ChapterOneShadowReceivers.RefreshSurface(current,surface);
                             else if(current!=surface){materials[i]=surface;changed=true;}
                         }
                         renderer.sharedMaterials=materials;
@@ -163,17 +163,9 @@ namespace CrowdPunch.Editor
             {
                 var receiver=AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));
                 if(receiver.GetTag("CrowdPunchSourceMaterial",false,"")!=AssetDatabase.GetAssetPath(source))continue;
-                CopyReceiverSurface(receiver,source);
+                ChapterOneShadowReceivers.RefreshSurface(receiver,source);
             }
             AssetDatabase.SaveAssets();
-        }
-
-        private static void CopyReceiverSurface(Material receiver,Material source)
-        {
-            var mask=receiver.GetTexture("_BakedShadowMask");var st=receiver.GetVector("_BakedShadowST");
-            receiver.CopyPropertiesFromMaterial(source);receiver.SetTexture("_BakedShadowMask",mask);
-            receiver.SetVector("_BakedShadowST",st);receiver.SetFloat("_UseBakedShadowMask",1);
-            receiver.SetOverrideTag("CrowdPunchSourceMaterial",AssetDatabase.GetAssetPath(source));EditorUtility.SetDirty(receiver);
         }
 
         [MenuItem("Crowd Punch/Art Direction/Bake Chapter Five Shadows")]
@@ -215,7 +207,7 @@ namespace CrowdPunch.Editor
             string path=Output+"/NecropolisPaintedPost.asset"; var profile=AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);
             if(profile==null){AssetDatabase.CopyAsset("Assets/CrowdPunch/Data/Presentation/FullCelPost.asset",path);profile=AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);}
             profile.TryGet<ColorAdjustments>(out var grade);grade.postExposure.Override(-.08f);grade.contrast.Override(3);grade.saturation.Override(-5);
-            profile.TryGet<Bloom>(out var bloom);bloom.intensity.Override(.015f);
+            profile.TryGet<Bloom>(out var bloom);bloom.intensity.Override(.12f);
             if(!profile.TryGet<SplitToning>(out var split)){split=profile.Add<SplitToning>();AssetDatabase.AddObjectToAsset(split,profile);}
             split.shadows.Override(new Color(.51f,.48f,.54f));split.highlights.Override(new Color(.52f,.49f,.54f));split.balance.Override(0);
             foreach(var c in profile.components)EditorUtility.SetDirty(c);EditorUtility.SetDirty(profile);

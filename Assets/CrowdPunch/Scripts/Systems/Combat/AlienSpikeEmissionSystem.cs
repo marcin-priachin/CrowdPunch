@@ -35,6 +35,9 @@ namespace CrowdPunch.Systems.Combat
                 };
                 if (SystemAPI.HasComponent<EnemyWaveOwnership>(emitter))
                     template.Wave = SystemAPI.GetComponent<EnemyWaveOwnership>(emitter);
+                // The projectile reads a gradient blob owned by the emitter's streamed section.
+                var scene = state.EntityManager.HasComponent<SceneTag>(emitter)
+                    ? state.EntityManager.GetSharedComponent<SceneTag>(emitter) : default;
 
                 foreach (var burst in bursts)
                 {
@@ -45,7 +48,7 @@ namespace CrowdPunch.Systems.Combat
                     shot.SourceLifetime = burst.SourceLifetime;
                     shot.PunchSequence = burst.PunchSequence;
                     shot.ChainDepth = burst.ChainDepth;
-                    Emit(commands, burst.Pose, sockets, shot, floor);
+                    Emit(commands, burst.Pose, sockets, shot, floor, scene);
                     if (!sockets.IsEmpty) audio.Record(EnemyAttackAudioKind.AlienSpikeBurst, burst.Pose.Position);
                 }
                 bursts.Clear();
@@ -57,7 +60,7 @@ namespace CrowdPunch.Systems.Combat
                 }
 
                 if (volley.ValueRO.Phase != AlienSpikeVolleyPhase.Release) continue;
-                Emit(commands, pose.ValueRO, sockets, template, floor);
+                Emit(commands, pose.ValueRO, sockets, template, floor, scene);
                 if (!sockets.IsEmpty) audio.Record(EnemyAttackAudioKind.AlienSpikeVolley, pose.ValueRO.Position);
                 volley.ValueRW.Phase = AlienSpikeVolleyPhase.FollowThrough;
                 volley.ValueRW.Remaining = t.FollowThroughSeconds;
@@ -66,7 +69,7 @@ namespace CrowdPunch.Systems.Combat
         }
 
         private static void Emit(EntityCommandBuffer commands, in LocalTransform pose, DynamicBuffer<AlienSpikeSocket> sockets,
-            AlienSpikeProjectile shot, float floor)
+            AlienSpikeProjectile shot, float floor, SceneTag scene)
         {
             bool normal = shot.PlayerOwned == 0;
             foreach (var socket in sockets)
@@ -78,6 +81,7 @@ namespace CrowdPunch.Systems.Combat
                 float2 planar = math.normalizesafe(direction.xz, new float2(0, 1));
                 shot.Velocity = new float3(planar.x, 0, planar.y) * shot.Tuning.Speed;
                 var entity = commands.CreateEntity();
+                if (scene.SceneEntity != Entity.Null) commands.AddSharedComponent(entity, scene);
                 commands.AddComponent(entity, LocalTransform.FromPosition(position));
                 commands.AddComponent(entity, shot);
                 commands.AddComponent<PunchAimAssistTarget>(entity);

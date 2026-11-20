@@ -84,6 +84,13 @@ shadow maps are disabled to remove camera-distance popping and crowd shadow-rend
 Moving characters, rotating cover and destructible objects must not leave baked caster
 shadows behind when their state changes.
 
+Across the campaign, retain each chapter's pigments and give the playable floor broad
+staggered paving, a warmer centre and a cooler perimeter. Use a cooler shaded band on
+enemies and readable instanced contact shadows beneath the player, enemies and bosses.
+Ground shadows follow the feet and fade as a body rises. Reserve the brighter combat
+accents for direct punch flashes, the Bomb's painted stripe and the tips of Alien spikes.
+Keep the ownership colours and ground warnings legible through these effects.
+
 ## Core Loop And Run Structure
 
 ### LOOP-001 — Moment-To-Moment Loop

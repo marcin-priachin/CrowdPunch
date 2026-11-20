@@ -11,6 +11,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
         [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull", Float) = 2
         _Meadow("Blend meadow and paths", Float) = 0
         _Bounds("Arena centre XZ / half size XZ", Vector) = (0,0,20,20)
+        [HideInInspector] _CourtPaintBounds("Playable floor centre XZ / half size XZ", Vector) = (0,0,0,0)
         _PathColor("Path tint", Color) = (.56,.43,.25,1)
         _Variation("Large colour variation", Range(0,.5)) = .12
         _PlasterGrain("Plaster wash", Range(0,.2)) = 0
@@ -53,6 +54,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float _WashStrength, _GrainStrength, _SeamStrength, _Window, _Contrast;
             float4 _BakedShadowST;
             float4 _Bounds;
+            float4 _CourtPaintBounds;
             float _TextureScale, _TextureStrength, _Meadow, _Variation, _ReceiveShadows, _PlasterGrain;
             float _UseBakedShadowMask;
             float _CameraCutaway;
@@ -117,6 +119,19 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             return output;
         }
         float Hash(float2 p) { return frac(sin(dot(p,float2(127.1,311.7)))*43758.5453); }
+        half3 CourtPaving(float2 positionXZ)
+        {
+            float2 relative = abs(positionXZ - _CourtPaintBounds.xy) / max(_CourtPaintBounds.zw, .01);
+            half perimeter = smoothstep(.52, .94, max(relative.x, relative.y));
+            float2 slab = positionXZ / float2(6, 4);
+            // Take derivatives before staggering rows to keep the mortar stable at row boundaries.
+            float2 aa = max(fwidth(slab), .002);
+            slab.x += .5 * fmod(abs(floor(slab.y)), 2);
+            float2 edge = abs(frac(slab) - .5);
+            float2 seam = smoothstep(float2(.485, .482) - aa, .499 + aa, edge);
+            half pigment = (.95 + .08 * Hash(floor(slab))) * (1 - .10 * max(seam.x, seam.y));
+            return lerp(half3(1.12,1.05,.94), half3(.77,.85,.97), perimeter) * pigment;
+        }
         float Noise(float2 p)
         {
             float2 i=floor(p), f=frac(p); f=f*f*(3-2*f);
@@ -273,6 +288,8 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                 half3 pigment=lerp(_ShadowColor.rgb,_LightColor.rgb,lightAmount);
                 half3 color=albedo*(pigment*1.25+SampleSH(n)*.12);
                 color*=lerp(1,ao.indirectAmbientOcclusion,.28);
+                if (_CourtPaintBounds.z > 0 && _CourtPaintBounds.w > 0)
+                    color *= CourtPaving(p.xz);
                 color=MixFog(color,input.fog);
                 return half4(ApplyArenaSceneryHaze(color,p,_SceneryHaze),1);
             }

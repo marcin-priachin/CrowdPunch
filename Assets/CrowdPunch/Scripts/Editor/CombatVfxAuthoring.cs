@@ -48,7 +48,10 @@ namespace CrowdPunch.Editor
             var smoke=NovaSmoke();
             ApplyDasher();
             var spark=Sprite("ImpactSplinters",Kenney+"spark_05.png");
-            var flash=Sprite("ImpactFlash","Assets/Travis Game Assets/Hit Impact Effects/Textures/HIE_Hit_01_Flash_01.tga");
+            const string flashTexture = "Assets/Travis Game Assets/Hit Impact Effects/Textures/HIE_Hit_01_Flash_01.tga";
+            var flash=Sprite("ImpactFlash",flashTexture);
+            var punchFlash=Sprite("PunchFlash",flashTexture);
+            punchFlash.SetFloat("_Glow",2);
             var ring=Sprite("ArcaneOrbit",Kenney+"circle_02.png");
             var droplet=Sprite("SnakeDroplet",Kenney+"circle_05.png");
             library.RangedFlight=CombatVfxParticles.Flight("ArcaneComet",library.Pollen,ring,false,false);
@@ -60,7 +63,7 @@ namespace CrowdPunch.Editor
             library.SnakeSever=CombatVfxParticles.Impact("SnakeSever",ring,droplet,null,new Color(1,.72f,.18f),.5f);
             library.LaunchDust=CombatVfxParticles.Smoke("LaunchDust",smoke,new Color(.72f,.65f,.48f,.4f),5,.3f,.4f);
             library.NinjaSmoke=CombatVfxParticles.Smoke("NinjaPoof",smoke,new Color(.48f,.42f,.63f,.7f),10,.48f,.85f);
-            settings.PunchParticles=CombatVfxParticles.Impact("ArtPunch",flash,spark,smoke,new Color(1,.7f,.16f),.85f);
+            settings.PunchParticles=CombatVfxParticles.Impact("ArtPunch",punchFlash,spark,smoke,new Color(1,.7f,.16f),.85f);
             settings.EnemyParticles=CombatVfxParticles.Impact("ArtCollision",flash,spark,null,new Color(.62f,.9f,1),.48f);
             settings.PlayerDamageParticles=CombatVfxParticles.Impact("ArtPlayerDamage",flash,spark,null,new Color(1,.2f,.12f),.9f);
             settings.EnvironmentParticles=CombatVfxParticles.Environment(smoke,spark);

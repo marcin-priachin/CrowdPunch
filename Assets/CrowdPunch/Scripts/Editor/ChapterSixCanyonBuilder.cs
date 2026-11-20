@@ -76,9 +76,7 @@ namespace CrowdPunch.Editor
                 string path=receiver.GetTag("CrowdPunchSourceMaterial",false,"");
                 var source=AssetDatabase.LoadAssetAtPath<Material>(path);
                 if(source==null || source==receiver)throw new InvalidOperationException("Invalid receiver source: "+path);
-                var mask=receiver.GetTexture("_BakedShadowMask");var st=receiver.GetVector("_BakedShadowST");
-                receiver.CopyPropertiesFromMaterial(source);receiver.SetTexture("_BakedShadowMask",mask);receiver.SetVector("_BakedShadowST",st);
-                receiver.SetFloat("_UseBakedShadowMask",1);receiver.SetOverrideTag("CrowdPunchSourceMaterial",path);EditorUtility.SetDirty(receiver);
+                ChapterOneShadowReceivers.RefreshSurface(receiver, source);
             }
             AssetDatabase.SaveAssets();
         }
@@ -101,7 +99,7 @@ namespace CrowdPunch.Editor
             string path=Output+"/CanyonPaintedPost.asset";var profile=AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);
             if(profile==null){AssetDatabase.CopyAsset("Assets/CrowdPunch/Data/Presentation/FullCelPost.asset",path);profile=AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);}
             profile.TryGet<ColorAdjustments>(out var grade);grade.postExposure.Override(.08f);grade.contrast.Override(4);grade.saturation.Override(-4);
-            profile.TryGet<Bloom>(out var bloom);bloom.intensity.Override(.025f);
+            profile.TryGet<Bloom>(out var bloom);bloom.intensity.Override(.12f);
             foreach(var c in profile.components)EditorUtility.SetDirty(c);EditorUtility.SetDirty(profile);
             var volume=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<Volume>()).Single(v=>v.priority==150);
             volume.sharedProfile=profile;EditorUtility.SetDirty(volume);

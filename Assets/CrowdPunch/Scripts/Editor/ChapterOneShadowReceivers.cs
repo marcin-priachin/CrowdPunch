@@ -21,6 +21,29 @@ namespace CrowdPunch.Editor
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
         }
 
+        internal static void ApplyCourtBounds(MeshRenderer renderer, Material surface)
+        {
+            if (surface == null || !surface.HasProperty("_CourtPaintBounds") ||
+                (renderer.name != "Continuous Convex Floor" && renderer.name != "Continuous Round Floor")) return;
+            Bounds bounds = renderer.bounds;
+            surface.SetVector("_CourtPaintBounds", new Vector4(bounds.center.x, bounds.center.z, bounds.extents.x, bounds.extents.z));
+            EditorUtility.SetDirty(surface);
+        }
+
+        internal static void RefreshSurface(Material receiver, Material source)
+        {
+            var mask = receiver.GetTexture("_BakedShadowMask");
+            var chart = receiver.GetVector("_BakedShadowST");
+            var court = receiver.GetVector("_CourtPaintBounds");
+            receiver.CopyPropertiesFromMaterial(source);
+            receiver.SetTexture("_BakedShadowMask", mask);
+            receiver.SetVector("_BakedShadowST", chart);
+            receiver.SetFloat("_UseBakedShadowMask", 1);
+            receiver.SetVector("_CourtPaintBounds", court);
+            receiver.SetOverrideTag("CrowdPunchSourceMaterial", AssetDatabase.GetAssetPath(source));
+            EditorUtility.SetDirty(receiver);
+        }
+
         internal static void Bind(Scene scene, string outputFolder=null)
         {
             string folder=outputFolder ?? ChapterOneVillageAssets.Output+"/BakedShadows/Receivers";
@@ -57,6 +80,7 @@ namespace CrowdPunch.Editor
                     material.SetTexture("_BakedShadowMask",mask);
                     material.SetVector("_BakedShadowST",r.lightmapScaleOffset);
                     material.SetFloat("_UseBakedShadowMask",1);
+                    if (i == 0) ApplyCourtBounds(r, material);
                     EditorUtility.SetDirty(material); materials[i]=material;
                     AssetDatabase.SaveAssetIfDirty(material);
                 }

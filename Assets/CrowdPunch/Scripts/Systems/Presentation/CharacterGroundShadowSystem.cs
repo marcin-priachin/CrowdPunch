@@ -71,8 +71,8 @@ namespace CrowdPunch.Systems.Presentation
 
             Color ambient = RenderSettings.ambientEquatorColor;
             float brightest = Mathf.Max(.001f, Mathf.Max(ambient.r, Mathf.Max(ambient.g, ambient.b)));
-            properties.SetVector(TintId, new Vector4(.25f + .14f * ambient.r / brightest,
-                .25f + .14f * ambient.g / brightest, .25f + .14f * ambient.b / brightest, 1f));
+            properties.SetVector(TintId, new Vector4(.70f * (.25f + .14f * ambient.r / brightest),
+                .80f * (.25f + .14f * ambient.g / brightest), .25f + .14f * ambient.b / brightest, 1f));
 
             float floor = SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight;
             CollectEnemyFootprints();
@@ -181,11 +181,13 @@ namespace CrowdPunch.Systems.Presentation
         private void AddShadow(float3 position, float2 forward, float2 radii, float floor, float strength, float lift)
         {
             Vector3 center = new(position.x, floor + FloorOffset, position.z);
+            radii *= 1.10f;
             float maxRadius = math.cmax(radii);
             foreach (Plane plane in frustum)
                 if (Vector3.Dot(plane.normal, center) + plane.distance < -maxRadius) return;
 
             strength *= 1f - .78f * math.saturate(lift / math.max(2f, radii.x * 4f));
+            strength = math.saturate(strength * 1.12f);
             transforms[instanceCount] = new Matrix4x4(
                 new Vector4(forward.y * radii.x, 0f, -forward.x * radii.x, 0f),
                 new Vector4(0f, 1f, 0f, 0f),

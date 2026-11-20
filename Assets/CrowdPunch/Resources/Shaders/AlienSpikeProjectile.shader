@@ -51,7 +51,8 @@ Shader "CrowdPunch/Alien Spike Projectile"
                 // Preserve the gradient's value while letting the player accent supply the hue.
                 half value = max(tint.r, max(tint.g, tint.b));
                 tint = lerp(tint, value.xxx, _PlayerOwned);
-                return half4(tint * _BaseColor.rgb, 1);
+                half tip = 1 - smoothstep(.08, .42, input.gradientPosition);
+                return half4(tint * _BaseColor.rgb * (1 + 2.5 * tip), 1);
             }
             ENDHLSL
         }

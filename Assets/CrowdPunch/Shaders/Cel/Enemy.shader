@@ -14,6 +14,7 @@ _DirtColor("DirtColor", Color) = (0, 0, 0, 0)
 _DirtAmount("DirtAmount", Range(0, 1)) = 0
 _EyelinerAmount("EyelinerAmount", Range(0, 1)) = 0
 [MainColor]_BaseColor("Enemy Body Tint", Color) = (1, 1, 1, 1)
+_BombStripeEmission("Bomb stripe emission", Range(0,1)) = 0
 _ExploderPulse("Exploder Pulse", Range(0, 3)) = 0
 [HideInInspector]_ComputeMeshIndex("Compute Mesh Buffer Index Offset", Float) = 0
 [HideInInspector]_QueueOffset("_QueueOffset", Float) = 0
@@ -340,6 +341,7 @@ float _EyelinerAmount;
 float _SkinColorAmount;
 float4 _BaseColor;
 float _ExploderPulse;
+float _BombStripeEmission;
 UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 
@@ -608,6 +610,8 @@ Unity_Multiply_float4_float4(_BodyReadability_84a204bce97045fc9c6824c3328d4e49_O
 surface.BaseColor = (_BodyReadability_84a204bce97045fc9c6824c3328d4e49_Out_2_Vector4.xyz);
 surface.NormalTS = IN.TangentSpaceNormal;
 surface.Emission = (_PaletteShadowFill_b77d58bc87fe4a2e98ca8c704eb8dafc_Out_2_Vector4.xyz);
+// The last quarter of the Bomb atlas contains its yellow/orange stripe.
+surface.Emission += half3(3,1.26,.14) * _BombStripeEmission * step(.75, frac(IN.uv0.x)) * smoothstep(.28,.65,surface.BaseColor.g);
 surface.Metallic = float(0);
 surface.Smoothness = float(0.18);
 surface.Occlusion = float(1);
@@ -682,6 +686,7 @@ SurfaceDescriptionInputs BuildSurfaceDescriptionInputs(Varyings input)
 // Main
 
 #include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl"
+#define CROWD_PUNCH_ENEMY_BANDS
 #include "Assets/CrowdPunch/Shaders/CelGraphForward.hlsl"
 
 // --------------------------------------------------
@@ -994,6 +999,7 @@ float _EyelinerAmount;
 float _SkinColorAmount;
 float4 _BaseColor;
 float _ExploderPulse;
+float _BombStripeEmission;
 UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 
@@ -1262,6 +1268,8 @@ Unity_Multiply_float4_float4(_BodyReadability_84a204bce97045fc9c6824c3328d4e49_O
 surface.BaseColor = (_BodyReadability_84a204bce97045fc9c6824c3328d4e49_Out_2_Vector4.xyz);
 surface.NormalTS = IN.TangentSpaceNormal;
 surface.Emission = (_PaletteShadowFill_b77d58bc87fe4a2e98ca8c704eb8dafc_Out_2_Vector4.xyz);
+// The last quarter of the Bomb atlas contains its yellow/orange stripe.
+surface.Emission += half3(3,1.26,.14) * _BombStripeEmission * step(.75, frac(IN.uv0.x)) * smoothstep(.28,.65,surface.BaseColor.g);
 surface.Metallic = float(0);
 surface.Smoothness = float(0.18);
 surface.Occlusion = float(1);
@@ -1533,6 +1541,7 @@ float _EyelinerAmount;
 float _SkinColorAmount;
 float4 _BaseColor;
 float _ExploderPulse;
+float _BombStripeEmission;
 UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 
@@ -1924,6 +1933,7 @@ float _EyelinerAmount;
 float _SkinColorAmount;
 float4 _BaseColor;
 float _ExploderPulse;
+float _BombStripeEmission;
 UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 
@@ -2312,6 +2322,7 @@ float _EyelinerAmount;
 float _SkinColorAmount;
 float4 _BaseColor;
 float _ExploderPulse;
+float _BombStripeEmission;
 UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 
@@ -2717,6 +2728,7 @@ float _EyelinerAmount;
 float _SkinColorAmount;
 float4 _BaseColor;
 float _ExploderPulse;
+float _BombStripeEmission;
 UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 
@@ -3133,6 +3145,7 @@ float _EyelinerAmount;
 float _SkinColorAmount;
 float4 _BaseColor;
 float _ExploderPulse;
+float _BombStripeEmission;
 UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 
@@ -3396,6 +3409,8 @@ float4 _PaletteShadowFill_b77d58bc87fe4a2e98ca8c704eb8dafc_Out_2_Vector4;
 Unity_Multiply_float4_float4(_BodyReadability_84a204bce97045fc9c6824c3328d4e49_Out_2_Vector4, (_Pulseandshadowfill_6d61d073f3f3403a9c853596880987e2_Out_2_Float.xxxx), _PaletteShadowFill_b77d58bc87fe4a2e98ca8c704eb8dafc_Out_2_Vector4);
 surface.BaseColor = (_BodyReadability_84a204bce97045fc9c6824c3328d4e49_Out_2_Vector4.xyz);
 surface.Emission = (_PaletteShadowFill_b77d58bc87fe4a2e98ca8c704eb8dafc_Out_2_Vector4.xyz);
+// The last quarter of the Bomb atlas contains its yellow/orange stripe.
+surface.Emission += half3(3,1.26,.14) * _BombStripeEmission * step(.75, frac(IN.uv0.x)) * smoothstep(.28,.65,surface.BaseColor.g);
 return surface;
 }
 
@@ -3655,6 +3670,7 @@ float _EyelinerAmount;
 float _SkinColorAmount;
 float4 _BaseColor;
 float _ExploderPulse;
+float _BombStripeEmission;
 UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 
@@ -4053,6 +4069,7 @@ float _EyelinerAmount;
 float _SkinColorAmount;
 float4 _BaseColor;
 float _ExploderPulse;
+float _BombStripeEmission;
 UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 
@@ -4548,6 +4565,7 @@ float _EyelinerAmount;
 float _SkinColorAmount;
 float4 _BaseColor;
 float _ExploderPulse;
+float _BombStripeEmission;
 UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 

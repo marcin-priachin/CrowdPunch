@@ -93,9 +93,7 @@ namespace CrowdPunch.Editor
                 string path = receiver.GetTag("CrowdPunchSourceMaterial",false,"");
                 var source = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if(source == null || source == receiver) throw new InvalidOperationException("Invalid receiver source: " + path);
-                var mask = receiver.GetTexture("_BakedShadowMask"); var st = receiver.GetVector("_BakedShadowST");
-                receiver.CopyPropertiesFromMaterial(source); receiver.SetTexture("_BakedShadowMask",mask); receiver.SetVector("_BakedShadowST",st);
-                receiver.SetFloat("_UseBakedShadowMask",1); receiver.SetOverrideTag("CrowdPunchSourceMaterial",path); EditorUtility.SetDirty(receiver);
+                ChapterOneShadowReceivers.RefreshSurface(receiver, source);
             }
             AssetDatabase.SaveAssets();
         }
@@ -115,7 +113,7 @@ namespace CrowdPunch.Editor
             AssetDatabase.CopyAsset("Assets/CrowdPunch/Data/Presentation/FullCelPost.asset",path);
             var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);
             profile.TryGet<ColorAdjustments>(out var grade); grade.postExposure.Override(.18f); grade.contrast.Override(3); grade.saturation.Override(-5);
-            profile.TryGet<Bloom>(out var bloom); bloom.intensity.Override(.015f);
+            profile.TryGet<Bloom>(out var bloom); bloom.intensity.Override(.12f);
             if(!profile.TryGet<SplitToning>(out var split)) split = profile.Add<SplitToning>();
             split.shadows.Override(new Color(.46f,.49f,.55f)); split.highlights.Override(new Color(.54f,.52f,.48f)); split.balance.Override(0);
             foreach(var c in profile.components) EditorUtility.SetDirty(c); EditorUtility.SetDirty(profile);

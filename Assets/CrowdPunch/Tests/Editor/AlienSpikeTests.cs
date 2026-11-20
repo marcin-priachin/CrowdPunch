@@ -204,6 +204,8 @@ namespace CrowdPunch.Tests
             var spike = em.CreateEntity(typeof(AlienSpikeTuning), typeof(AlienSpikeVolley),
                 typeof(EnemyLaunchState), typeof(LocalTransform));
             em.SetComponentData(spike, LocalTransform.FromPosition(new float3(10, 1, 10)));
+            var streamedSection = em.CreateEntity();
+            em.AddSharedComponent(spike, new SceneTag { SceneEntity = streamedSection });
             em.SetComponentData(spike, new EnemyLaunchState { Phase = EnemyLaunchPhase.Defeated });
             em.SetComponentData(spike, new AlienSpikeTuning
             {
@@ -224,6 +226,8 @@ namespace CrowdPunch.Tests
             emission.Update(world.Unmanaged);
             using var projectiles = em.CreateEntityQuery(typeof(AlienSpikeProjectile));
             var shot = projectiles.GetSingleton<AlienSpikeProjectile>();
+            Assert.That(em.GetSharedComponent<SceneTag>(projectiles.GetSingletonEntity()).SceneEntity,
+                Is.EqualTo(streamedSection), "An in-flight spike must unload with its baked gradient.");
             Assert.That(shot.PunchSequence, Is.EqualTo(56));
             Assert.That(shot.LaunchSequence, Is.EqualTo(8));
             Assert.That(shot.PlayerOwned, Is.EqualTo(1));

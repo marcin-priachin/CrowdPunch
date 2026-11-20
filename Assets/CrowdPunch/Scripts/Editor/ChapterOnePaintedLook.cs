@@ -70,6 +70,7 @@ namespace CrowdPunch.Editor
                     bool cutaway = !sub && !ground;
                     return MaterialFor(recipe, cutaway, source);
                 }).ToArray();
+                if (sub) ChapterOneShadowReceivers.ApplyCourtBounds(renderer, renderer.sharedMaterial);
                 EditorUtility.SetDirty(renderer);
             }
             if (!sub)
@@ -164,7 +165,7 @@ namespace CrowdPunch.Editor
             grade.contrast.Override(3);
             grade.saturation.Override(-5);
             profile.TryGet<Bloom>(out var bloom);
-            bloom.intensity.Override(.015f);
+            bloom.intensity.Override(.12f);
             if (!profile.TryGet<SplitToning>(out var split))
             {
                 split = profile.Add<SplitToning>();

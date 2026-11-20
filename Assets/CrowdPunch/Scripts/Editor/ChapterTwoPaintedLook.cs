@@ -78,6 +78,7 @@ namespace CrowdPunch.Editor
                     bool cutaway = !sub && kind != "Paving" && kind != "Earth";
                     return kind == null ? source : MaterialFor(source, kind, distant, variant, cutaway);
                 }).ToArray();
+                if (sub) ChapterOneShadowReceivers.ApplyCourtBounds(renderer, renderer.sharedMaterial);
                 EditorUtility.SetDirty(renderer);
             }
             if (sub) return;
@@ -217,7 +218,7 @@ namespace CrowdPunch.Editor
             grade.contrast.Override(3);
             grade.saturation.Override(-5);
             profile.TryGet<Bloom>(out var bloom);
-            bloom.intensity.Override(.015f);
+            bloom.intensity.Override(.12f);
             if (!profile.TryGet<SplitToning>(out var split))
             {
                 split = profile.Add<SplitToning>();
