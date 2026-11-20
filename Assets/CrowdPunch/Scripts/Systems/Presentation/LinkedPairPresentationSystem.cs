@@ -113,6 +113,9 @@ namespace CrowdPunch.Systems.Presentation
 
                     float pulse = .5f + .5f * math.sin(distance * 1.15f - travel * 2 + offset);
                     Color core = Color.Lerp(baseColor, highlight, (main ? .62f : .28f) + .36f * pulse);
+                    float opacity = core.a;
+                    core *= appearance.StreamEmission;
+                    core.a = opacity;
                     float3 halfWidth = across * (width * math.lerp(.55f, 1, taper));
                     AddVertex(center - halfWidth * appearance.GlowWidth, glowEdge);
                     AddVertex(center - halfWidth * glowShoulder, glow);

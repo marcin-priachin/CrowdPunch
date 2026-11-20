@@ -8,6 +8,7 @@ namespace CrowdPunch.Components
         public int StreamCount;
         public float StreamWidth, StreamSpread, StreamWavelength, GlowWidth;
         public float GroundFlowSpeed, FlightFlowSpeed;
+        public float StreamEmission;
         public float4 GroundCore, GroundHighlight, GroundGlow;
         public float4 FlightCore, FlightHighlight, FlightGlow;
         public float4 SparkColor;

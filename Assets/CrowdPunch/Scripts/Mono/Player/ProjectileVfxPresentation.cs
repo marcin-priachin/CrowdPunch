@@ -37,6 +37,7 @@ namespace CrowdPunch.Mono.Player
         private MaterialPropertyBlock tint;
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
         private static readonly int HighlightColor = Shader.PropertyToID("_HighlightColor");
+        private static readonly int Glow = Shader.PropertyToID("_Glow");
         private uint restart;
         internal int ActiveFlightCount => assigned.Count;
         internal int FlightCapacity => slots?.Length ?? 0;
@@ -66,6 +67,8 @@ namespace CrowdPunch.Mono.Player
             mushroomLanes = new MushroomLanePresentation(root);
             mushroomCore = new Material(Resources.Load<Shader>("Shaders/MushroomProjectile"));
             tint = new MaterialPropertyBlock();
+            var snakeEmission = new MaterialPropertyBlock();
+            snakeEmission.SetFloat(Glow, 2.4f);
             int index = 0;
             for (int kind = 0; kind < counts.Length; kind++)
             for (int i = 0; i < counts[kind]; i++)
@@ -75,6 +78,8 @@ namespace CrowdPunch.Mono.Player
                 {
                     slot.Flight = Instantiate(prefabs[kind], root);
                     slot.Flight.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    if (slot.Kind == ProjectileVisualKind.Snake)
+                        slot.Flight.GetComponent<ParticleSystemRenderer>().SetPropertyBlock(snakeEmission);
                 }
                 if (kind < 2)
                     CreateTrail(slot, kind == 0 ? "Arcane comet streak" : "Archmage orb streak",

@@ -6,12 +6,24 @@ using NUnit.Framework;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEditor;
 using UnityEngine;
 
 namespace CrowdPunch.Tests
 {
     public sealed class CombatVfxTests
     {
+        [TestCase("Assets/CrowdPunch/Prefabs/RangedProjectile.prefab")]
+        [TestCase("Assets/CrowdPunch/Data/ChickenBoss/ChickenProjectile.prefab")]
+        public void Vision005ProjectileMaterialsRetainHdrEmissionOnImport(string path)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            var core = prefab.GetComponent<MeshRenderer>().sharedMaterial;
+            Assert.That(core.IsKeywordEnabled("_PROJECTILE_EMISSION"), Is.True);
+            Assert.That(core.GetColor("_EmissionColor").maxColorComponent, Is.GreaterThan(1f));
+            Assert.That(core.globalIlluminationFlags, Is.EqualTo(MaterialGlobalIlluminationFlags.None));
+        }
+
         [Test]
         public void Enemy007DasherBridgeUsesSameRollForBothDashesAndAddsOwnership()
         {

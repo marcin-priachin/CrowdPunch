@@ -39,7 +39,8 @@ namespace CrowdPunch.Mono.Player
             Vector3 vertical = Vector3.up * beam.Radius;
             Color edge = ownership;
             edge.a = .65f;
-            Color core = Color.Lerp(ownership, Color.white, .8f);
+            Color core = Color.Lerp(ownership, Color.white, .65f) * 2f;
+            core.a = 1f;
             Strip(start, end, horizontal, edge);
             Strip(start, end, vertical, edge);
             Strip(start, end, horizontal * .23f, core);

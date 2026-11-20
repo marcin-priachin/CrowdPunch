@@ -32,6 +32,7 @@ namespace CrowdPunch.Configuration
         [Tooltip("Glow width as a multiple of the stream core width."), Min(1)] public float glowWidth = 4;
         [Tooltip("Ground flow in cycles per second."), Min(0)] public float groundFlowSpeed = .4f;
         [Tooltip("Airborne flow in cycles per second."), Min(0)] public float flightFlowSpeed = .73f;
+        [Tooltip("HDR brightness multiplier for the stream cores. Use 1 for the authored color."), Min(1)] public float streamEmission = 2.65f;
 
         [Header("Ground Palette")]
         public Color groundCore = new(1, .79f, .43f);
@@ -68,6 +69,7 @@ namespace CrowdPunch.Configuration
             GlowWidth = Mathf.Max(1, glowWidth),
             GroundFlowSpeed = Mathf.Max(0, groundFlowSpeed),
             FlightFlowSpeed = Mathf.Max(0, flightFlowSpeed),
+            StreamEmission = Mathf.Max(1, streamEmission),
             GroundCore = Rgba(groundCore), GroundHighlight = Rgba(groundHighlight), GroundGlow = Rgba(groundGlow),
             FlightCore = Rgba(flightCore), FlightHighlight = Rgba(flightHighlight), FlightGlow = Rgba(flightGlow),
             SparkColor = Rgba(sparkColor),

@@ -4793,6 +4793,14 @@ brightens the leading portion of the existing ownership gradient (VISION-005/006
 Alien spike projectiles inherit the emitter's streamed scene tag so their render samples
 expire with the section that owns the gradient blob.
 
+Projectile emission uses the existing cores, tips and trails (VISION-005/006).
+The cel forward pass enables orb emission independently of the lightmap flags.
+The Archmage orb writes per-instance emission from the same violet or warm danger
+colour as its base tint. The Mushroom Shooter boosts only its active beam core,
+and detached Snake flight particles use a brightness override on their pooled renderer.
+The linked pair's baked appearance boosts the strand core RGB and retains its authored
+opacity and ownership tint in the existing tether mesh (LINK-006).
+
 Campaign depth styling (VISION-005/006) uses the existing forward draws. The arena depth
 baker assigns rock and perimeter roles to the rendered submeshes at bake time, so a shared
 stone material can serve both roles. Painted Foundry applies rock contrast to the existing

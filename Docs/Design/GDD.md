@@ -92,6 +92,8 @@ Ground shadows follow the feet and fade as a body rises. Give direct punches a b
 white-gold flash, strong chain contacts a smaller spark, and explosions a bright core
 followed by a glowing ring that marks the actual blast radius. The Bomb's painted stripe
 and Alien spike tips retain their glow. Keep ownership colours and ground warnings legible.
+Give enemy and boss projectiles emissive accents that retain their attack colours. Give
+the linked pair's tether a glowing core in its ground and flight palettes (LINK-006).
 Use the stronger Level 78 treatment across all chapters. Give the player a warm upper rim,
 special enemies a soft cool rim tinted by their paint, and ranged shots a clearer
 core and streak. Deepen the contact shadows and rock undersides, and cool distant walls

@@ -13,6 +13,7 @@ namespace CrowdPunch.Bakers
             AddComponent<ChickenProjectile>(e); AddComponent<PunchAimAssistTarget>(e);
             AddBuffer<ChickenProjectileHit>(e);
             AddComponent(e,new URPMaterialPropertyBaseColor { Value=new float4(.7f,.22f,1f,1) });
+            AddComponent<URPMaterialPropertyEmissionColor>(e);
         }
     }
 }

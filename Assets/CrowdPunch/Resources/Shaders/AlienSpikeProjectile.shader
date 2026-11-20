@@ -52,7 +52,8 @@ Shader "CrowdPunch/Alien Spike Projectile"
                 half value = max(tint.r, max(tint.g, tint.b));
                 tint = lerp(tint, value.xxx, _PlayerOwned);
                 half tip = 1 - smoothstep(.08, .42, input.gradientPosition);
-                return half4(tint * _BaseColor.rgb * (1 + 2.5 * tip), 1);
+                half3 tipEmission = _BaseColor.rgb * (1.35h * tip * tip);
+                return half4(tint * _BaseColor.rgb * (1 + 2.5 * tip) + tipEmission, 1);
             }
             ENDHLSL
         }

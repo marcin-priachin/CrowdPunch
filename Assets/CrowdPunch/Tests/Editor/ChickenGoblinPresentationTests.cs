@@ -265,5 +265,27 @@ namespace CrowdPunch.Tests
                 Assert.AreEqual(new float4(1),em.GetComponentData<URPMaterialPropertyBaseColor>(visual).Value);
             }
         }
+
+        [Test]
+        public void Chicken007_ProjectileEmissionMatchesBothDangerColors()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/CrowdPunch/Data/ChickenBoss/ChickenProjectile.prefab");
+            Assert.That(prefab.GetComponent<MeshRenderer>().sharedMaterial.IsKeywordEnabled("_PROJECTILE_EMISSION"), Is.True);
+            using var world = new World("Archmage projectile palette");
+            var em = world.EntityManager;
+            var shot = em.CreateEntity(typeof(ChickenProjectile), typeof(URPMaterialPropertyBaseColor), typeof(URPMaterialPropertyEmissionColor));
+            var system = world.GetOrCreateSystem<ChickenPresentationSystem>();
+            system.Update(world.Unmanaged);
+            var violet = em.GetComponentData<URPMaterialPropertyEmissionColor>(shot).Value;
+            Assert.That(violet.z, Is.GreaterThan(1f));
+            Assert.That(violet.z, Is.GreaterThan(violet.x));
+            em.SetComponentData(shot, new ChickenProjectile { Redirected = 1 });
+            system.Update(world.Unmanaged);
+            var warm = em.GetComponentData<URPMaterialPropertyEmissionColor>(shot).Value;
+            Assert.That(warm.x, Is.GreaterThan(1f));
+            Assert.That(warm.z, Is.LessThan(warm.x));
+            var tint = em.GetComponentData<URPMaterialPropertyBaseColor>(shot).Value;
+            Assert.That(warm.xyz, Is.EqualTo(tint.xyz * ChickenPresentationSystem.ProjectileEmission));
+        }
     }
 }

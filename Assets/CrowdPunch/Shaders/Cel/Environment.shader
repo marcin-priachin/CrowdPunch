@@ -34,6 +34,7 @@ Shader "CrowdPunch/Cel/Environment"
 
         [HDR] _EmissionColor("Color", Color) = (0,0,0)
         _EmissionMap("Emission", 2D) = "white" {}
+        [Toggle(_PROJECTILE_EMISSION)] _ProjectileEmission("Emissive projectile", Float) = 0
 
         _DetailMask("Detail Mask", 2D) = "white" {}
         _DetailAlbedoMapScale("Scale", Range(0.0, 2.0)) = 1.0
@@ -128,6 +129,7 @@ Shader "CrowdPunch/Cel/Environment"
             #pragma shader_feature_local_fragment _ALPHATEST_ON
             #pragma shader_feature_local_fragment _ _ALPHAPREMULTIPLY_ON _ALPHAMODULATE_ON
             #pragma shader_feature_local_fragment _EMISSION
+            #pragma shader_feature_local_fragment _PROJECTILE_EMISSION
             #pragma shader_feature_local_fragment _METALLICSPECGLOSSMAP
             #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
             #pragma shader_feature_local_fragment _OCCLUSIONMAP
@@ -176,6 +178,10 @@ Shader "CrowdPunch/Cel/Environment"
             #pragma instancing_options renderinglayer
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
+            // Moving projectile cores use forward emission independently of baked GI flags.
+            #if defined(_PROJECTILE_EMISSION) && !defined(_EMISSION)
+                #define _EMISSION
+            #endif
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
             #include "Assets/CrowdPunch/Shaders/CelLitForward.hlsl"
             ENDHLSL
