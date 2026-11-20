@@ -499,6 +499,16 @@ billboards from copied world contacts. Reset/transition clears the mesh; disable
 its generated resources and re-enable reconstructs them. Existing particle pool children
 also use unscaled time so impact particles bloom and expire during hit-stop.
 
+Direct punches, strong body collisions and explosions now share brief HDR accents in
+that same mesh. The explosion bridge event also drives the existing pooled ground ring.
+Its bright outer band fades inward and still scales to the resolved blast radius.
+Reduce Flashes skips the HDR billboards and dims the ring. The pooled punch particles
+provide the base flash, sparks and dust. The brighter direct-hit accent starts when
+it first draws and sits on the camera-facing side of the contact. At close range, the
+avatar's head and hip pose move the core clear of the player's silhouette. The bridge publishes
+punches first and fills the remaining frame budget with background contacts. These
+effects reuse the campaign bloom pass.
+
 `CombatCameraFeedback` uses a damped directional spring and additive, decaying trauma
 with squared shake strength. The existing remove/apply offset boundary still keeps
 feedback out of camera follow history and never rotates aim. Resources settings now use

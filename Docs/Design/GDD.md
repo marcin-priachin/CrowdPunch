@@ -87,9 +87,10 @@ shadows behind when their state changes.
 Across the campaign, retain each chapter's pigments and give the playable floor broad
 staggered paving, a warmer centre and a cooler perimeter. Use a cooler shaded band on
 enemies and readable instanced contact shadows beneath the player, enemies and bosses.
-Ground shadows follow the feet and fade as a body rises. Reserve the brighter combat
-accents for direct punch flashes, the Bomb's painted stripe and the tips of Alien spikes.
-Keep the ownership colours and ground warnings legible through these effects.
+Ground shadows follow the feet and fade as a body rises. Give direct punches a brief
+white-gold flash, strong chain contacts a smaller spark, and explosions a bright core
+followed by a glowing ring that marks the actual blast radius. The Bomb's painted stripe
+and Alien spike tips retain their glow. Keep ownership colours and ground warnings legible.
 
 ## Core Loop And Run Structure
 

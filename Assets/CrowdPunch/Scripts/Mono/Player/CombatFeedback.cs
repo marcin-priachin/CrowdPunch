@@ -16,6 +16,7 @@ namespace CrowdPunch.Mono.Player
         private PlayerController controller;
         private PlayerPunch punch;
         private PlayerPunchAnimation punchAnimation;
+        private Transform playerHead, playerHips;
         private CombatFeedbackSettings settings;
         private CombatCameraFeedback cameraFeedback;
         private ImpactParticlePool particles;
@@ -46,6 +47,12 @@ namespace CrowdPunch.Mono.Player
             controller = player.GetComponent<PlayerController>();
             punch = player.GetComponent<PlayerPunch>();
             punchAnimation = player.GetComponentInChildren<PlayerPunchAnimation>(true);
+            var animator = player.GetComponentInChildren<Animator>(true);
+            if (animator != null && animator.isHuman)
+            {
+                playerHead = animator.GetBoneTransform(HumanBodyBones.Head);
+                playerHips = animator.GetBoneTransform(HumanBodyBones.Hips);
+            }
             var camera = UnityEngine.Camera.main;
             feedbackCamera = camera;
             if (camera != null)
@@ -66,6 +73,7 @@ namespace CrowdPunch.Mono.Player
             trails = new LaunchedTrailPool(poolRoot, settings, particleMaterial);
             flash = new PlayerDamageFlash(player.transform, flashMaterial);
             bridge.ImpactReceived += OnImpact;
+            bridge.ExplosionReceived += OnExplosion;
             bridge.PillarImpactReceived += OnPillarImpact;
             bridge.LaunchReceived += OnLaunch;
             bridge.PunchResolved += OnPunchResolved;
@@ -95,13 +103,23 @@ namespace CrowdPunch.Mono.Player
             if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
             pillarImpacts?.Show(position, direction, width, bossHit);
         }
+        private void OnExplosion(Vector3 position, float radius, float duration, float sizeMultiplier)
+        {
+            if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
+            comicImpacts?.ShowBlast(position, radius);
+        }
+
         private void OnImpact(CombatFeedbackMessage message)
         {
             if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
-            particles.Show(message.Kind, message.Position, message.Direction, message.Intensity);
             // Volume punches report the enemy's ground-plane origin, not a surface manifold.
-            Vector3 accentPosition = message.Position + (message.Kind == CombatImpactKind.Punch ? Vector3.up * .65f : Vector3.zero);
-            comicImpacts.Show(message.Kind, accentPosition, message.Direction, message.Intensity);
+            bool directPunch = message.Kind == CombatImpactKind.Punch;
+            Vector3 accentPosition = message.Position + (directPunch ? Vector3.up * .65f : Vector3.zero);
+            Vector3 flashOffset = directPunch && !settings.ReduceFlashes && feedbackCamera != null && playerHead != null && playerHips != null
+                ? ComicImpactPool.PunchFlashOffset(feedbackCamera, accentPosition, playerHead.position, playerHips.position)
+                : Vector3.zero;
+            particles.Show(message.Kind, message.Position, message.Direction, message.Intensity);
+            comicImpacts.Show(message.Kind, accentPosition, message.Direction, message.Intensity, brightFlash: true, flashOffset: flashOffset);
             if (message.Kind != CombatImpactKind.EnemyCollision || cameraFeedback == null) return;
             float distance = Vector3.Distance(message.Position, bridge.transform.position);
             float attenuation = Mathf.Clamp01(1f - distance / Mathf.Max(1f, settings.CameraImpactRange));
@@ -176,6 +194,7 @@ namespace CrowdPunch.Mono.Player
         private void LateUpdate()
         {
             if (!bound) return;
+            if (feedbackCamera == null) feedbackCamera = UnityEngine.Camera.main;
             comicImpacts?.Tick(Time.unscaledDeltaTime, feedbackCamera);
             launchDepartures?.Tick(Time.unscaledDeltaTime, feedbackCamera);
             pillarImpacts?.Tick(Time.unscaledDeltaTime, feedbackCamera);
@@ -250,6 +269,7 @@ namespace CrowdPunch.Mono.Player
             if (bridge != null)
             {
                 bridge.ImpactReceived -= OnImpact;
+                bridge.ExplosionReceived -= OnExplosion;
                 bridge.PillarImpactReceived -= OnPillarImpact;
                 bridge.LaunchReceived -= OnLaunch;
                 bridge.PunchResolved -= OnPunchResolved;

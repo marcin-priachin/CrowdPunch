@@ -19,15 +19,28 @@ namespace CrowdPunch.Systems.Presentation
         private uint restart;
         private NativeParallelHashMap<Entity, AABB> modelBounds;
         private NativeParallelHashMap<Entity, AABB> poseBounds;
+        private NativeList<DeferredImpact> backgroundImpacts;
+
+        private struct DeferredImpact
+        {
+            public CombatFeedbackMessage Message;
+            public bool GoblinGrunt;
+        }
         private EntityQuery visuals;
         public void OnCreate(ref SystemState state)
         {
             modelBounds = new NativeParallelHashMap<Entity, AABB>(256, Allocator.Persistent);
             poseBounds = new NativeParallelHashMap<Entity, AABB>(256, Allocator.Persistent);
+            backgroundImpacts = new NativeList<DeferredImpact>(8, Allocator.Persistent);
             visuals = state.GetEntityQuery(ComponentType.ReadOnly<EnemyVisualOwner>(),
                 ComponentType.ReadOnly<RenderBounds>(), ComponentType.ReadOnly<LocalToWorld>());
         }
-        public void OnDestroy(ref SystemState state) { modelBounds.Dispose(); poseBounds.Dispose(); }
+        public void OnDestroy(ref SystemState state)
+        {
+            modelBounds.Dispose();
+            poseBounds.Dispose();
+            backgroundImpacts.Dispose();
+        }
         public void OnUpdate(ref SystemState state)
         {
             bool available = PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge)
@@ -39,6 +52,7 @@ namespace CrowdPunch.Systems.Presentation
             restart = GameRestartRegistry.Sequence;
             modelBounds.Clear();
             poseBounds.Clear();
+            backgroundImpacts.Clear();
             if (!reset)
             {
                 int count = visuals.CalculateEntityCount();
@@ -124,15 +138,23 @@ namespace CrowdPunch.Systems.Presentation
                         f.FlashDuration = settings.FlashDuration;
                         f.VisualRemaining = intensity >= settings.DeformationThreshold ? f.VisualDuration : 0f;
                         f.FlashRemaining = intensity >= settings.DeformationThreshold ? f.FlashDuration : 0f;
-                        if (emitted++ < settings.MaximumImpactsPerFrame)
+                        if (emitted < settings.MaximumImpactsPerFrame && (punch || backgroundImpacts.Length < settings.MaximumImpactsPerFrame))
                         {
-                            bridge.ReceiveImpact(new CombatFeedbackMessage { Kind = f.Kind, Position = f.Position,
-                                Direction = f.Direction, Intensity = intensity, ChainDepth = f.ChainDepth, PlayerOwned = f.PlayerOwned != 0 });
-                            if ((punch || f.Kind == CombatImpactKind.EnemyCollision)
-                                && !SystemAPI.HasComponent<SnakeSegment>(entity)
-                                && SystemAPI.HasComponent<EnemyArchetype>(entity)
-                                && IsSmallGoblin(SystemAPI.GetComponent<EnemyArchetype>(entity).Value))
-                                bridge.ReceiveGameplaySfx(GameplaySfxCue.GoblinGrunt, f.Position);
+                            var impact = new DeferredImpact
+                            {
+                                Message = new CombatFeedbackMessage { Kind = f.Kind, Position = f.Position,
+                                    Direction = f.Direction, Intensity = intensity, ChainDepth = f.ChainDepth, PlayerOwned = f.PlayerOwned != 0 },
+                                GoblinGrunt = (punch || f.Kind == CombatImpactKind.EnemyCollision)
+                                    && !SystemAPI.HasComponent<SnakeSegment>(entity)
+                                    && SystemAPI.HasComponent<EnemyArchetype>(entity)
+                                    && IsSmallGoblin(SystemAPI.GetComponent<EnemyArchetype>(entity).Value)
+                            };
+                            if (punch)
+                            {
+                                Publish(bridge, impact);
+                                emitted++;
+                            }
+                            else backgroundImpacts.Add(impact);
                         }
                     }
                 }
@@ -178,7 +200,19 @@ namespace CrowdPunch.Systems.Presentation
                         size, f.LaunchAge, launch.ValueRO.Owner);
                 }
             }
+            // Keep one shared budget and spend it on confirmed punches before incidental contacts.
+            if (!reset && !trailsOnly)
+            {
+                int remaining = math.min(backgroundImpacts.Length, settings.MaximumImpactsPerFrame - emitted);
+                for (int i = 0; i < remaining; i++) Publish(bridge, backgroundImpacts[i]);
+            }
             bridge?.EndTrails();
+        }
+
+        private static void Publish(PlayerEcsBridge bridge, DeferredImpact impact)
+        {
+            bridge.ReceiveImpact(impact.Message);
+            if (impact.GoblinGrunt) bridge.ReceiveGameplaySfx(GameplaySfxCue.GoblinGrunt, impact.Message.Position);
         }
 
         private static bool IsSmallGoblin(EnemyArchetypeKind kind) => kind is EnemyArchetypeKind.Baseline

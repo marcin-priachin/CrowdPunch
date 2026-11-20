@@ -7,8 +7,10 @@ namespace CrowdPunch.Mono.Player
     [RequireComponent(typeof(PlayerEcsBridge))]
     public sealed class ExplosionFeedback : MonoBehaviour
     {
+        private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
         [SerializeField, Range(1, 64)] private int poolCapacity = 16;
         private PlayerEcsBridge bridge;
+        private CombatFeedbackSettings settings;
         private Material material;
         private Visual[] visuals;
         private Transform poolRoot;
@@ -31,24 +33,22 @@ namespace CrowdPunch.Mono.Player
             if (poolRoot != null) Destroy(poolRoot.gameObject);
             if (material != null) Destroy(material);
             bridge = GetComponent<PlayerEcsBridge>();
-            Shader shader = Resources.Load<Shader>("Shaders/ExplosionFeedback");
-            if (shader == null)
+            var library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
+            if (library != null && library.Shockwave != null) material = new Material(library.Shockwave);
+            else
             {
-                Debug.LogError("Explosion feedback shader is missing from Resources/Shaders/ExplosionFeedback.", this);
-                enabled = false;
-                return;
+                Shader shader = Resources.Load<Shader>("Shaders/CombatSprite");
+                if (shader == null)
+                {
+                    Debug.LogError("Explosion feedback needs the Combat Sprite shader.", this);
+                    enabled = false;
+                    return;
+                }
+                material = new Material(shader);
             }
-            material = new Material(shader);
-            material.SetColor("_BaseColor", new Color(1f, .35f, .05f, .28f));
             poolRoot = new GameObject("Explosion feedback pool").transform;
             visuals = new Visual[Mathf.Clamp(poolCapacity, 1, 64)];
-            var settings = Resources.Load<CombatFeedbackSettings>("CombatFeedbackSettings");
-            var library = Resources.Load<CombatVfxLibrary>("CombatVfxLibrary");
-            if (library != null && library.Shockwave != null)
-            {
-                Destroy(material);
-                material = new Material(library.Shockwave);
-            }
+            settings = Resources.Load<CombatFeedbackSettings>("CombatFeedbackSettings");
             properties = new MaterialPropertyBlock();
             ring = BuildRing();
             if (settings != null && settings.ExplosionParticles != null)
@@ -59,7 +59,6 @@ namespace CrowdPunch.Mono.Player
                     bursts[i] = Instantiate(settings.ExplosionParticles, poolRoot);
                     bursts[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 }
-                material.SetColor("_BaseColor", new Color(1f, .55f, .12f, .09f));
             }
             for (int i = 0; i < visuals.Length; i++)
             {
@@ -98,10 +97,12 @@ namespace CrowdPunch.Mono.Player
                 if (visual.Remaining <= 0f) visual.Object.SetActive(false);
                 else
                 {
-                    float t = 1f-visual.Remaining/visual.Duration;
-                    float expansion = 1f-Mathf.Pow(1f-Mathf.Clamp01(t/.65f),3);
+                    float t = 1f - visual.Remaining / visual.Duration;
+                    float expansion = 1f - Mathf.Pow(1f - Mathf.Clamp01(t / .65f), 3);
                     visual.Object.transform.localScale = Vector3.one * (visual.TargetDiameter * expansion);
-                    properties.SetColor("_BaseColor",new Color(1,.64f,.2f,.65f*(1-Mathf.SmoothStep(0,1,t))));
+                    float gain = settings != null && settings.ReduceFlashes ? .19f : 1f;
+                    float opacity = .65f * (1f - Mathf.SmoothStep(0, 1, t));
+                    properties.SetColor(BaseColor, new Color(gain, .64f * gain, .2f * gain, opacity));
                     visual.Renderer.SetPropertyBlock(properties);
                 }
             }
@@ -157,23 +158,37 @@ namespace CrowdPunch.Mono.Player
         private static Mesh BuildRing()
         {
             const int segments = 64;
-            var vertices = new Vector3[(segments+1)*2];
+            // The outer edge remains at half the mesh diameter so the pulse marks the true blast radius.
+            float[] radii = { .459f, .475f, .489f, .494f, .5f };
+            Color[] profile = { new Color(1.2f, .50f, .19f, 0f), new Color(1.4f, .56f, .26f, .38f),
+                new Color(2f, .93f, .30f, .7f), new Color(5.2f, 3.25f, 1.30f, 1f), new Color(4.3f, 2.45f, .93f, 0f) };
+            int bands = radii.Length;
+            var vertices = new Vector3[(segments + 1) * bands];
             var colors = new Color[vertices.Length];
             var uv = new Vector2[vertices.Length];
-            var indices = new int[segments*6];
-            for (int i=0;i<=segments;i++)
+            var indices = new int[segments * (bands - 1) * 6];
+            int nextIndex = 0;
+            for (int segment = 0; segment <= segments; segment++)
             {
-                float a=i*Mathf.PI*2/segments;
-                var direction=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a));
-                vertices[i*2]=direction*.46f; vertices[i*2+1]=direction*.5f;
-                colors[i*2]=colors[i*2+1]=Color.white;
-                uv[i*2]=new Vector2(i/(float)segments,0); uv[i*2+1]=new Vector2(i/(float)segments,1);
-                if(i==segments) continue;
-                int t=i*6,n=i*2;
-                indices[t]=n;indices[t+1]=n+1;indices[t+2]=n+3;
-                indices[t+3]=n;indices[t+4]=n+3;indices[t+5]=n+2;
+                float angle = segment * (2f * Mathf.PI / segments);
+                var direction = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+                for (int band = 0; band < bands; band++)
+                {
+                    int vertex = segment * bands + band;
+                    vertices[vertex] = direction * radii[band];
+                    colors[vertex] = profile[band];
+                    uv[vertex] = new Vector2(segment / (float)segments, Mathf.InverseLerp(radii[0], radii[bands - 1], radii[band]));
+                    if (segment == 0 || band == 0) continue;
+                    int previous = vertex - bands;
+                    indices[nextIndex++] = previous - 1;
+                    indices[nextIndex++] = vertex - 1;
+                    indices[nextIndex++] = previous;
+                    indices[nextIndex++] = previous;
+                    indices[nextIndex++] = vertex - 1;
+                    indices[nextIndex++] = vertex;
+                }
             }
-            return new Mesh { name="Blast radius ring",vertices=vertices,colors=colors,uv=uv,triangles=indices };
+            return new Mesh { name = "Blast radius ring", vertices = vertices, colors = colors, uv = uv, triangles = indices };
         }
     }
 }

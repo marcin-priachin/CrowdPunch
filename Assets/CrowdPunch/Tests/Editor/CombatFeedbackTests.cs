@@ -471,6 +471,112 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void Vision006BrightImpactCoresAreBriefAndRespectReducedFlashes()
+        {
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            var go = new GameObject("impact flash test");
+            var view = go.AddComponent<UnityEngine.Camera>();
+            var material = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            var pool = new ComicImpactPool(go.transform, settings, material);
+            try
+            {
+                var mesh = go.GetComponentInChildren<MeshFilter>().sharedMesh;
+                Vector3 contact = new Vector3(.4f, .2f, 3f);
+                pool.Show(CombatImpactKind.Punch, contact, Vector3.right, 1f, brightFlash: true);
+                pool.Tick(.27f, view);
+                int core = System.Array.FindIndex(mesh.colors, color => color.r > 6.5f && color.a > .9f);
+                Assert.That(core, Is.GreaterThanOrEqualTo(0), "A hitch before the first render must not consume the punch.");
+                Vector3 projectedCore = view.WorldToViewportPoint(mesh.vertices[core]);
+                Vector3 projectedContact = view.WorldToViewportPoint(contact + Vector3.up * .20f);
+                Assert.That(projectedCore.x, Is.EqualTo(projectedContact.x).Within(.001f));
+                Assert.That(projectedCore.y, Is.EqualTo(projectedContact.y).Within(.001f));
+                Assert.That(projectedCore.z, Is.LessThan(projectedContact.z - .5f));
+                Vector3 hips = new Vector3(0f, -.4f, 2f);
+                Vector3 head = new Vector3(0f, .4f, 2f);
+                Vector3 covered = new Vector3(0f, -.2f, 3f);
+                Vector3 offset = ComicImpactPool.PunchFlashOffset(view, covered, head, hips);
+                Assert.That(offset.sqrMagnitude, Is.GreaterThan(.01f), "A flash behind the player must move clear of the silhouette.");
+                Assert.That(view.WorldToViewportPoint(covered + offset).z, Is.EqualTo(3f).Within(.001f));
+                Assert.That(ComicImpactPool.PunchFlashOffset(view, covered + Vector3.right * 2f, head, hips), Is.EqualTo(Vector3.zero));
+                Assert.That(ComicImpactPool.PunchFlashOffset(view, covered - Vector3.forward * 2f, head, hips), Is.EqualTo(Vector3.zero));
+                pool.Tick(.065f, view);
+                Assert.That(System.Array.Exists(mesh.colors, color => color.r > 4f && color.a > .9f), Is.True);
+                pool.Tick(.09f, view);
+                Assert.That(System.Array.Exists(mesh.colors, color => color.r > 1f), Is.False);
+                Assert.That(pool.ActiveCount, Is.EqualTo(1), "The spark and ink accents outlast the bright core.");
+
+                pool.Clear();
+                pool.Show(CombatImpactKind.EnemyCollision, Vector3.forward, Vector3.right, .2f, brightFlash: true);
+                pool.Tick(.02f, view);
+                Assert.That(System.Array.Exists(mesh.colors, color => color.r > 1f), Is.False);
+
+                pool.Clear();
+                pool.ShowBlast(Vector3.forward, 3f);
+                pool.Tick(.06f, view);
+                Assert.That(System.Array.Exists(mesh.colors, color => color.r > 4f && color.a > .9f), Is.True);
+                pool.Tick(.10f, view);
+                Assert.That(pool.ActiveCount, Is.Zero);
+
+                settings.ReduceFlashes = true;
+                pool.ShowBlast(Vector3.forward, 3f);
+                pool.Show(CombatImpactKind.Punch, Vector3.forward, Vector3.right, 1f, brightFlash: true);
+                pool.Tick(.04f, view);
+                Assert.That(pool.ActiveCount, Is.EqualTo(1));
+                Assert.That(System.Array.Exists(mesh.colors, color => color.r > 1f), Is.False);
+            }
+            finally
+            {
+                pool.Dispose();
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(material);
+                Object.DestroyImmediate(settings);
+            }
+        }
+
+        [Test]
+        public void Vision006ConfirmedPunchTakesPriorityWithinTheSharedImpactBudget()
+        {
+            using var world = new World("Punch feedback priority");
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            settings.MaximumImpactsPerFrame = 2;
+            var go = new GameObject("feedback bridge");
+            var bridge = go.AddComponent<PlayerEcsBridge>();
+            bridge.FeedbackSettings = settings;
+            PlayerBridgeRegistry.TryGetBridge(out var previous);
+            PlayerBridgeRegistry.Register(bridge);
+            var delivered = new System.Collections.Generic.List<CombatImpactKind>();
+            bridge.ImpactReceived += impact => delivered.Add(impact.Kind);
+            try
+            {
+                var system = world.GetOrCreateSystem<CombatFeedbackBridgeSystem>();
+                system.Update(world.Unmanaged);
+                for (int i = 0; i < 5; i++) CreateImpact(CombatImpactKind.EnemyCollision);
+                CreateImpact(CombatImpactKind.Punch);
+                system.Update(world.Unmanaged);
+                Assert.That(delivered, Is.EqualTo(new[] { CombatImpactKind.Punch, CombatImpactKind.EnemyCollision }));
+                delivered.Clear();
+                system.Update(world.Unmanaged);
+                Assert.That(delivered, Is.Empty, "Contacts dropped by the frame budget must not replay later.");
+            }
+            finally
+            {
+                PlayerBridgeRegistry.Unregister(bridge);
+                if (previous != null) PlayerBridgeRegistry.Register(previous);
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(settings);
+            }
+
+            void CreateImpact(CombatImpactKind kind)
+            {
+                var entities = world.EntityManager;
+                var enemy = entities.CreateEntity(typeof(EnemyImpactFeedback), typeof(EnemyLaunchState),
+                    typeof(LocalTransform), typeof(Unity.Physics.PhysicsVelocity));
+                entities.SetComponentData(enemy, LocalTransform.Identity);
+                entities.SetComponentData(enemy, new EnemyImpactFeedback { Pending = 1, Kind = kind, Speed = 9f, Impulse = 9f });
+            }
+        }
+
+        [Test]
         public void Player004CameraSpringIsBoundedRestoresExactlyAndNeverRotatesAim()
         {
             var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
