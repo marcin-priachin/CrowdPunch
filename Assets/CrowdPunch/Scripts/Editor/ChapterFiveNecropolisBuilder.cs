@@ -178,7 +178,7 @@ namespace CrowdPunch.Editor
             lighting.sky=new Color(.20f,.12f,.30f); lighting.equator=new Color(.13f,.075f,.20f); lighting.ground=new Color(.065f,.035f,.10f);
             lighting.ambientMultiplier=1; lighting.overrideAtmosphere=true;
             lighting.haze=new Color(.22f,.13f,.31f); lighting.sceneryOnlyHaze=true;
-            lighting.sceneryHazeDepth=72;
+            lighting.sceneryHazeDepth=48;
             lighting.hazeStart=Mathf.Max(52,court.extents.magnitude+30); lighting.hazeEnd=lighting.hazeStart+103;
             lighting.hazeArenaBounds=new Vector4(court.center.x,court.center.z,court.extents.x,court.extents.z);
             lighting.hazeGroundHeight=groundHeight;

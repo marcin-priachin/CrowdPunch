@@ -96,6 +96,9 @@ Use the stronger Level 78 treatment across all chapters. Give the player a warm 
 special enemies a soft cool rim tinted by their paint, and ranged shots a clearer
 core and streak. Deepen the contact shadows and rock undersides, and cool distant walls
 and scenery as they recede from the camera.
+In Chapters Four and Five, fade distant exterior scenery into each chapter's fog
+colour. In Chapter Five, let the far ridge and trees recede gradually as faint
+silhouettes. Keep the playable space and combat cues clear.
 
 ## Core Loop And Run Structure
 

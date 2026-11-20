@@ -30,6 +30,7 @@ namespace CrowdPunch.Tests
             var lighting=main.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<CelLevelLighting>()).Single();
             Assert.That(lighting.GetComponent<BakedShadowLighting>(),Is.Not.Null);
             Assert.That(lighting.sceneryOnlyHaze,Is.True,"Fog must keep combat inside the floor boundary clear.");
+            Assert.That(lighting.sceneryHazeDepth,Is.EqualTo(48f));
             foreach(var renderer in root.GetComponentsInChildren<MeshRenderer>(true))
             {
                 Assert.That(GameObjectUtility.GetStaticEditorFlags(renderer.gameObject).HasFlag(StaticEditorFlags.ContributeGI),Is.True);
@@ -65,7 +66,7 @@ namespace CrowdPunch.Tests
                 Assert.That(patch.GetComponent<GroundHazardAppearanceAuthoring>().style,Is.EqualTo(GroundHazardStyle.Necropolis));
         }
 
-        [Test] public void Vision005_DistantSceneryIsADarkSilhouetteWithoutTintingGameplayOnGpu()
+        [Test] public void Vision005_DistantSceneryFadesGraduallyWithoutTintingGameplayOnGpu()
         {
             var shader=ShaderUtil.CreateShaderAsset(@"Shader ""Hidden/CrowdPunch/NecropolisSilhouetteTest"" { SubShader { Pass {
                 ZTest Always ZWrite Off Cull Off
@@ -94,7 +95,7 @@ namespace CrowdPunch.Tests
                 Shader.SetGlobalVector("_CrowdPunchSceneryHazeBounds",new Vector4(0,0,10,10));
                 Shader.SetGlobalInt("_CrowdPunchSceneryHazeEdgeCount",0);
                 Shader.SetGlobalColor("_CrowdPunchSceneryHazeColor",Color.white);
-                Shader.SetGlobalVector("_CrowdPunchSceneryHazeSettings",new Vector4(1,0,4.5f,72));
+                Shader.SetGlobalVector("_CrowdPunchSceneryHazeSettings",new Vector4(1,0,4.5f,48));
                 Color Sample(Vector3 position,Color color,float role)
                 {
                     material.SetVector("_SamplePosition",position);material.SetColor("_InputColor",color);material.SetFloat("_Role",role);
@@ -102,15 +103,19 @@ namespace CrowdPunch.Tests
                     pixel.ReadPixels(new Rect(0,0,1,1),0,0);pixel.Apply();return pixel.GetPixel(0,0);
                 }
                 Assert.That(Sample(Vector3.zero,Color.red,3).r,Is.EqualTo(1).Within(.002));
-                Assert.That(Sample(new Vector3(90,0,0),Color.red,0).g,Is.Zero.Within(.002));
-                foreach(float height in new[]{0f,10f})
-                {
-                    var far=new Vector3(90,height,0);
-                    var pale=Sample(far,Color.white,3);var dark=Sample(far,Color.black,3);
-                    Assert.That(pale.r,Is.LessThan(.3f),"Distant ground and objects must stay dark against the fog.");
-                    Assert.That(pale.r,Is.EqualTo(dark.r).Within(.002),"Distant detail must collapse into a flat silhouette.");
-                    Assert.That(Sample(far,Color.black,1).r,Is.EqualTo(1).Within(.002),"Existing chapter fog must still dissolve far scenery.");
-                }
+                Assert.That(Sample(new Vector3(58,0,0),Color.red,0).g,Is.Zero.Within(.002));
+                var silhouette = new Vector3(42,10,0);
+                var pale = Sample(silhouette,Color.white,3);
+                Assert.That(pale.r,Is.InRange(.6f,.95f),"Mid-distance silhouettes should remain visible through the fog.");
+                Assert.That(pale.r,Is.EqualTo(Sample(silhouette,Color.black,3).r).Within(.002),"Distant painted detail should be obscured.");
+                var ridge = Sample(new Vector3(58,10,0),Color.black,3).r;
+                var trees = Sample(new Vector3(74,10,0),Color.black,3).r;
+                var horizon = Sample(new Vector3(100,10,0),Color.black,3).r;
+                Assert.That(ridge,Is.InRange(.8f,.9f),"The ridge should remain faintly visible.");
+                Assert.That(trees,Is.GreaterThan(ridge));
+                Assert.That(horizon,Is.InRange(trees,.99f),"Farther silhouettes should recede gradually.");
+                Assert.That(Sample(new Vector3(58,0,0),Color.black,3).r,Is.EqualTo(1).Within(.002),"The low bank should still obscure exterior ground.");
+                Assert.That(Sample(new Vector3(58,10,0),Color.black,1).r,Is.EqualTo(1).Within(.002),"Standard chapter fog must still dissolve far scenery.");
                 Assert.That(ShaderUtil.GetShaderMessages(shader).Where(m=>m.severity==UnityEditor.Rendering.ShaderCompilerMessageSeverity.Error),Is.Empty);
             }
             finally

@@ -24,7 +24,7 @@ namespace CrowdPunch.Mono.Levels
         [Tooltip("Counterclockwise XZ floor edges, each stored as start XY and end ZW.")]
         public Vector4[] hazeArenaEdges = System.Array.Empty<Vector4>();
         public float hazeGroundHeight;
-        [Min(6), Tooltip("Distance outside the floor outline at which scenery fully merges into the sky.")]
+        [Min(6), Tooltip("Distance outside the floor outline that controls the scenery fade into the sky.")]
         public float sceneryHazeDepth = 24;
 
         private static readonly int SceneryHazeBounds = Shader.PropertyToID("_CrowdPunchSceneryHazeBounds");

@@ -980,11 +980,11 @@ passes. The chapter uses purple painted light, darker decorative masonry and a
 scoped purple dusk profile. It reuses Chapter Four's floor-outline scenery fog:
 exterior earth and decoration fade into purple banks while combat floors and
 dynamic objective cues remain outside the fog material roles.
-`CelLevelLighting.sceneryHazeDepth` defaults to the existing 24 m fade; Chapter
-Five selects 72 m and opts its exterior ground and decoration into silhouette
-material role 3. Beyond 12-32 m outside the actual floor outline, detail collapses
-into a flat dark purple silhouette with limited fog blending, including the ground
-and distant ridge. Existing roles 1/2 keep their original complete fog dissolve.
+`CelLevelLighting.sceneryHazeDepth` defaults to a 24 m fade. Chapter Five selects
+48 m and uses material role 3 for exterior ground and decoration. Painted detail
+fades toward a purple silhouette 12–32 m beyond the floor outline. The low bank
+obscures exterior ground. An exponential distance fade leaves the ridge and trees
+faintly visible at 48 m and blends them toward the horizon as distance increases.
 The 4.5 m low fog bank and loaded-scene restoration of all fog globals are unchanged.
 `CampaignShadowBake` writes owned UV2 meshes and explicit ECS receiver bindings;
 large exterior earth and the ridge use reduced chart density. Surface refreshes
@@ -1035,7 +1035,8 @@ fog offset as axis-aligned borders. Combined floor bounds remain a fallback for
 older scenes without outlines. An
 opt-in Painted Foundry material role submerges nearby decoration in dense low sage
 fog, fading both distant scenery and exterior ground completely into the chapter's
-matching painted sky. Serialized floor height anchors the bank across elevated stages.
+matching painted sky. The shader applies scenery fog after the depth tint, so fully
+fogged surfaces match the horizon. Serialized floor height anchors the bank across elevated stages.
 Conventional distance fog is disabled in this mode to keep gameplay clear.
 The bounds/edges/count/colour/settings shader globals and prior atmosphere are restored on
 unload. Earlier chapters retain their existing distance fog and default material
