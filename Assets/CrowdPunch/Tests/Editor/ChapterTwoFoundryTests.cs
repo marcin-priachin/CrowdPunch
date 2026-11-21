@@ -10,7 +10,12 @@ namespace CrowdPunch.Tests
     {
         private SceneSetup[] setup;
         [SetUp] public void SaveSetup()=>setup=EditorSceneManager.GetSceneManagerSetup();
-        [TearDown] public void RestoreSetup()=>EditorSceneManager.RestoreSceneManagerSetup(setup);
+        [TearDown]
+        public void RestoreSetup()
+        {
+            if(setup.Any(scene=>scene.isLoaded && scene.isActive)) EditorSceneManager.RestoreSceneManagerSetup(setup);
+            else EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
+        }
 
         [TestCase(11)] [TestCase(12)] [TestCase(13)] [TestCase(14)] [TestCase(15)]
         [TestCase(16)] [TestCase(17)] [TestCase(18)] [TestCase(19)] [TestCase(20)]
@@ -52,6 +57,59 @@ namespace CrowdPunch.Tests
             var settings=new SerializedObject(feature);
             Assert.That(settings.FindProperty("m_Settings.AOMethod").enumDisplayNames[settings.FindProperty("m_Settings.AOMethod").enumValueIndex],Is.EqualTo("Interleaved Gradient"));
             Assert.That(settings.FindProperty("m_Settings.Downsample").boolValue,Is.False);
+        }
+
+        [TestCase(11)] [TestCase(12)] [TestCase(13)] [TestCase(14)] [TestCase(15)]
+        [TestCase(16)] [TestCase(17)] [TestCase(18)] [TestCase(19)] [TestCase(20)]
+        public void Vision005_FoundryEntrancesAndGlazingHaveClearance(int stage)
+        {
+            var scene=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}.unity");
+            var root=scene.GetRootGameObjects().Single(g=>g.name=="Chapter Two - Emberworks Foundry");
+            var renderers=root.GetComponentsInChildren<MeshRenderer>();
+            var workshops=renderers.Where(r=>r.name=="Foundry brick workshop").ToArray();
+            var roofs=renderers.Where(r=>r.name.Contains("roof") || r.name.Contains("awning")).ToArray();
+            var piers=renderers.Where(r=>r.name=="Steel facade pier").ToArray();
+
+            foreach(var workshop in workshops)
+            {
+                var door=workshop.transform.parent.Find("door-wide-closed")?.GetComponentInChildren<MeshRenderer>();
+                if(door==null) continue;
+                Assert.That(door.bounds.max.y,Is.LessThan(workshop.bounds.max.y-.25f),workshop.transform.position.ToString());
+                var approach=door.bounds;
+                var forward=workshop.transform.parent.forward;
+                approach.Expand(new Vector3(.02f+.8f*Mathf.Abs(forward.x),0,.02f+.8f*Mathf.Abs(forward.z)));
+                Assert.That(piers.Any(p=>Penetrates(approach,p.bounds)),Is.False,$"Blocked shutter at {door.bounds.center}");
+            }
+
+            foreach(var window in renderers.Where(r=>r.name=="High clerestory window"))
+                Assert.That(roofs.Concat(piers).Any(r=>Penetrates(window.bounds,r.bounds)),Is.False,
+                    $"Obstructed clerestory at {window.bounds.center}");
+
+            foreach(var roof in roofs)
+                Assert.That(workshops.Any(r=>r.transform.parent!=roof.transform.parent && Penetrates(r.bounds,roof.bounds)),
+                    Is.False,$"{roof.name} cuts through masonry at {roof.bounds.center}");
+
+            foreach(var bunker in renderers.Where(r=>r.name.StartsWith("Coal bunker")))
+                Assert.That(renderers.Any(r=>r.name=="Connected process pipe" && Penetrates(r.bounds,bunker.bounds)),
+                    Is.False,$"Process pipe cuts through {bunker.name} at {bunker.bounds.center}");
+
+            foreach(var bridge in renderers.Where(r=>r.name=="Exit service bridge"))
+                Assert.That(roofs.Any(r=>Penetrates(r.bounds,bridge.bounds)),Is.False,"Exit service bridge cuts into a roof");
+
+            var freightProps=renderers.Where(r=>r.name.StartsWith("box-large") || r.name.StartsWith("crane")).ToArray();
+            foreach(var siding in renderers.Where(r=>r.name.StartsWith("Freight siding")))
+            {
+                var clearance=siding.bounds;
+                clearance.Expand(.05f);
+                Assert.That(freightProps.Any(r=>Penetrates(r.bounds,clearance)),Is.False,
+                    $"{siding.name} cuts through cargo or loading machinery at {siding.bounds.center}");
+            }
+        }
+
+        private static bool Penetrates(Bounds a,Bounds b)
+        {
+            var overlap=Vector3.Min(a.max,b.max)-Vector3.Max(a.min,b.min);
+            return overlap.x>.015f && overlap.y>.015f && overlap.z>.015f;
         }
 
         [TestCase(11)] [TestCase(12)] [TestCase(13)] [TestCase(14)] [TestCase(15)]

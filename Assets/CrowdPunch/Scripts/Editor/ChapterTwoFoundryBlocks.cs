@@ -22,7 +22,7 @@ namespace CrowdPunch.Editor
             foreach(int side in new[]{-1,1})
             {
                 float x=court.center.x+side*(court.extents.x+9);
-                Workshop(root,new Vector3(x,y,court.min.z-8),new Vector3(12,2.8f,9),false,false,180);
+                Workshop(root,new Vector3(x,y,court.min.z-8),new Vector3(12,2.8f,9),false,false,180,entranceBase:.16f);
                 Shape(root,"Delivery loading apron",new Vector3(x,y,court.min.z-10),new Vector3(13.5f,.16f,14),Ground);
             }
             Shape(root,"Delivery street paving",new Vector3(court.center.x,y-.04f,court.min.z-13),new Vector3(court.size.x+4,.16f,10),Ground);
@@ -32,8 +32,8 @@ namespace CrowdPunch.Editor
             float outerWidth=court.size.x+132,outerLength=court.size.z+116;
             Row(root,"North skyline block",new Vector3(court.center.x,y,court.max.z+59),outerWidth,22,12,0,stage+4,true);
             Row(root,"South skyline block",new Vector3(court.center.x,y,court.min.z-55),outerWidth,22,10,180,stage+5,true);
-            Row(root,"West skyline block",new Vector3(court.min.x-55,y,court.center.z+2),outerLength-24,22,11,-90,stage+6,true);
-            Row(root,"East skyline block",new Vector3(court.max.x+55,y,court.center.z+2),outerLength-24,22,11,90,stage+7,true);
+            Row(root,"West skyline block",new Vector3(court.min.x-55,y,court.center.z+2),outerLength-25,22,11,-90,stage+6,true);
+            Row(root,"East skyline block",new Vector3(court.max.x+55,y,court.center.z+2),outerLength-25,22,11,90,stage+7,true);
         }
 
         private static void Row(Transform root,string name,Vector3 center,float length,float depth,float height,float yaw,int seed,bool skyline=false)
@@ -52,7 +52,8 @@ namespace CrowdPunch.Editor
             backing.transform.localRotation=rotation;
         }
 
-        internal static void Workshop(Transform root,Vector3 p,Vector3 size,bool furnace,bool joined=false,float yaw=0,bool skyline=false)
+        internal static void Workshop(Transform root,Vector3 p,Vector3 size,bool furnace,bool joined=false,float yaw=0,bool skyline=false,
+            float entranceBase=0,bool loadingDock=false)
         {
             // Fit imported doors in their local axes before rotating the finished bay.
             var bay=new GameObject("Factory structural bay").transform;bay.SetParent(root,false);
@@ -61,28 +62,43 @@ namespace CrowdPunch.Editor
             Shape(bay,"Standing seam roof",Vector3.up*size.y,new Vector3(roofWidth,.25f,size.z+.4f),Teal);
             // The pitched roof bottom clears the flat roof top rather than intersecting it.
             Roof(bay,Vector3.up*(size.y+.27f),new Vector3(roofWidth,1.3f,size.z+.4f));
-            float windowHeight=Mathf.Min(1,size.y*.23f);
-            for(int i=-1;!skyline && i<=1;i++)
-            {
-                Shape(bay,"Steel facade pier",new Vector3(i*size.x*.43f,0,-size.z*.5f-.15f),new Vector3(.3f,size.y,.3f),Steel);
-                Shape(bay,"High clerestory window",new Vector3(i*size.x*.27f,size.y*.68f,-size.z*.5f-.08f),new Vector3(size.x*.20f,windowHeight,.12f),Ivory);
-                Shape(bay,"Clerestory mullion",new Vector3(i*size.x*.27f,size.y*.68f,-size.z*.5f-.17f),new Vector3(.1f,windowHeight,.06f),Steel);
-            }
-            // Door and footing occupied the same exposed plane. Terminate the footing
-            // at the jambs so their different baked receivers cannot alternate on screen.
-            if(!skyline)Model(bay,"door-wide-closed",new Vector3(0,0,-size.z*.5f-.25f),new Vector3(4,3.8f,.4f),Steel);
-            float footingWidth=(size.x-4.2f)*.5f;
-            foreach(int side in skyline?System.Array.Empty<int>():new[]{-1,1})
-            {
-                Shape(bay,"Brick footing beside door",new Vector3(side*(2.1f+footingWidth*.5f),0,-size.z*.5f-.225f),new Vector3(footingWidth,.35f,.45f),Steel);
-                Shape(bay,"Copper drainpipe",new Vector3(side*(size.x*.5f-.35f),0,-size.z*.5f-.2f),new Vector3(.14f,size.y,.14f),Copper,true);
-            }
+            if(!skyline) Frontage(bay,size,entranceBase,loadingDock);
             if(furnace)
             {
                 Chimney(bay,new Vector3(size.x*.28f,0,size.z*.15f),size.y+9,2.5f);
                 if(!skyline)Model(bay,"hopper-high-round",new Vector3(-size.x*.26f,size.y+.27f,0),new Vector3(3,4,3),Copper);
             }
             bay.localPosition=p;bay.localRotation=Quaternion.Euler(0,yaw,0);
+        }
+
+        private static void Frontage(Transform bay,Vector3 size,float entranceBase,bool loadingDock)
+        {
+            float facade=-size.z*.5f;
+            float windowBottom=size.y*.68f;
+            float windowHeight=Mathf.Min(1f,size.y*.23f);
+            float entranceTop=Mathf.Min(size.y*.73f,loadingDock?3.22f:3.85f);
+            var door=Model(bay,"door-wide-closed",new Vector3(0,entranceBase,facade-.035f),
+                new Vector3(size.x*.34f,entranceTop-entranceBase,.12f),Steel);
+            var doorBounds=door.GetComponentInChildren<MeshRenderer>().bounds;
+            float jamb=doorBounds.extents.x+.12f;
+            float footingWidth=size.x*.5f-jamb;
+            foreach(int side in new[]{-1,1})
+            {
+                Shape(bay,"Steel facade pier",new Vector3(side*size.x*.43f,0,facade-.15f),new Vector3(.3f,size.y,.3f),Steel);
+                Shape(bay,"Brick footing beside door",new Vector3(side*(jamb+footingWidth*.5f),0,facade-.225f),
+                    new Vector3(footingWidth,.35f,.45f),Steel);
+                Shape(bay,"Copper drainpipe",new Vector3(side*(size.x*.5f-.35f),0,facade-.2f),new Vector3(.14f,size.y,.14f),Copper,true);
+            }
+
+            for(int i=-1;i<=1;i++)
+            {
+                // Low bays have room for glazing beside the entrance, with a clear lintel above the shutter.
+                if(i==0 && doorBounds.max.y+.20f>windowBottom) continue;
+                float sideWindowBottom=i==0?windowBottom:Mathf.Min(windowBottom,size.y-.28f-windowHeight);
+                float x=i*size.x*.29f;
+                Shape(bay,"High clerestory window",new Vector3(x,sideWindowBottom,facade-.08f),new Vector3(size.x*.19f,windowHeight,.12f),Ivory);
+                Shape(bay,"Clerestory mullion",new Vector3(x,sideWindowBottom,facade-.17f),new Vector3(.1f,windowHeight,.06f),Steel);
+            }
         }
 
         private static void Chimney(Transform root,Vector3 p,float height,float width)
