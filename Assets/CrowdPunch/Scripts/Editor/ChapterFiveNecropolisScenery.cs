@@ -9,6 +9,16 @@ namespace CrowdPunch.Editor
     internal static class ChapterFiveNecropolisScenery
     {
         private const string Graves = "kenney_graveyard-kit_5.0/Models/FBX format";
+        private const float PropClearance = .5f;
+        private const string EnclosureName = "Connected memorial enclosure";
+
+        private static readonly Vector3[] PropOffsets = (
+            from x in Enumerable.Range(-20, 41)
+            from z in Enumerable.Range(-20, 41)
+            let offset = new Vector3(x, 0, z)
+            where offset.sqrMagnitude <= 400
+            orderby offset.sqrMagnitude
+            select offset).ToArray();
 
         internal static void Build(Transform root, Bounds[] floors, int stage)
         {
@@ -33,6 +43,7 @@ namespace CrowdPunch.Editor
                 MemorialGarden(root,new Vector3(x,y,b.center.z+side*(b.extents.z+10)),stage+i,side<0?180:0);
                 Tree(root,new Vector3(x+5,y,b.center.z+side*(b.extents.z+22)),9+(i%3)*2,i*71+stage);
             }
+            int firstLandmark = root.childCount;
             Vector3 North(float x=0,float z=20)=>new Vector3(b.center.x+x,y,b.max.z+z);
             switch(stage)
             {
@@ -85,11 +96,54 @@ namespace CrowdPunch.Editor
                     }
                     break;
             }
+            SpaceProps(root, b, firstLandmark);
+        }
+
+        internal static void SpaceProps(Transform root, Bounds arena, int firstLandmark)
+        {
+            var enclosure = root.Find(EnclosureName);
+            var occupied = enclosure.GetComponentsInChildren<MeshRenderer>()
+                .Select(r => Footprint(r.bounds)).ToList();
+            occupied.Add(Footprint(arena));
+            var props = root.Cast<Transform>()
+                .Where(t => t != enclosure && t.name != "Continuous necropolis earth" && t.name != "Continuous necropolis ridge")
+                .OrderBy(t => t.GetSiblingIndex() >= firstLandmark ? 0 : t.name == "pine-crooked" ? 2 : 1);
+
+            foreach (var prop in props)
+            {
+                var renderers = prop.GetComponentsInChildren<MeshRenderer>();
+                if (renderers.Length == 0) continue;
+                var bounds = renderers[0].bounds;
+                foreach (var renderer in renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
+                var footprint = Footprint(bounds);
+                var center = footprint.center;
+                // Clear assembled props as a unit, leaving the court and its enclosure intact.
+                bool placed = false;
+                foreach (var offset in PropOffsets)
+                {
+                    footprint.center = center + offset;
+                    var clearance = footprint;
+                    clearance.Expand(new Vector3(PropClearance * 2, 0, PropClearance * 2));
+                    if (occupied.Any(other => clearance.Intersects(other))) continue;
+
+                    prop.position += offset;
+                    occupied.Add(footprint);
+                    placed = true;
+                    break;
+                }
+                if (!placed) throw new System.InvalidOperationException($"No scenery clearance for {prop.name} in {root.gameObject.scene.path}.");
+            }
+        }
+
+        private static Bounds Footprint(Bounds bounds)
+        {
+            return new Bounds(new Vector3(bounds.center.x, 0, bounds.center.z),
+                new Vector3(bounds.size.x, 0, bounds.size.z));
         }
 
         private static void Enclosure(Transform root,Bounds b,float y)
         {
-            var walls=new GameObject("Connected memorial enclosure").transform;walls.SetParent(root,false);
+            var walls=new GameObject(EnclosureName).transform;walls.SetParent(root,false);
             foreach(int side in new[]{-1,1})
             {
                 float x=b.center.x+side*(b.extents.x+5.5f);
@@ -167,9 +221,10 @@ namespace CrowdPunch.Editor
 
         private static void Lantern(Transform root,Vector3 bottom,float height)
         {
-            Grave(root,"lightpost-single",bottom,new Vector3(height*.55f,height,height*.55f),"Slate");
+            var post=Grave(root,"lightpost-single",bottom,new Vector3(height*.55f,height,height*.55f),"Slate");
             // Painted ivory glass gives a quiet warm cue without lights, flames or emission.
-            Shape(root,"Lantern painted glass",bottom+Vector3.up*(height*.74f),new Vector3(.24f,.32f,.24f),Surface("Chalk",true));
+            var glass=Shape(root,"Lantern painted glass",bottom+Vector3.up*(height*.74f),new Vector3(.24f,.32f,.24f),Surface("Chalk",true));
+            glass.transform.SetParent(post.transform,true);
         }
 
         private static void Tree(Transform root,Vector3 bottom,float height,float yaw,bool distant=false)
