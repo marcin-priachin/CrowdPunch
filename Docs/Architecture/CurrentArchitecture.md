@@ -1012,8 +1012,10 @@ owned UV2 meshes and receivers. Large exterior ground and the wooded horizon use
 reduced chart density; moving objectives and cues remain excluded from fixed casts.
 `ChapterFourObservatoryRoofs` fits a single continuous gallery cap to the actual
 masonry vertices in building-local axes, including return walls and a small overhang.
-Its scoped refresh updates existing roofs and dome materials in 31-40; changes to
-fixed roof geometry require the existing chapter shadow bake.
+The recessed limestone frieze closes the top of the gallery while leaving the arch
+openings and broken foreground stonework visible. The scoped refresh also separates
+armillary hoops and gives landmarks clearance from neighboring buildings and trees.
+Changes to fixed scenery geometry use the existing chapter shadow bake.
 
 `CampaignCargoTrackVisuals.ApplyObservatory` extends the existing cargo recipe to
 32/39 with owned palettes, retaining its original 19/26 behavior. Gate/core fractures
@@ -1037,6 +1039,11 @@ opt-in Painted Foundry material role submerges nearby decoration in dense low sa
 fog, fading both distant scenery and exterior ground completely into the chapter's
 matching painted sky. The shader applies scenery fog after the depth tint, so fully
 fogged surfaces match the horizon. Serialized floor height anchors the bank across elevated stages.
+Chapter Four opts into a slow, 18-second pulse. `CelLevelLighting` adjusts the soft
+top of the bank by up to 1.8 m above or below its resting height and scales the fog
+color from 65% to 135% of its resting brightness. The Observatory sky uses the
+same color at the horizon, so the distant bank and sky move in sync. The opaque
+base, arena margin and distance fade stay fixed through the cycle.
 Conventional distance fog is disabled in this mode to keep gameplay clear.
 The bounds/edges/count/colour/settings shader globals and prior atmosphere are restored on
 unload. Earlier chapters retain their existing distance fog and default material

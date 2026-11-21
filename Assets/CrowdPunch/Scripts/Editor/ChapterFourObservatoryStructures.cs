@@ -50,7 +50,21 @@ namespace CrowdPunch.Editor
                 var ring=MeshObject(t,"Brass meridian hoop",Ring(radius,.14f,broken&&i==1?230:360),Surface("Ochre",true));
                 ring.transform.localPosition=new Vector3(0,radius+1.2f,0);ring.transform.localRotation=Quaternion.Euler(i==0?0:65,i*60,22+i*25);
             }
+            NestInstrumentHoops(t);
             Shape(t,"Quiet jade celestial sphere",new Vector3(0,radius+.6f,0),Vector3.one*radius*.65f,Surface("Sage",true),true);
+        }
+
+        internal static void NestInstrumentHoops(Transform instrument)
+        {
+            int index = 0;
+            foreach (Transform hoop in instrument)
+            {
+                if (hoop.name != "Brass meridian hoop") continue;
+                float radius = hoop.localPosition.y - 1.2f;
+                // Concentric rings need distinct radii even where their tilted planes cross.
+                hoop.localScale = Vector3.one * (1 - .25f * index / radius);
+                index++;
+            }
         }
 
         internal static Mesh Ring(float radius,float width,int degrees=360)

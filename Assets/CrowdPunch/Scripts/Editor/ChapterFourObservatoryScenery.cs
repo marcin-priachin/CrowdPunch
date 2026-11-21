@@ -69,6 +69,73 @@ namespace CrowdPunch.Editor
                     foreach(int side in new[]{-1,1})Instrument(root,new Vector3(court.center.x+side*(court.extents.x+16),y,court.center.z+4),5,side<0,side*30);
                     break;
             }
+            ClearLandmarkIntersections(root);
+        }
+
+        internal static void ClearLandmarkIntersections(Transform root)
+        {
+            const float clearance = 1f;
+            var scenery = root.Cast<Transform>().ToArray();
+            var galleries = scenery.Where(t => t.name == "Root-framed survey cloister")
+                .Select(t => (Transform: t, Bounds: SceneryBounds(t))).ToArray();
+            var landmarks = galleries.Select(g => g.Bounds).ToList();
+            landmarks.AddRange(scenery.Where(t => t.name == "Ruined planetarium" || t.name == "Watchkeeper observatory tower")
+                .Select(SceneryBounds));
+
+            foreach (var instrument in scenery.Where(t => t.name.EndsWith("armillary landmark", System.StringComparison.Ordinal)))
+            {
+                var bounds = SceneryBounds(instrument);
+                foreach (var gallery in galleries)
+                {
+                    if (!Intersects(bounds, gallery.Bounds, clearance)) continue;
+                    var outward = gallery.Transform.forward;
+                    var axis = new Vector3(Mathf.Abs(outward.x), 0, Mathf.Abs(outward.z));
+                    // Preserve the sightline along the gallery by shifting behind its back wall.
+                    float back = Vector3.Dot(gallery.Bounds.center, outward) +
+                        Vector3.Dot(gallery.Bounds.extents, axis);
+                    float front = Vector3.Dot(bounds.center, outward) -
+                        Vector3.Dot(bounds.extents, axis);
+                    var offset = outward * (back - front + clearance + .01f);
+                    instrument.position += offset;
+                    bounds.center += offset;
+                }
+                landmarks.Add(bounds);
+            }
+
+            var trees = scenery.Where(t => t.name == "Tree_2" || t.name.StartsWith("tree_", System.StringComparison.Ordinal))
+                .ToDictionary(t => t, SceneryBounds);
+            foreach (var tree in trees.Keys.ToArray())
+            {
+                var bounds = trees[tree];
+                if (!landmarks.Any(b => Intersects(bounds, b, clearance))) continue;
+                // The flank trees are planted along Z. Keep their distance from the arena.
+                for (int step = 0; ; step++)
+                {
+                    float distance = (step / 2 + 1) * (step % 2 == 0 ? 1 : -1);
+                    var offset = Vector3.forward * distance;
+                    var candidate = bounds;
+                    candidate.center += offset;
+                    if (landmarks.Any(b => Intersects(candidate, b, clearance)) ||
+                        trees.Any(pair => pair.Key != tree && Intersects(candidate, pair.Value, .2f))) continue;
+                    tree.position += offset;
+                    trees[tree] = candidate;
+                    break;
+                }
+            }
+        }
+
+        private static Bounds SceneryBounds(Transform root)
+        {
+            var renderers = root.GetComponentsInChildren<MeshRenderer>();
+            var bounds = renderers[0].bounds;
+            foreach (var renderer in renderers) bounds.Encapsulate(renderer.bounds);
+            return bounds;
+        }
+
+        private static bool Intersects(Bounds a, Bounds b, float clearance)
+        {
+            return a.min.x < b.max.x + clearance && a.max.x > b.min.x - clearance &&
+                a.min.z < b.max.z + clearance && a.max.z > b.min.z - clearance;
         }
 
         private static void Exterior(Transform root,Bounds court,float y)

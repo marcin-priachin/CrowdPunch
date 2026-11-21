@@ -49,9 +49,48 @@ namespace CrowdPunch.Tests
                 var wall=masonry.First(t=>t.name=="Cloister return wall").GetComponent<MeshRenderer>();
                 Assert.That(roof.GetComponent<MeshRenderer>().sharedMaterial,Is.SameAs(wall.sharedMaterial));
                 Assert.That(GameObjectUtility.GetStaticEditorFlags(roof.gameObject).HasFlag(StaticEditorFlags.ContributeGI),Is.True);
+
+                var frieze = gallery.Find("Recessed limestone frieze");
+                Assert.That(frieze, Is.Not.Null);
+                var front = masonry.Where(t => t.name.StartsWith("Wall_"))
+                    .SelectMany(t => t.GetComponentsInChildren<MeshFilter>())
+                    .SelectMany(f => f.sharedMesh.vertices.Select(v => gallery.InverseTransformPoint(f.transform.TransformPoint(v))))
+                    .ToArray();
+                var lower = frieze.localPosition - frieze.localScale * .5f;
+                var upper = frieze.localPosition + frieze.localScale * .5f;
+                Assert.That(upper.y, Is.EqualTo(roofBounds.min.y).Within(.002f));
+                Assert.That(lower.y, Is.LessThan(front.Max(p => p.y) - .4f), "The frieze must close the gap behind the arch crowns.");
+                Assert.That(lower.z, Is.GreaterThan(front.Max(p => p.z)), "The frieze must sit behind the arch faces.");
+                Assert.That(frieze.GetComponent<MeshRenderer>().sharedMaterial, Is.SameAs(wall.sharedMaterial));
             }
             foreach(var dome in root.GetComponentsInChildren<MeshRenderer>().Where(r=>r.name=="Patinated closed observatory dome"))
                 Assert.That(dome.sharedMaterial,Is.SameAs(dome.transform.parent.Find("Observatory drum").GetComponent<MeshRenderer>().sharedMaterial));
+        }
+
+        [TestCase(31)] [TestCase(32)] [TestCase(33)] [TestCase(34)] [TestCase(35)]
+        [TestCase(36)] [TestCase(37)] [TestCase(38)] [TestCase(39)] [TestCase(40)]
+        public void Vision006_LandmarksHaveClearanceFromBuildingsAndTrees(int stage)
+        {
+            var main = EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}.unity");
+            var root = main.GetRootGameObjects().Single(g => g.name == "Chapter Four - Overgrown Observatory").transform;
+            var scenery = root.Cast<Transform>();
+            var obstacles = scenery.Where(t => t.name == "Root-framed survey cloister" || t.name == "Ruined planetarium"
+                || t.name == "Watchkeeper observatory tower" || t.name == "Tree_2" || t.name.StartsWith("tree_")).ToArray();
+            Bounds BoundsOf(Transform item)
+            {
+                var renderers = item.GetComponentsInChildren<MeshRenderer>();
+                var bounds = renderers[0].bounds;
+                foreach (var renderer in renderers) bounds.Encapsulate(renderer.bounds);
+                return bounds;
+            }
+
+            foreach (var instrument in scenery.Where(t => t.name.EndsWith("armillary landmark")))
+            {
+                var instrumentBounds = BoundsOf(instrument);
+                instrumentBounds.Expand(new Vector3(1.98f, 0, 1.98f));
+                foreach (var obstacle in obstacles)
+                    Assert.That(instrumentBounds.Intersects(BoundsOf(obstacle)), Is.False, $"{instrument.name} near {obstacle.name}");
+            }
         }
 
         [TestCase(31)] [TestCase(32)] [TestCase(33)] [TestCase(34)] [TestCase(35)]
@@ -88,9 +127,9 @@ namespace CrowdPunch.Tests
             {
                 lighting.Apply();
                 Shader.SetGlobalColor("_CrowdPunchSceneryHazeColor",Color.white);
-                Color Sample(Vector2 p)
+                Color Sample(Vector2 p, float height = 0)
                 {
-                    material.SetVector("_SamplePosition",new Vector4(p.x,lighting.hazeGroundHeight,p.y,0));
+                    material.SetVector("_SamplePosition",new Vector4(p.x,lighting.hazeGroundHeight + height,p.y,0));
                     Graphics.Blit(null,target,material);
                     RenderTexture.active=target;pixel.ReadPixels(new Rect(0,0,1,1),0,0);pixel.Apply();
                     return pixel.GetPixel(0,0);
@@ -110,6 +149,24 @@ namespace CrowdPunch.Tests
                         Assert.That(sample.r,Is.EqualTo(distance).Within(.002f),$"Stage {stage}, edge {edge}");
                         if(distance==1)Assert.That(sample.g,Is.EqualTo(0).Within(.002f));
                         if(distance==6)Assert.That(sample.g,Is.EqualTo(1).Within(.002f),"Exterior ground must be opaque by 6m.");
+                    }
+                    if (checkedEdges == 0)
+                    {
+                        const string settingsName = "_CrowdPunchSceneryHazeSettings";
+                        var resting = Shader.GetGlobalVector(settingsName);
+                        var phase = resting;
+                        var exterior = middle + outward * 6;
+                        phase.z = resting.z - lighting.sceneryHazeBankPulse;
+                        Shader.SetGlobalVector(settingsName, phase);
+                        float lowFog = Sample(exterior, 3.2f).g;
+                        Assert.That(Sample(exterior).g, Is.EqualTo(1).Within(.002f));
+                        phase.z = resting.z + lighting.sceneryHazeBankPulse;
+                        Shader.SetGlobalVector(settingsName, phase);
+                        Assert.That(Sample(exterior, 3.2f).g - lowFog, Is.GreaterThan(.6f),
+                            "The rise and fall should be visible on nearby scenery.");
+                        Assert.That(Sample(exterior).g, Is.EqualTo(1).Within(.002f));
+                        Assert.That(Sample(middle + outward, 3.2f).g, Is.EqualTo(0).Within(.002f));
+                        Shader.SetGlobalVector(settingsName, resting);
                     }
                     checkedEdges++;
                 }
@@ -135,7 +192,10 @@ namespace CrowdPunch.Tests
             var main=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage:00}.unity");
             var lighting=main.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<CelLevelLighting>()).Single();
             Assert.That(lighting.overrideAtmosphere && lighting.sceneryOnlyHaze,Is.True);
+            Assert.That(lighting.sceneryHazeBankPulse, Is.EqualTo(1.8f));
+            Assert.That(lighting.sceneryHazeTintPulse, Is.EqualTo(.35f));
             Assert.That(lighting.skybox.shader.name,Is.EqualTo("CrowdPunch/Cel/Painted Haze Sky"));
+            Assert.That(lighting.skybox.GetFloat("_UseSceneryHazeColor"), Is.EqualTo(1));
             Assert.That(((Vector4)lighting.skybox.GetColor("_Horizon")-(Vector4)lighting.haze).sqrMagnitude,Is.LessThan(1e-8f));
             var root=main.GetRootGameObjects().Single(g=>g.name=="Chapter Four - Overgrown Observatory");
             foreach(var renderer in root.GetComponentsInChildren<MeshRenderer>())
