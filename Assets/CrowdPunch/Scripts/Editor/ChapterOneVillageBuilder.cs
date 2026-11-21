@@ -102,6 +102,8 @@ namespace CrowdPunch.Editor
             // Texture the original collision-aligned floor. No near-coplanar paving overlay.
             ChapterOneVillageScenery.Build(scenery,bounds,number);
             ChapterOneVillageRoofShadows.Apply(scenery);
+            ChapterOneVillageGateGable.Apply(scenery, number);
+            ChapterOneVillageWind.Apply(scenery);
             ConfigureLighting(scene,scenery,bounds,number);
             ChapterOnePaintedLook.ApplyScene(scene);
             if(scenery.GetComponentsInChildren<Collider>(true).Length!=0)

@@ -4562,7 +4562,7 @@ Campaign 01-10 now use the sunlit border village setting (VISION-004/005/006).
 watchtowers and the Gatekeeper keep. The newly imported Kenney Castle Kit supplies
 the fortified landmarks alongside the existing village, nature, dungeon and prop kits.
 
-Scenery is static, non-colliding main-scene presentation. Collision meshes, original
+Scenery is non-colliding main-scene presentation. Collision meshes, original
 transforms, waves, objectives, navigation and boss authoring remain in their original
 SubScenes. Surface materials are chapter-owned; the old flat backdrop renderer is hidden.
 Paving textures are projected onto the original authored floor, including the round boss
@@ -4596,6 +4596,14 @@ heights, fitted inside the tiled roof's curved underside. Houses no longer combi
 box wall with unrelated imported gable pieces. Cream plaster uses a subtle procedural
 wash instead of projecting a decorative wall atlas. Mills place their annex beside
 the tower with a recessed passage and a clear sail plane, avoiding shared wall faces.
+The gatehouses in Campaign 04, 09 and 10 have closed limestone gables fitted under
+the curved tiles on both sides. The roof maintains its overhang and existing shadow proxy.
+`ChapterOneVillageWind` authors UV8 data on chapter-owned mesh variants. The painted
+shader gently bends trees and bushes above their anchored bases across all ten stages,
+and turns the two windmill rotors around their axles in Campaign 06 and 08. Motion
+uses scaled shader time and retains the static batching and baked receiver UVs.
+The sails are excluded as casters so the baked shadowmask cannot leave a fixed blade
+silhouette on the windmill. The scenery recipe reapplies these details on rebuild.
 Chapter ambient fill is reduced to retain visibly shaded faces; the shared Full Cel
 post-processing profile is unchanged.
 

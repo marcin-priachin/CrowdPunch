@@ -87,6 +87,7 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             float3 normalOS : NORMAL;
             float2 uv : TEXCOORD0;
             float2 lightmapUV : TEXCOORD1;
+            float4 villageWind : TEXCOORD7;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         struct Varyings
@@ -104,22 +105,45 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
+        void ApplyVillageWind(float4 data, inout float3 positionWS, inout float3 normalWS)
+        {
+            // The village meshes carry their weights or axle offsets in UV8 so static
+            // batching can transform their vertices without losing the authored motion.
+            if (data.w == 67)
+            {
+                float phase = dot(positionWS.xz, float2(.082, .057));
+                float sway = sin(_Time.y * .83 - phase) * .72 + sin(_Time.y * 1.31 + phase * .61) * .28;
+                float crosswind = sin(_Time.y * .68 - phase * .84 + 1.4) * .42;
+                positionWS.xz += data.x * (sway * float2(.86, .51) + crosswind * float2(-.51, .86));
+            }
+            else if (data.w == 68)
+            {
+                // 5.5 degrees per second, with a gentle variation in speed.
+                float s, c;
+                sincos(_Time.y * .096 + sin(_Time.y * .19) * .06, s, c);
+                float2x2 rotation = float2x2(c, -s, s, c);
+                positionWS.xy += mul(rotation, data.xy) - data.xy;
+                normalWS.xy = mul(rotation, normalWS.xy);
+            }
+        }
         Varyings Vertex(Attributes input)
         {
             Varyings output = (Varyings)0;
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_TRANSFER_INSTANCE_ID(input, output);
             UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-            VertexPositionInputs pos = GetVertexPositionInputs(input.positionOS.xyz);
-            output.positionCS = pos.positionCS;
-            output.positionWS = pos.positionWS;
-            output.normalWS = TransformObjectToWorldNormal(input.normalOS);
+            float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+            float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+            ApplyVillageWind(input.villageWind, positionWS, normalWS);
+            output.positionCS = TransformWorldToHClip(positionWS);
+            output.positionWS = positionWS;
+            output.normalWS = normalWS;
             output.uv=input.uv;
             output.paintPosition=input.positionOS.xyz*3;
             output.paintNormal=input.normalOS;
             output.lightmapUV=input.lightmapUV*unity_LightmapST.xy+unity_LightmapST.zw;
             output.receiverUV=input.lightmapUV*_BakedShadowST.xy+_BakedShadowST.zw;
-            output.fog = ComputeFogFactor(pos.positionCS.z);
+            output.fog = ComputeFogFactor(output.positionCS.z);
             output.depthRole = _CameraCutaway * 2;
             #ifdef UNITY_DOTS_INSTANCING_ENABLED
                 output.depthRole = max(output.depthRole, UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _ArenaDepthRole));
