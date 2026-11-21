@@ -985,7 +985,10 @@ dynamic objective cues remain outside the fog material roles.
 fades toward a purple silhouette 12–32 m beyond the floor outline. The low bank
 obscures exterior ground. An exponential distance fade leaves the ridge and trees
 faintly visible at 48 m and blends them toward the horizon as distance increases.
-The 4.5 m low fog bank and loaded-scene restoration of all fog globals are unchanged.
+The Necropolis bank and distance haze rise and recede together on a smooth
+14-second cycle. The bank top ranges from 3.35 m to 5.65 m above the exterior
+ground. The scenery builder reserves each stage's landmarks first, then spaces
+the remaining prop assemblies at least 0.5 m apart in plan view.
 `CampaignShadowBake` writes owned UV2 meshes and explicit ECS receiver bindings;
 large exterior earth and the ridge use reduced chart density. Surface refreshes
 retain material GUIDs and receiver mask/chart/source bindings without rebuilding

@@ -27,6 +27,20 @@ namespace CrowdPunch.Tests
             var main=EditorSceneManager.OpenScene($"Assets/CrowdPunch/Scenes/Campaign/Campaign_{stage}.unity");
             var root=main.GetRootGameObjects().Single(g=>g.name=="Chapter Five - Twilight Necropolis");
             Assert.That(root.GetComponentsInChildren<Collider>(true),Is.Empty);
+            var props = root.transform.Cast<Transform>()
+                .Where(t => t.name != "Continuous necropolis earth" && t.name != "Continuous necropolis ridge")
+                .Select(t => (transform: t, bounds: t.GetComponentsInChildren<MeshRenderer>().Select(r => r.bounds).ToArray()))
+                .ToArray();
+            for (int i = 0; i < props.Length; i++)
+            for (int j = 0; j < i; j++)
+            foreach (var a in props[i].bounds)
+            foreach (var b in props[j].bounds)
+            {
+                float gapX = Mathf.Abs(a.center.x - b.center.x) - a.extents.x - b.extents.x;
+                float gapZ = Mathf.Abs(a.center.z - b.center.z) - a.extents.z - b.extents.z;
+                if (Mathf.Max(gapX, gapZ) < .49f)
+                    Assert.Fail($"{props[i].transform.name} crowds {props[j].transform.name} in Campaign {stage}.");
+            }
             var lighting=main.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<CelLevelLighting>()).Single();
             Assert.That(lighting.GetComponent<BakedShadowLighting>(),Is.Not.Null);
             Assert.That(lighting.sceneryOnlyHaze,Is.True,"Fog must keep combat inside the floor boundary clear.");
@@ -76,9 +90,9 @@ namespace CrowdPunch.Tests
                 #include ""UnityCG.cginc""
                 #include ""Assets/CrowdPunch/Shaders/Cel/ArenaSceneryHaze.hlsl""
                 float4 _SamplePosition, _InputColor;
-                float _Role;
+                float _Role, _SampleTime;
                 float4 frag(v2f_img input) : SV_Target {
-                    return float4(ApplyArenaSceneryHaze(_InputColor.rgb,_SamplePosition.xyz,_Role),1);
+                    return float4(ApplyArenaSceneryHaze(_InputColor.rgb,_SamplePosition.xyz,_Role,_SampleTime),1);
                 }
                 ENDHLSL
             } } }");
@@ -96,9 +110,10 @@ namespace CrowdPunch.Tests
                 Shader.SetGlobalInt("_CrowdPunchSceneryHazeEdgeCount",0);
                 Shader.SetGlobalColor("_CrowdPunchSceneryHazeColor",Color.white);
                 Shader.SetGlobalVector("_CrowdPunchSceneryHazeSettings",new Vector4(1,0,4.5f,48));
-                Color Sample(Vector3 position,Color color,float role)
+                Color Sample(Vector3 position,Color color,float role,float time=0)
                 {
                     material.SetVector("_SamplePosition",position);material.SetColor("_InputColor",color);material.SetFloat("_Role",role);
+                    material.SetFloat("_SampleTime",time);
                     Graphics.Blit(null,target,material);RenderTexture.active=target;
                     pixel.ReadPixels(new Rect(0,0,1,1),0,0);pixel.Apply();return pixel.GetPixel(0,0);
                 }
@@ -116,6 +131,15 @@ namespace CrowdPunch.Tests
                 Assert.That(horizon,Is.InRange(trees,.99f),"Farther silhouettes should recede gradually.");
                 Assert.That(Sample(new Vector3(58,0,0),Color.black,3).r,Is.EqualTo(1).Within(.002),"The low bank should still obscure exterior ground.");
                 Assert.That(Sample(new Vector3(58,10,0),Color.black,1).r,Is.EqualTo(1).Within(.002),"Standard chapter fog must still dissolve far scenery.");
+                var bankEdge = new Vector3(24, 3.8f, 0);
+                float thick = Sample(bankEdge, Color.black, 3, 3.5f).r;
+                float thin = Sample(bankEdge, Color.black, 3, 10.5f).r;
+                Assert.That(thick - thin, Is.GreaterThan(.3f), "The change should be visible near the fog bank.");
+                Assert.That(Sample(bankEdge, Color.black, 3, 17.5f).r, Is.EqualTo(thick).Within(.002f));
+                Assert.That(Sample(bankEdge, Color.black, 1, 3.5f).r,
+                    Is.EqualTo(Sample(bankEdge, Color.black, 1, 10.5f).r).Within(.002f));
+                Assert.That(Sample(Vector3.zero, Color.red, 3, 3.5f).g, Is.Zero.Within(.002f));
+                Assert.That(Sample(bankEdge, Color.red, 0, 3.5f).g, Is.Zero.Within(.002f));
                 Assert.That(ShaderUtil.GetShaderMessages(shader).Where(m=>m.severity==UnityEditor.Rendering.ShaderCompilerMessageSeverity.Error),Is.Empty);
             }
             finally

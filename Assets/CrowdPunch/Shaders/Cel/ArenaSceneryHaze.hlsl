@@ -27,26 +27,34 @@ float ArenaSceneryDistance(float2 sampleXZ)
     return winding!=0 ? 0 : sqrt(distanceSquared);
 }
 
-half3 ApplyArenaSceneryHaze(half3 color, float3 positionWS, float role)
+half3 ApplyArenaSceneryHaze(half3 color, float3 positionWS, float role, float timeSeconds)
 {
     if(role<.5 || _CrowdPunchSceneryHazeSettings.x<.5) return color;
     float distanceOutside=ArenaSceneryDistance(positionWS.xz);
     // Dense low fog buries nearby scenery instead of uniformly tinting its outline.
     float exterior=smoothstep(1,6,distanceOutside);
     float height=positionWS.y-_CrowdPunchSceneryHazeSettings.y;
-    half lowBank=1-smoothstep(1.5,_CrowdPunchSceneryHazeSettings.z,height);
+    float bankTop=_CrowdPunchSceneryHazeSettings.z;
     half depthHaze;
     if(role>2.5)
     {
-        // Let distant Necropolis silhouettes fade gradually into the horizon.
+        // The Necropolis bank rises and thickens together over a 14-second cycle.
+        float pulse=sin(timeSeconds*(6.2831853/14.0));
+        bankTop+=1.15*pulse;
         float depth=max(0,distanceOutside-3)/(_CrowdPunchSceneryHazeSettings.w-3);
-        depthHaze=1-exp2(-2.5*depth);
+        depthHaze=1-exp2(-2.5*depth*(1+.26*pulse));
         half silhouette=smoothstep(12,32,distanceOutside);
         color=lerp(color,_CrowdPunchSceneryHazeColor.rgb*.10,silhouette);
     }
     else depthHaze=smoothstep(3,_CrowdPunchSceneryHazeSettings.w,distanceOutside);
+    half lowBank=1-smoothstep(1.5,bankTop,height);
     // Ground and scenery share the same bank, hiding baked shadows beneath it too.
     half haze=1-(1-depthHaze)*(1-lowBank*exterior);
     return lerp(color,_CrowdPunchSceneryHazeColor.rgb,haze);
+}
+
+half3 ApplyArenaSceneryHaze(half3 color, float3 positionWS, float role)
+{
+    return ApplyArenaSceneryHaze(color,positionWS,role,_Time.y);
 }
 #endif
