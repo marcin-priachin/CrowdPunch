@@ -97,6 +97,19 @@ namespace CrowdPunch.Editor
             for(int i=0;i<3;i++)Shape(root,"Dock access step",p+new Vector3(2.6f,0,-3.75f+i*.3f),new Vector3(1.6f,.15f*(i+1),.3f),Steel);
         }
 
+        internal static void WorkshopDock(Transform root,Vector3 facade,bool machine)
+        {
+            // The deck ends beneath the shutter. The canopy meets the wall below the clerestory.
+            Shape(root,"Raised loading dock",facade+new Vector3(0,0,-1.42f),new Vector3(7.8f,.45f,2.8f),Steel);
+            Shape(root,"Loading shelter roof",facade+new Vector3(0,3.4f,-1.53f),new Vector3(8.3f,.22f,3.06f),Teal);
+            foreach(int side in new[]{-1,1})
+                Shape(root,"Dock canopy upright",facade+new Vector3(side*3.6f,.45f,-2.55f),new Vector3(.18f,2.95f,.18f),Steel);
+            for(int i=0;i<3;i++)
+                Shape(root,"Dock access step",facade+new Vector3(0,0,-3.57f+i*.3f),new Vector3(2.4f,.15f*(i+1),.3f),Steel);
+            Model(root,machine?"machine-fortified":"box-large",facade+new Vector3(-3,.45f,-1.3f),
+                new Vector3(1.3f,1.65f,1.5f),Teal);
+        }
+
         internal static void SeparateDrainEnds(Transform root)
         {
             var renderers=root.GetComponentsInChildren<MeshRenderer>();
