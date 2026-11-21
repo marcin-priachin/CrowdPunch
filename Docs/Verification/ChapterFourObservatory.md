@@ -61,7 +61,17 @@ scenery joins the same opaque bank. Unity reports no painted shader errors.
 ![Ground fog reaches the submerged scenery bases](Images/ChapterFourObservatory/FogGround.png)
 This hides the existing horizon geometry before its boundary or corners can appear.
 The painted sky matches the opaque bank and reserves its upper-sky wash for angles
-above 33 degrees. Fog does not animate or change density with camera distance.
+above 33 degrees. The bank is anchored to the arena and uses world-space distances.
+
+The soft top of the bank rises and falls from 2.7 to 6.3 m over an 18-second
+cycle. The distant fog and matching sky horizon brighten and dim together
+between 65% and 135% of their resting brightness. The opaque base and the
+exterior distance fade stay fixed.
+GPU checks across Campaign 31-40 verified the stronger rise and fall, the
+opaque exterior ground, and the clear arena margin at the crest.
+Campaign 37 gameplay-camera captures show the brightness change across the
+background fog. A Play Mode sample measured both endpoints over one cycle,
+and all ten saved-scene fog checks passed.
 
 Conventional fog is disabled for these scenes, and gameplay material roles remain
 zero. Characters, launched bodies, objectives, warnings and particles retain their
@@ -169,6 +179,18 @@ Unity C# compilation succeeded and the painted shader reports no diagnostics.
 These are static Editor checks, not a combat playthrough or standalone-player test.
 
 ![Continuous masonry roof covers the gallery end corners; haze disabled for inspection](Images/ChapterFourObservatory/RoofCorner.png)
+
+The November 21 follow-up fills the exposed upper façades with a recessed
+limestone frieze fitted between the end walls and the cap. Nearby armillaries and
+vegetation have clearance from the cloisters, and the concentric hoops have
+separate radii where their planes cross.
+
+All 80 observatory Edit Mode cases passed, including the new façade and landmark
+clearance checks. Front and oblique Campaign 37 inspection views showed the filled
+roofline and clear end wall. A 1,080-frame Play Mode sample at Campaign 37 measured
+the fog bank top moving between 3.7 and 5.3 m over one 18-second cycle.
+The ten shadow rebakes completed, and reopening each saved stage confirmed
+shadow masks, light probes and lightmap assignments for all 40 friezes.
 
 ## Objectives and hazards
 

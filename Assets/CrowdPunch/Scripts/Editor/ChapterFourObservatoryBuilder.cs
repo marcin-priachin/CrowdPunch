@@ -179,11 +179,14 @@ namespace CrowdPunch.Editor
             lighting.hazeArenaBounds=new Vector4(court.center.x,court.center.z,court.extents.x,court.extents.z);
             lighting.hazeGroundHeight=groundHeight;
             lighting.hazeArenaEdges=hazeEdges;
+            lighting.sceneryHazeBankPulse = 1.8f;
+            lighting.sceneryHazeTintPulse = .35f;
             string skyPath=Output+"/ObservatorySky.mat"; var sky=AssetDatabase.LoadAssetAtPath<Material>(skyPath);
             var skyShader=Shader.Find("CrowdPunch/Cel/Painted Haze Sky");
             if(skyShader==null)throw new InvalidOperationException("Painted haze sky shader is missing.");
             if(sky==null){sky=new Material(skyShader);AssetDatabase.CreateAsset(sky,skyPath);}
             sky.shader=skyShader;sky.SetColor("_Horizon",lighting.haze);sky.SetColor("_Zenith",new Color(.65f,.74f,.72f));
+            sky.SetFloat("_UseSceneryHazeColor", 1);
             EditorUtility.SetDirty(sky); lighting.skybox=sky;
             var previousBounds=Shader.GetGlobalVector("_CrowdPunchSceneryHazeBounds");
             var previousColor=Shader.GetGlobalVector("_CrowdPunchSceneryHazeColor");

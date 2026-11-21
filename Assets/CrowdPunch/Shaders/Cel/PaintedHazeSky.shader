@@ -4,6 +4,7 @@ Shader "CrowdPunch/Cel/Painted Haze Sky"
     {
         _Horizon("Opaque haze",Color)=(.57,.68,.63,1)
         _Zenith("Upper sky wash",Color)=(.65,.74,.72,1)
+        [ToggleUI] _UseSceneryHazeColor("Follow scene fog color",Float)=0
     }
     SubShader
     {
@@ -15,8 +16,10 @@ Shader "CrowdPunch/Cel/Painted Haze Sky"
             #pragma vertex Vertex
             #pragma fragment Fragment
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "ArenaSceneryHaze.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _Horizon, _Zenith;
+                half _UseSceneryHazeColor;
             CBUFFER_END
             struct Attributes { float4 positionOS:POSITION; UNITY_VERTEX_INPUT_INSTANCE_ID };
             struct Varyings { float4 positionCS:SV_POSITION; float3 direction:TEXCOORD0; UNITY_VERTEX_OUTPUT_STEREO };
@@ -35,7 +38,9 @@ Shader "CrowdPunch/Cel/Painted Haze Sky"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float upper=smoothstep(.55,1,normalize(input.direction).y);
-                return half4(lerp(_Horizon.rgb,_Zenith.rgb,upper),1);
+                bool followHaze = _UseSceneryHazeColor > .5 && _CrowdPunchSceneryHazeSettings.x > .5;
+                half3 horizon = followHaze ? _CrowdPunchSceneryHazeColor.rgb : _Horizon.rgb;
+                return half4(lerp(horizon,_Zenith.rgb,upper),1);
             }
             ENDHLSL
         }

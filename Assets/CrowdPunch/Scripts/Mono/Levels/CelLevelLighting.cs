@@ -26,6 +26,13 @@ namespace CrowdPunch.Mono.Levels
         public float hazeGroundHeight;
         [Min(6), Tooltip("Distance outside the floor outline that controls the scenery fade into the sky.")]
         public float sceneryHazeDepth = 24;
+        [Range(0, 2), Tooltip("Height in metres that the soft top of the scenery fog rises and falls over an 18-second cycle.")]
+        public float sceneryHazeBankPulse;
+        [Range(0, .5f), Tooltip("Strength of the brightness pulse in the scenery fog. The painted sky can follow this color.")]
+        public float sceneryHazeTintPulse;
+
+        private const float HazeBankTop = 4.5f;
+        private const float HazePulsePeriod = 18f;
 
         private static readonly int SceneryHazeBounds = Shader.PropertyToID("_CrowdPunchSceneryHazeBounds");
         private static readonly int SceneryHazeColor = Shader.PropertyToID("_CrowdPunchSceneryHazeColor");
@@ -90,10 +97,30 @@ namespace CrowdPunch.Mono.Levels
             Shader.SetGlobalVectorArray(SceneryHazeEdges, edgeUpload);
             Shader.SetGlobalInt(SceneryHazeEdgeCount, edgeCount);
             Shader.SetGlobalVector(SceneryHazeBounds, hazeArenaBounds);
-            Shader.SetGlobalColor(SceneryHazeColor, QualitySettings.activeColorSpace == ColorSpace.Linear ? haze.linear : haze);
-            Shader.SetGlobalVector(SceneryHazeSettings, overrideAtmosphere && sceneryOnlyHaze
-                ? new Vector4(1, hazeGroundHeight, 4.5f, Mathf.Max(6, sceneryHazeDepth)) : Vector4.zero);
+            ApplyHazeSettings(Application.isPlaying ? Time.timeSinceLevelLoad : 0);
             DynamicGI.UpdateEnvironment();
+        }
+
+        private void Update()
+        {
+            if (overrideAtmosphere && sceneryOnlyHaze && (sceneryHazeBankPulse > 0 || sceneryHazeTintPulse > 0))
+                ApplyHazeSettings(Time.timeSinceLevelLoad);
+        }
+
+        private void ApplyHazeSettings(float time)
+        {
+            bool sceneryHazeEnabled = overrideAtmosphere && sceneryOnlyHaze;
+            float pulse = sceneryHazeEnabled ? Mathf.Sin(time * (2 * Mathf.PI / HazePulsePeriod)) : 0;
+            float bankTop = HazeBankTop + sceneryHazeBankPulse * pulse;
+            Shader.SetGlobalVector(SceneryHazeSettings, sceneryHazeEnabled
+                ? new Vector4(1, hazeGroundHeight, bankTop, Mathf.Max(6, sceneryHazeDepth)) : Vector4.zero);
+
+            // The distant bank is already opaque, so animate its color along with the near bank's height.
+            var hazeColor = QualitySettings.activeColorSpace == ColorSpace.Linear ? haze.linear : haze;
+            float intensity = 1 + sceneryHazeTintPulse * pulse;
+            var pulsedColor = hazeColor * intensity;
+            pulsedColor.a = hazeColor.a;
+            Shader.SetGlobalColor(SceneryHazeColor, pulsedColor);
         }
 
         private void OnDisable()
