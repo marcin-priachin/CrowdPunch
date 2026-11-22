@@ -7,7 +7,39 @@ namespace CrowdPunch.Mono.Player
     // Prewarmed fixed capacity. Exhaustion drops presentation, never gameplay.
     internal sealed class ImpactParticlePool
     {
-        private readonly ParticleSystem[,] particles;
+        private sealed class EffectSlot
+        {
+            public readonly ParticleSystem Root;
+            private readonly (ParticleSystem System, float Speed)[] systems;
+            private float playbackSpeed = 1f;
+
+            public EffectSlot(ParticleSystem root)
+            {
+                Root = root;
+                var hierarchy = root.GetComponentsInChildren<ParticleSystem>(true);
+                systems = new (ParticleSystem, float)[hierarchy.Length];
+                for (int i = 0; i < hierarchy.Length; i++)
+                {
+                    var main = hierarchy[i].main;
+                    systems[i] = (hierarchy[i], main.simulationSpeed);
+                    // Accents expire while a confirmed impact freezes gameplay.
+                    main.useUnscaledTime = true;
+                }
+            }
+
+            public void SetPlaybackSpeed(float speed)
+            {
+                if (playbackSpeed == speed) return;
+                playbackSpeed = speed;
+                foreach (var (system, authoredSpeed) in systems)
+                {
+                    var main = system.main;
+                    main.simulationSpeed = authoredSpeed * speed;
+                }
+            }
+        }
+
+        private readonly EffectSlot[,] particles;
         private readonly bool[] placeholders;
         private readonly CombatFeedbackSettings settings;
         private readonly int capacity;
@@ -18,7 +50,7 @@ namespace CrowdPunch.Mono.Player
             ParticleSystem[] prefabs = { settings.PunchParticles, settings.EnemyParticles,
                 settings.EnvironmentParticles, settings.PlayerDamageParticles, settings.DashStartParticles,
                 settings.DashMovementParticles, settings.DashEndParticles };
-            particles = new ParticleSystem[prefabs.Length, capacity];
+            particles = new EffectSlot[prefabs.Length, capacity];
             placeholders = new bool[prefabs.Length];
             for (int kind = 0; kind < prefabs.Length; kind++)
             {
@@ -56,28 +88,25 @@ namespace CrowdPunch.Mono.Player
                     config.playOnAwake = false;
                     config.stopAction = ParticleSystemStopAction.None;
                     config.loop = false;
-                    // Accents must bloom and expire while a confirmed impact freezes gameplay.
-                    foreach (var child in effect.GetComponentsInChildren<ParticleSystem>(true))
-                    {
-                        var childMain = child.main;
-                        childMain.useUnscaledTime = true;
-                    }
-                    particles[kind, slot] = effect;
+                    particles[kind, slot] = new EffectSlot(effect);
                 }
             }
         }
-        public void Show(CombatImpactKind kind, Vector3 position, Vector3 direction, float intensity)
+        public void Show(CombatImpactKind kind, Vector3 position, Vector3 direction, float intensity,
+            float scale = 1f, float playbackSpeed = 1f)
         {
             int row = (int)kind;
             for (int slot = 0; slot < capacity; slot++)
             {
-                var effect = particles[row, slot];
+                var instance = particles[row, slot];
+                var effect = instance.Root;
                 if (effect.IsAlive(true)) continue;
                 effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                instance.SetPlaybackSpeed(playbackSpeed);
                 effect.transform.SetPositionAndRotation(position, Quaternion.LookRotation(
                     direction.sqrMagnitude > .001f ? direction : Vector3.up));
-                effect.transform.localScale = Vector3.one * Mathf.Lerp(settings.ParticleScale.x,
-                    settings.ParticleScale.y, Mathf.Clamp01(intensity));
+                effect.transform.localScale = Vector3.one * (scale * Mathf.Lerp(settings.ParticleScale.x,
+                    settings.ParticleScale.y, Mathf.Clamp01(intensity)));
                 if (placeholders[row])
                 {
                     var main = effect.main;
@@ -93,8 +122,11 @@ namespace CrowdPunch.Mono.Player
         }
         public void Clear()
         {
-            foreach (var effect in particles) if (effect != null)
-                effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            foreach (var instance in particles)
+            {
+                var effect = instance.Root;
+                if (effect != null) effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
         }
     }
 }

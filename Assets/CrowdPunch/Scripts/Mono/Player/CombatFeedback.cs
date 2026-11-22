@@ -11,6 +11,9 @@ namespace CrowdPunch.Mono.Player
     [DefaultExecutionOrder(100)]
     public sealed class CombatFeedback : MonoBehaviour
     {
+        private const float DashTakeoffIntensity = .7f;
+        private const float DashTravelIntensity = .35f;
+
         private PlayerEcsBridge bridge;
         private PlayerHealth health;
         private PlayerController controller;
@@ -76,6 +79,7 @@ namespace CrowdPunch.Mono.Player
             bridge.ExplosionReceived += OnExplosion;
             bridge.PillarImpactReceived += OnPillarImpact;
             bridge.LaunchReceived += OnLaunch;
+            bridge.PunchApproachApplied += OnPunchApproach;
             bridge.PunchResolved += OnPunchResolved;
             bridge.TrailsBegan += trails.Begin;
             bridge.TrailReceived += trails.Show;
@@ -89,6 +93,25 @@ namespace CrowdPunch.Mono.Player
             observedPunch = bridge.PunchSequence;
             bound = true;
         }
+
+        private void OnPunchApproach(Vector3 displacement)
+        {
+            if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
+            float distance = displacement.magnitude;
+            if (distance <= 0f) return;
+
+            Vector3 backward = -displacement / distance;
+            Vector3 end = bridge.Position;
+            Vector3 start = end - displacement;
+            const float fullWakeDistance = 1.5f;
+            float scale = Mathf.Clamp01(distance / fullWakeDistance);
+            // The dash's 200 ms travel streaks play for 280 ms on a punch approach.
+            const float playbackSpeed = .20f / .28f;
+            particles.Show(CombatImpactKind.DashStart, start, backward, DashTakeoffIntensity, scale, playbackSpeed);
+            particles.Show(CombatImpactKind.DashMove, Vector3.Lerp(start, end, .5f), backward, DashTravelIntensity, scale, playbackSpeed);
+            particles.Show(CombatImpactKind.DashEnd, end, backward, DashTravelIntensity, scale, playbackSpeed);
+        }
+
         private void OnPunchResolved(uint sequence, bool hit)
         {
             if (!isActiveAndEnabled || sequence != bridge.PunchSequence || sequence == observedPunch) return;
@@ -166,7 +189,7 @@ namespace CrowdPunch.Mono.Player
             dashEndPending = false;
             dashRemaining = settings.DashMovementInterval;
             if (cameraFeedback != null) cameraFeedback.Dashing = true;
-            particles.Show(CombatImpactKind.DashStart, bridge.transform.position, -dashDirection, .7f);
+            particles.Show(CombatImpactKind.DashStart, bridge.transform.position, -dashDirection, DashTakeoffIntensity);
         }
         private void OnDashEnd()
         {
@@ -202,7 +225,7 @@ namespace CrowdPunch.Mono.Player
             if (dashEndPending)
             {
                 dashEndPending = false;
-                particles.Show(CombatImpactKind.DashEnd, bridge.transform.position, -dashDirection, .35f);
+                particles.Show(CombatImpactKind.DashEnd, bridge.transform.position, -dashDirection, DashTravelIntensity);
             }
             if (controller != null && controller.isActiveAndEnabled && controller.IsDashing && Time.deltaTime > 0f)
             {
@@ -211,7 +234,7 @@ namespace CrowdPunch.Mono.Player
                 {
                     dashRemaining = settings.DashMovementInterval;
                     particles.Show(CombatImpactKind.DashMove, bridge.transform.position,
-                        -dashDirection, .35f);
+                        -dashDirection, DashTravelIntensity);
                 }
             }
         }
@@ -272,6 +295,7 @@ namespace CrowdPunch.Mono.Player
                 bridge.ExplosionReceived -= OnExplosion;
                 bridge.PillarImpactReceived -= OnPillarImpact;
                 bridge.LaunchReceived -= OnLaunch;
+                bridge.PunchApproachApplied -= OnPunchApproach;
                 bridge.PunchResolved -= OnPunchResolved;
                 if (trails != null) { bridge.TrailsBegan -= trails.Begin; bridge.TrailReceived -= trails.Show; bridge.TrailsEnded -= trails.End; }
                 if (dasherTelegraphs != null)
