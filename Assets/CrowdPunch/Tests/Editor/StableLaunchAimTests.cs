@@ -495,6 +495,62 @@ namespace CrowdPunch.Tests
             Aim(0); Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(other));
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Player004_LaunchedEnemyLosesLockAndDoesNotMaskAnotherTarget(bool useFacingRay)
+        {
+            em.SetComponentData(target, LocalTransform.FromPosition(new float3(0, 0, 4)));
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(0, 0, 18)));
+            Entity fallback = Body(new float3(.2f, 0, 6));
+            if (useFacingRay) SetCollisionBodies(target, other);
+
+            Aim(0);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target, Is.EqualTo(target));
+
+            em.SetComponentData(target, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            Assert.That(PunchAimAssist.TryGetLockedDirection(em, source, float3.zero, out _), Is.False);
+            Aim(.02);
+            Assert.That(em.GetComponentData<PunchAimAssistTarget>(source).Target,
+                Is.EqualTo(useFacingRay ? other : fallback));
+
+            em.SetComponentData(target, new EnemyLaunchState { Phase = EnemyLaunchPhase.Recovering });
+            Assert.That(PunchAimAssist.IsValidTarget(em, source, target), Is.True);
+        }
+
+        [TestCase(0)]
+        [TestCase(1)]
+        public void Player004_DisplayedAimCannotCommitTowardLaunchedEnemy(int hasAuthoritativePath)
+        {
+            const uint revision = 1;
+            em.SetComponentData(source, new PunchAimAssistTarget {
+                PreviewRevision = revision, PreviewDirection = math.forward(), PreviewTarget = target,
+                PreviewHasAuthoritativePath = (byte)hasAuthoritativePath
+            });
+            Assert.That(PunchAimAssist.TryGetCommittedDirection(em, source, revision, out _, out _), Is.True);
+
+            em.SetComponentData(target, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            Assert.That(PunchAimAssist.TryGetCommittedDirection(em, source, revision, out _, out _), Is.False);
+        }
+
+        [Test]
+        public void Combat014_Player004_RepunchAimsLaunchedBodyTowardEligibleEnemy()
+        {
+            em.SetComponentData(source, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched, LaunchSequence = 1 });
+            em.SetComponentData(other, LocalTransform.FromPosition(new float3(0, 0, 4)));
+            em.SetComponentData(other, new EnemyLaunchState { Phase = EnemyLaunchPhase.Launched });
+            SetCollisionBodies(other);
+
+            Aim(0);
+            world.GetOrCreateSystem<PresentationBridgeSystem>().Update(world.Unmanaged);
+            bridge.PublishPunch(Vector3.back, Vector3.forward, 1, 2, 90, .1f, 10, 0);
+            world.GetOrCreateSystem<PlayerBridgeSystem>().Update(world.Unmanaged);
+            world.GetOrCreateSystem<PunchDetectionSystem>().Update(world.Unmanaged);
+
+            var launch = em.GetComponentData<EnemyLaunchState>(source);
+            Assert.That(launch.LaunchSequence, Is.EqualTo(2u));
+            Assert.That(launch.HomingTarget, Is.EqualTo(target));
+        }
+
         [Test]
         public void Player004_LeadIsBoundedAndZeroDisablesPrediction()
         {

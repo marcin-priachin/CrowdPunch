@@ -2685,6 +2685,10 @@ steps, contact order, complete committed paths and rendered output are unchanged
 `PunchAimAssistSystem` gathers its update-local candidate snapshot only when an eligible
 source needs enabled aim assistance; normal lock clearing still runs for every source.
 Enemy and Chicken sources share that snapshot for the update, with no cross-frame cache.
+Facing rays skip launched enemies. The shared target check accepts ordinary enemies
+only while alive and Active or Recovering, and displayed aim is invalid before
+commitment if its target has entered Launched (PLAYER-004). A launched body can
+still be punched and receive assisted direction as a launch source (COMBAT-014).
 
 Forecast/runtime consistency amendment (2026-11-02), PLAYER-003/004, COMBAT-012:
 `PresentationBridgeSystem` reads this world's `FixedStepSimulationSystemGroup.Timestep`

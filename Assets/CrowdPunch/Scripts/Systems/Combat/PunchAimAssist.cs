@@ -142,11 +142,18 @@ namespace CrowdPunch.Systems.Combat
             var aim = em.GetComponentData<PunchAimAssistTarget>(source);
             bool hasPath = aim.PreviewHasAuthoritativePath != 0;
             if (aim.PreviewRevision != revision || math.lengthsq(aim.PreviewDirection) < .001f
+                || IsLaunched(em, aim.PreviewTarget)
                 || !hasPath && aim.PreviewTarget != Entity.Null && (!IsValidTarget(em, source, aim.PreviewTarget)
                     || CommittedLaunchPlan.Generation(em, aim.PreviewTarget) != aim.PreviewTargetGeneration)) return false;
             direction = aim.PreviewDirection;
             target = IsValidTarget(em, source, aim.PreviewTarget) ? aim.PreviewTarget : Entity.Null;
             return true;
+        }
+
+        public static bool IsLaunched(EntityManager manager, Entity target)
+        {
+            return manager.HasComponent<EnemyLaunchState>(target)
+                && manager.GetComponentData<EnemyLaunchState>(target).Phase == EnemyLaunchPhase.Launched;
         }
 
         public static bool IsValidTarget(EntityManager manager, Entity source, Entity target)
@@ -174,9 +181,9 @@ namespace CrowdPunch.Systems.Combat
                 || manager.HasComponent<RespawnRequest>(target)
                 && manager.IsComponentEnabled<RespawnRequest>(target)) return false;
             if (SnakeHitRules.Protected(manager, target)) return false;
-            return EnemyLaunchTransition.CanReceivePlayerPunch(
-                manager.GetComponentData<EnemyLaunchState>(target),
-                manager.GetComponentData<Health>(target));
+            var phase = manager.GetComponentData<EnemyLaunchState>(target).Phase;
+            return (phase == EnemyLaunchPhase.Active || phase == EnemyLaunchPhase.Recovering)
+                && manager.GetComponentData<Health>(target).Current > 0f;
         }
 
         public static bool IsWithinAssistLimits(EntityManager manager, Entity target, float3 sourcePosition,

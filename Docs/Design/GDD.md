@@ -484,6 +484,10 @@ after a short configurable input-memory interval, and consume it when the target
 changes. Fast rotation without a centred challenger is insufficient. Gatekeeper
 head priority and its ordinary challenger delay remain unchanged (BOSS-001/002).
 Retained targets continue to update their launch solution from current positions.
+Aim assistance skips launched enemies during acquisition and drops locks and
+uncommitted displayed aim when the target becomes launched. Living recovering
+enemies can be targeted again. Launched enemies can still be re-punched under
+COMBAT-014.
 Existing eligibility, obstruction, hard range/release limits, source punch-volume
 clearing and displayed-direction commitment remain authoritative. There is no
 outside-limits grace period or target memory shared between punchable bodies.

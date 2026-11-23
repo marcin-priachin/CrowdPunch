@@ -238,6 +238,7 @@ namespace CrowdPunch.Systems.Combat
             foreach (var hit in hits)
             {
                 if (hit.Entity == source || em.HasComponent<RotatingCover>(hit.Entity) || em.HasComponent<CoverEnclosure>(hit.Entity) || hit.Fraction >= fraction
+                    || PunchAimAssist.IsLaunched(em, hit.Entity)
                     || SnakeHitRules.Protected(em, hit.Entity)
                     || hit.Material.CollisionResponse == CollisionResponsePolicy.RaiseTriggerEvents
                     || hit.Material.CollisionResponse == CollisionResponsePolicy.None
