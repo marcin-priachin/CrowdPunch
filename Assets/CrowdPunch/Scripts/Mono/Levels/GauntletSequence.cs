@@ -61,6 +61,8 @@ namespace CrowdPunch.Mono.Levels
         public int CurrentLevelIndex => currentLevelIndex;
         public bool TransitionInProgress => transitionInProgress;
         public bool LoadingMenuPreview { get; private set; }
+        internal int LoadingLevelIndex { get; private set; } = -1;
+        internal bool IsRevealingLevel { get; private set; }
         public bool RunComplete { get; private set; }
         public bool RunFailed { get; private set; }
         public uint LevelEntrySequence { get; private set; }
@@ -270,6 +272,7 @@ namespace CrowdPunch.Mono.Levels
             LoadError = null;
             transitionInProgress = true;
             LoadingMenuPreview = menuPreview;
+            LoadingLevelIndex = menuPreview ? -1 : levelIndex;
             Screen = menuPreview ? CampaignScreen.MainMenu : CampaignScreen.Playing;
             RunComplete = false;
             RunFailed = false;
@@ -346,6 +349,7 @@ namespace CrowdPunch.Mono.Levels
             }
 
             transitionOverlay.ShowLoading(false);
+            IsRevealingLevel = true;
             yield return transitionOverlay.Fade(1f, 0f, FadeInSeconds);
             if (!menuPreview)
             {
@@ -397,6 +401,8 @@ namespace CrowdPunch.Mono.Levels
             transitionOverlay.Hide();
             FeedbackTimeController.SetTransition(false);
             LoadingMenuPreview = false;
+            LoadingLevelIndex = -1;
+            IsRevealingLevel = false;
             transitionInProgress = false;
         }
 

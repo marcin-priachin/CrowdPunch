@@ -12,15 +12,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ea0a7744df94b43b835f5bd8f41d32c, type: 3}
   m_Name: CampaignMusicSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.CampaignMusicSettings
-  mainMenuTrack: {fileID: 8300000, guid: 3a385ae2d13cc5741ac8f7c0dd4e9956, type: 3}
-  chapterTracks:
-  - {fileID: 8300000, guid: 15759f60a23c7e74696b004816a14a4d, type: 3}
-  - {fileID: 8300000, guid: ab1ce2ecb7bb64948b566dd6a59783e8, type: 3}
-  - {fileID: 8300000, guid: 69d8e443db6080345988da8f9c798dd7, type: 3}
-  - {fileID: 8300000, guid: 90feeb12473e96248a18866ec005502c, type: 3}
-  - {fileID: 8300000, guid: f140120aa7eef1f48b5b8d76ad954bf8, type: 3}
-  - {fileID: 8300000, guid: 6eb69e1da6ee6d74cb54093cd034344a, type: 3}
-  - {fileID: 8300000, guid: d815c60f9f5c85e42b79fbaf2cd0f382, type: 3}
-  - {fileID: 8300000, guid: dd32e4afbb4bc7b4d99d47a7df61c5a0, type: 3}
-  - {fileID: 8300000, guid: b1a7f4416cda0db4985aa48609af1225, type: 3}
+  mainMenuCue:
+    intro: {fileID: 8300000, guid: d64f8b7b02dac6b48a2b6cac727e0b48, type: 3}
+    loop: {fileID: 8300000, guid: c9fcd94df7f21e64d9f39b6df067ae8c, type: 3}
+  chapterCues:
+  - intro: {fileID: 8300000, guid: caf1bec09363a7043acb522434fa36ce, type: 3}
+    loop: {fileID: 8300000, guid: bf09079d6dd9d3948b69965097d02990, type: 3}
+  - intro: {fileID: 8300000, guid: f68af9da7af1c5c4987911fb907f0741, type: 3}
+    loop: {fileID: 8300000, guid: 5fb46f247c442604ea477bb6ecd4bbfd, type: 3}
+  - intro: {fileID: 8300000, guid: ff46767b8446a6541b52563e48a8588b, type: 3}
+    loop: {fileID: 8300000, guid: 147a21c359b119f449c1bba9926b78d7, type: 3}
+  - intro: {fileID: 8300000, guid: 7799e0d61a9575846b054eeb0eae89c2, type: 3}
+    loop: {fileID: 8300000, guid: fea3d5425deeee543a6af805bc6e977c, type: 3}
+  - intro: {fileID: 8300000, guid: e7ed1b6df659abd4f8d77eb6a48c2d96, type: 3}
+    loop: {fileID: 8300000, guid: a949afc92852f9c41b34e1b9428b91bb, type: 3}
+  - intro: {fileID: 8300000, guid: 91a05d5b656c9954aa5f29bd502b055d, type: 3}
+    loop: {fileID: 8300000, guid: e2520c2cb768c384495d4a89cdd44fc9, type: 3}
+  - intro: {fileID: 8300000, guid: d186cd872902eeb469827ac1b7da413e, type: 3}
+    loop: {fileID: 8300000, guid: 90d566b4ace34164683996afcab662b4, type: 3}
+  - intro: {fileID: 8300000, guid: 4dab57fdea0b5e64cb304894b4df186e, type: 3}
+    loop: {fileID: 8300000, guid: f6106e88fff3db24a8509986cca66a4f, type: 3}
+  - intro: {fileID: 8300000, guid: 66edf6c6f987fe84d9dd573ce91e00d7, type: 3}
+    loop: {fileID: 8300000, guid: 27858dcfb68b23542bf560ed52c5be0a, type: 3}
+  victorySting: {fileID: 8300000, guid: a9f9015863d19bf4dbc41ae8a56df470, type: 3}
+  musicOutput: {fileID: 24300002, guid: d4e871d3ab0ed8142aa0b267418ede8b, type: 2}
   volume: 0.25
+  mainMenuTrack: {fileID: 0}
+  chapterTracks: []

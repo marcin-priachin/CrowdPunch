@@ -33,6 +33,7 @@ namespace CrowdPunch.Mono.UI
         private AudioSource menuAudio;
         private GameObject lastSelection;
         public bool IsOpen => root != null && root.activeSelf;
+        internal bool IsBrowsingLevels => IsOpen && page == Page.Browser;
 
         public void Configure(GauntletSequence value)
         {

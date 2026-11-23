@@ -2332,12 +2332,21 @@ For LOOP-005/006, a persistent overlay fades to black in 0.15 seconds before the
 
 After `GameRestartSystem` acknowledges the request, one regular Unity Physics update rebuilds the collision world with the gameplay groups and hybrid movement resolution gated. The post-physics group signals readiness and freezes scaled time again. The overlay fades in over 0.2 seconds before player input, the wave clock, and combat resume. Fade timing and the delayed loading label use unscaled time. When readiness times out, the incomplete scene unloads under black and the flow returns to the available campaign or legacy menu.
 
-For LOOP-010, Bootstrap's `CampaignMusicPlayer` owns one looping 2D AudioSource.
-It reads the menu state and loaded level from `GauntletSequence`, using
-`CampaignCatalog.ChapterFor` to select the chapter track. The menu preview uses the
-menu track, and the chapter track continues through pause, results, retries, and
-same-chapter loads. `Data/Settings/CampaignMusicSettings.asset` holds the menu track,
-chapter tracks in catalog order, and music volume. Empty slots are silent.
+For LOOP-010, Bootstrap's `CampaignMusicPlayer` owns two scheduled 2D music sources
+and a victory sting source routed to the campaign music mixer. The settings asset
+assigns the menu and chapter intro/loop pairs in catalog order and sets the base
+volume. The player schedules the loop immediately after the intro's last sample frame using the
+DSP clock. Imported PCM preserves the baked handoff. A loop can also play on its
+own, and empty chapter slots are silent.
+
+For LOOP-004/005/006, the music player reads the campaign screen, destination level
+and reveal phase from `GauntletSequence`, the explicit pause flag from
+`FeedbackTimeController`, and the level browser state from `CampaignMenu`. Pause,
+results, failure and same-chapter loads duck the
+music in real time while retaining the current playhead. Chapter or menu changes
+fade out during the blackout and start the new cue during the reveal. Chapter and
+campaign completion play one sting over a deeper duck while leaving the results
+controls available.
 
 `GauntletCompletionSystem` runs in `GamePresentationGroup` and reports through the narrow `GauntletCompletionRegistry`. Ordinary gauntlets require every loaded wave sequence to complete; an empty loading interval cannot advance. When a boss is loaded, its defeat state is authoritative and supporting-wave completion cannot win early. The Bootstrap flow consumes one completion signal and loads the next scene (LOOP-002/006). Gauntlet 10 advances to The Gatekeeper; its defeat advances to Gauntlet_12 (Crack the Shell). Chicken defeat advances to Gauntlet_21 (Rolling Blob), and its defeat advances to Gauntlet_22 (Dino Pillars). Only the final authored gauntlet sets `GauntletSequence.RunComplete`. The existing pause menu presents Run Complete, Play Again, and twenty-two selectable levels (BOSS-007, CHICKEN-006, ROLL-006, PILLAR-006).
 

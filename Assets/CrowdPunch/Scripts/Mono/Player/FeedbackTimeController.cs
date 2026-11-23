@@ -14,6 +14,7 @@ namespace CrowdPunch.Mono.Player
         private float levelClearScale;
         private bool paused, transitioning, transitionPhysicsWarmup, menuPreview, levelClear;
         public static bool IsMenuPreview => instance != null && instance.menuPreview;
+        internal static bool IsPaused => instance != null && instance.paused;
         internal static bool IsTransitioning => instance != null && instance.transitioning;
         public static bool IsLevelClear => instance != null && instance.levelClear;
         public static bool IsLevelClearSlowMotion => IsLevelClear && Time.unscaledTimeAsDouble < instance.levelClearUntil;
