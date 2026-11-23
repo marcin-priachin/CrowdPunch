@@ -12,8 +12,9 @@ namespace CrowdPunch.Mono.Player
         private float slowScale = 1f, baseline = 1f;
         private double levelClearUntil;
         private float levelClearScale;
-        private bool paused, transitioning, menuPreview, levelClear;
+        private bool paused, transitioning, transitionPhysicsWarmup, menuPreview, levelClear;
         public static bool IsMenuPreview => instance != null && instance.menuPreview;
+        internal static bool IsTransitioning => instance != null && instance.transitioning;
         public static bool IsLevelClear => instance != null && instance.levelClear;
         public static bool IsLevelClearSlowMotion => IsLevelClear && Time.unscaledTimeAsDouble < instance.levelClearUntil;
         internal static float LevelClearStepScale => IsLevelClearSlowMotion ? instance.levelClearScale : 1f;
@@ -52,8 +53,15 @@ namespace CrowdPunch.Mono.Player
         {
             if (instance == null) { Time.timeScale = value ? 0f : 1f; return; }
             instance.transitioning = value;
+            instance.transitionPhysicsWarmup = false;
             if (value) instance.levelClear = false;
             CancelEffects();
+        }
+        internal static void SetTransitionPhysicsWarmup(bool value)
+        {
+            if (instance == null) return;
+            instance.transitionPhysicsWarmup = value;
+            instance.Apply();
         }
         public static void BeginLevelClear(float scale, float seconds)
         {
@@ -87,7 +95,8 @@ namespace CrowdPunch.Mono.Player
             => blocked || now < freezeEnd ? 0f : baseline * (now < slowEnd ? slowScale : 1f);
         private void Apply() => Time.timeScale = levelClear && !transitioning
             ? (IsLevelClearSlowMotion ? baseline * levelClearScale : 0f)
-            : ResolveScale(baseline, paused || transitioning, Time.unscaledTimeAsDouble, freezeUntil, slowUntil, slowScale);
+            : ResolveScale(baseline, paused || (transitioning && !transitionPhysicsWarmup),
+                Time.unscaledTimeAsDouble, freezeUntil, slowUntil, slowScale);
         private void OnDisable()
         {
             if (instance != this) return;

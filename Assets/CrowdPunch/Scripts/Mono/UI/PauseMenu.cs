@@ -91,6 +91,11 @@ namespace CrowdPunch.Mono.UI
         private void Update()
         {
             if (campaignMenu != null) { campaignMenu.Tick(pauseAction); return; }
+            if (gauntletSequence != null && gauntletSequence.TransitionInProgress)
+            {
+                if (isPaused) SetPaused(false);
+                return;
+            }
             if (gauntletSequence != null && observedLevelEntry != gauntletSequence.LevelEntrySequence)
             {
                 observedLevelEntry = gauntletSequence.LevelEntrySequence;
@@ -102,10 +107,12 @@ namespace CrowdPunch.Mono.UI
                 && !isPaused && hintSecondsRemaining > 0 && !string.IsNullOrEmpty(openingHint.text));
             bool failed = gauntletSequence != null && gauntletSequence.RunFailed;
             bool complete = gauntletSequence != null && (gauntletSequence.RunComplete || failed);
-            if (complete && !showingCompletion)
+            if (complete && (!showingCompletion || !isPaused))
             {
                 showingCompletion = true;
-                menuTitle.text = !failed ? "RUN COMPLETE" : gauntletSequence.PlayerDefeated ? "LEVEL FAILED" : "PROTECTED ZONE BREACHED";
+                menuTitle.text = !failed ? "RUN COMPLETE"
+                    : gauntletSequence.LoadError != null ? "LEVEL COULD NOT LOAD"
+                    : gauntletSequence.PlayerDefeated ? "LEVEL FAILED" : "PROTECTED ZONE BREACHED";
                 firstButton.GetComponentInChildren<Text>().text = failed ? "Retry Level" : "Play Again";
                 SetPaused(true);
             }

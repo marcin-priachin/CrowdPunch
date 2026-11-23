@@ -37,7 +37,8 @@ namespace CrowdPunch.Systems.InputBridge
 
         public void OnUpdate(ref SystemState state)
         {
-            if (!PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge) || !bridge.HasPendingMovement)
+            if (FeedbackTimeController.IsTransitioning
+                || !PlayerBridgeRegistry.TryGetBridge(out PlayerEcsBridge bridge) || !bridge.HasPendingMovement)
             {
                 return;
             }

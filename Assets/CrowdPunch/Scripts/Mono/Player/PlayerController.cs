@@ -192,7 +192,7 @@ namespace CrowdPunch.Mono.Player
 
         private void ApplyResolvedMovement(bool requireLatestSubmission)
         {
-            if (ecsBridge.PlayerDefeated) return;
+            if (ecsBridge.PlayerDefeated || FeedbackTimeController.IsTransitioning) return;
             uint resolvedSequence = ecsBridge.ResolvedMovementSequence;
             if (resolvedSequence == appliedMovementSequence
                 || (requireLatestSubmission && resolvedSequence != submittedMovementSequence))
@@ -208,7 +208,7 @@ namespace CrowdPunch.Mono.Player
 
         private void ApplyObstacleDisplacement(Vector3 position)
         {
-            if (ecsBridge.PlayerDefeated) return;
+            if (ecsBridge.PlayerDefeated || FeedbackTimeController.IsTransitioning) return;
             transform.position = position;
             appliedMovementSequence = ecsBridge.ResolvedMovementSequence;
             ecsBridge.PublishPlayerSnapshot(position, transform.forward, settings.PlayerRadius);
@@ -216,7 +216,7 @@ namespace CrowdPunch.Mono.Player
 
         private void ApplyKnockback(Vector3 impulse)
         {
-            if (ecsBridge.PlayerDefeated) return;
+            if (ecsBridge.PlayerDefeated || FeedbackTimeController.IsTransitioning) return;
             knockbackVelocity += new Vector3(impulse.x, 0f, impulse.z);
         }
 

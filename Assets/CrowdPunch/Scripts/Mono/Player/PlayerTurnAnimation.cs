@@ -34,7 +34,9 @@ namespace CrowdPunch.Mono.Player
                 playerController = GetComponentInParent<PlayerController>();
         }
 
-        private void OnEnable()
+        private void OnEnable() => ResetTurnTracking();
+
+        internal void ResetTurnTracking()
         {
             previousForward = Facing;
             accumulatedYaw = 0f;

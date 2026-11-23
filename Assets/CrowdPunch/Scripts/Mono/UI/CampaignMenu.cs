@@ -25,6 +25,7 @@ namespace CrowdPunch.Mono.UI
         private RingsideMenuLayout ringside;
         private Page page, browserOrigin;
         private CampaignScreen observedScreen;
+        private string observedLoadError;
         private bool observedFailure, gamepad;
         private uint entry;
         private float hintRemaining;
@@ -107,6 +108,12 @@ namespace CrowdPunch.Mono.UI
                 else if (observedScreen == CampaignScreen.LevelComplete) Show(Page.LevelClear);
                 else Show(Page.Milestone);
             }
+            else if (sequence.Screen == CampaignScreen.MainMenu && !sequence.TransitionInProgress
+                && (!IsOpen || observedLoadError != sequence.LoadError))
+            {
+                Show(Page.Main);
+            }
+            if (!sequence.TransitionInProgress) observedLoadError = sequence.LoadError;
             if (sequence.RunFailed && !observedFailure)
             {
                 observedFailure = true;

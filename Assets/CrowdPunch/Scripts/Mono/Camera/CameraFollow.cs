@@ -77,9 +77,28 @@ namespace CrowdPunch.Mono.Camera
             punchFocusLag -= displacement;
         }
 
+        internal void SnapToLevelEntry(Vector3 forward)
+        {
+            if (target == null) return;
+
+            if (feedback == null) feedback = GetComponent<CombatCameraFeedback>();
+            feedback?.ResetFeedback();
+            orbitAngle = Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg;
+            punchFocusLag = Vector3.zero;
+            wasFramingClear = false;
+            Vector3 lookTarget = FollowTarget;
+            transform.position = lookTarget + OrbitOffset;
+            transform.LookAt(lookTarget);
+            sceneryCutaway?.SetFocus(lookTarget);
+        }
+
+        private Vector3 OrbitOffset => Quaternion.Euler(0f, orbitAngle, 0f)
+            * new Vector3(0f, offset.y, -new Vector2(offset.x, offset.z).magnitude);
+        private Vector3 FollowTarget => target.position + targetOffset + Vector3.up * EncounterLookHeight;
+
         private void LateUpdate()
         {
-            if (target == null)
+            if (target == null || FeedbackTimeController.IsTransitioning)
             {
                 return;
             }
@@ -104,8 +123,7 @@ namespace CrowdPunch.Mono.Camera
                 punchFocusLag = Vector3.zero;
             }
 
-            Vector3 orbitOffset = Quaternion.Euler(0f, orbitAngle, 0f)
-                * new Vector3(0f, offset.y, -new Vector2(offset.x, offset.z).magnitude);
+            Vector3 orbitOffset = OrbitOffset;
             if (clearCamera.TryFrame(orbitOffset, target.position, targetOffset, out var subject))
             {
                 wasFramingClear = true;
@@ -113,7 +131,7 @@ namespace CrowdPunch.Mono.Camera
                 sceneryCutaway?.SetFocus(subject);
                 return;
             }
-            Vector3 lookTarget = target.position + targetOffset + Vector3.up * EncounterLookHeight;
+            Vector3 lookTarget = FollowTarget;
             float followInterpolation = wasFramingClear ? 1f : 1f - Mathf.Exp(-followSharpness * Time.deltaTime);
             float punchInterpolation = wasFramingClear ? 1f : 1f - Mathf.Exp(-punchRepositionSharpness * Time.deltaTime);
             wasFramingClear = false;

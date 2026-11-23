@@ -255,6 +255,8 @@ namespace CrowdPunch.Systems.Initialization
             spawnCommands.Playback(EntityManager);
             // Reset may run later than the request while the new SubScene's MatchState loads.
             World.GetExistingSystemManaged<GamePrePhysicsGroup>()?.RequestPhysicsRebuild();
+            if (World == Unity.Entities.World.DefaultGameObjectInjectionWorld)
+                GameRestartRegistry.CompletedSequence = restartSequence;
         }
 
         private void ResetWaveSequences()

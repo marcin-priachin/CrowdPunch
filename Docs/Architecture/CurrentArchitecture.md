@@ -2326,7 +2326,11 @@ MonoBehaviours do not retain or query enemy entities. `PlayerBridgeRegistry` exp
 
 ### Gauntlet Level Flow
 
-`GauntletSequence` belongs to the persistent Bootstrap scene and loads one configured gauntlet scene additively at a time. A gauntlet scene owns its presentation layout, one `GauntletLevel` marker with an authored player entry point, and an ECS SubScene for level-specific collision and encounter data. The transition pauses scaled simulation, unloads the previous scene and its baked entities, loads the next scene, places the GameObject player at the authored entry point, and requests the established ECS restart reset. It never queries or retains enemy entities.
+`GauntletSequence` belongs to the persistent Bootstrap scene and loads one configured gauntlet scene additively at a time. A gauntlet scene owns its presentation layout, one `GauntletLevel` marker with an authored player entry point, and an ECS SubScene for level-specific collision and encounter data.
+
+For LOOP-005/006, a persistent overlay fades to black in 0.15 seconds before the outgoing scene unloads. `LevelEntryReadinessSystem` confirms the incoming scene's auto-loaded ECS sections and reports the baked `ArenaBounds` centre through `LevelEntryRegistry`. Under black, the player snaps to the entry position with the camera and player facing inward. At a centred entry, the authored heading supplies the direction. The player resets movement, health, and presentation to its idle and punch-ready pose before the ECS restart.
+
+After `GameRestartSystem` acknowledges the request, one regular Unity Physics update rebuilds the collision world with the gameplay groups and hybrid movement resolution gated. The post-physics group signals readiness and freezes scaled time again. The overlay fades in over 0.2 seconds before player input, the wave clock, and combat resume. Fade timing and the delayed loading label use unscaled time. When readiness times out, the incomplete scene unloads under black and the flow returns to the available campaign or legacy menu.
 
 For LOOP-010, Bootstrap's `CampaignMusicPlayer` owns one looping 2D AudioSource.
 It reads the menu state and loaded level from `GauntletSequence`, using

@@ -56,7 +56,7 @@ namespace CrowdPunch.Mono.Player
             CancelReaction();
         }
 
-        private void CancelReaction()
+        internal void CancelReaction()
         {
             // PLAYER-005: accepted punches immediately regain presentation priority.
             reactionCancelled = true;

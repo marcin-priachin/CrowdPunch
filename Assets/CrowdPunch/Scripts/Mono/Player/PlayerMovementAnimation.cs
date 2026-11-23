@@ -103,6 +103,22 @@ namespace CrowdPunch.Mono.Player
 
         private void OnDisable()
         {
+            ClearLocomotionBlend();
+            if (wasDashing && animator != null && animator.runtimeAnimatorController != null)
+                animator.Play(LocomotionState, 0, 0f);
+            wasDashing = false;
+        }
+
+        internal void ResetLocomotion()
+        {
+            ClearLocomotionBlend();
+            wasDashing = false;
+            if (animator != null && animator.runtimeAnimatorController != null)
+                animator.Play(LocomotionState, 0, 0f);
+        }
+
+        private void ClearLocomotionBlend()
+        {
             if (animator == null || animator.runtimeAnimatorController == null)
             {
                 return;
@@ -112,9 +128,6 @@ namespace CrowdPunch.Mono.Player
             animator.SetFloat(MoveZ, 0f);
             movementMagnitude = 0f;
             movementAngle = 0f;
-            if (wasDashing)
-                animator.Play(LocomotionState, 0, 0f);
-            wasDashing = false;
         }
     }
 }

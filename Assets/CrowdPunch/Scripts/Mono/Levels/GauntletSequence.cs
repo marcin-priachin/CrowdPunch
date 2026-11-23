@@ -1,11 +1,15 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using CrowdPunch.Components;
 using CrowdPunch.Configuration;
+using CrowdPunch.Mono.Camera;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Mono.UI;
+using Unity.Scenes;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Hash128 = Unity.Entities.Hash128;
 
 namespace CrowdPunch.Mono.Levels
 {
@@ -15,6 +19,11 @@ namespace CrowdPunch.Mono.Levels
     [DefaultExecutionOrder(-200)]
     public sealed class GauntletSequence : MonoBehaviour
     {
+        private const float FadeOutSeconds = .15f;
+        private const float FadeInSeconds = .2f;
+        private const double LoadingLabelDelay = 1d;
+        private const double ReadinessTimeout = 20d;
+
 #if UNITY_EDITOR
         public const string EditorStartLevelKey = "CrowdPunch.LevelLauncher.StartLevel";
         public const string EditorLegacyKey = "CrowdPunch.LevelLauncher.Legacy";
@@ -35,6 +44,7 @@ namespace CrowdPunch.Mono.Levels
         private bool replay;
         private int editorStartIndex = -1;
         private PlayerHealth playerHealth;
+        private LevelTransitionOverlay transitionOverlay;
 
         public CampaignCatalog Campaign => campaign;
         public bool HasCampaign => campaign != null && !legacyMode;
@@ -110,6 +120,14 @@ namespace CrowdPunch.Mono.Levels
             {
                 StartMenuPreview();
             }
+        }
+
+        private void OnDestroy()
+        {
+            transitionOverlay?.Dispose();
+            if (!transitionInProgress) return;
+            LevelEntryRegistry.Clear();
+            FeedbackTimeController.SetTransition(false);
         }
 
         private void Update()
@@ -259,13 +277,20 @@ namespace CrowdPunch.Mono.Levels
             FeedbackTimeController.SetMenuPreview(menuPreview);
             FeedbackTimeController.SetPaused(false);
 
-            if (currentLevelScene.IsValid() && currentLevelScene.isLoaded)
+            LevelEntryRegistry.Clear();
+            bool hasOutgoingLevel = currentLevelScene.IsValid() && currentLevelScene.isLoaded;
+            transitionOverlay ??= new LevelTransitionOverlay(gameObject.scene);
+            transitionOverlay.Show(alreadyBlack: !hasOutgoingLevel);
+            if (hasOutgoingLevel)
+                yield return transitionOverlay.Fade(0f, 1f, FadeOutSeconds);
+            yield return null; // Render an opaque frame before any scene can unload or appear.
+
+            double blackoutStart = Time.unscaledTimeAsDouble;
+            if (hasOutgoingLevel)
             {
                 AsyncOperation unload = SceneManager.UnloadSceneAsync(currentLevelScene);
                 if (unload != null)
-                {
-                    yield return unload;
-                }
+                    yield return WaitBehindBlackout(() => unload.isDone, blackoutStart);
             }
 
             AsyncOperation load;
@@ -275,34 +300,121 @@ namespace CrowdPunch.Mono.Levels
 #else
             load = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
 #endif
-            yield return load;
+            if (load != null)
+                yield return WaitBehindBlackout(() => load.isDone, blackoutStart);
             currentLevelScene = SceneManager.GetSceneByName(Path.GetFileNameWithoutExtension(sceneName));
             currentLevelIndex = menuPreview ? -1 : levelIndex;
 
             GauntletLevel level = FindLevelMarker(currentLevelScene);
             if (level == null)
             {
-                Debug.LogError($"Gauntlet scene '{sceneName}' requires one {nameof(GauntletLevel)}.", this);
+                yield return FailLevelEntry(sceneName, "The scene is missing or has no level marker.");
+                yield break;
+            }
+
+            double deadline = Time.unscaledTimeAsDouble + ReadinessTimeout;
+            LevelEntryRegistry.RequiredSubScenes = GetRequiredSubScenes(currentLevelScene);
+            yield return WaitBehindBlackout(() => LevelEntryRegistry.SceneReady, blackoutStart, deadline);
+            if (!LevelEntryRegistry.SceneReady)
+            {
+                yield return FailLevelEntry(sceneName, "The encounter data did not finish loading.");
+                yield break;
+            }
+
+            if (!PlacePlayer(level.PlayerEntryPoint, LevelEntryRegistry.ArenaCenter))
+            {
+                yield return FailLevelEntry(sceneName, "The player could not be placed.");
+                yield break;
+            }
+
+            GameRestartRegistry.RequestRestart();
+            uint restart = GameRestartRegistry.Sequence;
+            yield return WaitBehindBlackout(() => GameRestartRegistry.CompletedSequence == restart, blackoutStart, deadline);
+            if (GameRestartRegistry.CompletedSequence != restart)
+            {
+                yield return FailLevelEntry(sceneName, "The encounter reset did not finish.");
+                yield break;
+            }
+
+            LevelEntryRegistry.WaitingForPhysics = true;
+            FeedbackTimeController.SetTransitionPhysicsWarmup(true);
+            yield return WaitBehindBlackout(() => !LevelEntryRegistry.WaitingForPhysics, blackoutStart, deadline);
+            if (LevelEntryRegistry.WaitingForPhysics)
+            {
+                yield return FailLevelEntry(sceneName, "The collision world did not finish initializing.");
+                yield break;
+            }
+
+            transitionOverlay.ShowLoading(false);
+            yield return transitionOverlay.Fade(1f, 0f, FadeInSeconds);
+            if (!menuPreview)
+            {
+                OpeningHint = level.OpeningHint;
+                LevelEntrySequence++;
+            }
+            observedCompletionSequence = GauntletCompletionRegistry.Sequence;
+            observedFailureSequence = GauntletFailureRegistry.Sequence;
+            FinishTransition();
+        }
+
+        private IEnumerator WaitBehindBlackout(System.Func<bool> ready, double started, double deadline = double.PositiveInfinity)
+        {
+            while (!ready() && Time.unscaledTimeAsDouble < deadline)
+            {
+                transitionOverlay.ShowLoading(Time.unscaledTimeAsDouble - started >= LoadingLabelDelay);
+                yield return null;
+            }
+        }
+
+        private IEnumerator FailLevelEntry(string sceneName, string reason)
+        {
+            FeedbackTimeController.SetTransitionPhysicsWarmup(false);
+            string levelName = GetLevelName(currentLevelIndex);
+            if (string.IsNullOrEmpty(levelName)) levelName = Path.GetFileNameWithoutExtension(sceneName);
+            LoadError = $"Could not enter {levelName}. {reason}";
+            Debug.LogError($"Could not enter level '{sceneName}'. {reason}", this);
+            if (currentLevelScene.IsValid() && currentLevelScene.isLoaded)
+                yield return SceneManager.UnloadSceneAsync(currentLevelScene);
+            currentLevelScene = default;
+
+            if (HasCampaign)
+            {
+                currentLevelIndex = -1;
+                Screen = CampaignScreen.MainMenu;
+                FeedbackTimeController.SetMenuPreview(true);
             }
             else
             {
-                PlacePlayer(level.PlayerEntryPoint);
-                if (!menuPreview)
-                {
-                    OpeningHint = level.OpeningHint;
-                    LevelEntrySequence++;
-                }
+                RunFailed = true;
+                FeedbackTimeController.SetPaused(true);
             }
+            FinishTransition();
+        }
 
-            observedCompletionSequence = GauntletCompletionRegistry.Sequence;
+        private void FinishTransition()
+        {
+            LevelEntryRegistry.Clear();
+            transitionOverlay.Hide();
             FeedbackTimeController.SetTransition(false);
-            observedFailureSequence = GauntletFailureRegistry.Sequence;
             LoadingMenuPreview = false;
             transitionInProgress = false;
         }
 
+        private static Hash128[] GetRequiredSubScenes(Scene scene)
+        {
+            var required = new List<Hash128>();
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (var subScene in root.GetComponentsInChildren<SubScene>())
+                    if (subScene.isActiveAndEnabled && subScene.AutoLoadScene)
+                        required.Add(subScene.SceneGUID);
+            }
+            return required.ToArray();
+        }
+
         private static GauntletLevel FindLevelMarker(Scene scene)
         {
+            if (!scene.IsValid() || !scene.isLoaded) return null;
             foreach (GameObject root in scene.GetRootGameObjects())
             {
                 GauntletLevel marker = root.GetComponentInChildren<GauntletLevel>(true);
@@ -315,31 +427,38 @@ namespace CrowdPunch.Mono.Levels
             return null;
         }
 
-        private static void PlacePlayer(Transform entryPoint)
+        private static bool PlacePlayer(Transform entryPoint, Vector3? arenaCenter)
         {
             PlayerEcsBridge bridge = Object.FindFirstObjectByType<PlayerEcsBridge>(FindObjectsInactive.Include);
-            if (bridge == null)
-            {
-                Debug.LogError($"Could not place the player because no {nameof(PlayerEcsBridge)} exists.");
-                GameRestartRegistry.RequestRestart();
-                return;
-            }
+            if (bridge == null || !bridge.TryGetComponent(out PlayerController controller)
+                || controller.MovementSettings == null)
+                return false;
 
             if (!bridge.gameObject.activeSelf)
             {
                 bridge.gameObject.SetActive(true);
             }
 
-            PlayerController controller = bridge.GetComponent<PlayerController>();
-            if (controller != null)
-            {
-                controller.SetLevelEntryPoint(entryPoint.position, entryPoint.rotation);
-            }
-
-            bridge.GetComponent<PlayerPunch>()?.ResetPunchState();
+            Vector3 forward = EntryForward(entryPoint, arenaCenter);
+            controller.SetLevelEntryPoint(entryPoint.position, Quaternion.LookRotation(forward));
             bridge.GetComponent<PlayerHealth>()?.ResetHealth();
+            bridge.GetComponent<PlayerPunch>()?.ResetPunchState();
+            bridge.GetComponent<PlayerHitAnimation>()?.CancelReaction();
+            bridge.GetComponentInChildren<PlayerMovementAnimation>()?.ResetLocomotion();
+            bridge.GetComponentInChildren<PlayerTurnAnimation>()?.ResetTurnTracking();
+            bridge.GetComponentInChildren<PlayerPunchAnimation>()?.EvaluateEntryPose();
 
-            GameRestartRegistry.RequestRestart();
+            UnityEngine.Camera.main?.GetComponent<CameraFollow>()?.SnapToLevelEntry(forward);
+            return true;
+        }
+
+        private static Vector3 EntryForward(Transform entryPoint, Vector3? arenaCenter)
+        {
+            Vector3 inward = Vector3.ProjectOnPlane(arenaCenter.GetValueOrDefault(entryPoint.position)
+                - entryPoint.position, Vector3.up);
+            if (inward.sqrMagnitude > .0001f) return inward.normalized;
+            Vector3 authored = Vector3.ProjectOnPlane(entryPoint.forward, Vector3.up);
+            return authored.sqrMagnitude > .0001f ? authored.normalized : Vector3.forward;
         }
     }
 }

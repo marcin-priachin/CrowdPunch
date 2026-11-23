@@ -8,6 +8,7 @@ namespace CrowdPunch.Mono.UI
         private static uint sequence;
 
         public static uint Sequence => sequence;
+        internal static uint CompletedSequence { get; set; }
 
         public static void RequestRestart()
         {

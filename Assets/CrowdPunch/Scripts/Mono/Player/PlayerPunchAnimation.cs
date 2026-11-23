@@ -150,11 +150,24 @@ namespace CrowdPunch.Mono.Player
 
         private void ResetPose()
         {
+            RestoreAnimatedRotation();
             playingPunch = false;
             if (HasAnimation())
             {
                 SetCooldownPose();
             }
+        }
+
+        internal void EvaluateEntryPose()
+        {
+            if (animator == null || !animator.isActiveAndEnabled || animator.runtimeAnimatorController == null)
+                return;
+
+            var culling = animator.cullingMode;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            animator.Update(0f);
+            animator.cullingMode = culling;
+            ApplyUpperBodyRotation();
         }
 
         private void StartCooldown()

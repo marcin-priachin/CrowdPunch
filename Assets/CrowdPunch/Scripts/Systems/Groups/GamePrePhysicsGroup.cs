@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Unity.Physics.Systems;
+using CrowdPunch.Mono.Player;
 using CrowdPunch.Mono.UI;
 
 namespace CrowdPunch.Systems.Groups
@@ -36,6 +37,7 @@ namespace CrowdPunch.Systems.Groups
                 // Let the following PhysicsSystemGroup rebuild once before querying them again.
                 return;
             }
+            if (FeedbackTimeController.IsTransitioning) return;
             base.OnUpdate();
         }
     }
