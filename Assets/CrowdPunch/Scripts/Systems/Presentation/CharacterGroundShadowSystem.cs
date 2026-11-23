@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CrowdPunch.Components;
 using CrowdPunch.Mono.Player;
 using CrowdPunch.Systems.Groups;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Deformations;
 using Unity.Entities;
@@ -33,6 +34,7 @@ namespace CrowdPunch.Systems.Presentation
         private readonly Plane[] frustum = new Plane[6];
         private readonly Dictionary<Entity, float2> footRadii = new(128);
         private readonly Dictionary<Entity, float2> animatedCenters = new(16);
+        private NativeHashMap<Entity, ProjectedFootprint> defeatedFootprints;
         private MaterialPropertyBlock properties;
         private Material material;
         private Mesh disc;
@@ -45,6 +47,7 @@ namespace CrowdPunch.Systems.Presentation
             RequireForUpdate<ArenaGroundPlane>();
             bossBodies = SystemAPI.QueryBuilder().WithAll<LocalToWorld, LocalTransform, PhysicsCollider>()
                 .WithAny<BossPart, ChickenBoss, DinoBoss, RollingBoss, FinaleBoss>().WithNone<Enemy>().Build();
+            defeatedFootprints = new NativeHashMap<Entity, ProjectedFootprint>(16, Allocator.Persistent);
         }
 
         protected override void OnUpdate()
@@ -76,6 +79,7 @@ namespace CrowdPunch.Systems.Presentation
 
             float floor = SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight;
             CollectEnemyFootprints();
+            CollectDefeatedFootprints();
 
             // Read the live bridge position so the shadow follows per-frame movement between fixed ticks.
             if (PlayerBridgeRegistry.TryGetBridge(out var player) && player.isActiveAndEnabled && player.Radius > 0f)
@@ -89,16 +93,33 @@ namespace CrowdPunch.Systems.Presentation
                 AddShadow(player.Position, facing, radii, floor, .8f, 0f);
             }
 
+            EntityManager.CompleteDependencyBeforeRO<RespawnRequest>();
+            var respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true);
             foreach (var (pose, agent, ground, enemy) in
                      SystemAPI.Query<RefRO<LocalToWorld>, RefRO<NavigationAgent>, RefRO<EnemyGroundConstraint>>()
-                         .WithAll<Enemy>().WithNone<RespawnRequest>().WithEntityAccess())
+                         .WithAll<Enemy>().WithEntityAccess())
             {
+                // A queued respawn leaves the enemy visible until it enters the pool.
+                if (respawns.HasComponent(enemy) && respawns.IsComponentEnabled(enemy) && respawns[enemy].IsPooled != 0)
+                    continue;
+
                 float3 position = pose.ValueRO.Position;
                 float lift = ground.ValueRO.HasGround != 0 ? position.y - ground.ValueRO.Height : 0f;
-                if (animatedCenters.TryGetValue(enemy, out var center)) position.xz = center;
+                float2 facing = GroundFacing(pose.ValueRO);
                 float2 radii = math.max(.25f, agent.ValueRO.Radius) * new float2(.85f, 1.05f);
-                if (footRadii.TryGetValue(enemy, out var feet)) radii = math.max(radii, feet);
-                AddShadow(position, GroundFacing(pose.ValueRO), radii, floor, .65f, lift);
+                if (defeatedFootprints.TryGetValue(enemy, out var bounds))
+                {
+                    float2 center = (bounds.Min + bounds.Max) * .5f;
+                    position.xz += new float2(facing.y, -facing.x) * center.x + facing * center.y;
+                    // The ellipse must enclose the corners of the projected pose bounds.
+                    radii = math.max(radii, (bounds.Max - bounds.Min) * (.5f * math.SQRT2));
+                }
+                else
+                {
+                    if (animatedCenters.TryGetValue(enemy, out var center)) position.xz = center;
+                    if (footRadii.TryGetValue(enemy, out var feet)) radii = math.max(radii, feet);
+                }
+                AddShadow(position, facing, radii, floor, .65f, lift);
             }
 
             if (!bossBodies.IsEmptyIgnoreFilter)
@@ -166,6 +187,81 @@ namespace CrowdPunch.Systems.Presentation
             }
         }
 
+        private void CollectDefeatedFootprints()
+        {
+            defeatedFootprints.Clear();
+            EntityManager.CompleteDependencyBeforeRO<EnemyLaunchState>();
+            EntityManager.CompleteDependencyBeforeRO<EnemyArmor>();
+            // The draw consumes the result in the same frame.
+            new DefeatedFootprintJob
+            {
+                Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
+                Poses = SystemAPI.GetComponentLookup<LocalToWorld>(true),
+                ArmorVisuals = SystemAPI.GetComponentLookup<EnemyArmorVisual>(true),
+                Armors = SystemAPI.GetComponentLookup<EnemyArmor>(true),
+                Footprints = defeatedFootprints
+            }.Run();
+        }
+
+        private struct ProjectedFootprint
+        {
+            public float2 Min;
+            public float2 Max;
+        }
+
+        [BurstCompile]
+        private partial struct DefeatedFootprintJob : IJobEntity
+        {
+            [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
+            [ReadOnly] public ComponentLookup<LocalToWorld> Poses;
+            [ReadOnly] public ComponentLookup<EnemyArmorVisual> ArmorVisuals;
+            [ReadOnly] public ComponentLookup<EnemyArmor> Armors;
+            public NativeHashMap<Entity, ProjectedFootprint> Footprints;
+
+            private void Execute(Entity entity, in EnemyTrailVisual visual, in DynamicBuffer<SkinMatrix> skin)
+            {
+                if (!Launches.TryGetComponent(visual.Owner, out var launch) || launch.Phase != EnemyLaunchPhase.Defeated
+                    || !visual.Probes.IsCreated || !Poses.TryGetComponent(visual.Owner, out var owner)
+                    || !Poses.TryGetComponent(visual.Root, out var root) || skin.Length == 0) return;
+
+                // Detached armor moves independently of the body and should not stretch its shadow.
+                if (ArmorVisuals.TryGetComponent(entity, out var armorVisual)
+                    && (!Armors.TryGetComponent(visual.Owner, out var armor) || armor.Stages < armorVisual.StagesRequired)) return;
+
+                ref var vertices = ref visual.Probes.Value.Vertices;
+                if (vertices.Length == 0) return;
+
+                float2 facing = GroundFacing(owner);
+                float2 right = new(facing.y, -facing.x);
+                var rootMatrix = root.Value;
+                var projectedRoot = new float2x4(
+                    Project(rootMatrix.c0.xz, right, facing),
+                    Project(rootMatrix.c1.xz, right, facing),
+                    Project(rootMatrix.c2.xz, right, facing),
+                    Project(root.Position.xz - owner.Position.xz, right, facing));
+                var matrices = skin.AsNativeArray();
+                if (!Footprints.TryGetValue(visual.Owner, out var bounds))
+                    bounds = new ProjectedFootprint { Min = float.PositiveInfinity, Max = float.NegativeInfinity };
+
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    ref var vertex = ref vertices[i];
+                    float4 point = new(vertex.Position, 1f);
+                    float3 local = math.mul(matrices[vertex.Bones.x].Value, point) * vertex.Weights.x;
+                    if (vertex.Weights.y > 0f) local += math.mul(matrices[vertex.Bones.y].Value, point) * vertex.Weights.y;
+                    if (vertex.Weights.z > 0f) local += math.mul(matrices[vertex.Bones.z].Value, point) * vertex.Weights.z;
+                    if (vertex.Weights.w > 0f) local += math.mul(matrices[vertex.Bones.w].Value, point) * vertex.Weights.w;
+                    float2 projected = math.mul(projectedRoot, new float4(local, 1f));
+                    bounds.Min = math.min(bounds.Min, projected);
+                    bounds.Max = math.max(bounds.Max, projected);
+                }
+                Footprints[visual.Owner] = bounds;
+            }
+
+            private static float2 Project(float2 offset, float2 right, float2 forward) =>
+                new(math.dot(offset, right), math.dot(offset, forward));
+        }
+
         private static float2 GroundFacing(in LocalToWorld pose) =>
             math.normalizesafe(pose.Forward.xz, new float2(0, 1));
 
@@ -207,6 +303,7 @@ namespace CrowdPunch.Systems.Presentation
 
         protected override void OnDestroy()
         {
+            defeatedFootprints.Dispose();
             if (disc != null) Object.Destroy(disc);
         }
 

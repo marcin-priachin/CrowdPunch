@@ -4811,8 +4811,11 @@ positions. Each disc is centred under and oriented to the character. Navigation 
 sizes the crowd shadows, while dedicated boss bodies use their collider footprint. The
 player bridge exposes the live foot and toe positions. `EnemyAnimationBaker` records foot
 anchors for legged rigs, and the shadow system reads their sampled skin matrices to extend
-the footprint through steps and turns. The system places discs on `ArenaGroundPlane`, fades
-elevated bodies, and omits off-camera, disabled and pooling enemies. Chapter ambient
+the footprint through steps and turns. For defeated enemies it fits the disc to the
+full pose using the existing skinned trail probes, including attached equipment.
+The system places discs on `ArenaGroundPlane`, fades elevated bodies, and omits off-camera,
+disabled and pooled enemies. It continues drawing during a pending `RespawnRequest` until
+`IsPooled` is set. Chapter ambient
 colour subtly tints the multiply blend. The material draws before
 transparent combat cues. The shadows work with the baked-only lighting policy and require
 no additional GameObjects, physics queries or character shadow-map passes.

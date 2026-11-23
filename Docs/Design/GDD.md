@@ -88,8 +88,9 @@ Across the campaign, retain each chapter's pigments and give the playable floor 
 staggered paving, a warmer centre and a cooler perimeter. Keep enemy faces and costume
 details readable in the cooler shaded bands. Use readable instanced contact shadows
 beneath the player, enemies and bosses.
-Ground shadows follow the feet and fade as a body rises. Give direct punches a brief
-white-gold flash, strong chain contacts a smaller spark, and explosions a bright core
+Ground shadows follow the feet and fade as a body rises. Defeated enemies keep a
+ground shadow beneath their full pose until they disappear. Give direct punches a brief white-gold
+flash, strong chain contacts a smaller spark, and explosions a bright core
 followed by a glowing ring that marks the actual blast radius. The Bomb's painted stripe
 and Alien spike tips retain their glow. Keep ownership colours and ground warnings legible.
 Give enemy and boss projectiles emissive accents that retain their attack colours. Give
