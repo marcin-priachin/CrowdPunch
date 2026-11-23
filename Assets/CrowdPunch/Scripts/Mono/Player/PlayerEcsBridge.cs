@@ -87,10 +87,10 @@ namespace CrowdPunch.Mono.Player
         internal event Action<GameplaySfxCue, Vector3> GameplaySfxReceived;
         internal void ReceiveGameplaySfx(GameplaySfxCue cue, Vector3 position) => GameplaySfxReceived?.Invoke(cue, position);
         public event Action<Vector3> ScoredDefeatReceived;
-        public event Action<int, int> ScoreAwarded;
+        public event Action<uint, int> PunchChainScored;
 
         public void ReceiveScoredDefeat(Vector3 worldPosition) => ScoredDefeatReceived?.Invoke(worldPosition);
-        public void ReceiveScoreAward(int defeats, int chainDefeats) => ScoreAwarded?.Invoke(defeats, chainDefeats);
+        public void ReceivePunchChainScore(uint punchSequence, int defeats) => PunchChainScored?.Invoke(punchSequence, defeats);
         public event Action<Vector3, Vector3, float, bool> PillarImpactReceived;
         public void ReceivePillarImpact(Vector3 position, Vector3 direction, float width, bool bossHit)
             => PillarImpactReceived?.Invoke(position, direction, width, bossHit);

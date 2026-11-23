@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using CrowdPunch.Components;
 using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Levels;
+using CrowdPunch.Mono.Player;
+using CrowdPunch.Mono.UI;
 using CrowdPunch.Systems.Combat;
 using CrowdPunch.Systems.Initialization;
 using CrowdPunch.Systems.Lifetime;
@@ -11,11 +14,103 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace CrowdPunch.Tests
 {
     public sealed class LevelScoreTests
     {
+        [Test]
+        public void Score001_ChainBridgeReportsEveryPunchOncePerFrameWithItsCumulativeCount()
+        {
+            using var world = new World("Level score bridge");
+            var em = world.EntityManager;
+            var score = em.CreateEntity(typeof(LevelClearScore), typeof(ScoredDefeat));
+            var system = world.GetOrCreateSystemManaged<LevelScoreBridgeSystem>();
+            var bridge = new GameObject("Level score bridge test").AddComponent<PlayerEcsBridge>();
+            PlayerBridgeRegistry.TryGetBridge(out var previous);
+            PlayerBridgeRegistry.Register(bridge);
+
+            try
+            {
+                var awards = new List<(uint Punch, int Count)>();
+                var positions = new List<Vector3>();
+                bridge.PunchChainScored += (punch, count) => awards.Add((punch, count));
+                bridge.ScoredDefeatReceived += positions.Add;
+                var buffer = em.GetBuffer<ScoredDefeat>(score);
+                uint[] punches = { 1, 2, 1, 2, 1, 3 };
+                for (int i = 0; i < punches.Length; i++)
+                    buffer.Add(new ScoredDefeat { PunchSequence = punches[i], WorldPosition = new float3(i, 0, 0) });
+
+                system.Update();
+
+                Assert.That(awards, Is.EqualTo(new[] { (1u, 3), (2u, 2) }));
+                Assert.That(positions.Count, Is.EqualTo(punches.Length));
+                Assert.That(positions[5], Is.EqualTo(Vector3.right * 5));
+                Assert.That(buffer.Length, Is.Zero);
+
+                buffer.Add(new ScoredDefeat { PunchSequence = 2 });
+                system.Update();
+                Assert.That(awards, Is.EqualTo(new[] { (1u, 3), (2u, 2), (2u, 3) }));
+            }
+            finally
+            {
+                PlayerBridgeRegistry.Unregister(bridge);
+                if (previous != null) PlayerBridgeRegistry.Register(previous);
+                UnityEngine.Object.DestroyImmediate(bridge.gameObject);
+            }
+        }
+
+        [Test]
+        public void Score001_ConsecutiveCalloutsProtectReadTimeAndGrowInPlace()
+        {
+            var canvas = new GameObject("Score callout test", typeof(RectTransform), typeof(Canvas));
+            try
+            {
+                var callouts = new LevelChainCallouts(canvas.transform);
+                callouts.Queue(1, 3, 0);
+                callouts.Tick(0);
+                var first = ReadCount("3");
+                Assert.That(first, Is.Not.Null);
+
+                callouts.Queue(2, 5, .15);
+                callouts.Tick(.15);
+                var second = ReadCount("5");
+                Assert.That(second, Is.Not.Null);
+                callouts.Queue(2, 6, .20);
+                callouts.Queue(3, 8, .20);
+                callouts.Queue(3, 9, .20);
+                callouts.Tick(.20);
+                Assert.That(ReadCount("6"), Is.SameAs(second));
+                Assert.That(second.rectTransform.localScale.y, Is.GreaterThan(1f));
+
+                callouts.Tick(.39);
+                var firstBadge = (RectTransform)first.transform.parent;
+                Assert.That(firstBadge.anchoredPosition.x, Is.LessThan(0f));
+                Assert.That(firstBadge.GetComponent<CanvasGroup>().alpha, Is.EqualTo(1f));
+                Assert.That(ReadCount("9"), Is.Null);
+
+                callouts.Tick(.50);
+                Assert.That(firstBadge.GetComponent<CanvasGroup>().alpha, Is.EqualTo(.5f).Within(.01f));
+                callouts.Tick(.61);
+                Assert.That(ReadCount("3"), Is.Null);
+                Assert.That(ReadCount("6"), Is.SameAs(second));
+                Assert.That(ReadCount("9"), Is.Not.Null);
+
+                callouts.Queue(4, 10, .62);
+                callouts.Reset();
+                callouts.Tick(1);
+                Assert.That(canvas.GetComponentsInChildren<Text>(), Is.Empty);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(canvas);
+            }
+
+            Text ReadCount(string count) => Array.Find(canvas.GetComponentsInChildren<Text>(), label => label.text == count);
+        }
+
         [Test]
         public void Score001_DeferredDefeatRetainsLethalPunchAndScoresOnce()
         {

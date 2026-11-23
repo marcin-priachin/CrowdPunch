@@ -11,6 +11,8 @@ namespace CrowdPunch.Systems.Presentation
     public partial class LevelScoreBridgeSystem : SystemBase
     {
         private readonly Dictionary<uint, int> defeatsByPunch = new();
+        private readonly HashSet<uint> updatedPunches = new();
+        private readonly List<uint> updateOrder = new();
         private uint restartSequence;
 
         protected override void OnCreate() => RequireForUpdate<LevelClearScore>();
@@ -26,17 +28,24 @@ namespace CrowdPunch.Systems.Presentation
             var defeats = SystemAPI.GetSingletonBuffer<ScoredDefeat>();
             if (defeats.Length == 0) return;
 
-            int bestChain = 0;
             PlayerBridgeRegistry.TryGetBridge(out var bridge);
             foreach (var defeat in defeats)
             {
                 defeatsByPunch.TryGetValue(defeat.PunchSequence, out int count);
                 defeatsByPunch[defeat.PunchSequence] = ++count;
-                if (count > bestChain) bestChain = count;
+                if (count >= 2 && updatedPunches.Add(defeat.PunchSequence))
+                    updateOrder.Add(defeat.PunchSequence);
                 if (bridge != null) bridge.ReceiveScoredDefeat(defeat.WorldPosition);
             }
 
-            if (bridge != null) bridge.ReceiveScoreAward(defeats.Length, bestChain);
+            if (bridge != null)
+            {
+                foreach (uint punch in updateOrder)
+                    bridge.ReceivePunchChainScore(punch, defeatsByPunch[punch]);
+            }
+
+            updatedPunches.Clear();
+            updateOrder.Clear();
             defeats.Clear();
         }
     }

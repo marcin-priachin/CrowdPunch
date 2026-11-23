@@ -4965,12 +4965,16 @@ its authored completion gate (LOOP-006). Scoring applies to finite wave clears. 
 replenishing crowd and supplemental ammunition are excluded. Each credited defeat is 100 points.
 The post-physics pass snapshots each credited defeat's world position before pooling.
 `LevelScoreBridgeSystem` drains those value events once per presentation frame and forwards
-positions and the originating-punch chain summary through `PlayerEcsBridge`. On the campaign
+each position and one cumulative chain count per updated multi-defeat punch through `PlayerEcsBridge`.
+Each chain count includes its originating punch sequence. On the campaign
 canvas, `LevelScoreTally` projects each position and animates pooled point labels into the
 upper-right total. The tally starts with the first award, counts up on arrival, and banks points
 without a flight when the origin is behind the camera or the presentation budget is full.
-The larger multi-defeat callout is brief. These effects use unscaled presentation time and
-the tally hides while a menu is open.
+`LevelChainCallouts` shows the latest punch in the headline slot and moves the previous punch to a
+smaller outgoing slot. Counts from a visible punch update in place. Distinct punches wait in arrival
+order when both slots are occupied, and the outgoing slot preserves a short read before fading.
+These effects use unscaled presentation time. The tally hides and pending callouts clear while a menu
+is open, and a restart clears both.
 
 `GameRestartSystem` clears attempt totals and pending awards. Completion snapshots the totals
 for `GauntletSequence` before the ordinary transition. `CampaignProgress` stores the best
