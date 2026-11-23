@@ -14,7 +14,7 @@ namespace CrowdPunch.Systems.AI
     // The baked grid stays immutable. Only this system owns and disposes its replacement blobs.
     [BurstCompile]
     [UpdateInGroup(typeof(GamePrePhysicsGroup), OrderFirst = true)]
-    [UpdateBefore(typeof(PlayerObstacleCollisionSystem))]
+    [UpdateBefore(typeof(PlayerBridgeSystem))]
     public partial struct TrackNavigationSystem : ISystem
     {
         private BlobAssetReference<NavigationGridBlob> original, owned;

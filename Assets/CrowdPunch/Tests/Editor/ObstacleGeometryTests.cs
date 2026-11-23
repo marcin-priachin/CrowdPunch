@@ -4,10 +4,12 @@ using System.Linq;
 using CrowdPunch.Authoring;
 using CrowdPunch.Components;
 using CrowdPunch.Mono.Player;
+using CrowdPunch.Systems.Groups;
 using CrowdPunch.Systems.InputBridge;
 using CrowdPunch.Systems.AI;
 using CrowdPunch.Utilities;
 using NUnit.Framework;
+using Unity.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -254,6 +256,85 @@ namespace CrowdPunch.Tests
         [TestCase(.5f)] [TestCase(7f)]
         public void Vision004_PlayerSweepUsesFloorAndPreservesVisualRootHeight(float rootHeight)
         {
+            using var wall = Unity.Physics.BoxCollider.Create(new BoxGeometry
+                { Center = new float3(0, -.25f, 0), Size = new float3(1, 1.5f, 10), Orientation = quaternion.identity });
+            WithPlayerCollisionWorld(-1f, (world, bridge) =>
+            {
+                var system = world.GetOrCreateSystem<PlayerObstacleCollisionSystem>();
+                bridge.PublishMovement(new Vector3(-3, rootHeight, 0), new Vector3(3, rootHeight, 0), .5f, .02f);
+                system.Update(world.Unmanaged);
+                Assert.That(bridge.ResolvedMovementPosition.x, Is.LessThan(-.98f));
+                Assert.That(bridge.ResolvedMovementPosition.y, Is.EqualTo(rootHeight));
+            }, Body(wall));
+        }
+
+        [Test]
+        public void Player002_SlideKeepsTangentialSpeedAndStopsAtTheNextWall()
+        {
+            using var sideWall = Unity.Physics.BoxCollider.Create(new BoxGeometry
+                { Center = new float3(0, 1, 0), Size = new float3(1, 2, 12), Orientation = quaternion.identity });
+            using var endWall = Unity.Physics.BoxCollider.Create(new BoxGeometry
+                { Center = new float3(-3, 1, 2.5f), Size = new float3(6, 2, 1), Orientation = quaternion.identity });
+            WithPlayerCollisionWorld(0f, (world, bridge) =>
+            {
+                var system = world.GetOrCreateSystem<PlayerObstacleCollisionSystem>();
+                var position = new Vector3(-1f, .5f, -3f);
+                for (int step = 0; step < 20; step++)
+                {
+                    Vector3 target = position + new Vector3(.06f, 0f, .12f);
+                    bridge.PublishMovement(position, target, .5f, .01f);
+                    system.Update(world.Unmanaged);
+                    position = bridge.ResolvedMovementPosition;
+                    Assert.That(position.x, Is.EqualTo(-1f).Within(.022f));
+                    Assert.That(position.z, Is.EqualTo(target.z).Within(.001f));
+                }
+
+                // Start within the first wall's cast tolerance so its tangent hit arrives first.
+                position.x = -1.0005f;
+                bridge.PublishMovement(position, position + Vector3.forward * 5f, .5f, .02f);
+                system.Update(world.Unmanaged);
+                position = bridge.ResolvedMovementPosition;
+                Assert.That(position.z, Is.EqualTo(1.48f).Within(.005f));
+
+                Vector3 escape = position + new Vector3(-1f, 0f, -1f);
+                bridge.PublishMovement(position, escape, .5f, .02f);
+                system.Update(world.Unmanaged);
+                Assert.That(math.distance(bridge.ResolvedMovementPosition, escape), Is.LessThan(.001f));
+            }, Body(sideWall), Body(endWall));
+        }
+
+        [Test]
+        public void Player002_ResolvesMovementOnAFrameWithoutAFixedStep()
+        {
+            using var wall = Unity.Physics.BoxCollider.Create(new BoxGeometry
+                { Center = new float3(0, 1, 0), Size = new float3(1, 2, 10), Orientation = quaternion.identity });
+            WithPlayerCollisionWorld(0f, (world, bridge) =>
+            {
+                DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, typeof(FixedStepSimulationSystemGroup),
+                    typeof(GamePrePhysicsGroup), typeof(PlayerObstacleCollisionSystem));
+                var simulation = world.GetExistingSystemManaged<SimulationSystemGroup>();
+                simulation.Update();
+
+                float frameDuration = 1f / 144f;
+                world.SetTime(new TimeData(frameDuration, frameDuration));
+                uint sequence = bridge.PublishMovement(new Vector3(-1.1f, .5f, 0), new Vector3(-.9f, .5f, .1f), .5f, frameDuration);
+                simulation.Update();
+
+                Assert.That(bridge.ResolvedMovementSequence, Is.EqualTo(sequence));
+                Assert.That(bridge.ResolvedMovementPosition.x, Is.EqualTo(-1.02f).Within(.005f));
+                Assert.That(bridge.ResolvedMovementPosition.z, Is.EqualTo(.1f).Within(.001f));
+            }, Body(wall));
+        }
+
+        private static RigidBody Body(BlobAssetReference<Unity.Physics.Collider> collider) => new RigidBody
+        {
+            Collider = collider,
+            WorldFromBody = RigidTransform.identity,
+            Scale = 1f
+        };
+
+        private static void WithPlayerCollisionWorld(float groundHeight, Action<World, PlayerEcsBridge> check, params RigidBody[] staticBodies)
+        {
             var go = new GameObject("Player obstacle test");
             var bridge = go.AddComponent<PlayerEcsBridge>();
             PlayerBridgeRegistry.TryGetBridge(out var previous);
@@ -261,21 +342,16 @@ namespace CrowdPunch.Tests
             try
             {
                 using var world = new World("Grounded player collision");
-                using var wall = Unity.Physics.BoxCollider.Create(new BoxGeometry { Center = new float3(0, -.25f, 0), Size = new float3(1, 1.5f, 10), Orientation = quaternion.identity });
-                using var physicsOwner = new PhysicsWorld(1, 0, 0);
+                using var physicsOwner = new PhysicsWorld(staticBodies.Length, 0, 0);
                 var physics = physicsOwner;
                 var bodies = physics.StaticBodies;
-                bodies[0] = new RigidBody { Collider = wall, WorldFromBody = RigidTransform.identity, Scale = 1 };
+                for (int i = 0; i < staticBodies.Length; i++) bodies[i] = staticBodies[i];
                 physics.CollisionWorld.BuildBroadphase(ref physics, .02f, float3.zero, true);
                 var em = world.EntityManager;
                 em.AddComponentData(em.CreateEntity(), new PhysicsWorldSingleton { PhysicsWorld = physics });
-                em.AddComponentData(em.CreateEntity(), new ArenaGroundPlane { SurfaceHeight = -1 });
-                var system = world.GetOrCreateSystem<PlayerObstacleCollisionSystem>();
-                bridge.PublishPlayerSnapshot(new Vector3(-3, rootHeight, 0), Vector3.forward, .5f);
-                bridge.PublishMovement(new Vector3(-3, rootHeight, 0), new Vector3(3, rootHeight, 0), .5f, .02f);
-                system.Update(world.Unmanaged);
-                Assert.That(bridge.ResolvedMovementPosition.x, Is.LessThan(-.98f));
-                Assert.That(bridge.ResolvedMovementPosition.y, Is.EqualTo(rootHeight));
+                em.AddComponentData(em.CreateEntity(), new ArenaGroundPlane { SurfaceHeight = groundHeight });
+                bridge.PublishPlayerSnapshot(Vector3.zero, Vector3.forward, .5f);
+                check(world, bridge);
             }
             finally
             {

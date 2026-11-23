@@ -264,7 +264,6 @@ separate convex collision surfaces (COMBAT-018).
 `ArenaGroundPlane.SurfaceHeight`, independently of the elevated player visual root.
 The resolved root Y remains player-owned. Low rocks therefore block the actual
 grounded body without requiring invisible collision walls above their visible tops.
-The Mono/ECS bridge and movement-resolution ordering remain unchanged.
 
 See `Docs/Verification/ObstacleGeometry.md` and `ObstacleGeometryTests`.
 
@@ -3214,7 +3213,7 @@ the current presentation architecture has no entity-linked GameObject trail rend
 The current implementation proves architecture and basic interactions, but several behaviors are placeholders:
 
 - Punch detection uses a line/capsule-like distance test and independently assigns impulse, damage, and launched state. Enemy collision damage is also independently thresholded rather than inferred from propagation.
-- Player movement and dash remain transform-driven MonoBehaviour movement. `PlayerController` submits each intended horizontal displacement through `PlayerEcsBridge`; `PlayerObstacleCollisionSystem` first resolves any shallow overlap, then sphere-casts the configured player radius against baked non-enemy geometry, resolves one wall-slide pass, and returns the corrected position to the controller. Zero-distance contacts permit motion away from their surface so corners cannot trap the player. This keeps SubScene obstacle collision inside the ECS physics world without allowing the MonoBehaviour to query or retain entities.
+- Player movement and dash are transform-driven (PLAYER-002). `PlayerController` submits each intended horizontal displacement through `PlayerEcsBridge`. `PlayerObstacleCollisionSystem` resolves it once per rendered frame before the fixed-step group, using the latest built physics world. The controller applies the result before the camera follows it. The resolver clears horizontal overlaps with solid geometry, then sphere-casts the configured radius and removes inward motion at each blocking face. Tangent and separating contacts leave the rest of the sweep available to find another face, including at perimeter joins. The resolver holds movement while a pending physics rebuild makes the previous world unsafe to query. The player MonoBehaviour owns the transform and receives only the corrected position through the bridge.
 - Dash punches start immediately through the ordinary punch pipeline, use the same tuning as standing punches, and do not alter committed dash movement (PLAYER-005). Matching results select the separate hit/miss cooldown (PLAYER-009).
 - A launched enemy, including a zero-health enemy with deferred defeat, can propagate launched state to and independently damage an active or recovering enemy when Unity Physics reports solver-estimated contact impulse above the respective authored thresholds. Unity Physics supplies the transferred velocity; gameplay may rotate newly propagated horizontal velocity toward the smallest-angle eligible target inside the configured correction radius without changing its magnitude or vertical component. One source launch damages each target at most once but may damage multiple targets. Defeated enemies and launched-versus-launched pairs are ineligible. The final effect grammar remains unresolved.
 - Enemy chasing and contact damage exist as prototype behavior.

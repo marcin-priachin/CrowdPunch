@@ -23,12 +23,13 @@ namespace CrowdPunch.Systems.Groups
         /// <summary>Allows Unity Physics to rebuild after restart destroys collider-owning entities.</summary>
         public void RequestPhysicsRebuild() { physicsRebuildPending = true; }
 
+        public bool CanQueryPhysicsWorld => !physicsRebuildPending && observedRestart == GameRestartRegistry.Sequence;
+
         protected override void OnUpdate()
         {
-            uint restart = GameRestartRegistry.Sequence;
-            if (restart != observedRestart || physicsRebuildPending)
+            if (!CanQueryPhysicsWorld)
             {
-                observedRestart = restart;
+                observedRestart = GameRestartRegistry.Sequence;
                 physicsRebuildPending = false;
                 // Pre-physics queries normally read the previous step's collision world. After
                 // scene teardown or pooled-Dasher destruction those collider blobs can be freed.

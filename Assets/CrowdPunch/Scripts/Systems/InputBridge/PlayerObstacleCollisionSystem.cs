@@ -8,13 +8,16 @@ using Unity.Physics;
 namespace CrowdPunch.Systems.InputBridge
 {
     /// <summary>Resolves hybrid player movement against baked static geometry.</summary>
-    [UpdateInGroup(typeof(GamePrePhysicsGroup), OrderFirst = true)]
-    [UpdateBefore(typeof(PlayerBridgeSystem))]
+    [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
+    [UpdateAfter(typeof(BeginSimulationEntityCommandBufferSystem))]
+    [UpdateBefore(typeof(FixedStepSimulationSystemGroup))]
     public partial struct PlayerObstacleCollisionSystem : ISystem
     {
         private const uint EnemyCategory = 1u << 7;
         private const float Skin = 0.02f;
+        private const float MinBlockingDot = 1e-5f;
         private const int MaxDepenetrationPasses = 4;
+        private const int MaxSlidePasses = 4;
         private BlobAssetReference<Collider> sphere;
         private float sphereRadius;
         private uint sphereLayer;
@@ -52,6 +55,14 @@ namespace CrowdPunch.Systems.InputBridge
                 return;
             }
 
+            // A restart or collider destruction can invalidate the previous step's broadphase.
+            // Hold this step until Unity Physics has rebuilt it.
+            if (state.World.GetExistingSystemManaged<GamePrePhysicsGroup>() is { CanQueryPhysicsWorld: false })
+            {
+                bridge.ResolveMovement(sequence, start);
+                return;
+            }
+
             EnsureSphere(radius, bridge.CollisionLayer);
 
             // The visual/player root can be above the floor. Sweep at the actual grounded
@@ -59,14 +70,9 @@ namespace CrowdPunch.Systems.InputBridge
             float groundHeight = SystemAPI.TryGetSingleton<ArenaGroundPlane>(out var ground)
                 ? ground.SurfaceHeight : start.y;
             float3 castOffset = new float3(0f, groundHeight - start.y + radius + Skin, 0f);
+            state.EntityManager.CompleteDependencyBeforeRO<PhysicsWorldSingleton>();
             CollisionWorld world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
             start = Depenetrate(world, sphere, start, castOffset);
-            if (math.lengthsq(displacement) <= 1e-8f)
-            {
-                start.y = end.y;
-                bridge.ResolveMovement(sequence, start);
-                return;
-            }
 
             float3 resolved = CastWithSlide(
                 world,
@@ -91,19 +97,13 @@ namespace CrowdPunch.Systems.InputBridge
                     sphere,
                     0f,
                     new RigidTransform(quaternion.identity, position + castOffset));
-                if (!world.CalculateDistance(input, out DistanceHit hit) || hit.Distance >= 0f)
+                var collector = new HorizontalOverlapCollector();
+                if (!world.CalculateDistance(input, ref collector))
                 {
                     break;
                 }
 
-                float3 normal = hit.SurfaceNormal;
-                normal.y = 0f;
-                if (math.lengthsq(normal) <= 1e-8f)
-                {
-                    break;
-                }
-
-                position += math.normalize(normal) * (-hit.Distance + Skin);
+                position += collector.Normal * (Skin - collector.MaxFraction);
             }
 
             return position;
@@ -157,53 +157,88 @@ namespace CrowdPunch.Systems.InputBridge
             float3 displacement,
             float3 castOffset)
         {
-            if (!Cast(world, sphere, start + castOffset, displacement, out ColliderCastHit hit))
+            for (int pass = 0; pass < MaxSlidePasses && math.lengthsq(displacement) > 1e-8f; pass++)
             {
-                return start + displacement;
+                float3 castStart = start + castOffset;
+                var input = new ColliderCastInput(sphere, castStart, castStart + displacement);
+                var collector = new BlockingHitCollector(displacement);
+                if (!world.CastCollider(input, ref collector))
+                {
+                    return start + displacement;
+                }
+
+                // Measure the clearance across the wall, so shallow approaches keep their full slide.
+                float closingDistance = -math.dot(displacement, collector.Normal);
+                float safeFraction = math.max(0f, collector.MaxFraction - Skin / closingDistance);
+                start += displacement * safeFraction;
+                displacement = (displacement + collector.Normal * closingDistance) * (1f - safeFraction);
             }
 
-            float distance = math.length(displacement);
-            float safeFraction = math.max(0f, hit.Fraction - Skin / math.max(distance, Skin));
-            float3 resolved = start + displacement * safeFraction;
-            float3 remainder = displacement * (1f - safeFraction);
-            float3 normal = hit.SurfaceNormal;
-            normal.y = 0f;
-            if (math.lengthsq(normal) <= 1e-8f)
-            {
-                return resolved;
-            }
-
-            normal = math.normalize(normal);
-            if (hit.Fraction <= 1e-5f && math.dot(displacement, normal) >= 0f)
-            {
-                return start + displacement;
-            }
-
-            float3 slide = remainder - normal * math.dot(remainder, normal);
-            if (math.lengthsq(slide) <= 1e-8f)
-            {
-                return resolved;
-            }
-
-            if (Cast(world, sphere, resolved + castOffset, slide, out ColliderCastHit slideHit))
-            {
-                float slideDistance = math.length(slide);
-                float slideFraction = math.max(0f, slideHit.Fraction - Skin / math.max(slideDistance, Skin));
-                return resolved + slide * slideFraction;
-            }
-
-            return resolved + slide;
+            return start;
         }
 
-        private static bool Cast(
-            CollisionWorld world,
-            BlobAssetReference<Collider> sphere,
-            float3 start,
-            float3 displacement,
-            out ColliderCastHit hit)
+        private static bool IsSolid(Material material) =>
+            material.CollisionResponse != CollisionResponsePolicy.RaiseTriggerEvents
+            && material.CollisionResponse != CollisionResponsePolicy.None;
+
+        private static float3 HorizontalNormal(float3 normal)
         {
-            ColliderCastInput input = new ColliderCastInput(sphere, start, start + displacement);
-            return world.CastCollider(input, out hit);
+            normal.y = 0f;
+            return math.lengthsq(normal) > 1e-8f ? math.normalize(normal) : float3.zero;
+        }
+
+        private struct BlockingHitCollector : ICollector<ColliderCastHit>
+        {
+            private readonly float3 direction;
+
+            public float3 Normal { get; private set; }
+            public bool EarlyOutOnFirstHit => false;
+            public float MaxFraction { get; private set; }
+            public int NumHits { get; private set; }
+
+            public BlockingHitCollector(float3 displacement)
+            {
+                this = default;
+                direction = math.normalize(displacement);
+                MaxFraction = 1f;
+            }
+
+            public bool AddHit(ColliderCastHit hit)
+            {
+                float3 normal = HorizontalNormal(hit.SurfaceNormal);
+                // Keep searching after floor, tangent or separating contacts. Another face can still block.
+                if (!IsSolid(hit.Material) || math.dot(direction, normal) >= -MinBlockingDot)
+                {
+                    return false;
+                }
+
+                Normal = normal;
+                MaxFraction = hit.Fraction;
+                NumHits = 1;
+                return true;
+            }
+        }
+
+        private struct HorizontalOverlapCollector : ICollector<DistanceHit>
+        {
+            public float3 Normal { get; private set; }
+            public bool EarlyOutOnFirstHit => false;
+            public float MaxFraction { get; private set; }
+            public int NumHits { get; private set; }
+
+            public bool AddHit(DistanceHit hit)
+            {
+                float3 normal = HorizontalNormal(hit.SurfaceNormal);
+                if (!IsSolid(hit.Material) || hit.Distance >= 0f || math.all(normal == float3.zero))
+                {
+                    return false;
+                }
+
+                Normal = normal;
+                MaxFraction = hit.Distance;
+                NumHits = 1;
+                return true;
+            }
         }
     }
 }
