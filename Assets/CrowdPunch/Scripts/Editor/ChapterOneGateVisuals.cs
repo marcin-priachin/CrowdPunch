@@ -86,6 +86,9 @@ namespace CrowdPunch.Editor
             for(int i=0;i<12;i++)
                 Piece(gate,"Brief wood dust puff",new Vector3((i/11f-.5f)*width,0,0),
                     Vector3.one*(.55f+i%3*.14f),dust,index++,kind:3,sphere:true);
+
+            if (Mathf.Approximately(gate.size.z, CampaignBorderGeometry.Depth))
+                CampaignGateBorderFit.FitArtwork(gate, gate.transform.position, resizeWidth: true);
         }
 
         private static GameObject Piece(BarricadeAuthoring gate,string name,Vector3 position,Vector3 size,

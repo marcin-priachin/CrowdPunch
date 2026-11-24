@@ -26,6 +26,44 @@ namespace CrowdPunch.Tests
         private static IEnumerable<string> Scenes() => AssetDatabase.FindAssets("t:Scene", new[] { "Assets/CrowdPunch/Scenes" })
             .Select(AssetDatabase.GUIDToAssetPath).OrderBy(p => p);
 
+        [TestCase(4)]
+        [TestCase(6)]
+        public void Barricade006_WideGateFitsTaperedBorders(int level)
+        {
+            var scene = EditorSceneManager.OpenPreviewScene(
+                $"Assets/CrowdPunch/Scenes/Campaign/Campaign_{level:00}/Campaign_{level:00} Sub Scene.unity");
+            var origin = new GameObject("Gate jamb validation origin");
+            try
+            {
+                var roots = scene.GetRootGameObjects();
+                var gate = roots.SelectMany(r => r.GetComponentsInChildren<BarricadeAuthoring>()).Single();
+                var jambs = roots.SelectMany(r => r.GetComponentsInChildren<SolidObstacleAuthoring>())
+                    .Where(s => s.name.StartsWith("Gate terrain ")).Select(s => s.GetComponentInChildren<MeshFilter>())
+                    .OrderBy(s => s.transform.position.x).ToArray();
+                var bounds = new Bounds(gate.transform.position, gate.size);
+                Assert.That(jambs.Length, Is.EqualTo(2));
+                Assert.That(jambs[0].GetComponent<MeshRenderer>().bounds.max.x, Is.EqualTo(bounds.min.x).Within(.001f));
+                Assert.That(jambs[1].GetComponent<MeshRenderer>().bounds.min.x, Is.EqualTo(bounds.max.x).Within(.001f));
+                foreach (var piece in gate.GetComponentsInChildren<VillageGatePieceAuthoring>().Where(p => p.kind <= 1))
+                {
+                    var artwork = piece.GetComponent<MeshRenderer>().bounds;
+                    Assert.That(artwork.min.x, Is.GreaterThanOrEqualTo(bounds.min.x - .001f), piece.name);
+                    Assert.That(artwork.max.x, Is.LessThanOrEqualTo(bounds.max.x + .001f), piece.name);
+                }
+                using var terrain = SolidObstacleGeometry.CreateCollider(origin.transform, jambs);
+                foreach (int side in new[] { -1, 1 })
+                {
+                    var start = new float3(bounds.center.x + side * (bounds.extents.x + .02f), bounds.center.y, bounds.min.z - .5f);
+                    Assert.True(terrain.Value.CastRay(new RaycastInput
+                        { Start = start, End = start + new float3(0, 0, 2.5f), Filter = CollisionFilter.Default }, out Unity.Physics.RaycastHit _));
+                }
+                using var player = Unity.Physics.SphereCollider.Create(new SphereGeometry { Radius = .5f });
+                var opening = new float3(bounds.center.x, bounds.min.y + .52f, bounds.min.z - 1);
+                Assert.False(terrain.Value.CastCollider(new ColliderCastInput(player, opening, opening + new float3(0, 0, 3.5f)), out ColliderCastHit _));
+            }
+            finally { Object.DestroyImmediate(origin); EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
         [TestCase(13, 1)]
         [TestCase(22, 2)]
         [TestCase(34, 3)]

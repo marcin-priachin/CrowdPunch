@@ -11,7 +11,7 @@ namespace CrowdPunch.Editor
     internal static class CampaignGateBorderFit
     {
         internal static int Apply(Scene scene, Vector2[] outline, float floor, Material wallMaterial,
-            Func<Mesh, Mesh> saveMesh)
+            Func<Mesh, Mesh> saveMesh, bool fitWideOpening)
         {
             var roots = scene.GetRootGameObjects();
             var gates = roots.SelectMany(g => g.GetComponentsInChildren<BarricadeAuthoring>(true))
@@ -39,7 +39,16 @@ namespace CrowdPunch.Editor
                 float center = (front + rear) * .5f;
                 var frontEdges = CourtCrossSection(outline, front, p.x);
                 var rearEdges = CourtCrossSection(outline, rear, p.x);
-                FitGate(gate, new Vector3(p.x, floor + CampaignBorderGeometry.Height * .5f, center));
+                float width = gate.size.x;
+                if (fitWideOpening)
+                {
+                    // Leave a solid jamb at the tight end of the tapered court on both sides.
+                    const float minimumJamb = .1f;
+                    float clearHalfWidth = Mathf.Min(p.x - Mathf.Max(frontEdges.x, rearEdges.x),
+                        Mathf.Min(frontEdges.y, rearEdges.y) - p.x);
+                    width = Mathf.Min(width, 2 * (clearHalfWidth - minimumJamb));
+                }
+                FitGate(gate, new Vector3(p.x, floor + CampaignBorderGeometry.Height * .5f, center), width);
                 foreach (int direction in new[] { -1, 1 })
                 {
                     float gateEdge = p.x + direction * gate.size.x * .5f;
@@ -48,8 +57,8 @@ namespace CrowdPunch.Editor
                     float frontSpan = (frontEdge - gateEdge) * direction;
                     float rearSpan = (rearEdge - gateEdge) * direction;
                     if (Mathf.Max(frontSpan, rearSpan) < .001f) continue;
-                    if (Mathf.Min(frontSpan, rearSpan) < .001f || Mathf.Abs(frontSpan - rearSpan) > .001f)
-                        throw new InvalidOperationException("Gate terrain intersects a slanted court edge at " + gate.name);
+                    if (Mathf.Min(frontSpan, rearSpan) < .001f)
+                        throw new InvalidOperationException("Gate terrain cannot seal the court edge at " + gate.name);
 
                     var side = around.SingleOrDefault(s => Mathf.Sign(s.transform.position.x - p.x) == direction);
                     if (side == null)
@@ -62,8 +71,7 @@ namespace CrowdPunch.Editor
                         SceneManager.MoveGameObjectToScene(child, scene);
                         child.transform.SetParent(side.transform, false);
                     }
-                    unit ??= saveMesh(CampaignBorderGeometry.GateWall());
-                    float span = frontSpan;
+                    float span = Mathf.Max(frontSpan, rearSpan);
                     // Extend the navigation footprint outward by at least half a metre. The visible solid ends at the inner rim.
                     side.placementUnit = .5f;
                     side.footprint = new Vector2Int(Mathf.CeilToInt(span * 2f) + 1, 3);
@@ -71,9 +79,19 @@ namespace CrowdPunch.Editor
                     side.transform.SetPositionAndRotation(new Vector3(gateEdge + direction * side.Size.x * .5f, floor, center), Quaternion.identity);
                     var filter = side.GetComponentsInChildren<MeshFilter>(true).Single();
                     filter.name = direction < 0 ? "Gate wall left" : "Gate wall right";
-                    filter.sharedMesh = unit;
-                    filter.transform.SetPositionAndRotation(new Vector3(gateEdge + direction * span * .5f, floor, center), Quaternion.identity);
-                    filter.transform.localScale = new Vector3(span, CampaignBorderGeometry.Height, CampaignBorderGeometry.Depth);
+                    if (Mathf.Abs(frontSpan - rearSpan) < .001f)
+                    {
+                        unit ??= saveMesh(CampaignBorderGeometry.GateWall());
+                        filter.sharedMesh = unit;
+                        filter.transform.SetPositionAndRotation(new Vector3(gateEdge + direction * span * .5f, floor, center), Quaternion.identity);
+                        filter.transform.localScale = new Vector3(span, CampaignBorderGeometry.Height, CampaignBorderGeometry.Depth);
+                    }
+                    else
+                    {
+                        filter.sharedMesh = saveMesh(CampaignBorderGeometry.GateJamb(side.name + " jamb", direction, frontSpan, rearSpan));
+                        filter.transform.SetPositionAndRotation(new Vector3(gateEdge, floor, center), Quaternion.identity);
+                        filter.transform.localScale = Vector3.one;
+                    }
                     filter.GetComponent<MeshRenderer>().sharedMaterial = wallMaterial;
                 }
             }
@@ -96,11 +114,19 @@ namespace CrowdPunch.Editor
             return new Vector2(left, right);
         }
 
-        private static void FitGate(BarricadeAuthoring gate, Vector3 position)
+        private static void FitGate(BarricadeAuthoring gate, Vector3 position, float width)
         {
-            if (Mathf.Abs(gate.size.y - CampaignBorderGeometry.Height) < .0001f &&
+            if (Mathf.Abs(gate.size.x - width) < .0001f &&
+                Mathf.Abs(gate.size.y - CampaignBorderGeometry.Height) < .0001f &&
                 Mathf.Abs(gate.size.z - CampaignBorderGeometry.Depth) < .0001f &&
                 (gate.transform.position - position).sqrMagnitude < .000001f) return;
+            bool resizeWidth = Mathf.Abs(gate.size.x - width) >= .0001f;
+            gate.size = new Vector3(width, CampaignBorderGeometry.Height, CampaignBorderGeometry.Depth);
+            FitArtwork(gate, position, resizeWidth);
+        }
+
+        internal static void FitArtwork(BarricadeAuthoring gate, Vector3 position, bool resizeWidth)
+        {
             var parts = gate.GetComponentsInChildren<BarricadeVisualAuthoring>(true)
                 .Select(v => (visual: v, renderer: v.GetComponent<MeshRenderer>(), piece: v.GetComponent<VillageGatePieceAuthoring>())).ToArray();
             if (parts.Length == 0 || parts.Any(p => p.renderer == null))
@@ -110,18 +136,19 @@ namespace CrowdPunch.Editor
             var original = artwork[0].bounds;
             foreach (var renderer in artwork.Skip(1)) original.Encapsulate(renderer.bounds);
             var artworkOffset = original.center - oldPosition;
-            float yScale = CampaignBorderGeometry.Height / original.size.y;
-            float zScale = CampaignBorderGeometry.Depth / original.size.z;
-            gate.size = new Vector3(gate.size.x, CampaignBorderGeometry.Height, CampaignBorderGeometry.Depth);
+            float xScale = resizeWidth ? gate.size.x / original.size.x : 1;
+            float yScale = gate.size.y / original.size.y;
+            float zScale = gate.size.z / original.size.z;
             gate.transform.position = position;
             var target = new Bounds(position, gate.size);
             foreach (var part in parts)
             {
                 var t = part.visual.transform;
                 var offset = t.position - position - artworkOffset;
-                t.position = new Vector3(t.position.x, position.y + offset.y * yScale, position.z + offset.z * zScale);
+                t.position = new Vector3(resizeWidth ? position.x + offset.x * xScale : t.position.x,
+                    position.y + offset.y * yScale, position.z + offset.z * zScale);
                 var scale = t.localScale;
-                t.localScale = new Vector3(scale.x, scale.y * yScale, scale.z * zScale);
+                t.localScale = new Vector3(scale.x * xScale, scale.y * yScale, scale.z * zScale);
                 if (part.visual.name == "Solid plate")
                 {
                     scale = t.localScale;
@@ -138,11 +165,13 @@ namespace CrowdPunch.Editor
                 }
                 // Angled timber braces can exceed the envelope after scaling their local axes.
                 var size = part.renderer.bounds.size;
-                t.localScale *= Mathf.Min(1, gate.size.y / size.y, gate.size.z / size.z);
+                t.localScale *= Mathf.Min(1, resizeWidth ? gate.size.x / size.x : 1, gate.size.y / size.y, gate.size.z / size.z);
                 var bounds = part.renderer.bounds;
+                float x = resizeWidth ? Mathf.Clamp(bounds.center.x, target.min.x + bounds.extents.x,
+                    target.max.x - bounds.extents.x) : bounds.center.x;
                 float y = Mathf.Clamp(bounds.center.y, target.min.y + bounds.extents.y, target.max.y - bounds.extents.y);
                 float z = Mathf.Clamp(bounds.center.z, target.min.z + bounds.extents.z, target.max.z - bounds.extents.z);
-                t.position += new Vector3(0, y - bounds.center.y, z - bounds.center.z);
+                t.position += new Vector3(x - bounds.center.x, y - bounds.center.y, z - bounds.center.z);
                 if (part.piece != null) part.piece.restingHeight = t.localScale.z * .5f + .03f;
             }
 

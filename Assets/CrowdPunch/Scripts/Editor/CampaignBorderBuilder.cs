@@ -64,7 +64,9 @@ namespace CrowdPunch.Editor
                     .Where(t => t.name.StartsWith("Perimeter ", StringComparison.Ordinal)).ToArray();
                 var navigation = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<NavigationArenaAuthoring>(true)).Single();
                 var registered = new HashSet<MeshCollider>(navigation.perimeterColliders ?? Array.Empty<MeshCollider>());
-                if (registered.Count == 0 && rim.All(t => AssetDatabase.GetAssetPath(t.GetComponent<MeshFilter>().sharedMesh) == meshPath))
+                bool fitWideOpening = level == 4 || level == 6;
+                bool updatePerimeter = registered.Count > 0 || rim.Any(t => AssetDatabase.GetAssetPath(t.GetComponent<MeshFilter>().sharedMesh) != meshPath);
+                if (!updatePerimeter && !fitWideOpening)
                     return $"Level {level:00} already has {rim.Length} straight wall sections.";
 
                 var outline = floor.name == "Continuous Round Floor"
@@ -73,8 +75,6 @@ namespace CrowdPunch.Editor
                 if (rim.Length > outline.Length) outline = CampaignBorderGeometry.SplitLongEdges(outline, rim);
                 if (rim.Length != outline.Length)
                     throw new InvalidOperationException($"Floor has {outline.Length} edges and the scene has {rim.Length} perimeter sections.");
-                var outside = CampaignBorderGeometry.Outside(outline);
-                var remaining = new List<Transform>(rim);
                 var savedMeshes = AssetDatabase.LoadAllAssetsAtPath(meshPath).OfType<Mesh>().ToDictionary(m => m.name);
                 bool hasAsset = savedMeshes.Count > 0;
                 Directory.CreateDirectory(Path.GetDirectoryName(meshPath));
@@ -90,30 +90,36 @@ namespace CrowdPunch.Editor
                     if (hasAsset) AssetDatabase.AddObjectToAsset(mesh, meshPath);
                     else AssetDatabase.CreateAsset(mesh, meshPath);
                     hasAsset = true;
+                    savedMeshes.Add(mesh.name, mesh);
                     return mesh;
                 }
                 float ground = floor.bounds.max.y;
                 var wallMaterial = MaterialSource(rim[0].GetComponent<MeshRenderer>().sharedMaterial);
-                for (int i = 0; i < outline.Length; i++)
+                if (updatePerimeter)
                 {
-                    var start = outline[i]; var end = outline[(i + 1) % outline.Length];
-                    var origin = (start + end) * .5f + CampaignBorderGeometry.Normal(start, end) * (CampaignBorderGeometry.Depth * .5f);
-                    var wall = remaining.OrderBy(t => (new Vector2(t.position.x, t.position.z) - origin).sqrMagnitude).First();
-                    remaining.Remove(wall);
-                    var filter = wall.GetComponent<MeshFilter>();
-                    var renderer = wall.GetComponent<MeshRenderer>();
-                    var collider = wall.GetComponent<MeshCollider>();
-                    var direction = (end - start).normalized;
-                    var rotation = registered.Contains(collider)
-                        ? Quaternion.LookRotation(new Vector3(direction.x, 0, direction.y)) : Quaternion.identity;
-                    renderer.sharedMaterial = MaterialSource(renderer.sharedMaterial);
-                    renderer.sharedMaterials = new[] { renderer.sharedMaterial };
-                    wall.SetPositionAndRotation(new Vector3(origin.x, ground, origin.y), rotation);
-                    wall.localScale = Vector3.one;
-                    filter.sharedMesh = SaveMesh(CampaignBorderGeometry.Wall(wall.name + " straight wall", outline, outside, origin, rotation, i, false));
-                    collider.sharedMesh = SaveMesh(CampaignBorderGeometry.Wall(wall.name + " overlapping collision", outline, outside, origin, rotation, i, true));
+                    var outside = CampaignBorderGeometry.Outside(outline);
+                    var remaining = new List<Transform>(rim);
+                    for (int i = 0; i < outline.Length; i++)
+                    {
+                        var start = outline[i]; var end = outline[(i + 1) % outline.Length];
+                        var origin = (start + end) * .5f + CampaignBorderGeometry.Normal(start, end) * (CampaignBorderGeometry.Depth * .5f);
+                        var wall = remaining.OrderBy(t => (new Vector2(t.position.x, t.position.z) - origin).sqrMagnitude).First();
+                        remaining.Remove(wall);
+                        var filter = wall.GetComponent<MeshFilter>();
+                        var renderer = wall.GetComponent<MeshRenderer>();
+                        var collider = wall.GetComponent<MeshCollider>();
+                        var direction = (end - start).normalized;
+                        var rotation = registered.Contains(collider)
+                            ? Quaternion.LookRotation(new Vector3(direction.x, 0, direction.y)) : Quaternion.identity;
+                        renderer.sharedMaterial = MaterialSource(renderer.sharedMaterial);
+                        renderer.sharedMaterials = new[] { renderer.sharedMaterial };
+                        wall.SetPositionAndRotation(new Vector3(origin.x, ground, origin.y), rotation);
+                        wall.localScale = Vector3.one;
+                        filter.sharedMesh = SaveMesh(CampaignBorderGeometry.Wall(wall.name + " straight wall", outline, outside, origin, rotation, i, false));
+                        collider.sharedMesh = SaveMesh(CampaignBorderGeometry.Wall(wall.name + " overlapping collision", outline, outside, origin, rotation, i, true));
+                    }
                 }
-                int gates = CampaignGateBorderFit.Apply(scene, outline, ground, wallMaterial, SaveMesh);
+                int gates = CampaignGateBorderFit.Apply(scene, outline, ground, wallMaterial, SaveMesh, fitWideOpening);
                 AssetDatabase.SaveAssets();
                 EditorSceneManager.MarkSceneDirty(scene);
                 if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save the campaign SubScene.");

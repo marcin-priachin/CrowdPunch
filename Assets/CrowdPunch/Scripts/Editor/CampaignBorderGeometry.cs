@@ -162,6 +162,13 @@ namespace CrowdPunch.Editor
         internal static Mesh GateWall() => Prism("Gate wall unit prism", new[] { new Vector2(-.5f, -.5f),
             new Vector2(.5f, -.5f), new Vector2(.5f, .5f), new Vector2(-.5f, .5f) }, true, 1f);
 
+        internal static Mesh GateJamb(string name, int direction, float frontSpan, float rearSpan)
+        {
+            float halfDepth = Depth * .5f;
+            return Prism(name, new[] { new Vector2(0, -halfDepth), new Vector2(direction * frontSpan, -halfDepth),
+                new Vector2(direction * rearSpan, halfDepth), new Vector2(0, halfDepth) }, true);
+        }
+
         private static Mesh Prism(string name, Vector2[] corners, bool unwrap, float height = Height)
         {
             var vertices = new List<Vector3>(24);
