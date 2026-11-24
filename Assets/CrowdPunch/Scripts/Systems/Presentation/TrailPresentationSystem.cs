@@ -12,6 +12,9 @@ namespace CrowdPunch.Systems.Presentation
     [UpdateInGroup(typeof(GamePresentationGroup))]
     public partial class TrailPresentationSystem : SystemBase
     {
+        // CharacterGroundShadow renders at Transparent-100 and multiplies the surface below it.
+        private const int GroundTrailRenderQueue = (int)RenderQueue.Transparent - 110;
+
         private Mesh mesh;
         private Material material;
         private CombatVfxLibrary library;
@@ -32,8 +35,12 @@ namespace CrowdPunch.Systems.Presentation
 
         protected override void OnUpdate()
         {
-            if (material == null) material = Resources.Load<Material>("EnemyTrail");
-            if (material == null) return;
+            if (material == null)
+            {
+                var source = Resources.Load<Material>("EnemyTrail");
+                if (source == null) return;
+                material = new Material(source) { renderQueue = GroundTrailRenderQueue };
+            }
             vertices.Clear();
             colors.Clear();
             capsules.Clear();
@@ -106,6 +113,10 @@ namespace CrowdPunch.Systems.Presentation
             capsules.Add(capsule);
         }
 
-        protected override void OnDestroy() { if (mesh != null) Object.Destroy(mesh); }
+        protected override void OnDestroy()
+        {
+            if (mesh != null) Object.Destroy(mesh);
+            if (material != null) Object.Destroy(material);
+        }
     }
 }

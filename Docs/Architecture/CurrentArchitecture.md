@@ -4308,7 +4308,9 @@ excluded from the old monster-atlas replacement command. Root motion is disabled
 owns movement, trail emission, collision and lifetime. `TrailPresentationSystem` batches
 all ground capsules into one reusable mesh/draw, with green normal and orange launched colors.
 The shader clips each strip to its full XZ damage capsule and shades it with a wet rim,
-flowing highlights and bubbles. Opacity fades to a visible minimum through the last 35% of
+flowing highlights and bubbles. The system owns a material instance whose ground trail
+queue draws before the character shadow pass, so the shadow darkens the trail where they overlap.
+Opacity fades to a visible minimum through the last 35% of
 the section's lifetime. Fixed-step expiry and encounter cleanup remove the visible footprint
 with the section (TRAIL-003/006).
 
@@ -4811,7 +4813,10 @@ positions. Each disc is centred under and oriented to the character. Navigation 
 sizes the crowd shadows, while dedicated boss bodies use their collider footprint. The
 player bridge exposes the live foot and toe positions. `EnemyAnimationBaker` records foot
 anchors for legged rigs, and the shadow system reads their sampled skin matrices to extend
-the footprint through steps and turns. On defeat, the disc keeps the last launch ellipse's
+the footprint through steps and turns, including after the Rolling Boss animation. A short
+exponential blend smooths the radii, orientation and pose-relative offset while the disc
+follows the live position. The ellipse treats opposite axes as equivalent, and history
+resets on restarts, player replacement and pooled enemy reuse. On defeat, the disc keeps the last launch ellipse's
 proportions. The navigation-radius ellipse supplies the shape if no launch was sampled.
 Skinned trail probes center the ellipse beneath the full defeat pose, including attached
 equipment. Both radii can grow together by up to 10% of the launch size to fit the pose.

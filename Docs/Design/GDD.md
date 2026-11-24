@@ -1402,6 +1402,8 @@ Status: Must
 
 Both trail types share one visual style, show the full damaging width and fade toward expiry. Tint the fill and rim of normal sections with the enemy ownership color. Launched sections use the color of the stored launch owner, falling back to their authored color for neutral ownership. Use `Assets/Squid Baby Cute Series/Prefabs/Squid Baby White.prefab` at its authored scale, with animations from that pack's FBX folder and the established Full Cel shading. Use authored animations for movement, damage, launch, recovery and defeat instead of scripted body tint, shaking or scale changes. Enable Spawn From Ground and use the supplied Spawn animation (model amendment requested 2026-10-25). Keep every animated pose, including Spawn, at least a configurable 0.1 metres above the ground at the current model scale, using visual translation only (clearance amendment requested 2026-10-25). Animation choices remain delegated. Add no individual normal-enemy health bars or other HUD elements.
 
+Keep the Trail enemy's ground shadow visible over its trail.
+
 ### TRAIL-007 - Gauntlet_19
 
 Status: Must

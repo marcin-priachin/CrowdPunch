@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CrowdPunch.Components;
 using CrowdPunch.Mono.Player;
+using CrowdPunch.Mono.UI;
 using CrowdPunch.Systems.Groups;
 using Unity.Burst;
 using Unity.Collections;
@@ -20,11 +21,13 @@ namespace CrowdPunch.Systems.Presentation
     [UpdateAfter(typeof(EnemyTrailBoundsSystem))]
     [UpdateAfter(typeof(StandingTurnAnimationSystem))]
     [UpdateAfter(typeof(ChickenAnimationSystem))]
+    [UpdateAfter(typeof(RollingAnimationSystem))]
     [UpdateBefore(typeof(EnemyImpactVisualSystem))]
     public partial class CharacterGroundShadowSystem : SystemBase
     {
         private const int BatchSize = 128;
         private const float FloorOffset = .012f;
+        private const float FootprintSmoothingTime = .055f;
         private const float MaximumDefeatShadowScale = 1.10f;
         private const float TrooperAndNinjaShadowLengthScale = .75f;
         private static readonly int StrengthId = Shader.PropertyToID("_ShadowStrength");
@@ -36,9 +39,12 @@ namespace CrowdPunch.Systems.Presentation
         private readonly Plane[] frustum = new Plane[6];
         private readonly Dictionary<Entity, float2> footRadii = new(128);
         private readonly Dictionary<Entity, float2> animatedCenters = new(16);
-        private Dictionary<Entity, (float2 Radii, uint Generation)> previousLaunchShadows = new(16);
-        private Dictionary<Entity, (float2 Radii, uint Generation)> currentLaunchShadows = new(16);
+        private Dictionary<Entity, ShadowHistory> previousShadows = new(128);
+        private Dictionary<Entity, ShadowHistory> currentShadows = new(128);
         private NativeHashMap<Entity, ProjectedFootprint> defeatedFootprints;
+        private PlayerEcsBridge shadowPlayer;
+        private ShadowFootprint playerFootprint;
+        private uint completedRestart;
         private MaterialPropertyBlock properties;
         private Material material;
         private Mesh disc;
@@ -57,11 +63,20 @@ namespace CrowdPunch.Systems.Presentation
         protected override void OnUpdate()
         {
             Camera camera = Camera.main;
-            if (camera == null || !SystemInfo.supportsInstancing) return;
+            if (camera == null || !SystemInfo.supportsInstancing)
+            {
+                ClearShadowHistory();
+                return;
+            }
             if (material == null) material = Resources.Load<Material>("CharacterGroundShadow");
             if (material == null) return;
 
             using var scope = DrawMarker.Auto();
+            if (completedRestart != GameRestartRegistry.CompletedSequence)
+            {
+                completedRestart = GameRestartRegistry.CompletedSequence;
+                ClearShadowHistory();
+            }
             disc ??= CreateDisc();
             properties ??= new MaterialPropertyBlock();
             GeometryUtility.CalculateFrustumPlanes(camera, frustum);
@@ -82,6 +97,7 @@ namespace CrowdPunch.Systems.Presentation
                 .80f * (.25f + .14f * ambient.g / brightest), .25f + .14f * ambient.b / brightest, 1f));
 
             float floor = SystemAPI.GetSingleton<ArenaGroundPlane>().SurfaceHeight;
+            float blend = 1f - math.exp(-math.max(0f, SystemAPI.Time.DeltaTime) / FootprintSmoothingTime);
             CollectEnemyFootprints();
             CollectDefeatedFootprints();
 
@@ -94,8 +110,12 @@ namespace CrowdPunch.Systems.Presentation
                 int count = player.CopyShadowFeet(feet);
                 for (int i = 0; i < count; i++)
                     FitFoot(ref radii, feet[i].xz - player.Position.xz, facing, .14f);
-                AddShadow(player.Position, facing, radii, floor, .8f, 0f);
+                var target = new ShadowFootprint(facing, radii);
+                playerFootprint = target.BlendFrom(shadowPlayer == player ? playerFootprint : default, blend);
+                shadowPlayer = player;
+                AddShadow(player.Position, playerFootprint, floor, .8f, 0f);
             }
+            else shadowPlayer = null;
 
             EntityManager.CompleteDependencyBeforeRO<RespawnRequest>();
             EntityManager.CompleteDependencyBeforeRO<EnemyLifetime>();
@@ -113,35 +133,25 @@ namespace CrowdPunch.Systems.Presentation
                 if (respawns.HasComponent(enemy) && respawns.IsComponentEnabled(enemy) && respawns[enemy].IsPooled != 0)
                     continue;
 
-                float3 position = pose.ValueRO.Position;
-                float lift = ground.ValueRO.HasGround != 0 ? position.y - ground.ValueRO.Height : 0f;
+                float3 anchor = pose.ValueRO.Position;
+                float lift = ground.ValueRO.HasGround != 0 ? anchor.y - ground.ValueRO.Height : 0f;
                 float2 facing = GroundFacing(pose.ValueRO);
                 float2 radii = math.max(.25f, agent.ValueRO.Radius) * new float2(.85f, 1.05f);
                 launches.TryGetComponent(enemy, out var launch);
                 bool launched = launch.Phase == EnemyLaunchPhase.Launched;
                 bool defeated = launch.Phase == EnemyLaunchPhase.Defeated;
-                if (animatedCenters.TryGetValue(enemy, out var center)) position.xz = center;
+                float2 offset = animatedCenters.TryGetValue(enemy, out var center) ? center - anchor.xz : default;
                 if (!defeated && footRadii.TryGetValue(enemy, out var feet)) radii = math.max(radii, feet);
 
-                if (launched)
-                {
-                    lifetimes.TryGetComponent(enemy, out var lifetime);
-                    currentLaunchShadows[enemy] = (radii, lifetime.Generation);
-                }
-                else if (previousLaunchShadows.TryGetValue(enemy, out var flight))
-                {
-                    lifetimes.TryGetComponent(enemy, out var lifetime);
-                    if (flight.Generation == lifetime.Generation)
-                    {
-                        currentLaunchShadows[enemy] = flight;
-                        if (defeated) radii = flight.Radii;
-                    }
-                }
+                lifetimes.TryGetComponent(enemy, out var lifetime);
+                var history = GetShadowHistory(enemy, lifetime.Generation);
+                if (launched) history.LaunchRadii = radii;
+                else if (defeated && history.LaunchRadii.x > 0f) radii = history.LaunchRadii;
 
                 if (defeated && defeatedFootprints.TryGetValue(enemy, out var bounds))
                 {
-                    float2 offset = (bounds.Min + bounds.Max) * .5f;
-                    position.xz = pose.ValueRO.Position.xz + new float2(facing.y, -facing.x) * offset.x + facing * offset.y;
+                    float2 centerInPose = (bounds.Min + bounds.Max) * .5f;
+                    offset = new float2(facing.y, -facing.x) * centerInPose.x + facing * centerInPose.y;
                     // A wide pose can push the bounding-box corners far outside a narrow launch ellipse.
                     float2 extents = (bounds.Max - bounds.Min) * .5f;
                     radii *= math.clamp(math.length(extents / radii), 1f, MaximumDefeatShadowScale);
@@ -156,11 +166,11 @@ namespace CrowdPunch.Systems.Presentation
                     if (trooper || profile == EnemyAnimationProfile.Ninja)
                         radii.y *= TrooperAndNinjaShadowLengthScale;
                 }
-                AddShadow(position, facing, radii, floor, .65f, lift);
+                var target = new ShadowFootprint(facing, radii, offset);
+                history.Footprint = target.BlendFrom(history.Footprint, blend);
+                currentShadows[enemy] = history;
+                AddShadow(anchor, history.Footprint, floor, .65f, lift);
             }
-            // Carry forward only shadows from enemies still in the render query this frame.
-            (previousLaunchShadows, currentLaunchShadows) = (currentLaunchShadows, previousLaunchShadows);
-            currentLaunchShadows.Clear();
 
             if (!bossBodies.IsEmptyIgnoreFilter)
             {
@@ -176,11 +186,58 @@ namespace CrowdPunch.Systems.Presentation
                     float radius = math.cmax(bounds.Extents.xz) * .4f * scale;
                     float2 radii = radius * new float2(1f, 1.35f);
                     if (footRadii.TryGetValue(boss, out var feet)) radii = math.max(radii, feet);
-                    AddShadow(pose.Position, GroundFacing(pose), radii, floor, .72f, lift);
+                    var target = new ShadowFootprint(GroundFacing(pose), radii);
+                    var history = GetShadowHistory(boss, 0);
+                    history.Footprint = target.BlendFrom(history.Footprint, blend);
+                    currentShadows[boss] = history;
+                    AddShadow(pose.Position, history.Footprint, floor, .72f, lift);
                 }
             }
 
+            // Carry forward only characters sampled in this update.
+            (previousShadows, currentShadows) = (currentShadows, previousShadows);
+            currentShadows.Clear();
             Flush();
+        }
+
+        private ShadowHistory GetShadowHistory(Entity entity, uint generation) =>
+            previousShadows.TryGetValue(entity, out var history) && history.Generation == generation
+                ? history : new ShadowHistory { Generation = generation };
+
+        private struct ShadowHistory
+        {
+            public uint Generation;
+            public float2 LaunchRadii;
+            public ShadowFootprint Footprint;
+        }
+
+        private readonly struct ShadowFootprint
+        {
+            public readonly float2 Forward, Radii, Offset;
+
+            public ShadowFootprint(float2 forward, float2 radii, float2 offset = default)
+            {
+                Forward = forward;
+                Radii = radii;
+                Offset = offset;
+            }
+
+            public ShadowFootprint BlendFrom(in ShadowFootprint previous, float blend)
+            {
+                if (previous.Radii.x <= 0f) return this;
+
+                // A disc with an elliptical footprint has the same outline when flipped 180 degrees.
+                float2 axis = math.dot(previous.Forward, Forward) < 0f ? -Forward : Forward;
+                return new ShadowFootprint(math.normalizesafe(math.lerp(previous.Forward, axis, blend), axis),
+                    math.lerp(previous.Radii, Radii, blend), math.lerp(previous.Offset, Offset, blend));
+            }
+        }
+
+        private void ClearShadowHistory()
+        {
+            shadowPlayer = null;
+            previousShadows.Clear();
+            currentShadows.Clear();
         }
 
         private void CollectEnemyFootprints()
@@ -314,10 +371,12 @@ namespace CrowdPunch.Systems.Presentation
             radii *= math.max(1f, math.length(corner / radii) * 1.015f);
         }
 
-        private void AddShadow(float3 position, float2 forward, float2 radii, float floor, float strength, float lift)
+        private void AddShadow(float3 anchor, in ShadowFootprint footprint, float floor, float strength, float lift)
         {
-            Vector3 center = new(position.x, floor + FloorOffset, position.z);
-            radii *= 1.10f;
+            float2 position = anchor.xz + footprint.Offset;
+            Vector3 center = new(position.x, floor + FloorOffset, position.y);
+            float2 forward = footprint.Forward;
+            float2 radii = footprint.Radii * 1.10f;
             float maxRadius = math.cmax(radii);
             foreach (Plane plane in frustum)
                 if (Vector3.Dot(plane.normal, center) + plane.distance < -maxRadius) return;
@@ -346,6 +405,8 @@ namespace CrowdPunch.Systems.Presentation
             defeatedFootprints.Dispose();
             if (disc != null) Object.Destroy(disc);
         }
+
+        protected override void OnStopRunning() => ClearShadowHistory();
 
         private static Mesh CreateDisc()
         {
