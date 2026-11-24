@@ -4811,8 +4811,12 @@ positions. Each disc is centred under and oriented to the character. Navigation 
 sizes the crowd shadows, while dedicated boss bodies use their collider footprint. The
 player bridge exposes the live foot and toe positions. `EnemyAnimationBaker` records foot
 anchors for legged rigs, and the shadow system reads their sampled skin matrices to extend
-the footprint through steps and turns. For defeated enemies it fits the disc to the
-full pose using the existing skinned trail probes, including attached equipment.
+the footprint through steps and turns. On defeat, the disc keeps the last launch ellipse's
+proportions. The navigation-radius ellipse supplies the shape if no launch was sampled.
+Skinned trail probes center the ellipse beneath the full defeat pose, including attached
+equipment. Both radii can grow together by up to 10% of the launch size to fit the pose.
+Goblin Trooper variants and Ninjas draw launch and defeat ellipses 25% shorter along their
+forward axis. The Goblin Giant Elite shares the Goblin animation profile and keeps its length.
 The system places discs on `ArenaGroundPlane`, fades elevated bodies, and omits off-camera,
 disabled and pooled enemies. It continues drawing during a pending `RespawnRequest` until
 `IsPooled` is set. Chapter ambient

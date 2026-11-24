@@ -25,6 +25,8 @@ namespace CrowdPunch.Systems.Presentation
     {
         private const int BatchSize = 128;
         private const float FloorOffset = .012f;
+        private const float MaximumDefeatShadowScale = 1.10f;
+        private const float TrooperAndNinjaShadowLengthScale = .75f;
         private static readonly int StrengthId = Shader.PropertyToID("_ShadowStrength");
         private static readonly int TintId = Shader.PropertyToID("_ShadowTint");
         private static readonly ProfilerMarker DrawMarker = new("CrowdPunch.CharacterGroundShadows");
@@ -34,6 +36,8 @@ namespace CrowdPunch.Systems.Presentation
         private readonly Plane[] frustum = new Plane[6];
         private readonly Dictionary<Entity, float2> footRadii = new(128);
         private readonly Dictionary<Entity, float2> animatedCenters = new(16);
+        private Dictionary<Entity, (float2 Radii, uint Generation)> previousLaunchShadows = new(16);
+        private Dictionary<Entity, (float2 Radii, uint Generation)> currentLaunchShadows = new(16);
         private NativeHashMap<Entity, ProjectedFootprint> defeatedFootprints;
         private MaterialPropertyBlock properties;
         private Material material;
@@ -94,7 +98,13 @@ namespace CrowdPunch.Systems.Presentation
             }
 
             EntityManager.CompleteDependencyBeforeRO<RespawnRequest>();
+            EntityManager.CompleteDependencyBeforeRO<EnemyLifetime>();
             var respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true);
+            var launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true);
+            var lifetimes = SystemAPI.GetComponentLookup<EnemyLifetime>(true);
+            var landingAnimations = SystemAPI.GetComponentLookup<EnemyLandingAnimation>(true);
+            var animations = SystemAPI.GetComponentLookup<EnemyAnimation>(true);
+            var tiers = SystemAPI.GetComponentLookup<EnemyTier>(true);
             foreach (var (pose, agent, ground, enemy) in
                      SystemAPI.Query<RefRO<LocalToWorld>, RefRO<NavigationAgent>, RefRO<EnemyGroundConstraint>>()
                          .WithAll<Enemy>().WithEntityAccess())
@@ -107,20 +117,50 @@ namespace CrowdPunch.Systems.Presentation
                 float lift = ground.ValueRO.HasGround != 0 ? position.y - ground.ValueRO.Height : 0f;
                 float2 facing = GroundFacing(pose.ValueRO);
                 float2 radii = math.max(.25f, agent.ValueRO.Radius) * new float2(.85f, 1.05f);
-                if (defeatedFootprints.TryGetValue(enemy, out var bounds))
+                launches.TryGetComponent(enemy, out var launch);
+                bool launched = launch.Phase == EnemyLaunchPhase.Launched;
+                bool defeated = launch.Phase == EnemyLaunchPhase.Defeated;
+                if (animatedCenters.TryGetValue(enemy, out var center)) position.xz = center;
+                if (!defeated && footRadii.TryGetValue(enemy, out var feet)) radii = math.max(radii, feet);
+
+                if (launched)
                 {
-                    float2 center = (bounds.Min + bounds.Max) * .5f;
-                    position.xz += new float2(facing.y, -facing.x) * center.x + facing * center.y;
-                    // The ellipse must enclose the corners of the projected pose bounds.
-                    radii = math.max(radii, (bounds.Max - bounds.Min) * (.5f * math.SQRT2));
+                    lifetimes.TryGetComponent(enemy, out var lifetime);
+                    currentLaunchShadows[enemy] = (radii, lifetime.Generation);
                 }
-                else
+                else if (previousLaunchShadows.TryGetValue(enemy, out var flight))
                 {
-                    if (animatedCenters.TryGetValue(enemy, out var center)) position.xz = center;
-                    if (footRadii.TryGetValue(enemy, out var feet)) radii = math.max(radii, feet);
+                    lifetimes.TryGetComponent(enemy, out var lifetime);
+                    if (flight.Generation == lifetime.Generation)
+                    {
+                        currentLaunchShadows[enemy] = flight;
+                        if (defeated) radii = flight.Radii;
+                    }
+                }
+
+                if (defeated && defeatedFootprints.TryGetValue(enemy, out var bounds))
+                {
+                    float2 offset = (bounds.Min + bounds.Max) * .5f;
+                    position.xz = pose.ValueRO.Position.xz + new float2(facing.y, -facing.x) * offset.x + facing * offset.y;
+                    // A wide pose can push the bounding-box corners far outside a narrow launch ellipse.
+                    float2 extents = (bounds.Max - bounds.Min) * .5f;
+                    radii *= math.clamp(math.length(extents / radii), 1f, MaximumDefeatShadowScale);
+                }
+                // Apply the length adjustment once at draw time so the cached ellipse can serve both phases.
+                if ((launched || defeated) && landingAnimations.TryGetComponent(enemy, out var landing)
+                    && animations.TryGetComponent(landing.Visual, out var animation))
+                {
+                    var profile = (EnemyAnimationProfile)animation.Profile;
+                    bool trooper = (profile is EnemyAnimationProfile.Goblin or EnemyAnimationProfile.GoblinArmored)
+                        && (!tiers.TryGetComponent(enemy, out var tier) || tier.Value != EnemyCombatTier.Elite);
+                    if (trooper || profile == EnemyAnimationProfile.Ninja)
+                        radii.y *= TrooperAndNinjaShadowLengthScale;
                 }
                 AddShadow(position, facing, radii, floor, .65f, lift);
             }
+            // Carry forward only shadows from enemies still in the render query this frame.
+            (previousLaunchShadows, currentLaunchShadows) = (currentLaunchShadows, previousLaunchShadows);
+            currentLaunchShadows.Clear();
 
             if (!bossBodies.IsEmptyIgnoreFilter)
             {
