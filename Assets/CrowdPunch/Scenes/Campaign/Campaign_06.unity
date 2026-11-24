@@ -220,6 +220,7 @@ GameObject:
   - component: {fileID: 1302891}
   - component: {fileID: 1302890}
   - component: {fileID: 1302889}
+  - component: {fileID: 1302892}
   m_Layer: 0
   m_Name: Full Cel Presentation
   m_TagString: Untagged
@@ -288,6 +289,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1302892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1302888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ab3e90a3bee98c47a1dc52a01220a87, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.BakedShadowLighting
+  bakedProbes: {fileID: 25800006, guid: 4c75e71fbb9c3d84681a7a1bfcbca83e, type: 2}
 --- !u!1 &1572208
 GameObject:
   m_ObjectHideFlags: 0

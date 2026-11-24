@@ -38,6 +38,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _ArenaDepthRole: 0
     - _AtlasColor: 0
     - _CameraCutaway: 0
     - _ContinuousPaint: 1
@@ -65,9 +66,10 @@ Material:
     - _WashStrength: 0.1
     - _Window: 0
     m_Colors:
-    - _BakedShadowST: {r: 0.0049823998, g: 0.0054806327, b: 0.3561817, a: 0.47580868}
+    - _BakedShadowST: {r: 0.0049823998, g: 0.0054806327, b: 0.4714161, a: 0.4987579}
     - _BaseColor: {r: 0.82, g: 0.79, b: 0.68, a: 1}
     - _Bounds: {r: 0, g: 0, b: 20, a: 20}
+    - _CourtPaintBounds: {r: 0, g: 0, b: 0, a: 0}
     - _LightColor: {r: 1, g: 0.94, b: 0.82, a: 1}
     - _MarbleVeinColor: {r: 0.59, g: 0.65, b: 0.73, a: 1}
     - _PathColor: {r: 0.56, g: 0.42999998, b: 0.24999997, a: 1}

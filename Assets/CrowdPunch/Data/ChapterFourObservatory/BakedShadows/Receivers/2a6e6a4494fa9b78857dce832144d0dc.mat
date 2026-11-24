@@ -39,17 +39,24 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _ArenaDepthRole: 0
     - _AtlasColor: 0
     - _CameraCutaway: 0
     - _ContinuousPaint: 1
     - _Contrast: 0.78
     - _Cull: 2
     - _GrainStrength: 0.03
+    - _MarbleScale: 0.42
+    - _MarbleSlabSize: 6
+    - _MarbleSlabStrength: 0
+    - _MarbleStrength: 0
     - _Meadow: 0
     - _MineralStrength: 0
+    - _MultiplyEntityColor: 0
     - _ObjectSpacePaint: 0
     - _PlasterGrain: 0
     - _ReceiveShadows: 1
+    - _SceneryHaze: 0
     - _SeamStrength: 0
     - _StrataStrength: 0
     - _TextureScale: 0.3
@@ -60,10 +67,12 @@ Material:
     - _WashStrength: 0.1
     - _Window: 0
     m_Colors:
-    - _BakedShadowST: {r: 0.00099648, g: 0.0009964786, b: 0.17065041, a: 0.15404885}
+    - _BakedShadowST: {r: 0.00099648, g: 0.0009964786, b: 0.14721291, a: 0.19750588}
     - _BaseColor: {r: 0.35, g: 0.44, b: 0.48, a: 1}
     - _Bounds: {r: 0, g: 0, b: 20, a: 20}
+    - _CourtPaintBounds: {r: 0, g: 0, b: 0, a: 0}
     - _LightColor: {r: 1, g: 0.97, b: 0.86, a: 1}
+    - _MarbleVeinColor: {r: 0.45, g: 0.53, b: 0.62, a: 1}
     - _PathColor: {r: 0.56, g: 0.42999998, b: 0.24999997, a: 1}
     - _ShadowColor: {r: 0.43, g: 0.54, b: 0.61, a: 1}
     - _WashColor: {r: 0.48, g: 0.54, b: 0.56, a: 1}

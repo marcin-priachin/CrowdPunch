@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: 1e31cf8b0f881d06f8338d442b966671
-  m_Shader: {fileID: 4800000, guid: 8a2bec547a72dfc4c9d356b471899637, type: 3}
+  m_Shader: {fileID: 4800000, guid: 7f0048fd1df365d439d6a7ceacf1c557, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -18,19 +18,19 @@ Material:
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap:
-    CrowdPunchSourceMaterial: Assets/CrowdPunch/Data/ChapterTwoFoundry/Materials/Blue
-      steel.mat
+    CrowdPunchSourceMaterial: Assets/CrowdPunch/Data/ChapterTwoFoundry/PaintedLook/Materials/Painted
+      Stone_Near_0.mat
   disabledShaderPasses: []
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
     - _BakedShadowMask:
-        m_Texture: {fileID: 2800000, guid: 30509e294622e9f4e966976229ef5a8a, type: 3}
+        m_Texture: {fileID: 2800000, guid: 87aa96b087cdbbf4bb4f76a6786a27e0, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: baf23df249cc3974fafd9a18167df712, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DirtMap:
@@ -39,17 +39,42 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _ArenaDepthRole: 0
+    - _AtlasColor: 0
+    - _CameraCutaway: 0
+    - _ContinuousPaint: 0
+    - _Contrast: 0.78
+    - _Cull: 2
+    - _GrainStrength: 0.11
+    - _MarbleScale: 0.42
+    - _MarbleSlabSize: 6
+    - _MarbleSlabStrength: 0
+    - _MarbleStrength: 0
     - _Meadow: 0
+    - _MineralStrength: 0
+    - _MultiplyEntityColor: 0
+    - _ObjectSpacePaint: 0
     - _PlasterGrain: 0
     - _ReceiveShadows: 1
-    - _TextureScale: 0.2
-    - _TextureStrength: 0
+    - _SceneryHaze: 0
+    - _SeamStrength: 0
+    - _StrataStrength: 0
+    - _TextureScale: 0.18
+    - _TextureStrength: 0.38
     - _UseBakedShadowMask: 1
-    - _Variation: 0.055
+    - _UseEntityColor: 0
+    - _Variation: 0.18
+    - _WashStrength: 0.3
+    - _Window: 0
     m_Colors:
-    - _BakedShadowST: {r: 0.023368424, g: 0.023186326, b: 0.11245754, a: 0.012360601}
-    - _BaseColor: {r: 0.24, g: 0.31, b: 0.36, a: 1}
+    - _BakedShadowST: {r: 0.026044708, g: 0.02613626, b: 0.12465412, a: 0.10268111}
+    - _BaseColor: {r: 0.4, g: 0.46, b: 0.51, a: 1}
     - _Bounds: {r: 0, g: 0, b: 20, a: 20}
+    - _CourtPaintBounds: {r: 0, g: 0, b: 0, a: 0}
+    - _LightColor: {r: 1, g: 0.94, b: 0.83, a: 1}
+    - _MarbleVeinColor: {r: 0.45, g: 0.53, b: 0.62, a: 1}
     - _PathColor: {r: 0.56, g: 0.42999998, b: 0.24999997, a: 1}
+    - _ShadowColor: {r: 0.43, g: 0.49, b: 0.65, a: 1}
+    - _WashColor: {r: 0.53, g: 0.48, b: 0.51, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

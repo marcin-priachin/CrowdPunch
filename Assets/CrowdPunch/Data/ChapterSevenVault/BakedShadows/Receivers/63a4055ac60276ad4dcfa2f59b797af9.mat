@@ -26,7 +26,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BakedShadowMask:
-        m_Texture: {fileID: 2800000, guid: 5e5e52d67a897c74da20887f603be35b, type: 3}
+        m_Texture: {fileID: 2800000, guid: 08ebb34d07092f44eac2c20b10ef9931, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
@@ -39,14 +39,20 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _ArenaDepthRole: 0
     - _AtlasColor: 0
     - _CameraCutaway: 0
     - _ContinuousPaint: 1
     - _Contrast: 0.78
     - _Cull: 2
     - _GrainStrength: 0.03
+    - _MarbleScale: 0.42
+    - _MarbleSlabSize: 6
+    - _MarbleSlabStrength: 0
+    - _MarbleStrength: 0
     - _Meadow: 0
     - _MineralStrength: 0
+    - _MultiplyEntityColor: 0
     - _ObjectSpacePaint: 0
     - _PlasterGrain: 0
     - _ReceiveShadows: 1
@@ -61,10 +67,12 @@ Material:
     - _WashStrength: 0.1
     - _Window: 0
     m_Colors:
-    - _BakedShadowST: {r: 0.00099648, g: 0.0009964786, b: 0.18432228, a: 0.118404314}
+    - _BakedShadowST: {r: 0.00099648, g: 0.0009964786, b: 0.24877541, a: 0.107173845}
     - _BaseColor: {r: 0.35, g: 0.44, b: 0.48, a: 1}
     - _Bounds: {r: 0, g: 0, b: 20, a: 20}
+    - _CourtPaintBounds: {r: 0, g: 0, b: 0, a: 0}
     - _LightColor: {r: 0.91, g: 0.97, b: 1, a: 1}
+    - _MarbleVeinColor: {r: 0.45, g: 0.53, b: 0.62, a: 1}
     - _PathColor: {r: 0.56, g: 0.42999998, b: 0.24999997, a: 1}
     - _ShadowColor: {r: 0.4, g: 0.48, b: 0.62, a: 1}
     - _WashColor: {r: 0.48, g: 0.54, b: 0.56, a: 1}

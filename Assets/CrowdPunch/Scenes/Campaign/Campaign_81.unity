@@ -10147,7 +10147,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1018840690161153560, guid: 2f25d744ee9f4bc40815c9e035878b1b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
-      value:
+      value: 
       objectReference: {fileID: 2100000, guid: e4db5da9d1ac6a54aa2807d665a33966, type: 2}
     - target: {fileID: 1477006780650588764, guid: 2f25d744ee9f4bc40815c9e035878b1b, type: 3}
       propertyPath: m_LocalScale.x
@@ -10223,7 +10223,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1535285584391757548, guid: 2f25d744ee9f4bc40815c9e035878b1b, type: 3}
       propertyPath: m_Controller
-      value:
+      value: 
       objectReference: {fileID: 9100000, guid: af95f03b16a4be14aac6b4590176304f, type: 2}
     - target: {fileID: 1535285584391757548, guid: 2f25d744ee9f4bc40815c9e035878b1b, type: 3}
       propertyPath: m_CullingMode
@@ -24193,6 +24193,8 @@ MonoBehaviour:
   hazeArenaEdges: []
   hazeGroundHeight: 0
   sceneryHazeDepth: 24
+  sceneryHazeBankPulse: 0
+  sceneryHazeTintPulse: 0
 --- !u!114 &1664787065
 MonoBehaviour:
   m_ObjectHideFlags: 0

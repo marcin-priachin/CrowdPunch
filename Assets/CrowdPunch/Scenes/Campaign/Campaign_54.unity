@@ -5295,7 +5295,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d9276c63fd6077409705bfe4dc7f1e2, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.GauntletLevel
   playerEntryPoint: {fileID: 352381317}
   openingHint: Launch bodies or blast the block along the turning arrows into the
@@ -8277,7 +8277,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
   m_UsePipelineSettings: 1
   m_AdditionalLightsShadowResolutionTier: 2
@@ -41008,7 +41008,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 45a335734b1572644a6a5d09d87adc65, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.Scenes::Unity.Scenes.SubScene
   _SceneAsset: {fileID: 102900000, guid: 159cd8e8c172fb640b823d3882fc2868, type: 3}
   _HierarchyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
@@ -51592,7 +51592,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4b586cc84753ee9439080d7732d2be71, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.CelLevelLighting
   sky: {r: 0.29, g: 0.36, b: 0.46, a: 1}
   equator: {r: 0.17, g: 0.2, b: 0.26, a: 1}
@@ -51609,6 +51609,8 @@ MonoBehaviour:
   hazeArenaEdges: []
   hazeGroundHeight: 0
   sceneryHazeDepth: 24
+  sceneryHazeBankPulse: 0
+  sceneryHazeTintPulse: 0
 --- !u!114 &1843834846
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51619,7 +51621,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
   m_IsGlobal: 1
   priority: 150
@@ -51651,7 +51653,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1ab3e90a3bee98c47a1dc52a01220a87, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Mono.Levels.BakedShadowLighting
   bakedProbes: {fileID: 25800006, guid: 199e01adad3709046947089e78edeba8, type: 2}
 --- !u!1 &1852118217
