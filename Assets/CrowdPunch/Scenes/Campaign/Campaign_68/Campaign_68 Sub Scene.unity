@@ -147,8 +147,8 @@ Transform:
   m_GameObject: {fileID: 108319832}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 50.75, y: -0.25, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 101.5}
+  m_LocalPosition: {x: 50.75, y: -1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2143048611}
@@ -178,8 +178,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: bfcb0e54b04179c409d4ddaefd3dc698, type: 2}
-  - {fileID: 2100000, guid: 264e56fd0544b7b4bb689fc518a74c1a, type: 2}
+  - {fileID: 2100000, guid: 0c29c745bb0d303458c5930113e1daba, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -203,6 +202,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &108319836
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 108319832}
+  m_Mesh: {fileID: 5306766976265233280, guid: b6afb3201a0f8644ca283f6ce384a0eb, type: 2}
 --- !u!64 &108319837
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -224,15 +231,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 98e0344bce1342b47b49d941adec4946, type: 2}
---- !u!33 &108319836
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 108319832}
-  m_Mesh: {fileID: 4300000, guid: 98e0344bce1342b47b49d941adec4946, type: 2}
+  m_Mesh: {fileID: 6611211733424418091, guid: b6afb3201a0f8644ca283f6ce384a0eb, type: 2}
 --- !u!1 &185264329
 GameObject:
   m_ObjectHideFlags: 0
@@ -301,6 +300,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.NavigationArenaAuthoring
   settings: {fileID: 11400000, guid: 2d814e5f0d4a6da41988897dbfdc9d1e, type: 2}
+  perimeterColliders: []
   overrideParticipationAnchor: 1
   participationAnchor: {x: 0, y: -16}
 --- !u!1 &219645177
@@ -421,9 +421,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 457749968}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -0.25, z: 50.75}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 101.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -1, z: 50.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2143048611}
@@ -453,8 +453,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3eb87cd0283fcd44c81d7ce1d54e696b, type: 2}
-  - {fileID: 2100000, guid: c3c91cd35d4d2b94faf83db8a293a8c9, type: 2}
+  - {fileID: 2100000, guid: 0c29c745bb0d303458c5930113e1daba, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -478,6 +477,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &457749972
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 457749968}
+  m_Mesh: {fileID: 1023187793086738490, guid: b6afb3201a0f8644ca283f6ce384a0eb, type: 2}
 --- !u!64 &457749973
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -499,15 +506,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: dbcbc1d3cab578c4a9fbdf57a6d7faa9, type: 2}
---- !u!33 &457749972
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 457749968}
-  m_Mesh: {fileID: 4300000, guid: dbcbc1d3cab578c4a9fbdf57a6d7faa9, type: 2}
+  m_Mesh: {fileID: -1562760596474264917, guid: b6afb3201a0f8644ca283f6ce384a0eb, type: 2}
 --- !u!1 &549293180
 GameObject:
   m_ObjectHideFlags: 0
@@ -628,7 +627,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63c474b1fb547c4438b63150e73fca57, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAuthoring
   sequence: {fileID: 1296011366}
   shape: 0
@@ -762,6 +761,77 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 613987229}
   m_Mesh: {fileID: 4300000, guid: cd0f1ef33832d6d4f8dc747197c73e10, type: 2}
+--- !u!1 &710093098
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 710093101}
+  - component: {fileID: 710093100}
+  - component: {fileID: 710093099}
+  m_Layer: 0
+  m_Name: East crossing warning
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &710093099
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 710093098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1e80925cbc102b4f9aebd4cdd1b0996, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAppearanceAuthoring
+  style: 5
+--- !u!114 &710093100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 710093098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63c474b1fb547c4438b63150e73fca57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAuthoring
+  sequence: {fileID: 1296011366}
+  shape: 0
+  operation: 1
+  firstWave: 0
+  width: 3
+  depth: 6
+  radius: 2.5
+  damage: 12
+  damageInterval: 0.75
+  inactiveDuration: 4
+  warningDuration: 1.5
+  activeDuration: 2.5
+  cycleOffset: 2.6666667
+--- !u!4 &710093101
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 710093098}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14, y: -0.965, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &757807634
 GameObject:
   m_ObjectHideFlags: 0
@@ -790,7 +860,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63c474b1fb547c4438b63150e73fca57, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAuthoring
   sequence: {fileID: 1296011366}
   shape: 0
@@ -861,7 +931,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63c474b1fb547c4438b63150e73fca57, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAuthoring
   sequence: {fileID: 1296011366}
   shape: 0
@@ -1018,6 +1088,77 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 871467547}
   m_Mesh: {fileID: 4300000, guid: d1aead8446928404fa68ed9c6c87cffe, type: 2}
+--- !u!1 &875892885
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 875892888}
+  - component: {fileID: 875892887}
+  - component: {fileID: 875892886}
+  m_Layer: 0
+  m_Name: West crossing warning
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &875892886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 875892885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1e80925cbc102b4f9aebd4cdd1b0996, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAppearanceAuthoring
+  style: 5
+--- !u!114 &875892887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 875892885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63c474b1fb547c4438b63150e73fca57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAuthoring
+  sequence: {fileID: 1296011366}
+  shape: 0
+  operation: 1
+  firstWave: 0
+  width: 3
+  depth: 6
+  radius: 2.5
+  damage: 12
+  damageInterval: 0.75
+  inactiveDuration: 4
+  warningDuration: 1.5
+  activeDuration: 2.5
+  cycleOffset: 6.6666665
+--- !u!4 &875892888
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 875892885}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -14, y: -0.965, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &882122002
 GameObject:
   m_ObjectHideFlags: 0
@@ -1090,9 +1231,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1256613510}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -0.25, z: -50.75}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 101.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -1, z: -50.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2143048611}
@@ -1122,8 +1263,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: c6e97da768d0e8f43a888a55ee7312a6, type: 2}
-  - {fileID: 2100000, guid: ff2a8ac044b3c6743ac206ce9108ca63, type: 2}
+  - {fileID: 2100000, guid: 0c29c745bb0d303458c5930113e1daba, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1147,6 +1287,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1256613514
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1256613510}
+  m_Mesh: {fileID: 4300000, guid: b6afb3201a0f8644ca283f6ce384a0eb, type: 2}
 --- !u!64 &1256613515
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1168,15 +1316,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 71645870a52400d46ba1ad8b934269a3, type: 2}
---- !u!33 &1256613514
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1256613510}
-  m_Mesh: {fileID: 4300000, guid: 71645870a52400d46ba1ad8b934269a3, type: 2}
+  m_Mesh: {fileID: 7897819250494176875, guid: b6afb3201a0f8644ca283f6ce384a0eb, type: 2}
 --- !u!1 &1296011365
 GameObject:
   m_ObjectHideFlags: 0
@@ -1342,6 +1482,77 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1324508664}
   m_Mesh: {fileID: 4300000, guid: 571fd977439101249be6a2631f2d0958, type: 2}
+--- !u!1 &1324779345
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1324779348}
+  - component: {fileID: 1324779347}
+  - component: {fileID: 1324779346}
+  m_Layer: 0
+  m_Name: Southeast approach warning
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1324779346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1324779345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1e80925cbc102b4f9aebd4cdd1b0996, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAppearanceAuthoring
+  style: 5
+--- !u!114 &1324779347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1324779345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63c474b1fb547c4438b63150e73fca57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAuthoring
+  sequence: {fileID: 1296011366}
+  shape: 0
+  operation: 1
+  firstWave: 0
+  width: 3
+  depth: 6
+  radius: 2.5
+  damage: 12
+  damageInterval: 0.75
+  inactiveDuration: 4
+  warningDuration: 1.5
+  activeDuration: 2.5
+  cycleOffset: 4
+--- !u!4 &1324779348
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1324779345}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 7, y: -0.965, z: -17}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1355594300
 GameObject:
   m_ObjectHideFlags: 0
@@ -1742,9 +1953,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2066766794}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -50.75, y: -0.25, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 101.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -50.75, y: -1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2143048611}
@@ -1774,8 +1985,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 91f5a451f0e0bce429f4cfa5235b22bf, type: 2}
-  - {fileID: 2100000, guid: 217de86ed80a7954185268666eb5b730, type: 2}
+  - {fileID: 2100000, guid: 0c29c745bb0d303458c5930113e1daba, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1799,6 +2009,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &2066766798
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2066766794}
+  m_Mesh: {fileID: 4400126220825117041, guid: b6afb3201a0f8644ca283f6ce384a0eb, type: 2}
 --- !u!64 &2066766799
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1820,15 +2038,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: ff6a53124e0775145b08c2299f3e0fbf, type: 2}
---- !u!33 &2066766798
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2066766794}
-  m_Mesh: {fileID: 4300000, guid: ff6a53124e0775145b08c2299f3e0fbf, type: 2}
+  m_Mesh: {fileID: 8370012192791349470, guid: b6afb3201a0f8644ca283f6ce384a0eb, type: 2}
 --- !u!1 &2143048610
 GameObject:
   m_ObjectHideFlags: 0
@@ -1865,219 +2075,6 @@ Transform:
   - {fileID: 457749969}
   - {fileID: 2066766795}
   - {fileID: 549293181}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &710093098
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 710093101}
-  - component: {fileID: 710093100}
-  - component: {fileID: 710093099}
-  m_Layer: 0
-  m_Name: East crossing warning
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &710093099
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 710093098}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1e80925cbc102b4f9aebd4cdd1b0996, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAppearanceAuthoring
-  style: 5
---- !u!114 &710093100
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 710093098}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 63c474b1fb547c4438b63150e73fca57, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAuthoring
-  sequence: {fileID: 1296011366}
-  shape: 0
-  operation: 1
-  firstWave: 0
-  width: 3
-  depth: 6
-  radius: 2.5
-  damage: 12
-  damageInterval: 0.75
-  inactiveDuration: 4
-  warningDuration: 1.5
-  activeDuration: 2.5
-  cycleOffset: 2.6666667
---- !u!4 &710093101
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 710093098}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 14, y: -0.965, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &875892885
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 875892888}
-  - component: {fileID: 875892887}
-  - component: {fileID: 875892886}
-  m_Layer: 0
-  m_Name: West crossing warning
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &875892886
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 875892885}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1e80925cbc102b4f9aebd4cdd1b0996, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAppearanceAuthoring
-  style: 5
---- !u!114 &875892887
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 875892885}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 63c474b1fb547c4438b63150e73fca57, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAuthoring
-  sequence: {fileID: 1296011366}
-  shape: 0
-  operation: 1
-  firstWave: 0
-  width: 3
-  depth: 6
-  radius: 2.5
-  damage: 12
-  damageInterval: 0.75
-  inactiveDuration: 4
-  warningDuration: 1.5
-  activeDuration: 2.5
-  cycleOffset: 6.6666665
---- !u!4 &875892888
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 875892885}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -14, y: -0.965, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1324779345
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1324779348}
-  - component: {fileID: 1324779347}
-  - component: {fileID: 1324779346}
-  m_Layer: 0
-  m_Name: Southeast approach warning
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1324779346
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1324779345}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1e80925cbc102b4f9aebd4cdd1b0996, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAppearanceAuthoring
-  style: 5
---- !u!114 &1324779347
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1324779345}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 63c474b1fb547c4438b63150e73fca57, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GroundHazardAuthoring
-  sequence: {fileID: 1296011366}
-  shape: 0
-  operation: 1
-  firstWave: 0
-  width: 3
-  depth: 6
-  radius: 2.5
-  damage: 12
-  damageInterval: 0.75
-  inactiveDuration: 4
-  warningDuration: 1.5
-  activeDuration: 2.5
-  cycleOffset: 4
---- !u!4 &1324779348
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1324779345}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7, y: -0.965, z: -17}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807

@@ -146,9 +146,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 31073299}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0.5, y: -0.25, z: -20.75}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 30.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.5, y: -1, z: -20.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 421955174}
@@ -178,8 +178,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d138b0ca22f7b944298a52077e96daff, type: 2}
-  - {fileID: 2100000, guid: 4a841ae13554b264986f5c0f37eab506, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -203,6 +202,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &31073303
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31073299}
+  m_Mesh: {fileID: 4300000, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!64 &31073304
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -224,15 +231,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: ccca88d26c6fd914990e66bfead02732, type: 2}
---- !u!33 &31073303
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 31073299}
-  m_Mesh: {fileID: 4300000, guid: ccca88d26c6fd914990e66bfead02732, type: 2}
+  m_Mesh: {fileID: -5410933838452308389, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!1 &65792882
 GameObject:
   m_ObjectHideFlags: 0
@@ -277,7 +276,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 10
@@ -383,7 +382,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
@@ -402,7 +401,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -510,7 +509,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 2
@@ -619,7 +618,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
@@ -638,7 +637,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 2
@@ -746,7 +745,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 0
@@ -852,7 +851,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
@@ -871,7 +870,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 1
@@ -962,7 +961,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 539b143591e3f2c4995b89defcb5128d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GameSettingsAuthoring
   settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000024, type: 2}
 --- !u!4 &115110112
@@ -1024,7 +1023,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 20
@@ -1130,7 +1129,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
@@ -1149,7 +1148,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -1257,7 +1256,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 13
@@ -1362,7 +1361,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 19
@@ -1467,7 +1466,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 24
@@ -1571,7 +1570,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
   placementUnit: 1
   footprint: {x: 10, y: 3}
@@ -1620,7 +1619,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 9
@@ -1864,9 +1863,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 443697146}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.92387956, z: -0, w: 0.38268346}
-  m_LocalPosition: {x: -17.53033, y: -0.25, z: -17.53033}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 9.985281}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -17.53033, y: -1, z: -17.53033}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 421955174}
@@ -1896,8 +1895,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 58a36814cbd15f9478336906093d4831, type: 2}
-  - {fileID: 2100000, guid: fd99d6c4fde53dc4c93c8d159e2ca13e, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1921,6 +1919,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &443697150
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 443697146}
+  m_Mesh: {fileID: -1181647838341468143, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!64 &443697151
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1942,15 +1948,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 96876edc875001142b05f2e7dae4195e, type: 2}
---- !u!33 &443697150
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 443697146}
-  m_Mesh: {fileID: 4300000, guid: 96876edc875001142b05f2e7dae4195e, type: 2}
+  m_Mesh: {fileID: 1133841389270664644, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!1 &458008158
 GameObject:
   m_ObjectHideFlags: 0
@@ -1995,7 +1993,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 35
@@ -2101,7 +2099,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
@@ -2120,7 +2118,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 1
@@ -2228,7 +2226,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 26
@@ -2333,7 +2331,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 1
@@ -2442,7 +2440,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
@@ -2461,7 +2459,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -2569,7 +2567,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 15
@@ -2674,7 +2672,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 27
@@ -2779,7 +2777,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 32
@@ -2884,7 +2882,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 2
@@ -2992,7 +2990,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 12
@@ -3097,7 +3095,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 28
@@ -3294,7 +3292,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
@@ -3313,7 +3311,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 1
@@ -3422,7 +3420,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
@@ -3441,7 +3439,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -3549,7 +3547,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 1
@@ -3638,7 +3636,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69fb4f90670f984498a51d5c6036ae10, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.ArenaAuthoring
   spacingCenterOffset: {x: 0, y: 0, z: 0}
   spacingSize: {x: 34, y: 16, z: 34}
@@ -3673,9 +3671,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d140cba58f9b1e3458d83420892801fd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.NavigationArenaAuthoring
   settings: {fileID: 11400000, guid: 2d814e5f0d4a6da41988897dbfdc9d1e, type: 2}
+  perimeterColliders: []
   overrideParticipationAnchor: 1
   participationAnchor: {x: 0, y: -10}
 --- !u!1 &912406062
@@ -3722,7 +3721,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 6
@@ -3827,7 +3826,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 30
@@ -4023,7 +4022,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
@@ -4042,7 +4041,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -4150,7 +4149,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 22
@@ -4255,7 +4254,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 16
@@ -4360,7 +4359,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 34
@@ -4448,9 +4447,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1040971576}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.30517748, z: -0, w: 0.95229554}
-  m_LocalPosition: {x: 18.1103, y: -0.25, z: -16.935928}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 10.102325}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 18.1103, y: -1, z: -16.935928}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 421955174}
@@ -4480,8 +4479,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 60776856190627940b35342777d195d6, type: 2}
-  - {fileID: 2100000, guid: 931695d32b09b64459fa9d646aba4335, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4505,6 +4503,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1040971580
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1040971576}
+  m_Mesh: {fileID: -5819318195326698011, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!64 &1040971581
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4526,15 +4532,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 7e7ceb7dfbbb1654e90d296a07f0bd2e, type: 2}
---- !u!33 &1040971580
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1040971576}
-  m_Mesh: {fileID: 4300000, guid: 7e7ceb7dfbbb1654e90d296a07f0bd2e, type: 2}
+  m_Mesh: {fileID: -9005973575861405553, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!1 &1047527284
 GameObject:
   m_ObjectHideFlags: 0
@@ -4579,7 +4577,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 5
@@ -4685,7 +4683,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
@@ -4704,7 +4702,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -4795,7 +4793,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0fabe604f40cfd842abb5ec65a82a505, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeAuthoring
   settings: {fileID: 11400000, guid: 7e4e6e4cba1af294e9de057979925d0b, type: 2}
   size: {x: 2.4, y: 4, z: 2.4}
@@ -4889,7 +4887,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 21
@@ -4994,7 +4992,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 2
@@ -5102,7 +5100,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 17
@@ -5207,7 +5205,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 11
@@ -5312,7 +5310,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 33
@@ -5418,7 +5416,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
@@ -5437,7 +5435,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -5545,7 +5543,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -5653,7 +5651,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 14
@@ -5834,8 +5832,8 @@ Transform:
   m_GameObject: {fileID: 1190998603}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 20.75, y: -0.25, z: 0.5}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 28.5}
+  m_LocalPosition: {x: 20.75, y: -1, z: 0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 421955174}
@@ -5865,8 +5863,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 60490f4f76317c1459d621d6ec7c8488, type: 2}
-  - {fileID: 2100000, guid: f3e32915bd5a0554184370a5364880f7, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5890,6 +5887,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1190998607
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1190998603}
+  m_Mesh: {fileID: 2485493784341362244, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!64 &1190998608
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -5911,15 +5916,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 9e9d2d6e9a4d1ed4e9acc06ab418fad0, type: 2}
---- !u!33 &1190998607
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1190998603}
-  m_Mesh: {fileID: 4300000, guid: 9e9d2d6e9a4d1ed4e9acc06ab418fad0, type: 2}
+  m_Mesh: {fileID: 3444103101947248044, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!1 &1212132369
 GameObject:
   m_ObjectHideFlags: 0
@@ -5964,7 +5961,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 4
@@ -6070,7 +6067,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
@@ -6089,7 +6086,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -6197,7 +6194,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 1
@@ -6305,7 +6302,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 25
@@ -6467,7 +6464,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8068bb54f3ccaa14c9c3e6c15c5fd251, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.TrajectoryPreviewSurfaceAuthoring
   radius: 0.5000001
   heightOffset: 1
@@ -6498,9 +6495,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1364536191}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.97821563, z: -0, w: -0.20759147}
-  m_LocalPosition: {x: -18.685358, y: -0.25, z: 15.804604}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 11.348858}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -18.685358, y: -1, z: 15.804604}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 421955174}
@@ -6530,8 +6527,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1f10d62bc424f0c42992caa5e942de5d, type: 2}
-  - {fileID: 2100000, guid: 7556f91b07518f544b15d61ff6dec694, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6555,6 +6551,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1364536195
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1364536191}
+  m_Mesh: {fileID: 295083883086198080, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!64 &1364536196
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -6576,15 +6580,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 585035d51eed7604facd6a39c29721e5, type: 2}
---- !u!33 &1364536195
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1364536191}
-  m_Mesh: {fileID: 4300000, guid: 585035d51eed7604facd6a39c29721e5, type: 2}
+  m_Mesh: {fileID: 7454441291241682356, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!1 &1374247408
 GameObject:
   m_ObjectHideFlags: 0
@@ -6630,7 +6626,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
@@ -6649,7 +6645,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 2
@@ -6757,7 +6753,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 8
@@ -6862,7 +6858,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 1
@@ -6970,7 +6966,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 3
@@ -7058,7 +7054,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c35519dadca8ee946a881de19d7d5907, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyWaveSequenceAuthoring
   bossEncounter: {fileID: 0}
   chickenBoss: {fileID: 0}
@@ -7113,9 +7109,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1450830826}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.44721362, z: -0, w: 0.8944272}
-  m_LocalPosition: {x: 16.45, y: -0.25, z: 17.6}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 11.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 16.45, y: -1, z: 17.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 421955174}
@@ -7145,8 +7141,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d34543165b9311f499dabeb45dd4169f, type: 2}
-  - {fileID: 2100000, guid: fdd5a2f54546103469dbb9fd47333723, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -7170,6 +7165,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1450830830
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1450830826}
+  m_Mesh: {fileID: -7158224313474081234, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!64 &1450830831
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -7191,15 +7194,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: ea9ebe8b76254b447a5230191bdf37c7, type: 2}
---- !u!33 &1450830830
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1450830826}
-  m_Mesh: {fileID: 4300000, guid: ea9ebe8b76254b447a5230191bdf37c7, type: 2}
+  m_Mesh: {fileID: 2363262815271256576, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!1 &1482767787
 GameObject:
   m_ObjectHideFlags: 0
@@ -7244,7 +7239,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 29
@@ -7349,7 +7344,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 31
@@ -7455,7 +7450,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
@@ -7474,7 +7469,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 1
@@ -7565,7 +7560,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: df4b41994be04f6429678d8087839b6e, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.RotatingCoverAuthoring
   target: {fileID: 1074384550}
   settings: {fileID: 11400000, guid: ce73ec0cb6e34b04f99b0d4efb7f886a, type: 2}
@@ -7647,9 +7642,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1589394000}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -2, y: -0.25, z: 20.75}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 29.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -2, y: -1, z: 20.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 421955174}
@@ -7679,8 +7674,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d7415aa2281b81c46805af1b4d9ec905, type: 2}
-  - {fileID: 2100000, guid: b16d5a573c83aa74b8b27cf86ebc0d9e, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -7704,6 +7698,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1589394004
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1589394000}
+  m_Mesh: {fileID: -2079523575692783547, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!64 &1589394005
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -7725,15 +7727,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 9cec88d972b4a704c8597e8ce3462b42, type: 2}
---- !u!33 &1589394004
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1589394000}
-  m_Mesh: {fileID: 4300000, guid: 9cec88d972b4a704c8597e8ce3462b42, type: 2}
+  m_Mesh: {fileID: 9153483673044398932, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!1 &1670115961
 GameObject:
   m_ObjectHideFlags: 0
@@ -7778,7 +7772,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 2
@@ -7887,7 +7881,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
@@ -7906,7 +7900,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 2
@@ -8014,7 +8008,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 18
@@ -8120,7 +8114,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
@@ -8139,7 +8133,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -8247,7 +8241,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 1
@@ -8355,7 +8349,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 7
@@ -8461,7 +8455,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
@@ -8480,7 +8474,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 2
@@ -8588,7 +8582,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 2
@@ -8694,7 +8688,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
@@ -8713,7 +8707,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1074384550}
   crackStage: 0
@@ -8804,9 +8798,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2087558969}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -20.75, y: -0.25, z: -1.5}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 26.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -20.75, y: -1, z: -1.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 421955174}
@@ -8836,8 +8830,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 67bcf6059b1c93644b94ce179ad8a517, type: 2}
-  - {fileID: 2100000, guid: 5a56d54b958010a40b1abc551aac4c74, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8861,6 +8854,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &2087558973
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2087558969}
+  m_Mesh: {fileID: -1496175887885372750, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!64 &2087558974
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -8882,15 +8883,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: e1e122e204c70484b8df47338083ee35, type: 2}
---- !u!33 &2087558973
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2087558969}
-  m_Mesh: {fileID: 4300000, guid: e1e122e204c70484b8df47338083ee35, type: 2}
+  m_Mesh: {fileID: 5710598409594701134, guid: a0ab9c153aa0fac4da7634b5ed14df35, type: 2}
 --- !u!1 &2126418220
 GameObject:
   m_ObjectHideFlags: 0
@@ -8935,7 +8928,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7180b789a0edaf14ca4a93ffcdb0e3f1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.CoverPanelAuthoring
   cover: {fileID: 1582249926}
   index: 23

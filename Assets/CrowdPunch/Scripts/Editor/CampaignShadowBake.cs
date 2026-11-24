@@ -16,7 +16,7 @@ namespace CrowdPunch.Editor
     {
         private static string Output;
         private static SceneSetup[] previousSetup;
-        private static string[] scenePaths;
+        private static (string Path, string Output, bool SplitVillageTerrain)[] targets;
         private static bool villageTerrain;
         private static bool awaitingBake, bakeCompleted;
         public static bool Running { get; private set; }
@@ -26,17 +26,21 @@ namespace CrowdPunch.Editor
         [MenuItem("Crowd Punch/Art Direction/Bake Chapter Two Shadows")]
         public static void BakeChapterTwo() => Begin(Enumerable.Range(11,10).Select(ChapterTwoFoundryBuilder.MainPath).ToArray(), ChapterTwoFoundryAssets.Output+"/BakedShadows");
 
-        public static void Begin(string[] mainScenes, string outputFolder, bool splitVillageTerrain=false)
+        public static void Begin(string[] mainScenes, string outputFolder, bool splitVillageTerrain=false) =>
+            Begin(mainScenes.Select(path => (path, outputFolder, splitVillageTerrain)).ToArray());
+
+        internal static void Begin((string Path, string Output, bool SplitVillageTerrain)[] scenes)
         {
             if(Running || Lightmapping.isRunning || EditorApplication.isPlayingOrWillChangePlaymode)
                 throw new InvalidOperationException("Finish the current operation before baking.");
             if(Enumerable.Range(0,SceneManager.sceneCount).Any(i=>SceneManager.GetSceneAt(i).isDirty))
                 throw new InvalidOperationException("Save open scenes before baking.");
-            if(mainScenes.Length==0 || mainScenes.Any(p=>!File.Exists(p)) || !outputFolder.StartsWith("Assets/CrowdPunch/Data/",StringComparison.Ordinal)) throw new ArgumentException("Explicit saved campaign scenes and an owned output folder are required.");
-            Output=outputFolder; villageTerrain=splitVillageTerrain;
+            if(scenes.Length==0 || scenes.Any(scene=>!File.Exists(scene.Path) || !scene.Output.StartsWith("Assets/CrowdPunch/Data/",StringComparison.Ordinal)))
+                throw new ArgumentException("Explicit saved campaign scenes and owned output folders are required.");
             previousSetup=EditorSceneManager.GetSceneManagerSetup();
-            Directory.CreateDirectory(Output+"/Meshes"); AssetDatabase.Refresh();
-            scenePaths=mainScenes.ToArray(); Completed=0; Error=null; awaitingBake=false; Running=true;
+            foreach (string output in scenes.Select(scene => scene.Output).Distinct()) Directory.CreateDirectory(output+"/Meshes");
+            AssetDatabase.Refresh();
+            targets=scenes.ToArray(); Completed=0; Error=null; awaitingBake=false; Running=true;
             Lightmapping.bakeCompleted+=OnBaked;
             EditorApplication.update+=Step;
         }
@@ -63,13 +67,13 @@ namespace CrowdPunch.Editor
                     if(lighting.GetComponent<BakedShadowLighting>()==null) lighting.gameObject.AddComponent<BakedShadowLighting>();
                     lighting.GetComponent<BakedShadowLighting>().bakedProbes=LightmapSettings.lightProbes;
                     EditorSceneManager.MarkAllScenesDirty(); EditorSceneManager.SaveOpenScenes(); AssetDatabase.SaveAssets();
-                    Debug.Log($"{scenePaths[Completed]}: baked {LightmapSettings.lightmaps.Length} lightmap/shadowmask atlases.");
+                    Debug.Log($"{targets[Completed].Path}: baked {LightmapSettings.lightmaps.Length} lightmap/shadowmask atlases.");
                     Completed++; awaitingBake=false;
-                    if(Completed==scenePaths.Length)
+                    if(Completed==targets.Length)
                     {
                         // A late lightmapper import can overwrite an earlier importer's flag.
                         // Reassert the saved chapter textures after the entire bake batch.
-                        foreach(string main in scenePaths)
+                        foreach(string main in targets.Select(target=>target.Path))
                         {
                             string folder=Path.GetDirectoryName(main)+"/"+Path.GetFileNameWithoutExtension(main);
                             foreach(string path in AssetDatabase.FindAssets("t:Texture2D",new[]{folder}).Select(AssetDatabase.GUIDToAssetPath).Where(p=>Path.GetFileName(p).StartsWith("Lightmap-",StringComparison.Ordinal)))
@@ -83,7 +87,10 @@ namespace CrowdPunch.Editor
                     }
                     return;
                 }
-                Prepare(scenePaths[Completed]);
+                var target = targets[Completed];
+                Output = target.Output;
+                villageTerrain = target.SplitVillageTerrain;
+                Prepare(target.Path);
                 bakeCompleted=false;
                 awaitingBake=true;
                 if(!Lightmapping.BakeAsync()) throw new InvalidOperationException("Unity refused to start the light bake.");
@@ -103,6 +110,12 @@ namespace CrowdPunch.Editor
             string stem=Path.GetFileNameWithoutExtension(main);
             int number=int.Parse(stem.Substring(stem.Length-2));
             var scene=EditorSceneManager.OpenScene(main);
+            if (Completed > 0)
+            {
+                // A campaign batch can otherwise retain the last scene's lightmap and scenery textures.
+                EditorUtility.UnloadUnusedAssetsImmediate();
+                GC.Collect();
+            }
             var sub=EditorSceneManager.OpenScene(Path.GetDirectoryName(main)+"/"+stem+"/"+stem+" Sub Scene.unity",OpenSceneMode.Additive);
             SceneManager.SetActiveScene(scene);
             var lighting=scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<CelLevelLighting>(true)).Single();
@@ -198,13 +211,18 @@ namespace CrowdPunch.Editor
         {
             // Entities Graphics copies these into arrays with full mip chains. Applying a
             // quality mip limit to just the source textures breaks that copy on low quality.
-            foreach(var texture in LightmapSettings.lightmaps.SelectMany(l=>new[]{l.lightmapColor,l.lightmapDir,l.shadowMask}).Where(t=>t!=null).Distinct())
+            AssetDatabase.StartAssetEditing();
+            try
             {
-                var importer=AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
-                if(importer==null || importer.ignoreMipmapLimit) continue;
-                importer.ignoreMipmapLimit=true;
-                importer.SaveAndReimport();
+                foreach(var texture in LightmapSettings.lightmaps.SelectMany(l=>new[]{l.lightmapColor,l.lightmapDir,l.shadowMask}).Where(t=>t!=null).Distinct())
+                {
+                    var importer=AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
+                    if(importer==null || importer.ignoreMipmapLimit) continue;
+                    importer.ignoreMipmapLimit=true;
+                    importer.SaveAndReimport();
+                }
             }
+            finally { AssetDatabase.StopAssetEditing(); }
         }
 
         private static Mesh LightmapMesh(Mesh original)

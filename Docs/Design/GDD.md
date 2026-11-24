@@ -88,6 +88,12 @@ Across the campaign, retain each chapter's pigments and give the playable floor 
 staggered paving, a warmer centre and a cooler perimeter. Keep enemy faces and costume
 details readable in the cooler shaded bands. Use readable instanced contact shadows
 beneath the player, enemies and bosses.
+
+Use level 13's opaque, straight-sided stone walls for the campaign perimeter. Fit each
+wall's inner face to the playable floor outline and retain the inner rim of the round
+Gatekeeper courts inside the boss route. Walls rise 1.7985 metres above the floor and
+are 1.5 metres deep. Break-and-exit gate tops, fronts and backs meet their flanking walls
+flush. Keep the chapter surface treatment, authored gate widths and room sequence.
 Ground shadows follow the feet and fade as a body rises. Defeated enemies keep a shadow
 centered beneath their full pose until they disappear, with the launch shape and limited growth.
 Give direct punches a brief white-gold flash, strong chain contacts a smaller spark, and explosions a bright core
@@ -806,7 +812,7 @@ Breaking an intermediate gate opens the next room without completing the level. 
 gate must be broken and the player must reach the sole exit beyond the final gate;
 surviving enemies remain hostile and need not be cleared. Preserve the per-gate hit rules,
 physical response, aiming, feedback and bounded replenishment in BARRICADE-002..005.
-The original single-gate legacy introduction and campaign levels 4/6/13 remain unchanged.
+The legacy introduction and campaign levels 4/6/13 keep their single-gate structure.
 
 The original repeated-layout defaults are superseded by BARRICADE-009's ascending sector
 layouts and crowd mixes. A room starts its initial spawn delay only after the preceding gate is

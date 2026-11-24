@@ -163,7 +163,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -271,7 +271,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -364,8 +364,8 @@ Transform:
   m_GameObject: {fileID: 53741586}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: -1.3333333, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: -0.59949994, z: 0.041337967}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173224}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -380,14 +380,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -2, y: 2, z: 2}
   spin: {x: 2, y: 1, z: 2}
   duration: 1.2
-  restingHeight: 0.6
+  restingHeight: 0.73866117
   seed: 0
 --- !u!114 &53741589
 MonoBehaviour:
@@ -399,7 +399,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 0
@@ -597,7 +597,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -673,7 +673,7 @@ GameObject:
   - component: {fileID: 139979026}
   - component: {fileID: 139979025}
   m_Layer: 0
-  m_Name: Nature rock
+  m_Name: Gate wall left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -687,9 +687,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 139979023}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.25, y: 0, z: 0}
+  m_LocalScale: {x: 15, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1764743139}
@@ -719,7 +719,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f5975044be75cda4f959d02f19362d4c, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -750,7 +750,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 139979023}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8208051298116561265, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &160372026
 GameObject:
   m_ObjectHideFlags: 0
@@ -795,7 +795,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -886,9 +886,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 160624306}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -0.25, z: -21.75}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 33.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -1, z: -21.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 253917936}
@@ -918,8 +918,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 17ab1fe209e08ca4398402dca1bcb89a, type: 2}
-  - {fileID: 2100000, guid: a252efc654bb0174093426dcca3eefe7, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -943,6 +942,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &160624310
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 160624306}
+  m_Mesh: {fileID: 4300000, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!64 &160624311
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -964,15 +971,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 603939d02ed5c3744a2a675912b8c1a3, type: 2}
---- !u!33 &160624310
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 160624306}
-  m_Mesh: {fileID: 4300000, guid: 603939d02ed5c3744a2a675912b8c1a3, type: 2}
+  m_Mesh: {fileID: -3472083529593357422, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &173023643
 GameObject:
   m_ObjectHideFlags: 0
@@ -1016,7 +1015,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
   placementUnit: 1
   footprint: {x: 2, y: 2}
@@ -1049,8 +1048,8 @@ Transform:
   m_GameObject: {fileID: 175977400}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 16.75, y: -0.25, z: 84}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 211.5}
+  m_LocalPosition: {x: 16.75, y: -1, z: 84}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 253917936}
@@ -1080,8 +1079,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4b4ba9753cbc0434b9f8c15a0fcf6a33, type: 2}
-  - {fileID: 2100000, guid: 59b3091672a321947a13f963865103f3, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1105,6 +1103,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &175977404
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 175977400}
+  m_Mesh: {fileID: -4550122877859579034, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!64 &175977405
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1126,15 +1132,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: fd9de6c61b193674db30bc8dc93261a8, type: 2}
---- !u!33 &175977404
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 175977400}
-  m_Mesh: {fileID: 4300000, guid: fd9de6c61b193674db30bc8dc93261a8, type: 2}
+  m_Mesh: {fileID: 2247938523800058956, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &195623354
 GameObject:
   m_ObjectHideFlags: 0
@@ -1164,8 +1162,8 @@ Transform:
   m_GameObject: {fileID: 195623354}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: 0, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173267}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -1180,14 +1178,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -1.6, y: 2.2, z: 2.1}
   spin: {x: 2.1, y: 1.3, z: 2}
   duration: 1.225
-  restingHeight: 0.6
+  restingHeight: 0.7386633
   seed: 0.1
 --- !u!114 &195623357
 MonoBehaviour:
@@ -1199,7 +1197,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 0
@@ -1292,8 +1290,8 @@ Transform:
   m_GameObject: {fileID: 212983140}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: 0, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -1308,14 +1306,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -1.6, y: 2.2, z: 2.1}
   spin: {x: 2.1, y: 1.3, z: 2}
   duration: 1.225
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0.1
 --- !u!114 &212983143
 MonoBehaviour:
@@ -1327,7 +1325,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 0
@@ -1420,7 +1418,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 4, z: 1.2}
+  m_LocalScale: {x: 2, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -1435,7 +1433,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 0
@@ -1549,7 +1547,7 @@ GameObject:
   - component: {fileID: 261644144}
   - component: {fileID: 261644143}
   m_Layer: 0
-  m_Name: Nature rock
+  m_Name: Gate wall right
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1563,9 +1561,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 261644141}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.25, y: 0, z: 0}
+  m_LocalScale: {x: 15, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1498693014}
@@ -1595,7 +1593,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 36a8865306ddd93469f3b7d1c48eb749, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1626,7 +1624,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 261644141}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8208051298116561265, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &278227403
 GameObject:
   m_ObjectHideFlags: 0
@@ -1639,7 +1637,7 @@ GameObject:
   - component: {fileID: 278227406}
   - component: {fileID: 278227405}
   m_Layer: 0
-  m_Name: Nature rock
+  m_Name: Gate wall left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1653,9 +1651,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 278227403}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.25, y: 0, z: 0}
+  m_LocalScale: {x: 15, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1325656934}
@@ -1685,7 +1683,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 134b6c3f383e2d245acd96170d324580, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1716,7 +1714,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 278227403}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8208051298116561265, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &293989818
 GameObject:
   m_ObjectHideFlags: 0
@@ -1743,7 +1741,7 @@ Transform:
   m_GameObject: {fileID: 293989818}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 11, y: -2, z: 54.2}
+  m_LocalPosition: {x: 8.75, y: -2, z: 53.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1760,11 +1758,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
-  placementUnit: 1
-  footprint: {x: 20, y: 3}
-  height: 4
+  placementUnit: 0.5
+  footprint: {x: 31, y: 3}
+  height: 1.7985
 --- !u!1 &309766667
 GameObject:
   m_ObjectHideFlags: 0
@@ -1792,10 +1790,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0fabe604f40cfd842abb5ec65a82a505, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeAuthoring
   settings: {fileID: 11400000, guid: 4e605efe658549e40a45f31f5aae08cd, type: 2}
-  size: {x: 2, y: 4, z: 1.2}
+  size: {x: 2, y: 1.7985, z: 1.5}
   exit: {fileID: 0}
   completeOnDestruction: 1
   cover: {fileID: 0}
@@ -1809,7 +1807,7 @@ Transform:
   m_GameObject: {fileID: 309766667}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 11}
+  m_LocalPosition: {x: 0, y: -0.10075003, z: 11.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1858,8 +1856,8 @@ Transform:
   m_GameObject: {fileID: 309968041}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.0999999, z: -0.6499996}
-  m_LocalScale: {x: 1.4, y: 0.18, z: 0.08}
+  m_LocalPosition: {x: 0, y: 0.49458745, z: -0.8002472}
+  m_LocalScale: {x: 1.4, y: 0.0809325, z: 0.09448673}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -1874,7 +1872,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 2
@@ -2058,8 +2056,8 @@ Transform:
   m_GameObject: {fileID: 326428587}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.72, y: 0, z: -0.63500005}
-  m_LocalScale: {x: 0.14, y: 3.76, z: 0.07}
+  m_LocalPosition: {x: 0.72, y: 0, z: -0.7086334}
+  m_LocalScale: {x: 0.14, y: 1.6905899, z: 0.08267589}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -2074,14 +2072,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -1.88, y: 2.06, z: 2.03}
   spin: {x: 2.03, y: 1.09, z: 2}
   duration: 1.2075001
-  restingHeight: 0.035
+  restingHeight: 0.071337946
   seed: 0.03
 --- !u!114 &326428590
 MonoBehaviour:
@@ -2093,7 +2091,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 0
@@ -2185,8 +2183,8 @@ Transform:
   m_GameObject: {fileID: 328794363}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.100000024, z: -0.6499996}
-  m_LocalScale: {x: 1.4, y: 0.18, z: 0.08}
+  m_LocalPosition: {x: 0, y: 0.04496251, z: -0.80024433}
+  m_LocalScale: {x: 1.4, y: 0.0809325, z: 0.09448815}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -2201,7 +2199,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 1
@@ -2277,7 +2275,7 @@ GameObject:
   - component: {fileID: 337757035}
   - component: {fileID: 337757034}
   m_Layer: 0
-  m_Name: Nature rock
+  m_Name: Gate wall right
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2291,9 +2289,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 337757032}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.25, y: 0, z: 0}
+  m_LocalScale: {x: 15, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1649262119}
@@ -2323,7 +2321,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: c53f076867f39934f9cab5495df52525, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2354,7 +2352,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 337757032}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8208051298116561265, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &355474931
 GameObject:
   m_ObjectHideFlags: 0
@@ -2489,7 +2487,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -2579,7 +2577,7 @@ Transform:
   m_GameObject: {fileID: 386472920}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 11, y: -2, z: 180.2}
+  m_LocalPosition: {x: 8.75, y: -2, z: 179.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2596,11 +2594,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
-  placementUnit: 1
-  footprint: {x: 20, y: 3}
-  height: 4
+  placementUnit: 0.5
+  footprint: {x: 31, y: 3}
+  height: 1.7985
 --- !u!1 &408889519
 GameObject:
   m_ObjectHideFlags: 0
@@ -2630,8 +2628,8 @@ Transform:
   m_GameObject: {fileID: 408889519}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.72, y: 0, z: -0.63500005}
-  m_LocalScale: {x: 0.14, y: 3.76, z: 0.07}
+  m_LocalPosition: {x: -0.72, y: 0, z: -0.7086334}
+  m_LocalScale: {x: 0.14, y: 1.6905899, z: 0.08267589}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -2646,14 +2644,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.79999995, y: 2.6, z: 2.3}
   spin: {x: 2.3, y: 1.9000001, z: 2}
   duration: 1.2750001
-  restingHeight: 0.035
+  restingHeight: 0.071337946
   seed: 0.3
 --- !u!114 &408889522
 MonoBehaviour:
@@ -2665,7 +2663,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 0
@@ -2757,7 +2755,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c35519dadca8ee946a881de19d7d5907, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyWaveSequenceAuthoring
   bossEncounter: {fileID: 0}
   chickenBoss: {fileID: 0}
@@ -2795,7 +2793,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e8c496d878463f84e95e4bbc661ddbea, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeRoomAuthoring
   previousGate: {fileID: 0}
   minimum: {x: -15, y: -21}
@@ -2829,8 +2827,8 @@ Transform:
   m_GameObject: {fileID: 450546305}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.72637177}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810983}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -2845,14 +2843,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
   velocity: {x: -1.0799999, y: 2.46, z: 2.23}
   spin: {x: 2.23, y: 1.69, z: 2}
   duration: 1.2575
-  restingHeight: 0.0175
+  restingHeight: 0.62054914
   seed: 0.23
 --- !u!114 &450546308
 MonoBehaviour:
@@ -2864,7 +2862,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 2
@@ -2957,8 +2955,8 @@ Transform:
   m_GameObject: {fileID: 482980169}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.7263832}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1811055}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -2973,14 +2971,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
   velocity: {x: 1.48, y: 3.74, z: 2.87}
   spin: {x: 2.87, y: 3.6100001, z: 2}
   duration: 1.4175
-  restingHeight: 0.0175
+  restingHeight: 0.6205527
   seed: 0.87
 --- !u!114 &482980172
 MonoBehaviour:
@@ -2992,7 +2990,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 1
@@ -3085,7 +3083,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 4, z: 1.2}
+  m_LocalScale: {x: 2, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -3100,7 +3098,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 0
@@ -3191,7 +3189,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 539b143591e3f2c4995b89defcb5128d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.GameSettingsAuthoring
   settings: {fileID: 11400000, guid: a12c749ec1ba4b17aac7000000000024, type: 2}
 --- !u!4 &517815785
@@ -3238,8 +3236,8 @@ Transform:
   m_GameObject: {fileID: 532067177}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 1.3333334, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: 0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -3254,14 +3252,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.120000005, y: 2.94, z: 2.47}
   spin: {x: 2.47, y: 2.41, z: 2}
   duration: 1.3175
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0.47
 --- !u!114 &532067180
 MonoBehaviour:
@@ -3273,7 +3271,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 0
@@ -3366,8 +3364,8 @@ Transform:
   m_GameObject: {fileID: 556296623}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: -1.3333333, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: -0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -3382,14 +3380,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -2, y: 2, z: 2}
   spin: {x: 2, y: 1, z: 2}
   duration: 1.2
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0
 --- !u!114 &556296626
 MonoBehaviour:
@@ -3401,7 +3399,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 0
@@ -3493,7 +3491,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e8c496d878463f84e95e4bbc661ddbea, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeRoomAuthoring
   previousGate: {fileID: 2078462374}
   minimum: {x: -15, y: 137.7}
@@ -3508,7 +3506,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c35519dadca8ee946a881de19d7d5907, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyWaveSequenceAuthoring
   bossEncounter: {fileID: 0}
   chickenBoss: {fileID: 0}
@@ -3565,8 +3563,8 @@ Transform:
   m_GameObject: {fileID: 594594323}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7452774}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810983}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -3581,14 +3579,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
   velocity: {x: -1.0799999, y: 2.46, z: 2.23}
   spin: {x: 2.23, y: 1.69, z: 2}
   duration: 1.2575
-  restingHeight: 0.0175
+  restingHeight: 0.62054914
   seed: 0.23
 --- !u!114 &594594326
 MonoBehaviour:
@@ -3600,7 +3598,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 2
@@ -3692,7 +3690,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e8c496d878463f84e95e4bbc661ddbea, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeRoomAuthoring
   previousGate: {fileID: 1433408949}
   minimum: {x: -15, y: 95.7}
@@ -3707,7 +3705,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c35519dadca8ee946a881de19d7d5907, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyWaveSequenceAuthoring
   bossEncounter: {fileID: 0}
   chickenBoss: {fileID: 0}
@@ -3870,7 +3868,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -3977,7 +3975,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
   placementUnit: 1
   footprint: {x: 2, y: 2}
@@ -4047,8 +4045,8 @@ Transform:
   m_GameObject: {fileID: 648857240}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: -1.3333333, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: -0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -4063,14 +4061,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.52, y: 2.74, z: 2.37}
   spin: {x: 2.37, y: 2.1100001, z: 2}
   duration: 1.2925
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0.37
 --- !u!114 &648857243
 MonoBehaviour:
@@ -4082,7 +4080,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 0
@@ -4190,7 +4188,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -4282,8 +4280,8 @@ Transform:
   m_GameObject: {fileID: 655763210}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.100000024, z: -0.6499996}
-  m_LocalScale: {x: 1.4, y: 0.18, z: 0.08}
+  m_LocalPosition: {x: 0, y: 0.04496251, z: -0.8002472}
+  m_LocalScale: {x: 1.4, y: 0.0809325, z: 0.09448673}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -4298,7 +4296,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 1
@@ -4390,8 +4388,8 @@ Transform:
   m_GameObject: {fileID: 677206102}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.100000024, z: -0.6499996}
-  m_LocalScale: {x: 1.4, y: 0.18, z: 0.08}
+  m_LocalPosition: {x: 0, y: 0.04496251, z: -0.8002434}
+  m_LocalScale: {x: 1.4, y: 0.0809325, z: 0.094488434}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -4406,7 +4404,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 1
@@ -4499,8 +4497,8 @@ Transform:
   m_GameObject: {fileID: 696468625}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.7263489}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810842}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -4515,14 +4513,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
   velocity: {x: -1.0799999, y: 2.46, z: 2.23}
   spin: {x: 2.23, y: 1.69, z: 2}
   duration: 1.2575
-  restingHeight: 0.0175
+  restingHeight: 0.62054205
   seed: 0.23
 --- !u!114 &696468628
 MonoBehaviour:
@@ -4534,7 +4532,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 2
@@ -4610,7 +4608,7 @@ GameObject:
   - component: {fileID: 703191565}
   - component: {fileID: 703191564}
   m_Layer: 0
-  m_Name: Nature rock
+  m_Name: Gate wall left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4624,9 +4622,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 703191562}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.25, y: 0, z: 0}
+  m_LocalScale: {x: 15, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2111138291}
@@ -4656,7 +4654,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0c2e23c8d4a4eff48bc3936e65b076e9, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4687,7 +4685,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 703191562}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8208051298116561265, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &714168383
 GameObject:
   m_ObjectHideFlags: 0
@@ -4717,8 +4715,8 @@ Transform:
   m_GameObject: {fileID: 714168383}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: -1.3333333, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: -0.59949994, z: 0.04134369}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173181}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -4733,14 +4731,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.52, y: 2.74, z: 2.37}
   spin: {x: 2.37, y: 2.1100001, z: 2}
   duration: 1.2925
-  restingHeight: 0.6
+  restingHeight: 0.738659
   seed: 0.37
 --- !u!114 &714168386
 MonoBehaviour:
@@ -4752,7 +4750,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 0
@@ -4845,8 +4843,8 @@ Transform:
   m_GameObject: {fileID: 721111870}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.72, y: 0, z: -0.63500005}
-  m_LocalScale: {x: 0.14, y: 3.76, z: 0.07}
+  m_LocalPosition: {x: -0.72, y: 0, z: -0.7086611}
+  m_LocalScale: {x: 0.14, y: 1.6905899, z: 0.08267713}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -4861,14 +4859,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.79999995, y: 2.6, z: 2.3}
   spin: {x: 2.3, y: 1.9000001, z: 2}
   duration: 1.2750001
-  restingHeight: 0.035
+  restingHeight: 0.071338564
   seed: 0.3
 --- !u!114 &721111873
 MonoBehaviour:
@@ -4880,7 +4878,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 0
@@ -4973,8 +4971,8 @@ Transform:
   m_GameObject: {fileID: 722736701}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7452755}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1811019}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -4989,14 +4987,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
   velocity: {x: -1.0799999, y: 2.46, z: 2.23}
   spin: {x: 2.23, y: 1.69, z: 2}
   duration: 1.2575
-  restingHeight: 0.0175
+  restingHeight: 0.62055093
   seed: 0.23
 --- !u!114 &722736704
 MonoBehaviour:
@@ -5008,7 +5006,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 2
@@ -5101,7 +5099,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 4, z: 1.2}
+  m_LocalScale: {x: 2, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -5116,7 +5114,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 0
@@ -5209,8 +5207,8 @@ Transform:
   m_GameObject: {fileID: 740482480}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 1.3333334, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: 0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -5225,14 +5223,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: 1.3599999, y: 3.6799998, z: 2.84}
   spin: {x: 2.84, y: 3.52, z: 2}
   duration: 1.4100001
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0.84
 --- !u!114 &740482483
 MonoBehaviour:
@@ -5244,7 +5242,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 0
@@ -5337,8 +5335,8 @@ Transform:
   m_GameObject: {fileID: 742750410}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 1.3333334, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: 0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -5353,14 +5351,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.120000005, y: 2.94, z: 2.47}
   spin: {x: 2.47, y: 2.41, z: 2}
   duration: 1.3175
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0.47
 --- !u!114 &742750413
 MonoBehaviour:
@@ -5372,7 +5370,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 0
@@ -5465,8 +5463,8 @@ Transform:
   m_GameObject: {fileID: 755068983}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.7263489}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810842}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -5481,14 +5479,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
   velocity: {x: 1.48, y: 3.74, z: 2.87}
   spin: {x: 2.87, y: 3.6100001, z: 2}
   duration: 1.4175
-  restingHeight: 0.0175
+  restingHeight: 0.62054205
   seed: 0.87
 --- !u!114 &755068986
 MonoBehaviour:
@@ -5500,7 +5498,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 1
@@ -5593,8 +5591,8 @@ Transform:
   m_GameObject: {fileID: 781063218}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.72, y: 0, z: -0.63500005}
-  m_LocalScale: {x: 0.14, y: 3.76, z: 0.07}
+  m_LocalPosition: {x: -0.72, y: 0, z: -0.7086563}
+  m_LocalScale: {x: 0.14, y: 1.6905899, z: 0.08267689}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -5609,14 +5607,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.79999995, y: 2.6, z: 2.3}
   spin: {x: 2.3, y: 1.9000001, z: 2}
   duration: 1.2750001
-  restingHeight: 0.035
+  restingHeight: 0.071338445
   seed: 0.3
 --- !u!114 &781063221
 MonoBehaviour:
@@ -5628,7 +5626,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 0
@@ -5721,8 +5719,8 @@ Transform:
   m_GameObject: {fileID: 808031750}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.7263775}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1811019}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -5737,14 +5735,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
   velocity: {x: 1.48, y: 3.74, z: 2.87}
   spin: {x: 2.87, y: 3.6100001, z: 2}
   duration: 1.4175
-  restingHeight: 0.0175
+  restingHeight: 0.62055093
   seed: 0.87
 --- !u!114 &808031753
 MonoBehaviour:
@@ -5756,7 +5754,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 1
@@ -5863,7 +5861,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
   placementUnit: 1
   footprint: {x: 5, y: 3}
@@ -5912,7 +5910,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -6004,8 +6002,8 @@ Transform:
   m_GameObject: {fileID: 835115338}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.100000024, z: -0.6499996}
-  m_LocalScale: {x: 1.4, y: 0.18, z: 0.08}
+  m_LocalPosition: {x: 0, y: 0.04496251, z: -0.8002472}
+  m_LocalScale: {x: 1.4, y: 0.0809325, z: 0.09448673}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -6020,7 +6018,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 1
@@ -6113,8 +6111,8 @@ Transform:
   m_GameObject: {fileID: 863134930}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.7263489}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810842}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -6129,14 +6127,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
   velocity: {x: 1.48, y: 3.74, z: 2.87}
   spin: {x: 2.87, y: 3.6100001, z: 2}
   duration: 1.4175
-  restingHeight: 0.0175
+  restingHeight: 0.62054205
   seed: 0.87
 --- !u!114 &863134933
 MonoBehaviour:
@@ -6148,7 +6146,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 1
@@ -6241,8 +6239,8 @@ Transform:
   m_GameObject: {fileID: 870111496}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 1.3333334, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: 0.59949994, z: 0.041337967}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173224}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -6257,14 +6255,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.120000005, y: 2.94, z: 2.47}
   spin: {x: 2.47, y: 2.41, z: 2}
   duration: 1.3175
-  restingHeight: 0.6
+  restingHeight: 0.73866117
   seed: 0.47
 --- !u!114 &870111499
 MonoBehaviour:
@@ -6276,7 +6274,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 0
@@ -6384,7 +6382,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -6568,8 +6566,8 @@ Transform:
   m_GameObject: {fileID: 883253086}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 0, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: 0, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173267}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -6584,14 +6582,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: 0.96000004, y: 3.48, z: 2.74}
   spin: {x: 2.74, y: 3.22, z: 2}
   duration: 1.385
-  restingHeight: 0.6
+  restingHeight: 0.7386633
   seed: 0.74
 --- !u!114 &883253089
 MonoBehaviour:
@@ -6603,7 +6601,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 0
@@ -6696,8 +6694,8 @@ Transform:
   m_GameObject: {fileID: 894198133}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: 0, z: 0.04134369}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173181}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -6712,14 +6710,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -1.6, y: 2.2, z: 2.1}
   spin: {x: 2.1, y: 1.3, z: 2}
   duration: 1.225
-  restingHeight: 0.6
+  restingHeight: 0.738659
   seed: 0.1
 --- !u!114 &894198136
 MonoBehaviour:
@@ -6731,7 +6729,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 0
@@ -6824,8 +6822,8 @@ Transform:
   m_GameObject: {fileID: 894821294}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7452755}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1811019}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -6840,14 +6838,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
   velocity: {x: 1.48, y: 3.74, z: 2.87}
   spin: {x: 2.87, y: 3.6100001, z: 2}
   duration: 1.4175
-  restingHeight: 0.0175
+  restingHeight: 0.62055093
   seed: 0.87
 --- !u!114 &894821297
 MonoBehaviour:
@@ -6859,7 +6857,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 1
@@ -6952,8 +6950,8 @@ Transform:
   m_GameObject: {fileID: 896174525}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.7263832}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1811055}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -6968,14 +6966,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
   velocity: {x: -1.0799999, y: 2.46, z: 2.23}
   spin: {x: 2.23, y: 1.69, z: 2}
   duration: 1.2575
-  restingHeight: 0.0175
+  restingHeight: 0.6205527
   seed: 0.23
 --- !u!114 &896174528
 MonoBehaviour:
@@ -6987,7 +6985,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 2
@@ -7115,8 +7113,8 @@ Transform:
   m_GameObject: {fileID: 905495662}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: -1.3333333, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: -0.59949994, z: 0.04134369}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173181}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -7131,14 +7129,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -2, y: 2, z: 2}
   spin: {x: 2, y: 1, z: 2}
   duration: 1.2
-  restingHeight: 0.6
+  restingHeight: 0.738659
   seed: 0
 --- !u!114 &905495665
 MonoBehaviour:
@@ -7150,7 +7148,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 0
@@ -7243,8 +7241,8 @@ Transform:
   m_GameObject: {fileID: 906317106}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.72, y: 0, z: -0.63500005}
-  m_LocalScale: {x: 0.14, y: 3.76, z: 0.07}
+  m_LocalPosition: {x: 0.72, y: 0, z: -0.7086611}
+  m_LocalScale: {x: 0.14, y: 1.6905899, z: 0.08267713}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -7259,14 +7257,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -1.88, y: 2.06, z: 2.03}
   spin: {x: 2.03, y: 1.09, z: 2}
   duration: 1.2075001
-  restingHeight: 0.035
+  restingHeight: 0.071338564
   seed: 0.03
 --- !u!114 &906317109
 MonoBehaviour:
@@ -7278,7 +7276,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 0
@@ -7371,8 +7369,8 @@ Transform:
   m_GameObject: {fileID: 915140494}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 1.3333334, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: 0.59949994, z: 0.041337967}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173224}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -7387,14 +7385,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: 1.3599999, y: 3.6799998, z: 2.84}
   spin: {x: 2.84, y: 3.52, z: 2}
   duration: 1.4100001
-  restingHeight: 0.6
+  restingHeight: 0.73866117
   seed: 0.84
 --- !u!114 &915140497
 MonoBehaviour:
@@ -7406,7 +7404,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 0
@@ -7589,8 +7587,8 @@ Transform:
   m_GameObject: {fileID: 939862202}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7452774}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810983}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -7605,14 +7603,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
   velocity: {x: 1.48, y: 3.74, z: 2.87}
   spin: {x: 2.87, y: 3.6100001, z: 2}
   duration: 1.4175
-  restingHeight: 0.0175
+  restingHeight: 0.62054914
   seed: 0.87
 --- !u!114 &939862205
 MonoBehaviour:
@@ -7624,7 +7622,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 1
@@ -7717,8 +7715,8 @@ Transform:
   m_GameObject: {fileID: 965802080}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: 0, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -7733,14 +7731,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -1.6, y: 2.2, z: 2.1}
   spin: {x: 2.1, y: 1.3, z: 2}
   duration: 1.225
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0.1
 --- !u!114 &965802083
 MonoBehaviour:
@@ -7752,7 +7750,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 0
@@ -7860,7 +7858,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -7953,7 +7951,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 4, z: 1.2}
+  m_LocalScale: {x: 2, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -7968,7 +7966,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 0
@@ -8061,8 +8059,8 @@ Transform:
   m_GameObject: {fileID: 990370469}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.7263775}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1811019}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -8077,14 +8075,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
   velocity: {x: -1.0799999, y: 2.46, z: 2.23}
   spin: {x: 2.23, y: 1.69, z: 2}
   duration: 1.2575
-  restingHeight: 0.0175
+  restingHeight: 0.62055093
   seed: 0.23
 --- !u!114 &990370472
 MonoBehaviour:
@@ -8096,7 +8094,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 2
@@ -8189,8 +8187,8 @@ Transform:
   m_GameObject: {fileID: 995054662}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 1.3333334, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: 0.59949994, z: 0.04134369}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173181}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -8205,14 +8203,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: 1.3599999, y: 3.6799998, z: 2.84}
   spin: {x: 2.84, y: 3.52, z: 2}
   duration: 1.4100001
-  restingHeight: 0.6
+  restingHeight: 0.738659
   seed: 0.84
 --- !u!114 &995054665
 MonoBehaviour:
@@ -8224,7 +8222,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 0
@@ -8317,8 +8315,8 @@ Transform:
   m_GameObject: {fileID: 997984766}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 1.3333334, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: 0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173267}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -8333,14 +8331,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: 1.3599999, y: 3.6799998, z: 2.84}
   spin: {x: 2.84, y: 3.52, z: 2}
   duration: 1.4100001
-  restingHeight: 0.6
+  restingHeight: 0.7386633
   seed: 0.84
 --- !u!114 &997984769
 MonoBehaviour:
@@ -8352,7 +8350,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 0
@@ -8428,7 +8426,7 @@ GameObject:
   - component: {fileID: 1005480376}
   - component: {fileID: 1005480375}
   m_Layer: 0
-  m_Name: Nature rock
+  m_Name: Gate wall right
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8442,9 +8440,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1005480373}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.25, y: 0, z: 0}
+  m_LocalScale: {x: 15, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1402123615}
@@ -8474,7 +8472,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0cdbe84246bc395488d235b99ec0ad98, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8505,7 +8503,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1005480373}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8208051298116561265, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &1017808857
 GameObject:
   m_ObjectHideFlags: 0
@@ -8534,8 +8532,8 @@ Transform:
   m_GameObject: {fileID: 1017808857}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.0999999, z: -0.6499996}
-  m_LocalScale: {x: 1.4, y: 0.18, z: 0.08}
+  m_LocalPosition: {x: 0, y: 0.49458745, z: -0.80024433}
+  m_LocalScale: {x: 1.4, y: 0.0809325, z: 0.09448815}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -8550,7 +8548,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 2
@@ -8643,8 +8641,8 @@ Transform:
   m_GameObject: {fileID: 1063234459}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.72637177}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810983}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -8659,14 +8657,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
   velocity: {x: 1.48, y: 3.74, z: 2.87}
   spin: {x: 2.87, y: 3.6100001, z: 2}
   duration: 1.4175
-  restingHeight: 0.0175
+  restingHeight: 0.62054914
   seed: 0.87
 --- !u!114 &1063234462
 MonoBehaviour:
@@ -8678,7 +8676,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 1
@@ -8771,8 +8769,8 @@ Transform:
   m_GameObject: {fileID: 1072427185}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 0, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: 0, z: 0.041337967}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173224}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -8787,14 +8785,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: 0.96000004, y: 3.48, z: 2.74}
   spin: {x: 2.74, y: 3.22, z: 2}
   duration: 1.385
-  restingHeight: 0.6
+  restingHeight: 0.73866117
   seed: 0.74
 --- !u!114 &1072427188
 MonoBehaviour:
@@ -8806,7 +8804,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 0
@@ -8914,7 +8912,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -8990,7 +8988,7 @@ GameObject:
   - component: {fileID: 1099787824}
   - component: {fileID: 1099787823}
   m_Layer: 0
-  m_Name: Nature rock
+  m_Name: Gate wall right
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9004,9 +9002,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1099787821}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.25, y: 0, z: 0}
+  m_LocalScale: {x: 15, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 293989819}
@@ -9036,7 +9034,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1139d4815e4b881488624b5feed86a26, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -9067,7 +9065,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1099787821}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8208051298116561265, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &1128814183
 GameObject:
   m_ObjectHideFlags: 0
@@ -9096,8 +9094,8 @@ Transform:
   m_GameObject: {fileID: 1128814183}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.0999999, z: -0.6499996}
-  m_LocalScale: {x: 1.4, y: 0.18, z: 0.08}
+  m_LocalPosition: {x: 0, y: 0.49458745, z: -0.8002472}
+  m_LocalScale: {x: 1.4, y: 0.0809325, z: 0.09448787}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -9112,7 +9110,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 2
@@ -9386,8 +9384,8 @@ Transform:
   m_GameObject: {fileID: 1187180223}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.72, y: 0, z: -0.63500005}
-  m_LocalScale: {x: 0.14, y: 3.76, z: 0.07}
+  m_LocalPosition: {x: 0.72, y: 0, z: -0.7086601}
+  m_LocalScale: {x: 0.14, y: 1.6905899, z: 0.08267739}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -9402,14 +9400,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -1.88, y: 2.06, z: 2.03}
   spin: {x: 2.03, y: 1.09, z: 2}
   duration: 1.2075001
-  restingHeight: 0.035
+  restingHeight: 0.07133869
   seed: 0.03
 --- !u!114 &1187180226
 MonoBehaviour:
@@ -9421,7 +9419,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 0
@@ -9529,7 +9527,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -9637,7 +9635,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -9730,8 +9728,8 @@ Transform:
   m_GameObject: {fileID: 1209656972}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: -1.3333333, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: -0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -9746,14 +9744,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -2, y: 2, z: 2}
   spin: {x: 2, y: 1, z: 2}
   duration: 1.2
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0
 --- !u!114 &1209656975
 MonoBehaviour:
@@ -9765,7 +9763,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 0
@@ -9856,9 +9854,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1210076418}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -0.25, z: 189.75}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 33.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -1, z: 189.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 253917936}
@@ -9888,8 +9886,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8b025867dfad1744e85abc6e79f2936a, type: 2}
-  - {fileID: 2100000, guid: 06141c48fa0991f439bc80089268b0ac, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -9913,6 +9910,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1210076422
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210076418}
+  m_Mesh: {fileID: -2458303792912481348, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!64 &1210076423
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -9934,15 +9939,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: c73f5287004eb4142a2db3abe064945c, type: 2}
---- !u!33 &1210076422
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1210076418}
-  m_Mesh: {fileID: 4300000, guid: c73f5287004eb4142a2db3abe064945c, type: 2}
+  m_Mesh: {fileID: 6409706672790281237, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &1238729323
 GameObject:
   m_ObjectHideFlags: 0
@@ -10045,7 +10042,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -10153,7 +10150,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -10260,7 +10257,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
   placementUnit: 1
   footprint: {x: 2, y: 3}
@@ -10381,7 +10378,7 @@ Transform:
   m_GameObject: {fileID: 1325656933}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -11, y: -2, z: 96.2}
+  m_LocalPosition: {x: -8.75, y: -2, z: 95.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -10398,11 +10395,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
-  placementUnit: 1
-  footprint: {x: 20, y: 3}
-  height: 4
+  placementUnit: 0.5
+  footprint: {x: 31, y: 3}
+  height: 1.7985
 --- !u!1 &1329193171
 GameObject:
   m_ObjectHideFlags: 0
@@ -10432,8 +10429,8 @@ Transform:
   m_GameObject: {fileID: 1329193171}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: 0, z: 0.041337967}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173224}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -10448,14 +10445,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -1.6, y: 2.2, z: 2.1}
   spin: {x: 2.1, y: 1.3, z: 2}
   duration: 1.225
-  restingHeight: 0.6
+  restingHeight: 0.73866117
   seed: 0.1
 --- !u!114 &1329193174
 MonoBehaviour:
@@ -10467,7 +10464,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 0
@@ -10560,8 +10557,8 @@ Transform:
   m_GameObject: {fileID: 1331648158}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7452698}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810842}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -10576,14 +10573,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
   velocity: {x: 1.48, y: 3.74, z: 2.87}
   spin: {x: 2.87, y: 3.6100001, z: 2}
   duration: 1.4175
-  restingHeight: 0.0175
+  restingHeight: 0.62054205
   seed: 0.87
 --- !u!114 &1331648161
 MonoBehaviour:
@@ -10595,7 +10592,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 1
@@ -10794,7 +10791,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -10884,7 +10881,7 @@ Transform:
   m_GameObject: {fileID: 1402123614}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 11, y: -2, z: 12.2}
+  m_LocalPosition: {x: 8.75, y: -2, z: 11.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -10901,11 +10898,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
-  placementUnit: 1
-  footprint: {x: 20, y: 3}
-  height: 4
+  placementUnit: 0.5
+  footprint: {x: 31, y: 3}
+  height: 1.7985
 --- !u!1 &1428500662
 GameObject:
   m_ObjectHideFlags: 0
@@ -10950,7 +10947,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -11041,10 +11038,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0fabe604f40cfd842abb5ec65a82a505, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeAuthoring
   settings: {fileID: 11400000, guid: 4e605efe658549e40a45f31f5aae08cd, type: 2}
-  size: {x: 2, y: 4, z: 1.2}
+  size: {x: 2, y: 1.7985, z: 1.5}
   exit: {fileID: 0}
   completeOnDestruction: 1
   cover: {fileID: 0}
@@ -11058,7 +11055,7 @@ Transform:
   m_GameObject: {fileID: 1433408948}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 95}
+  m_LocalPosition: {x: 0, y: -0.10075003, z: 95.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -11107,7 +11104,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69fb4f90670f984498a51d5c6036ae10, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.ArenaAuthoring
   spacingCenterOffset: {x: 0, y: 0, z: 84}
   spacingSize: {x: 29, y: 16, z: 206}
@@ -11157,9 +11154,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d140cba58f9b1e3458d83420892801fd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.NavigationArenaAuthoring
   settings: {fileID: 11400000, guid: 46542e2cd7951f148a4f101fbef80f1b, type: 2}
+  perimeterColliders: []
   overrideParticipationAnchor: 1
   participationAnchor: {x: 0, y: -10}
 --- !u!1 &1458937693
@@ -11191,8 +11189,8 @@ Transform:
   m_GameObject: {fileID: 1458937693}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: -1.3333333, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: -0.59949994, z: 0.041337967}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173224}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 309766669}
@@ -11207,14 +11205,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.52, y: 2.74, z: 2.37}
   spin: {x: 2.37, y: 2.1100001, z: 2}
   duration: 1.2925
-  restingHeight: 0.6
+  restingHeight: 0.73866117
   seed: 0.37
 --- !u!114 &1458937696
 MonoBehaviour:
@@ -11226,7 +11224,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 309766668}
   crackStage: 0
@@ -11319,8 +11317,8 @@ Transform:
   m_GameObject: {fileID: 1483239631}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 0, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: 0, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -11335,14 +11333,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: 0.96000004, y: 3.48, z: 2.74}
   spin: {x: 2.74, y: 3.22, z: 2}
   duration: 1.385
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0.74
 --- !u!114 &1483239634
 MonoBehaviour:
@@ -11354,7 +11352,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 0
@@ -11447,8 +11445,8 @@ Transform:
   m_GameObject: {fileID: 1483449773}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 0, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: 0, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -11463,14 +11461,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: 0.96000004, y: 3.48, z: 2.74}
   spin: {x: 2.74, y: 3.22, z: 2}
   duration: 1.385
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0.74
 --- !u!114 &1483449776
 MonoBehaviour:
@@ -11482,7 +11480,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 0
@@ -11572,7 +11570,7 @@ Transform:
   m_GameObject: {fileID: 1498693013}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 11, y: -2, z: 96.2}
+  m_LocalPosition: {x: 8.75, y: -2, z: 95.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -11589,11 +11587,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
-  placementUnit: 1
-  footprint: {x: 20, y: 3}
-  height: 4
+  placementUnit: 0.5
+  footprint: {x: 31, y: 3}
+  height: 1.7985
 --- !u!1 &1504215352
 GameObject:
   m_ObjectHideFlags: 0
@@ -11714,8 +11712,8 @@ Transform:
   m_GameObject: {fileID: 1506082765}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 1.3333334, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: 0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -11730,14 +11728,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: 1.3599999, y: 3.6799998, z: 2.84}
   spin: {x: 2.84, y: 3.52, z: 2}
   duration: 1.4100001
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0.84
 --- !u!114 &1506082768
 MonoBehaviour:
@@ -11749,7 +11747,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 0
@@ -11842,8 +11840,8 @@ Transform:
   m_GameObject: {fileID: 1513773133}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 1.3333334, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: 0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173267}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -11858,14 +11856,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.120000005, y: 2.94, z: 2.47}
   spin: {x: 2.47, y: 2.41, z: 2}
   duration: 1.3175
-  restingHeight: 0.6
+  restingHeight: 0.7386633
   seed: 0.47
 --- !u!114 &1513773136
 MonoBehaviour:
@@ -11877,7 +11875,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 0
@@ -11953,7 +11951,7 @@ GameObject:
   - component: {fileID: 1561003305}
   - component: {fileID: 1561003304}
   m_Layer: 0
-  m_Name: Nature rock
+  m_Name: Gate wall right
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11967,9 +11965,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1561003302}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.25, y: 0, z: 0}
+  m_LocalScale: {x: 15, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 386472921}
@@ -11999,7 +11997,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1abb78ce2a534274e9f13e13ffd32efc, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -12030,7 +12028,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1561003302}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8208051298116561265, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &1565155146
 GameObject:
   m_ObjectHideFlags: 0
@@ -12058,10 +12056,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0fabe604f40cfd842abb5ec65a82a505, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeAuthoring
   settings: {fileID: 11400000, guid: 4e605efe658549e40a45f31f5aae08cd, type: 2}
-  size: {x: 2, y: 4, z: 1.2}
+  size: {x: 2, y: 1.7985, z: 1.5}
   exit: {fileID: 898901218}
   completeOnDestruction: 0
   cover: {fileID: 0}
@@ -12075,7 +12073,7 @@ Transform:
   m_GameObject: {fileID: 1565155146}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 179}
+  m_LocalPosition: {x: 0, y: -0.10075003, z: 179.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12139,7 +12137,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
   placementUnit: 1
   footprint: {x: 2, y: 2}
@@ -12173,8 +12171,8 @@ Transform:
   m_GameObject: {fileID: 1576746913}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7452698}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810842}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -12189,14 +12187,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
   velocity: {x: -1.0799999, y: 2.46, z: 2.23}
   spin: {x: 2.23, y: 1.69, z: 2}
   duration: 1.2575
-  restingHeight: 0.0175
+  restingHeight: 0.62054205
   seed: 0.23
 --- !u!114 &1576746916
 MonoBehaviour:
@@ -12208,7 +12206,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 2
@@ -12315,7 +12313,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
   placementUnit: 1
   footprint: {x: 2, y: 3}
@@ -12349,8 +12347,8 @@ Transform:
   m_GameObject: {fileID: 1624831942}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.72, y: 0, z: -0.63500005}
-  m_LocalScale: {x: 0.14, y: 3.76, z: 0.07}
+  m_LocalPosition: {x: 0.72, y: 0, z: -0.7086334}
+  m_LocalScale: {x: 0.14, y: 1.6905899, z: 0.08267589}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -12365,14 +12363,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -1.88, y: 2.06, z: 2.03}
   spin: {x: 2.03, y: 1.09, z: 2}
   duration: 1.2075001
-  restingHeight: 0.035
+  restingHeight: 0.071337946
   seed: 0.03
 --- !u!114 &1624831945
 MonoBehaviour:
@@ -12384,7 +12382,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 0
@@ -12492,7 +12490,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -12582,7 +12580,7 @@ Transform:
   m_GameObject: {fileID: 1649262118}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 11, y: -2, z: 138.2}
+  m_LocalPosition: {x: 8.75, y: -2, z: 137.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12599,11 +12597,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
-  placementUnit: 1
-  footprint: {x: 20, y: 3}
-  height: 4
+  placementUnit: 0.5
+  footprint: {x: 31, y: 3}
+  height: 1.7985
 --- !u!1 &1654537293
 GameObject:
   m_ObjectHideFlags: 0
@@ -12633,8 +12631,8 @@ Transform:
   m_GameObject: {fileID: 1654537293}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: -1.3333333, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: -0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.417301}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1565155148}
@@ -12649,14 +12647,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.52, y: 2.74, z: 2.37}
   spin: {x: 2.37, y: 2.1100001, z: 2}
   duration: 1.2925
-  restingHeight: 0.6
+  restingHeight: 0.7386505
   seed: 0.37
 --- !u!114 &1654537296
 MonoBehaviour:
@@ -12668,7 +12666,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1565155147}
   crackStage: 0
@@ -12760,7 +12758,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e8c496d878463f84e95e4bbc661ddbea, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeRoomAuthoring
   previousGate: {fileID: 1853688870}
   minimum: {x: -15, y: 53.7}
@@ -12775,7 +12773,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c35519dadca8ee946a881de19d7d5907, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyWaveSequenceAuthoring
   bossEncounter: {fileID: 0}
   chickenBoss: {fileID: 0}
@@ -12832,8 +12830,8 @@ Transform:
   m_GameObject: {fileID: 1676237933}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7452774}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1811055}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -12848,14 +12846,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
   velocity: {x: -1.0799999, y: 2.46, z: 2.23}
   spin: {x: 2.23, y: 1.69, z: 2}
   duration: 1.2575
-  restingHeight: 0.0175
+  restingHeight: 0.6205527
   seed: 0.23
 --- !u!114 &1676237936
 MonoBehaviour:
@@ -12867,7 +12865,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 2
@@ -12959,8 +12957,8 @@ Transform:
   m_GameObject: {fileID: 1690100011}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.100000024, z: -0.6499996}
-  m_LocalScale: {x: 1.4, y: 0.18, z: 0.08}
+  m_LocalPosition: {x: 0, y: 0.04496251, z: -0.8002472}
+  m_LocalScale: {x: 1.4, y: 0.0809325, z: 0.09448787}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -12975,7 +12973,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 1
@@ -13160,8 +13158,8 @@ Transform:
   m_GameObject: {fileID: 1714553574}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7452774}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1811055}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -13176,14 +13174,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
   velocity: {x: 1.48, y: 3.74, z: 2.87}
   spin: {x: 2.87, y: 3.6100001, z: 2}
   duration: 1.4175
-  restingHeight: 0.0175
+  restingHeight: 0.6205527
   seed: 0.87
 --- !u!114 &1714553577
 MonoBehaviour:
@@ -13195,7 +13193,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 1
@@ -13288,8 +13286,8 @@ Transform:
   m_GameObject: {fileID: 1732073033}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: -1.3333333, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: -0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173267}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -13304,14 +13302,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -2, y: 2, z: 2}
   spin: {x: 2, y: 1, z: 2}
   duration: 1.2
-  restingHeight: 0.6
+  restingHeight: 0.7386633
   seed: 0
 --- !u!114 &1732073036
 MonoBehaviour:
@@ -13323,7 +13321,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 0
@@ -13416,8 +13414,8 @@ Transform:
   m_GameObject: {fileID: 1743933655}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.7263489}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810842}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -13432,14 +13430,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
   velocity: {x: -1.0799999, y: 2.46, z: 2.23}
   spin: {x: 2.23, y: 1.69, z: 2}
   duration: 1.2575
-  restingHeight: 0.0175
+  restingHeight: 0.62054205
   seed: 0.23
 --- !u!114 &1743933658
 MonoBehaviour:
@@ -13451,7 +13449,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 2
@@ -13541,7 +13539,7 @@ Transform:
   m_GameObject: {fileID: 1758908292}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -11, y: -2, z: 54.2}
+  m_LocalPosition: {x: -8.75, y: -2, z: 53.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -13558,11 +13556,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
-  placementUnit: 1
-  footprint: {x: 20, y: 3}
-  height: 4
+  placementUnit: 0.5
+  footprint: {x: 31, y: 3}
+  height: 1.7985
 --- !u!1 &1764511157
 GameObject:
   m_ObjectHideFlags: 0
@@ -13679,7 +13677,7 @@ Transform:
   m_GameObject: {fileID: 1764743138}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -11, y: -2, z: 12.2}
+  m_LocalPosition: {x: -8.75, y: -2, z: 11.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -13696,11 +13694,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
-  placementUnit: 1
-  footprint: {x: 20, y: 3}
-  height: 4
+  placementUnit: 0.5
+  footprint: {x: 31, y: 3}
+  height: 1.7985
 --- !u!1 &1774329555
 GameObject:
   m_ObjectHideFlags: 0
@@ -13835,7 +13833,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -13925,7 +13923,7 @@ Transform:
   m_GameObject: {fileID: 1785961775}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -11, y: -2, z: 180.2}
+  m_LocalPosition: {x: -8.75, y: -2, z: 179.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -13942,11 +13940,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
-  placementUnit: 1
-  footprint: {x: 20, y: 3}
-  height: 4
+  placementUnit: 0.5
+  footprint: {x: 31, y: 3}
+  height: 1.7985
 --- !u!1 &1788523780
 GameObject:
   m_ObjectHideFlags: 0
@@ -13976,8 +13974,8 @@ Transform:
   m_GameObject: {fileID: 1788523780}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.72, y: 0, z: -0.63500005}
-  m_LocalScale: {x: 0.14, y: 3.76, z: 0.07}
+  m_LocalPosition: {x: -0.72, y: 0, z: -0.7086601}
+  m_LocalScale: {x: 0.14, y: 1.6905899, z: 0.08267739}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -13992,14 +13990,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.79999995, y: 2.6, z: 2.3}
   spin: {x: 2.3, y: 1.9000001, z: 2}
   duration: 1.2750001
-  restingHeight: 0.035
+  restingHeight: 0.07133869
   seed: 0.3
 --- !u!114 &1788523783
 MonoBehaviour:
@@ -14011,7 +14009,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 0
@@ -14104,8 +14102,8 @@ Transform:
   m_GameObject: {fileID: 1807600746}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 0, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: 0, z: 0.04134369}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173181}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -14120,14 +14118,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: 0.96000004, y: 3.48, z: 2.74}
   spin: {x: 2.74, y: 3.22, z: 2}
   duration: 1.385
-  restingHeight: 0.6
+  restingHeight: 0.738659
   seed: 0.74
 --- !u!114 &1807600749
 MonoBehaviour:
@@ -14139,7 +14137,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 0
@@ -14321,8 +14319,8 @@ Transform:
   m_GameObject: {fileID: 1833639288}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.0999999, z: -0.6499996}
-  m_LocalScale: {x: 1.4, y: 0.18, z: 0.08}
+  m_LocalPosition: {x: 0, y: 0.49458745, z: -0.8002434}
+  m_LocalScale: {x: 1.4, y: 0.0809325, z: 0.094488434}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -14337,7 +14335,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 2
@@ -14428,10 +14426,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0fabe604f40cfd842abb5ec65a82a505, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeAuthoring
   settings: {fileID: 11400000, guid: 4e605efe658549e40a45f31f5aae08cd, type: 2}
-  size: {x: 2, y: 4, z: 1.2}
+  size: {x: 2, y: 1.7985, z: 1.5}
   exit: {fileID: 0}
   completeOnDestruction: 1
   cover: {fileID: 0}
@@ -14445,7 +14443,7 @@ Transform:
   m_GameObject: {fileID: 1853688869}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 53}
+  m_LocalPosition: {x: 0, y: -0.10075003, z: 53.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -14494,7 +14492,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e8c496d878463f84e95e4bbc661ddbea, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeRoomAuthoring
   previousGate: {fileID: 309766668}
   minimum: {x: -15, y: 11.7}
@@ -14509,7 +14507,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c35519dadca8ee946a881de19d7d5907, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyWaveSequenceAuthoring
   bossEncounter: {fileID: 0}
   chickenBoss: {fileID: 0}
@@ -14657,8 +14655,8 @@ Transform:
   m_GameObject: {fileID: 1875743693}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: -1.3333333, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: 0.5, y: -0.59949994, z: 0.04133606}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173267}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -14673,14 +14671,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.52, y: 2.74, z: 2.37}
   spin: {x: 2.37, y: 2.1100001, z: 2}
   duration: 1.2925
-  restingHeight: 0.6
+  restingHeight: 0.7386633
   seed: 0.37
 --- !u!114 &1875743696
 MonoBehaviour:
@@ -14692,7 +14690,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 0
@@ -15004,7 +15002,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -15097,8 +15095,8 @@ Transform:
   m_GameObject: {fileID: 1933033913}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7452698}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810842}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -15113,14 +15111,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 1
   velocity: {x: 1.48, y: 3.74, z: 2.87}
   spin: {x: 2.87, y: 3.6100001, z: 2}
   duration: 1.4175
-  restingHeight: 0.0175
+  restingHeight: 0.62054205
   seed: 0.87
 --- !u!114 &1933033916
 MonoBehaviour:
@@ -15132,7 +15130,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 1
@@ -15208,7 +15206,7 @@ GameObject:
   - component: {fileID: 1955203701}
   - component: {fileID: 1955203700}
   m_Layer: 0
-  m_Name: Nature rock
+  m_Name: Gate wall left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15222,9 +15220,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1955203698}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.25, y: 0, z: 0}
+  m_LocalScale: {x: 15, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1785961776}
@@ -15254,7 +15252,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7aaceccfa8e4e4c4cb15ee282197f905, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -15285,7 +15283,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1955203698}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8208051298116561265, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &1963366838
 GameObject:
   m_ObjectHideFlags: 0
@@ -15330,7 +15328,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -15423,8 +15421,8 @@ Transform:
   m_GameObject: {fileID: 1987335191}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.65000004}
-  m_LocalScale: {x: 1.56, y: 2.88, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7452698}
+  m_LocalScale: {x: 1.56, y: 1.29492, z: 1.1810842}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -15439,14 +15437,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 1
   damageStage: 2
   velocity: {x: -1.0799999, y: 2.46, z: 2.23}
   spin: {x: 2.23, y: 1.69, z: 2}
   duration: 1.2575
-  restingHeight: 0.0175
+  restingHeight: 0.62054205
   seed: 0.23
 --- !u!114 &1987335194
 MonoBehaviour:
@@ -15458,7 +15456,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 2
@@ -15566,7 +15564,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -15674,7 +15672,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -15767,8 +15765,8 @@ Transform:
   m_GameObject: {fileID: 2005733228}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 1.3333334, z: 0}
-  m_LocalScale: {x: 0.975, y: 1.3083333, z: 1.2}
+  m_LocalPosition: {x: -0.5, y: 0.59949994, z: 0.04134369}
+  m_LocalScale: {x: 0.975, y: 0.58825934, z: 1.4173181}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -15783,14 +15781,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.120000005, y: 2.94, z: 2.47}
   spin: {x: 2.47, y: 2.41, z: 2}
   duration: 1.3175
-  restingHeight: 0.6
+  restingHeight: 0.738659
   seed: 0.47
 --- !u!114 &2005733231
 MonoBehaviour:
@@ -15802,7 +15800,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 0
@@ -15910,7 +15908,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -16003,8 +16001,8 @@ Transform:
   m_GameObject: {fileID: 2027790628}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.72, y: 0, z: -0.63500005}
-  m_LocalScale: {x: 0.14, y: 3.76, z: 0.07}
+  m_LocalPosition: {x: 0.72, y: 0, z: -0.7086563}
+  m_LocalScale: {x: 0.14, y: 1.6905899, z: 0.08267689}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1433408950}
@@ -16019,14 +16017,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -1.88, y: 2.06, z: 2.03}
   spin: {x: 2.03, y: 1.09, z: 2}
   duration: 1.2075001
-  restingHeight: 0.035
+  restingHeight: 0.071338445
   seed: 0.03
 --- !u!114 &2027790631
 MonoBehaviour:
@@ -16038,7 +16036,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1433408949}
   crackStage: 0
@@ -16131,7 +16129,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 4, z: 1.2}
+  m_LocalScale: {x: 2, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1853688871}
@@ -16146,7 +16144,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 1853688870}
   crackStage: 0
@@ -16237,10 +16235,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0fabe604f40cfd842abb5ec65a82a505, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeAuthoring
   settings: {fileID: 11400000, guid: 4e605efe658549e40a45f31f5aae08cd, type: 2}
-  size: {x: 2, y: 4, z: 1.2}
+  size: {x: 2, y: 1.7985, z: 1.5}
   exit: {fileID: 0}
   completeOnDestruction: 1
   cover: {fileID: 0}
@@ -16254,7 +16252,7 @@ Transform:
   m_GameObject: {fileID: 2078462373}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 137}
+  m_LocalPosition: {x: 0, y: -0.10075003, z: 137.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -16319,7 +16317,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -16411,8 +16409,8 @@ Transform:
   m_GameObject: {fileID: 2087275290}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.0999999, z: -0.6499996}
-  m_LocalScale: {x: 1.4, y: 0.18, z: 0.08}
+  m_LocalPosition: {x: 0, y: 0.49458745, z: -0.8002472}
+  m_LocalScale: {x: 1.4, y: 0.0809325, z: 0.09448673}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -16427,7 +16425,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 2
@@ -16535,7 +16533,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}
@@ -16626,9 +16624,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2109030161}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -16.75, y: -0.25, z: 84}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 211.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -16.75, y: -1, z: 84}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 253917936}
@@ -16658,8 +16656,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ca1ae0f10142733488b3b098c218354a, type: 2}
-  - {fileID: 2100000, guid: fd5031e54915a424ba11937f44e78fe3, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -16683,6 +16680,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &2109030165
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2109030161}
+  m_Mesh: {fileID: 4952301574785630479, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!64 &2109030166
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -16704,15 +16709,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 8d180f2e04e7a124bbac202120f04dff, type: 2}
---- !u!33 &2109030165
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2109030161}
-  m_Mesh: {fileID: 4300000, guid: 8d180f2e04e7a124bbac202120f04dff, type: 2}
+  m_Mesh: {fileID: 5496885627010281211, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &2111138290
 GameObject:
   m_ObjectHideFlags: 0
@@ -16739,7 +16736,7 @@ Transform:
   m_GameObject: {fileID: 2111138290}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -11, y: -2, z: 138.2}
+  m_LocalPosition: {x: -8.75, y: -2, z: 137.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -16756,11 +16753,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
-  placementUnit: 1
-  footprint: {x: 20, y: 3}
-  height: 4
+  placementUnit: 0.5
+  footprint: {x: 31, y: 3}
+  height: 1.7985
 --- !u!1 &2114277644
 GameObject:
   m_ObjectHideFlags: 0
@@ -16790,8 +16787,8 @@ Transform:
   m_GameObject: {fileID: 2114277644}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.72, y: 0, z: -0.63500005}
-  m_LocalScale: {x: 0.14, y: 3.76, z: 0.07}
+  m_LocalPosition: {x: -0.72, y: 0, z: -0.7086334}
+  m_LocalScale: {x: 0.14, y: 1.6905899, z: 0.08267589}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2078462375}
@@ -16806,14 +16803,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c49bbbc06ccee04481ce58c7f278c83, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageGatePieceAuthoring
   kind: 0
   damageStage: 0
   velocity: {x: -0.79999995, y: 2.6, z: 2.3}
   spin: {x: 2.3, y: 1.9000001, z: 2}
   duration: 1.2750001
-  restingHeight: 0.035
+  restingHeight: 0.071337946
   seed: 0.3
 --- !u!114 &2114277647
 MonoBehaviour:
@@ -16825,7 +16822,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a549f4d63ad62d4fb5f2511007015ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.BarricadeVisualAuthoring
   barricade: {fileID: 2078462374}
   crackStage: 0
@@ -16932,7 +16929,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f3c907b17b1f274882888b91841bbbd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.SolidObstacleAuthoring
   placementUnit: 1
   footprint: {x: 2, y: 3}
@@ -16949,7 +16946,7 @@ GameObject:
   - component: {fileID: 2121378334}
   - component: {fileID: 2121378333}
   m_Layer: 0
-  m_Name: Nature rock
+  m_Name: Gate wall left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16963,9 +16960,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2121378331}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.25, y: 0, z: 0}
+  m_LocalScale: {x: 15, y: 1.7985, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1758908293}
@@ -16995,7 +16992,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 84c7013d94e2ba246ae8dbba285316b4, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -17026,7 +17023,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2121378331}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8208051298116561265, guid: 3419bff62f062e84f8f8f81c59062198, type: 2}
 --- !u!1 &2141764776
 GameObject:
   m_ObjectHideFlags: 0
@@ -17071,7 +17068,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70888ae253b821f43b00beaae520f137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.VillageExitCueAuthoring
   gate: {fileID: 1565155147}
   lockedColor: {r: 0.28, g: 0.4, b: 0.42, a: 1}

@@ -103,16 +103,17 @@ namespace CrowdPunch.Tests
                         Assert.That(terrain[1].transform.position.x-terrain[1].Size.x*.5f,Is.EqualTo(wall.size.x*.5f));
                         Assert.That(terrain[0].transform.position.x-terrain[0].Size.x*.5f,Is.LessThan(floor.bounds.min.x));
                         Assert.That(terrain[1].transform.position.x+terrain[1].Size.x*.5f,Is.GreaterThan(floor.bounds.max.x));
+                        var gateBounds = new Bounds(wall.transform.position,wall.size);
                         foreach(var solid in terrain)
                         {
-                            Assert.That(solid.height,Is.GreaterThanOrEqualTo(wall.size.y));
-                            float front=solid.transform.position.z-solid.Size.y*.5f;
-                            Assert.That(front,Is.GreaterThan(wall.transform.position.z-wall.size.z*.5f),"Terrain must not shield the gate's front face.");
-                            Assert.That(front,Is.LessThan(wall.transform.position.z+wall.size.z*.5f),"Terrain must overlap the gate to seal the side routes.");
-                            Assert.That(solid.Size.y,Is.GreaterThanOrEqualTo(wall.size.z));
+                            var wallBounds = solid.GetComponentInChildren<MeshRenderer>().bounds;
+                            Assert.That(solid.height,Is.EqualTo(wall.size.y).Within(.001f));
+                            Assert.That(wallBounds.min.y,Is.EqualTo(gateBounds.min.y).Within(.001f),"Gate and walls share the floor line.");
+                            Assert.That(wallBounds.max.y,Is.EqualTo(gateBounds.max.y).Within(.001f),"Gate and walls share the top line.");
+                            Assert.That(wallBounds.min.z,Is.EqualTo(gateBounds.min.z).Within(.001f),"Gate and wall fronts are flush.");
+                            Assert.That(wallBounds.max.z,Is.EqualTo(gateBounds.max.z).Within(.001f),"Gate and wall backs are flush.");
                         }
-                        Assert.That(wall.exit.position.z-wall.exitRadius,
-                            Is.GreaterThan(wall.transform.position.z+terrain[0].Size.y*.5f));
+                        Assert.That(wall.exit.position.z-wall.exitRadius,Is.GreaterThan(gateBounds.max.z));
                     }
                     if (n==12)
                     {

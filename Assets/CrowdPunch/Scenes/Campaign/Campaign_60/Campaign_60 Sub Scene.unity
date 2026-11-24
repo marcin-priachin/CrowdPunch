@@ -238,9 +238,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 159961509}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -0.25, z: 18.75}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 37.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -1, z: 18.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1342226399}
@@ -270,8 +270,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4e638f80c3721b24f8e6b09457d53ded, type: 2}
-  - {fileID: 2100000, guid: 5c2638b5bdaf10047a5572880d809a27, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -295,6 +294,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &159961513
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159961509}
+  m_Mesh: {fileID: 484731973275422138, guid: 1a6597110ebdd344488aebc053de024c, type: 2}
 --- !u!64 &159961514
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -316,15 +323,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 39ba303be310ec84687a587c5216e130, type: 2}
---- !u!33 &159961513
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 159961509}
-  m_Mesh: {fileID: 4300000, guid: 39ba303be310ec84687a587c5216e130, type: 2}
+  m_Mesh: {fileID: -2813799630792754862, guid: 1a6597110ebdd344488aebc053de024c, type: 2}
 --- !u!1 &226406760
 GameObject:
   m_ObjectHideFlags: 0
@@ -629,9 +628,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 646958036}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -0.25, z: -18.75}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 37.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -1, z: -18.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1342226399}
@@ -661,8 +660,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9d0ff4cec2243ed44a9147ad340821d2, type: 2}
-  - {fileID: 2100000, guid: 6a4d7d30b0d1cac41b69e63b8376fbbc, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -686,6 +684,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &646958040
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 646958036}
+  m_Mesh: {fileID: 4300000, guid: 1a6597110ebdd344488aebc053de024c, type: 2}
 --- !u!64 &646958041
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -707,15 +713,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 0cc435203d3f8c546988f4a1dee60139, type: 2}
---- !u!33 &646958040
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 646958036}
-  m_Mesh: {fileID: 4300000, guid: 0cc435203d3f8c546988f4a1dee60139, type: 2}
+  m_Mesh: {fileID: -6821827905838066832, guid: 1a6597110ebdd344488aebc053de024c, type: 2}
 --- !u!1 &714928219
 GameObject:
   m_ObjectHideFlags: 0
@@ -961,8 +959,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 9d352eb49f89f35468508548018bb4aa, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
+  MaxLegAnimationSpeed: 2
+  JogCycleDistances: []
   Profile: 10
+  GroundClearance: 0.1
+  ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0
   LaunchPivotHeight: 0
@@ -1093,9 +1102,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1458980130}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -18.75, y: -0.25, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 37.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -18.75, y: -1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1342226399}
@@ -1125,8 +1134,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f9f6f2bd5d1686941ac49cd534ca07c3, type: 2}
-  - {fileID: 2100000, guid: 6c3e19f0114ceff4cb1369b63cb5b46d, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1150,6 +1158,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1458980134
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1458980130}
+  m_Mesh: {fileID: -7024096108825231640, guid: 1a6597110ebdd344488aebc053de024c, type: 2}
 --- !u!64 &1458980135
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1171,15 +1187,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 059ae79f2ac9f0b4b8dff23b9d2edc88, type: 2}
---- !u!33 &1458980134
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1458980130}
-  m_Mesh: {fileID: 4300000, guid: 059ae79f2ac9f0b4b8dff23b9d2edc88, type: 2}
+  m_Mesh: {fileID: 2510630931709805632, guid: 1a6597110ebdd344488aebc053de024c, type: 2}
 --- !u!1 &1545822469
 GameObject:
   m_ObjectHideFlags: 0
@@ -1208,8 +1216,8 @@ Transform:
   m_GameObject: {fileID: 1545822469}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 18.75, y: -0.25, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 37.5}
+  m_LocalPosition: {x: 18.75, y: -1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1342226399}
@@ -1239,8 +1247,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f3ece0abc23809943bb09ea20db8052b, type: 2}
-  - {fileID: 2100000, guid: e589eb51b07b6134ab1d721964cc637e, type: 2}
+  - {fileID: 2100000, guid: 225e1f0f99b3a80458cecc8ceb90b300, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1264,6 +1271,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1545822473
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1545822469}
+  m_Mesh: {fileID: -5461018786507251455, guid: 1a6597110ebdd344488aebc053de024c, type: 2}
 --- !u!64 &1545822474
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1285,15 +1300,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: cc765c46424206943b4f67e248e1c89f, type: 2}
---- !u!33 &1545822473
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1545822469}
-  m_Mesh: {fileID: 4300000, guid: cc765c46424206943b4f67e248e1c89f, type: 2}
+  m_Mesh: {fileID: -2611768517563992671, guid: 1a6597110ebdd344488aebc053de024c, type: 2}
 --- !u!114 &1675746447
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1307,8 +1314,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 030e91b54e911134fb383df771c68de7, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
+  MaxLegAnimationSpeed: 2
+  JogCycleDistances: []
   Profile: 10
+  GroundClearance: 0.1
+  ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0
   LaunchPivotHeight: 0
@@ -1438,6 +1456,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.NavigationArenaAuthoring
   settings: {fileID: 11400000, guid: 2d814e5f0d4a6da41988897dbfdc9d1e, type: 2}
+  perimeterColliders: []
   overrideParticipationAnchor: 0
   participationAnchor: {x: 0, y: 0}
 --- !u!1001 &1962953519
@@ -2943,8 +2962,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: f35ff6d270a201844bccf4cb0eef4e78, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
+  MaxLegAnimationSpeed: 2
+  JogCycleDistances: []
   Profile: 10
+  GroundClearance: 0.1
+  ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0
   LaunchPivotHeight: 0
@@ -3023,8 +3053,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 9b7faa776eda4d1459714c0d280cd3db, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
+  MaxLegAnimationSpeed: 2
+  JogCycleDistances: []
   Profile: 10
+  GroundClearance: 0.1
+  ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0
   LaunchPivotHeight: 0
@@ -3103,8 +3144,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 3552b97b40589c04b8a1e116f2718b01, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 4900000, guid: 37f2efa9d11e88148afc35a88c7d1aa2, type: 3}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
+  MaxLegAnimationSpeed: 2
+  JogCycleDistances: []
   Profile: 10
+  GroundClearance: 0.1
+  ArmorStagesRequired: 0
   SpawnMotion: -1
   RotateLaunchAroundOwner: 0
   LaunchPivotHeight: 0

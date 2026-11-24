@@ -55,10 +55,27 @@ namespace CrowdPunch.Editor
             var powder = Paint("Barrier powder wash", new Color(.60f,.66f,.65f), new Color(.51f,.58f,.62f));
             int index = 0;
             float width = gate.size.x, height = gate.size.y, depth = gate.size.z;
+            const float referenceHeight = 4f;
+            const float referenceHalfDepth = .6f;
+            const float insetBadgeDepth = .025f;
+            const float insetBadgeOffset = .11f;
+            float heightScale = height / referenceHeight;
+            // The outer badge face defines the relief envelope for both sides of the gate.
+            float depthScale = (depth * .5f) / (referenceHalfDepth + insetBadgeOffset + insetBadgeDepth * .5f);
             void Piece(string name, Mesh mesh, Vector3 p, Vector3 size, Material material,
-                int kind = 0, int stage = 0, float angle = 0)
+                int kind = 0, int stage = 0, float angle = 0, bool fullDepth = false, bool bottomRow = false)
             {
                 float seed = (index++ * 37 % 101) / 100f;
+                p.y *= heightScale;
+                p.z *= depthScale;
+                size.y *= heightScale;
+                size.z = fullDepth ? depth : size.z * depthScale;
+                if (bottomRow)
+                {
+                    float floorGap = p.y - size.y * .5f + height * .5f;
+                    p.y -= floorGap * .5f;
+                    size.y += floorGap;
+                }
                 var go = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
                 go.transform.SetParent(root, false);
                 go.transform.localPosition = p;
@@ -78,32 +95,31 @@ namespace CrowdPunch.Editor
                 motion.duration = 1.10f + seed * .25f;
                 motion.velocity = new Vector3((seed-.5f)*3.8f, 3.1f+seed*1.9f, 2.3f+seed*1.6f);
                 motion.spin = new Vector3(2+seed*3, seed*4-2, 2.5f-seed*5);
-                // The collider extends below this court's zero-height floor. Land visible debris on the floor.
-                motion.restingHeight = height*.5f-gate.transform.position.y+size.z*.5f+.03f;
+                motion.restingHeight = size.z * .5f + .03f;
             }
 
             // Thin metal skins and separate returns expose a hollow welded construction as it tears apart.
             for (int row = 0; row < 4; row++)
             {
-                float y = (row-1.5f)*height/4;
+                float y = (row-1.5f)*referenceHeight/4;
                 foreach (int face in new[] {-1,1}) for (int col = -1; col <= 1; col += 2)
                 {
                     float x = col*width*.25f;
-                    Piece("Breakaway copper plate",plate,new Vector3(x,y,face*(depth*.5f-.065f)),new Vector3(width*.5f-.025f,height/4-.025f,.13f),copper);
+                    Piece("Breakaway copper plate",plate,new Vector3(x,y,face*(referenceHalfDepth-.065f)),new Vector3(width*.5f-.025f,referenceHeight/4-.025f,.13f),copper,bottomRow:row==0);
                     foreach (int side in new[] {-1,1})
-                        Piece("Captive brass rivet",plate,new Vector3(x+side*width*.155f,y+.28f,face*(depth*.5f+.035f)),new Vector3(.11f,.11f,.07f),brass);
+                        Piece("Captive brass rivet",plate,new Vector3(x+side*width*.155f,y+.28f,face*(referenceHalfDepth+.035f)),new Vector3(.11f,.11f,.07f),brass);
                 }
                 foreach (int side in new[] {-1,1})
-                    Piece("Split steel edge return",plate,new Vector3(side*(width*.5f-.065f),y,0),new Vector3(.13f,height/4-.025f,depth-.08f),steel);
+                    Piece("Split steel edge return",plate,new Vector3(side*(width*.5f-.065f),y,0),new Vector3(.13f,referenceHeight/4-.025f,depth),steel,fullDepth:true,bottomRow:row==0);
             }
             for (int col = -1; col <= 1; col += 2)
-                Piece("Split steel crown",plate,new Vector3(col*width*.25f,height*.5f-.055f,0),new Vector3(width*.5f-.025f,.11f,depth-.02f),steel);
+                Piece("Split steel crown",plate,new Vector3(col*width*.25f,referenceHeight*.5f-.055f,0),new Vector3(width*.5f-.025f,.11f,depth),steel,fullDepth:true);
             foreach (int face in new[] {-1,1})
             {
                 foreach (int row in new[] {-1,1}) for (int col = -1; col <= 1; col += 2)
-                    Piece("Teal reinforcing cleat",plate,new Vector3(col*width*.25f,row*height*.205f,face*(depth*.5f+.04f)),new Vector3(width*.5f-.05f,.15f,.08f),teal);
-                Piece("Ivory foundry strike badge",plate,new Vector3(0,.22f,face*(depth*.5f+.075f)),new Vector3(.63f,.63f,.06f),ivory,angle:45);
-                Piece("Teal badge inset",plate,new Vector3(0,.22f,face*(depth*.5f+.11f)),new Vector3(.34f,.34f,.025f),teal,angle:45);
+                    Piece("Teal reinforcing cleat",plate,new Vector3(col*width*.25f,row*referenceHeight*.205f,face*(referenceHalfDepth+.04f)),new Vector3(width*.5f-.05f,.15f,.08f),teal);
+                Piece("Ivory foundry strike badge",plate,new Vector3(0,.22f,face*(referenceHalfDepth+.075f)),new Vector3(.63f,.63f,.06f),ivory,angle:45);
+                Piece("Teal badge inset",plate,new Vector3(0,.22f,face*(referenceHalfDepth+insetBadgeOffset)),new Vector3(.34f,.34f,insetBadgeDepth),teal,angle:45);
                 for (int damage = 1; damage <= 2; damage++)
                 {
                     var path = damage==1
@@ -112,7 +128,7 @@ namespace CrowdPunch.Editor
                     void Seam(Vector2 a, Vector2 b)
                     {
                         var delta = b-a; var center = (a+b)*.5f;
-                        Piece("Progressive torn metal seam",plate,new Vector3(center.x,center.y,face*(depth*.5f+.015f)),
+                        Piece("Progressive torn metal seam",plate,new Vector3(center.x,center.y,face*(referenceHalfDepth+.015f)),
                             new Vector3(.045f,delta.magnitude+.025f,.025f),ink,1,damage,-Mathf.Atan2(delta.x,delta.y)*Mathf.Rad2Deg);
                     }
                     for (int segment = 0; segment < path.Length-1; segment++) Seam(path[segment],path[segment+1]);

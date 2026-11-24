@@ -27,19 +27,27 @@ namespace CrowdPunch.Tests
             foreach(var gate in gates)
             {
                 Assert.That(gate.size.x,Is.EqualTo(2));Assert.That(gate.settings.requiredHits,Is.EqualTo(level<=22?3:4));Assert.That(gate.settings.replenishDelay,Is.EqualTo(4));
-                var seal=sides.Where(s=>Mathf.Abs(s.transform.position.z-gate.transform.position.z-1.2f)<.01f).OrderBy(s=>s.transform.position.x).ToArray();
+                var seal=sides.Where(s=>Mathf.Abs(s.transform.position.z-gate.transform.position.z)<.01f).OrderBy(s=>s.transform.position.x).ToArray();
                 Assert.That(seal.Length,Is.EqualTo(2));
                 Assert.That(seal[0].transform.position.x+seal[0].Size.x*.5f,Is.EqualTo(gate.transform.position.x-1));Assert.That(seal[1].transform.position.x-seal[1].Size.x*.5f,Is.EqualTo(gate.transform.position.x+1));
                 Assert.That(seal[0].transform.position.x-seal[0].Size.x*.5f,Is.LessThanOrEqualTo(-Widths[index]*.5f));Assert.That(seal[1].transform.position.x+seal[1].Size.x*.5f,Is.GreaterThanOrEqualTo(Widths[index]*.5f));
-                foreach(var s in seal){float front=s.transform.position.z-s.Size.y*.5f;Assert.That(front,Is.GreaterThan(gate.transform.position.z-gate.size.z*.5f));Assert.That(front,Is.LessThan(gate.transform.position.z+gate.size.z*.5f));}
+                var gateBounds = new Bounds(gate.transform.position, gate.size);
+                foreach (var side in seal)
+                {
+                    var wallBounds = side.GetComponentInChildren<MeshRenderer>().bounds;
+                    Assert.That(wallBounds.min.y, Is.EqualTo(gateBounds.min.y).Within(.001f));
+                    Assert.That(wallBounds.max.y, Is.EqualTo(gateBounds.max.y).Within(.001f));
+                    Assert.That(wallBounds.min.z, Is.EqualTo(gateBounds.min.z).Within(.001f));
+                    Assert.That(wallBounds.max.z, Is.EqualTo(gateBounds.max.z).Within(.001f));
+                }
             }
             for(int i=0;i<count;i++)
             {
                 Assert.That(gates[i].completeOnDestruction,Is.EqualTo(i<count-1));
-                if(i>0)Assert.That(gates[i].transform.position.z-gates[i-1].transform.position.z,Is.EqualTo(Lengths[index]));
+                if(i>0)Assert.That(gates[i].transform.position.z-gates[i-1].transform.position.z,Is.EqualTo(Lengths[index]).Within(.001f));
                 if(i<count-1)Assert.That(gates[i].exit,Is.Null);
             }
-            Assert.That(gates.Last().exit.position.z-gates.Last().transform.position.z,Is.EqualTo(5));
+            Assert.That(gates.Last().exit.position.z-gates.Last().transform.position.z,Is.EqualTo(4.55f).Within(.001f));
             Assert.That(gates.Last().exit.position.x,Is.EqualTo(level==62?8:0));
         }
 
