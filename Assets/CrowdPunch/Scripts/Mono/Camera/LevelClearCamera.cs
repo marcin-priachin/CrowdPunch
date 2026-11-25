@@ -1,3 +1,4 @@
+using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Levels;
 using CrowdPunch.Mono.UI;
 using UnityEngine;
@@ -54,7 +55,7 @@ namespace CrowdPunch.Mono.Camera
             viewport.x = Mathf.Lerp(ArenaEdge(view.aspect, viewport.y, sequence.Screen), 1f, viewport.x);
             Vector3 offset = orbitOffset * settings.LevelClearCameraDistance;
             Pose shot = Compose(view, subject, offset, viewport);
-            Quaternion orbit = !failure && settings.LevelClearCameraIncludePlayer
+            Quaternion orbit = !failure && settings.LevelClearCameraIncludePlayer && !PlayerPreferences.Enabled(PlayerPreference.ReducedMotion)
                 ? FindPlayerOrbit(view, shot, subject, player + playerAimOffset, viewport, sequence.Screen)
                 : Quaternion.identity;
             trackedOrbit = Quaternion.Slerp(trackedOrbit, orbit, follow);

@@ -100,7 +100,7 @@ namespace CrowdPunch.Mono.Player
                     float t = 1f - visual.Remaining / visual.Duration;
                     float expansion = 1f - Mathf.Pow(1f - Mathf.Clamp01(t / .65f), 3);
                     visual.Object.transform.localScale = Vector3.one * (visual.TargetDiameter * expansion);
-                    float gain = settings != null && settings.ReduceFlashes ? .19f : 1f;
+                    float gain = settings != null && settings.UseReducedFlashes ? .19f : 1f;
                     float opacity = .65f * (1f - Mathf.SmoothStep(0, 1, t));
                     properties.SetColor(BaseColor, new Color(gain, .64f * gain, .2f * gain, opacity));
                     visual.Renderer.SetPropertyBlock(properties);
@@ -130,7 +130,7 @@ namespace CrowdPunch.Mono.Player
         private void Show(Vector3 position, float radius, float duration, float sizeMultiplier)
         {
             if (visuals == null || FeedbackTimeController.IsSuspended) return;
-            if (bursts != null)
+            if (bursts != null && (settings == null || !settings.UseReducedFlashes))
             {
                 foreach (var burst in bursts)
                 {

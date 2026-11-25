@@ -24,6 +24,7 @@ namespace CrowdPunch.Mono.Player
         private uint pendingPunchSequence;
 
         public float PunchRadius => settings == null ? 0f : settings.Radius;
+        internal InputAction PunchAction => settings == null ? null : settings.FindAttackAction();
         public event Action PunchStarted;
         public event Action CooldownStarted;
         public event Action PunchStateReset;

@@ -203,7 +203,8 @@ namespace CrowdPunch.Mono.UI
                 }
             }
 
-            pauseMenu?.Configure(playerController?.MovementSettings?.InputActions);
+            var movement = playerController?.MovementSettings;
+            pauseMenu?.Configure(movement?.InputActions, movement, playerPunch?.PunchAction);
         }
 
         private void EnsureEnemyHealthBarCanvas()

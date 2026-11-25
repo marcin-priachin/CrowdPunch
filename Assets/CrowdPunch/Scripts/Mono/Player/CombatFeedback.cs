@@ -138,7 +138,7 @@ namespace CrowdPunch.Mono.Player
             // Volume punches report the enemy's ground-plane origin, not a surface manifold.
             bool directPunch = message.Kind == CombatImpactKind.Punch;
             Vector3 accentPosition = message.Position + (directPunch ? Vector3.up * .65f : Vector3.zero);
-            Vector3 flashOffset = directPunch && !settings.ReduceFlashes && feedbackCamera != null && playerHead != null && playerHips != null
+            Vector3 flashOffset = directPunch && !settings.UseReducedFlashes && feedbackCamera != null && playerHead != null && playerHips != null
                 ? ComicImpactPool.PunchFlashOffset(feedbackCamera, accentPosition, playerHead.position, playerHips.position)
                 : Vector3.zero;
             particles.Show(message.Kind, message.Position, message.Direction, message.Intensity);
@@ -176,7 +176,7 @@ namespace CrowdPunch.Mono.Player
             comicImpacts.Show(CombatImpactKind.PlayerDamage, contact, direction, 1f);
             cameraFeedback?.Impulse(direction, settings.DamageKick, 1.4f);
             FeedbackTimeController.Freeze(settings.DamageHitStop);
-            if (!settings.ReduceFlashes)
+            if (!settings.UseReducedFlashes)
             {
                 flashRemaining = settings.FlashDuration;
                 flash.Show(settings.PlayerFlashColor, settings.PlayerFlashIntensity);
@@ -211,7 +211,7 @@ namespace CrowdPunch.Mono.Player
             }
             if (cameraFeedback != null) cameraFeedback.Dashing = controller != null && controller.isActiveAndEnabled && controller.IsDashing;
             flashRemaining -= Time.unscaledDeltaTime;
-            if (flashRemaining <= 0f || settings.ReduceFlashes || !bridge.gameObject.activeInHierarchy) flash.Clear();
+            if (flashRemaining <= 0f || settings.UseReducedFlashes || !bridge.gameObject.activeInHierarchy) flash.Clear();
             else flash.Show(settings.PlayerFlashColor, settings.PlayerFlashIntensity * flashRemaining / Mathf.Max(.001f, settings.FlashDuration));
         }
         private void LateUpdate()

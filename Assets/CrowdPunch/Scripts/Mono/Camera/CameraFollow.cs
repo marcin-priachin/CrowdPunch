@@ -105,13 +105,17 @@ namespace CrowdPunch.Mono.Camera
 
             if (feedback == null) feedback = GetComponent<CombatCameraFeedback>();
             feedback?.RemoveOffset();
-            float horizontalLook = CrowdPunch.Mono.Player.FeedbackTimeController.IsSuspended
-                ? 0f : lookAction?.ReadValue<Vector2>().x ?? 0f;
-            bool usesJoystick = lookAction?.activeControl?.device is Gamepad
-                || lookAction?.activeControl?.device is Joystick;
-            float inputRotation = usesJoystick
+            InputDevice device = null;
+            float horizontalLook = FeedbackTimeController.IsSuspended || lookAction == null ? 0f
+                : PlayerPreferences.ReadStick(lookAction, lookAction.ReadValue<Vector2>(), out device).x;
+            bool usesJoystick = device is Gamepad or Joystick;
+            bool rateBased = usesJoystick || device is Keyboard;
+            float inputRotation = rateBased
                 ? horizontalLook * movementSettings.JoystickRotationSpeed * Time.deltaTime
                 : horizontalLook * horizontalLookSensitivity;
+            inputRotation *= PlayerPreferences.Gain(usesJoystick ? PlayerPreference.ControllerSensitivity : PlayerPreference.MouseSensitivity);
+            if (PlayerPreferences.Enabled(usesJoystick ? PlayerPreference.ReverseController : PlayerPreference.ReverseMouse))
+                inputRotation = -inputRotation;
             orbitAngle += inputRotation;
             if (aimBridge == null && target.TryGetComponent(out aimBridge))
                 aimBridge.PunchApproachApplied += OnPunchApproach;

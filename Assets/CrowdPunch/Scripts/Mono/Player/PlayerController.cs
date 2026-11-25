@@ -122,7 +122,7 @@ namespace CrowdPunch.Mono.Player
 
             Vector2 moveInput = moveAction == null
                 ? Vector2.zero
-                : moveAction.ReadValue<Vector2>();
+                : PlayerPreferences.ReadStick(moveAction, moveAction.ReadValue<Vector2>(), out _);
 
             Vector3 cameraForward = movementCamera == null ? Vector3.forward : movementCamera.forward;
             cameraForward.y = 0f;

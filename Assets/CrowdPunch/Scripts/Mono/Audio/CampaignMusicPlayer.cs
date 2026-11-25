@@ -34,7 +34,7 @@ namespace CrowdPunch.Mono.Audio
         private float fadeDuration = MixSeconds;
         private float fadeFrom;
         private float targetVolume;
-        private float volume;
+        private float volume, stingVolume;
         private float mixDb;
         private bool wasMilestone;
 
@@ -89,7 +89,7 @@ namespace CrowdPunch.Mono.Audio
                 mixDb = GetMixDb(loading, milestone);
                 FadeTo(settings.Volume * Mathf.Pow(10f, mixDb / 20f), Math.Max(now, cueStart), MixSeconds);
             }
-            intro.volume = loop.volume = volume;
+            intro.volume = loop.volume = volume * PlayerPreferences.Gain(PlayerPreference.Music);
         }
 
         private int GetRequestedCue()
@@ -115,14 +115,16 @@ namespace CrowdPunch.Mono.Audio
             if (milestone && !wasMilestone && settings.VictorySting != null)
             {
                 sting.clip = settings.VictorySting;
-                sting.volume = settings.Volume * .8f;
+                stingVolume = settings.Volume * .8f;
+                sting.volume = stingVolume * PlayerPreferences.Gain(PlayerPreference.Music);
                 sting.Play();
             }
             else if (!milestone && sting.isPlaying)
             {
-                sting.volume = Mathf.MoveTowards(sting.volume, 0f, Time.unscaledDeltaTime * .8f * settings.Volume / FadeOutSeconds);
-                if (sting.volume == 0f) sting.Stop();
+                stingVolume = Mathf.MoveTowards(stingVolume, 0f, Time.unscaledDeltaTime * .8f * settings.Volume / FadeOutSeconds);
+                if (stingVolume == 0f) sting.Stop();
             }
+            sting.volume = stingVolume * PlayerPreferences.Gain(PlayerPreference.Music);
             wasMilestone = milestone;
         }
 

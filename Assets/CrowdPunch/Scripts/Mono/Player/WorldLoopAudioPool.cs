@@ -1,3 +1,4 @@
+using CrowdPunch.Configuration;
 using UnityEngine;
 
 namespace CrowdPunch.Mono.Player
@@ -131,7 +132,8 @@ namespace CrowdPunch.Mono.Player
         private void UpdateVoice(AudioSource source, Sample sample, float fadeStep)
         {
             source.pitch = sample.Pitch;
-            source.volume = Mathf.MoveTowards(source.volume, sample.Gain * sample.Volume, fadeStep);
+            source.volume = Mathf.MoveTowards(source.volume,
+                sample.Gain * sample.Volume * PlayerPreferences.Gain(PlayerPreference.Effects), fadeStep);
             source.panStereo = audioCamera != null ? .55f * Vector3.Dot(audioCamera.right, sample.Offset.normalized) : 0f;
         }
     }

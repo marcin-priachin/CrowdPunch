@@ -1,3 +1,4 @@
+using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Levels;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -26,7 +27,7 @@ namespace CrowdPunch.Mono.UI
         private bool isPaused;
         private CampaignMenu campaignMenu;
 
-        public void Configure(InputActionAsset actions)
+        public void Configure(InputActionAsset actions, PlayerMovementSettings movement = null, InputAction punch = null)
         {
             if (inputActions == actions && pauseAction != null)
             {
@@ -50,6 +51,7 @@ namespace CrowdPunch.Mono.UI
             {
                 pauseAction.Enable();
             }
+            campaignMenu?.ConfigureInput(movement, punch, pauseAction);
         }
 
         private void Awake()

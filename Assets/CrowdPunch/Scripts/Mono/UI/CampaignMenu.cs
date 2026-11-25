@@ -1,3 +1,4 @@
+using CrowdPunch.Configuration;
 using CrowdPunch.Mono.Levels;
 using CrowdPunch.Mono.Player;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace CrowdPunch.Mono.UI
     /// <summary>Campaign menu routing and pause ownership (LOOP-005/006/007).</summary>
     public sealed class CampaignMenu : MonoBehaviour
     {
-        private enum Page { Main, Browser, Pause, ConfirmNew, Milestone, Failure, LevelClear }
+        private enum Page { Main, Browser, Pause, Settings, ConfirmNew, Milestone, Failure, LevelClear }
 
         private GauntletSequence sequence;
         private GameObject root;
@@ -23,7 +24,10 @@ namespace CrowdPunch.Mono.UI
         private Button first;
         private ArenaBrowser browser;
         private RingsideMenuLayout ringside;
-        private Page page, browserOrigin;
+        private RingsideSettings settings;
+        private SettingsBindings settingsBindings;
+        private Page page, browserOrigin, settingsOrigin;
+        private Button settingsEntry;
         private CampaignScreen observedScreen;
         private string observedLoadError;
         private bool observedFailure, gamepad;
@@ -70,12 +74,18 @@ namespace CrowdPunch.Mono.UI
             previousChapter = MenuAction("Previous Chapter", "<Keyboard>/pageUp");
             nextChapter = MenuAction("Next Chapter", "<Keyboard>/pageDown");
             jump = MenuAction("Jump Chapter", "<Keyboard>/y", "<Gamepad>/buttonNorth");
-            back = MenuAction("Menu Back", "<Gamepad>/buttonEast");
+            back = MenuAction("Menu Back", "<Gamepad>/buttonEast", "<Keyboard>/escape");
             gamepad = Gamepad.current != null;
             InputSystem.onActionChange += TrackInputDevice;
 
             observedScreen = sequence.Screen;
             Show(Page.Main);
+        }
+
+        internal void ConfigureInput(PlayerMovementSettings movement, InputAction punch, InputAction pause)
+        {
+            settingsBindings = new SettingsBindings(movement?.FindMoveAction(), movement?.FindLookAction(),
+                punch, movement?.FindDashAction(), pause);
         }
 
         public void Tick(InputAction pause)
@@ -121,7 +131,9 @@ namespace CrowdPunch.Mono.UI
                 Show(Page.Failure);
             }
             hintRemaining = Mathf.Max(0, hintRemaining - Time.deltaTime);
-            hintPanel.gameObject.SetActive(sequence.Screen == CampaignScreen.Playing && !sequence.HintsDisabled
+            hint.resizeTextMinSize = PlayerPreferences.Enabled(PlayerPreference.LargeText) ? 22 : 17;
+            hint.resizeTextMaxSize = PlayerPreferences.Enabled(PlayerPreference.LargeText) ? 32 : 24;
+            hintPanel.gameObject.SetActive(sequence.Screen == CampaignScreen.Playing && RingsideSettings.HintsEnabled(sequence.HintsDisabled)
                 && !IsOpen && hintRemaining > 0 && !string.IsNullOrEmpty(hint.text));
 
             if (IsOpen)
@@ -131,6 +143,7 @@ namespace CrowdPunch.Mono.UI
                 browser?.Fit();
                 ringside?.Fit();
                 if (!controls.interactable) return;
+                settings?.Tick(gamepad);
                 var selection = EventSystem.current?.currentSelectedGameObject;
                 if (selection != lastSelection && selection != null)
                     PlaySound(CelComicUi.Theme?.MoveSound);
@@ -141,7 +154,7 @@ namespace CrowdPunch.Mono.UI
                     else if (nextChapter.WasPressedThisFrame()) browser.StepChapter(1);
                     else if (jump.WasPressedThisFrame()) browser.FocusChapters();
                 }
-                if (pause?.WasPressedThisFrame() == true || back.WasPressedThisFrame()) GoBack();
+                if (back.WasPressedThisFrame() || page != Page.Settings && pause?.WasPressedThisFrame() == true) GoBack();
             }
             else if (sequence.Screen == CampaignScreen.Playing && pause?.WasPressedThisFrame() == true)
             {
@@ -151,6 +164,8 @@ namespace CrowdPunch.Mono.UI
 
         private void Show(Page nextPage, int encounter = 0)
         {
+            settings?.Dispose();
+            settings = null;
             page = nextPage;
             root.SetActive(true);
             FeedbackTimeController.SetPaused(sequence.Screen != CampaignScreen.MainMenu);
@@ -165,6 +180,7 @@ namespace CrowdPunch.Mono.UI
             browser = null;
             ringside = null;
             first = null;
+            settingsEntry = null;
 
             shade.color = page == Page.Browser ? new Color32(17, 18, 55, 255)
                 : page == Page.ConfirmNew ? RingsideUi.Hint : Color.clear;
@@ -176,6 +192,15 @@ namespace CrowdPunch.Mono.UI
                 browser = new ArenaBrowser(viewport, sequence, encounter, GoBack, ConfirmSound);
                 browser.SetPrompts(gamepad);
                 first = browser.First;
+            }
+            else if (page == Page.Settings)
+            {
+                var viewport = (RectTransform)PauseMenu.CreateUiObject("Ringside Settings", root.transform).transform;
+                panel = viewport;
+                CelComicUi.Stretch(viewport);
+                settings = new RingsideSettings(viewport, settingsBindings, gamepad,
+                    settingsOrigin == Page.Pause ? hint.text : null, sequence.HintsDisabled, ReturnFromSettings, PreviewAudio);
+                first = settings.First;
             }
             else
             {
@@ -208,6 +233,7 @@ namespace CrowdPunch.Mono.UI
                         finished || available, primary: true);
                     Button("Level Select", () => OpenBrowser(Page.Main));
                     Button("New Campaign", () => Show(Page.ConfirmNew), !sequence.EditorPreview);
+                    settingsEntry = Button("Settings", () => OpenSettings(Page.Main));
                     Button("Exit Game", PauseMenu.ExitGame);
                     break;
                 case Page.Pause:
@@ -215,6 +241,7 @@ namespace CrowdPunch.Mono.UI
                     Button("Resume", Close, primary: true);
                     Button("Retry Level", sequence.RestartCurrentLevel);
                     Button("Level Select", () => OpenBrowser(Page.Pause));
+                    settingsEntry = Button("Settings", () => OpenSettings(Page.Pause));
                     Button("Main Menu", ReturnToMain);
                     Button("Exit Game", PauseMenu.ExitGame);
                     break;
@@ -281,12 +308,26 @@ namespace CrowdPunch.Mono.UI
             switch (page)
             {
                 case Page.Pause: Close(); break;
+                case Page.Settings: settings.Back(); break;
                 case Page.Browser:
                     if (sequence.Screen == CampaignScreen.ReplayComplete) ReturnToMain();
                     else Show(browserOrigin);
                     break;
                 case Page.ConfirmNew: Show(Page.Main); break;
             }
+        }
+
+        private void OpenSettings(Page origin)
+        {
+            settingsOrigin = origin;
+            Show(Page.Settings);
+        }
+
+        private void ReturnFromSettings()
+        {
+            Show(settingsOrigin);
+            settingsEntry?.Select();
+            lastSelection = settingsEntry != null ? settingsEntry.gameObject : null;
         }
 
         private void ReturnToMain()
@@ -316,19 +357,23 @@ namespace CrowdPunch.Mono.UI
                 RingsideUi.Label(ringside.Content, "NEW BEST", 24, 36, RingsideUi.Gold);
         }
 
-        private void Button(string text, UnityAction action, bool enabled = true, bool primary = false, bool danger = false)
+        private Button Button(string text, UnityAction action, bool enabled = true, bool primary = false, bool danger = false)
         {
             var button = RingsideUi.Action(ringside.Content, text, () =>
             {
                 ConfirmSound();
                 action();
-            }, enabled, primary, danger: danger, levelClear: page == Page.LevelClear);
+            }, enabled, primary, size: PlayerPreferences.Enabled(PlayerPreference.LargeText) ? 51 : 42,
+                danger: danger, levelClear: page == Page.LevelClear);
             if (first == null && enabled) first = button;
+            return button;
         }
 
         private void Close()
         {
             if (!IsOpen) return;
+            settings?.Dispose();
+            settings = null;
             root.SetActive(false);
             FeedbackTimeController.SetPaused(false);
             Cursor.lockState = CursorLockMode.Locked;
@@ -371,11 +416,28 @@ namespace CrowdPunch.Mono.UI
 
         private void PlaySound(AudioClip clip)
         {
-            if (clip != null && menuAudio.isActiveAndEnabled) menuAudio.PlayOneShot(clip);
+            if (clip != null && menuAudio.isActiveAndEnabled) menuAudio.PlayOneShot(clip, PlayerPreferences.Gain(PlayerPreference.MenuSounds));
+        }
+
+        private void PreviewAudio(PlayerPreference preference)
+        {
+            if (preference == PlayerPreference.Music) return;
+            if (preference == PlayerPreference.Master || preference == PlayerPreference.MenuSounds)
+            {
+                ConfirmSound();
+                return;
+            }
+            var profile = Resources.Load<GameplaySfxProfiles>("GameplaySfxProfiles")?.Default;
+            var clips = preference == PlayerPreference.CrowdImpacts ? profile?.CrowdCollision : profile?.PunchConfirmed;
+            if (clips == null || clips.Length == 0 || clips[0] == null || !menuAudio.isActiveAndEnabled) return;
+            float gain = PlayerPreferences.Gain(PlayerPreference.Effects);
+            if (preference == PlayerPreference.CrowdImpacts) gain *= PlayerPreferences.Gain(PlayerPreference.CrowdImpacts);
+            menuAudio.PlayOneShot(clips[0], gain);
         }
 
         private void OnDestroy()
         {
+            settings?.Dispose();
             InputSystem.onActionChange -= TrackInputDevice;
             previousChapter?.Dispose();
             nextChapter?.Dispose();

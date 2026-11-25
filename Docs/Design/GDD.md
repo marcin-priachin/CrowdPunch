@@ -169,6 +169,8 @@ Launch into a main menu with Continue, chapter/level selection and New Campaign.
 
 Game settings may optionally start the game with all available levels unlocked. This option defaults to off, does not mark levels complete or alter saved unlock progress, and preserves Continue's next-unfinished-level behavior. Unavailable content remains unselectable.
 
+Main Menu and Pause both open the Ringside Settings page with Controls, Audio, Accessibility and Display tabs. All tabs support mouse and controller navigation. Keep settings across restarts and new campaigns. Options that change the window mode or resolution revert unless the player confirms them.
+
 ### LOOP-008 - Large Crowd Level And Difficulty Rhythm
 
 Status: Must
@@ -1516,7 +1518,7 @@ committed Sweep, hit reactions, spawning, launch, recovery, pooling and defeat r
 
 Status: Must
 
-Default arrow mode predicts initial launch directions and the bounded first enemy impact (PLAYER-003). The optional dotted mode estimates the full travel of directly punched enemies, including approximate deflections, within an exposed time/step budget. Neither mode promises chaotic downstream collision outcomes or displays full trajectories for indirectly launched enemies. For a directly punched body using an authoritative dotted snapshot, its visible endpoint also ends the launch, including when the forecast budget is exhausted; do not continue the same launch beyond the indication.
+Dotted mode is the only supported player-facing aim indication, superseding the arrow default and mode choice described in PLAYER-003. Keep the current first-contact rendering cutoff while estimating the full travel of directly punched enemies, including approximate deflections, within the authored time/step budget. The forecast omits paths for indirectly launched enemies. For a directly punched body using an authoritative snapshot, the forecast endpoint ends the launch, including when the budget is exhausted. The first-contact rendering cutoff only limits the visible dots.
 
 ### INFO-006 - Enemy Spawn Warning
 

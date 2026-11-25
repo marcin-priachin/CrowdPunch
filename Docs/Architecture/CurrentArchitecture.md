@@ -2947,6 +2947,8 @@ builds the numbered results rail with Next Level, Retry, Level Select, and Main 
 Clear presentation locks player input and damage while allowing the slowed simulation.
 Launch speed lines continue following eligible airborne bodies during the clear shot and
 hold with the paused arena. The other combat feedback remains suspended (VISION-005).
+
+`CampaignMenu` also routes Main Menu and Pause to `RingsideSettings` and returns focus to the originating Settings button. `RingsideSettingsLayout` uses the existing EventSystem, with explicit controller navigation, scroll-to-focus, and mouse controls. `SettingsBindings` applies overrides to the existing Move, Look, Attack, Dash and Pause actions. `PlayerPreferences` stores local options and binding overrides in PlayerPrefs independently of `CampaignProgress`. Camera, flash and audio consumers apply preferences on top of authored tuning. Display timing updates immediately, while window mode and resolution use a timed trial before the new values are saved (LOOP-007, PLAYER-010/011). The campaign punch asset continues to supply the dotted, first-contact aim indication (PLAYER-003, INFO-005).
 `LevelClearFixedStepSystem` scales the ECS timestep by the clear slowdown multiplier before
 the fixed group runs. This preserves its real-time update cadence during the shot and restores
 its prior timestep when the shot pauses or a transition starts.

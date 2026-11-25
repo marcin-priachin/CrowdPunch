@@ -38,6 +38,7 @@ namespace CrowdPunch.Configuration
         [Range(0f, 1f)] public float CameraMotionScale = .75f;
         [Tooltip("Disable body flashes and use saturated impact centres instead of pale flashes.")]
         public bool ReduceFlashes;
+        internal bool UseReducedFlashes => ReduceFlashes || PlayerPreferences.Enabled(PlayerPreference.ReducedFlashes);
         [Header("Comic impact accents")]
         [Tooltip("Contact starbursts, expanding rings and tumbling stars. Zero disables this layer.")]
         [Range(0f, 2f)] public float ComicImpactScale = 1f;

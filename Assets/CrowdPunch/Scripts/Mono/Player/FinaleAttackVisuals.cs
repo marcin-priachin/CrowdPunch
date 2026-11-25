@@ -157,7 +157,7 @@ namespace CrowdPunch.Mono.Player
             Color ink = Ink; ink.a *= fade;
             float pop = 1 - Mathf.Pow(1 - t, 3);
             float flash = Mathf.Clamp01(1 - t / .32f);
-            bool reduced = feedback != null && feedback.ReduceFlashes;
+            bool reduced = feedback != null && feedback.UseReducedFlashes;
             Color flashColor = reduced ? new Color(.25f, .48f, 1, flash * .06f)
                 : new Color(.65f, .86f, 1, flash * .23f);
             if (hitAttack == 2)

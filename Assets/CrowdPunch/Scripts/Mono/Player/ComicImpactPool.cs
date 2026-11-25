@@ -82,7 +82,7 @@ namespace CrowdPunch.Mono.Player
 
         public void ShowBlast(Vector3 position, float radius)
         {
-            if (settings.ComicImpactScale <= 0f || settings.ReduceFlashes) return;
+            if (settings.ComicImpactScale <= 0f || settings.UseReducedFlashes) return;
             Queue(new Impact { Active = true, IsBlast = true, Position = position + Vector3.up * .60f,
                 BlastRadius = radius, BrightFlash = true });
         }
@@ -121,7 +121,7 @@ namespace CrowdPunch.Mono.Player
                 ActiveCount++;
                 if (!canDraw) continue;
                 if (!impact.IsBlast) Draw(impact, camera);
-                if (impact.BrightFlash && !settings.ReduceFlashes)
+                if (impact.BrightFlash && !settings.UseReducedFlashes)
                     DrawFlash(impact, camera, firstFrame ? 0f : impact.Age);
                 impact.HasDrawn = true;
             }
@@ -140,7 +140,7 @@ namespace CrowdPunch.Mono.Player
             bool collision = impact.Kind == CombatImpactKind.EnemyCollision;
             Color accent = damage ? new Color(1f, .22f, .19f)
                 : collision ? new Color(.18f, .88f, 1f) : new Color(1f, .68f, .045f);
-            Color core = settings.ReduceFlashes ? accent : new Color(1f, .95f, .69f);
+            Color core = settings.UseReducedFlashes ? accent : new Color(1f, .95f, .69f);
             float radius = (damage ? 1.05f : collision ? .58f : .9f)
                 * Mathf.Lerp(.65f, 1.15f, impact.Intensity) * settings.ComicImpactScale;
             float fade = 1f - Smooth(Mathf.InverseLerp(.45f, 1f, t));

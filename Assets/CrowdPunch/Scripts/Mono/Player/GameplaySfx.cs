@@ -319,7 +319,7 @@ namespace CrowdPunch.Mono.Player
             var voice = crowdVoices[nextCrowdVoice];
             // Pan relative to the view while applying distance falloff only from the player.
             voice.panStereo = PlayerRelativePan(position);
-            if (!Play(voice, clips, volume * gain)) return false;
+            if (!Play(voice, clips, volume * gain * PlayerPreferences.Gain(PlayerPreference.CrowdImpacts))) return false;
             nextCrowdVoice = (nextCrowdVoice + 1) % crowdVoices.Length;
             return true;
         }
@@ -611,7 +611,7 @@ namespace CrowdPunch.Mono.Player
             var clip = SelectClip(clips);
             if (clip == null) return false;
             source.clip = clip;
-            source.volume = volume;
+            source.volume = volume * PlayerPreferences.Gain(PlayerPreference.Effects);
             source.Play();
             return true;
         }
@@ -619,7 +619,7 @@ namespace CrowdPunch.Mono.Player
         private void PlayResults(AudioClip[] clips, float volume)
         {
             var clip = SelectClip(clips);
-            if (clip != null) clearVoice.PlayOneShot(clip, volume);
+            if (clip != null) clearVoice.PlayOneShot(clip, volume * PlayerPreferences.Gain(PlayerPreference.Effects));
         }
 
         private static AudioClip SelectClip(AudioClip[] clips)

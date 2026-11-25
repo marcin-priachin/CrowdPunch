@@ -41,7 +41,7 @@ namespace CrowdPunch.Mono.Camera
             Vector3 noise = new Vector3(Mathf.Sin(phase), Mathf.Sin(phase * 1.37f), 0f)
                 * (settings.Shake * trauma * trauma);
             appliedOffset = Vector3.ClampMagnitude(kick + transform.TransformDirection(noise),
-                settings.MaximumCameraOffset) * settings.CameraMotionScale;
+                settings.MaximumCameraOffset) * settings.CameraMotionScale * PlayerPreferences.Gain(PlayerPreference.ImpactMotion);
             transform.position += appliedOffset;
             // Analytic damped spring: one brief counter-kick, stable even after a long frame.
             float frequency = 1.8f / Mathf.Max(.01f, settings.CameraRecovery);
@@ -55,7 +55,7 @@ namespace CrowdPunch.Mono.Camera
             if (kick.sqrMagnitude + kickVelocity.sqrMagnitude < .000001f)
                 kick = kickVelocity = Vector3.zero;
             trauma = Mathf.MoveTowards(trauma, 0f, dt / Mathf.Max(.01f, settings.CameraRecovery * 2.5f));
-            fovOffset = Mathf.Lerp(fovOffset, Dashing ? settings.DashFovDelta : 0f,
+            fovOffset = Mathf.Lerp(fovOffset, Dashing && !PlayerPreferences.Enabled(PlayerPreference.ReducedMotion) ? settings.DashFovDelta : 0f,
                 1f - Mathf.Exp(-dt / Mathf.Max(.01f, settings.DashFovTransition)));
             if (view != null) view.fieldOfView = baselineFov + fovOffset;
         }
