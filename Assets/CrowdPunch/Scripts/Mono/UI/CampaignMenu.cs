@@ -337,7 +337,7 @@ namespace CrowdPunch.Mono.UI
             {
                 ConfirmSound();
                 action();
-            }, enabled, primary, size: PlayerPreferences.Enabled(PlayerPreference.LargeText) ? 51 : 42,
+            }, enabled, primary, size: 51,
                 danger: danger, levelClear: page == Page.LevelClear);
             if (first == null && enabled) first = button;
             return button;

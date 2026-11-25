@@ -8,7 +8,7 @@ namespace CrowdPunch.Configuration
     {
         MouseSensitivity, ControllerSensitivity, ReverseMouse, ReverseController, StickDeadZone,
         Master, Music, Effects, CrowdImpacts, MenuSounds,
-        ImpactMotion, ReducedMotion, ReducedFlashes, LargeText,
+        ImpactMotion, ReducedMotion, ReducedFlashes,
         VSync, FrameLimit, WindowMode, Width, Height,
         RenderScale, AmbientOcclusion, AntiAliasing, ReducedEffects
     }

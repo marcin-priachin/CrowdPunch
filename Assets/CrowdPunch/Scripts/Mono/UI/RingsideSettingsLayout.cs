@@ -9,6 +9,8 @@ namespace CrowdPunch.Mono.UI
 {
     internal sealed class RingsideSettingsLayout
     {
+        private const int RowHeight = 76;
+        private const int RowTextSize = 33;
         private static readonly Color Panel = new Color32(21, 30, 75, 255);
         private readonly RectTransform viewport, frame, content, footer;
         private readonly CanvasGroup page;
@@ -109,15 +111,13 @@ namespace CrowdPunch.Mono.UI
             status.text = "";
         }
 
-        internal Button AddRow(string label, string value, UnityAction click, out Text valueLabel, bool large)
+        internal Button AddRow(string label, string value, UnityAction click, out Text valueLabel)
         {
-            int size = large ? 33 : 27;
-            int height = large ? 76 : 64;
-            Button button = RingsideUi.Action(content, "", click, true, false, height, size);
+            Button button = RingsideUi.Action(content, "", click, true, false, RowHeight, RowTextSize);
             button.name = label;
             var rect = (RectTransform)button.transform;
-            Label(rect, label, 18, 0, 450, height, size);
-            valueLabel = Label(rect, value, 480, 0, 395, height, size);
+            Label(rect, label, 18, 0, 450, RowHeight, RowTextSize);
+            valueLabel = Label(rect, value, 480, 0, 395, RowHeight, RowTextSize);
             valueLabel.alignment = TextAnchor.MiddleRight;
             valueLabel.color = RingsideUi.Sky;
             rows.Add(button);
@@ -126,15 +126,15 @@ namespace CrowdPunch.Mono.UI
             return button;
         }
 
-        internal void AddNote(string text, bool large)
+        internal void AddNote(string text)
         {
-            var note = RingsideUi.Label(content, "  " + text, large ? 29 : 24, large ? 66 : 54, RingsideUi.Muted);
+            var note = RingsideUi.Label(content, "  " + text, 29, 66, RingsideUi.Muted);
             note.verticalOverflow = VerticalWrapMode.Overflow;
         }
 
-        internal Slider AddSlider(Button row, int min, int max, int value, bool large, UnityAction<float> change)
+        internal Slider AddSlider(Button row, int min, int max, int value, UnityAction<float> change)
         {
-            var root = Place((RectTransform)row.transform, "Slider", 465, large ? 12 : 6, 295, 52);
+            var root = Place((RectTransform)row.transform, "Slider", 465, (RowHeight - 52) / 2, 295, 52);
             var slider = root.gameObject.AddComponent<Slider>();
             var hit = Block(root, "Slider track area", 0, 0, 295, 52, Color.clear);
             hit.GetComponent<Image>().raycastTarget = true;
@@ -161,8 +161,9 @@ namespace CrowdPunch.Mono.UI
         internal void AddArrows(Button row, Action<int> step)
         {
             var rect = (RectTransform)row.transform;
-            var left = PlacedButton(rect, "<", 490, 7, 44, 48, () => { row.Select(); step(-1); }, 24);
-            var right = PlacedButton(rect, ">", 849, 7, 44, 48, () => { row.Select(); step(1); }, 24);
+            int top = (RowHeight - 48) / 2;
+            var left = PlacedButton(rect, "<", 490, top, 44, 48, () => { row.Select(); step(-1); }, 24);
+            var right = PlacedButton(rect, ">", 849, top, 44, 48, () => { row.Select(); step(1); }, 24);
             left.navigation = right.navigation = new Navigation { mode = Navigation.Mode.None };
             foreach (Transform child in row.transform)
                 if (child.TryGetComponent<Text>(out var label) && label.alignment == TextAnchor.MiddleRight)

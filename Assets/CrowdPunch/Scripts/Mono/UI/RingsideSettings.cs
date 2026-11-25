@@ -33,7 +33,6 @@ namespace CrowdPunch.Mono.UI
         private bool resetDisplayMode;
 
         internal Button First => view.First;
-        private bool Large => PlayerPreferences.Enabled(PlayerPreference.LargeText);
 
         internal RingsideSettings(RectTransform viewport, SettingsBindings bindings, bool gamepad,
             Action close, Action<PlayerPreference> preview)
@@ -118,17 +117,17 @@ namespace CrowdPunch.Mono.UI
         {
             if (bindingAction >= 0)
             {
-                view.AddNote(SettingsBindings.ActionLabels[bindingAction] + " / " + (controller ? "Controller" : "Keyboard & Mouse"), Large);
+                view.AddNote(SettingsBindings.ActionLabels[bindingAction] + " / " + (controller ? "Controller" : "Keyboard & Mouse"));
                 int ordinal = 0;
                 foreach (int slot in bindings.Slots(bindingAction, controller))
                 {
                     if (bindings.IsFixed(bindingAction, slot))
                     {
-                        view.AddNote("Mouse movement rotates the camera. You can also bind rotation keys below.", Large);
+                        view.AddNote("Mouse movement rotates the camera. You can also bind rotation keys below.");
                         continue;
                     }
                     var row = view.AddRow(bindings.Label(bindingAction, slot, ordinal++), bindings.Display(bindingAction, slot),
-                        () => Capture(slot), out _, Large);
+                        () => Capture(slot), out _);
                     row.gameObject.name = "Binding " + slot;
                 }
                 return;
@@ -138,7 +137,7 @@ namespace CrowdPunch.Mono.UI
             {
                 controller = !controller;
                 Build(0);
-            }, out _, Large);
+            }, out _);
             if (bindings != null)
             {
                 for (int i = 0; i < SettingsBindings.ActionLabels.Length; i++)
@@ -152,7 +151,7 @@ namespace CrowdPunch.Mono.UI
                         bindingOrigin = view.RowIndex(EventSystem.current?.currentSelectedGameObject?.GetComponent<Button>());
                         bindingAction = action;
                         Build(0);
-                    }, out _, Large);
+                    }, out _);
                 }
             }
             Range("Camera Sensitivity", controller ? PlayerPreference.ControllerSensitivity : PlayerPreference.MouseSensitivity, 25, 250);
@@ -197,7 +196,6 @@ namespace CrowdPunch.Mono.UI
             Range("Impact Camera Motion", PlayerPreference.ImpactMotion, 0, 100);
             Toggle("Reduced Camera Motion", PlayerPreference.ReducedMotion);
             Toggle("Reduced Flashes", PlayerPreference.ReducedFlashes);
-            Toggle("Text Size", PlayerPreference.LargeText, "Large", "Standard", 3);
         }
 
         private void BuildDisplay()
@@ -227,7 +225,7 @@ namespace CrowdPunch.Mono.UI
                         Build(1);
                     });
             }
-            else view.AddNote("Borderless uses the desktop resolution.", Large);
+            else view.AddNote("Borderless uses the desktop resolution.");
 
             Choice("VSync", new[] { "Off", "On" }, PlayerPreferences.Get(PlayerPreference.VSync), value =>
             {
@@ -240,7 +238,7 @@ namespace CrowdPunch.Mono.UI
                     Save(PlayerPreference.FrameLimit, FrameRates[value]);
                     PlayerDisplayPreferences.ApplyTiming();
                 });
-            view.AddNote("VSync takes priority over the frame rate limit.", Large);
+            view.AddNote("VSync takes priority over the frame rate limit.");
             BuildGraphics();
         }
 
@@ -338,8 +336,7 @@ namespace CrowdPunch.Mono.UI
                     break;
                 case 1: Reset(Audio); break;
                 case 2:
-                    Reset(PlayerPreference.ImpactMotion, PlayerPreference.ReducedMotion, PlayerPreference.ReducedFlashes,
-                        PlayerPreference.LargeText);
+                    Reset(PlayerPreference.ImpactMotion, PlayerPreference.ReducedMotion, PlayerPreference.ReducedFlashes);
                     break;
                 case 3:
                     Reset(PlayerPreference.VSync, PlayerPreference.FrameLimit, PlayerPreference.RenderScale,
@@ -356,16 +353,15 @@ namespace CrowdPunch.Mono.UI
             else view.Status(Tabs[tab] + " reset to defaults");
         }
 
-        private void Toggle(string name, PlayerPreference option, string on = "On", string off = "Off", int rebuildRow = -1)
+        private void Toggle(string name, PlayerPreference option)
         {
             Text value = null;
-            view.AddRow(name, PlayerPreferences.Enabled(option) ? on : off, () =>
+            view.AddRow(name, PlayerPreferences.Enabled(option) ? "On" : "Off", () =>
             {
                 bool enabled = !PlayerPreferences.Enabled(option);
                 Save(option, enabled ? 1 : 0);
-                if (rebuildRow >= 0) Build(rebuildRow);
-                else value.text = enabled ? on : off;
-            }, out value, Large);
+                value.text = enabled ? "On" : "Off";
+            }, out value);
         }
 
         private void Range(string name, PlayerPreference option, int min, int max, bool audio = false)
@@ -398,8 +394,8 @@ namespace CrowdPunch.Mono.UI
                     if (!accept) Change(original);
                     PlayerPreferences.Save();
                 });
-            }, out label, Large);
-            slider = view.AddSlider(row, min, max, PlayerPreferences.Get(option), Large, value => Change((int)value));
+            }, out label);
+            slider = view.AddSlider(row, min, max, PlayerPreferences.Get(option), value => Change((int)value));
             RingsideSettingsLayout.Hook(slider, EventTriggerType.PointerUp, _ => PlayerPreferences.Save());
             EditArrows(row, step => Change(Mathf.Clamp(PlayerPreferences.Get(option) + step * (option == PlayerPreference.StickDeadZone ? 1 : 5), min, max)));
         }
@@ -419,7 +415,7 @@ namespace CrowdPunch.Mono.UI
                     else current = original;
                     value.text = Format();
                 });
-            }, out value, Large);
+            }, out value);
             view.AddArrows(row, step =>
             {
                 if (editing == row)

@@ -169,7 +169,7 @@ Launch into a main menu with Continue, chapter/level selection and New Campaign.
 
 Game settings may optionally start the game with all available levels unlocked. This option defaults to off, does not mark levels complete or alter saved unlock progress, and preserves Continue's next-unfinished-level behavior. Unavailable content remains unselectable.
 
-Main Menu and Pause both open the Ringside Settings page with Controls, Audio, Accessibility and Display tabs. All tabs support mouse and controller navigation. Keep settings across restarts and new campaigns. Options that change the window mode or resolution revert unless the player confirms them.
+Main Menu and Pause both open the Ringside Settings page with Controls, Audio, Accessibility and Display tabs. All tabs support mouse and controller navigation. Ringside uses the large text layout throughout. Keep settings across restarts and new campaigns. Options that change the window mode or resolution revert unless the player confirms them.
 
 Display offers VSync Off or On, plus Render Scale, Ambient Occlusion, Anti-Aliasing and Effects Quality. VSync starts On. Standard graphics use 100% scale, full-resolution ambient occlusion, SMAA and full effects. Performance uses 85% scale, half-resolution ambient occlusion, FXAA and full effects. Effects Quality may independently reduce decorative particles and accents while preserving trails, blast radius, threats and the dotted aim indication (VISION-005/006, INFO-005).
 
