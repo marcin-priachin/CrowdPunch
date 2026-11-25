@@ -610,6 +610,85 @@ namespace CrowdPunch.Tests
         }
 
         [Test]
+        public void CameraMotionOffClearsKickAndDashZoom()
+        {
+            const PlayerPreference motion = PlayerPreference.CameraMotion;
+            bool wasSaved = PlayerPrefs.HasKey("CrowdPunch.Settings." + motion);
+            int previous = PlayerPreferences.Get(motion);
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            settings.Shake = 0f;
+            settings.DashFovDelta = 5f;
+            var root = new GameObject("Camera motion preference test");
+            try
+            {
+                var camera = root.AddComponent<Camera>();
+                var feedback = root.AddComponent<CombatCameraFeedback>();
+                float baselineFov = camera.fieldOfView;
+                feedback.Configure(settings);
+                PlayerPreferences.Set(motion, 1);
+                const float strength = .22f;
+                feedback.Dashing = true;
+                feedback.Impulse(Vector3.up, strength, 1f);
+                feedback.Advance(.04f);
+                Assert.That(root.transform.position.y, Is.EqualTo(strength * settings.CameraMotionScale).Within(.00001f));
+                Assert.That(camera.fieldOfView, Is.GreaterThan(baselineFov));
+
+                PlayerPreferences.Set(motion, 0);
+                feedback.Impulse(Vector3.up, strength, 1f);
+                feedback.Advance(.04f);
+                Assert.That(root.transform.position, Is.EqualTo(Vector3.zero));
+                Assert.That(camera.fieldOfView, Is.EqualTo(baselineFov));
+                Assert.That(feedback.Dashing, Is.True);
+            }
+            finally
+            {
+                RestorePreference(motion, previous, wasSaved);
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(settings);
+            }
+        }
+
+        [TestCase(Mono.Levels.CampaignScreen.LevelComplete, false)]
+        [TestCase(Mono.Levels.CampaignScreen.Playing, true)]
+        public void Loop006CameraMotionOffHoldsGameplayViewThroughResults(Mono.Levels.CampaignScreen screen, bool failed)
+        {
+            const PlayerPreference motion = PlayerPreference.CameraMotion;
+            bool wasSaved = PlayerPrefs.HasKey("CrowdPunch.Settings." + motion);
+            int previous = PlayerPreferences.Get(motion);
+            var root = new GameObject("Results camera preference test");
+            root.SetActive(false);
+            try
+            {
+                var sequence = root.AddComponent<Mono.Levels.GauntletSequence>();
+                typeof(Mono.Levels.GauntletSequence).GetProperty(nameof(sequence.Screen)).SetValue(sequence, screen);
+                typeof(Mono.Levels.GauntletSequence).GetProperty(nameof(sequence.RunFailed)).SetValue(sequence, failed);
+                var camera = root.AddComponent<Camera>();
+                var start = new Pose(new Vector3(10f, 20f, -30f), Quaternion.Euler(40f, 30f, 0f));
+                root.transform.SetPositionAndRotation(start.position, start.rotation);
+                var results = new LevelClearCamera(camera, sequence);
+                var player = new Vector3(10f, 0f, 20f);
+                var aimOffset = Vector3.up;
+
+                PlayerPreferences.Set(motion, 0);
+                Assert.That(results.TryFrame(new Vector3(0f, 10f, -12f), player, aimOffset, out Vector3 focus), Is.True);
+                Assert.That(focus, Is.EqualTo(player + aimOffset));
+                Assert.That(root.transform.position, Is.EqualTo(start.position));
+                Assert.That(Quaternion.Angle(root.transform.rotation, start.rotation), Is.LessThan(.001f));
+            }
+            finally
+            {
+                RestorePreference(motion, previous, wasSaved);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        private static void RestorePreference(PlayerPreference option, int value, bool wasSaved)
+        {
+            PlayerPreferences.Set(option, value);
+            if (!wasSaved) PlayerPrefs.DeleteKey("CrowdPunch.Settings." + option);
+        }
+
+        [Test]
         public void Player009FreezeAndExceptionalSlowMotionExpireIndependently()
         {
             Assert.That(FeedbackTimeController.ResolveScale(.8f, false, 1, 1.03, 1.08, .3f), Is.Zero);

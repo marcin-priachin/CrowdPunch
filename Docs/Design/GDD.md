@@ -171,6 +171,8 @@ Game settings may optionally start the game with all available levels unlocked. 
 
 Main Menu and Pause both open the Ringside Settings page with Controls, Audio, Accessibility and Display tabs. All tabs support mouse and controller navigation. Ringside uses the large text layout throughout. Keep settings across restarts and new campaigns. Options that change the window mode or resolution revert unless the player confirms them.
 
+Accessibility offers a Reduced Camera Motion toggle, off by default. On suppresses hit kick, shake, and dash zoom and holds the gameplay view through clear and failure results (LOOP-006, PLAYER-004).
+
 Display offers VSync Off or On, plus Render Scale, Ambient Occlusion, Anti-Aliasing and Effects Quality. VSync starts On. Standard graphics use 100% scale, full-resolution ambient occlusion, SMAA and full effects. Performance uses 85% scale, half-resolution ambient occlusion, FXAA and full effects. Effects Quality may independently reduce decorative particles and accents while preserving trails, blast radius, threats and the dotted aim indication (VISION-005/006, INFO-005).
 
 ### LOOP-008 - Large Crowd Level And Difficulty Rhythm

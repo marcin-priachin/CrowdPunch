@@ -8,7 +8,7 @@ namespace CrowdPunch.Configuration
     {
         MouseSensitivity, ControllerSensitivity, ReverseMouse, ReverseController, StickDeadZone,
         Master, Music, Effects, CrowdImpacts, MenuSounds,
-        ImpactMotion, ReducedMotion, ReducedFlashes,
+        CameraMotion, ReducedFlashes,
         VSync, FrameLimit, WindowMode, Width, Height,
         RenderScale, AmbientOcclusion, AntiAliasing, ReducedEffects
     }
@@ -32,9 +32,9 @@ namespace CrowdPunch.Configuration
         {
             PlayerPreference.MouseSensitivity or PlayerPreference.ControllerSensitivity or PlayerPreference.Master
                 or PlayerPreference.Music or PlayerPreference.Effects or PlayerPreference.CrowdImpacts
-                or PlayerPreference.MenuSounds or PlayerPreference.ImpactMotion or PlayerPreference.RenderScale => 100,
+                or PlayerPreference.MenuSounds or PlayerPreference.RenderScale => 100,
             PlayerPreference.StickDeadZone => Mathf.RoundToInt(InputSystem.settings.defaultDeadzoneMin * 100),
-            PlayerPreference.VSync => 1,
+            PlayerPreference.VSync or PlayerPreference.CameraMotion => 1,
             PlayerPreference.AntiAliasing => 2,
             PlayerPreference.FrameLimit or PlayerPreference.WindowMode => -1,
             _ => 0
@@ -44,12 +44,19 @@ namespace CrowdPunch.Configuration
 
         private static int Load(PlayerPreference option)
         {
-            int value = PlayerPrefs.GetInt(Prefix + option, Default(option));
+            string key = Prefix + option;
+            if (option == PlayerPreference.CameraMotion && !PlayerPrefs.HasKey(key)
+                && (PlayerPrefs.GetInt(Prefix + "ReducedMotion") == 1 || PlayerPrefs.GetInt(Prefix + "ImpactMotion", 100) == 0))
+            {
+                PlayerPrefs.SetInt(key, 0);
+                return 0;
+            }
+            int value = PlayerPrefs.GetInt(key, Default(option));
             // Old saves used -1 to inherit the quality preset. The shipped preset enabled VSync.
             if (option == PlayerPreference.VSync && value != 0 && value != 1)
             {
                 value = Default(option);
-                PlayerPrefs.SetInt(Prefix + option, value);
+                PlayerPrefs.SetInt(key, value);
             }
             return value;
         }

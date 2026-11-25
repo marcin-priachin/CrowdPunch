@@ -164,6 +164,7 @@ namespace CrowdPunch.Mono.Levels
                 else Screen = CampaignScreen.LevelComplete;
                 float slowSeconds = gameSettings != null ? gameSettings.LevelClearSlowSeconds : 1.25f;
                 float cameraSeconds = gameSettings != null && gameSettings.LevelClearCameraEnabled
+                    && PlayerPreferences.Enabled(PlayerPreference.CameraMotion)
                     && GauntletCompletionRegistry.Focus.HasValue ? gameSettings.LevelClearCameraBlendSeconds : 0f;
                 replayShotUntil = Time.unscaledTimeAsDouble + Mathf.Max(slowSeconds, cameraSeconds);
                 FeedbackTimeController.BeginLevelClear(gameSettings != null ? gameSettings.LevelClearTimeScale : .25f, slowSeconds);

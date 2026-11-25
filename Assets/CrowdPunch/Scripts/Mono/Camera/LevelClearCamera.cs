@@ -27,8 +27,16 @@ namespace CrowdPunch.Mono.Camera
             subject = default;
             var settings = sequence != null ? sequence.RuntimeSettings : null;
             bool failure = sequence != null && sequence.ShowingFailure;
+            bool clear = sequence != null && sequence.ShowingClear;
+            if ((failure || clear) && !PlayerPreferences.Enabled(PlayerPreference.CameraMotion))
+            {
+                // Hold the gameplay view through results and keep the cutaway focused on the player.
+                framing = false;
+                subject = player + playerAimOffset;
+                return true;
+            }
             Vector3? resultFocus = failure ? player : GauntletCompletionRegistry.Focus;
-            if (settings == null || !settings.LevelClearCameraEnabled || (!failure && !sequence.ShowingClear)
+            if (settings == null || !settings.LevelClearCameraEnabled || (!failure && !clear)
                 || resultFocus is not Vector3 focus || view == null || orbitOffset.sqrMagnitude < .01f)
             {
                 framing = false;
@@ -55,7 +63,7 @@ namespace CrowdPunch.Mono.Camera
             viewport.x = Mathf.Lerp(ArenaEdge(view.aspect, viewport.y, sequence.Screen), 1f, viewport.x);
             Vector3 offset = orbitOffset * settings.LevelClearCameraDistance;
             Pose shot = Compose(view, subject, offset, viewport);
-            Quaternion orbit = !failure && settings.LevelClearCameraIncludePlayer && !PlayerPreferences.Enabled(PlayerPreference.ReducedMotion)
+            Quaternion orbit = !failure && settings.LevelClearCameraIncludePlayer
                 ? FindPlayerOrbit(view, shot, subject, player + playerAimOffset, viewport, sequence.Screen)
                 : Quaternion.identity;
             trackedOrbit = Quaternion.Slerp(trackedOrbit, orbit, follow);

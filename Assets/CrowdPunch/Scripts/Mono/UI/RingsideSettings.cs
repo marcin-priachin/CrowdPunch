@@ -193,8 +193,7 @@ namespace CrowdPunch.Mono.UI
 
         private void BuildAccessibility()
         {
-            Range("Impact Camera Motion", PlayerPreference.ImpactMotion, 0, 100);
-            Toggle("Reduced Camera Motion", PlayerPreference.ReducedMotion);
+            Toggle("Reduced Camera Motion", PlayerPreference.CameraMotion, invertedDisplay: true);
             Toggle("Reduced Flashes", PlayerPreference.ReducedFlashes);
         }
 
@@ -336,7 +335,7 @@ namespace CrowdPunch.Mono.UI
                     break;
                 case 1: Reset(Audio); break;
                 case 2:
-                    Reset(PlayerPreference.ImpactMotion, PlayerPreference.ReducedMotion, PlayerPreference.ReducedFlashes);
+                    Reset(PlayerPreference.CameraMotion, PlayerPreference.ReducedFlashes);
                     break;
                 case 3:
                     Reset(PlayerPreference.VSync, PlayerPreference.FrameLimit, PlayerPreference.RenderScale,
@@ -353,14 +352,14 @@ namespace CrowdPunch.Mono.UI
             else view.Status(Tabs[tab] + " reset to defaults");
         }
 
-        private void Toggle(string name, PlayerPreference option)
+        private void Toggle(string name, PlayerPreference option, bool invertedDisplay = false)
         {
+            string DisplayValue() => PlayerPreferences.Enabled(option) != invertedDisplay ? "On" : "Off";
             Text value = null;
-            view.AddRow(name, PlayerPreferences.Enabled(option) ? "On" : "Off", () =>
+            view.AddRow(name, DisplayValue(), () =>
             {
-                bool enabled = !PlayerPreferences.Enabled(option);
-                Save(option, enabled ? 1 : 0);
-                value.text = enabled ? "On" : "Off";
+                Save(option, PlayerPreferences.Enabled(option) ? 0 : 1);
+                value.text = DisplayValue();
             }, out value);
         }
 

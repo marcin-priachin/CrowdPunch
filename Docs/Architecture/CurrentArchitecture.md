@@ -513,6 +513,9 @@ Ordinary collisions retain their existing camera distance/strength/cadence gates
 exceptional chains retain their existing slow-motion gate. The shared time controller
 continues to own pause/transition restoration and does not change the fixed timestep.
 
+Turning Reduced Camera Motion on suppresses transient kick, shake, and dash zoom and holds the gameplay camera through clear and failure results
+(LOOP-006, PLAYER-004). Gameplay follow and manual aim keep their usual behavior.
+
 `CombatFeedbackSettings.asset` adds `ComicImpactScale` (1; zero disables the new layer),
 `CameraMotionScale` (0.75; zero disables impact camera displacement), and `ReduceFlashes`
 (false; disables body hit overlays/flashes and uses saturated burst centres). These are

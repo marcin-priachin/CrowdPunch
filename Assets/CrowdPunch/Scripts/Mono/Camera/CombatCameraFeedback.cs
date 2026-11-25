@@ -19,7 +19,7 @@ namespace CrowdPunch.Mono.Camera
         }
         public void Impulse(Vector3 direction, float strength, float intensity)
         {
-            if (settings == null) return;
+            if (settings == null || !PlayerPreferences.Enabled(PlayerPreference.CameraMotion)) return;
             kick = Vector3.ClampMagnitude(kick + direction.normalized * strength, settings.MaximumCameraOffset);
             trauma = Mathf.Clamp01(trauma + Mathf.Max(0f, intensity) * .55f);
         }
@@ -37,11 +37,16 @@ namespace CrowdPunch.Mono.Camera
         internal void Advance(float dt)
         {
             if (settings == null) return;
+            if (!PlayerPreferences.Enabled(PlayerPreference.CameraMotion))
+            {
+                ClearMotion();
+                return;
+            }
             float phase = Time.unscaledTime * 47f;
             Vector3 noise = new Vector3(Mathf.Sin(phase), Mathf.Sin(phase * 1.37f), 0f)
                 * (settings.Shake * trauma * trauma);
             appliedOffset = Vector3.ClampMagnitude(kick + transform.TransformDirection(noise),
-                settings.MaximumCameraOffset) * settings.CameraMotionScale * PlayerPreferences.Gain(PlayerPreference.ImpactMotion);
+                settings.MaximumCameraOffset) * settings.CameraMotionScale;
             transform.position += appliedOffset;
             // Analytic damped spring: one brief counter-kick, stable even after a long frame.
             float frequency = 1.8f / Mathf.Max(.01f, settings.CameraRecovery);
@@ -55,16 +60,21 @@ namespace CrowdPunch.Mono.Camera
             if (kick.sqrMagnitude + kickVelocity.sqrMagnitude < .000001f)
                 kick = kickVelocity = Vector3.zero;
             trauma = Mathf.MoveTowards(trauma, 0f, dt / Mathf.Max(.01f, settings.CameraRecovery * 2.5f));
-            fovOffset = Mathf.Lerp(fovOffset, Dashing && !PlayerPreferences.Enabled(PlayerPreference.ReducedMotion) ? settings.DashFovDelta : 0f,
+            fovOffset = Mathf.Lerp(fovOffset, Dashing ? settings.DashFovDelta : 0f,
                 1f - Mathf.Exp(-dt / Mathf.Max(.01f, settings.DashFovTransition)));
             if (view != null) view.fieldOfView = baselineFov + fovOffset;
         }
         public void ResetFeedback()
         {
+            Dashing = false;
+            ClearMotion();
+        }
+
+        private void ClearMotion()
+        {
             RemoveOffset();
             kick = kickVelocity = Vector3.zero;
             trauma = fovOffset = 0f;
-            Dashing = false;
             if (view != null) view.fieldOfView = baselineFov;
         }
         private void OnDisable() => ResetFeedback();
