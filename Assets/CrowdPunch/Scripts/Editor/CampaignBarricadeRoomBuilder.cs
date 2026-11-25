@@ -14,7 +14,6 @@ namespace CrowdPunch.Editor
         public static readonly int[] CampaignBarricadeLevels = {13,22,34,42,56,62,74};
         private static readonly int[] BarricadeRoomWidths = {30,30,32,34,32,36,38};
         private static readonly int[] BarricadeRoomLengths = {42,40,44,44,42,44,46};
-        private const string BarricadeRoomHint = "Break every barricade with launched bodies or explosions. Push through each room, then reach the green exit beyond the final gate.";
 
         [MenuItem("Crowd Punch/Campaign/Apply Progressive Barricade Rooms")]
         public static void ApplyProgressiveBarricadeRooms()
@@ -32,7 +31,6 @@ namespace CrowdPunch.Editor
                     AuthorBarricadeRooms(sub,level,i);
                     EditorSceneManager.MarkSceneDirty(sub);EditorSceneManager.SaveScene(sub);AssetDatabase.SaveAssets();
                     GauntletNatureEnvironment.ApplyCampaignLevel(level);
-                    SetCampaignHint(level,BarricadeRoomHint);
                 }
             }
             finally {EditorSceneManager.RestoreSceneManagerSetup(setup);}

@@ -44,10 +44,6 @@ namespace CrowdPunch.Editor
                 var wd = new SerializedObject(encounter); wd.FindProperty("minimumPlayerDistance").floatValue = 4;
                 wd.ApplyModifiedPropertiesWithoutUndo();
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
-                var main = EditorSceneManager.OpenScene(Scenes + "Gauntlet_17.unity", OpenSceneMode.Single);
-                var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue = "Wizards cast damaging violet zones. Launch nearby enemies into Wizards before their zones activate.";
-                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap = EditorSceneManager.OpenScene(Root + "Scenes/Bootstrap.unity", OpenSceneMode.Single);
                 var sequence = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
                 var names = sequence.FindProperty("levelSceneNames"); var titles = sequence.FindProperty("levelDisplayNames");

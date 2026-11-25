@@ -18,20 +18,6 @@ namespace CrowdPunch.Editor
         private const string CampaignData = Root + "Data/Campaign/";
         private const string CampaignScenes = Root + "Scenes/Campaign/";
         private static string CampaignSub(int number) => $"{CampaignScenes}Campaign_{number:00}/Campaign_{number:00} Sub Scene.unity";
-        private static readonly string[] ChapterOneHints =
-        {
-            "Line up an enemy with the crowd, then punch. The short line shows the launch direction.",
-            "Move around the rocks to find a clear angle. Reinforcements arrive from the other side; dash to reposition.",
-            "Use nearby enemies to reach the shooters. Keep moving between shots.",
-            "Launch bodies into the barricade, then reach the exit.",
-            "Step out of the Mushroom Shooter's warning line. Launch it through the crowd to turn its beam against them.",
-            "Find an angle around the divider and break through.",
-            "Send bodies through the rotating opening. Watch for returned shots.",
-            "Mixed reinforcements keep arriving from changing sides. Launch Mushroom Shooters through the crowd, then clear the survivors.",
-            "One last small group is coming. Line up the Mushroom Shooter with the crowd.",
-            "Launch enemies into the head. Dodge the hands and shoot through the openings."
-        };
-
         private static Level[] ChapterOneDesigns()
         {
             var levels = new[]
@@ -97,7 +83,6 @@ namespace CrowdPunch.Editor
                         MaterialAsset("GauntletWalls",Color.gray),MaterialAsset("GauntletLanes",Color.gray),MaterialAsset("GauntletBackdrop",Color.gray),CampaignData);
                     AuthorCampaignInterior(i+1, designs[i]);
                     GauntletNatureEnvironment.ApplyCampaignLevel(i+1);
-                    SetCampaignHint(i+1);
                 }
                 CopyCampaignBoss(profiles);
                 var catalog = ScriptableObject.CreateInstance<CampaignCatalog>();
@@ -264,22 +249,6 @@ namespace CrowdPunch.Editor
             if(number==7) ChapterOneRotatingTargetVisuals.Build(cover);
         }
 
-        private static void SetCampaignHint(int number, string hint = null)
-        {
-            var main=EditorSceneManager.OpenScene($"{CampaignScenes}Campaign_{number:00}.unity",OpenSceneMode.Single);
-            var marker=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-            int trackIndex = Array.IndexOf(CampaignTrackLevels, number);
-            if (trackIndex > 0)
-            {
-                var start = ProgressiveTrackPoints(trackIndex + 1)[0];
-                ((Transform)marker.FindProperty("playerEntryPoint").objectReferenceValue).position = start + new Vector3(0,-.2f,-6);
-                hint = "Launch bodies or blast the block along the turning arrows into the blue socket. Change your shooting side at each corner; opposite hits push it back.";
-            }
-            if (Array.IndexOf(CampaignBarricadeLevels, number) > 0) hint = BarricadeRoomHint;
-            marker.FindProperty("openingHint").stringValue=hint ?? ChapterOneHints[number-1]; marker.ApplyModifiedPropertiesWithoutUndo();
-            EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
-        }
-
         private static void CopyCampaignBoss(EnemySpawnSettings[] profiles)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(CampaignSub(10))); AssetDatabase.Refresh();
@@ -304,7 +273,6 @@ namespace CrowdPunch.Editor
             var main=EditorSceneManager.OpenScene(CampaignScenes+"Campaign_10.unity",OpenSceneMode.Single);
             UnityEngine.Object.FindFirstObjectByType<SubScene>().SceneAsset=AssetDatabase.LoadAssetAtPath<SceneAsset>(CampaignSub(10));
             EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
-            SetCampaignHint(10);
         }
     }
 }

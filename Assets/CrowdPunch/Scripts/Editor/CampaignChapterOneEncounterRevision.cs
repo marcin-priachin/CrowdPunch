@@ -65,7 +65,6 @@ namespace CrowdPunch.Editor
                     }
                 }
                 AssetDatabase.SaveAssets();
-                foreach (int level in new[] { 2, 5, 8, 9 }) SetCampaignHint(level);
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
             Debug.Log("LOOP-011: Chapter One revised in place; Mushroom Shooter at 5/8/9, timed practice at 2/8/9, 270 enemies at 8.");

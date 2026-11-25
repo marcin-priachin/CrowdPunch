@@ -127,9 +127,7 @@ namespace CrowdPunch.Editor
                 presentation.gameObject.AddComponent<CrowdPunch.Mono.UI.BossHealthBar>();
                 presentation.settings=settings;
                 BossAppearanceBuilder.ConfigureFinale(presentation);
-                var hint=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<CrowdPunch.Mono.Levels.GauntletLevel>());
-                hint.FindProperty("openingHint").stringValue="Overload any cyan anchor: shoot through the cover, blast the shell then break its core, dock the rail, or hit the narrow target. Dodge the landing, then launch the crowd into the grounded giant. Dark anchors reset after all four are used.";
-                hint.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
+                EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var catalog=AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CampaignBuildRegistration.CatalogPath);
                 Array.Resize(ref catalog.levels,81); catalog.levels[80]=new CampaignCatalog.Level {id="cp-081",title="Bring Down the Sky",scenePath=CampaignScenes+"Campaign_81.unity"};
                 Array.Resize(ref catalog.chapterNames,9); catalog.chapterNames[8]="Bring Down the Sky";

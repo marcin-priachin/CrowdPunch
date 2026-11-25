@@ -14,20 +14,6 @@ namespace CrowdPunch.Editor
 {
     public static partial class GauntletProgressionBuilder
     {
-        private static readonly string[] ChapterThreeHints =
-        {
-            "Hit shields with launched bodies or explosions. Break both shields before punching the Armored enemy.",
-            "Break the narrow gate with launched bodies or explosions, then pass through to the exit.",
-            "Elites launch nearby enemies at you. Disrupt their setup and defeat them to stop their crowd returning.",
-            "Protect the turquoise zone. Stop three waves; one active enemy entering the zone ends the attempt.",
-            "Red ground hurts you and unprotected enemies. Launch bodies across it and take the safe route around.",
-            "Hit the block from behind to reach the blue socket. Keep clear of the hot outer pocket.",
-            "Amber ground warns before turning red. Use the other lane while the patch is active.",
-            "Reinforcements arrive from changing sides. Break armor with bodies, stop the Elite to halt replacements, and use the safe lanes around the hot crossings.",
-            "Watch the moving opening and send bodies through to the target.",
-            "Launch bodies into the Blob during its pauses and wind-up. Rolling protects it; punch scattered bodies to reclaim them."
-        };
-
         private static Level[] ChapterThreeDesigns() => new[]
         {
             new Level { Name="Peel the Armor", Outline=Clipped(32,34,3), Spacing=new Vector2(26,28), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
@@ -139,7 +125,6 @@ namespace CrowdPunch.Editor
                         WaveAsset(ChapterTwoWaveName(level, phase, recipes[phase]), recipes[phase], profiles, CampaignData+"Waves/");
                 }
                 AssetDatabase.SaveAssets();
-                SetCampaignHint(28, ChapterThreeHints[7]);
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
             Debug.Log("LOOP-011: Chapter Three revised in place. Mixed crowds at 22/28 and timed reinforcements at 25/27/28.");
@@ -169,7 +154,7 @@ namespace CrowdPunch.Editor
                         MaterialAsset("GauntletWalls",Color.gray),MaterialAsset("GauntletLanes",Color.gray),MaterialAsset("GauntletBackdrop",Color.gray),CampaignData);
                     AuthorChapterThreeInterior(i+21);
                     GauntletNatureEnvironment.ApplyCampaignLevel(i+21);
-                    SetCampaignHint(i+21,ChapterThreeHints[i]);
+                    PositionCampaignTrackEntry(i+21);
                 }
                 CopyCampaignRolling();
                 catalog=AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CampaignBuildRegistration.CatalogPath);
@@ -271,7 +256,7 @@ namespace CrowdPunch.Editor
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub); AssetDatabase.SaveAssets();
             var main=EditorSceneManager.OpenScene(CampaignScenes+"Campaign_30.unity",OpenSceneMode.Single);
             UnityEngine.Object.FindFirstObjectByType<SubScene>().SceneAsset=AssetDatabase.LoadAssetAtPath<SceneAsset>(CampaignSub(30));
-            EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main); SetCampaignHint(30,ChapterThreeHints[9]);
+            EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
         }
     }
 }

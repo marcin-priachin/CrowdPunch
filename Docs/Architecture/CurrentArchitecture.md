@@ -10,8 +10,7 @@ indices intact. Existing ordinary enemy profiles and runtime combat systems are 
 
 `CampaignChapterOneEncounterRevision` applies the recipe to all 19 existing wave
 assets in place after validating the ten scenes' wiring and required prefabs. It
-preserves wave GUIDs and authored safe spawn rectangles, updates opening hints at
-2/5/8/9, and restores the Editor scene setup. It does not rebuild scenery, lighting,
+preserves wave GUIDs and authored safe spawn rectangles and restores the Editor scene setup. It does not rebuild scenery, lighting,
 navigation, objective settings, catalog entries or later chapters.
 
 Initial batches are four every six seconds, or eight every six seconds at level 8.
@@ -45,15 +44,14 @@ the final clear. Levels 11, 14 and 15 retain a full-clear checkpoint.
 
 **Crowd Punch > Campaign > Apply Chapter Two Encounter Revision** validates the
 scene wiring, edits 16 existing wave assets, preserves their spawn rectangles
-and GUIDs, and writes opening hints at 15 and 18. Objective members retain their
+and GUIDs. Objective members retain their
 existing replenishment systems, including level 12's paired Exploder supply.
 The chapter uses the existing layouts and introduces no static ground hazards.
 See [Chapter 2 verification](../Verification/Chapter2.md).
 
 ## Chapter Three encounter revision (2026-11-17, LOOP-011)
 
-`CampaignChapterThreeBuilder` updates 17 campaign-owned wave assets and level 28's
-hint. It preserves the prefab references for existing archetypes and adds the
+`CampaignChapterThreeBuilder` updates 17 campaign-owned wave assets. It preserves the prefab references for existing archetypes and adds the
 shared Mushroom Shooter and Alien Spike profiles to levels 22 and 28. Level 22's
 final room remains bounded at 14 enemies, supported by seven replenishing
 Baselines. The barricade sector authoring command also applies this recipe.
@@ -76,7 +74,7 @@ first-breach failure and no Elite attackers. See
 
 `CampaignChapterFourBuilder` applies the revised Chapter 4 recipes to 19 existing
 wave assets using their saved spawn banks. The in-place command also adds eight
-periodic patches across 35/36/38 and updates their opening hints. Each patch uses
+periodic patches across 35/36/38. Each patch uses
 the existing ground hazard baker, sequence reset and Observatory appearance.
 
 Level 36 uses timed finite defense with cumulative final clearance. Ranged,
@@ -214,16 +212,13 @@ share a positional redirect cue (SPIKE-003/004, SPORELLA-003).
 Pause and retry clear active combat sounds. The exploder fuse is an audition warning when an
 active exploder enters a small band outside player contact range.
 
-## Runtime player protection and hints (2026-11-05)
+## Runtime player protection (2026-11-05)
 
-`GameRuntimeSettings` exposes `Player Invincible` and `Disable Hints`, both off by
-default. `GauntletSequence.Start` passes its existing settings asset to `PlayerHealth`
+`GameRuntimeSettings` exposes `Player Invincible`, off by default. `GauntletSequence.Start` passes its existing settings asset to `PlayerHealth`
 after bootstrap player creation. Health reads the live asset to reject every damage
 path and its damage-hit reaction when invincibility is enabled, including hazards
 that bypass ordinary temporary hit protection (COMBAT-015, TRAIL-003, GROUND-003).
-Objective failures remain independent. Campaign and legacy pause-menu presentation
-read `GauntletSequence.HintsDisabled` when showing opening hints (INFO-002).
-These MonoBehaviour options require no ECS rebake; crowd simulation ownership and
+Objective failures remain independent. The MonoBehaviour option requires no ECS rebake; crowd simulation ownership and
 ordinary per-source protection rules are unchanged when disabled.
 
 ## Static obstacle surface collision (2026-11-01, VISION-004/005/006)
@@ -1244,7 +1239,7 @@ lighting data, receiver bindings or gameplay/presentation ownership.
 
 Initial boss settings: 6000 health, three stages at 67%/34%, 2.5s fall, 24s downed with 7s initial stun, 2.5s harmless takeoff and 3s victory; attack cadence and warning sizes remain editable. The 6-8 minute/6-8 downing targets require human combat playtesting. See `Docs/Verification/FinalEncounter.md` for actual checks and limitations.
 
-The finale scene owns `BossHealthBar` (formerly `FinaleBossHealthBar`, retaining its script GUID), a noninteractive screen-space uGUI canvas shared with the other bosses (INFO-007, FINALE-007). `FinalePresentation` forwards health fraction through the same ECS presentation endpoint, without UI entity access. It displays a long red fill centered at the top over a full-width background that shares the player's `CelComicUi.HealthBarTrack` color. The pulsing cyan ground ring indicates vulnerability through grounded attacks and ends at takeoff. The opening hint sits below the bar. Pause/failure/completion screens and defeat hide the bar, and unloading the finale removes it.
+The finale scene owns `BossHealthBar` (formerly `FinaleBossHealthBar`, retaining its script GUID), a noninteractive screen-space uGUI canvas shared with the other bosses (INFO-007, FINALE-007). `FinalePresentation` forwards health fraction through the same ECS presentation endpoint, without UI entity access. It displays a long red fill centered at the top over a full-width background that shares the player's `CelComicUi.HealthBarTrack` color. The pulsing cyan ground ring indicates vulnerability through grounded attacks and ends at takeoff. Pause/failure/completion screens and defeat hide the bar, and unloading the finale removes it.
 
 The 2026-10-25 finale presentation amendment uses the Wraith Cute Series prefab at its authored scale. `FinaleWraithBuilder` replaces only the main-scene model, creates a dedicated cel material retaining the Wraith texture and preserves the prefab's particle auras. Its controller references eight original FBX clips. `FinaleWraithAnimation` uses in-place flight, Idle, Take Damage and Die for the encounter phases. Projectile Attack, Spin Wing Slash Attack, Wing Stab Attack and Cast Spell cover the four attack types. Damage reactions never interrupt a committed warning. A fixed sampled grounding translation clears the complete clip envelope, including death. No runtime model scaling, scripted bone shaking or material-property feedback remains. The ECS encounter, collider, anchors and damage timing retain their existing ownership and data flow (FINALE-001/003/007).
 
@@ -1316,9 +1311,9 @@ anchor rules retain their existing ownership and tuning.
 
 ## Four-Enemy Campaign Integration (LOOP-009)
 
-The existing 80-level campaign now introduces LinkedPair at 41, Dragon at 52, Snake at 61 and Ninja at 71. The exact 2026-10-14 recurrence and counts are in Campaign80Proposal.md. Fifteen finite wave-clear encounters use 48 revised wave assets; earlier introductions recur in every later chapter. Main-scene opening hints explain the introductions and mixed encounters. Existing safe spawn banks, navigation/floor/obstacle assets, objectives, boss support, stable level identifiers, catalog, build registration and saved progress are retained.
+The existing 80-level campaign now introduces LinkedPair at 41, Dragon at 52, Snake at 61 and Ninja at 71. The exact 2026-10-14 recurrence and counts are in Campaign80Proposal.md. Fifteen finite wave-clear encounters use 48 revised wave assets; earlier introductions recur in every later chapter. Existing safe spawn banks, navigation/floor/obstacle assets, objectives, boss support, stable level identifiers, catalog, build registration and saved progress are retained.
 
-The shared editor `Wave` recipe now represents Dragon, Snake, Ninja and a separate LinkedPairs count. `WaveAsset` writes F/S/N as exact ordinary profile guarantees and pairs through `linkedPairProfile`/`linkedPairCount`. The chapter-five-through-eight recipes and hints match the saved content. **Crowd Punch > Campaign > Apply Four Enemy Revision** updates those existing assets in place after checking installed levels, wave wiring, prefab availability and unsaved scenes; it preserves wave GUIDs and authored spawn regions instead of rebuilding whole chapters. The four revised large arenas use simultaneous finite waves, replacing their prior eight-body batches.
+The shared editor `Wave` recipe now represents Dragon, Snake, Ninja and a separate LinkedPairs count. `WaveAsset` writes F/S/N as exact ordinary profile guarantees and pairs through `linkedPairProfile`/`linkedPairCount`. The chapter-five-through-eight recipes match the saved content. **Crowd Punch > Campaign > Apply Four Enemy Revision** updates those existing assets in place after checking installed levels, wave wiring, prefab availability and unsaved scenes; it preserves wave GUIDs and authored spawn regions instead of rebuilding whole chapters. The four revised large arenas use simultaneous finite waves, replacing their prior eight-body batches.
 
 No runtime enemy system or Mono/ECS ownership changed. The existing baker adds two endpoints per pair to clearance, while Snake spawns its six tail bodies independently and counts only the head. Baseline substitutions preserve each non-introductory wave's initial physical-body budget, with peak populations 128/138/138/148 at 48/58/68/78. Wizard/armor ammunition safeguards and Wizard-zone completion gates are retained; pair records, detached Snake orbs and Dragon flame add no completion waits. Shared settings retain six-segment tails and two concurrent Ninja ambushes. Legacy Gauntlet_24..27 remain development-only and unchanged.
 
@@ -1990,7 +1985,7 @@ Crowd Punch uses a hybrid Unity architecture:
 ## Scenes
 
 - `Assets/CrowdPunch/Scenes/Bootstrap.unity` â€” persistent GameObject scene and application bootstrap. Its `GameBootstrap` object owns the fixed `GauntletSequence`; it contains no arena SubScene.
-- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, brief opening hint, light, and arena SubScene reference.
+- `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01.unity` â€” First Line, the first additive gauntlet, containing its player entry point, light, and arena SubScene reference.
 - `Assets/CrowdPunch/Scenes/Gauntlets/Gauntlet_01` through `Gauntlet_23` each contain their matching ECS SubScene. Twenty-three gauntlets are included after Bootstrap in Build Settings and in the Bootstrap level selector. The first ten remain ordinary encounters; gauntlet 11 is The Gatekeeper boss, gauntlet 17 introduces Wizards, gauntlet 18 introduces protected-point defense, gauntlet 19 introduces Trail enemies, gauntlet 20 introduces the Chicken boss, gauntlet 21 introduces the Rolling Blob, gauntlet 22 introduces Dino Pillars, and gauntlet 23 introduces fixed ground hazards. The separate navigation validation scenes remain outside progression.
 - Authored gauntlet scenes load additively around Bootstrap. Each owns a `GauntletLevel` entry point and its own ECS SubScene containing layout collision, arena bounds, spawns, and waves.
 
@@ -2350,7 +2345,7 @@ controls available.
 
 `GauntletCompletionSystem` runs in `GamePresentationGroup` and reports through the narrow `GauntletCompletionRegistry`. Ordinary gauntlets require every loaded wave sequence to complete; an empty loading interval cannot advance. When a boss is loaded, its defeat state is authoritative and supporting-wave completion cannot win early. The Bootstrap flow consumes one completion signal and loads the next scene (LOOP-002/006). Gauntlet 10 advances to The Gatekeeper; its defeat advances to Gauntlet_12 (Crack the Shell). Chicken defeat advances to Gauntlet_21 (Rolling Blob), and its defeat advances to Gauntlet_22 (Dino Pillars). Only the final authored gauntlet sets `GauntletSequence.RunComplete`. The existing pause menu presents Run Complete, Play Again, and twenty-two selectable levels (BOSS-007, CHICKEN-006, ROLL-006, PILLAR-006).
 
-`GauntletLevel` owns optional opening-hint text alongside its entry transform. `GauntletSequence` publishes that text and an entry counter to the existing `PauseMenu`, which shows a ten-second hint in levels 1-2 and a two-column selection grid in the menu. This is GameObject presentation metadata, not an enemy bridge. The authored display names are separate from scene-loading names. The existing restart button now delegates through `GameBootstrap` to `RestartCurrentLevel` when a gauntlet is active, resetting final-completion state and reusing the additive reload path. Legacy scenes still use soft restart.
+`GauntletLevel` owns the scene's player entry transform. `GauntletSequence` publishes a level-entry counter for campaign UI state and other consumers. The legacy `PauseMenu` presents a two-column level selection grid. The authored display names are separate from scene-loading names. The existing restart button now delegates through `GameBootstrap` to `RestartCurrentLevel` when a gauntlet is active, resetting final-completion state and reusing the additive reload path. Legacy scenes still use soft restart.
 
 ### Initial Spawn Workflows
 
@@ -2949,6 +2944,8 @@ Launch speed lines continue following eligible airborne bodies during the clear 
 hold with the paused arena. The other combat feedback remains suspended (VISION-005).
 
 `CampaignMenu` also routes Main Menu and Pause to `RingsideSettings` and returns focus to the originating Settings button. `RingsideSettingsLayout` uses the existing EventSystem, with explicit controller navigation, scroll-to-focus, and mouse controls. `SettingsBindings` applies overrides to the existing Move, Look, Attack, Dash and Pause actions. `PlayerPreferences` stores local options and binding overrides in PlayerPrefs independently of `CampaignProgress`. Camera, flash and audio consumers apply preferences on top of authored tuning. Display timing updates immediately, while window mode and resolution use a timed trial before the new values are saved (LOOP-007, PLAYER-010/011). The campaign punch asset continues to supply the dotted, first-contact aim indication (PLAYER-003, INFO-005).
+
+`GameplayGraphics` owns the session's URP pipeline copy. `BakedShadowLighting` registers its level-owned copies so render scale applies on entry and when changed from Pause. The gameplay camera selects the authored, half-resolution ambient occlusion, or no-ambient-occlusion renderer and applies its post-process anti-aliasing mode. Reduced Effects caps decorative particle overlap and omits launch departure puffs and extra impact stars in the existing pools. Aim, launch trails and threat cues continue through their existing presentation paths (LOOP-007, VISION-005/006, INFO-005).
 `LevelClearFixedStepSystem` scales the ECS timestep by the clear slowdown multiplier before
 the fixed group runs. This preserves its real-time update cadence during the shot and restores
 its prior timestep when the shot pauses or a transition starts.
@@ -2967,8 +2964,7 @@ slowdown duration/scale and camera enable, blend, distance and framing. Replays 
 arena shot before the opaque Versus Select screen (LOOP-005/006).
 Next Level uses the existing additive scene transition. Back from Level Select returns to the results rail. Scored
 clears use `LastClearScore` and `LastClearIsBest` for the result (SCORE-001). Replay statistics use the existing
-results strip within Versus Select. The campaign HUD styles the existing player health, opening
-hint, and score feedback. The score tally still consumes player-credited defeats from the bridge and the boss
+results strip within Versus Select. The campaign HUD styles player health and score feedback. The score tally still consumes player-credited defeats from the bridge and the boss
 bar keeps the textless upper-center presentation (SCORE-001, INFO-002/007).
 
 `PauseMenu` is a scene-level MonoBehaviour UI boundary created on the persistent game canvas by `GameBootstrap`. It reads
@@ -3685,7 +3681,7 @@ the established counters. Wave completion includes that budget. Restart resets i
 queries enemies and no alternate runtime spawning framework is introduced.
 
 GauntletProgressionBuilder.BuildArmored authors only Gauntlet_12 and its two waves (1+6, then 3+12
-Armored+Baseline), navigation, opening hint and Bootstrap/build-list registration. Nature-kit rendering
+Armored+Baseline), navigation and Bootstrap/build-list registration. Nature-kit rendering
 uses the existing recipe. Rebuilding the original ten or boss preserves later sequence entries.
 Default armor tuning: 0.30 s stagger, 3 m/s planar recoil, 0.25 s hit protection.
 Authored animation, textured Full Cel materials and removable equipment communicate armor state.
@@ -3695,7 +3691,7 @@ Scene, physics, regression and crowd-cost evidence is recorded in [Armored valid
 ## Barricade And Gauntlet_13 (BARRICADE-001..005)
 
 Gauntlet_13, "Break Through", follows the unchanged Gauntlet_12. The main scene supplies the
-entry and nonblocking opening hint. Its SubScene contains a 28 x 36 m court, one solid
+entry point. Its SubScene contains a 28 x 36 m court, one solid
 28 x 4 x 1.2 m barricade at z=11, and a green exit at z=15. It reuses the nature environment,
 existing Baseline/Explosive prefabs, wave placement and pooling. The Bootstrap selector and
 build list now continue to Gauntlet_14. The authored sequence is not a decision about the
@@ -3917,7 +3913,7 @@ cancels pending replacements without changing survivors. No additional crowd ent
 data and a `ShellVisual` marker. Shell cracks progress with explosion damage; core tint/scars
 progress with health loss. Shell break scatters/shrinks the armor, revealing turquoise core geometry.
 Blocked punches flash blue at low impact intensity; successful hits flash gold with the existing
-environment impact particles. There are no new UI bars. The opening hint uses `GauntletLevel`.
+environment impact particles. There are no new UI bars.
 
 Campaign level 12 now opts into `ShellFragmentAuthoring`/`ShellFragmentBaker` and
 `ShellFragmentMotion` for its painted foundry casing (SHELL-006). The bounded 134 visual

@@ -19,8 +19,6 @@ namespace CrowdPunch.Mono.UI
         private Image shade;
         private CanvasGroup controls, healthHud;
         private Transform panel;
-        private Text hint;
-        private RectTransform hintPanel;
         private Button first;
         private ArenaBrowser browser;
         private RingsideMenuLayout ringside;
@@ -32,7 +30,6 @@ namespace CrowdPunch.Mono.UI
         private string observedLoadError;
         private bool observedFailure, gamepad;
         private uint entry;
-        private float hintRemaining;
         private InputAction previousChapter, nextChapter, jump, back;
         private AudioSource menuAudio;
         private GameObject lastSelection;
@@ -48,19 +45,6 @@ namespace CrowdPunch.Mono.UI
             healthHud = GetHudGroup(playerHealth);
             var restart = GetComponentInChildren<RestartGameButton>();
             if (restart != null) restart.gameObject.SetActive(false);
-            hintPanel = RingsideUi.Image(transform, "Campaign Opening Hint", RingsideUi.Hint).rectTransform;
-            hintPanel.anchorMin = new Vector2(.24f, 1);
-            hintPanel.anchorMax = new Vector2(.76f, 1);
-            hintPanel.pivot = new Vector2(.5f, 1);
-            hintPanel.anchoredPosition = new Vector2(0, -56);
-            hintPanel.sizeDelta = new Vector2(0, 76);
-            hint = RingsideUi.Label(hintPanel, string.Empty, 24, 76, RingsideUi.Paper);
-            hint.alignment = TextAnchor.MiddleCenter;
-            CelComicUi.Stretch(hint.rectTransform, 8);
-            hint.resizeTextForBestFit = true;
-            hint.resizeTextMinSize = 17;
-            hint.resizeTextMaxSize = 24;
-            hintPanel.gameObject.SetActive(false);
 
             root = PauseMenu.CreateUiObject("Campaign Menu", transform);
             CelComicUi.Stretch((RectTransform)root.transform);
@@ -98,9 +82,6 @@ namespace CrowdPunch.Mono.UI
             if (entry != sequence.LevelEntrySequence)
             {
                 entry = sequence.LevelEntrySequence;
-                hint.text = sequence.OpeningHint;
-                hintPanel.anchoredPosition = new Vector2(0, sequence.CurrentLevelIndex == 80 ? -105 : -56);
-                hintRemaining = 10;
                 observedScreen = sequence.Screen;
                 observedFailure = false;
                 Close();
@@ -130,12 +111,6 @@ namespace CrowdPunch.Mono.UI
                 observedFailure = true;
                 Show(Page.Failure);
             }
-            hintRemaining = Mathf.Max(0, hintRemaining - Time.deltaTime);
-            hint.resizeTextMinSize = PlayerPreferences.Enabled(PlayerPreference.LargeText) ? 22 : 17;
-            hint.resizeTextMaxSize = PlayerPreferences.Enabled(PlayerPreference.LargeText) ? 32 : 24;
-            hintPanel.gameObject.SetActive(sequence.Screen == CampaignScreen.Playing && RingsideSettings.HintsEnabled(sequence.HintsDisabled)
-                && !IsOpen && hintRemaining > 0 && !string.IsNullOrEmpty(hint.text));
-
             if (IsOpen)
             {
                 root.transform.SetAsLastSibling();
@@ -183,7 +158,7 @@ namespace CrowdPunch.Mono.UI
             settingsEntry = null;
 
             shade.color = page == Page.Browser ? new Color32(17, 18, 55, 255)
-                : page == Page.ConfirmNew ? RingsideUi.Hint : Color.clear;
+                : page == Page.ConfirmNew ? RingsideUi.ConfirmationShade : Color.clear;
             if (page == Page.Browser)
             {
                 var viewport = (RectTransform)PauseMenu.CreateUiObject("Level Select", root.transform).transform;
@@ -198,8 +173,7 @@ namespace CrowdPunch.Mono.UI
                 var viewport = (RectTransform)PauseMenu.CreateUiObject("Ringside Settings", root.transform).transform;
                 panel = viewport;
                 CelComicUi.Stretch(viewport);
-                settings = new RingsideSettings(viewport, settingsBindings, gamepad,
-                    settingsOrigin == Page.Pause ? hint.text : null, sequence.HintsDisabled, ReturnFromSettings, PreviewAudio);
+                settings = new RingsideSettings(viewport, settingsBindings, gamepad, ReturnFromSettings, PreviewAudio);
                 first = settings.First;
             }
             else

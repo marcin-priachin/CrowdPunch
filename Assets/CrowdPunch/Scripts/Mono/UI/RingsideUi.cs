@@ -13,7 +13,7 @@ namespace CrowdPunch.Mono.UI
         internal static readonly Color Red = new Color32(238, 73, 77, 255);
         internal static readonly Color Sky = new Color32(199, 236, 255, 255);
         internal static readonly Color Muted = new Color32(197, 209, 237, 255);
-        internal static readonly Color Hint = new Color32(21, 30, 80, 185);
+        internal static readonly Color ConfirmationShade = new Color32(21, 30, 80, 185);
 
         internal static void OutlineHud(Text text)
         {

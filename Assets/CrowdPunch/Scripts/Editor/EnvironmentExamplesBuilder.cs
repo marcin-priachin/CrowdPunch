@@ -150,9 +150,6 @@ namespace CrowdPunch.Editor
             reference.SceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(subPath);
             var marker = UnityEngine.Object.FindFirstObjectByType<GauntletLevel>();
             marker.name = id + " - " + Titles[theme];
-            var dataMarker = new SerializedObject(marker);
-            dataMarker.FindProperty("openingHint").stringValue = Titles[theme] + " - " + marker.OpeningHint;
-            dataMarker.ApplyModifiedPropertiesWithoutUndo();
             var light = UnityEngine.Object.FindFirstObjectByType<Light>();
             light.color = theme == 0 ? new Color(1,.91f,.75f) : theme == 1 ? new Color(1,.84f,.69f) : theme == 2 ? new Color(.87f,1,.91f) : new Color(.77f,.88f,1);
             light.intensity = theme == 3 ? 1.15f : 1.35f;

@@ -70,10 +70,6 @@ namespace CrowdPunch.Editor
                 var zoneMaterial = MaterialAsset("ProtectedPointZone", new Color(.15f, .75f, .68f));
                 Box("Protected Zone 8 x 4", encounter.transform, new Vector3(0, -.97f, -46), new Vector3(8, .035f, 4), zoneMaterial, false);
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
-                var main = EditorSceneManager.OpenScene(Scenes + "Gauntlet_18.unity", OpenSceneMode.Single);
-                var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue = "Protect the turquoise zone. Stop three waves before active enemies reach it.";
-                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap = EditorSceneManager.OpenScene(Root + "Scenes/Bootstrap.unity", OpenSceneMode.Single);
                 var sequence = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
                 var names = sequence.FindProperty("levelSceneNames"); var titles = sequence.FindProperty("levelDisplayNames");

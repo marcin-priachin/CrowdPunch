@@ -62,10 +62,6 @@ namespace CrowdPunch.Editor
                 var boss=root.AddComponent<RollingBossAuthoring>(); boss.settings=settings; crowd.rollingBoss=boss;
                 AddRollingModel(root,settings);
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
-                var main=EditorSceneManager.OpenScene(Scenes+"Gauntlet_21.unity",OpenSceneMode.Single);
-                var marker=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue="Dodge the spin. Launch enemies into Spike while it pauses or hides. Launched bodies still hurt you.";
-                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap=EditorSceneManager.OpenScene(Root+"Scenes/Bootstrap.unity",OpenSceneMode.Single);
                 var sequence=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
                 var names=sequence.FindProperty("levelSceneNames"); var titles=sequence.FindProperty("levelDisplayNames");

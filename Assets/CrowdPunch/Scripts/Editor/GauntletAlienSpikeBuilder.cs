@@ -63,11 +63,6 @@ namespace CrowdPunch.Editor
                 EditorSceneManager.MarkSceneDirty(sub);
                 EditorSceneManager.SaveScene(sub);
 
-                var scene = EditorSceneManager.OpenScene(Scenes + "Gauntlet_32.unity", OpenSceneMode.Single);
-                var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue = "Watch the gaps in the volley. Punch flying spikes to send them back.";
-                marker.ApplyModifiedPropertiesWithoutUndo();
-                EditorSceneManager.SaveScene(scene);
 
                 var bootstrap = EditorSceneManager.OpenScene(Root + "Scenes/Bootstrap.unity", OpenSceneMode.Single);
                 var sequence = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());

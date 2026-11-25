@@ -8,14 +8,15 @@ namespace CrowdPunch.Configuration
     {
         MouseSensitivity, ControllerSensitivity, ReverseMouse, ReverseController, StickDeadZone,
         Master, Music, Effects, CrowdImpacts, MenuSounds,
-        ImpactMotion, ReducedMotion, ReducedFlashes, LargeText, HideHints,
-        VSync, FrameLimit, WindowMode, Width, Height
+        ImpactMotion, ReducedMotion, ReducedFlashes, LargeText,
+        VSync, FrameLimit, WindowMode, Width, Height,
+        RenderScale, AmbientOcclusion, AntiAliasing, ReducedEffects
     }
 
     internal static class PlayerPreferences
     {
         private const string Prefix = "CrowdPunch.Settings.";
-        private static readonly int?[] Values = new int?[(int)PlayerPreference.Height + 1];
+        private static readonly int?[] Values = new int?[(int)PlayerPreference.ReducedEffects + 1];
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetCache() => System.Array.Clear(Values, 0, Values.Length);
@@ -31,14 +32,27 @@ namespace CrowdPunch.Configuration
         {
             PlayerPreference.MouseSensitivity or PlayerPreference.ControllerSensitivity or PlayerPreference.Master
                 or PlayerPreference.Music or PlayerPreference.Effects or PlayerPreference.CrowdImpacts
-                or PlayerPreference.MenuSounds or PlayerPreference.ImpactMotion => 100,
+                or PlayerPreference.MenuSounds or PlayerPreference.ImpactMotion or PlayerPreference.RenderScale => 100,
             PlayerPreference.StickDeadZone => Mathf.RoundToInt(InputSystem.settings.defaultDeadzoneMin * 100),
-            PlayerPreference.VSync or PlayerPreference.FrameLimit or PlayerPreference.WindowMode or PlayerPreference.HideHints => -1,
+            PlayerPreference.VSync => 1,
+            PlayerPreference.AntiAliasing => 2,
+            PlayerPreference.FrameLimit or PlayerPreference.WindowMode => -1,
             _ => 0
         };
 
-        internal static int Get(PlayerPreference option) => Values[(int)option] ??=
-            PlayerPrefs.GetInt(Prefix + option, Default(option));
+        internal static int Get(PlayerPreference option) => Values[(int)option] ??= Load(option);
+
+        private static int Load(PlayerPreference option)
+        {
+            int value = PlayerPrefs.GetInt(Prefix + option, Default(option));
+            // Old saves used -1 to inherit the quality preset. The shipped preset enabled VSync.
+            if (option == PlayerPreference.VSync && value != 0 && value != 1)
+            {
+                value = Default(option);
+                PlayerPrefs.SetInt(Prefix + option, value);
+            }
+            return value;
+        }
 
         internal static bool Enabled(PlayerPreference option) => Get(option) == 1;
 

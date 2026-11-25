@@ -90,10 +90,6 @@ namespace CrowdPunch.Editor
                 var previewSurface = plinth.AddComponent<TrajectoryPreviewSurfaceAuthoring>();
                 previewSurface.radius = .5f; previewSurface.heightOffset = 1f;
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
-                var main = EditorSceneManager.OpenScene(Scenes + "Gauntlet_14.unity", OpenSceneMode.Single);
-                var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue = "Launch through the rotating gap to break the core. The shield sends bodies back at you!";
-                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap = EditorSceneManager.OpenScene(Root + "Scenes/Bootstrap.unity", OpenSceneMode.Single);
                 var sequence = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
                 var names = sequence.FindProperty("levelSceneNames"); var titles = sequence.FindProperty("levelDisplayNames");

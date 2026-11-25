@@ -60,10 +60,6 @@ namespace CrowdPunch.Editor
                 AddPillar(boss,new Vector3(8,-1,-3));
                 AddPillar(boss,new Vector3(0,-1,7));
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
-                var main=EditorSceneManager.OpenScene(Scenes+"Gauntlet_22.unity",OpenSceneMode.Single);
-                var marker=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue="Launch enemies into the three pillars to topple them onto Dino. Dodge his red speed bursts. Missed pillars return; falling pillars hurt everyone.";
-                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap=EditorSceneManager.OpenScene(Root+"Scenes/Bootstrap.unity",OpenSceneMode.Single);
                 var sequence=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
                 var names=sequence.FindProperty("levelSceneNames"); var titles=sequence.FindProperty("levelDisplayNames");

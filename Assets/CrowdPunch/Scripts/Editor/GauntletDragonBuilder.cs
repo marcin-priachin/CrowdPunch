@@ -52,10 +52,6 @@ namespace CrowdPunch.Editor
                     visual.GetComponent<Renderer>().sharedMaterial = MaterialAsset("GauntletWalls", new Color(.13f,.19f,.24f));
                 }
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
-                var main = EditorSceneManager.OpenScene(Scenes + "Gauntlet_26.unity", OpenSceneMode.Single);
-                var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue = "Flank the slow-turning flame. Use cover, then launch a dragon through the crowd. Flame hurts even during dash.";
-                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap = EditorSceneManager.OpenScene(Root + "Scenes/Bootstrap.unity", OpenSceneMode.Single);
                 var sequence = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
                 var names = sequence.FindProperty("levelSceneNames"); var titles = sequence.FindProperty("levelDisplayNames");

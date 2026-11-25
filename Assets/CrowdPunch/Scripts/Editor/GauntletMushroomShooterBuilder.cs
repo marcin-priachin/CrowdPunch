@@ -60,15 +60,6 @@ namespace CrowdPunch.Editor
                 EditorSceneManager.MarkSceneDirty(sub);
                 EditorSceneManager.SaveScene(sub);
 
-                var level = EditorSceneManager.OpenScene(Scenes + MushroomGauntlet + ".unity", OpenSceneMode.Single);
-                using (var data = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>()))
-                {
-                    data.FindProperty("openingHint").stringValue = "Sidestep the violet warning lane. Punch the Shooter to fire its beam through the crowd.";
-                    data.ApplyModifiedPropertiesWithoutUndo();
-                }
-                EditorSceneManager.MarkSceneDirty(level);
-                EditorSceneManager.SaveScene(level);
-
                 var bootstrap = EditorSceneManager.OpenScene(CampaignBuildRegistration.BootstrapPath, OpenSceneMode.Single);
                 using (var data = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>()))
                 {

@@ -164,7 +164,7 @@ namespace CrowdPunch.Mono.Player
                 Ring(ringRadius, ringWidth, WithAlpha(accent, fade));
             }
 
-            int stars = collision ? 0 : 2;
+            int stars = collision || PlayerPreferences.Enabled(PlayerPreference.ReducedEffects) ? 0 : 2;
             for (int i = 0; i < stars; i++)
             {
                 float a = .4f + i * (2f * Mathf.PI / stars);

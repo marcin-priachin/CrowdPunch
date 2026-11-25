@@ -160,7 +160,7 @@ namespace CrowdPunch.Tests
                     string mainPath=$"Assets/CrowdPunch/Scenes/Campaign/Campaign_{i+1:00}.unity";
                     var main=EditorSceneManager.OpenScene(mainPath);
                     var marker=UnityEngine.Object.FindFirstObjectByType<GauntletLevel>();
-                    Assert.That(marker,Is.Not.Null); Assert.That(marker.OpeningHint,Is.Not.Empty);
+                    Assert.That(marker,Is.Not.Null);
                     var reference=UnityEngine.Object.FindFirstObjectByType<Unity.Scenes.SubScene>();
                     Assert.That(AssetDatabase.GetAssetPath(reference.SceneAsset),Does.StartWith("Assets/CrowdPunch/Scenes/Campaign/"));
                     EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(reference.SceneAsset));

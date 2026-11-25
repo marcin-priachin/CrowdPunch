@@ -30,11 +30,9 @@ namespace CrowdPunch.Configuration
         [SerializeField] private Vector2 levelClearCameraFraming = new Vector2(.5f, .55f);
         [Tooltip("Vertical framing offset in world metres above the finishing subject's origin.")]
         [SerializeField] private float levelClearCameraSubjectHeight = 1f;
-        [Header("Player And Hints")]
+        [Header("Player")]
         [Tooltip("Reject all player damage and damage-hit reactions, including hazards that bypass ordinary hit invulnerability. Objective failures still apply.")]
         [SerializeField] private bool playerInvincible;
-        [Tooltip("Hide opening gameplay hints in campaign and legacy gauntlet levels.")]
-        [SerializeField] private bool disableHints;
         [Header("Baseline Crowd Tactics (Provisional)")]
         [Tooltip("Regional engages nearby groups; Whole Arena involves every eligible Baseline. Settings are baked: restart/rebake after editing.")]
         [SerializeField] private CrowdParticipation crowdParticipation = CrowdParticipation.Regional;
@@ -115,7 +113,6 @@ namespace CrowdPunch.Configuration
         public Vector2 LevelClearCameraFraming => new Vector2(Mathf.Clamp01(levelClearCameraFraming.x), Mathf.Clamp01(levelClearCameraFraming.y));
         public float LevelClearCameraSubjectHeight => levelClearCameraSubjectHeight;
         public bool PlayerInvincible => playerInvincible;
-        public bool DisableHints => disableHints;
         public EnemyCrowdPressureSettings CrowdPressure => new EnemyCrowdPressureSettings
         {
             Participation = crowdParticipation,

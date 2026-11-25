@@ -73,7 +73,6 @@ namespace CrowdPunch.Tests
                 for (int n=11;n<=20;n++)
                 {
                     EditorSceneManager.OpenScene($"{Scenes}Campaign_{n:00}.unity");
-                    Assert.That(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>().OpeningHint,Is.Not.Empty);
                     var reference = UnityEngine.Object.FindFirstObjectByType<Unity.Scenes.SubScene>();
                     Assert.That(AssetDatabase.GetAssetPath(reference.SceneAsset),Is.EqualTo($"{Scenes}Campaign_{n:00}/Campaign_{n:00} Sub Scene.unity"));
                     EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(reference.SceneAsset));

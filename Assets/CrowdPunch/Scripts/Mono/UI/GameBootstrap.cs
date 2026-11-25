@@ -1,3 +1,4 @@
+using CrowdPunch.Mono.Camera;
 using CrowdPunch.Mono.Player;
 using UnityEngine;
 
@@ -21,6 +22,7 @@ namespace CrowdPunch.Mono.UI
 
         private void Awake()
         {
+            gameObject.AddComponent<GameplayGraphics>();
             if (playerBridge == null)
             {
                 playerBridge = FindFirstObjectByType<PlayerEcsBridge>();

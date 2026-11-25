@@ -62,10 +62,6 @@ namespace CrowdPunch.Editor
                 chicken.arenaHalfSize=new Vector2(18,18); crowd.chickenBoss=chicken;
                 AddChickenModel(root,settings);
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
-                var main=EditorSceneManager.OpenScene(Scenes+"Gauntlet_20.unity",OpenSceneMode.Single);
-                var marker=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue="Punch the bouncing shots back, or launch enemies at the Chicken. Returned shots and launched bodies still hurt you.";
-                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap=EditorSceneManager.OpenScene(Root+"Scenes/Bootstrap.unity",OpenSceneMode.Single);
                 var sequence=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
                 var names=sequence.FindProperty("levelSceneNames"); var titles=sequence.FindProperty("levelDisplayNames");

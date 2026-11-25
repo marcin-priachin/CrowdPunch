@@ -171,6 +171,8 @@ Game settings may optionally start the game with all available levels unlocked. 
 
 Main Menu and Pause both open the Ringside Settings page with Controls, Audio, Accessibility and Display tabs. All tabs support mouse and controller navigation. Keep settings across restarts and new campaigns. Options that change the window mode or resolution revert unless the player confirms them.
 
+Display offers VSync Off or On, plus Render Scale, Ambient Occlusion, Anti-Aliasing and Effects Quality. VSync starts On. Standard graphics use 100% scale, full-resolution ambient occlusion, SMAA and full effects. Performance uses 85% scale, half-resolution ambient occlusion, FXAA and full effects. Effects Quality may independently reduce decorative particles and accents while preserving trails, blast radius, threats and the dotted aim indication (VISION-005/006, INFO-005).
+
 ### LOOP-008 - Large Crowd Level And Difficulty Rhythm
 
 Status: Must
@@ -347,7 +349,7 @@ Crowd supply increases at each boss health stage, treating the existing full pop
 
 Status: Must
 
-Boss death immediately ends hostile combat, cancels attacks and replenishment including pending allocations, neutralizes survivors/effects, then presents a short victory before campaign completion. No survivor clear is required. Retry restores full player/boss health, flight, anchors, histories, cover clocks, rail state and supply. Scene exit cleans all encounter state. Provide a brief nonblocking opening instruction and in-world active/paused/spent/damaged feedback.
+Boss death immediately ends hostile combat, cancels attacks and replenishment including pending allocations, neutralizes survivors/effects, then presents a short victory before campaign completion. No survivor clear is required. Retry restores full player/boss health, flight, anchors, histories, cover clocks, rail state and supply. Scene exit cleans all encounter state. Provide in-world active/paused/spent/damaged feedback.
 
 The final boss uses the shared boss health bar (INFO-007). Keep the pulsing cyan ground ring for vulnerability. Use authored Wraith animations for flight, attack preparation/follow-through, hit reactions and defeat; do not apply scripted body tint, flashes, shaking or scale changes for readability. Preserve prefab proportions and use the established Full Cel shading. This supersedes the cyan body glow and procedural model feedback on 2026-10-25; the HUD exception was requested on 2026-10-14.
 
@@ -785,7 +787,7 @@ Bodies rebound from an intact barricade and remain eligible for ordinary crowd c
 
 Status: Must
 
-An intact barricade participates as a target in the existing enemy aim-assist mechanics, with the same ray selection, lock retention, angular and range limits, and fallback selection. Launch and short initial trajectory preview agree (PLAYER-003/004); no separate barricade alignment mechanic is introduced. Propagated aim correction and launched-body homing also accept it. Broken barricades cease to be targets. Show distinct visual damage stages and impact/destruction effects, without a health bar. Show one brief nonblocking opening instruction through the existing tutorial presentation. Previewing the rebound path is not required.
+An intact barricade participates as a target in the existing enemy aim-assist mechanics, with the same ray selection, lock retention, angular and range limits, and fallback selection. Launch and short initial trajectory preview agree (PLAYER-003/004); no separate barricade alignment mechanic is introduced. Propagated aim correction and launched-body homing also accept it. Broken barricades cease to be targets. Show distinct visual damage stages and impact/destruction effects, without a health bar. Previewing the rebound path is not required.
 
 ### BARRICADE-005 - Bounded Replenishing Crowd
 
@@ -956,8 +958,7 @@ while retaining existing exploders. Core destruction stops replenishment through
 Status: Must
 
 Use a chunky placeholder shell, a clearly distinct core, and visual damage progression in both
-phases without health bars. Include a brief opening hint explaining explosions and distinct
-successful shell-hit feedback. Geometry, colors, effects, baseline population, bounce strength
+phases without health bars. Provide distinct feedback for a successful shell hit. Geometry, colors, effects, baseline population, bounce strength
 and remaining timing values are implementation tuning, subject to playtesting.
 
 ## Knock Into Place Objective
@@ -1363,8 +1364,7 @@ Status: Must
 
 Append a compact Wizard introduction without extra hazards: wave one is 6 Baselines + 1 Wizard;
 wave two is 12 Baselines + 2 Wizards. Wait for every enemy and persistent zone before advancing.
-Wizards do not replenish. Use a brief nonblocking opening hint about damaging zones and
-launching enemies into Wizards, without revealing their launched special effect.
+Wizards do not replenish.
 
 Expose reusable wave options, disabled by default: ensure a Baseline is available while a
 Wizard remains; wait for persistent hazards before advancing; maximum live Wizards (unlimited
@@ -1428,7 +1428,7 @@ Do not attach persistent health bars, names, targeting markers, or other persist
 
 Status: Must
 
-Keep the HUD to information needed for immediate decisions. Prefer world animation, silhouette, color, motion, and effects over additional HUD elements.
+Keep the HUD to information needed for immediate decisions. Prefer world animation, silhouette, color, motion, and effects over additional HUD elements. Encounters use in-world cues in place of opening gameplay hints. Menus retain button prompts for navigation.
 
 ### INFO-003 — Elite Exception
 
@@ -1770,8 +1770,8 @@ Use authored animation for boss feedback rather than
 scripted tint, shaking or squash. Ranged-enemy and boss projectiles share an arcane visual family
 to match their wizard models: compact cyan comets for ranged enemies, larger violet/gold orbiting
 orbs for this boss. A returned boss orb gains a warm danger accent and remains harmful to the player.
-Use the upper-center health bar from INFO-007; retain dangerous projectile
-ownership colors and one brief opening hint. A dedicated boss settings asset exposes health/damage, stage
+Use the upper-center health bar from INFO-007 and retain dangerous projectile
+ownership colors. A dedicated boss settings asset exposes health/damage, stage
 thresholds/patterns, wind-up/spacing/pauses, rush/proximity, stagger/protection and projectile tuning.
 Initial numbers, arena size and minor model presentation are delegated to implementation/playtesting.
 
@@ -1847,7 +1847,7 @@ Use `Assets/Spike Cute Series/Prefabs/Spike.prefab` with a constant uniform auth
 health, thresholds, protection, wind-up/pause/roll timing, bounce limits, speed, contact damage,
 launch/push and presentation tuning. Composition/replenishment remain wave-owned. Use one upper-center
 boss health bar per INFO-007 without vulnerability countdown. Distinguish pause, wind-up, rolling and temporary
-hit protection; include one brief opening hint. Numbers, layout and minor presentation are delegated.
+hit protection. Numbers, layout and minor presentation are delegated.
 
 ## Dino Pillar Boss (Agreed 2026-10-08)
 
@@ -1916,7 +1916,7 @@ shaking/squash/stretch. Preserve the source palette with Full Cel shading. Stand
 the player's shared Left Turn and Right Turn clips on the lower body, with the same small-turn
 filtering and entry/exit treatment as the player and Chicken. Preserve the authored upper body,
 equipment, movement, warning timing, stagger and defeat poses. Retain one existing
-upper-center boss health bar per INFO-007 and a brief opening hint. Show readable warning, burst, stagger, pillar
+upper-center boss health bar per INFO-007. Show readable warning, burst, stagger, pillar
 impact and regeneration feedback in-world. A dedicated settings asset owns stage movement,
 turning, cycle/stagger/contact timing, pillar geometry/fall/regeneration and damage/push/launch
 strengths. General crowd composition and replenishment remain in existing wave settings.

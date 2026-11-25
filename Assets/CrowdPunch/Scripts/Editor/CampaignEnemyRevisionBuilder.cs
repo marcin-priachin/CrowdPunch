@@ -21,10 +21,10 @@ namespace CrowdPunch.Editor
                     throw new InvalidOperationException("Save open scenes before authoring.");
 
             var chapters = new[] {
-                (Offset: 40, Designs: ChapterFiveDesigns(), Hints: ChapterFiveHints),
-                (Offset: 50, Designs: ChapterSixDesigns(), Hints: ChapterSixHints),
-                (Offset: 60, Designs: ChapterSevenDesigns(), Hints: ChapterSevenHints),
-                (Offset: 70, Designs: ChapterEightDesigns(), Hints: ChapterEightHints)
+                (Offset: 40, Designs: ChapterFiveDesigns()),
+                (Offset: 50, Designs: ChapterSixDesigns()),
+                (Offset: 60, Designs: ChapterSevenDesigns()),
+                (Offset: 70, Designs: ChapterEightDesigns())
             };
             var catalog = AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CampaignBuildRegistration.CatalogPath);
             if (catalog == null || catalog.Count != 80)
@@ -86,7 +86,7 @@ namespace CrowdPunch.Editor
                             data.ApplyModifiedPropertiesWithoutUndo();
                             waves++;
                         }
-                        SetCampaignHint(number, chapter.Hints[i]);
+                        PositionCampaignTrackEntry(number);
                         levels++;
                     }
                 AssetDatabase.SaveAssets();

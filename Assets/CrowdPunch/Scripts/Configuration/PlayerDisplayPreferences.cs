@@ -5,7 +5,6 @@ namespace CrowdPunch.Configuration
 {
     internal static class PlayerDisplayPreferences
     {
-        private static int defaultSync;
         internal static Mode DefaultMode { get; private set; }
         internal readonly struct Mode
         {
@@ -44,7 +43,6 @@ namespace CrowdPunch.Configuration
 
         internal static void ApplySaved()
         {
-            defaultSync = QualitySettings.vSyncCount;
             DefaultMode = Mode.Current;
             ApplyTiming();
             int window = PlayerPreferences.Get(PlayerPreference.WindowMode);
@@ -58,8 +56,7 @@ namespace CrowdPunch.Configuration
 
         internal static void ApplyTiming()
         {
-            int sync = PlayerPreferences.Get(PlayerPreference.VSync);
-            QualitySettings.vSyncCount = sync >= 0 ? sync : defaultSync;
+            QualitySettings.vSyncCount = PlayerPreferences.Get(PlayerPreference.VSync);
             Application.targetFrameRate = PlayerPreferences.Get(PlayerPreference.FrameLimit);
         }
     }

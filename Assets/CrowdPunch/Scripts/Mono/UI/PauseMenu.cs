@@ -20,9 +20,6 @@ namespace CrowdPunch.Mono.UI
         private Button firstButton;
         private Text menuTitle;
         private bool showingCompletion;
-        private Text openingHint;
-        private uint observedLevelEntry;
-        private float hintSecondsRemaining;
 
         private bool isPaused;
         private CampaignMenu campaignMenu;
@@ -98,15 +95,6 @@ namespace CrowdPunch.Mono.UI
                 if (isPaused) SetPaused(false);
                 return;
             }
-            if (gauntletSequence != null && observedLevelEntry != gauntletSequence.LevelEntrySequence)
-            {
-                observedLevelEntry = gauntletSequence.LevelEntrySequence;
-                openingHint.text = gauntletSequence.OpeningHint;
-                hintSecondsRemaining = 10f;
-            }
-            hintSecondsRemaining = Mathf.Max(0, hintSecondsRemaining - Time.deltaTime);
-            openingHint.gameObject.SetActive((gauntletSequence == null || !gauntletSequence.HintsDisabled)
-                && !isPaused && hintSecondsRemaining > 0 && !string.IsNullOrEmpty(openingHint.text));
             bool failed = gauntletSequence != null && gauntletSequence.RunFailed;
             bool complete = gauntletSequence != null && (gauntletSequence.RunComplete || failed);
             if (complete && (!showingCompletion || !isPaused))
@@ -176,13 +164,6 @@ namespace CrowdPunch.Mono.UI
 
         private void BuildMenu()
         {
-            openingHint = CreateLabel(transform, string.Empty, 20, 44f);
-            openingHint.name = "Opening Hint";
-            openingHint.raycastTarget = false;
-            openingHint.rectTransform.anchorMin = openingHint.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            openingHint.rectTransform.anchoredPosition = new Vector2(0, -36f);
-            openingHint.rectTransform.sizeDelta = new Vector2(1000f, 44f);
-            openingHint.gameObject.SetActive(false);
             menuRoot = CreateUiObject("Pause Menu", transform);
             RectTransform rootRect = menuRoot.GetComponent<RectTransform>();
             rootRect.anchorMin = Vector2.zero;

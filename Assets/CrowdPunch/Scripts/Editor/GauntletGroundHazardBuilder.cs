@@ -59,10 +59,6 @@ namespace CrowdPunch.Editor
                 AddGroundPatch(encounter, "Periodic Rectangle", new Vector2(3,-5), GroundHazardShape.Rectangle, true, 1, new Vector2(4,5), 0);
                 AddGroundPatch(encounter, "Periodic Circle", new Vector2(-4,8), GroundHazardShape.Circle, true, 1, new Vector2(5,5), 2);
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
-                var main = EditorSceneManager.OpenScene(Scenes + "Gauntlet_23.unity", OpenSceneMode.Single);
-                var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue = "Launch enemies into red floor patches. Amber patches warn before activating. Hazards hurt you even while dashing.";
-                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap = EditorSceneManager.OpenScene(Root + "Scenes/Bootstrap.unity", OpenSceneMode.Single);
                 var sequence = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
                 var names = sequence.FindProperty("levelSceneNames"); var titles = sequence.FindProperty("levelDisplayNames");

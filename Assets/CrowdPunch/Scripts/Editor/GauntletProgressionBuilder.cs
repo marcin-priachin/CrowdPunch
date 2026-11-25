@@ -220,10 +220,6 @@ namespace CrowdPunch.Editor
                 var wd = new SerializedObject(encounter); wd.FindProperty("minimumPlayerDistance").floatValue = 4;
                 wd.ApplyModifiedPropertiesWithoutUndo();
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
-                var main = EditorSceneManager.OpenScene(Scenes + "Gauntlet_12.unity", OpenSceneMode.Single);
-                var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue = "Launch bodies into blue armor. Three hits crack it open. Punches alone cannot break armor.";
-                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap = EditorSceneManager.OpenScene(Root + "Scenes/Bootstrap.unity", OpenSceneMode.Single);
                 var sequence = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
                 var names = sequence.FindProperty("levelSceneNames"); var titles = sequence.FindProperty("levelDisplayNames");
@@ -317,9 +313,6 @@ namespace CrowdPunch.Editor
             entry.position=new Vector3(design.Entry.x,0.5f,design.Entry.y);
             var markerData=new SerializedObject(marker);
             markerData.FindProperty("playerEntryPoint").objectReferenceValue=entry;
-            markerData.FindProperty("openingHint").stringValue=index==0
-                ? "Move: WASD / left stick     Aim: mouse / right stick     Punch: LMB / X (Square)"
-                : index==1 ? "Dash sideways: RMB / right shoulder. Aim through one body into the next." : string.Empty;
             markerData.ApplyModifiedPropertiesWithoutUndo();
             var subScene=new GameObject("Arena SubScene").AddComponent<SubScene>();
             subScene.SceneAsset=AssetDatabase.LoadAssetAtPath<SceneAsset>(subPath);

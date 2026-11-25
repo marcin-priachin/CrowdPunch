@@ -2,6 +2,8 @@
 
 Date: 2026-10-10. Revised: 2026-11-17. The roster and reinforcement revision is implemented across all nine chapters. Encounter counts and cadence are starting values for playtesting.
 
+The opening-hint proposals below are historical. INFO-002 in the [GDD](GDD.md) defines the current HUD.
+
 Source: `C:/Users/pc/Downloads/Crowd_Punch_80_Level_Campaign_Plan.md` plus current repository design, configuration and authoring inspection. The user explicitly selected full-table review before Chapter 1 implementation, then requested Chapters 2 through 8 in sequence. All 80 levels and their campaign infrastructure are authorized and implemented.
 
 ## Approved variety and reinforcement revision (2026-11-16, LOOP-011)

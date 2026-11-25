@@ -56,16 +56,6 @@ namespace CrowdPunch.Editor
                 EditorSceneManager.MarkSceneDirty(sub);
                 EditorSceneManager.SaveScene(sub);
 
-                var level = EditorSceneManager.OpenScene(Scenes + SporellaGauntlet + ".unity", OpenSceneMode.Single);
-                using (var data = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>()))
-                {
-                    data.FindProperty("openingHint").stringValue =
-                        "Watch Sporella wind up. Use cover, punch a shot back, or launch an enemy into Sporella.";
-                    data.ApplyModifiedPropertiesWithoutUndo();
-                }
-                EditorSceneManager.MarkSceneDirty(level);
-                EditorSceneManager.SaveScene(level);
-
                 var bootstrap = EditorSceneManager.OpenScene(CampaignBuildRegistration.BootstrapPath, OpenSceneMode.Single);
                 using (var data = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>()))
                 {

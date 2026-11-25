@@ -62,7 +62,7 @@ namespace CrowdPunch.Editor
                 var marker=new GameObject("Gauntlet 11 - The Gatekeeper").AddComponent<GauntletLevel>();
                 var entry=new GameObject("Player Entry Point").transform; entry.SetParent(marker.transform); entry.position=new Vector3(0,.5f,-10);
                 var md=new SerializedObject(marker); md.FindProperty("playerEntryPoint").objectReferenceValue=entry;
-                md.FindProperty("openingHint").stringValue="Launch bodies at the head. Dodge the hands, then use their recovery."; md.ApplyModifiedPropertiesWithoutUndo();
+                md.ApplyModifiedPropertiesWithoutUndo();
                 var ss=new GameObject("Boss Arena SubScene").AddComponent<SubScene>(); ss.SceneAsset=AssetDatabase.LoadAssetAtPath<SceneAsset>(SubPath); ss.AutoLoadScene=true;
                 var light=new GameObject("Arena Light").AddComponent<Light>(); light.type=LightType.Directional; light.intensity=1.2f; light.shadows=LightShadows.Hard; light.transform.rotation=Quaternion.Euler(50,-30,0);
                 EditorSceneManager.SaveScene(main,ScenePath); EditorSceneManager.CloseScene(main,true);

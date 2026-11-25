@@ -32,18 +32,27 @@ namespace CrowdPunch.Editor
                     GauntletNatureEnvironment.ApplyCampaignLevel(number);
                     var main = EditorSceneManager.OpenScene($"{CampaignScenes}Campaign_{number:00}.unity");
                     var marker = UnityEngine.Object.FindFirstObjectByType<GauntletLevel>();
-                    var entry = new SerializedObject(marker);
                     var start = ProgressiveTrackPoints(i + 1)[0];
-                    ((Transform)entry.FindProperty("playerEntryPoint").objectReferenceValue)
-                        .SetPositionAndRotation(start + new Vector3(0, -.2f, -6), Quaternion.identity);
-                    entry.FindProperty("openingHint").stringValue = "Launch bodies or blast the block along the turning arrows into the blue socket. Change your shooting side at each corner; opposite hits push it back.";
-                    entry.ApplyModifiedPropertiesWithoutUndo();
+                    marker.PlayerEntryPoint.SetPositionAndRotation(start + new Vector3(0, -.2f, -6), Quaternion.identity);
                     EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 }
                 AssetDatabase.SaveAssets();
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
             Debug.Log("TRACK-006: campaign rails now progress from 10 to 80 metres, with 2m hits and alternating left/right turns.");
+        }
+
+        private static void PositionCampaignTrackEntry(int level)
+        {
+            int trackIndex = Array.IndexOf(CampaignTrackLevels, level);
+            if (trackIndex <= 0) return;
+
+            var main = EditorSceneManager.OpenScene($"{CampaignScenes}Campaign_{level:00}.unity", OpenSceneMode.Single);
+            var marker = UnityEngine.Object.FindFirstObjectByType<GauntletLevel>();
+            var start = ProgressiveTrackPoints(trackIndex + 1)[0];
+            marker.PlayerEntryPoint.position = start + new Vector3(0, -.2f, -6);
+            EditorSceneManager.MarkSceneDirty(main);
+            EditorSceneManager.SaveScene(main);
         }
 
         public static Vector3[] ProgressiveTrackPoints(int legs)

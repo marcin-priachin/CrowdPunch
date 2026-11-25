@@ -23,6 +23,7 @@ namespace CrowdPunch.Mono.UI
         private int selectedTab;
 
         internal Button First => tabs[selectedTab];
+        internal int RowCount => rows.Count;
         internal bool HasModal => modal != null;
 
         internal RingsideSettingsLayout(RectTransform viewport, string[] labels, Action<int, bool> select)

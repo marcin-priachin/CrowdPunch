@@ -13,20 +13,6 @@ namespace CrowdPunch.Editor
 {
     public static partial class GauntletProgressionBuilder
     {
-        private static readonly string[] ChapterTwoHints =
-        {
-            "Launch Exploders into the crowd. Choose where the blast will land.",
-            "Break the shell with three explosions. Then attack the exposed core again.",
-            "Launch bodies or Exploders into the barricade, then reach the exit.",
-            "Dashers commit to a direction. Step aside and send them into the crowd.",
-            "Use cover against Alien Spike's radial shots. Launch it into a crowd to fire a burst, or punch a flying spike back.",
-            "Launch bodies into the block from behind to move it into the blue socket. Far-side hits push it back.",
-            "Send Exploders through the moving opening. Blasts outside the cover cannot reach the target.",
-            "Reinforcements arrive from changing sides. Turn Spike bursts into explosions and aim Mushroom Shooters through the charging crowd.",
-            "Blast behind the block to push it toward the socket. Use the outer lane to get into position.",
-            "Punch the bouncing shots back, or launch enemies at the Chicken. Returned shots and launched bodies still hurt you."
-        };
-
         private static Level[] ChapterTwoLayoutRecipes() => new[]
         {
             new Level { Name="First Fuse", Outline=OvalCourt(28,30), Spacing=new Vector2(22,24), Entry=new Vector2(0,-10), Lanes=Array.Empty<Vector4>(), Waves=new[]{
@@ -124,7 +110,6 @@ namespace CrowdPunch.Editor
                         WaveAsset(ChapterTwoWaveName(index + 11, phase, recipe), recipe, profiles, CampaignData + "Waves/");
                     }
                 AssetDatabase.SaveAssets();
-                foreach (int level in new[] { 15, 18 }) SetCampaignHint(level, ChapterTwoHints[level - 11]);
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
             Debug.Log("LOOP-011: Chapter Two revised in place. Alien Spike at 15/17/18; timed reinforcements and 264 enemies at 18.");
@@ -159,7 +144,7 @@ namespace CrowdPunch.Editor
                         MaterialAsset("GauntletBackdrop",Color.gray), CampaignData);
                     AuthorChapterTwoInterior(i+11, designs[i]);
                     GauntletNatureEnvironment.ApplyCampaignLevel(i+11);
-                    SetCampaignHint(i+11, ChapterTwoHints[i]);
+                    PositionCampaignTrackEntry(i+11);
                 }
                 CopyCampaignChicken();
                 // Single-scene loads can unload cached Unity asset wrappers.
@@ -313,7 +298,6 @@ namespace CrowdPunch.Editor
             var main = EditorSceneManager.OpenScene(CampaignScenes+"Campaign_20.unity",OpenSceneMode.Single);
             UnityEngine.Object.FindFirstObjectByType<SubScene>().SceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(CampaignSub(20));
             EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
-            SetCampaignHint(20,ChapterTwoHints[9]);
         }
     }
 }

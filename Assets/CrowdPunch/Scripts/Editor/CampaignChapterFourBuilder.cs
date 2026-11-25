@@ -14,20 +14,6 @@ namespace CrowdPunch.Editor
 {
     public static partial class GauntletProgressionBuilder
     {
-        private static readonly string[] ChapterFourHints =
-        {
-            "Move out of the purple warning zones. Launch nearby enemies into the Wizards.",
-            "Send bodies into the block from behind. Reach the blue socket in five forward hits.",
-            "Trails leave dangerous ground behind them. Launch them along a useful path and keep clear of their wake.",
-            "Break the narrow gate with bodies or explosions. The inner crossing turns hot after its warning.",
-            "Watch the opening and the Trail. Dodge Mushroom Shooter beams and use the clear floor to line up a shot.",
-            "Intercept the timed groups before they reach the turquoise zone. One breach ends the attempt.",
-            "Break the shell with three explosions, then hit the exposed core. Keep clear of the hot corner.",
-            "Reinforcements arrive from changing sides. Defeat the Elites to stop replacements, then use Spike bursts and Trails against the crowd.",
-            "Work around the block to line up forward hits. The blue socket is the destination.",
-            "Lure Dino near a pillar, then launch a body into the pillar. Only falling pillars can hurt him."
-        };
-
         private static Level[] ChapterFourDesigns() => new[]
         {
             new Level { Name="Purple Warning", Outline=Clipped(34,34,4), Spacing=new Vector2(28,28), Entry=new Vector2(0,-12), Lanes=Array.Empty<Vector4>(), Waves=new[]{
@@ -133,7 +119,6 @@ namespace CrowdPunch.Editor
                     AuthorChapterFourPressureHazards(scene, level, UnityEngine.Object.FindFirstObjectByType<EnemyWaveSequenceAuthoring>());
                     EditorSceneManager.MarkSceneDirty(scene);
                     EditorSceneManager.SaveScene(scene);
-                    SetCampaignHint(level, ChapterFourHints[level-31]);
                 }
                 AssetDatabase.SaveAssets();
             }
@@ -208,7 +193,7 @@ namespace CrowdPunch.Editor
                         MaterialAsset("GauntletWalls",Color.gray),MaterialAsset("GauntletLanes",Color.gray),MaterialAsset("GauntletBackdrop",Color.gray),CampaignData);
                     AuthorChapterFourInterior(i+31);
                     GauntletNatureEnvironment.ApplyCampaignLevel(i+31);
-                    SetCampaignHint(i+31,ChapterFourHints[i]);
+                    PositionCampaignTrackEntry(i+31);
                 }
                 CopyCampaignDino();
                 catalog=AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CampaignBuildRegistration.CatalogPath);
@@ -311,7 +296,7 @@ namespace CrowdPunch.Editor
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub); AssetDatabase.SaveAssets();
             var main=EditorSceneManager.OpenScene(CampaignScenes+"Campaign_40.unity",OpenSceneMode.Single);
             UnityEngine.Object.FindFirstObjectByType<SubScene>().SceneAsset=AssetDatabase.LoadAssetAtPath<SceneAsset>(CampaignSub(40));
-            EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main); SetCampaignHint(40,ChapterFourHints[9]);
+            EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
         }
     }
 }

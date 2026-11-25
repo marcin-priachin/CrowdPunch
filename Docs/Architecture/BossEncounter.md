@@ -4,7 +4,7 @@ Implements BOSS-001 through BOSS-009. Gameplay stays in ECS; the existing GameOb
 
 ## Authoring and assets
 
-`Scenes/Gauntlets/Gauntlet_11.unity` owns the entry point, opening hint, lighting and the matching arena SubScene. Bootstrap appends `11 The Gatekeeper` to its sequence. The two navigation validation scenes remain outside progression. Gauntlets 1-10 are preserved.
+`Scenes/Gauntlets/Gauntlet_11.unity` owns the entry point, lighting and the matching arena SubScene. Bootstrap appends `11 The Gatekeeper` to its sequence. The two navigation validation scenes remain outside progression. Gauntlets 1-10 are preserved.
 
 `BossEncounterSettings.asset` bakes into `BossTuning`. It exposes health, immunity, stage thresholds, transitions, rounded perimeter, bounded movement, hand speed/acceleration, shielding, anticipation/active/recovery times, reach, sweep/slam width, stagger/protection, player hit and crowd-scatter tuning. The current attack widths are 6 m slam radius, 3 m lunge half-width and 12 m sweep half-travel. Hand speed and acceleration are 44 m/s and 160 m/s^2; slam/lunge active times are 0.225/0.35 s, while the doubled sweep travel keeps its 1.2 s active time. Reach 60 m covers the whole court. Anticipation and recovery remain at their prior values. Inspector edits require SubScene rebaking; runtime components are snapshots, not live ScriptableObject reads.
 

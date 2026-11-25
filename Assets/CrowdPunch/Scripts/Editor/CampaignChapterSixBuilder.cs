@@ -14,20 +14,6 @@ namespace CrowdPunch.Editor
 {
     public static partial class GauntletProgressionBuilder
     {
-        private static readonly string[] ChapterSixHints =
-        {
-            "Break the shell with three explosions, then hit the exposed core. More Exploders arrive when both are gone.",
-            "Use rocks to block the flame. Launch a Dragon to sweep its fire through the crowd.",
-            "The cover reverses every five seconds. Launch bodies through the opening and watch the Mushroom Shooter's firing lane.",
-            "Launch bodies or blast the block along the turning arrows into the blue socket. Change your shooting side at each corner; opposite hits push it back.",
-            "Turn Dragon flame and Sporella's shots against the crowd. Watch for the next bank as Spike and Exploder groups arrive.",
-            "Line up four hits on the narrow gate, then move through it to the exit.",
-            "Intercept timed groups before they reach the turquoise zone. Cross between approaches when the warning strips are clear.",
-            "Watch for new firing angles from each bank. Redirect flames and shots, then clear the Elite group to open the next approach.",
-            "Choose where the explosives land as distant shooters arrive.",
-            "The Chicken leads its shots toward your movement. Change direction, return shots, and watch the edge warnings."
-        };
-
         [MenuItem("Crowd Punch/Campaign/Apply Chapter Six Encounter Revision")]
         public static void ApplyChapterSixEncounterRevision()
         {
@@ -88,7 +74,6 @@ namespace CrowdPunch.Editor
                     EditorSceneManager.MarkSceneDirty(scene);
                     EditorSceneManager.SaveScene(scene);
                 }
-                foreach (int level in new[] { 53, 55, 57, 58, 59 }) SetCampaignHint(level, ChapterSixHints[level - 51]);
                 AssetDatabase.SaveAssets();
             }
             finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
@@ -193,7 +178,7 @@ namespace CrowdPunch.Editor
                         MaterialAsset("GauntletWalls",Color.gray),MaterialAsset("GauntletLanes",Color.gray),MaterialAsset("GauntletBackdrop",Color.gray),CampaignData);
                     AuthorChapterSixInterior(i+51);
                     GauntletNatureEnvironment.ApplyCampaignLevel(i+51);
-                    SetCampaignHint(i+51,ChapterSixHints[i]);
+                    PositionCampaignTrackEntry(i+51);
                 }
                 CopyCampaignChickenRematch();
                 catalog=AssetDatabase.LoadAssetAtPath<CampaignCatalog>(CampaignBuildRegistration.CatalogPath);
@@ -298,7 +283,7 @@ namespace CrowdPunch.Editor
             EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub); AssetDatabase.SaveAssets();
             var main=EditorSceneManager.OpenScene(CampaignScenes+"Campaign_60.unity",OpenSceneMode.Single);
             UnityEngine.Object.FindFirstObjectByType<SubScene>().SceneAsset=AssetDatabase.LoadAssetAtPath<SceneAsset>(CampaignSub(60));
-            EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main); SetCampaignHint(60,ChapterSixHints[9]);
+            EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
         }
     }
 }

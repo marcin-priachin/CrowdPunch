@@ -102,7 +102,7 @@ including Mushroom beams, Alien Spike projectiles and Sporella shots.
 - Preserve current-level failure/retry behavior: player death retries this encounter with full player health and all boss/anchor/crowd state restored.
 - Retry restores boss health/stage/flight state, all four anchors, shell/core health, cover pose/clocks, rail state, hit histories, spawn supplies and clean attack/warning/tether state.
 - Scene exit cleans up boss, crowd, persistent enemy effects, warnings, pending attacks and supply.
-- Short opening instruction and in-world active/paused/spent/damaged feedback should explain the goal without stopping combat. Exact wording, finale/chapter name, particles, colors and victory presentation are delegated.
+- In-world active/paused/spent/damaged feedback communicates the goal during combat (INFO-002). Finale and chapter names, particles, colors, and victory presentation are delegated.
 
 ## Configurable settings
 Use dedicated finale-owned settings; do not overwrite legacy objectives, other bosses or shared ordinary enemy profiles. The chosen behaviors below are requirements, not a request to expose every unselected alternative as a mode.

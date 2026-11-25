@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using CrowdPunch.Configuration;
+using CrowdPunch.Mono.Camera;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -13,14 +14,13 @@ namespace CrowdPunch.Mono.UI
         private static readonly string[] Tabs = { "Controls", "Audio", "Accessibility", "Display" };
         private static readonly string[] DisplayModes = { "Windowed", "Borderless Fullscreen" };
         private static readonly int[] FrameRates = { -1, 30, 60, 90, 120, 144, 165, 240 };
+        private static readonly int[] RenderScales = { 100, 85, 70 };
         private static readonly PlayerPreference[] Audio = { PlayerPreference.Master, PlayerPreference.Music,
             PlayerPreference.Effects, PlayerPreference.CrowdImpacts, PlayerPreference.MenuSounds };
         private readonly RingsideSettingsLayout view;
         private readonly SettingsBindings bindings;
         private readonly Action close;
         private readonly Action<PlayerPreference> preview;
-        private readonly string openingHint;
-        private readonly bool authoredHintsDisabled;
         private int tab, bindingAction = -1, bindingOrigin;
         private bool controller, usingGamepad, capturing, navigationWasEnabled;
         private int capturedFrame = -1;
@@ -35,14 +35,12 @@ namespace CrowdPunch.Mono.UI
         internal Button First => view.First;
         private bool Large => PlayerPreferences.Enabled(PlayerPreference.LargeText);
 
-        internal RingsideSettings(RectTransform viewport, SettingsBindings bindings, bool gamepad, string hint,
-            bool authoredHintsDisabled, Action close, Action<PlayerPreference> preview)
+        internal RingsideSettings(RectTransform viewport, SettingsBindings bindings, bool gamepad,
+            Action close, Action<PlayerPreference> preview)
         {
             this.bindings = bindings;
             this.close = close;
             this.preview = preview;
-            openingHint = hint;
-            this.authoredHintsDisabled = authoredHintsDisabled;
             usingGamepad = controller = gamepad;
             pendingMode = PlayerDisplayPreferences.Mode.Current;
             view = new RingsideSettingsLayout(viewport, Tabs, SelectTab);
@@ -200,25 +198,6 @@ namespace CrowdPunch.Mono.UI
             Toggle("Reduced Camera Motion", PlayerPreference.ReducedMotion);
             Toggle("Reduced Flashes", PlayerPreference.ReducedFlashes);
             Toggle("Text Size", PlayerPreference.LargeText, "Large", "Standard", 3);
-            bool show = HintsEnabled(authoredHintsDisabled);
-            view.AddRow("Opening Hints", show ? "On" : "Off", () =>
-            {
-                Save(PlayerPreference.HideHints, show ? 1 : 0);
-                Build(4);
-            }, out _, Large);
-            if (!string.IsNullOrEmpty(openingHint))
-                view.AddRow("Read Opening Hint", ">", () =>
-                {
-                    void CloseHint() { dismissModal = null; view.CloseModal(); view.RowAt(5)?.Select(); }
-                    dismissModal = CloseHint;
-                    view.ShowModal(openingHint, null, null, CloseHint);
-                }, out _, Large);
-        }
-
-        internal static bool HintsEnabled(bool authoredDisabled)
-        {
-            int preference = PlayerPreferences.Get(PlayerPreference.HideHints);
-            return preference < 0 ? !authoredDisabled : preference == 0;
         }
 
         private void BuildDisplay()
@@ -250,10 +229,9 @@ namespace CrowdPunch.Mono.UI
             }
             else view.AddNote("Borderless uses the desktop resolution.", Large);
 
-            int sync = PlayerPreferences.Get(PlayerPreference.VSync);
-            Choice("VSync", new[] { "Default", "Off", "On" }, Mathf.Clamp(sync + 1, 0, 2), value =>
+            Choice("VSync", new[] { "Off", "On" }, PlayerPreferences.Get(PlayerPreference.VSync), value =>
             {
-                Save(PlayerPreference.VSync, value - 1);
+                Save(PlayerPreference.VSync, value);
                 PlayerDisplayPreferences.ApplyTiming();
             });
             Choice("Frame Rate Limit", FrameRates.Select(rate => rate < 0 ? "Uncapped" : rate + " FPS").ToArray(),
@@ -263,6 +241,56 @@ namespace CrowdPunch.Mono.UI
                     PlayerDisplayPreferences.ApplyTiming();
                 });
             view.AddNote("VSync takes priority over the frame rate limit.", Large);
+            BuildGraphics();
+        }
+
+        private void BuildGraphics()
+        {
+            int scale = PlayerPreferences.Get(PlayerPreference.RenderScale);
+            int ao = Mathf.Clamp(PlayerPreferences.Get(PlayerPreference.AmbientOcclusion), 0, 2);
+            int aa = Mathf.Clamp(PlayerPreferences.Get(PlayerPreference.AntiAliasing), 0, 2);
+            int effects = PlayerPreferences.Enabled(PlayerPreference.ReducedEffects) ? 1 : 0;
+            int preset = (scale, ao, aa, effects) switch
+            {
+                (100, 0, 2, 0) => 0,
+                (85, 1, 1, 0) => 1,
+                _ => -1
+            };
+            int presetRow = view.RowCount;
+            Choice("Graphics Preset", new[] { "Standard", "Performance" }, preset, index =>
+            {
+                if (index == preset) return;
+                bool performance = index == 1;
+                PlayerPreferences.Set(PlayerPreference.RenderScale, performance ? 85 : 100);
+                PlayerPreferences.Set(PlayerPreference.AmbientOcclusion, performance ? 1 : 0);
+                PlayerPreferences.Set(PlayerPreference.AntiAliasing, performance ? 1 : 2);
+                PlayerPreferences.Set(PlayerPreference.ReducedEffects, 0);
+                ApplyGraphics(presetRow);
+            }, unsetLabel: "Custom");
+
+            GraphicsChoice("Render Scale", new[] { "100%", "85%", "70%" }, Mathf.Max(0, Array.IndexOf(RenderScales, scale)),
+                PlayerPreference.RenderScale, index => RenderScales[index]);
+            GraphicsChoice("Ambient Occlusion", new[] { "Full", "Half Resolution", "Off" }, ao, PlayerPreference.AmbientOcclusion);
+            GraphicsChoice("Anti-Aliasing", new[] { "Off", "FXAA", "SMAA" }, aa, PlayerPreference.AntiAliasing);
+            GraphicsChoice("Effects Quality", new[] { "Full", "Reduced" }, effects, PlayerPreference.ReducedEffects);
+        }
+
+        private void GraphicsChoice(string label, string[] options, int current, PlayerPreference preference, Func<int, int> value = null)
+        {
+            int row = view.RowCount;
+            Choice(label, options, current, next =>
+            {
+                if (next == current) return;
+                PlayerPreferences.Set(preference, value == null ? next : value(next));
+                ApplyGraphics(row);
+            });
+        }
+
+        private void ApplyGraphics(int focusRow)
+        {
+            PlayerPreferences.Save();
+            GameplayGraphics.Refresh();
+            Build(focusRow);
         }
 
         private bool HasPendingDisplay() => !pendingMode.Equals(displayApplied ?? PlayerDisplayPreferences.Mode.Current);
@@ -311,11 +339,13 @@ namespace CrowdPunch.Mono.UI
                 case 1: Reset(Audio); break;
                 case 2:
                     Reset(PlayerPreference.ImpactMotion, PlayerPreference.ReducedMotion, PlayerPreference.ReducedFlashes,
-                        PlayerPreference.LargeText, PlayerPreference.HideHints);
+                        PlayerPreference.LargeText);
                     break;
                 case 3:
-                    Reset(PlayerPreference.VSync, PlayerPreference.FrameLimit);
+                    Reset(PlayerPreference.VSync, PlayerPreference.FrameLimit, PlayerPreference.RenderScale,
+                        PlayerPreference.AmbientOcclusion, PlayerPreference.AntiAliasing, PlayerPreference.ReducedEffects);
                     PlayerDisplayPreferences.ApplyTiming();
+                    GameplayGraphics.Refresh();
                     pendingMode = PlayerDisplayPreferences.DefaultMode;
                     resetDisplayMode = true;
                     break;
@@ -374,7 +404,7 @@ namespace CrowdPunch.Mono.UI
             EditArrows(row, step => Change(Mathf.Clamp(PlayerPreferences.Get(option) + step * (option == PlayerPreference.StickDeadZone ? 1 : 5), min, max)));
         }
 
-        private void Choice(string name, string[] options, int initial, Action<int> commit)
+        private void Choice(string name, string[] options, int initial, Action<int> commit, string unsetLabel = null)
         {
             int current = initial;
             Text value = null;
@@ -385,24 +415,32 @@ namespace CrowdPunch.Mono.UI
                 int original = current;
                 Edit(row, accept =>
                 {
-                    if (accept) commit(current);
+                    if (accept && current >= 0) commit(current);
                     else current = original;
                     value.text = Format();
                 });
             }, out value, Large);
             view.AddArrows(row, step =>
             {
+                if (editing == row)
+                {
+                    current = Step(step);
+                    FinishEdit(true);
+                    return;
+                }
                 if (editing != null) FinishEdit(true);
-                current = (current + step + options.Length) % options.Length;
+                current = Step(step);
                 value.text = Format();
                 commit(current);
             });
             EditArrows(row, step =>
             {
-                current = (current + step + options.Length) % options.Length;
+                current = Step(step);
                 value.text = Format();
             });
-            string Format() => options[current];
+            int Step(int direction) => current < 0 ? (direction < 0 ? options.Length - 1 : 0)
+                : (current + direction + options.Length) % options.Length;
+            string Format() => current < 0 ? unsetLabel : options[current];
         }
 
         private void EditArrows(Button row, Action<int> change) => RingsideSettingsLayout.Hook(row, EventTriggerType.Move, data =>

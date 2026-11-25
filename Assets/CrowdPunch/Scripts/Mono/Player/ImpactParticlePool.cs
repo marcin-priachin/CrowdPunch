@@ -96,7 +96,9 @@ namespace CrowdPunch.Mono.Player
             float scale = 1f, float playbackSpeed = 1f)
         {
             int row = (int)kind;
-            for (int slot = 0; slot < capacity; slot++)
+            bool background = kind is CombatImpactKind.EnemyCollision or CombatImpactKind.Environment or CombatImpactKind.DashMove;
+            int budget = background && PlayerPreferences.Enabled(PlayerPreference.ReducedEffects) ? Mathf.Max(1, capacity / 3) : capacity;
+            for (int slot = 0; slot < budget; slot++)
             {
                 var instance = particles[row, slot];
                 var effect = instance.Root;

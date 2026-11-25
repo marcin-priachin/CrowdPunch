@@ -26,6 +26,7 @@ namespace CrowdPunch.Mono.Player
         private Vector3 centre, right, up;
         internal int ActiveCount { get; private set; }
         internal int Capacity => departures.Length;
+        private bool ShowPuffs => settings.LaunchDeparturePuff && !PlayerPreferences.Enabled(PlayerPreference.ReducedEffects);
 
         public LaunchDeparturePool(Transform parent, CombatFeedbackSettings settings, Material material)
         {
@@ -52,7 +53,7 @@ namespace CrowdPunch.Mono.Player
 
         public void Show(Vector3 position, Vector3 direction, Vector3 modelSize)
         {
-            if (!settings.LaunchDeparturePuff) return;
+            if (!ShowPuffs) return;
             for (int i = 0; i < departures.Length; i++)
             {
                 if (departures[i].Active) continue;
@@ -70,7 +71,11 @@ namespace CrowdPunch.Mono.Player
 
         public void Tick(float unscaledDeltaTime, UnityEngine.Camera camera)
         {
-            if (!settings.LaunchDeparturePuff) { Clear(); return; }
+            if (!ShowPuffs)
+            {
+                if (ActiveCount > 0 || renderer.enabled) Clear();
+                return;
+            }
             count = ActiveCount = 0;
             for (int i = 0; i < departures.Length; i++)
             {

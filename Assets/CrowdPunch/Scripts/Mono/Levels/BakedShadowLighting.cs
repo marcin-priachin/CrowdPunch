@@ -1,3 +1,4 @@
+using CrowdPunch.Mono.Camera;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -25,6 +26,7 @@ namespace CrowdPunch.Mono.Levels
             ownedPipeline.name="Baked shadows - active level";
             ownedPipeline.hideFlags=HideFlags.DontSave;
             ownedPipeline.shadowDistance=0;
+            GameplayGraphics.RegisterLevelPipeline(ownedPipeline);
             previousMaskMode=QualitySettings.shadowmaskMode;
             previousBakedOnly=Shader.GetGlobalFloat(BakedOnly);
             QualitySettings.shadowmaskMode=ShadowmaskMode.Shadowmask;
@@ -52,6 +54,7 @@ namespace CrowdPunch.Mono.Levels
                 if(LightmapSettings.lightProbes==ownedProbes) LightmapSettings.lightProbes=previousProbes;
                 Destroy(ownedProbes); ownedProbes=null;
             }
+            GameplayGraphics.UnregisterLevelPipeline(ownedPipeline);
             Destroy(ownedPipeline);
             ownedPipeline=null;
         }

@@ -65,7 +65,7 @@ namespace CrowdPunch.Editor
                 var main = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive); SceneManager.SetActiveScene(main);
                 var level = new GameObject("Navigation validation").AddComponent<GauntletLevel>(); var entry = new GameObject("Player Entry").transform; entry.position = new Vector3(0, .5f, -14);
                 var ls = new SerializedObject(level); ls.FindProperty("playerEntryPoint").objectReferenceValue = entry;
-                ls.FindProperty("openingHint").stringValue = "Navigation test: blocks, L corner, narrow passage, sealed northwest pocket. Debug: Crowd Punch > Navigation > Inspect."; ls.ApplyModifiedPropertiesWithoutUndo();
+                ls.ApplyModifiedPropertiesWithoutUndo();
                 var scene = new GameObject("Navigation Geometry SubScene").AddComponent<SubScene>(); scene.SceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(SubScenePath); scene.AutoLoadScene = true;
                 var light = new GameObject("Arena Light").AddComponent<Light>(); light.type = LightType.Directional; light.intensity = 1.2f; light.transform.rotation = Quaternion.Euler(50, -30, 0);
                 EditorSceneManager.SaveScene(main, ArenaPath); EditorSceneManager.CloseScene(main, true);

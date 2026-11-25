@@ -74,10 +74,6 @@ namespace CrowdPunch.Editor
                 Box("Exit left post", exit, new Vector3(-2, .5f, 16), new Vector3(.25f, 3, .25f), exitMaterial, false);
                 Box("Exit right post", exit, new Vector3(2, .5f, 16), new Vector3(.25f, 3, .25f), exitMaterial, false);
                 EditorSceneManager.MarkSceneDirty(sub); EditorSceneManager.SaveScene(sub);
-                var main = EditorSceneManager.OpenScene(Scenes + "Gauntlet_13.unity", OpenSceneMode.Single);
-                var marker = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletLevel>());
-                marker.FindProperty("openingHint").stringValue = "Launch enemies into the barricade, then reach the green exit. Punches alone cannot break it.";
-                marker.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(main); EditorSceneManager.SaveScene(main);
                 var bootstrap = EditorSceneManager.OpenScene(Root + "Scenes/Bootstrap.unity", OpenSceneMode.Single);
                 var sequence = new SerializedObject(UnityEngine.Object.FindFirstObjectByType<GauntletSequence>());
                 var names = sequence.FindProperty("levelSceneNames"); var titles = sequence.FindProperty("levelDisplayNames");

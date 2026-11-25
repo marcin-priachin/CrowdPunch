@@ -66,7 +66,6 @@ namespace CrowdPunch.Mono.Levels
         public bool RunComplete { get; private set; }
         public bool RunFailed { get; private set; }
         public uint LevelEntrySequence { get; private set; }
-        public string OpeningHint { get; private set; }
         public LevelClearScore LastClearScore { get; private set; }
         public bool LastClearIsBest { get; private set; }
         internal GameRuntimeSettings RuntimeSettings => gameSettings;
@@ -76,7 +75,6 @@ namespace CrowdPunch.Mono.Levels
         internal bool PlayerDefeated => playerHealth != null && playerHealth.IsDefeated;
         internal bool ShowingReplayShot => Screen == CampaignScreen.ReplayComplete
             && Time.unscaledTimeAsDouble < replayShotUntil;
-        public bool HintsDisabled => gameSettings != null && gameSettings.DisableHints;
 
         private void Awake()
         {
@@ -353,7 +351,6 @@ namespace CrowdPunch.Mono.Levels
             yield return transitionOverlay.Fade(1f, 0f, FadeInSeconds);
             if (!menuPreview)
             {
-                OpeningHint = level.OpeningHint;
                 LevelEntrySequence++;
             }
             observedCompletionSequence = GauntletCompletionRegistry.Sequence;
