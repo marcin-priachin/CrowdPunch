@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 504e1d2676985dd42b7442c956ed60cb, type: 3}
   m_Name: CombatFeedbackSettings
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Configuration.CombatFeedbackSettings
-  PunchHitStop: 0.055
+  PunchHitStop: 0.065
   DamageHitStop: 0.065
   ExceptionalSlowMotion: 1
   ExceptionalChainDepth: 4
@@ -29,20 +29,21 @@ MonoBehaviour:
   MaximumChainMultiplier: 1.8
   PunchKick: 2.2
   DamageKick: 2.8
-  CollisionKick: 0.085
+  CollisionKick: 0.14
   ExceptionalKick: 2.2
+  ExplosionKick: 0.34
   Shake: 0.75
   CameraRecovery: 0.1
-  MaximumCameraOffset: 0.34
+  MaximumCameraOffset: 0.42
   CollisionCameraThreshold: 0.55
   CollisionCameraInterval: 0.22
   CameraImpactRange: 25
   CameraMotionScale: 0.75
   ReduceFlashes: 0
-  ComicImpactScale: 0.65
+  ComicImpactScale: 0.9
   LaunchDeparturePuff: 1
   LaunchDepartureDuration: 0.18
-  LaunchDepartureScale: 0.8
+  LaunchDepartureScale: 1
   LaunchSpeedLineBoost: 1
   LaunchSpeedLineBoostDuration: 0.13
   LaunchSpeedLineOpacityMultiplier: 2
@@ -209,5 +210,6 @@ MonoBehaviour:
   EnemyFlashIntensity: 0.9
   PlayerFlashIntensity: 0.9
   PlayerFlashColor: {r: 1, g: 0.48, b: 0.22, a: 1}
+  DashCameraTug: 0.32
   DashFovDelta: 0
   DashFovTransition: 0.075

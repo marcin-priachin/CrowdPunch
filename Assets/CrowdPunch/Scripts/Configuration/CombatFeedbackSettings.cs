@@ -6,7 +6,7 @@ namespace CrowdPunch.Configuration
     public sealed class CombatFeedbackSettings : ScriptableObject
     {
         [Header("Time (real seconds)")]
-        [Range(0f, .1f)] public float PunchHitStop = 0.055f;
+        [Range(0f, .1f)] public float PunchHitStop = 0.065f;
         [Range(0f, .1f)] public float DamageHitStop = 0.065f;
         public bool ExceptionalSlowMotion = true;
         [Min(2)] public int ExceptionalChainDepth = 4;
@@ -25,11 +25,12 @@ namespace CrowdPunch.Configuration
         [Header("Camera (world metres)")]
         [Min(0f)] public float PunchKick = 0.22f;
         [Min(0f)] public float DamageKick = 0.28f;
-        [Min(0f)] public float CollisionKick = 0.085f;
+        [Min(0f)] public float CollisionKick = 0.14f;
         [Min(0f)] public float ExceptionalKick = 0.22f;
+        [Min(0f)] public float ExplosionKick = 0.34f;
         [Min(0f)] public float Shake = 0.075f;
         [Min(.01f)] public float CameraRecovery = 0.1f;
-        [Min(0f)] public float MaximumCameraOffset = 0.34f;
+        [Min(0f)] public float MaximumCameraOffset = 0.42f;
         [Range(0f, 1f)] public float CollisionCameraThreshold = .55f;
         [Min(.01f)] public float CollisionCameraInterval = 0.22f;
         [Min(1f)] public float CameraImpactRange = 25f;
@@ -41,12 +42,12 @@ namespace CrowdPunch.Configuration
         internal bool UseReducedFlashes => ReduceFlashes || PlayerPreferences.Enabled(PlayerPreference.ReducedFlashes);
         [Header("Comic impact accents")]
         [Tooltip("Contact starbursts, expanding rings and tumbling stars. Zero disables this layer.")]
-        [Range(0f, 2f)] public float ComicImpactScale = 1f;
+        [Range(0f, 2f)] public float ComicImpactScale = .9f;
         [Header("Launch accents")]
         [Tooltip("A cream-white departure puff and curved strokes at each new launch or re-punch.")]
         public bool LaunchDeparturePuff = true;
         [Min(.01f)] public float LaunchDepartureDuration = .18f;
-        [Range(.1f, 2f)] public float LaunchDepartureScale = .8f;
+        [Range(.1f, 2f)] public float LaunchDepartureScale = 1f;
         [Tooltip("Briefly brighten the existing parallel speed lines at the beginning of a launch.")]
         public bool LaunchSpeedLineBoost = true;
         [Min(.01f)] public float LaunchSpeedLineBoostDuration = .13f;
@@ -113,6 +114,8 @@ namespace CrowdPunch.Configuration
         [Range(0f, 1f)] public float PlayerFlashIntensity = 0.9f;
         public Color PlayerFlashColor = new Color(1f, .48f, .22f);
         [Header("Dash camera")]
+        [Tooltip("Camera pullback in metres at takeoff, followed by a short spring return.")]
+        [Min(0f)] public float DashCameraTug = .32f;
         [Tooltip("Keep at zero for stable hard shadows: changing FOV resizes URP's directional shadow projection.")]
         [Range(0f, 10f)] public float DashFovDelta = 0f;
         [Min(.01f)] public float DashFovTransition = 0.075f;

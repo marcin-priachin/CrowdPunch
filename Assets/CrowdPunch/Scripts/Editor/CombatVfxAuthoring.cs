@@ -71,7 +71,6 @@ namespace CrowdPunch.Editor
             settings.EnemyParticles=CombatVfxParticles.Impact("ArtCollision",flash,spark,null,new Color(.62f,.9f,1),.48f);
             settings.PlayerDamageParticles=CombatVfxParticles.Impact("ArtPlayerDamage",flash,spark,null,new Color(1,.2f,.12f),.9f);
             settings.EnvironmentParticles=CombatVfxParticles.Environment(smoke,spark);
-            settings.ComicImpactScale=.65f;
             settings.TrailWidthInModels=1; settings.TrailLengthInModels=2.5f;
             settings.TrailColor=new Color(.97f,.99f,1,1);
             RefineExplosion(settings.ExplosionParticles);

@@ -253,7 +253,7 @@ namespace CrowdPunch.Mono.Player
         {
             if (sequence != bridge.PunchSequence || sequence == punchSequence) return;
             punchSequence = sequence;
-            if (CanPlay) Play(punchVoice, hit ? profile.PunchConfirmed : profile.PunchMiss, hit ? .8f : .43f);
+            if (CanPlay) Play(punchVoice, hit ? profile.PunchConfirmed : profile.PunchMiss, hit ? .9f : .43f);
         }
 
         private void OnNinjaTeleport(Vector3 _, Vector3 arrival) =>
@@ -261,7 +261,7 @@ namespace CrowdPunch.Mono.Player
 
         private void OnDash()
         {
-            if (CanPlay) Play(dashVoice, profile.PlayerDash, .45f);
+            if (CanPlay) Play(dashVoice, profile.PlayerDash, .58f);
         }
 
         private void OnHurt(Vector3 _)
@@ -301,7 +301,8 @@ namespace CrowdPunch.Mono.Player
                 nextImpact = now + .085;
             }
             if (collisionScore > 0f && now >= nextImpact
-                && PlayCrowdImpact(profile.CrowdCollision, collision.Position, Mathf.Lerp(.6f, .85f, collision.Intensity)))
+                && PlayCrowdImpact(profile.CrowdCollision, collision.Position,
+                    Mathf.Lerp(.6f, .85f, collision.Intensity), Mathf.Lerp(1.16f, .91f, collision.Intensity)))
                 nextImpact = now + .085;
         }
 
@@ -312,13 +313,14 @@ namespace CrowdPunch.Mono.Player
             return Mathf.InverseLerp(CrowdImpactRange, CrowdImpactFullVolumeRange, offset.magnitude);
         }
 
-        private bool PlayCrowdImpact(AudioClip[] clips, Vector3 position, float volume)
+        private bool PlayCrowdImpact(AudioClip[] clips, Vector3 position, float volume, float pitch = 1f)
         {
             float gain = CrowdImpactGain(position);
             if (gain <= 0f) return false;
             var voice = crowdVoices[nextCrowdVoice];
             // Pan relative to the view while applying distance falloff only from the player.
             voice.panStereo = PlayerRelativePan(position);
+            voice.pitch = pitch;
             if (!Play(voice, clips, volume * gain * PlayerPreferences.Gain(PlayerPreference.CrowdImpacts))) return false;
             nextCrowdVoice = (nextCrowdVoice + 1) % crowdVoices.Length;
             return true;
@@ -336,9 +338,11 @@ namespace CrowdPunch.Mono.Player
             if (CanPlay) PlayWorld(bossHit ? profile.PillarBossHit : profile.PillarLanding, position, .7f, 2f);
         }
 
-        private void OnExplosion(Vector3 position, float radius, float impulse, float intensity)
+        private void OnExplosion(Vector3 position, float radius, float duration, float sizeMultiplier)
         {
-            if (CanPlay) PlayWorld(profile.ExploderDetonation, position, .6f, 2f);
+            float size = Mathf.InverseLerp(1.5f, 5f, radius);
+            if (CanPlay) PlayWorld(profile.ExploderDetonation, position,
+                Mathf.Lerp(.68f, .86f, size), 2f, pitch: Mathf.Lerp(1.04f, .88f, size));
         }
 
         private void OnProjectileImpact(ProjectileVisualKind kind, Vector3 position)

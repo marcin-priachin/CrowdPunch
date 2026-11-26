@@ -99,12 +99,13 @@ namespace CrowdPunch.Tests
             return entity;
         }
 
-        private Entity Wall(float z, bool bouncy = false)
+        private Entity Wall(float z, bool bouncy = false,
+            CollisionResponsePolicy collisionResponse = CollisionResponsePolicy.CollideRaiseCollisionEvents)
         {
             var material = Unity.Physics.Material.Default;
             material.Friction = 0; material.Restitution = bouncy ? 1 : 0;
             material.RestitutionCombinePolicy = Unity.Physics.Material.CombinePolicy.Maximum;
-            material.CollisionResponse = CollisionResponsePolicy.CollideRaiseCollisionEvents;
+            material.CollisionResponse = collisionResponse;
             var collider = Unity.Physics.BoxCollider.Create(new BoxGeometry { Size = new float3(20, 10, 1),
                 Orientation = quaternion.identity, BevelRadius = 0 }, CollisionFilter.Default, material);
             colliders.Add(collider); return Body(new float3(0, 0, z), collider, false);
@@ -114,6 +115,68 @@ namespace CrowdPunch.Tests
         {
             world.SetTime(new TimeData(++tick * Dt, Dt));
             world.GetOrCreateSystemManaged<Unity.Physics.Systems.PhysicsSystemGroup>().Update(); em.CompleteAllTrackedJobs();
+        }
+
+        [TestCase(false, CollisionResponsePolicy.CollideRaiseCollisionEvents)]
+        [TestCase(true, CollisionResponsePolicy.Collide)]
+        [TestCase(true, CollisionResponsePolicy.CollideRaiseCollisionEvents)]
+        public void Vision005_LaunchedWallHitPublishesOneAccentAtTheContact(bool usesCommittedPath, CollisionResponsePolicy response)
+        {
+            const float wallZ = 3.5f;
+            Wall(wallZ, bouncy: true, collisionResponse: response);
+            if (response == CollisionResponsePolicy.Collide)
+            {
+                var material = Unity.Physics.Material.Default;
+                material.CollisionResponse = response;
+                var shape = Unity.Physics.SphereCollider.Create(new SphereGeometry { Radius = .5f }, CollisionFilter.Default, material);
+                colliders.Add(shape);
+                em.SetComponentData(source, new PhysicsCollider { Value = shape });
+            }
+            if (usesCommittedPath)
+            {
+                Preview();
+                Punch();
+            }
+            else
+            {
+                var launch = new EnemyLaunchState();
+                EnemyLaunchTransition.Begin(ref launch, EnemyLaunchCause.PlayerPunch, 12f);
+                em.SetComponentData(source, launch);
+                em.SetComponentData(source, new PhysicsVelocity { Linear = math.forward() * 12f });
+            }
+            em.AddComponent<EnemyImpactFeedback>(source);
+            var settings = ScriptableObject.CreateInstance<CrowdPunch.Configuration.CombatFeedbackSettings>();
+            bridge.FeedbackSettings = settings;
+            var presenter = world.GetOrCreateSystem<CombatFeedbackBridgeSystem>();
+            var collisions = world.GetOrCreateSystem<EnemyLaunchCollisionSystem>();
+            var capture = world.GetOrCreateSystem<ImpactVelocityCaptureSystem>();
+            var impacts = new List<CombatFeedbackMessage>();
+            bridge.ImpactReceived += impacts.Add;
+            try
+            {
+                presenter.Update(world.Unmanaged);
+                for (int frame = 0; frame < 28; frame++)
+                {
+                    if (usesCommittedPath && em.IsComponentEnabled<AuthoritativeLaunchPath>(source)) Step();
+                    else
+                    {
+                        capture.Update(world.Unmanaged);
+                        PhysicsStep();
+                        collisions.Update(world.Unmanaged);
+                    }
+                    presenter.Update(world.Unmanaged);
+                }
+                Assert.That(impacts.Count, Is.EqualTo(1));
+                Assert.That(impacts[0].Kind, Is.EqualTo(CombatImpactKind.Obstacle));
+                Assert.That(impacts[0].Position.z, Is.EqualTo(wallZ - .5f).Within(.16f));
+                Assert.That(impacts[0].Direction.z, Is.LessThan(-.99f));
+            }
+            finally
+            {
+                bridge.ImpactReceived -= impacts.Add;
+                bridge.FeedbackSettings = null;
+                UnityEngine.Object.DestroyImmediate(settings);
+            }
         }
 
         [TestCase(false)]

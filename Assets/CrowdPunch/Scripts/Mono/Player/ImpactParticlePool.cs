@@ -95,9 +95,15 @@ namespace CrowdPunch.Mono.Player
         public void Show(CombatImpactKind kind, Vector3 position, Vector3 direction, float intensity,
             float scale = 1f, float playbackSpeed = 1f)
         {
-            int row = (int)kind;
-            bool background = kind is CombatImpactKind.EnemyCollision or CombatImpactKind.Environment or CombatImpactKind.DashMove;
-            int budget = background && PlayerPreferences.Enabled(PlayerPreference.ReducedEffects) ? Mathf.Max(1, capacity / 3) : capacity;
+            bool obstacle = kind == CombatImpactKind.Obstacle;
+            int row = obstacle ? (int)CombatImpactKind.Environment : (int)kind;
+            bool background = kind is CombatImpactKind.EnemyCollision or CombatImpactKind.Environment
+                or CombatImpactKind.Obstacle or CombatImpactKind.DashMove;
+            bool reducedEffects = PlayerPreferences.Enabled(PlayerPreference.ReducedEffects);
+            int budget = background && reducedEffects ? Mathf.Max(1, capacity / 3) : capacity;
+            if (obstacle && !reducedEffects) scale *= Mathf.Lerp(1.2f, 1.7f, Mathf.Clamp01(intensity));
+            if (kind == CombatImpactKind.EnemyCollision && !reducedEffects)
+                scale *= Mathf.Lerp(1.15f, 1.45f, Mathf.Clamp01(intensity));
             for (int slot = 0; slot < budget; slot++)
             {
                 var instance = particles[row, slot];
@@ -113,7 +119,7 @@ namespace CrowdPunch.Mono.Player
                 {
                     var main = effect.main;
                     main.startColor = kind == CombatImpactKind.PlayerDamage ? new Color(1f, .3f, .16f, .8f)
-                        : kind == CombatImpactKind.Environment ? new Color(.6f, .53f, .4f, .6f)
+                        : row == (int)CombatImpactKind.Environment ? new Color(.6f, .53f, .4f, .6f)
                         : new Color(.85f, .91f, .85f, .65f);
                     effect.Play();
                     effect.Emit(Mathf.Clamp(Mathf.RoundToInt(settings.PlaceholderParticleCount * Mathf.Lerp(.5f, 1f, intensity)), 1, 24));

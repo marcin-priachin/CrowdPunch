@@ -11,8 +11,8 @@ namespace CrowdPunch.Mono.Player
     [DefaultExecutionOrder(100)]
     public sealed class CombatFeedback : MonoBehaviour
     {
-        private const float DashTakeoffIntensity = .7f;
-        private const float DashTravelIntensity = .35f;
+        private const float DashTakeoffIntensity = .9f;
+        private const float DashTravelIntensity = .55f;
 
         private PlayerEcsBridge bridge;
         private PlayerHealth health;
@@ -36,7 +36,7 @@ namespace CrowdPunch.Mono.Player
         private float flashRemaining, dashRemaining;
         private Vector3 dashDirection;
         private bool dashEndPending;
-        private double nextCameraTime, nextExceptionalTime, nextDamageTime;
+        private double nextCameraTime, nextExceptionalTime, nextExplosionCameraTime, nextDamageTime;
         private uint restart, observedPunch;
         private bool bound;
 
@@ -130,6 +130,16 @@ namespace CrowdPunch.Mono.Player
         {
             if (!isActiveAndEnabled || FeedbackTimeController.IsSuspended || !bridge.gameObject.activeInHierarchy) return;
             comicImpacts?.ShowBlast(position, radius);
+            double now = Time.unscaledTimeAsDouble;
+            if (cameraFeedback == null || settings.ExplosionKick <= 0f || radius <= 0f || now < nextExplosionCameraTime)
+                return;
+            Vector3 away = Vector3.ProjectOnPlane(bridge.transform.position - position, Vector3.up);
+            float range = Mathf.Min(settings.CameraImpactRange, Mathf.Max(radius * 3f, 6f));
+            float attenuation = 1f - Mathf.Clamp01(away.magnitude / range);
+            if (attenuation <= 0f) return;
+            Vector3 direction = away.normalized + Vector3.up * .45f;
+            cameraFeedback.Impulse(direction, settings.ExplosionKick * attenuation, attenuation);
+            nextExplosionCameraTime = now + settings.CollisionCameraInterval;
         }
 
         private void OnImpact(CombatFeedbackMessage message)
@@ -142,7 +152,8 @@ namespace CrowdPunch.Mono.Player
                 ? ComicImpactPool.PunchFlashOffset(feedbackCamera, accentPosition, playerHead.position, playerHips.position)
                 : Vector3.zero;
             particles.Show(message.Kind, message.Position, message.Direction, message.Intensity);
-            comicImpacts.Show(message.Kind, accentPosition, message.Direction, message.Intensity, brightFlash: true, flashOffset: flashOffset);
+            comicImpacts.Show(message.Kind, accentPosition, message.Direction, message.Intensity,
+                brightFlash: true, flashOffset: flashOffset, playerChainDepth: message.PlayerOwned ? message.ChainDepth : 0);
             if (message.Kind != CombatImpactKind.EnemyCollision || cameraFeedback == null) return;
             float distance = Vector3.Distance(message.Position, bridge.transform.position);
             float attenuation = Mathf.Clamp01(1f - distance / Mathf.Max(1f, settings.CameraImpactRange));
@@ -188,7 +199,11 @@ namespace CrowdPunch.Mono.Player
             dashDirection = controller.DashDirection;
             dashEndPending = false;
             dashRemaining = settings.DashMovementInterval;
-            if (cameraFeedback != null) cameraFeedback.Dashing = true;
+            if (cameraFeedback != null)
+            {
+                cameraFeedback.Dashing = true;
+                cameraFeedback.DashTug(-dashDirection);
+            }
             particles.Show(CombatImpactKind.DashStart, bridge.transform.position, -dashDirection, DashTakeoffIntensity);
         }
         private void OnDashEnd()
@@ -218,14 +233,19 @@ namespace CrowdPunch.Mono.Player
         {
             if (!bound) return;
             if (feedbackCamera == null) feedbackCamera = UnityEngine.Camera.main;
+            if (bridge != null && bridge.gameObject.activeInHierarchy && !FeedbackTimeController.IsSuspended)
+                ShowDashParticles();
             comicImpacts?.Tick(Time.unscaledDeltaTime, feedbackCamera);
             launchDepartures?.Tick(Time.unscaledDeltaTime, feedbackCamera);
             pillarImpacts?.Tick(Time.unscaledDeltaTime, feedbackCamera);
-            if (bridge == null || !bridge.gameObject.activeInHierarchy || FeedbackTimeController.IsSuspended) return;
+        }
+
+        private void ShowDashParticles()
+        {
             if (dashEndPending)
             {
                 dashEndPending = false;
-                particles.Show(CombatImpactKind.DashEnd, bridge.transform.position, -dashDirection, DashTravelIntensity);
+                particles.Show(CombatImpactKind.DashEnd, bridge.transform.position, -dashDirection, DashTakeoffIntensity);
             }
             if (controller != null && controller.isActiveAndEnabled && controller.IsDashing && Time.deltaTime > 0f)
             {
@@ -248,7 +268,7 @@ namespace CrowdPunch.Mono.Player
             flashRemaining = dashRemaining = 0f;
             dashEndPending = false;
             dashDirection = Vector3.zero;
-            nextCameraTime = nextExceptionalTime = nextDamageTime = 0;
+            nextCameraTime = nextExceptionalTime = nextExplosionCameraTime = nextDamageTime = 0;
             particles?.Clear(); comicImpacts?.Clear(); dasherTelegraphs?.Clear(); flash?.Clear();
             if (!preserveLaunchTrails) trails?.Clear();
             launchDepartures?.Clear();

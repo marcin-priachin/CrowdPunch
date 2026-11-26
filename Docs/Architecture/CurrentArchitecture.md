@@ -4915,6 +4915,28 @@ Ground impacts add four noncolliding mesh chips. Ninja smoke uses eight finite p
 The Cartoon FX explosion accent is shorter and accompanied by a fading horizontal shockwave
 whose outer radius matches the event radius; the former transparent sphere is removed.
 
+### Feel combat feedback
+
+CombatFeedback uses the authored particle prefabs for all three dash phases and adds a gold
+starburst on confirmed punches. The comic mesh uses player-owned chain depth from the impact message to
+grow the cyan collision accents, hold them longer, and show thicker rings on later contacts.
+Enemy contacts have a wider cyan burst and ring than equally strong wall contacts
+(VISION-005/006, PLAYER-004/005/009, LOOP-007).
+Floor contacts keep a short amber spark. Lateral obstacle contacts use a distinct amber pop,
+a ring along the surface, and outward debris from the existing comic mesh and particle pools
+(VISION-005/006, TRACK-004). EnemyLaunchCollisionSystem records the surface normal and contact
+position from solver contacts and from live sweeps of committed launches. Both feed the same
+per-enemy mailbox and respect the existing environment threshold and cooldown. Reduced Effects
+keeps the smaller core of the wall impact and drops its decorative ring and flecks.
+CombatCameraFeedback advances a Feel `MMSpringFloat` on unscaled time for dash pullback,
+inside CameraFollow's existing offset composition. Nearby explosions add distance-attenuated,
+rate-limited camera recoil. Feel's `MMTween` drives comic expansion and launch and blast easing.
+Explosions add a short scalloped core accent and an inner echo to the existing shockwave mesh.
+Reduced Effects drops decorative strokes and the echo. Reduced Flashes keeps a dim single
+radius ring. Reduced Camera Motion clears every camera impulse, including the dash spring.
+GameplaySfx reuses its existing voices and volume controls for stronger punch and dash cues,
+collision pitch variation, and a deeper detonation for larger blasts.
+
 WizardZonePresentationSystem keeps every authoritative ground boundary and decorates up to
 32 zones with 12 cloud quads each by default. Pollen count scales with each zone's area,
 from 24 quads at a 6 m radius to 96 at 12 m, with a per-zone cap of 128.

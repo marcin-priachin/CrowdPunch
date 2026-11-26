@@ -1,4 +1,5 @@
 using CrowdPunch.Configuration;
+using MoreMountains.Tools;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -98,7 +99,7 @@ namespace CrowdPunch.Mono.Player
         private void Draw(Departure departure, UnityEngine.Camera camera)
         {
             float t = Mathf.Clamp01(departure.Age / Mathf.Max(.01f, settings.LaunchDepartureDuration));
-            float ease = 1f - Mathf.Pow(1f - t, 3);
+            float ease = MMTween.EaseOutCubic(t);
             float fade = (1f - t) * (1f - t);
             float size = departure.Size * settings.LaunchDepartureScale;
             var screenRight = camera.transform.right;

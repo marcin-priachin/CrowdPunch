@@ -123,7 +123,7 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     f.Pending = 0;
                     bool punch = f.Kind == CombatImpactKind.Punch;
-                    bool environment = f.Kind == CombatImpactKind.Environment;
+                    bool environment = f.Kind is CombatImpactKind.Environment or CombatImpactKind.Obstacle;
                     float minimum = environment ? settings.EnvironmentMinimumSpeed : settings.MinimumCollisionSpeed;
                     if (punch || f.Speed >= minimum && f.Impulse >= settings.MinimumCollisionImpulse)
                     {

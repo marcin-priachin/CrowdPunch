@@ -442,7 +442,8 @@ namespace CrowdPunch.Tests
             {
                 pool = new ComicImpactPool(go.transform, settings, material);
                 for (int i = 0; i < 200; i++)
-                    pool.Show(CombatImpactKind.EnemyCollision, Vector3.zero, Vector3.right, 1);
+                    pool.Show(CombatImpactKind.EnemyCollision, Vector3.zero, Vector3.right, 1,
+                        brightFlash: true, playerChainDepth: 4);
                 Assert.That(pool.ActiveCount, Is.EqualTo(pool.Capacity));
                 pool.Show(CombatImpactKind.PlayerDamage, Vector3.zero, Vector3.right, 1);
                 pool.Tick(0, view);
@@ -467,6 +468,117 @@ namespace CrowdPunch.Tests
                 Object.DestroyImmediate(go); Object.DestroyImmediate(view.gameObject);
                 Object.DestroyImmediate(material); Object.DestroyImmediate(settings);
                 Time.timeScale = scale;
+            }
+        }
+
+        [TestCase(CombatImpactKind.DashStart)]
+        [TestCase(CombatImpactKind.DashMove)]
+        [TestCase(CombatImpactKind.DashEnd)]
+        public void Vision005DashPhasesDoNotDrawComicStrokes(CombatImpactKind kind)
+        {
+            const PlayerPreference effects = PlayerPreference.ReducedEffects;
+            bool wasSaved = PlayerPrefs.HasKey("CrowdPunch.Settings." + effects);
+            int previous = PlayerPreferences.Get(effects);
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            var go = new GameObject("Dash strokes test");
+            var view = go.AddComponent<Camera>();
+            var material = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            var pool = new ComicImpactPool(go.transform, settings, material);
+            try
+            {
+                PlayerPreferences.Set(effects, 0);
+                pool.Show(kind, Vector3.forward * 3f, Vector3.right, 1f);
+                pool.Tick(.03f, view);
+                var mesh = go.GetComponentInChildren<MeshFilter>().sharedMesh;
+                Assert.That(pool.ActiveCount, Is.Zero);
+                Assert.That(mesh.vertexCount, Is.Zero);
+            }
+            finally
+            {
+                RestorePreference(effects, previous, wasSaved);
+                pool.Dispose();
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(material);
+                Object.DestroyImmediate(settings);
+            }
+        }
+
+        [Test]
+        public void Vision005LaterEnemyContactsHaveLargerLongerAccentsAtTheSameStrength()
+        {
+            const PlayerPreference effects = PlayerPreference.ReducedEffects;
+            bool wasSaved = PlayerPrefs.HasKey("CrowdPunch.Settings." + effects);
+            int previous = PlayerPreferences.Get(effects);
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            var go = new GameObject("Chain accents test");
+            var view = go.AddComponent<Camera>();
+            var material = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            var pool = new ComicImpactPool(go.transform, settings, material);
+            try
+            {
+                PlayerPreferences.Set(effects, 0);
+                var mesh = go.GetComponentInChildren<MeshFilter>().sharedMesh;
+                var position = Vector3.forward * 3f;
+                pool.Show(CombatImpactKind.EnemyCollision, position, Vector3.right, .52f, playerChainDepth: 2);
+                pool.Tick(.03f, view);
+                float firstWidth = mesh.bounds.size.x;
+                int firstVertices = mesh.vertexCount;
+                pool.Tick(.32f, view);
+                Assert.That(pool.ActiveCount, Is.Zero);
+
+                pool.Show(CombatImpactKind.EnemyCollision, position, Vector3.right, .52f, playerChainDepth: 4);
+                pool.Tick(.03f, view);
+                Assert.That(mesh.bounds.size.x, Is.GreaterThan(firstWidth));
+                Assert.That(mesh.vertexCount, Is.GreaterThan(firstVertices));
+                pool.Tick(.32f, view);
+                Assert.That(pool.ActiveCount, Is.EqualTo(1));
+                pool.Tick(.04f, view);
+                Assert.That(pool.ActiveCount, Is.Zero);
+            }
+            finally
+            {
+                RestorePreference(effects, previous, wasSaved);
+                pool.Dispose();
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(material);
+                Object.DestroyImmediate(settings);
+            }
+        }
+
+        [Test]
+        public void Vision005EnemyContactAccentSpreadsWiderThanAnEquallyStrongWallHit()
+        {
+            const PlayerPreference effects = PlayerPreference.ReducedEffects;
+            bool wasSaved = PlayerPrefs.HasKey("CrowdPunch.Settings." + effects);
+            int previous = PlayerPreferences.Get(effects);
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            var go = new GameObject("Impact hierarchy test");
+            var view = go.AddComponent<Camera>();
+            var material = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            var pool = new ComicImpactPool(go.transform, settings, material);
+            try
+            {
+                PlayerPreferences.Set(effects, 0);
+                var mesh = go.GetComponentInChildren<MeshFilter>().sharedMesh;
+                Vector3 contact = Vector3.forward * 3f;
+                pool.Show(CombatImpactKind.Obstacle, contact, Vector3.back, .55f);
+                pool.Tick(.06f, view);
+                float wallWidth = mesh.bounds.size.x;
+                Assert.That(wallWidth, Is.GreaterThan(0f));
+                pool.Clear();
+
+                pool.Show(CombatImpactKind.EnemyCollision, contact, Vector3.right, .55f, brightFlash: true);
+                pool.Tick(.06f, view);
+                Assert.That(mesh.bounds.size.x, Is.GreaterThan(wallWidth * 1.2f));
+                Assert.That(System.Array.Exists(mesh.colors, c => c.b > c.r && c.a > .5f), Is.True);
+            }
+            finally
+            {
+                RestorePreference(effects, previous, wasSaved);
+                pool.Dispose();
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(material);
+                Object.DestroyImmediate(settings);
             }
         }
 
@@ -648,6 +760,76 @@ namespace CrowdPunch.Tests
             }
         }
 
+        [Test]
+        public void Loop007FeelDashSpringSettlesAndClearsWithoutRotatingAim()
+        {
+            const PlayerPreference motion = PlayerPreference.CameraMotion;
+            bool wasSaved = PlayerPrefs.HasKey("CrowdPunch.Settings." + motion);
+            int previous = PlayerPreferences.Get(motion);
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            settings.Shake = 0f;
+            var root = new GameObject("Dash spring test");
+            try
+            {
+                PlayerPreferences.Set(motion, 1);
+                var camera = root.AddComponent<Camera>();
+                var feedback = root.AddComponent<CombatCameraFeedback>();
+                root.transform.rotation = Quaternion.Euler(30f, 15f, 0f);
+                var aim = root.transform.rotation;
+                feedback.Configure(settings);
+                float baselineFov = camera.fieldOfView;
+                feedback.DashTug(Vector3.back);
+                feedback.Advance(1f / 60f);
+                Assert.That(root.transform.position.z, Is.EqualTo(-settings.DashCameraTug * settings.CameraMotionScale).Within(.0001f));
+                for (int frame = 0; frame < 60; frame++)
+                {
+                    feedback.RemoveOffset();
+                    feedback.Advance(1f / 60f);
+                }
+                Assert.That(root.transform.position.magnitude, Is.LessThan(.0001f));
+                Assert.That(root.transform.rotation, Is.EqualTo(aim));
+                Assert.That(camera.fieldOfView, Is.EqualTo(baselineFov));
+
+                feedback.RemoveOffset();
+                feedback.DashTug(Vector3.left);
+                feedback.Advance(1f / 60f);
+                PlayerPreferences.Set(motion, 0);
+                feedback.Advance(1f / 60f);
+                Assert.That(root.transform.position, Is.EqualTo(Vector3.zero));
+            }
+            finally
+            {
+                RestorePreference(motion, previous, wasSaved);
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(settings);
+            }
+        }
+
+        [Test]
+        public void Vision006BlastEchoKeepsTheAuthoritativeOuterRadius()
+        {
+            var full = ExplosionFeedback.BuildRing(includeEcho: true);
+            var reduced = ExplosionFeedback.BuildRing(includeEcho: false);
+            try
+            {
+                Assert.That(full.vertexCount, Is.EqualTo(reduced.vertexCount * 2));
+                var points = full.vertices;
+                var reducedPoints = reduced.vertices;
+                for (int index = 0; index < reducedPoints.Length; index++)
+                {
+                    Assert.That(points[index].magnitude, Is.LessThan(.4f));
+                    Assert.That(points[index + reducedPoints.Length], Is.EqualTo(reducedPoints[index]));
+                    Assert.That(reducedPoints[index].magnitude, Is.LessThanOrEqualTo(.50001f));
+                }
+                Assert.That(reduced.bounds.extents.x, Is.EqualTo(.5f).Within(.00001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(full);
+                Object.DestroyImmediate(reduced);
+            }
+        }
+
         [TestCase(Mono.Levels.CampaignScreen.LevelComplete, false)]
         [TestCase(Mono.Levels.CampaignScreen.Playing, true)]
         public void Loop006CameraMotionOffHoldsGameplayViewThroughResults(Mono.Levels.CampaignScreen screen, bool failed)
@@ -748,11 +930,63 @@ namespace CrowdPunch.Tests
             var f = new EnemyImpactFeedback();
             var launch = new EnemyLaunchState { Owner = EnemyLaunchOwner.Player, FeedbackChainDepth = 1 };
             ImpactFeedbackRecording.Record(ref f, CombatImpactKind.Punch, float3.zero, math.forward(), 10, 10, launch, 0);
-            ImpactFeedbackRecording.Record(ref f, CombatImpactKind.Environment, math.up(), math.up(), 20, 20, launch, 0);
+            ImpactFeedbackRecording.RecordWorldContact(ref f, math.up(), math.right(), 20, 20, launch, 0);
             Assert.That(f.Kind, Is.EqualTo(CombatImpactKind.Punch));
             f.Pending = 0; f.NextContactTime = 2;
             ImpactFeedbackRecording.Record(ref f, CombatImpactKind.EnemyCollision, float3.zero, math.up(), 20, 20, launch, 1);
             Assert.That(f.Pending, Is.Zero);
+        }
+
+        [TestCase(0f, 1f, CombatImpactKind.Environment)]
+        [TestCase(1f, 0f, CombatImpactKind.Obstacle)]
+        public void Vision005FloorAndObstacleContactsUseDifferentAccents(float x, float y, CombatImpactKind kind)
+        {
+            var feedback = new EnemyImpactFeedback();
+            var launch = new EnemyLaunchState { Owner = EnemyLaunchOwner.Player };
+            ImpactFeedbackRecording.RecordWorldContact(ref feedback, float3.zero, new float3(x, y, 0), 12, 12, launch, 0);
+            Assert.That(feedback.Pending, Is.EqualTo(1));
+            Assert.That(feedback.Kind, Is.EqualTo(kind));
+        }
+
+        [Test]
+        public void Vision005ObstacleAccentStaysOnTheVisibleSideAndScalesWithEffectsQuality()
+        {
+            const PlayerPreference effects = PlayerPreference.ReducedEffects;
+            bool wasSaved = PlayerPrefs.HasKey("CrowdPunch.Settings." + effects);
+            int previous = PlayerPreferences.Get(effects);
+            var settings = ScriptableObject.CreateInstance<CombatFeedbackSettings>();
+            var go = new GameObject("Obstacle accents test");
+            var view = go.AddComponent<Camera>();
+            var material = new Material(Resources.Load<Shader>("Shaders/CombatFeedback"));
+            var pool = new ComicImpactPool(go.transform, settings, material);
+            try
+            {
+                PlayerPreferences.Set(effects, 0);
+                var mesh = go.GetComponentInChildren<MeshFilter>().sharedMesh;
+                var contact = Vector3.forward * 3f;
+                pool.Show(CombatImpactKind.Obstacle, contact, Vector3.back, .7f, brightFlash: true);
+                pool.Tick(.06f, view);
+                int fullVertices = mesh.vertexCount;
+                Assert.That(fullVertices, Is.GreaterThan(0).And.LessThanOrEqualTo(768));
+                Assert.That(System.Array.TrueForAll(mesh.vertices, vertex => vertex.z < contact.z), Is.True);
+                Assert.That(System.Array.TrueForAll(mesh.colors, color => color.r <= 1f), Is.True);
+                pool.Clear();
+
+                PlayerPreferences.Set(effects, 1);
+                pool.Show(CombatImpactKind.Obstacle, contact, Vector3.back, .7f);
+                pool.Tick(.06f, view);
+                Assert.That(mesh.vertexCount, Is.GreaterThan(0).And.LessThan(fullVertices));
+                pool.Tick(.25f, view);
+                Assert.That(pool.ActiveCount, Is.Zero);
+            }
+            finally
+            {
+                RestorePreference(effects, previous, wasSaved);
+                pool.Dispose();
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(material);
+                Object.DestroyImmediate(settings);
+            }
         }
 
         [Test]

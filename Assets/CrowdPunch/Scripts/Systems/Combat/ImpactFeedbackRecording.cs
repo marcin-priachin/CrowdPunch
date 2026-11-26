@@ -5,6 +5,15 @@ namespace CrowdPunch.Systems.Combat
 {
     internal static class ImpactFeedbackRecording
     {
+        public static bool IsObstacleContact(float3 normal) => math.abs(normal.y) < .7f;
+
+        public static void RecordWorldContact(ref EnemyImpactFeedback feedback, float3 position, float3 normal,
+            float speed, float impulse, in EnemyLaunchState launch, double time)
+        {
+            Record(ref feedback, IsObstacleContact(normal) ? CombatImpactKind.Obstacle : CombatImpactKind.Environment,
+                position, normal, speed, impulse, launch, time);
+        }
+
         public static void Record(ref EnemyImpactFeedback feedback, CombatImpactKind kind,
             float3 position, float3 direction, float speed, float impulse, in EnemyLaunchState launch, double time)
         {

@@ -84,11 +84,12 @@ namespace CrowdPunch.Systems.Combat
 
             state.Dependency = job.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
 
-            // The motor can turn at a verified sweep contact without a solver event at
-            // the touching vertex. Resolve that contact through the same damage history.
-            state.Dependency = new EliteSweepJob
+            // The motor can turn at a verified sweep contact without a solver event.
+            state.Dependency = new SweptContactJob
             {
                 Damage = damage,
+                Enemies = SystemAPI.GetComponentLookup<Enemy>(true),
+                Dashers = SystemAPI.GetComponentLookup<DasherSettings>(true),
                 Launches = SystemAPI.GetComponentLookup<EnemyLaunchState>(true),
                 Tiers = SystemAPI.GetComponentLookup<EnemyTier>(true),
                 Respawns = SystemAPI.GetComponentLookup<RespawnRequest>(true),
@@ -178,7 +179,7 @@ namespace CrowdPunch.Systems.Combat
                             float speed = math.abs(math.dot(feedback.IncomingVelocity, collisionEvent.Normal));
                             if (speed <= .0001f) return;
                             var contact = collisionEvent.CalculateDetails(ref World);
-                            ImpactFeedbackRecording.Record(ref feedback, CombatImpactKind.Environment,
+                            ImpactFeedbackRecording.RecordWorldContact(ref feedback,
                                 contact.AverageContactPointPosition, enemyA ? collisionEvent.Normal : -collisionEvent.Normal,
                                 speed, contact.EstimatedImpulse, LaunchStateLookup[body], ElapsedTime);
                             FeedbackLookup[body] = feedback;
@@ -482,10 +483,12 @@ namespace CrowdPunch.Systems.Combat
 
         [BurstCompile]
         [WithAll(typeof(Enemy))]
-        [WithNone(typeof(RespawnRequest), typeof(DasherSettings))]
-        private partial struct EliteSweepJob : IJobEntity
+        [WithNone(typeof(RespawnRequest))]
+        private partial struct SweptContactJob : IJobEntity
         {
             public CollisionDamageQueue Damage;
+            [ReadOnly] public ComponentLookup<Enemy> Enemies;
+            [ReadOnly] public ComponentLookup<DasherSettings> Dashers;
             [ReadOnly] public ComponentLookup<EnemyLaunchState> Launches;
             [ReadOnly] public ComponentLookup<EnemyTier> Tiers;
             [ReadOnly] public ComponentLookup<RespawnRequest> Respawns;
@@ -496,7 +499,23 @@ namespace CrowdPunch.Systems.Combat
             {
                 Entity target = path.Contact;
                 if (target == Entity.Null || path.LaunchSequence != launch.LaunchSequence
-                    || launch.Phase != EnemyLaunchPhase.Launched || math.abs(path.ContactNormal.y) > .7f
+                    || launch.Phase != EnemyLaunchPhase.Launched) return;
+
+                if (!Enemies.HasComponent(target))
+                {
+                    float closingSpeed = -math.dot(path.IncomingVelocity, path.ContactNormal);
+                    if (ImpactFeedbackRecording.IsObstacleContact(path.ContactNormal) && closingSpeed > 0f
+                        && path.ContactImpulse > 0f && Feedbacks.TryGetComponent(source, out var worldFeedback))
+                    {
+                        // Share the solver's mailbox so a sweep and a collision event yield one accent.
+                        ImpactFeedbackRecording.RecordWorldContact(ref worldFeedback, path.ContactPoint, path.ContactNormal,
+                            closingSpeed, path.ContactImpulse, launch, Now);
+                        Feedbacks[source] = worldFeedback;
+                    }
+                    return;
+                }
+
+                if (Dashers.HasComponent(source) || math.abs(path.ContactNormal.y) > .7f
                     || !Tiers.TryGetComponent(target, out var tier) || tier.Value != EnemyCombatTier.Elite
                     || !EnemyCollisionDamage.CanDamage(tier.Value, launch.Owner)
                     || !Launches.TryGetComponent(target, out var targetLaunch)

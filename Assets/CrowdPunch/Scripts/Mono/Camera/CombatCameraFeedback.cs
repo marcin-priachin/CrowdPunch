@@ -1,4 +1,5 @@
 using CrowdPunch.Configuration;
+using MoreMountains.Feedbacks;
 using UnityEngine;
 
 namespace CrowdPunch.Mono.Camera
@@ -8,6 +9,8 @@ namespace CrowdPunch.Mono.Camera
     {
         private UnityEngine.Camera view;
         private CombatFeedbackSettings settings;
+        private readonly MMSpringFloat dashRecoil = new MMSpringFloat { Damping = .55f, Frequency = 5.5f };
+        private Vector3 dashRecoilDirection;
         private Vector3 kick, kickVelocity, appliedOffset;
         private float trauma, fovOffset, baselineFov;
         public bool Dashing { get; set; }
@@ -22,6 +25,14 @@ namespace CrowdPunch.Mono.Camera
             if (settings == null || !PlayerPreferences.Enabled(PlayerPreference.CameraMotion)) return;
             kick = Vector3.ClampMagnitude(kick + direction.normalized * strength, settings.MaximumCameraOffset);
             trauma = Mathf.Clamp01(trauma + Mathf.Max(0f, intensity) * .55f);
+        }
+
+        public void DashTug(Vector3 direction)
+        {
+            if (settings == null || !PlayerPreferences.Enabled(PlayerPreference.CameraMotion)) return;
+            dashRecoilDirection = direction.normalized;
+            dashRecoil.MoveToInstant(settings.DashCameraTug);
+            dashRecoil.MoveTo(0f);
         }
         // Called by CameraFollow around its normal update so feedback cannot enter its smoothing history.
         public void RemoveOffset()
@@ -45,7 +56,8 @@ namespace CrowdPunch.Mono.Camera
             float phase = Time.unscaledTime * 47f;
             Vector3 noise = new Vector3(Mathf.Sin(phase), Mathf.Sin(phase * 1.37f), 0f)
                 * (settings.Shake * trauma * trauma);
-            appliedOffset = Vector3.ClampMagnitude(kick + transform.TransformDirection(noise),
+            Vector3 dashOffset = dashRecoilDirection * dashRecoil.CurrentValue;
+            appliedOffset = Vector3.ClampMagnitude(kick + dashOffset + transform.TransformDirection(noise),
                 settings.MaximumCameraOffset) * settings.CameraMotionScale;
             transform.position += appliedOffset;
             // Analytic damped spring: one brief counter-kick, stable even after a long frame.
@@ -59,6 +71,12 @@ namespace CrowdPunch.Mono.Camera
             kick = next;
             if (kick.sqrMagnitude + kickVelocity.sqrMagnitude < .000001f)
                 kick = kickVelocity = Vector3.zero;
+            if (dashRecoil.CurrentValue != 0f || dashRecoil.Velocity != 0f)
+            {
+                dashRecoil.UpdateSpringValue(Mathf.Clamp(dt, 0f, .25f));
+                if (Mathf.Abs(dashRecoil.CurrentValue) < .0001f && Mathf.Abs(dashRecoil.Velocity) < .001f)
+                    dashRecoil.MoveToInstant(0f);
+            }
             trauma = Mathf.MoveTowards(trauma, 0f, dt / Mathf.Max(.01f, settings.CameraRecovery * 2.5f));
             fovOffset = Mathf.Lerp(fovOffset, Dashing ? settings.DashFovDelta : 0f,
                 1f - Mathf.Exp(-dt / Mathf.Max(.01f, settings.DashFovTransition)));
@@ -74,6 +92,7 @@ namespace CrowdPunch.Mono.Camera
         {
             RemoveOffset();
             kick = kickVelocity = Vector3.zero;
+            dashRecoil.MoveToInstant(0f);
             trauma = fovOffset = 0f;
             if (view != null) view.fieldOfView = baselineFov;
         }

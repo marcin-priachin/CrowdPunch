@@ -1,5 +1,6 @@
 using CrowdPunch.Components;
 using CrowdPunch.Configuration;
+using MoreMountains.Tools;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -13,15 +14,18 @@ namespace CrowdPunch.Mono.Player
             public bool Active, IsBlast, BrightFlash, HasDrawn;
             public CombatImpactKind Kind;
             public Vector3 Position, Direction, FlashOffset;
-            public float Age, Intensity;
+            public float Age, Intensity, ChainAccent;
             public float BlastRadius;
+            public readonly float Lifetime => IsBlast ? BlastFlashDuration
+                : Kind == CombatImpactKind.Obstacle ? .30f
+                : Kind == CombatImpactKind.EnemyCollision ? .31f + .075f * ChainAccent : Duration;
         }
 
         private const float Duration = .22f;
         private const float PunchFlashDuration = .145f;
         private const float PunchFlashLift = .20f;
         private const float BlastFlashDuration = .155f;
-        private const float CampaignImpactScale = .65f;
+        private const float FlashReferenceScale = .65f;
         private const int VerticesPerImpact = 768;
         private static readonly Color Ink = new Color(.095f, .055f, .16f);
         private static readonly Vector2[] BurstOutline = MakeOutline(10, .34f);
@@ -30,10 +34,18 @@ namespace CrowdPunch.Mono.Player
         private static readonly Vector2[] RingOutline = MakeOutline(12, 1f);
         private static readonly Vector2[] PunchFlashOutline = MakeOutline(8, .34f);
         private static readonly Vector2[] BlastFlashOutline = MakeOutline(14, .82f, .10f);
+        private static readonly Vector2[] SmokeOutline = MakeOutline(6, .84f, .08f);
         private static readonly Color FlashCentre = new Color(6.8f, 6.4f, 4.6f);
         private static readonly Color FlashInner = new Color(5.6f, 4.8f, 3.1f);
         private static readonly Color PunchFlashEdge = new Color(6f, 2.5f, .40f);
+        private static readonly Color CollisionAccent = new Color(.18f, .92f, 1f);
+        private static readonly Color CollisionCore = new Color(.72f, .98f, 1f);
+        private static readonly Color CollisionFlashCentre = new Color(2.6f, 5.75f, 6.6f);
+        private static readonly Color CollisionFlashInner = new Color(1.35f, 4.65f, 5.5f);
+        private static readonly Color CollisionFlashEdge = new Color(.55f, 4f, 5.2f);
         private static readonly Color BlastFlashEdge = new Color(7f, 2.36f, .38f);
+        private static readonly Color ObstacleAmber = new Color(1f, .50f, .13f);
+        private static readonly Color ObstacleGold = new Color(1f, .80f, .36f);
         private readonly Impact[] impacts;
         private readonly Vector3[] vertices;
         private readonly Color[] colors;
@@ -72,17 +84,23 @@ namespace CrowdPunch.Mono.Player
         }
 
         public void Show(CombatImpactKind kind, Vector3 position, Vector3 direction, float intensity,
-            bool brightFlash = false, Vector3 flashOffset = default)
+            bool brightFlash = false, Vector3 flashOffset = default, int playerChainDepth = 0)
         {
-            if (settings.ComicImpactScale <= 0f || kind != CombatImpactKind.Punch
-                && kind != CombatImpactKind.EnemyCollision && kind != CombatImpactKind.PlayerDamage) return;
-            Queue(new Impact { Active = true, Kind = kind, Position = position,
-                Direction = direction, Intensity = Mathf.Clamp01(intensity), BrightFlash = brightFlash, FlashOffset = flashOffset });
+            if (settings.ComicImpactScale <= 0f ||
+                kind is not (CombatImpactKind.Punch or CombatImpactKind.EnemyCollision
+                    or CombatImpactKind.PlayerDamage or CombatImpactKind.Environment or CombatImpactKind.Obstacle)) return;
+            if (kind == CombatImpactKind.Environment && PlayerPreferences.Enabled(PlayerPreference.ReducedEffects)) return;
+            Queue(new Impact
+            {
+                Active = true, Kind = kind, Position = position, Direction = direction,
+                Intensity = Mathf.Clamp01(intensity), BrightFlash = brightFlash, FlashOffset = flashOffset,
+                ChainAccent = kind == CombatImpactKind.EnemyCollision ? Mathf.InverseLerp(1f, 4f, playerChainDepth) : 0f
+            });
         }
 
         public void ShowBlast(Vector3 position, float radius)
         {
-            if (settings.ComicImpactScale <= 0f || settings.UseReducedFlashes) return;
+            if (settings.ComicImpactScale <= 0f || radius <= 0f || settings.UseReducedFlashes) return;
             Queue(new Impact { Active = true, IsBlast = true, Position = position + Vector3.up * .60f,
                 BlastRadius = radius, BrightFlash = true });
         }
@@ -94,21 +112,25 @@ namespace CrowdPunch.Mono.Player
             {
                 if (!impacts[i].Active) { slot = i; break; }
             }
-            // Reserve the player's readability under saturation by replacing a background collision.
-            if (slot < 0 && impact.Kind != CombatImpactKind.EnemyCollision)
+            // Reserve the important impacts under saturation by replacing the oldest decoration.
+            if (slot < 0 && IsPriority(impact))
                 for (int i = 0; i < impacts.Length; i++)
-                    if (impacts[i].Kind == CombatImpactKind.EnemyCollision
+                    if (!IsPriority(impacts[i])
                         && (slot < 0 || impacts[i].Age > impacts[slot].Age)) slot = i;
             if (slot < 0) return;
             if (!impacts[slot].Active) ActiveCount++;
             impacts[slot] = impact;
         }
 
+        private static bool IsPriority(Impact impact) =>
+            impact.IsBlast || impact.Kind is CombatImpactKind.Punch or CombatImpactKind.PlayerDamage;
+
         public void Tick(float unscaledDeltaTime, UnityEngine.Camera camera)
         {
             count = 0;
             ActiveCount = 0;
             bool canDraw = camera != null && settings.ComicImpactScale > 0f;
+            bool reducedEffects = PlayerPreferences.Enabled(PlayerPreference.ReducedEffects);
             float delta = Mathf.Max(0f, unscaledDeltaTime);
             for (int i = 0; i < impacts.Length; i++)
             {
@@ -117,10 +139,17 @@ namespace CrowdPunch.Mono.Player
                 bool firstFrame = !impact.HasDrawn;
                 // A confirmed punch starts its flash on a rendered frame, even after a hitch.
                 if (!firstFrame || !canDraw || !IsDirectPunch(impact)) impact.Age += delta;
-                if (impact.Age >= (impact.IsBlast ? BlastFlashDuration : Duration)) { impact.Active = false; continue; }
+                if (impact.Age >= impact.Lifetime) { impact.Active = false; continue; }
                 ActiveCount++;
                 if (!canDraw) continue;
-                if (!impact.IsBlast) Draw(impact, camera);
+                if (impact.IsBlast)
+                {
+                    if (!reducedEffects && !settings.UseReducedFlashes) DrawBlast(impact, camera);
+                }
+                else if (impact.Kind == CombatImpactKind.Obstacle)
+                    DrawObstacle(impact, camera, reducedEffects);
+                else if (!reducedEffects || impact.Kind != CombatImpactKind.Environment)
+                    Draw(impact, camera, reducedEffects);
                 if (impact.BrightFlash && !settings.UseReducedFlashes)
                     DrawFlash(impact, camera, firstFrame ? 0f : impact.Age);
                 impact.HasDrawn = true;
@@ -133,17 +162,19 @@ namespace CrowdPunch.Mono.Player
             mesh.SetTriangles(indices, 0, count, 0, true);
         }
 
-        private void Draw(Impact impact, UnityEngine.Camera camera)
+        private void Draw(Impact impact, UnityEngine.Camera camera, bool reducedEffects)
         {
-            float t = impact.Age / Duration;
+            float t = impact.Age / impact.Lifetime;
             bool damage = impact.Kind == CombatImpactKind.PlayerDamage;
             bool collision = impact.Kind == CombatImpactKind.EnemyCollision;
+            bool environment = impact.Kind == CombatImpactKind.Environment;
             Color accent = damage ? new Color(1f, .22f, .19f)
-                : collision ? new Color(.18f, .88f, 1f) : new Color(1f, .68f, .045f);
-            Color core = settings.UseReducedFlashes ? accent : new Color(1f, .95f, .69f);
-            float radius = (damage ? 1.05f : collision ? .58f : .9f)
+                : collision ? CollisionAccent
+                : environment ? new Color(.97f, .56f, .22f) : new Color(1f, .68f, .045f);
+            Color core = settings.UseReducedFlashes ? accent : collision ? CollisionCore : new Color(1f, .95f, .69f);
+            float radius = (damage ? 1.05f : collision ? .91f + .23f * impact.ChainAccent : environment ? .44f : .9f)
                 * Mathf.Lerp(.65f, 1.15f, impact.Intensity) * settings.ComicImpactScale;
-            float fade = 1f - Smooth(Mathf.InverseLerp(.45f, 1f, t));
+            float fade = 1f - MMTween.EaseInOutCubic(Mathf.InverseLerp(.32f, 1f, t));
             SetBillboard(impact.Position, impact.Direction, camera.transform, .08f);
 
             // The burst snaps out, overshoots once, then contracts; the ring carries energy outward.
@@ -155,16 +186,29 @@ namespace CrowdPunch.Mono.Player
                 Burst(Vector2.zero, burst * .83f, WithAlpha(accent, fade), BurstOutline, 0f);
                 Burst(Vector2.zero, burst * .44f, WithAlpha(core, fade), CoreOutline, .07f);
             }
-            float travel = 1f - Mathf.Pow(1f - t, 3f);
+            float travel = MMTween.EaseOutCubic(t);
             float ringRadius = radius * Mathf.Lerp(.45f, 1.7f, travel);
             float ringWidth = radius * .065f * (1f - t);
+            bool collisionRing = collision && impact.Intensity >= Mathf.Lerp(.27f, .12f, impact.ChainAccent);
             if (damage)
             {
                 Ring(ringRadius, ringWidth * 1.8f, WithAlpha(Ink, fade * .8f));
                 Ring(ringRadius, ringWidth, WithAlpha(accent, fade));
             }
+            else if (!reducedEffects && collisionRing)
+                Ring(ringRadius, ringWidth * (1.85f + .8f * impact.ChainAccent), WithAlpha(accent, fade * .95f));
 
-            int stars = collision || PlayerPreferences.Enabled(PlayerPreference.ReducedEffects) ? 0 : 2;
+            if (!reducedEffects && impact.Kind == CombatImpactKind.Punch)
+                PunchStrokes(radius, travel, fade, accent);
+
+            if (reducedEffects) return;
+            int stars = impact.Kind switch
+            {
+                CombatImpactKind.Punch => 3,
+                CombatImpactKind.PlayerDamage => 2,
+                CombatImpactKind.EnemyCollision when collisionRing => impact.ChainAccent >= .5f ? 4 : 3,
+                _ => 0
+            };
             for (int i = 0; i < stars; i++)
             {
                 float a = .4f + i * (2f * Mathf.PI / stars);
@@ -177,22 +221,94 @@ namespace CrowdPunch.Mono.Player
             }
         }
 
+        private void PunchStrokes(float radius, float travel, float fade, Color accent)
+        {
+            for (int lane = -1; lane <= 1; lane++)
+            {
+                float length = radius * (lane == 0 ? .85f : .57f) * Mathf.Lerp(1f, .35f, travel);
+                float x = radius * Mathf.Lerp(.45f, 1.35f, travel);
+                float y = lane * radius * Mathf.Lerp(.22f, .46f, travel);
+                var start = new Vector2(x, y);
+                var end = new Vector2(x + length, y + lane * length * .22f);
+                var edge = new Vector2(0f, radius * .065f * fade);
+                Triangle(start - edge, start + edge, end, WithAlpha(Ink, fade));
+                edge *= .48f;
+                end = Vector2.Lerp(start, end, .82f);
+                Triangle(start - edge, start + edge, end, WithAlpha(accent, fade));
+            }
+        }
+
+        private void DrawObstacle(Impact impact, UnityEngine.Camera camera, bool reducedEffects)
+        {
+            float t = impact.Age / impact.Lifetime;
+            float travel = MMTween.EaseOutCubic(t);
+            float fade = 1f - MMTween.EaseInOutCubic(Mathf.InverseLerp(.28f, 1f, t));
+            float radius = settings.ComicImpactScale * Mathf.Lerp(.79f, 1.18f, impact.Intensity);
+            Vector3 normal = impact.Direction.normalized;
+            Color core = settings.UseReducedFlashes ? ObstacleGold : new Color(1f, .95f, .72f);
+            if (!reducedEffects)
+            {
+                Vector3 alongWall = Vector3.Cross(Vector3.up, normal).normalized;
+                right = root.InverseTransformVector(alongWall);
+                up = root.InverseTransformVector(Vector3.Cross(normal, alongWall));
+                centre = root.InverseTransformPoint(impact.Position + normal * .04f);
+                Ring(radius * Mathf.Lerp(.27f, 1.22f, travel), radius * .10f * (1f - t), WithAlpha(ObstacleGold, fade * .8f));
+            }
+
+            // Pull the pop and debris away from the surface to keep them visible at grazing angles.
+            SetBillboard(impact.Position + normal * Mathf.Lerp(.16f, .43f, travel), normal, camera.transform, 0f);
+            float pop = radius * Mathf.Lerp(.72f, .35f, travel) * (1f - Smooth(Mathf.InverseLerp(.36f, .82f, t)));
+            if (pop > .001f)
+            {
+                Burst(Vector2.zero, pop, WithAlpha(Ink, fade), BurstOutline, 0f);
+                Burst(Vector2.zero, pop * .84f, WithAlpha(ObstacleAmber, fade), BurstOutline, 0f);
+                Burst(Vector2.zero, pop * .46f, WithAlpha(core, fade), CoreOutline, .07f);
+            }
+
+            if (reducedEffects) return;
+            for (int chip = -2; chip <= 2; chip++)
+            {
+                float angle = chip * .51f;
+                var offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius * Mathf.Lerp(.22f, .99f, travel);
+                float size = radius * (.12f - .019f * Mathf.Abs(chip)) * fade;
+                Burst(offset, size, WithAlpha(Ink, fade), StarOutline, angle + t * 3f);
+                Burst(offset, size * .72f, WithAlpha(ObstacleGold, fade), StarOutline, angle + t * 3f);
+            }
+        }
+
+        private void DrawBlast(Impact impact, UnityEngine.Camera camera)
+        {
+            float t = impact.Age / BlastFlashDuration;
+            float travel = MMTween.EaseOutCubic(t);
+            float fade = 1f - MMTween.EaseInCubic(t);
+            float radius = Mathf.Min(impact.BlastRadius * .65f, 2.2f * settings.ComicImpactScale);
+            SetBillboard(impact.Position, Vector3.right, camera.transform, .1f);
+            for (int i = 0; i < 5; i++)
+            {
+                float angle = (i + .4f) * Mathf.PI * .4f;
+                Vector2 radial = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                Vector2 point = radial * radius * Mathf.Lerp(.21f, .69f, travel);
+                float size = radius * Mathf.Lerp(.20f, .31f, travel);
+                Color smoke = i % 2 == 0 ? new Color(.86f, .33f, .12f) : new Color(.45f, .18f, .19f);
+                Burst(point, size, WithAlpha(smoke, fade * .85f), SmokeOutline, angle + t);
+            }
+        }
+
         private void DrawFlash(Impact impact, UnityEngine.Camera camera, float age)
         {
             bool collision = impact.Kind == CombatImpactKind.EnemyCollision;
-            if (impact.Kind == CombatImpactKind.PlayerDamage || collision && impact.Intensity < .38f) return;
+            if (!impact.IsBlast && impact.Kind != CombatImpactKind.Punch && (!collision || impact.Intensity < .38f)) return;
             bool directPunch = IsDirectPunch(impact);
-            float duration = impact.IsBlast ? BlastFlashDuration : collision ? .072f : PunchFlashDuration;
+            float duration = impact.IsBlast ? BlastFlashDuration : collision ? .09f + .04f * impact.ChainAccent : PunchFlashDuration;
             if (age >= duration) return;
 
             float peak = impact.IsBlast ? .072f : collision ? .025f : .070f;
             float fade = 1f - Smooth(Mathf.InverseLerp(peak * .77f, duration, age));
             float width = impact.IsBlast ? Mathf.Clamp(impact.BlastRadius * .32f, .78f, 1.7f)
-                : collision ? Mathf.Lerp(.23f, .42f, impact.Intensity)
+                : collision ? Mathf.Lerp(.31f, .49f, impact.Intensity) * (1f + .28f * impact.ChainAccent)
                 : .76f * Mathf.Lerp(.8f, 1.12f, impact.Intensity);
-            // The approved flash widths use the saved campaign scale as their reference.
-            width *= (settings.ComicImpactScale / CampaignImpactScale) * Mathf.Lerp(.86f, 1.16f, age / duration);
-            float gain = collision ? (impact.Intensity >= .70f ? .48f : .29f) : 1f;
+            width *= (settings.ComicImpactScale / FlashReferenceScale) * Mathf.Lerp(.86f, 1.16f, age / duration);
+            float gain = collision ? Mathf.Lerp(.38f, .56f, impact.Intensity) : 1f;
             Vector3 position = impact.Position + impact.FlashOffset;
             if (!impact.IsBlast) position += Vector3.up * (collision ? .18f : PunchFlashLift);
             if (directPunch)
@@ -205,9 +321,9 @@ namespace CrowdPunch.Mono.Player
             SetBillboard(position, impact.Direction, camera.transform, directPunch ? 0f : .18f,
                 impact.IsBlast ? 12f * Mathf.Deg2Rad : 0f);
 
-            Color centerColor = WithAlpha(FlashCentre * gain, fade);
-            Color inner = WithAlpha(FlashInner * gain, fade);
-            Color edge = WithAlpha((impact.IsBlast ? BlastFlashEdge : PunchFlashEdge) * gain, fade);
+            Color centerColor = WithAlpha((collision ? CollisionFlashCentre : FlashCentre) * gain, fade);
+            Color inner = WithAlpha((collision ? CollisionFlashInner : FlashInner) * gain, fade);
+            Color edge = WithAlpha((impact.IsBlast ? BlastFlashEdge : collision ? CollisionFlashEdge : PunchFlashEdge) * gain, fade);
             Color fringe = WithAlpha(edge, 0f);
             var outline = impact.IsBlast ? BlastFlashOutline : PunchFlashOutline;
             Vector2 size = new Vector2(width, width * (impact.IsBlast ? .82f : .62f));
