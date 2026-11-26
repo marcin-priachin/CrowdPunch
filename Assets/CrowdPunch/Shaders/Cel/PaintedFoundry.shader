@@ -202,7 +202,6 @@ Shader "CrowdPunch/Cel/Painted Foundry"
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
-            #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
             #pragma multi_compile_fog
             #pragma multi_compile _ LIGHTMAP_ON
             #pragma multi_compile _ LIGHTMAP_SHADOW_MIXING
@@ -314,12 +313,10 @@ Shader "CrowdPunch/Cel/Painted Foundry"
                 half ndl=saturate(dot(n,sun.direction));
                 half feather=max(fwidth(ndl)*1.5,.018);
                 half band=.20+.42*smoothstep(.23-feather,.23+feather,ndl)+.38*smoothstep(.68-feather,.68+feather,ndl);
-                AmbientOcclusionFactor ao=GetScreenSpaceAmbientOcclusion(GetNormalizedScreenSpaceUV(input.positionCS));
                 half visibility=lerp(1,sun.shadowAttenuation,_ReceiveShadows);
                 half lightAmount=lerp(.65,band*visibility,_Contrast);
                 half3 pigment=lerp(_ShadowColor.rgb,_LightColor.rgb,lightAmount);
                 half3 color=albedo*(pigment*1.25+SampleSH(n)*.12);
-                color*=lerp(1,ao.indirectAmbientOcclusion,.28);
                 if (_CourtPaintBounds.z > 0 && _CourtPaintBounds.w > 0)
                     color *= CourtPaving(p.xz);
                 color=MixFog(color,input.fog);

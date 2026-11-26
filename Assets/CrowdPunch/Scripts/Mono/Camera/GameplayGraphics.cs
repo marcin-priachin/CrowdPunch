@@ -18,8 +18,7 @@ namespace CrowdPunch.Mono.Camera
 
         private void Awake()
         {
-            if (active != null || GraphicsSettings.currentRenderPipeline is not UniversalRenderPipelineAsset source
-                || !SupportsGraphicsSettings(source)) return;
+            if (active != null || GraphicsSettings.currentRenderPipeline is not UniversalRenderPipelineAsset source) return;
 
             active = this;
             previousPipeline = QualitySettings.renderPipeline;
@@ -45,7 +44,7 @@ namespace CrowdPunch.Mono.Camera
 
         internal static void RegisterLevelPipeline(UniversalRenderPipelineAsset levelPipeline)
         {
-            if (active == null || !SupportsGraphicsSettings(levelPipeline)) return;
+            if (active == null) return;
             active.levelPipelines.Add(levelPipeline);
             ApplyScale(levelPipeline);
         }
@@ -58,19 +57,9 @@ namespace CrowdPunch.Mono.Camera
         private static void ApplyScale(UniversalRenderPipelineAsset target) =>
             target.renderScale = Mathf.Clamp(PlayerPreferences.Gain(PlayerPreference.RenderScale), .7f, 1f);
 
-        private static bool SupportsGraphicsSettings(UniversalRenderPipelineAsset target)
-        {
-            var renderers = target.rendererDataList;
-            return renderers.Length >= 3 && renderers[1] != null && renderers[1].name == "CelRendererHalfAo"
-                && renderers[2] != null && renderers[2].name == "CelRendererNoAo";
-        }
-
         private void ApplyCamera()
         {
             if (cameraData == null) return;
-            // CelRendering lists the authored, half-resolution AO, and no-AO renderers in this order.
-            int ambientOcclusion = PlayerPreferences.Get(PlayerPreference.AmbientOcclusion);
-            cameraData.SetRenderer(ambientOcclusion is 1 or 2 ? ambientOcclusion : -1);
             cameraData.antialiasing = PlayerPreferences.Get(PlayerPreference.AntiAliasing) switch
             {
                 0 => AntialiasingMode.None,
@@ -84,10 +73,7 @@ namespace CrowdPunch.Mono.Camera
             if (active != this) return;
             active = null;
             if (cameraData != null)
-            {
-                cameraData.SetRenderer(-1);
                 cameraData.antialiasing = previousAntiAliasing;
-            }
             var selected = QualitySettings.renderPipeline;
             if (selected == pipeline || selected is UniversalRenderPipelineAsset level && levelPipelines.Contains(level))
                 QualitySettings.renderPipeline = previousPipeline;

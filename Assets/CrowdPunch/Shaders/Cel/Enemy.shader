@@ -69,7 +69,6 @@ HLSLPROGRAM
 #pragma shader_feature_local_fragment _PLAIN_ENEMY
 
 // Keywords
-#pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
 #pragma multi_compile_fragment _ _SCREEN_SPACE_IRRADIANCE
 #pragma multi_compile _ LIGHTMAP_ON
 #pragma multi_compile _ DYNAMICLIGHTMAP_ON

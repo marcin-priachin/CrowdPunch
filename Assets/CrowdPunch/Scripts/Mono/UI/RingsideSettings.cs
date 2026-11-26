@@ -244,13 +244,12 @@ namespace CrowdPunch.Mono.UI
         private void BuildGraphics()
         {
             int scale = PlayerPreferences.Get(PlayerPreference.RenderScale);
-            int ao = Mathf.Clamp(PlayerPreferences.Get(PlayerPreference.AmbientOcclusion), 0, 2);
             int aa = Mathf.Clamp(PlayerPreferences.Get(PlayerPreference.AntiAliasing), 0, 2);
             int effects = PlayerPreferences.Enabled(PlayerPreference.ReducedEffects) ? 1 : 0;
-            int preset = (scale, ao, aa, effects) switch
+            int preset = (scale, aa, effects) switch
             {
-                (100, 0, 2, 0) => 0,
-                (85, 1, 1, 0) => 1,
+                (100, 2, 0) => 0,
+                (85, 1, 0) => 1,
                 _ => -1
             };
             int presetRow = view.RowCount;
@@ -259,7 +258,6 @@ namespace CrowdPunch.Mono.UI
                 if (index == preset) return;
                 bool performance = index == 1;
                 PlayerPreferences.Set(PlayerPreference.RenderScale, performance ? 85 : 100);
-                PlayerPreferences.Set(PlayerPreference.AmbientOcclusion, performance ? 1 : 0);
                 PlayerPreferences.Set(PlayerPreference.AntiAliasing, performance ? 1 : 2);
                 PlayerPreferences.Set(PlayerPreference.ReducedEffects, 0);
                 ApplyGraphics(presetRow);
@@ -267,7 +265,6 @@ namespace CrowdPunch.Mono.UI
 
             GraphicsChoice("Render Scale", new[] { "100%", "85%", "70%" }, Mathf.Max(0, Array.IndexOf(RenderScales, scale)),
                 PlayerPreference.RenderScale, index => RenderScales[index]);
-            GraphicsChoice("Ambient Occlusion", new[] { "Full", "Half Resolution", "Off" }, ao, PlayerPreference.AmbientOcclusion);
             GraphicsChoice("Anti-Aliasing", new[] { "Off", "FXAA", "SMAA" }, aa, PlayerPreference.AntiAliasing);
             GraphicsChoice("Effects Quality", new[] { "Full", "Reduced" }, effects, PlayerPreference.ReducedEffects);
         }
@@ -339,7 +336,7 @@ namespace CrowdPunch.Mono.UI
                     break;
                 case 3:
                     Reset(PlayerPreference.VSync, PlayerPreference.FrameLimit, PlayerPreference.RenderScale,
-                        PlayerPreference.AmbientOcclusion, PlayerPreference.AntiAliasing, PlayerPreference.ReducedEffects);
+                        PlayerPreference.AntiAliasing, PlayerPreference.ReducedEffects);
                     PlayerDisplayPreferences.ApplyTiming();
                     GameplayGraphics.Refresh();
                     pendingMode = PlayerDisplayPreferences.DefaultMode;

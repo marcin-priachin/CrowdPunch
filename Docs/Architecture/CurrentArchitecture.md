@@ -2948,7 +2948,7 @@ hold with the paused arena. The other combat feedback remains suspended (VISION-
 
 `CampaignMenu` also routes Main Menu and Pause to `RingsideSettings` and returns focus to the originating Settings button. `RingsideSettingsLayout` uses the existing EventSystem, with explicit controller navigation, scroll-to-focus, and mouse controls. `SettingsBindings` applies overrides to the existing Move, Look, Attack, Dash and Pause actions. `PlayerPreferences` stores local options and binding overrides in PlayerPrefs independently of `CampaignProgress`. Camera, flash and audio consumers apply preferences on top of authored tuning. Display timing updates immediately, while window mode and resolution use a timed trial before the new values are saved (LOOP-007, PLAYER-010/011). The campaign punch asset continues to supply the dotted, first-contact aim indication (PLAYER-003, INFO-005).
 
-`GameplayGraphics` owns the session's URP pipeline copy. `BakedShadowLighting` registers its level-owned copies so render scale applies on entry and when changed from Pause. The gameplay camera selects the authored, half-resolution ambient occlusion, or no-ambient-occlusion renderer and applies its post-process anti-aliasing mode. Reduced Effects caps decorative particle overlap and omits launch departure puffs and extra impact stars in the existing pools. Aim, launch trails and threat cues continue through their existing presentation paths (LOOP-007, VISION-005/006, INFO-005).
+`GameplayGraphics` owns the session's URP pipeline copy. `BakedShadowLighting` registers its level-owned copies so render scale applies on entry and when changed from Pause. `GameplayGraphics` applies the selected post-process anti-aliasing mode to the gameplay camera. Reduced Effects caps decorative particle overlap and omits launch departure puffs and extra impact stars in the existing pools. Aim, launch trails and threat cues continue through their existing presentation paths (LOOP-007, VISION-005/006, INFO-005).
 `LevelClearFixedStepSystem` scales the ECS timestep by the clear slowdown multiplier before
 the fixed group runs. This preserves its real-time update cadence during the shot and restores
 its prior timestep when the shot pauses or a transition starts.
@@ -4504,8 +4504,8 @@ backdrop is inactive in these four SubScenes; gameplay floor and physics are unc
 `ExampleEnvironmentLighting` owns presentation settings during an example's additive
 scene lifetime. Bootstrap remains the active scene, so this component explicitly applies
 the sky, trilight ambient fill and distance fog, enables camera HDR/post-processing/SMAA,
-and temporarily selects a project-owned URP asset with soft cascaded shadows and
-half-resolution SSAO. It restores the prior camera, atmosphere and quality-pipeline
+and temporarily selects a project-owned URP asset with cascaded shadows.
+It restores the prior camera, atmosphere and quality-pipeline
 settings on unload. Each example has one global Volume at priority 100 with a separate
 ACES/bloom/colour/vignette profile. No depth of field or motion blur is used. All new
 scenery is non-colliding, main-scene presentation; no enemy entity access is introduced.
@@ -4547,7 +4547,7 @@ threshold 1.1 and scatter .65, and vignette .12. Campaign main scenes carry a gl
 Volume at priority 150; Bootstrap provides the same profile at priority 0. Chapter
 white balance remains inherited. The camera enables HDR, post-processing and SMAA.
 `CelRendering.asset`/`CelRenderer.asset` promote the example rendering configuration to
-all quality levels, including its contact shading and shadow settings.
+all quality levels, including its shadow settings.
 
 The production pipeline disables soft shadows and uses a single 8192 directional shadow
 map across 110 m, avoiding cascade resolution changes and improving near-object edge density.
@@ -4557,7 +4557,7 @@ Dash displacement, camera follow, impact kick and shake retain their existing be
 `ChapterOneVillageRoofShadows` authors a shared two-plane, shadows-only roof mesh for
 the village's tiled gable roofs. The detailed visible tiles no longer cast a serrated
 outline. Terracotta roof materials opt out of receiving cast shadows so the proxy cannot
-self-shadow the tiles; directional cel lighting and contact shading still define their
+self-shadow the tiles; directional cel lighting defines their
 form. These proxies have no colliders or LOD switching and are retained by the village recipe.
 `CelShadowDetailAuthoring` applies hard-only quality settings, authors LOD0 overrides on
 MeshRenderer and SkinnedMeshRenderer components in game prefabs/scenes, and flattens any
@@ -4602,7 +4602,7 @@ across the entire 100 m wave arena.
 `CrowdPunch/Cel/Village Surface` materials. World-space projection supports UV-less
 authored floors and imported atlas geometry without relying on their original texture UVs. This opaque
 URP shader supports DOTS instancing, shadow casting, depth and depth normals, three-band
-directional lighting, screen-space contact shading and fog. Meadow materials store each
+directional lighting and fog. Meadow materials store each
 arena's bounds and blend earth paths and broad colour variation per pixel; no geometry
 colour bands or overlapping path slabs are used. Base material recipes have no runtime
 controller; baked-only visibility is scoped by `BakedShadowLighting` as described below.
@@ -4712,9 +4712,6 @@ This supports the existing orbiting camera, including views from arena edges. Jo
 bays leave expansion joints, roofs clear their deck surfaces, door jamb footings stop
 beside the opening, and service paving meets edge to edge to avoid competing depth
 surfaces. The backdrop remains fixed, noncolliding scene geometry.
-The shared cel renderer uses full-resolution interleaved-gradient contact shading
-instead of per-render blue-noise sampling. Its effective radius, intensity and sample
-count are preserved; this affects contact shading in every scene using `CelRenderer`.
 
 `CampaignShadowBake` accepts explicit main-scene paths and an owned output directory,
 processes each main scene with its SubScene, and enables `BakedShadowLighting` only after
@@ -4799,7 +4796,7 @@ not permanent casters, and no real-time character shadow pass runs. Light probes
 moving receivers. The component holds an owned copy of the saved probe data and reasserts
 its reference if additive ECS SubScene streaming clears the global probe set. Unload
 restores the preceding probe set. This requires only a reference comparison, with no
-renderer or entity scan. Screen-space contact shading remains part of the production renderer.
+renderer or entity scan.
 
 Rebake after scenery, sun or fixed-layout changes with `Crowd Punch > Art Direction >
 Bake Chapter One Shadows`. The village dressing command invalidates its old baked-only

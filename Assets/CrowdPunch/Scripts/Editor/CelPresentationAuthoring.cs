@@ -64,11 +64,9 @@ namespace CrowdPunch.Editor
                 var pipeline=AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(PipelinePath);
                 var data=new SerializedObject(pipeline);
                 var renderers=data.FindProperty("m_RendererDataList");
-                string[] rendererNames={"CelRenderer", "CelRendererHalfAo", "CelRendererNoAo"};
-                renderers.arraySize=rendererNames.Length;
-                for(int i=0;i<rendererNames.Length;i++)
-                    renderers.GetArrayElementAtIndex(i).objectReferenceValue=
-                        AssetDatabase.LoadAssetAtPath<UniversalRendererData>($"{Folder}/{rendererNames[i]}.asset");
+                renderers.arraySize=1;
+                renderers.GetArrayElementAtIndex(0).objectReferenceValue=
+                    AssetDatabase.LoadAssetAtPath<UniversalRendererData>(Folder+"/CelRenderer.asset");
                 data.FindProperty("m_DefaultRendererIndex").intValue=0;
                 data.ApplyModifiedPropertiesWithoutUndo(); pipeline.supportsHDR=true; EditorUtility.SetDirty(pipeline);
             }

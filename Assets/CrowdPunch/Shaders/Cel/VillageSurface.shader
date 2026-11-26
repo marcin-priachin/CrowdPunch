@@ -91,7 +91,6 @@ Shader "CrowdPunch/Cel/Village Surface"
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
-            #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
             #pragma multi_compile_fog
             #pragma multi_compile _ LIGHTMAP_ON
             #pragma multi_compile _ LIGHTMAP_SHADOW_MIXING
@@ -141,10 +140,9 @@ Shader "CrowdPunch/Cel/Village Surface"
                 half ndl=saturate(dot(n,sun.direction));
                 half feather=max(fwidth(ndl)*1.5,.018);
                 half band=.20+.42*smoothstep(.23-feather,.23+feather,ndl)+.38*smoothstep(.68-feather,.68+feather,ndl);
-                AmbientOcclusionFactor ao=GetScreenSpaceAmbientOcclusion(GetNormalizedScreenSpaceUV(input.positionCS));
-                half visibility=lerp(.18,1,lerp(1,sun.shadowAttenuation,_ReceiveShadows))*ao.directAmbientOcclusion;
+                half visibility=lerp(.18,1,lerp(1,sun.shadowAttenuation,_ReceiveShadows));
                 half3 fill=half3(.17,.21,.28)+SampleSH(n)*.24;
-                half3 color=albedo*(fill+band*visibility*min(sun.color,half3(1.35,1.35,1.35)))*ao.indirectAmbientOcclusion;
+                half3 color=albedo*(fill+band*visibility*min(sun.color,half3(1.35,1.35,1.35)));
                 return half4(MixFog(color,input.fog),1);
             }
             ENDHLSL

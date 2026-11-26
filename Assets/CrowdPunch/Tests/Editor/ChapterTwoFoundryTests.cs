@@ -3,6 +3,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 namespace CrowdPunch.Tests
 {
@@ -49,14 +50,18 @@ namespace CrowdPunch.Tests
             }
         }
 
-        [Test]
-        public void Vision006_ContactShadingUsesStableFullResolutionSampling()
+        [TestCase("Assets/CrowdPunch/Data/Presentation/CelRendering.asset")]
+        [TestCase("Assets/CrowdPunch/Data/EnvironmentExamples/Atmosphere/ExampleRendering.asset")]
+        public void Vision006_RenderersOmitScreenSpaceAmbientOcclusion(string path)
         {
-            var data=AssetDatabase.LoadAssetAtPath<UnityEngine.Rendering.Universal.UniversalRendererData>("Assets/CrowdPunch/Data/Presentation/CelRenderer.asset");
-            var feature=data.rendererFeatures.Single(f=>f.GetType().Name=="ScreenSpaceAmbientOcclusion");
-            var settings=new SerializedObject(feature);
-            Assert.That(settings.FindProperty("m_Settings.AOMethod").enumDisplayNames[settings.FindProperty("m_Settings.AOMethod").enumValueIndex],Is.EqualTo("Interleaved Gradient"));
-            Assert.That(settings.FindProperty("m_Settings.Downsample").boolValue,Is.False);
+            var pipeline = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(path);
+            Assert.That(pipeline, Is.Not.Null);
+            Assert.That(pipeline.rendererDataList.Length, Is.Positive);
+            foreach (var renderer in pipeline.rendererDataList)
+            {
+                Assert.That(renderer, Is.Not.Null);
+                Assert.That(renderer.rendererFeatures.Any(feature => feature is ScreenSpaceAmbientOcclusion), Is.False, renderer.name);
+            }
         }
 
         [TestCase(11)] [TestCase(12)] [TestCase(13)] [TestCase(14)] [TestCase(15)]

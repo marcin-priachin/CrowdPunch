@@ -10,7 +10,7 @@ namespace CrowdPunch.Configuration
         Master, Music, Effects, CrowdImpacts, MenuSounds,
         CameraMotion, ReducedFlashes,
         VSync, FrameLimit, WindowMode, Width, Height,
-        RenderScale, AmbientOcclusion, AntiAliasing, ReducedEffects
+        RenderScale, AntiAliasing, ReducedEffects
     }
 
     internal static class PlayerPreferences
