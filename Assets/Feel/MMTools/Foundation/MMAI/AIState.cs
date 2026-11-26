@@ -13,7 +13,7 @@ namespace MoreMountains.Tools
 	{
 	}
 	
-	public struct AIStateEvent
+	public partial struct AIStateEvent
 	{
 		public AIBrain Brain;
 		public AIState ExitState;
@@ -26,6 +26,7 @@ namespace MoreMountains.Tools
 			EnterState = enterState;
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static AIStateEvent e;
 		public static void Trigger(AIBrain brain, AIState exitState, AIState enterState)
 		{

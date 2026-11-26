@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -21,14 +20,15 @@ namespace MoreMountains.Tools
 	/// 
 	/// Delete save folder : MMSaveLoadManager.DeleteSaveFolder(FolderName);
 	/// 
-	/// You can also specify what IMMSaveLoadManagerMethod the system should use. By default it's binary but you can also pick binary encrypted, json, or json encrypted
+	/// You can also specify what IMMSaveLoadManagerMethod the system should use. By default it's json but you can also pick json encrypted, binary, or binary encrypted
 	/// You'll find examples of how to set each of these in the MMSaveLoadTester class
 	/// 
 	/// </summary>
-	public static class MMSaveLoadManager
+	public static partial class MMSaveLoadManager
 	{
 		/// the method to use when saving and loading files (has to be the same at both times of course)
-		public static IMMSaveLoadManagerMethod SaveLoadMethod = new MMSaveLoadManagerMethodBinary();
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
+		public static IMMSaveLoadManagerMethod SaveLoadMethod = new MMSaveLoadManagerMethodJson();
 		/// the default top level folder the system will use to save the file
 		private const string _baseFolderName = "/MMData/";
 		/// the name of the save folder if none is provided
@@ -93,6 +93,19 @@ namespace MoreMountains.Tools
 		}
 
 		/// <summary>
+		/// Returns whether or not a save file with the specified name already exists in the specified folder
+		/// </summary>
+		/// <param name="fileName"></param>
+		/// <param name="foldername"></param>
+		/// <returns></returns>
+		public static bool SaveFileExists(string fileName, string foldername = _defaultFolderName)
+		{
+			string savePath = DetermineSavePath(foldername);
+			string saveFileName = DetermineSaveFileName(fileName);
+			return File.Exists(savePath + saveFileName);
+		}
+
+		/// <summary>
 		/// Load the specified file based on a file name into a specified folder
 		/// </summary>
 		/// <param name="fileName">File name.</param>
@@ -111,8 +124,20 @@ namespace MoreMountains.Tools
 			}
 
 			FileStream saveFile = File.Open(saveFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-			returnObject = SaveLoadMethod.Load(objectType, saveFile);
-			saveFile.Close();
+			try
+			{
+				returnObject = SaveLoadMethod.Load(objectType, saveFile);
+			}
+			catch (System.Exception exception)
+			{
+				// the file couldn't be read with the current SaveLoadMethod (corrupted, or saved with another method or an older format)
+				Debug.LogWarning("[MMSaveLoadManager] Couldn't load " + saveFileName + " with " + SaveLoadMethod.GetType().Name + ", it may have been saved with another method or by an older version : " + exception.Message);
+				returnObject = null;
+			}
+			finally
+			{
+				saveFile.Close();
+			}
 
 			return returnObject;
 		}

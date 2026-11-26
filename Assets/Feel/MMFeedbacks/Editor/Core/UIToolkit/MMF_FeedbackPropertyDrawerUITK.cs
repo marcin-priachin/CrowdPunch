@@ -48,6 +48,7 @@ namespace MoreMountains.Feedbacks
 		private const string _channelModeFieldName = "ChannelMode";
 		private const string _channelDefinitionFieldName = "MMChannelDefinition";
 		private const string _automatedTargetAcquisitionName = "AutomatedTargetAcquisition";
+		private const string _automatedMultipleTargetAcquisitionName = "AutomatedMultipleTargetAcquisition";
 		private const string _timingFieldName = "Timing";
 		protected const string _customInspectorButtonPropertyName = "MMF_Button";
 
@@ -287,6 +288,7 @@ namespace MoreMountains.Feedbacks
 				}
 				
 				bool shouldDraw = !((groupData.PropertiesList[i].name == _automatedTargetAcquisitionName) && (!drawData.Feedback.HasAutomatedTargetAcquisition));
+				shouldDraw = shouldDraw && !((groupData.PropertiesList[i].name == _automatedMultipleTargetAcquisitionName) && (!drawData.Feedback.HasAutomatedMultipleTargetAcquisition));
 				if (!shouldDraw)
 				{
 					return;

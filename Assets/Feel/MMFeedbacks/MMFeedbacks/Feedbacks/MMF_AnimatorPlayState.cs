@@ -13,9 +13,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Animation/Animator Play State")]
-	public class MMF_AnimatorPlayState : MMF_Feedback 
+	public partial class MMF_AnimatorPlayState : MMF_Feedback 
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
         
 		/// the possible modes that pilot triggers        
@@ -37,6 +38,8 @@ namespace MoreMountains.Feedbacks
 		public override bool HasRandomness => true;
 		public override bool HasAutomatedTargetAcquisition => true;
 		protected override void AutomateTargetAcquisition() => BoundAnimator = FindAutomatedTarget<Animator>();
+		public override bool HasAutomatedMultipleTargetAcquisition => true;
+		protected override void AutomateMultipleTargetAcquisition() => ExtraBoundAnimators = FindAutomatedTargets<Animator>(ExtraBoundAnimators, BoundAnimator);
 		
 		public enum Modes { NormalizedTime, FixedTime } 
 
@@ -96,6 +99,12 @@ namespace MoreMountains.Feedbacks
 		protected override void CustomInitialization(MMF_Player owner)
 		{
 			base.CustomInitialization(owner);
+			
+			if (!TargetExists(BoundAnimator, nameof(BoundAnimator)))
+			{
+				return;
+			}
+			
 			_targetParameter = Animator.StringToHash(StateName);
 			_layerID = TargetLayerIndex;
 			if ((LayerName != "") && (BoundAnimator != null))
@@ -118,7 +127,6 @@ namespace MoreMountains.Feedbacks
 
 			if (BoundAnimator == null)
 			{
-				Debug.LogWarning("[Animator Play State Feedback] The animator play state feedback on "+Owner.name+" doesn't have a BoundAnimator, it won't work. You need to specify one in its inspector.");
 				return;
 			}
 

@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Audio/AudioMixer Snapshot Transition")]
-	public class MMF_AudioMixerSnapshotTransition : MMF_Feedback
+	public partial class MMF_AudioMixerSnapshotTransition : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		#if UNITY_EDITOR
 		public override Color FeedbackColor { get { return MMFeedbacksInspectorColors.UIColor; } }

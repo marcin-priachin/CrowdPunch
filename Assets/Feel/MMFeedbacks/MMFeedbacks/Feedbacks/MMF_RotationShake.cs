@@ -13,9 +13,10 @@ namespace MoreMountains.Feedbacks
 	[FeedbackPath("Transform/Rotation Shake")]
 	[FeedbackHelp("This feedback lets you emit a RotationShake event. This will be caught by MMRotationShakers (on the specified channel)." +
 	              " Rotation shakers, as the name suggests, are used to shake the rotation of a transform, along a direction, with optional noise and other fine control options.")]
-	public class MMF_RotationShake : MMF_Feedback
+	public partial class MMF_RotationShake : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

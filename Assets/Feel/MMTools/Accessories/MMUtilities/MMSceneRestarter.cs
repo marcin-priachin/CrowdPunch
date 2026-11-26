@@ -51,9 +51,12 @@ namespace MoreMountains.Tools
 		{
 			bool keyPressed = false;
 			#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-				keyPressed = Keyboard.current[RestarterKey].wasPressedThisFrame;
+				if (RestarterKey != Key.None)
+				{
+					keyPressed = Keyboard.current[RestarterKey].wasPressedThisFrame;
+				}
 			#else
-			keyPressed = Input.GetKeyDown(RestarterKeyCode);
+				keyPressed = Input.GetKeyDown(RestarterKeyCode);
 			#endif
 			if (keyPressed)
 			{

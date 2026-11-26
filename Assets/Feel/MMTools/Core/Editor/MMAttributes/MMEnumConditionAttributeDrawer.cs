@@ -8,7 +8,7 @@ namespace MoreMountains.Tools
 {
 	// original implementation by http://www.brechtos.com/hiding-or-disabling-inspector-properties-using-propertydrawers-within-unity-5/
 	[CustomPropertyDrawer(typeof(MMEnumConditionAttribute))]
-	public class MMEnumConditionAttributeDrawer : PropertyDrawer
+	public partial class MMEnumConditionAttributeDrawer : PropertyDrawer
 	{
 		#if  UNITY_EDITOR
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -25,6 +25,7 @@ namespace MoreMountains.Tools
 		}
 		#endif
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static Dictionary<string, string> cachedPaths = new Dictionary<string, string>();
 
 		private bool GetConditionAttributeResult(MMEnumConditionAttribute enumConditionAttribute, SerializedProperty property)

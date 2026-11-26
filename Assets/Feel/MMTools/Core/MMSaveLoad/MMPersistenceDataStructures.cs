@@ -56,7 +56,7 @@ namespace MoreMountains.Tools
 	/// To use :
 	/// MMPersistencyEvent.Trigger(MMPersistencyEventType.DataLoadedFromFileToMemory, "yourPersistencyID");
 	/// </summary>
-	public struct MMPersistenceEvent
+	public partial struct MMPersistenceEvent
 	{
 		public MMPersistenceEventType PersistenceEventType;
 		public string PersistenceID;
@@ -67,6 +67,7 @@ namespace MoreMountains.Tools
 			PersistenceID = persistenceID;
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMPersistenceEvent e;
 		public static void Trigger(MMPersistenceEventType eventType, string persistencyID)
 		{

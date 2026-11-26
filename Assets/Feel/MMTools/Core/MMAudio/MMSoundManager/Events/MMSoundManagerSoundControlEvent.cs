@@ -19,7 +19,7 @@ namespace MoreMountains.Tools
 	/// Example : MMSoundManagerSoundControlEvent.Trigger(MMSoundManagerSoundControlEventTypes.Stop, 33);
 	/// will cause the sound(s) with an ID of 33 to stop playing
 	/// </summary>
-	public struct MMSoundManagerSoundControlEvent
+	public partial struct MMSoundManagerSoundControlEvent
 	{
 		/// the ID of the sound to control (has to match the one used to play it)
 		public int SoundID;
@@ -35,6 +35,7 @@ namespace MoreMountains.Tools
 			MMSoundManagerSoundControlEventType = eventType;
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMSoundManagerSoundControlEvent e;
 		public static void Trigger(MMSoundManagerSoundControlEventTypes eventType, int soundID, AudioSource source = null)
 		{

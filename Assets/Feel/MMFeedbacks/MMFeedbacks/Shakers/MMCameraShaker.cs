@@ -30,10 +30,10 @@ namespace MoreMountains.Feedbacks
 
 	public enum MMCameraZoomModes { For, Set, Reset }
 
-	public struct MMCameraZoomEvent
+	public partial struct MMCameraZoomEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -45,10 +45,10 @@ namespace MoreMountains.Feedbacks
 		}
 	}
 
-	public struct MMCameraShakeEvent
+	public partial struct MMCameraShakeEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -60,10 +60,10 @@ namespace MoreMountains.Feedbacks
 		}
 	}
 
-	public struct MMCameraShakeStopEvent
+	public partial struct MMCameraShakeStopEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -120,7 +120,9 @@ namespace MoreMountains.Feedbacks
 		/// <param name="frequency">Frequency.</param>
 		public virtual void ShakeCamera(float duration, float amplitude, float frequency, float amplitudeX, float amplitudeY, float amplitudeZ, bool useUnscaledTime)
 		{
-			if (Time.unscaledTime - _shakeStartedTimestamp < CooldownBetweenShakes)
+			float elapsedSinceLastShake = Time.unscaledTime - _shakeStartedTimestamp;
+			
+			if ((CooldownBetweenShakes > 0f) && (elapsedSinceLastShake >= 0f) && (elapsedSinceLastShake < CooldownBetweenShakes))
 			{
 				return;
 			}

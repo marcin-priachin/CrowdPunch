@@ -20,6 +20,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 	public class MMVignetteShaker_URP : MMShaker
 	{
 		[MMInspectorGroup("Vignette Intensity", true, 63)]
+		/// whether or not this shaker should modify intensity
+		[Tooltip("whether or not this shaker should modify intensity")]
+		public bool ModifyIntensity = true;
 		/// whether or not to add to the initial value
 		[Tooltip("whether or not to add to the initial value")]
 		public bool RelativeIntensity = false;
@@ -68,6 +71,7 @@ namespace MoreMountains.FeedbacksForThirdParty
 		protected float _originalRemapColorZero;
 		protected float _originalRemapColorOne;
 		protected Color _originalTargetColor;
+		protected bool _originalModifyIntensity;
 		protected Color _initialColor;
 
 		/// <summary>
@@ -85,8 +89,11 @@ namespace MoreMountains.FeedbacksForThirdParty
 		/// </summary>
 		protected override void Shake()
 		{
-			float newValue = ShakeFloat(ShakeIntensity, RemapIntensityZero, RemapIntensityOne, RelativeIntensity, _initialIntensity);
-			_vignette.intensity.Override(newValue);
+			if (ModifyIntensity)
+			{
+				float newValue = ShakeFloat(ShakeIntensity, RemapIntensityZero, RemapIntensityOne, RelativeIntensity, _initialIntensity);
+				_vignette.intensity.Override(newValue);
+			}
 			
 			if (InterpolateColor)
 			{
@@ -115,7 +122,8 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public virtual void OnVignetteShakeEvent(AnimationCurve intensity, float duration, float remapMin, float remapMax, bool relativeIntensity = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true, 
 			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
-			bool interpolateColor = false, AnimationCurve colorCurve = null, float remapColorZero = 0f, float remapColorOne = 1f, Color targetColor = default(Color))
+			bool interpolateColor = false, AnimationCurve colorCurve = null, float remapColorZero = 0f, float remapColorOne = 1f, Color targetColor = default(Color),
+			bool modifyIntensity = true)
 		{
 			if (!CheckEventAllowed(channelData) || (!Interruptible && Shaking))
 			{
@@ -149,6 +157,7 @@ namespace MoreMountains.FeedbacksForThirdParty
 				_originalRemapColorZero = RemapColorZero;
 				_originalRemapColorOne = RemapColorOne;
 				_originalTargetColor = TargetColor;
+				_originalModifyIntensity = ModifyIntensity;
 			}
 
 			if (!OnlyUseShakerValues)
@@ -159,6 +168,7 @@ namespace MoreMountains.FeedbacksForThirdParty
 				RemapIntensityZero = remapMin * attenuation;
 				RemapIntensityOne = remapMax * attenuation;
 				RelativeIntensity = relativeIntensity;
+				ModifyIntensity = modifyIntensity;
 				ForwardDirection = forwardDirection;
 				InterpolateColor = interpolateColor;
 				ColorCurve = colorCurve;
@@ -176,7 +186,7 @@ namespace MoreMountains.FeedbacksForThirdParty
 		protected override void ResetTargetValues()
 		{
 			base.ResetTargetValues();
-			_vignette.intensity.Override(_initialIntensity);
+			if (ModifyIntensity) { _vignette.intensity.Override(_initialIntensity); }
 		}
 
 		/// <summary>
@@ -195,6 +205,7 @@ namespace MoreMountains.FeedbacksForThirdParty
 			RemapColorZero = _originalRemapColorZero;
 			RemapColorOne = _originalRemapColorOne;
 			TargetColor = _originalTargetColor;
+			ModifyIntensity = _originalModifyIntensity;
 		}
 
 		/// <summary>
@@ -220,26 +231,29 @@ namespace MoreMountains.FeedbacksForThirdParty
 	/// <summary>
 	/// An event used to trigger vignette shakes
 	/// </summary>
-	public struct MMVignetteShakeEvent_URP
+	public partial struct MMVignetteShakeEvent_URP
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
 		public delegate void Delegate(AnimationCurve intensity, float duration, float remapMin, float remapMax, bool relativeIntensity = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true, 
 			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
-			bool interpolateColor = false, AnimationCurve colorCurve = null, float remapColorZero = 0f, float remapColorOne = 1f, Color targetColor = default(Color));
+			bool interpolateColor = false, AnimationCurve colorCurve = null, float remapColorZero = 0f, float remapColorOne = 1f, Color targetColor = default(Color),
+			bool modifyIntensity = true);
 		
 		static public void Trigger(AnimationCurve intensity, float duration, float remapMin, float remapMax, bool relativeIntensity = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true, 
 			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
-			bool interpolateColor = false, AnimationCurve colorCurve = null, float remapColorZero = 0f, float remapColorOne = 1f, Color targetColor = default(Color))
+			bool interpolateColor = false, AnimationCurve colorCurve = null, float remapColorZero = 0f, float remapColorOne = 1f, Color targetColor = default(Color),
+			bool modifyIntensity = true)
 		{
 			OnEvent?.Invoke(intensity, duration, remapMin, remapMax, relativeIntensity, attenuation, channelData, 
 				resetShakerValuesAfterShake, resetTargetValuesAfterShake, forwardDirection, timescaleMode, stop, restore, 
-				interpolateColor, colorCurve, remapColorZero, remapColorOne, targetColor);
+				interpolateColor, colorCurve, remapColorZero, remapColorOne, targetColor,
+				modifyIntensity);
 		}
 	}
 }

@@ -88,7 +88,9 @@ namespace MoreMountains.Tools
 			switch (Mode)
 			{
 				case Modes.Gyroscope:
+					#pragma warning disable UAL0018 
 					_referencePosition = MMGyroscope.CalibratedInputAcceleration; 
+					#pragma warning restore UAL0018
 					break;
 				case Modes.Mouse:
 					#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER

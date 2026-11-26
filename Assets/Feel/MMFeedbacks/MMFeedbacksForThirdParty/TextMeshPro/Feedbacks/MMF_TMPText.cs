@@ -16,9 +16,10 @@ namespace MoreMountains.Feedbacks
 	[FeedbackPath("TextMesh Pro/TMP Text")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.TextMeshPro")]
-	public class MMF_TMPText : MMF_Feedback
+	public partial class MMF_TMPText : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		#if UNITY_EDITOR
 		public override Color FeedbackColor { get { return MMFeedbacksInspectorColors.TMPColor; } }

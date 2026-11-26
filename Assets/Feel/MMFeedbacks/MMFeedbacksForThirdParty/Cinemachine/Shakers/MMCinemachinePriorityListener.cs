@@ -10,7 +10,7 @@ using MoreMountains.Feedbacks;
 namespace MoreMountains.FeedbacksForThirdParty
 {
 	/// <summary>
-	/// Add this to a Cinemachine virtual camera and it'll be able to listen to MMCinemachinePriorityEvent, usually triggered by a MMFeedbackCinemachineTransition
+	/// Add this to a Cinemachine camera and it'll be able to listen to MMCinemachinePriorityEvent, usually triggered by a MMFeedbackCinemachineTransition
 	/// </summary>
 	[AddComponentMenu("More Mountains/Feedbacks/Shakers/Cinemachine/MM Cinemachine Priority Listener")]
 	#if MM_CINEMACHINE || MM_CINEMACHINE3
@@ -47,7 +47,7 @@ namespace MoreMountains.FeedbacksForThirdParty
 		#endif
         
 		/// <summary>
-		/// On Awake we store our virtual camera
+		/// On Awake we store our CM camera
 		/// </summary>
 		protected virtual void Awake()
 		{
@@ -140,11 +140,11 @@ namespace MoreMountains.FeedbacksForThirdParty
 	/// <summary>
 	/// An event used to pilot priorities on cinemachine virtual cameras and brain transitions
 	/// </summary>
-	public struct MMCinemachinePriorityEvent
+	public partial struct MMCinemachinePriorityEvent
 	{
 		#if MM_CINEMACHINE || MM_CINEMACHINE3
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 

@@ -35,6 +35,7 @@ namespace MoreMountains.Feedbacks
 		public bool MMSoundManagerSoundFade = true;
 		public bool MMSoundManagerTrackControl = true;
 		public bool MMSoundManagerTrackFade = true;
+		public bool MMSoundManagerTrackPitchFade = true;
 		public bool Sound = true;
 
 		[MMInspectorGroup("Camera", true, 18)] [MMInspectorButton("ToggleCamera")]
@@ -239,6 +240,7 @@ namespace MoreMountains.Feedbacks
 			MMSoundManagerSoundFade = !MMSoundManagerSoundFade;
 			MMSoundManagerTrackControl = !MMSoundManagerTrackControl;
 			MMSoundManagerTrackFade = !MMSoundManagerTrackFade;
+			MMSoundManagerTrackPitchFade = !MMSoundManagerTrackPitchFade;
 			Sound = !Sound;
 		}
 
@@ -441,6 +443,7 @@ namespace MoreMountains.Feedbacks
 			MMF_MMSoundManagerSoundFade.FeedbackTypeAuthorized = MMSoundManagerSoundFade;
 			MMF_MMSoundManagerTrackControl.FeedbackTypeAuthorized = MMSoundManagerTrackControl;
 			MMF_MMSoundManagerTrackFade.FeedbackTypeAuthorized = MMSoundManagerTrackFade;
+			MMF_MMSoundManagerTrackPitchFade.FeedbackTypeAuthorized = MMSoundManagerTrackPitchFade;
 			MMF_Sound.FeedbackTypeAuthorized = Sound;
 			MMF_CameraShake.FeedbackTypeAuthorized = CameraShake;
 			MMF_CameraZoom.FeedbackTypeAuthorized = CameraZoom;
@@ -520,7 +523,11 @@ namespace MoreMountains.Feedbacks
 			MMF_RectTransformOffset.FeedbackTypeAuthorized = RectTransformOffset;
 			MMF_RectTransformPivot.FeedbackTypeAuthorized = RectTransformPivot;
 			MMF_RectTransformSizeDelta.FeedbackTypeAuthorized = RectTransformSizeDelta;
+			
+			
+			#if !UNITY_WEBGL
 			MMF_VideoPlayer.FeedbackTypeAuthorized = VideoPlayer;
+			#endif
 			
 			#if MM_UI
 			MMF_ShaderController.FeedbackTypeAuthorized = ShaderController;

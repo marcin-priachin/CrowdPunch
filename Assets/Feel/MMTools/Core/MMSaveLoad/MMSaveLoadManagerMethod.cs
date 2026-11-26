@@ -17,7 +17,7 @@ namespace MoreMountains.Tools
 
 		/// the method to use to save to file
 		[Tooltip("the method to use to save to file")]
-		public MMSaveLoadManagerMethods SaveLoadMethod = MMSaveLoadManagerMethods.Binary;
+		public MMSaveLoadManagerMethods SaveLoadMethod = MMSaveLoadManagerMethods.Json;
 		/// the key to use to encrypt the file (if using an encryption method)
 		[Tooltip("the key to use to encrypt the file (if using an encryption method)")]
 		public string EncryptionKey = "ThisIsTheKey";

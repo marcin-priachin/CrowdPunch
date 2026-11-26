@@ -21,9 +21,10 @@ namespace MoreMountains.Feedbacks
 	[System.Serializable]
 	[FeedbackPath("Audio/MMSoundManager Sound")]
 	[FeedbackHelp("This feedback will let you play a sound via the MMSoundManager. You will need a game object in your scene with a MMSoundManager object on it for this to work.")]
-	public class MMF_MMSoundManagerSound : MMF_Feedback
+	public partial class MMF_MMSoundManagerSound : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -33,7 +34,7 @@ namespace MoreMountains.Feedbacks
 		public override bool EvaluateRequiresSetup()
 		{
 			bool requiresSetup = false;
-			if (Sfx == null)
+			if ((Sfx == null) && (AudioResourceToPlay == null))
 			{
 				requiresSetup = true;
 			}
@@ -128,6 +129,10 @@ namespace MoreMountains.Feedbacks
 		/// the track on which to play the sound. Pick the one that matches the nature of your sound
 		[Tooltip("the track on which to play the sound. Pick the one that matches the nature of your sound")]
 		public MMSoundManager.MMSoundManagerTracks MmSoundManagerTrack = MMSoundManager.MMSoundManagerTracks.Sfx;
+		/// if MmSoundManagerTrack is set to Other, the custom track SO to route through
+		[Tooltip("if MmSoundManagerTrack is set to Other, the custom track SO to route through")]
+		[MMFEnumCondition("MmSoundManagerTrack", (int)MMSoundManager.MMSoundManagerTracks.Other)]
+		public MMSoundManagerCustomTrackSO CustomTrack;
 		/// the ID of the sound. This is useful if you plan on using sound control feedbacks on it afterwards. 
 		[Tooltip("the ID of the sound. This is useful if you plan on using sound control feedbacks on it afterwards.")]
 		public int ID = 0;
@@ -459,6 +464,7 @@ namespace MoreMountains.Feedbacks
 			PlaybackTime = SoundDataSO.PlaybackTime;
 			PlaybackDuration = SoundDataSO.PlaybackDuration;
 			MmSoundManagerTrack = SoundDataSO.MmSoundManagerTrack;
+			CustomTrack = SoundDataSO.CustomTrack;
 			ID = SoundDataSO.ID;
 			AudioGroup = SoundDataSO.AudioGroup;
 			RecycleAudioSource = SoundDataSO.RecycleAudioSource;
@@ -551,6 +557,7 @@ namespace MoreMountains.Feedbacks
 
 			_options.AudioResourceToPlay = audioResource;
 			_options.MmSoundManagerTrack = MmSoundManagerTrack;
+			_options.CustomTrack = CustomTrack;
 			_options.Location = position;
 			_options.Loop = Loop;
 			_options.Volume = volume;

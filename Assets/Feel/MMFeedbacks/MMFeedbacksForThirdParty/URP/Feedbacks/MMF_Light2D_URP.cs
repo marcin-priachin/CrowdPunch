@@ -17,9 +17,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Lights/Light2D_URP")]
-	public class MMF_Light2D_URP : MMF_Feedback
+	public partial class MMF_Light2D_URP : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

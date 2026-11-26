@@ -13,9 +13,10 @@ namespace MoreMountains.Feedbacks
 	[FeedbackPath("Transform/Scale Shake")]
 	[FeedbackHelp("This feedback lets you emit a ScaleShake event. This will be caught by MMScaleShakers (on the specified channel)." +
 	              " Scale shakers, as the name suggests, are used to shake the scale of a transform, along a direction, with optional noise and other fine control options.")]
-	public class MMF_ScaleShake : MMF_Feedback
+	public partial class MMF_ScaleShake : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

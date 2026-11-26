@@ -20,9 +20,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackPath("PostProcess/Panini Projection URP")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.URP")]
-	public class MMF_PaniniProjection_URP : MMF_Feedback
+	public partial class MMF_PaniniProjection_URP : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

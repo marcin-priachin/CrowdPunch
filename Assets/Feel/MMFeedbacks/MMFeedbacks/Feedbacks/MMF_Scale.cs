@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[System.Serializable]
 	[FeedbackPath("Transform/Scale")]
 	[FeedbackHelp("This feedback will animate the target's scale on the 3 specified animation curves, for the specified duration (in seconds). You can apply a multiplier, that will multiply each animation curve value.")]
-	public class MMF_Scale : MMF_Feedback
+	public partial class MMF_Scale : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// the possible modes this feedback can operate on
 		public enum Modes { Absolute, Additive, ToDestination }
@@ -224,7 +225,11 @@ namespace MoreMountains.Feedbacks
 
 			float duration = HandleSpeedMode(AnimateScaleTarget.localScale, DestinationScale, FeedbackDuration);
 
-			_initialScale = AnimateScaleTarget.localScale;
+			if (DetermineScaleOnPlay)
+			{
+				_initialScale = AnimateScaleTarget.localScale;	
+			}
+			
 			_newScale = _initialScale;
 			IsPlaying = true;
 			while ((journey >= 0) && (journey <= duration) && (duration > 0))
@@ -297,8 +302,11 @@ namespace MoreMountains.Feedbacks
 			}
             
 			float journey = NormalPlayDirection ? 0f : duration;
-            
-			_initialScale = targetTransform.localScale;
+
+			if (DetermineScaleOnPlay)
+			{
+				_initialScale = targetTransform.localScale;	
+			}
             
 			IsPlaying = true;
 			

@@ -16,9 +16,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.MMTools")]
 	[System.Serializable]
 	[FeedbackPath("UI/Image Fill")]
-	public class MMF_ImageFill : MMF_Feedback
+	public partial class MMF_ImageFill : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -86,9 +87,8 @@ namespace MoreMountains.Feedbacks
 		{
 			base.CustomInitialization(owner);
 			
-			if (BoundImage == null)
+			if (!TargetExists(BoundImage, nameof(BoundImage)))
 			{
-				Debug.LogWarning("[Image Fill Feedback] The image fill feedback on "+Owner.name+" doesn't have a bound image, it won't work. You need to specify an image in its inspector.");
 				return;
 			}
 

@@ -15,9 +15,10 @@ namespace MoreMountains.Feedbacks
 	[FeedbackPath("Audio/Audio Filter Reverb")]
 	[FeedbackHelp(
 		"This feedback lets you control a low pass audio filter over time. You'll need a MMAudioFilterReverbShaker on your filter.")]
-	public class MMF_AudioFilterReverb : MMF_Feedback
+	public partial class MMF_AudioFilterReverb : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

@@ -300,8 +300,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 	/// <summary>
 	/// An event used to trigger vignette shakes
 	/// </summary>
-	public struct MMPostProcessingVolumeAutoBlendURPShakeEvent
+	public partial struct MMPostProcessingVolumeAutoBlendURPShakeEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMPostProcessingVolumeAutoBlendURPShakeEvent e;
 		
 		public MMChannelData ChannelData;

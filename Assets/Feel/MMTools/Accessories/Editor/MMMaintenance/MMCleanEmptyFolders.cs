@@ -12,9 +12,11 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// A maintenance class that removes all empty directories from a project via a menu item
 	/// </summary>
-	public class MMCleanEmptyFolders : MonoBehaviour
+	public partial class MMCleanEmptyFolders : MonoBehaviour
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static string _consoleLog = "";
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static List<DirectoryInfo> _listOfEmptyDirectories = new List<DirectoryInfo>();
 
 		/// <summary>

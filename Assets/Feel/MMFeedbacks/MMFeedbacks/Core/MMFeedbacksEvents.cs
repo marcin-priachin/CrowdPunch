@@ -33,10 +33,10 @@ namespace  MoreMountains.Feedbacks
 	/// }
 	/// 
 	/// </summary>
-	public struct MMFeedbacksEvent
+	public partial struct MMFeedbacksEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -51,10 +51,10 @@ namespace  MoreMountains.Feedbacks
 	/// <summary>
 	/// An event used to set the RangeCenter on all feedbacks that listen for it
 	/// </summary>
-	public struct MMSetFeedbackRangeCenterEvent
+	public partial struct MMSetFeedbackRangeCenterEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 		

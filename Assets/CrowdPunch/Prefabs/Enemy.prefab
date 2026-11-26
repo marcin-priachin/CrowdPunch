@@ -70,6 +70,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 782062cc258f12f469043c785a7c84b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAuthoring
+  ShotSource: {fileID: 0}
 --- !u!54 &6021746284219461527
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -131,11 +132,11 @@ PrefabInstance:
       objectReference: {fileID: 3008684754780122390}
     - target: {fileID: 188648568011856339, guid: 8fedfef9cb177b04eb590f6f40bbc81b, type: 3}
       propertyPath: m_AABB.m_Center.x
-      value: 0.07593459
+      value: 0.07593447
       objectReference: {fileID: 0}
     - target: {fileID: 188648568011856339, guid: 8fedfef9cb177b04eb590f6f40bbc81b, type: 3}
       propertyPath: m_AABB.m_Center.y
-      value: 0.25141692
+      value: 0.2514168
       objectReference: {fileID: 0}
     - target: {fileID: 188648568011856339, guid: 8fedfef9cb177b04eb590f6f40bbc81b, type: 3}
       propertyPath: m_AABB.m_Center.z
@@ -143,15 +144,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 188648568011856339, guid: 8fedfef9cb177b04eb590f6f40bbc81b, type: 3}
       propertyPath: m_AABB.m_Extent.x
-      value: 0.9180031
+      value: 0.9180029
       objectReference: {fileID: 0}
     - target: {fileID: 188648568011856339, guid: 8fedfef9cb177b04eb590f6f40bbc81b, type: 3}
       propertyPath: m_AABB.m_Extent.y
-      value: 1.8454638
+      value: 1.8454633
       objectReference: {fileID: 0}
     - target: {fileID: 188648568011856339, guid: 8fedfef9cb177b04eb590f6f40bbc81b, type: 3}
       propertyPath: m_AABB.m_Extent.z
-      value: 1.5940468
+      value: 1.5940465
       objectReference: {fileID: 0}
     - target: {fileID: 188648568011856339, guid: 8fedfef9cb177b04eb590f6f40bbc81b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -600,4 +601,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: f0e4c4bfb7488e74f8136d9a1c75b893, type: 3}
+  ProjectileOrigin: {fileID: 0}
+  JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
+  MaxLegAnimationSpeed: 2
+  JogCycleDistances: []
+  Profile: 0
+  GroundClearance: 0.1
+  ArmorStagesRequired: 0
+  SpawnMotion: -1
+  RotateLaunchAroundOwner: 0
+  LaunchPivotHeight: 0
   BlendResponse: 12

@@ -7,13 +7,15 @@ using UnityEngine;
 
 namespace MoreMountains.Tools
 {
-	public class MMReorderableList {
+	public partial class MMReorderableList {
 
 		private const float ELEMENT_EDGE_TOP = 1;
 		private const float ELEMENT_EDGE_BOT = 3;
 		private const float ELEMENT_HEIGHT_OFFSET = ELEMENT_EDGE_TOP + ELEMENT_EDGE_BOT;
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static int selectionHash = "ReorderableListSelection".GetHashCode();
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static int dragAndDropHash = "ReorderableListDragAndDrop".GetHashCode();
 
 		public enum ElementDisplayType {
@@ -1446,20 +1448,33 @@ namespace MoreMountains.Tools
 		// -- LIST STYLE --
 		//
 
-		static class Style {
+		static partial class Style {
 			
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIContent iconToolbarPlus;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIContent iconToolbarPlusMore;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIContent iconToolbarMinus;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIStyle draggingHandle;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIStyle headerBackground;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIStyle footerBackground;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIStyle boxBackground;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIStyle preButton;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIStyle elementBackground;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIStyle verticalLabel;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIContent expandButton;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static GUIContent collapseButton;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			public static Sprite expandIcon;
 
 			static Style() {
@@ -1882,16 +1897,20 @@ namespace MoreMountains.Tools
 		// -- INTERNAL --
 		//
 
-		static class Internals {
+		static partial class Internals {
 
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			private static MethodInfo dragDropValidation;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			private static object[] dragDropValidationParams;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			private static MethodInfo appendDragDrop;
+			[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 			private static object[] appendDragDropParams;
 
 			static Internals() {
 
-				dragDropValidation = System.Type.GetType("UnityEditor.EditorGUI, UnityEditor").GetMethod("ValidateObjectFieldAssignment", BindingFlags.NonPublic | BindingFlags.Static);
+				dragDropValidation = typeof(EditorGUI).GetMethod("ValidateObjectFieldAssignment", BindingFlags.NonPublic | BindingFlags.Static);
 				appendDragDrop = typeof(SerializedProperty).GetMethod("AppendFoldoutPPtrValue", BindingFlags.NonPublic | BindingFlags.Instance);
 			}
 

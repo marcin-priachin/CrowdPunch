@@ -8,9 +8,11 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// This class adds a MoreMountains entry in Unity's top menu, allowing to enable/disable the help texts from the engine's inspectors
 	/// </summary>
-	public static class MMMenuHelp
+	public static partial class MMMenuHelp
 	{
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		public static bool SettingCached = false;
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		public static bool CachedHelpEnabled = false;
 		
 		[MenuItem("Tools/More Mountains/Enable Help in Inspectors", false,0)]

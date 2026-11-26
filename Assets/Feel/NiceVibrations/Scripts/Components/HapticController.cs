@@ -36,33 +36,42 @@ namespace Lofelt.NiceVibrations
     /// None of the methods here are thread-safe and should only be called from
     /// the main (Unity) thread. Calling these methods from a secondary thread can
     /// cause undefined behaviour and memory leaks.
-    public static class HapticController
+    public static partial class HapticController
     {
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static bool lofeltHapticsInitalized = false;
 
         // Timer used to call HandleFinishedPlayback() when playback is complete
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static Timer playbackFinishedTimer = new Timer();
 
         // Duration of the loaded haptic clip, in seconds
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static float clipLoadedDurationSecs = 0.0f;
 
         // Whether Load() has been called before
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static bool clipLoaded = false;
 
         // The value of the last call to seek()
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static float lastSeekTime = 0.0f;
 
         // Flag indicating if the device supports playing back .haptic clips
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static bool deviceMeetsAdvancedRequirements = false;
 
         // Flag indicating if the user enabled playback looping.
         // This does not necessarily mean that the currently active playback is looping, for
         // example gamepads don't support looping.
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static bool isLoopingEnabledByUser = false;
 
         // Flag indicating if the currently active playback is looping
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static bool isPlaybackLooping = false;
 
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static HapticPatterns.PresetType _fallbackPreset = HapticPatterns.PresetType.None;
 
         /// <summary>
@@ -74,6 +83,7 @@ namespace Lofelt.NiceVibrations
             set { _fallbackPreset = value; }
         }
 
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         internal static bool _hapticsEnabled = true;
 
         /// <summary>
@@ -92,6 +102,7 @@ namespace Lofelt.NiceVibrations
             }
         }
 
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         internal static float _outputLevel = 1.0f;
 
         /// <summary>
@@ -129,6 +140,7 @@ namespace Lofelt.NiceVibrations
             }
         }
 
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         internal static float _clipLevel = 1.0f;
 
         /// <summary>
@@ -175,9 +187,11 @@ namespace Lofelt.NiceVibrations
         }
 
         /// Action that is invoked when Load() is called
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         public static Action LoadedClipChanged;
 
         /// Action that is invoked when Play() is called
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         public static Action PlaybackStarted;
 
         /// <summary>
@@ -189,6 +203,7 @@ namespace Lofelt.NiceVibrations
         ///
         /// This can be invoked spuriously, even if no haptics are currently playing, for example
         /// if Stop() is called multiple times in a row.
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         public static Action PlaybackStopped;
 
         // Applies the current clip level and output level as the amplitude multiplication to
@@ -385,7 +400,9 @@ namespace Lofelt.NiceVibrations
             {
                 playbackFinishedTimer.Interval = remainingPlayDuration * 1000;
                 playbackFinishedTimer.AutoReset = false;
+                #pragma warning disable UAL0018 // value copy, the timer itself is reset by auto cleanup too
                 playbackFinishedTimer.Enabled = !isPlaybackLooping;
+                #pragma warning restore UAL0018
             }
             else
             {

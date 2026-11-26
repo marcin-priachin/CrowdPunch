@@ -214,6 +214,12 @@ namespace MoreMountains.Tools
 		/// an event to trigger every time the bar stops increasing
 		[Tooltip("an event to trigger every time the bar stops increasing")]
 		public UnityEvent OnBarMovementIncreasingStop;
+		/// an event to trigger every time the bar reaches its minimum fill value (MinimumBarFillValue). It won't trigger again until the bar has gone above that value
+		[Tooltip("an event to trigger every time the bar reaches its minimum fill value (MinimumBarFillValue). It won't trigger again until the bar has gone above that value")]
+		public UnityEvent OnZero;
+		/// an event to trigger every time the bar reaches its maximum fill value (MaximumBarFillValue). It won't trigger again until the bar has gone below that value
+		[Tooltip("an event to trigger every time the bar reaches its maximum fill value (MaximumBarFillValue). It won't trigger again until the bar has gone below that value")]
+		public UnityEvent OnComplete;
 
 		[MMInspectorGroup("Text", true, 20)] 
 		/// a Text object to update with the bar's value
@@ -309,6 +315,9 @@ namespace MoreMountains.Tools
 		protected bool _isForegroundImageNotNull;
 		protected bool _isPercentageTextNotNull;
 		protected bool _isPercentageTextMeshProNotNull;
+		protected bool _complete = false;
+		protected bool _zero = false;
+		protected const float _completionThreshold = 0.0001f;
 
 		#region PUBLIC_API
         
@@ -456,6 +465,8 @@ namespace MoreMountains.Tools
 			UpdateText();
 			_coroutineShouldRun = false;
 			CurrentState = MMProgressBarStates.Idle;
+			CheckForZero();
+			CheckForCompletion();
 		}
         
 		#endregion PUBLIC_API
@@ -515,8 +526,15 @@ namespace MoreMountains.Tools
 
 			_percentLastTimeBarWasUpdated = BarProgress;
 
+			// we don't want OnComplete / OnZero to trigger if the bar starts full / empty
+			_complete = IsComplete(BarProgress);
+			_zero = IsZero(BarProgress);
+
 			if (SetInitialFillValueOnStart)
 			{
+				float initialProgress = MMMaths.Remap(InitialFillValue, 0f, 1f, MinimumBarFillValue, MaximumBarFillValue);
+				_complete = IsComplete(initialProgress);
+				_zero = IsZero(initialProgress);
 				SetBar01(InitialFillValue);
 			}
 		}
@@ -740,6 +758,55 @@ namespace MoreMountains.Tools
 					OnBarMovementDecreasingStop?.Invoke();
 				}
 			}
+
+			CheckForZero();
+			CheckForCompletion();
+		}
+
+		/// <summary>
+		/// Returns true if the specified bar progress has reached the minimum fill value
+		/// </summary>
+		/// <param name="progress"></param>
+		/// <returns></returns>
+		protected virtual bool IsZero(float progress)
+		{
+			return progress <= MinimumBarFillValue + _completionThreshold;
+		}
+
+		/// <summary>
+		/// Triggers the OnZero event if the bar just reached its minimum fill value, and resets the zero state if it went above it
+		/// </summary>
+		protected virtual void CheckForZero()
+		{
+			bool zero = IsZero(BarProgress);
+			if (zero && !_zero)
+			{
+				OnZero?.Invoke();
+			}
+			_zero = zero;
+		}
+
+		/// <summary>
+		/// Returns true if the specified bar progress has reached the maximum fill value
+		/// </summary>
+		/// <param name="progress"></param>
+		/// <returns></returns>
+		protected virtual bool IsComplete(float progress)
+		{
+			return progress >= MaximumBarFillValue - _completionThreshold;
+		}
+
+		/// <summary>
+		/// Triggers the OnComplete event if the bar just reached its maximum fill value, and resets the completion state if it went below it
+		/// </summary>
+		protected virtual void CheckForCompletion()
+		{
+			bool complete = IsComplete(BarProgress);
+			if (complete && !_complete)
+			{
+				OnComplete?.Invoke();
+			}
+			_complete = complete;
 		}
 
 		protected virtual float ComputeNewFill(bool lerpBar, float barSpeed, float barDuration, AnimationCurve barCurve, float delay, float lastPercent, out float t)

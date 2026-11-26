@@ -8,8 +8,9 @@ using UnityEditor;
 
 namespace MoreMountains.Tools
 {
-	public class MMFindMissingScriptsRecursively : EditorWindow 
+	public partial class MMFindMissingScriptsRecursively : EditorWindow 
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static int go_count = 0, components_count = 0, missing_count = 0;
 	 
 		[MenuItem("Tools/More Mountains/Find missing scripts recursively", false, 505)]

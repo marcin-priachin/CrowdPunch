@@ -21,9 +21,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackHelp("This feedback allows you to control Film Grain intensity over time. " +
 	              "It requires you have in your scene an object with a Volume " +
 	              "with Film Grain active, and a MMFilmGrainShaker_URP component.")]
-	public class MMF_FilmGrain_URP : MMF_Feedback
+	public partial class MMF_FilmGrain_URP : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

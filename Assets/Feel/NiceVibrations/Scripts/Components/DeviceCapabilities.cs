@@ -15,7 +15,7 @@ namespace Lofelt.NiceVibrations
     ///
     /// This class describes the capabilities of an iOS or Android device, gamepads are not handled
     /// by it.
-    public static class DeviceCapabilities
+    public static partial class DeviceCapabilities
     {
         /// <summary>
         /// Property that holds the current RuntimePlatform
@@ -56,6 +56,7 @@ namespace Lofelt.NiceVibrations
                 return _meetsAdvancedRequirements;
             }
         }
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         private static bool _meetsAdvancedRequirements;
 
         /// <summary>
@@ -82,6 +83,7 @@ namespace Lofelt.NiceVibrations
                 return _hasAmplitudeControl;
             }
         }
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         private static bool _hasAmplitudeControl;
 
         /// <summary>
@@ -94,6 +96,7 @@ namespace Lofelt.NiceVibrations
                 return _hasFrequencyControl;
             }
         }
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         private static bool _hasFrequencyControl;
 
         /// <summary>
@@ -106,6 +109,7 @@ namespace Lofelt.NiceVibrations
                 return _hasAmplitudeModulation;
             }
         }
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         private static bool _hasAmplitudeModulation;
 
         /// <summary>
@@ -118,6 +122,7 @@ namespace Lofelt.NiceVibrations
                 return _hasFrequencyModulation;
             }
         }
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         private static bool _hasFrequencyModulation;
 
         /// <summary>
@@ -130,6 +135,7 @@ namespace Lofelt.NiceVibrations
                 return _hasEmphasis;
             }
         }
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         private static bool _hasEmphasis;
 
         /// <summary>
@@ -142,6 +148,7 @@ namespace Lofelt.NiceVibrations
                 return _canEmulateEmphasis;
             }
         }
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         private static bool _canEmulateEmphasis;
 
         /// <summary>
@@ -154,6 +161,7 @@ namespace Lofelt.NiceVibrations
                 return _canLoop;
             }
         }
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         private static bool _canLoop;
 
         /// <summary>

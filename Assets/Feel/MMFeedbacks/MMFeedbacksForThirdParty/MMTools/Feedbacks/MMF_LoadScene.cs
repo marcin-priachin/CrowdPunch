@@ -15,9 +15,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.MMTools")]
 	[System.Serializable]
 	[FeedbackPath("Scene/Load Scene")]
-	public class MMF_LoadScene : MMF_Feedback
+	public partial class MMF_LoadScene : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -72,7 +73,13 @@ namespace MoreMountains.Feedbacks
 		[Tooltip("in additive mode, whether or not to display debug logs of the loading sequence")]
 		[MMFEnumCondition("LoadingMode", (int)LoadingModes.MMAdditiveSceneLoadingManager)]
 		public bool DebugMode = false;
-		
+		/// in MMSceneLoadingManager and MMAdditiveSceneLoadingManager modes, if this is true, when in the editor, the loading screen, destination (and in additive mode, anti spill) scenes will be loaded via EditorSceneManager.LoadSceneInPlayMode / LoadSceneAsyncInPlayMode, letting you load scenes that aren't in the build settings.
+		/// Scene names can then be either a scene name or its full asset path (Assets/.../MyScene.unity). This has no effect in builds.
+		[Tooltip("in MMSceneLoadingManager and MMAdditiveSceneLoadingManager modes, if this is true, when in the editor, the loading screen, destination (and in additive mode, anti spill) scenes will be loaded via EditorSceneManager.LoadSceneInPlayMode / LoadSceneAsyncInPlayMode, letting you load scenes that aren't in the build settings. " +
+		         "Scene names can then be either a scene name or its full asset path (Assets/.../MyScene.unity). This has no effect in builds.")]
+		[MMFEnumCondition("LoadingMode", (int)LoadingModes.MMSceneLoadingManager, (int)LoadingModes.MMAdditiveSceneLoadingManager)]
+		public bool EditorMode = false;
+
 		[MMFInspectorGroup("Loading Scene Delays", true, 58)] 
 		/// a delay (in seconds) to apply before the first fade plays
 		[Tooltip("a delay (in seconds) to apply before the first fade plays")]
@@ -135,7 +142,7 @@ namespace MoreMountains.Feedbacks
 					SceneManager.LoadScene(DestinationSceneName, LoadSceneMode.Additive);
 					break;
 				case LoadingModes.MMSceneLoadingManager:
-					MMSceneLoadingManager.LoadScene(DestinationSceneName, LoadingSceneName);
+					MMSceneLoadingManager.LoadScene(DestinationSceneName, LoadingSceneName, EditorMode);
 					break;
 				case LoadingModes.MMAdditiveSceneLoadingManager:
 					MMAdditiveSceneLoadingManager.LoadScene(DestinationSceneName, LoadingSceneName, 
@@ -147,7 +154,7 @@ namespace MoreMountains.Feedbacks
 						ExitFadeDuration,
 						EntryFadeTween, ExitFadeTween,
 						ProgressInterpolationSpeed, FadeMode, UnloadMethod, AntiSpillSceneName,
-						SpeedIntervals, DebugMode);
+						SpeedIntervals, DebugMode, EditorMode);
 					break;
 			}
 		}

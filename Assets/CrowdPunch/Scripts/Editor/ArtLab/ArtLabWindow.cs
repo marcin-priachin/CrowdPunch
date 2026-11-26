@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using CrowdPunch.Mono.Levels;
+using Unity.Profiling;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -18,6 +19,7 @@ namespace CrowdPunch.Editor.ArtLab
         private bool showingB;
         private Vector2 scroll;
         private string error;
+        private ProfilerRecorder batches;
         private static readonly string[] Levels={"28 - Sunlit Village Gate","29 - Emberworks Foundry","30 - Overgrown Observatory","31 - Frostbound Vault"};
 
         static ArtLabWindow()
@@ -32,8 +34,17 @@ namespace CrowdPunch.Editor.ArtLab
         [MenuItem("Crowd Punch/Art Lab/Open Art Lab")]
         [MenuItem("Window/Crowd Punch/Art Lab")]
         public static void Open() => GetWindow<ArtLabWindow>("Art Lab").Show();
-        private void OnEnable() => minSize=new Vector2(410,560);
-        private void OnDisable() => ArtLabSession.Reset();
+        private void OnEnable()
+        {
+            minSize = new Vector2(410, 560);
+            batches = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Total Batches Count");
+        }
+
+        private void OnDisable()
+        {
+            batches.Dispose();
+            ArtLabSession.Reset();
+        }
         private void OnInspectorUpdate() { ArtLabSession.Configure(preview,environmentStyle,characterStyle,lighting,post);Repaint(); }
 
         private void OnGUI()
@@ -95,7 +106,10 @@ namespace CrowdPunch.Editor.ArtLab
             EditorGUILayout.Space(8);
             EditorGUILayout.HelpBox(ArtLabSession.Status,MessageType.None);
             if(EditorApplication.isPlaying)
-                EditorGUILayout.LabelField($"Editor: {UnityStats.batches:N0} batches | {UnityStats.triangles:N0} triangles | {Time.unscaledDeltaTime*1000:F1} ms/frame",EditorStyles.miniLabel);
+            {
+                string batchCount = batches.Valid ? batches.LastValue.ToString("N0") : "n/a";
+                EditorGUILayout.LabelField($"Editor: {batchCount} batches | {UnityStats.triangles:N0} triangles | {Time.unscaledDeltaTime*1000:F1} ms/frame", EditorStyles.miniLabel);
+            }
             EditorGUILayout.LabelField("Comic uses shading-based silhouette ink and shadow dots. No motion blur or depth of field. Chapter colours remain in the lighting and grading.",EditorStyles.wordWrappedMiniLabel);
             if(!string.IsNullOrEmpty(error))EditorGUILayout.HelpBox(error,MessageType.Error);
             ArtLabSession.Configure(preview,environmentStyle,characterStyle,lighting,post);

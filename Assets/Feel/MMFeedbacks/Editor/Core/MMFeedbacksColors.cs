@@ -7,7 +7,7 @@ namespace MoreMountains.Feedbacks
 	/// <summary>
 	/// Color helpers
 	/// </summary>
-	public static class MMFeedbacksColors
+	public static partial class MMFeedbacksColors
 	{
 		// via https://gist.github.com/LotteMakesStuff/f7ce43f11e545a151b95b5e87f76304c
 		// NOTE: The follwing color names come from the CSS3 specification, Section 4.3 Extended Color Keywords
@@ -156,6 +156,7 @@ namespace MoreMountains.Feedbacks
 		public static readonly Color ReunoYellow = new Color32(255, 196, 0, 255);
 		public static readonly Color BestRed = new Color32(255, 24, 0, 255);
 
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		public static Dictionary<int, Color> ColorDictionary;
 
 		public static Color RandomColor()

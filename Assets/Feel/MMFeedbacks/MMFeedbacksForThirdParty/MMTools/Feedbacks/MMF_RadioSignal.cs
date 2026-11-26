@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.MMTools")]
 	[System.Serializable]
 	[FeedbackPath("GameObject/MMRadioSignal")]
-	public class MMF_RadioSignal : MMF_Feedback
+	public partial class MMF_RadioSignal : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
         
 		#if UNITY_EDITOR

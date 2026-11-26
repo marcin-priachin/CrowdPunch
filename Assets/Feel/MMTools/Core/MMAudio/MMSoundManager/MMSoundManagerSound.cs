@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace MoreMountains.Tools
 {
@@ -15,6 +16,8 @@ namespace MoreMountains.Tools
 		public int ID;
 		/// the track the sound is being played on
 		public MMSoundManager.MMSoundManagerTracks Track;
+		/// if Track is Other, the optional custom track SO this sound is associated with
+		public MMSoundManagerCustomTrackSO CustomTrack;
 		/// the associated audiosource
 		public AudioSource Source;
 		/// whether or not this sound will play over multiple scenes
@@ -22,5 +25,7 @@ namespace MoreMountains.Tools
 
 		public float PlaybackTime;
 		public float PlaybackDuration;
+		/// the pitch this sound was requested at, before any track pitch multiplier got applied to it
+		public float BasePitch;
 	}
 }

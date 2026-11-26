@@ -18,9 +18,10 @@ namespace MoreMountains.Feedbacks
 	[FeedbackPath("TextMesh Pro/TMP Dilate")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.TextMeshPro")]
-	public class MMF_TMPDilate : MMF_Feedback
+	public partial class MMF_TMPDilate : MMF_Feedback
 	{
-		/// a static bool used to disable all feedbacks of this type at o
+		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		
 		/// sets the inspector color for this feedback
@@ -93,9 +94,8 @@ namespace MoreMountains.Feedbacks
 				return;
 			}
 			#if MM_UGUI2
-			if (TargetTMPText == null)
+			if (!TargetExists(TargetTMPText, nameof(TargetTMPText)))
 			{
-				Debug.LogWarning("[TMP Dilate Feedback] The TMP Dilate feedback on "+Owner.name+" doesn't have a TargetTMPText, it won't work. You need to specify one in its inspector.");
 				return;
 			}
 			_initialDilate = TargetTMPText.fontMaterial.GetFloat(ShaderUtilities.ID_FaceDilate);

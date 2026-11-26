@@ -7,8 +7,9 @@ namespace MoreMountains.Feedbacks
 	/// <summary>
 	/// An event used to pilot a MMSpringVector3 component
 	/// </summary>
-	public struct MMSpringVector3Event
+	public partial struct MMSpringVector3Event
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMSpringVector3Event e;
 		
 		public MMChannelData ChannelData;

@@ -22,7 +22,7 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// An event usually triggered when a swipe happens. It contains the swipe "base" direction, and detailed information if needed (angle, length, origin and destination
 	/// </summary>
-	public struct MMSwipeEvent
+	public partial struct MMSwipeEvent
 	{
 		public MMPossibleSwipeDirections SwipeDirection;
 		public float SwipeAngle;
@@ -49,6 +49,7 @@ namespace MoreMountains.Tools
 			SwipeDuration = swipeDuration;
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMSwipeEvent e;
 		public static void Trigger(MMPossibleSwipeDirections direction, float angle, float length, Vector2 origin, Vector2 destination, float swipeDuration)
 		{

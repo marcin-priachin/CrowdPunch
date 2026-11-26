@@ -10,7 +10,7 @@ namespace MoreMountains.Tools
 	/// Example : MMSoundManagerTrackFadeEvent.Trigger(MMSoundManager.MMSoundManagerTracks.Music, 2f, 0.5f, new MMTweenType(MMTween.MMTweenCurve.EaseInCubic));
 	/// will fade the volume of the music track towards 0.5, over 2 seconds, using an ease in cubic tween 
 	/// </summary>
-	public struct MMSoundManagerTrackFadeEvent
+	public partial struct MMSoundManagerTrackFadeEvent
 	{
 		public enum Modes { PlayFade, StopFade }
 
@@ -18,6 +18,8 @@ namespace MoreMountains.Tools
 		public Modes Mode;
 		/// the track to fade the volume of
 		public MMSoundManager.MMSoundManagerTracks Track;
+		/// if Track is Other, the optional custom track SO to target
+		public MMSoundManagerCustomTrackSO CustomTrack;
 		/// the duration of the fade, in seconds
 		public float FadeDuration;
 		/// the final volume to fade towards
@@ -25,20 +27,23 @@ namespace MoreMountains.Tools
 		/// the tween to use when fading
 		public MMTweenType FadeTween;
         
-		public MMSoundManagerTrackFadeEvent(Modes mode, MMSoundManager.MMSoundManagerTracks track, float fadeDuration, float finalVolume, MMTweenType fadeTween)
+		public MMSoundManagerTrackFadeEvent(Modes mode, MMSoundManager.MMSoundManagerTracks track, float fadeDuration, float finalVolume, MMTweenType fadeTween, MMSoundManagerCustomTrackSO customTrack = null)
 		{
 			Mode = mode;
 			Track = track;
+			CustomTrack = customTrack;
 			FadeDuration = fadeDuration;
 			FinalVolume = finalVolume;
 			FadeTween = fadeTween;
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMSoundManagerTrackFadeEvent e;
-		public static void Trigger(Modes mode, MMSoundManager.MMSoundManagerTracks track, float fadeDuration, float finalVolume, MMTweenType fadeTween)
+		public static void Trigger(Modes mode, MMSoundManager.MMSoundManagerTracks track, float fadeDuration, float finalVolume, MMTweenType fadeTween, MMSoundManagerCustomTrackSO customTrack = null)
 		{
 			e.Mode = mode;
 			e.Track = track;
+			e.CustomTrack = customTrack;
 			e.FadeDuration = fadeDuration;
 			e.FinalVolume = finalVolume;
 			e.FadeTween = fadeTween;

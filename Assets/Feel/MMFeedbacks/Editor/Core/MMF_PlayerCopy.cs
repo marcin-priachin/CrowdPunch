@@ -10,12 +10,16 @@ namespace MoreMountains.Feedbacks
 	/// <summary>
 	/// A helper class to copy and paste feedback properties
 	/// </summary>
-	static class MMF_PlayerCopy
+	static partial class MMF_PlayerCopy
 	{
+		// NoAutoStaticsCleanup: must survive exiting Play mode
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		static public System.Type Type { get; private set; }
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		public static readonly List<MMF_Feedback> CopiedFeedbacks = new List<MMF_Feedback>();
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		public static readonly Dictionary<MMF_Player, List<MMF_Feedback>> RuntimeChanges = new Dictionary<MMF_Player, List<MMF_Feedback>>();
-
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		static string[] IgnoreList = new string[]
 		{
 			"m_ObjectHideFlags",
@@ -39,6 +43,11 @@ namespace MoreMountains.Feedbacks
 		{
 			switch (playModeState)
 			{
+				case PlayModeStateChange.ExitingEditMode:
+					CopiedFeedbacks.Clear();
+					RuntimeChanges.Clear();
+					break;
+
 				case PlayModeStateChange.ExitingPlayMode:
 					StoreRuntimeChanges();
 					break;
@@ -51,7 +60,7 @@ namespace MoreMountains.Feedbacks
 
 		private static void StoreRuntimeChanges()
 		{
-			foreach (MMF_Player player in Object.FindObjectsByType<MMF_Player>(FindObjectsInactive.Include, FindObjectsSortMode.None).Where(p => p.KeepPlayModeChanges))
+			foreach (MMF_Player player in Object.FindObjectsByType<MMF_Player>(FindObjectsInactive.Include).Where(p => p.KeepPlayModeChanges))
 			{
 				MMF_PlayerCopy.StoreRuntimeChanges(player);
 			}
@@ -59,7 +68,7 @@ namespace MoreMountains.Feedbacks
 
 		private static void ApplyRuntimeChanges()
 		{
-			foreach (MMF_Player player in Object.FindObjectsByType<MMF_Player>(FindObjectsInactive.Include, FindObjectsSortMode.None).Where(MMF_PlayerCopy.RuntimeChanges.ContainsKey))
+			foreach (MMF_Player player in Object.FindObjectsByType<MMF_Player>(FindObjectsInactive.Include).Where(MMF_PlayerCopy.RuntimeChanges.ContainsKey))
 			{
 				MMF_PlayerCopy.ApplyRuntimeChanges(player);
 			}

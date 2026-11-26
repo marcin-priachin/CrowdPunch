@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[System.Serializable]
 	[FeedbackPath("Camera/Clipping Planes")]
 	[FeedbackHelp("This feedback lets you control a camera's clipping planes over time. You'll need a MMCameraClippingPlanesShaker on your camera.")]
-	public class MMF_CameraClippingPlanes : MMF_Feedback
+	public partial class MMF_CameraClippingPlanes : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[System.Serializable]
 	[FeedbackPath("Audio/Audio Filter Echo")]
 	[FeedbackHelp("This feedback lets you control an echo audio filter's wet mix value over time. You'll need a MMAudioFilterEchoShaker on your filter.")]
-	public class MMF_AudioFilterEcho : MMF_Feedback
+	public partial class MMF_AudioFilterEcho : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

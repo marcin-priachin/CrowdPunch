@@ -13,9 +13,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Particles/Particles Play")]
-	public class MMF_Particles : MMF_Feedback
+	public partial class MMF_Particles : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		public override float FeedbackDuration { get { return ApplyTimeMultiplier(DeclaredDuration); } set { DeclaredDuration = value;  } }
 		public override bool HasAutomatedTargetAcquisition => true;

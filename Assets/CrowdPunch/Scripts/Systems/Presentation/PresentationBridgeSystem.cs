@@ -22,7 +22,7 @@ namespace CrowdPunch.Systems.Presentation
         private LaunchTrajectoryScratch trajectoryScratch;
         private uint collisionFrame, resetSequence;
         private double lastPreviewTime;
-        private int bridgeInstance;
+        private UnityEngine.EntityId bridgeInstance;
         private Entity observedPlayer;
 
         [BurstCompile]
@@ -69,11 +69,13 @@ namespace CrowdPunch.Systems.Presentation
             }
             double now = SystemAPI.Time.ElapsedTime;
             float previewDelta = (float)math.max(0d, now - lastPreviewTime);
-            if (observedPlayer != playerEntity || bridgeInstance != bridge.GetInstanceID()
+            var currentBridgeInstance = bridge.GetEntityId();
+            if (observedPlayer != playerEntity || bridgeInstance != currentBridgeInstance
                 || resetSequence != bridge.CollisionPreviewResetSequence || now < lastPreviewTime
                 || previewDelta > math.max(.25f, bridge.CollisionPreviewTuning.ConfirmationTime * 2f))
                 collisionStates.Clear();
-            observedPlayer = playerEntity; bridgeInstance = bridge.GetInstanceID();
+            observedPlayer = playerEntity;
+            bridgeInstance = currentBridgeInstance;
             resetSequence = bridge.CollisionPreviewResetSequence;
             if (SystemAPI.HasComponent<PunchRequest>(playerEntity))
             {

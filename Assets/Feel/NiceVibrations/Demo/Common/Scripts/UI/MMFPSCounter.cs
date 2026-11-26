@@ -10,7 +10,7 @@ namespace Lofelt.NiceVibrations
     /// <summary>
     /// Add this class to a gameObject with a Text component and it'll feed it the number of FPS in real time.
     /// </summary>
-    public class MMFPSCounter : MonoBehaviour
+    public partial class MMFPSCounter : MonoBehaviour
     {
         /// <summary>
         /// The frequency at which the FPS counter should update (in seconds)
@@ -22,7 +22,8 @@ namespace Lofelt.NiceVibrations
         protected float _timeLeft;
         protected Text _text;
         protected int _currentFPS;
-
+        
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup] // NoAutoStaticsCleanup: immutable cache
         static string[] _stringsFrom00To300 = {
             "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
             "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",

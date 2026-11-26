@@ -15,7 +15,7 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Feedbacks/MMF Player Chain")]
-	public class MMF_PlayerChain : MMF_Feedback
+	public partial class MMF_PlayerChain : MMF_Feedback
 	{
 		/// <summary>
 		/// A class used to store and define items in a chain of MMF Players
@@ -39,6 +39,7 @@ namespace MoreMountains.Feedbacks
 		}
 		
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

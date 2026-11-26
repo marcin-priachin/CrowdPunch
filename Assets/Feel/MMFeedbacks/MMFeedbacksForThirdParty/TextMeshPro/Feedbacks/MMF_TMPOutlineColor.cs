@@ -17,7 +17,7 @@ namespace MoreMountains.Feedbacks
 	[FeedbackPath("TextMesh Pro/TMP Outline Color")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.TextMeshPro")]
-	public class MMF_TMPOutlineColor : MMF_Feedback
+	public partial class MMF_TMPOutlineColor : MMF_Feedback
 	{
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -30,6 +30,7 @@ namespace MoreMountains.Feedbacks
 		#endif
         
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		public enum ColorModes { Instant, Gradient, Interpolate }
 

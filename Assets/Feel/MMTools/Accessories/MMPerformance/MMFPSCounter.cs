@@ -10,7 +10,7 @@ namespace MoreMountains.Tools
 	/// </summary>
 	[RequireComponent(typeof(Text))]
 	[AddComponentMenu("More Mountains/Tools/Performance/MM FPS Counter")]
-	public class MMFPSCounter : MonoBehaviour
+	public partial class MMFPSCounter : MonoBehaviour
 	{
 		public enum Modes { Instant, MovingAverage, InstantAndMovingAverage }
 		
@@ -27,6 +27,7 @@ namespace MoreMountains.Tools
 		protected int _totalFrames = 0;
 		protected int _average;
 
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup] // NoAutoStaticsCleanup: immutable cache
 		static string[] _stringsFrom00To300 = {
 			"00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
 			"10", "11", "12", "13", "14", "15", "16", "17", "18", "19",

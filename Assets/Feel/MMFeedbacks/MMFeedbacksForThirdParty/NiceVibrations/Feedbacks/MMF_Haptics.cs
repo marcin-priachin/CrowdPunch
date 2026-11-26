@@ -14,17 +14,30 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackPath("Haptics/Haptics DEPRECATED!")]
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.NiceVibrations")]
 	[FeedbackHelp("This feedback has been deprecated, and is just here to avoid errors in case you were to update from an old version. Use any of the new haptic feedbacks instead.")]
-	public class MMF_Haptics : MMF_Feedback
+	public partial class MMF_Haptics : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		
 		[Header("Deprecated Feedback")] 
 		/// if this is true, this feedback will output a warning when played
 		public bool OutputDeprecationWarning = true;
-	    
+
 		/// <summary>
-		/// When this feedback gets played
+		/// On init we output a warning if needed
+		/// </summary>
+		/// <param name="owner"></param>
+		protected override void CustomInitialization(MMF_Player owner)
+		{
+			if (OutputDeprecationWarning)
+			{
+				Debug.LogWarning(Owner.name + " : the haptic feedback on this object is using the old version of Nice Vibrations, and won't work anymore. Replace it with any of the new haptic feedbacks.");
+			}
+		}
+
+		/// <summary>
+		/// When this feedback gets played, we do nothing anymore, it's deprecated
 		/// </summary>
 		/// <param name="position"></param>
 		/// <param name="feedbacksIntensity"></param>
@@ -33,11 +46,6 @@ namespace MoreMountains.FeedbacksForThirdParty
 			if (!Active || !FeedbackTypeAuthorized)
 			{
 				return;
-			}
-
-			if (OutputDeprecationWarning)
-			{
-				Debug.LogWarning(Owner.name + " : the haptic feedback on this object is using the old version of Nice Vibrations, and won't work anymore. Replace it with any of the new haptic feedbacks.");
 			}
 		}
 	}

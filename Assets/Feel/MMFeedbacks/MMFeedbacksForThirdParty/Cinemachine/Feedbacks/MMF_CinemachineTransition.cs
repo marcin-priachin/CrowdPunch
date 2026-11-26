@@ -25,9 +25,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	              "adding a MMCinemachinePriorityListener to your different cameras, with unique Channel values on them. " +
 	              "Optionally, you can add a MMCinemachinePriorityBrainListener on your Cinemachine Brain to handle different transition types and durations. " +
 	              "Then all you have to do is pick a channel and a new priority on your feedback, and play it. Magic transition!")]
-	public class MMF_CinemachineTransition : MMF_Feedback
+	public partial class MMF_CinemachineTransition : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		public enum Modes { Event, Binding }
         

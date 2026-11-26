@@ -32,7 +32,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 996630122044447782}
+  - {fileID: 2993225192625293214}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2871451800927250041
@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 782062cc258f12f469043c785a7c84b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAuthoring
+  ShotSource: {fileID: 0}
 --- !u!135 &4246333810346521945
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -95,7 +96,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 84
   m_CollisionDetection: 0
---- !u!1001 &55783040727813739
+--- !u!1001 &2637000268034938323
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -226,7 +227,7 @@ PrefabInstance:
     - target: {fileID: 3183054720210650875, guid: 9a902e3b5a0e89f4b95400188fe59129, type: 3}
       propertyPath: m_RootBone
       value: 
-      objectReference: {fileID: 996630122044447782}
+      objectReference: {fileID: 2993225192625293214}
     - target: {fileID: 3183054720210650875, guid: 9a902e3b5a0e89f4b95400188fe59129, type: 3}
       propertyPath: m_CastShadows
       value: 0
@@ -381,32 +382,39 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7302851803324608970, guid: 9a902e3b5a0e89f4b95400188fe59129, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 368497656886593102}
+      addedObject: {fileID: 5963171777576200782}
   m_SourcePrefab: {fileID: 100100000, guid: 9a902e3b5a0e89f4b95400188fe59129, type: 3}
---- !u!4 &996630122044447782 stripped
+--- !u!4 &2993225192625293214 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 941977662840853069, guid: 9a902e3b5a0e89f4b95400188fe59129, type: 3}
-  m_PrefabInstance: {fileID: 55783040727813739}
+  m_PrefabInstance: {fileID: 2637000268034938323}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &7322535667549437857 stripped
+--- !u!1 &4737910779417650201 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7302851803324608970, guid: 9a902e3b5a0e89f4b95400188fe59129, type: 3}
-  m_PrefabInstance: {fileID: 55783040727813739}
+  m_PrefabInstance: {fileID: 2637000268034938323}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &368497656886593102
+--- !u!114 &5963171777576200782
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7322535667549437857}
+  m_GameObject: {fileID: 4737910779417650201}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f66db5618b7ed5f4797260304159f9ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 3655ca0dbb33dd64b9434e76636f092f, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
   MaxLegAnimationSpeed: 2
   JogCycleDistances: []
   Profile: 14

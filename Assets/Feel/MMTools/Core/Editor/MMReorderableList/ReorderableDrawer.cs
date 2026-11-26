@@ -5,8 +5,9 @@ using UnityEngine;
 namespace MoreMountains.Tools
 {
 	[CustomPropertyDrawer(typeof(MMReorderableAttributeAttribute))]
-	public class ReorderableDrawer : PropertyDrawer {
+	public partial class ReorderableDrawer : PropertyDrawer {
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static Dictionary<int, MMReorderableList> lists = new Dictionary<int, MMReorderableList>();
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {

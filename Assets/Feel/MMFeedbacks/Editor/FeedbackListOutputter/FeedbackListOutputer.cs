@@ -23,7 +23,7 @@ namespace MoreMountains.Feedbacks
 		public static void OutputIFeedbacksList()
 		{
 			// Retrieve available feedbacks
-			List<System.Type> types = (from domainAssembly in System.AppDomain.CurrentDomain.GetAssemblies()
+			List<System.Type> types = (from domainAssembly in UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies()
 				from assemblyType in domainAssembly.GetTypes()
 				where assemblyType.IsSubclassOf(typeof(MMF_Feedback))
 				select assemblyType).ToList();

@@ -6,8 +6,9 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// Game object extensions
 	/// </summary>
-	public static class MMGameObjectExtensions
+	public static partial class MMGameObjectExtensions
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static List<Component> m_ComponentCache = new List<Component>();
 
 		/// <summary>

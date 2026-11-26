@@ -11,18 +11,27 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// A static class used to save / load peaks once they've been computed
 	/// </summary>
-	public static class PeaksSaver
+	public static partial class PeaksSaver
 	{
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		public static float[] Peaks;
+
+		#if UNITY_EDITOR
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void InitializeStatics()
+		{
+			Peaks = null;
+		}
+		#endif
 	}
 
 	/// <summary>
 	/// An event you can listen to that will get automatically triggered for every remapped beat
 	/// </summary>
-	public struct MMBeatEvent
+	public partial struct MMBeatEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 

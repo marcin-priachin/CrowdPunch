@@ -11,9 +11,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Transform/Set Parent")]
-	public class MMF_SetParent : MMF_Feedback 
+	public partial class MMF_SetParent : MMF_Feedback 
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
         
 		/// sets the inspector color for this feedback
@@ -39,6 +40,23 @@ namespace MoreMountains.Feedbacks
 		public bool WorldPositionStays = true;
 
 		/// <summary>
+		/// On init we check if we have a target
+		/// </summary>
+		/// <param name="owner"></param>
+		protected override void CustomInitialization(MMF_Player owner)
+		{
+			base.CustomInitialization(owner);
+
+			if (Active)
+			{
+				if (!TargetExists(ObjectToParent, nameof(ObjectToParent)))
+				{
+					return;
+				}
+			}
+		}
+		
+		/// <summary>
 		/// On Play, changes the parent of the target transform
 		/// </summary>
 		/// <param name="position"></param>
@@ -51,7 +69,6 @@ namespace MoreMountains.Feedbacks
 			}
 			if (ObjectToParent == null)
 			{
-				Debug.LogWarning("[SetParent Feedback] The set parent feedback on "+Owner.name+" doesn't have an ObjectToParent, it won't work. You need to specify one in its inspector.");
 				return;
 			}
 			ObjectToParent.SetParent(NewParent, WorldPositionStays);

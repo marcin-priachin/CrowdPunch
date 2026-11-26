@@ -8,8 +8,10 @@ using UnityEngine.Rendering.HighDefinition;
 namespace MoreMountains.FeedbacksForThirdParty
 {
 	/// <summary>
-	/// This feedback allows you to control HDRP exposure intensity over time.
-	/// It requires you have in your scene an object with a Volume 
+	/// This feedback allows you to control HDRP exposure over time, in any exposure mode.
+	/// Fixed exposure is used by the Fixed mode, compensation by all other modes (Automatic, Automatic Histogram, Curve Mapping, Physical Camera),
+	/// and limit min / limit max by the Automatic and Automatic Histogram modes. Use the Modify toggles to pick the values to animate.
+	/// It requires you have in your scene an object with a Volume
 	/// with Exposure active, and a MMExposureShaker_HDRP component.
 	/// </summary>
 	[AddComponentMenu("")]
@@ -18,12 +20,15 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackPath("PostProcess/Exposure HDRP")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.HDRP")]
-	[FeedbackHelp("This feedback allows you to control Exposure intensity over time. " +
+	[FeedbackHelp("This feedback allows you to control Exposure over time, in any exposure mode. " +
+	              "Fixed Exposure is used by the Fixed mode, Compensation by all other modes (Automatic, Automatic Histogram, Curve Mapping, Physical Camera), " +
+	              "and Limit Min / Limit Max by the Automatic and Automatic Histogram modes. Use the Modify toggles to pick the values to animate. " +
 	              "It requires you have in your scene an object with a Volume " +
 	              "with Exposure active, and a MMExposureShaker_HDRP component.")]
-	public class MMF_Exposure_HDRP : MMF_Feedback
+	public partial class MMF_Exposure_HDRP : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -48,10 +53,13 @@ namespace MoreMountains.FeedbacksForThirdParty
 		[Tooltip("whether or not to reset the target's values after shake")]
 		public bool ResetTargetValuesAfterShake = true;
 
-		[MMFInspectorGroup("Intensity", true, 18)]
+		[MMFInspectorGroup("Fixed Exposure", true, 18)]
+		/// whether or not this feedback should modify the fixed exposure (used in Fixed exposure mode)
+		[Tooltip("whether or not this feedback should modify the fixed exposure (used in Fixed exposure mode)")]
+		public bool ModifyFixedExposure = true;
 		/// the curve to animate the intensity on
 		[Tooltip("the curve to animate the intensity on")]
-		public AnimationCurve FixedExposure = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0)); 
+		public AnimationCurve FixedExposure = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
 		/// the value to remap the curve's 0 to
 		[Tooltip("the value to remap the curve's 0 to")]
 		public float RemapFixedExposureZero = 8.5f;
@@ -61,6 +69,57 @@ namespace MoreMountains.FeedbacksForThirdParty
 		/// whether or not to add to the initial intensity
 		[Tooltip("whether or not to add to the initial intensity")]
 		public bool RelativeFixedExposure = false;
+
+		[MMFInspectorGroup("Compensation", true, 19)]
+		/// whether or not this feedback should modify the exposure compensation (used in Automatic, Automatic Histogram, Curve Mapping and Physical Camera exposure modes)
+		[Tooltip("whether or not this feedback should modify the exposure compensation (used in Automatic, Automatic Histogram, Curve Mapping and Physical Camera exposure modes)")]
+		public bool ModifyCompensation = false;
+		/// the curve to animate the compensation on
+		[Tooltip("the curve to animate the compensation on")]
+		public AnimationCurve Compensation = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
+		/// the value to remap the curve's 0 to
+		[Tooltip("the value to remap the curve's 0 to")]
+		public float RemapCompensationZero = 0f;
+		/// the value to remap the curve's 1 to
+		[Tooltip("the value to remap the curve's 1 to")]
+		public float RemapCompensationOne = 2f;
+		/// whether or not to add to the initial compensation
+		[Tooltip("whether or not to add to the initial compensation")]
+		public bool RelativeCompensation = true;
+
+		[MMFInspectorGroup("Limit Min", true, 20)]
+		/// whether or not this feedback should modify the minimum exposure limit (used in Automatic and Automatic Histogram exposure modes)
+		[Tooltip("whether or not this feedback should modify the minimum exposure limit (used in Automatic and Automatic Histogram exposure modes)")]
+		public bool ModifyLimitMin = false;
+		/// the curve to animate the limit min on
+		[Tooltip("the curve to animate the limit min on")]
+		public AnimationCurve LimitMin = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
+		/// the value to remap the curve's 0 to
+		[Tooltip("the value to remap the curve's 0 to")]
+		public float RemapLimitMinZero = 0f;
+		/// the value to remap the curve's 1 to
+		[Tooltip("the value to remap the curve's 1 to")]
+		public float RemapLimitMinOne = 2f;
+		/// whether or not to add to the initial limit min
+		[Tooltip("whether or not to add to the initial limit min")]
+		public bool RelativeLimitMin = true;
+
+		[MMFInspectorGroup("Limit Max", true, 21)]
+		/// whether or not this feedback should modify the maximum exposure limit (used in Automatic and Automatic Histogram exposure modes)
+		[Tooltip("whether or not this feedback should modify the maximum exposure limit (used in Automatic and Automatic Histogram exposure modes)")]
+		public bool ModifyLimitMax = false;
+		/// the curve to animate the limit max on
+		[Tooltip("the curve to animate the limit max on")]
+		public AnimationCurve LimitMax = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
+		/// the value to remap the curve's 0 to
+		[Tooltip("the value to remap the curve's 0 to")]
+		public float RemapLimitMaxZero = 0f;
+		/// the value to remap the curve's 1 to
+		[Tooltip("the value to remap the curve's 1 to")]
+		public float RemapLimitMaxOne = -2f;
+		/// whether or not to add to the initial limit max
+		[Tooltip("whether or not to add to the initial limit max")]
+		public bool RelativeLimitMax = true;
 
 		/// <summary>
 		/// Triggers a Exposure shake
@@ -73,13 +132,17 @@ namespace MoreMountains.FeedbacksForThirdParty
 			{
 				return;
 			}
-            
+
 			float intensityMultiplier = ComputeIntensity(feedbacksIntensity, position);
 			MMExposureShakeEvent_HDRP.Trigger(FixedExposure, FeedbackDuration, RemapFixedExposureZero, RemapFixedExposureOne, RelativeFixedExposure, intensityMultiplier,
-				ChannelData, ResetShakerValuesAfterShake, ResetTargetValuesAfterShake, NormalPlayDirection, ComputedTimescaleMode);
-            
+				ChannelData, ResetShakerValuesAfterShake, ResetTargetValuesAfterShake, NormalPlayDirection, ComputedTimescaleMode,
+				modifyFixedExposure: ModifyFixedExposure,
+				modifyCompensation: ModifyCompensation, compensation: Compensation, remapCompensationZero: RemapCompensationZero, remapCompensationOne: RemapCompensationOne, relativeCompensation: RelativeCompensation,
+				modifyLimitMin: ModifyLimitMin, limitMin: LimitMin, remapLimitMinZero: RemapLimitMinZero, remapLimitMinOne: RemapLimitMinOne, relativeLimitMin: RelativeLimitMin,
+				modifyLimitMax: ModifyLimitMax, limitMax: LimitMax, remapLimitMaxZero: RemapLimitMaxZero, remapLimitMaxOne: RemapLimitMaxOne, relativeLimitMax: RelativeLimitMax);
+
 		}
-        
+
 		/// <summary>
 		/// On stop we stop our transition
 		/// </summary>
@@ -92,11 +155,11 @@ namespace MoreMountains.FeedbacksForThirdParty
 				return;
 			}
 			base.CustomStopFeedback(position, feedbacksIntensity);
-            
-			MMExposureShakeEvent_HDRP.Trigger(FixedExposure, FeedbackDuration, RemapFixedExposureZero, 
+
+			MMExposureShakeEvent_HDRP.Trigger(FixedExposure, FeedbackDuration, RemapFixedExposureZero,
 				RemapFixedExposureOne, RelativeFixedExposure, channelData:ChannelData, stop:true);
 		}
-		
+
 		/// <summary>
 		/// On restore, we put our object back at its initial position
 		/// </summary>
@@ -106,11 +169,13 @@ namespace MoreMountains.FeedbacksForThirdParty
 			{
 				return;
 			}
-			
-			MMExposureShakeEvent_HDRP.Trigger(FixedExposure, FeedbackDuration, RemapFixedExposureZero, 
-				RemapFixedExposureOne, RelativeFixedExposure, channelData:ChannelData, restore:true);
+
+			MMExposureShakeEvent_HDRP.Trigger(FixedExposure, FeedbackDuration, RemapFixedExposureZero,
+				RemapFixedExposureOne, RelativeFixedExposure, channelData:ChannelData, restore:true,
+				modifyFixedExposure: ModifyFixedExposure, modifyCompensation: ModifyCompensation,
+				modifyLimitMin: ModifyLimitMin, modifyLimitMax: ModifyLimitMax);
 		}
-		
+
 		/// <summary>
 		/// Automaticall sets up the post processing profile and shaker
 		/// </summary>

@@ -65,5 +65,46 @@ namespace MoreMountains.Tools
 		{
 			return GetScenesInBuild().Contains(sceneName);
 		}
+
+		#if UNITY_EDITOR
+		/// <summary>
+		/// Editor only : returns the asset path of the specified scene, looking first in the build settings, then in the whole project.
+		/// Accepts either a scene name or a full asset path (Assets/.../MyScene.unity). Returns null if no matching scene is found.
+		/// </summary>
+		/// <param name="sceneNameOrPath"></param>
+		/// <returns></returns>
+		public static string GetEditorScenePath(string sceneNameOrPath)
+		{
+			if (string.IsNullOrEmpty(sceneNameOrPath))
+			{
+				return null;
+			}
+
+			if (sceneNameOrPath.EndsWith(".unity") && (UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEditor.SceneAsset>(sceneNameOrPath) != null))
+			{
+				return sceneNameOrPath;
+			}
+
+			foreach (UnityEditor.EditorBuildSettingsScene buildScene in UnityEditor.EditorBuildSettings.scenes)
+			{
+				if (System.IO.Path.GetFileNameWithoutExtension(buildScene.path) == sceneNameOrPath)
+				{
+					return buildScene.path;
+				}
+			}
+
+			string[] guids = UnityEditor.AssetDatabase.FindAssets("t:Scene " + sceneNameOrPath);
+			foreach (string guid in guids)
+			{
+				string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+				if (System.IO.Path.GetFileNameWithoutExtension(path) == sceneNameOrPath)
+				{
+					return path;
+				}
+			}
+
+			return null;
+		}
+		#endif
 	}
 }

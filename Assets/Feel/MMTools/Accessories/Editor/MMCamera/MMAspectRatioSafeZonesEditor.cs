@@ -10,8 +10,9 @@ namespace MoreMountains.Tools
 	/// </summary>
 	[CustomEditor(typeof(MMAspectRatioSafeZones), true)]
 	[CanEditMultipleObjects]
-	public class MMAspectRatioSafeZonesEditor : Editor
+	public partial class MMAspectRatioSafeZonesEditor : Editor
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMAspectRatioSafeZones safeZones;
 
 		/// <summary>

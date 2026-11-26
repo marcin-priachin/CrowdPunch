@@ -43,8 +43,10 @@ namespace Lofelt.NiceVibrations
         /// </summary>
         public void OnBeforeSerialize()
         {
+            #pragma warning disable UAL0018 // value copies into serialized fields, on purpose
             _outputLevel = HapticController._outputLevel;
             _hapticsEnabled = HapticController._hapticsEnabled;
+            #pragma warning restore UAL0018
         }
 
         /// <summary>

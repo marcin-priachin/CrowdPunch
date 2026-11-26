@@ -46,10 +46,40 @@ namespace MoreMountains.Feedbacks
 			_recordingStyle.alignment = TextAnchor.MiddleCenter;
 			_targetRecorder = (MMInputSequenceRecorder)target;
 
-			System.Reflection.FieldInfo info = typeof(EditorApplication).GetField("globalEventHandler", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+			System.Reflection.FieldInfo info = GetGlobalEventHandlerField();
+			if (info == null)
+			{
+				return;
+			}
 			EditorApplication.CallbackFunction value = (EditorApplication.CallbackFunction)info.GetValue(null);
+			// we remove ourselves first, so that enabling this editor several times never adds the handler twice
+			value -= EditorGlobalKeyPress;
 			value += EditorGlobalKeyPress;
 			info.SetValue(null, value);
+		}
+
+		/// <summary>
+		/// On disable we stop listening for input
+		/// </summary>
+		protected virtual void OnDisable()
+		{
+			System.Reflection.FieldInfo info = GetGlobalEventHandlerField();
+			if (info == null)
+			{
+				return;
+			}
+			EditorApplication.CallbackFunction value = (EditorApplication.CallbackFunction)info.GetValue(null);
+			value -= EditorGlobalKeyPress;
+			info.SetValue(null, value);
+		}
+
+		/// <summary>
+		/// Returns the editor's internal global event handler field, which lets us catch key presses in the editor
+		/// </summary>
+		/// <returns></returns>
+		protected virtual System.Reflection.FieldInfo GetGlobalEventHandlerField()
+		{
+			return typeof(EditorApplication).GetField("globalEventHandler", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
 		}
 
 		/// <summary>

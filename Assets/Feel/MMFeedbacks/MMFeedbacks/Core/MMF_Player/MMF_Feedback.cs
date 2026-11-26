@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using MoreMountains.Tools;
 using Random = UnityEngine.Random;
@@ -73,7 +74,11 @@ namespace MoreMountains.Feedbacks
 		/// a set of settings letting you define automated target acquisition for this feedback, to (for example) automatically grab the target on this game object, or a parent, a child, or on a reference holder
 		[Tooltip("a set of settings letting you define automated target acquisition for this feedback, to (for example) automatically grab the target on this game object, or a parent, a child, or on a reference holder")]
 		public MMFeedbackTargetAcquisition AutomatedTargetAcquisition;
-		
+
+		/// a set of settings letting you define automated acquisition of multiple targets for this feedback, to (for example) automatically fill its list of extra targets with all matching components found on this game object, its children, its parents, or on reference holders
+		[Tooltip("a set of settings letting you define automated acquisition of multiple targets for this feedback, to (for example) automatically fill its list of extra targets with all matching components found on this game object, its children, its parents, or on reference holders")]
+		public MMFeedbackMultipleTargetAcquisition AutomatedMultipleTargetAcquisition;
+
 		[MMFInspectorGroup(_randomnessGroupName, true, 58, false, true)]
 		/// if this is true, intensity will be multiplied by a random value on play, picked between RandomMultiplier.x and RandomMultiplier.y
 		[Tooltip(
@@ -170,6 +175,12 @@ namespace MoreMountains.Feedbacks
 
 		/// whether or not this feedback can automatically grab the target on this game object, or a parent, a child, or on a reference holder
 		public virtual bool HasAutomatedTargetAcquisition => false;
+		/// whether or not this feedback can automatically fill its list of extra targets with all matching targets found on this game object, its children, its parents, or on reference holders
+		public virtual bool HasAutomatedMultipleTargetAcquisition => false;
+		/// returns true if this feedback supports multiple target acquisition and has it set to a mode other than None
+		public virtual bool AutomatedMultipleTargetAcquisitionActive => HasAutomatedMultipleTargetAcquisition
+		                                                                 && (AutomatedMultipleTargetAcquisition != null)
+		                                                                 && (AutomatedMultipleTargetAcquisition.Mode != MMFeedbackMultipleTargetAcquisition.Modes.None);
 		/// when in forced reference mode, this will contain the forced reference holder that will be used (usually set by itself)
 		public virtual MMF_ReferenceHolder ForcedReferenceHolder { get; set; }
 
@@ -186,7 +197,9 @@ namespace MoreMountains.Feedbacks
 		public virtual Color FeedbackColor => Color.white;
 		#endif
 		/// returns true if this feedback is in cooldown at this time (and thus can't play), false otherwise
+		/// (a negative elapsed time means the last play timestamp comes from another time base, like an edit mode preview, so it doesn't count)
 		public virtual bool InCooldown => (Timing.CooldownDuration > 0f) &&
+		                                  (FeedbackTime - _lastPlayTimestamp >= 0f) &&
 		                                  (FeedbackTime - _lastPlayTimestamp < Timing.CooldownDuration);
 
 		/// if this is true, this feedback is currently playing
@@ -199,7 +212,11 @@ namespace MoreMountains.Feedbacks
 		/// <returns></returns>
 		public virtual float ComputeIntensity(float intensity, Vector3 position)
 		{
-			float result = Timing.ConstantIntensity ? 1f : intensity;
+			if (Timing.ConstantIntensity)
+			{
+				return 1f;
+			}
+			float result = intensity;
 			result *= ComputedRandomMultiplier;
 			result *= Owner.ComputeRangeIntensityMultiplier(position);
 			return result;
@@ -283,12 +300,29 @@ namespace MoreMountains.Feedbacks
 			}
 		}
 
+		/// the maximum delta time allowed in editor preview mode
+		public const float MaxEditorPreviewDeltaTime = 0.05f;
+		
 		/// the delta time (or unscaled delta time) based on the selected Timing settings
 		public virtual float FeedbackDeltaTime
 		{
 			get
 			{
+				if (_skipFirstDeltaTime && Timing.InitialDelay > 0f)
+				{
+					_skipFirstDeltaTime = false;
+					return 0.005f;
+				}
+				
 				float timescaleMultiplier = Owner.TimescaleMultiplier;
+				
+				#if UNITY_EDITOR
+				if (!Application.isPlaying)
+				{
+					// we cap the delta time to prevent spikes in editor preview mode
+					return Mathf.Min(Time.unscaledDeltaTime, MaxEditorPreviewDeltaTime) * timescaleMultiplier;
+				}
+				#endif
 				
 				if (Timing.UseScriptDrivenTimescale)
 				{
@@ -398,7 +432,7 @@ namespace MoreMountains.Feedbacks
 		}
 
 		// the timestamp at which this feedback was last played
-		public virtual float FeedbackStartedAt => Application.isPlaying ? _lastPlayTimestamp : -1f;
+		public virtual float FeedbackStartedAt => (Application.isPlaying || _lastPlayTimestamp > 0f) ? _lastPlayTimestamp : -1f;
 
 		// the perceived duration of the feedback, to be used to display its progress bar, meant to be overridden with meaningful data by each feedback
 		public virtual float FeedbackDuration
@@ -448,6 +482,7 @@ namespace MoreMountains.Feedbacks
 		protected string _requiredTargetTextCached = ".";
 		protected string _requiredTargetTextCachedExtra = "";
 		protected float _repeatOffset = 0f;
+		protected bool _skipFirstDeltaTime = false;
 
 		#endregion Properties
 
@@ -517,23 +552,40 @@ namespace MoreMountains.Feedbacks
 		/// </summary>
 		protected virtual void AutomateTargetAcquisitionInternal()
 		{
-			if (!HasAutomatedTargetAcquisition)
+			bool acquired = false;
+
+			if (HasAutomatedTargetAcquisition)
 			{
-				return;
-			}
-			
-			if (AutomatedTargetAcquisition == null)
-			{
-				AutomatedTargetAcquisition = new MMFeedbackTargetAcquisition();
+				if (AutomatedTargetAcquisition == null)
+				{
+					AutomatedTargetAcquisition = new MMFeedbackTargetAcquisition();
+				}
+
+				if (AutomatedTargetAcquisition.Mode != MMFeedbackTargetAcquisition.Modes.None)
+				{
+					AutomateTargetAcquisition();
+					acquired = true;
+				}
 			}
 
-			if (AutomatedTargetAcquisition.Mode == MMFeedbackTargetAcquisition.Modes.None)
+			if (HasAutomatedMultipleTargetAcquisition)
 			{
-				return;
+				if (AutomatedMultipleTargetAcquisition == null)
+				{
+					AutomatedMultipleTargetAcquisition = new MMFeedbackMultipleTargetAcquisition();
+				}
+
+				if (AutomatedMultipleTargetAcquisitionActive)
+				{
+					AutomateMultipleTargetAcquisition();
+					acquired = true;
+				}
 			}
 
-			AutomateTargetAcquisition();
-			CacheRequiresSetup();
+			if (acquired)
+			{
+				CacheRequiresSetup();
+			}
 		}
 
 		/// <summary>
@@ -542,6 +594,10 @@ namespace MoreMountains.Feedbacks
 		public virtual void ForceAutomateTargetAcquisition()
 		{
 			AutomateTargetAcquisition();
+			if (AutomatedMultipleTargetAcquisitionActive)
+			{
+				AutomateMultipleTargetAcquisition();
+			}
 			CacheRequiresSetup();
 		}
 
@@ -550,7 +606,15 @@ namespace MoreMountains.Feedbacks
 		/// </summary>
 		protected virtual void AutomateTargetAcquisition()
 		{
-			
+
+		}
+
+		/// <summary>
+		/// A method meant to be implemented per feedback supporting multiple targets, letting you specify what happens (usually filling a list of extra targets)
+		/// </summary>
+		protected virtual void AutomateMultipleTargetAcquisition()
+		{
+
 		}
 
 		/// <summary>
@@ -571,8 +635,58 @@ namespace MoreMountains.Feedbacks
 		{
 			return MMFeedbackTargetAcquisition.FindAutomatedTarget<T>(AutomatedTargetAcquisition, Owner, _indexInOwnerFeedbackList);
 		}
-		
+
+		/// <summary>
+		/// Finds all targets of type T matching this feedback's multiple target acquisition settings, and adds them to the specified list
+		/// </summary>
+		/// <param name="targetList">the list to fill (if null, a new one will be created)</param>
+		/// <param name="excludedTarget">a target that should never be added to the list, typically this feedback's main target</param>
+		/// <typeparam name="T"></typeparam>
+		/// <returns>the filled list</returns>
+		protected virtual List<T> FindAutomatedTargets<T>(List<T> targetList, T excludedTarget = default(T))
+		{
+			return MMFeedbackMultipleTargetAcquisition.FindAutomatedTargets<T>(AutomatedMultipleTargetAcquisition, Owner, _indexInOwnerFeedbackList, targetList, excludedTarget);
+		}
+
+		/// <summary>
+		/// Finds all game objects matching this feedback's multiple target acquisition settings, and adds them to the specified list
+		/// </summary>
+		/// <param name="targetList">the list to fill (if null, a new one will be created)</param>
+		/// <param name="excludedTarget">a game object that should never be added to the list, typically this feedback's main target</param>
+		/// <returns>the filled list</returns>
+		protected virtual List<GameObject> FindAutomatedTargetGameObjects(List<GameObject> targetList, GameObject excludedTarget = null)
+		{
+			return MMFeedbackMultipleTargetAcquisition.FindAutomatedTargetGameObjects(AutomatedMultipleTargetAcquisition, Owner, _indexInOwnerFeedbackList, targetList, excludedTarget);
+		}
+
 		#endregion Automation
+		
+		#region Target Checks
+
+		/// <summary>
+		/// Checks whether a feedback has a correct target setup or not
+		/// </summary>
+		/// <param name="target"></param>
+		/// <param name="targetName"></param>
+		/// <param name="feedbackName"></param>
+		/// <returns></returns>
+		public bool TargetExists(UnityEngine.Object target, string targetName)
+		{
+			if (target != null)
+			{
+				return true;
+			}
+
+			if (Owner.LogMissingTargets)
+			{
+				string feedbackName = GetType().Name.Replace("MMF_", "");
+				Debug.LogWarning("<color=#82d3f9>["+feedbackName+" Feedback]</color> The <color=#ffc400>"+feedbackName.ToLower()+"</color> feedback on <color=#ffc400>"+Owner.name+"</color> doesn't have an <color=#ffc400>"+targetName+"</color>, it won't work. You need to specify one in its inspector.");	
+			}
+			
+			return false;
+		}
+
+		#endregion Target Checks
 
 		#region Play
 
@@ -694,6 +808,7 @@ namespace MoreMountains.Feedbacks
 		{
 			Timing.PlayCount++;
 			_lastPlayTimestamp = FeedbackTime;
+			_skipFirstDeltaTime = true;
 			CustomPlayFeedback(position, intensity);
 		}
 
@@ -735,22 +850,31 @@ namespace MoreMountains.Feedbacks
 				float time = InScaledTimescaleMode ? Time.time : Time.unscaledTime;
 				TriggerCustomPlay(position, feedbacksIntensity);
 				float repeatStartTime = time;
-					
-				float repeatDuration = Timing.DelayBetweenRepeats + FeedbackDuration;
-				if (_repeatOffset <= Timing.DelayBetweenRepeats)
+
+				if (Timing.IgnoreFeedbackDurationForRepeats)
 				{
-					repeatDuration = Timing.DelayBetweenRepeats + FeedbackDuration - _repeatOffset;	
+					yield return WaitFor(Timing.DelayBetweenRepeats);
+					_repeatOffset = 0f;
 				}
-				
-				yield return WaitFor(repeatDuration);
-				yield return null;
-				time = InScaledTimescaleMode ? Time.time : Time.unscaledTime;
-				_repeatOffset = (time - repeatStartTime - (Timing.DelayBetweenRepeats + FeedbackDuration));
+				else
+				{
+					float repeatDuration = Timing.DelayBetweenRepeats + FeedbackDuration;
+					if (_repeatOffset <= Timing.DelayBetweenRepeats)
+					{
+						repeatDuration = Timing.DelayBetweenRepeats + FeedbackDuration - _repeatOffset;	
+					}
+					
+					yield return WaitFor(repeatDuration);
+					yield return null;
+					time = InScaledTimescaleMode ? Time.time : Time.unscaledTime;
+					_repeatOffset = (time - repeatStartTime - (Timing.DelayBetweenRepeats + FeedbackDuration));
+				}
 			}
 			else
 			{
 				_sequenceCoroutine = Owner.StartCoroutine(SequenceCoroutine(position, feedbacksIntensity));
-				float delay = ApplyTimeMultiplier(Timing.DelayBetweenRepeats) + Timing.Sequence.Length;
+				float sequenceDurationForRepeat = Timing.IgnoreFeedbackDurationForRepeats ? 0f : Timing.Sequence.Length;
+				float delay = ApplyTimeMultiplier(Timing.DelayBetweenRepeats) + sequenceDurationForRepeat;
 				yield return WaitFor(delay);
 			}
 		}
@@ -907,7 +1031,7 @@ namespace MoreMountains.Feedbacks
 			}
 			else
 			{
-				Play(position, feedbacksIntensity);
+				RegularPlay(position, feedbacksIntensity);
 				Stop(position, feedbacksIntensity);	
 			}
 		}
@@ -920,7 +1044,7 @@ namespace MoreMountains.Feedbacks
 		/// <returns></returns>
 		protected virtual IEnumerator ForceInitialValueDelayedCo(Vector3 position, float feedbacksIntensity = 1.0f)
 		{
-			Play(position, feedbacksIntensity);
+			RegularPlay(position, feedbacksIntensity);
 			yield return new WaitForEndOfFrame();
 			Stop(position, feedbacksIntensity);
 			
@@ -1032,19 +1156,15 @@ namespace MoreMountains.Feedbacks
 		}
 
 		/// <summary>
-		/// Internal method used to wait for a duration, on scaled or unscaled time
+		/// Internal method used to wait for a duration, using FeedbackDeltaTime to ensure proper timing in all modes (editor preview, runtime, scaled/unscaled)
 		/// </summary>
 		/// <param name="delay"></param>
 		/// <returns></returns>
 		protected virtual IEnumerator WaitFor(float delay)
 		{
-			if (InScaledTimescaleMode)
+			for (float timer = 0f; timer < delay; timer += FeedbackDeltaTime)
 			{
-				yield return MMFeedbacksCoroutine.WaitFor(delay);
-			}
-			else
-			{
-				yield return MMFeedbacksCoroutine.WaitForUnscaled(delay);
+				yield return null;
 			}
 		}
 
@@ -1077,8 +1197,9 @@ namespace MoreMountains.Feedbacks
 			if (Timing.NumberOfRepeats != 0)
 			{
 				float delayBetweenRepeats = ApplyTimeMultiplier(Timing.DelayBetweenRepeats);
+				float feedbackDurationForRepeat = Timing.IgnoreFeedbackDurationForRepeats ? 0f : FeedbackDuration;
 
-				totalTime += Timing.NumberOfRepeats * (FeedbackDuration + delayBetweenRepeats);
+				totalTime += Timing.NumberOfRepeats * (feedbackDurationForRepeat + delayBetweenRepeats);
 			}
 				
 			_totalDuration = totalTime;

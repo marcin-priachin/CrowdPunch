@@ -170,10 +170,10 @@ namespace MoreMountains.Feedbacks
 	/// <summary>
 	/// An event used (usually from MMFeeedbackSpriteRenderer) to shake the values of a SpriteRenderer
 	/// </summary>
-	public struct MMSpriteRendererShakeEvent
+	public partial struct MMSpriteRendererShakeEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 

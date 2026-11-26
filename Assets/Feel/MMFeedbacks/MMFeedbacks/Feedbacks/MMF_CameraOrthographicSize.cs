@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 using MoreMountains.FeedbacksForThirdParty;
 using MoreMountains.Tools;
+#if MM_CINEMACHINE
+using Cinemachine;
+#elif MM_CINEMACHINE3
+using Unity.Cinemachine;
+#endif
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.Scripting.APIUpdating;
@@ -16,9 +21,10 @@ namespace MoreMountains.Feedbacks
 	[System.Serializable]
 	[FeedbackPath("Camera/Orthographic Size")]
 	[FeedbackHelp("This feedback lets you control a camera's orthographic size over time. You'll need a MMCameraOrthographicSizeShaker on your camera.")]
-	public class MMF_CameraOrthographicSize : MMF_Feedback
+	public partial class MMF_CameraOrthographicSize : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -108,18 +114,18 @@ namespace MoreMountains.Feedbacks
 			bool virtualCameraFound = false;
 			#endif
 			
-			#if MMCINEMACHINE 
+			#if MM_CINEMACHINE 
 				CinemachineVirtualCamera virtualCamera = (CinemachineVirtualCamera)Object.FindObjectOfType(typeof(CinemachineVirtualCamera));
 				virtualCameraFound = (virtualCamera != null);
-			#elif MMCINEMACHINE3
-				CinemachineCamera virtualCamera = (CinemachineCamera)Object.FindObjectOfType(typeof(CinemachineCamera));
+			#elif MM_CINEMACHINE3
+				CinemachineCamera virtualCamera = (CinemachineCamera)Object.FindAnyObjectByType(typeof(CinemachineCamera), FindObjectsInactive.Include);
 				virtualCameraFound = (virtualCamera != null);
 			#endif
 			
 			#if MM_CINEMACHINE || MM_CINEMACHINE3
 			if (virtualCameraFound)
 			{
-				MMCinemachineHelpers.AutomaticCinemachineShakersSetup(Owner, "CinemachineImpulse");
+				MMCinemachineHelpers.AutomaticCinemachineShakersSetup(Owner, "OrthographicSize");
 				return;
 			}
 			#endif

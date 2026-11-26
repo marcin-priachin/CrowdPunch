@@ -16,9 +16,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("UI/Image")]
-	public class MMF_Image : MMF_Feedback
+	public partial class MMF_Image : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -104,10 +105,10 @@ namespace MoreMountains.Feedbacks
 				{
 					Turn(false);
 				}
-
-				if (BoundImage == null)
+				
+				if (!TargetExists(BoundImage, nameof(BoundImage)))
 				{
-					Debug.LogWarning("[Image Feedback] The image feedback on "+Owner.name+" doesn't have a BoundImage, it won't work. You need to specify an Image in its inspector.");
+					return;
 				}
 				else
 				{

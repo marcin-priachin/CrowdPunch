@@ -98,6 +98,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 782062cc258f12f469043c785a7c84b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAuthoring
+  ShotSource: {fileID: 0}
 --- !u!114 &4595888342496134965
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -438,7 +439,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 3655ca0dbb33dd64b9434e76636f092f, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
   MaxLegAnimationSpeed: 2
   JogCycleDistances: []
   Profile: 13

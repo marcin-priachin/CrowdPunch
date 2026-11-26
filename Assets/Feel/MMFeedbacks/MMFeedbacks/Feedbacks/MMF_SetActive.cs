@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("GameObject/Set Active")]
-	public class MMF_SetActive : MMF_Feedback
+	public partial class MMF_SetActive : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -42,6 +43,8 @@ namespace MoreMountains.Feedbacks
 		#endif
 		public override bool HasAutomatedTargetAcquisition => true;
 		protected override void AutomateTargetAcquisition() => TargetGameObject = FindAutomatedTargetGameObject();
+		public override bool HasAutomatedMultipleTargetAcquisition => true;
+		protected override void AutomateMultipleTargetAcquisition() => ExtraTargetGameObjects = FindAutomatedTargetGameObjects(ExtraTargetGameObjects, TargetGameObject);
 
 		/// the possible effects the feedback can have on the target object's status 
 		public enum PossibleStates { Active, Inactive, Toggle }
@@ -290,9 +293,29 @@ namespace MoreMountains.Feedbacks
 				return;
 			}
 			TargetGameObject.SetActive(_initialState);
-			for (int i = 0; i < ExtraTargetGameObjects.Count; i++)
+			for (int i = 0; (i < ExtraTargetGameObjects.Count) && (i < _initialStates.Count); i++)
 			{
 				ExtraTargetGameObjects[i].SetActive(_initialStates[i]);
+			}
+		}
+
+		/// <summary>
+		/// When forcing target acquisition after initialization, we store the initial states of extra targets that may have been added (or of all of them if the list got replaced)
+		/// </summary>
+		public override void ForceAutomateTargetAcquisition()
+		{
+			base.ForceAutomateTargetAcquisition();
+			if (!_initialized || !AutomatedMultipleTargetAcquisitionActive || (_initialStates == null) || (ExtraTargetGameObjects == null))
+			{
+				return;
+			}
+			if (AutomatedMultipleTargetAcquisition.ListMode == MMFeedbackMultipleTargetAcquisition.ListModes.Replace)
+			{
+				_initialStates.Clear();
+			}
+			for (int i = _initialStates.Count; i < ExtraTargetGameObjects.Count; i++)
+			{
+				_initialStates.Add(ExtraTargetGameObjects[i].activeInHierarchy);
 			}
 		}
 	}

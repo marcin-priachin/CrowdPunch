@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Transform/Destination")]
-	public class MMF_DestinationTransform : MMF_Feedback
+	public partial class MMF_DestinationTransform : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// the possible timescales this feedback can animate on
 		public enum TimeScales { Scaled, Unscaled }

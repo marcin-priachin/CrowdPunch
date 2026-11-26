@@ -38,10 +38,10 @@ namespace MoreMountains.Feedbacks
 		public override string ToString() => $"REQUESTED ts={TimeScale} time={Duration} lerp={TimeScaleLerp} speed={LerpSpeed} keep={Infinite}";
 	}
 
-	public struct MMTimeScaleEvent
+	public partial struct MMTimeScaleEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -67,18 +67,18 @@ namespace MoreMountains.Feedbacks
 		}
 	}
     
-	public struct MMFreezeFrameEvent
+	public partial struct MMFreezeFrameEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
-		public delegate void Delegate(float duration);
+		public delegate void Delegate(float duration, float minimumTimescaleThreshold);
 
-		static public void Trigger(float duration)
+		static public void Trigger(float duration, float minimumTimescaleThreshold)
 		{
-			OnEvent?.Invoke(duration);
+			OnEvent?.Invoke(duration, minimumTimescaleThreshold);
 		}
 	}
 
@@ -128,15 +128,6 @@ namespace MoreMountains.Feedbacks
 		protected float _timeScaleLastTime = float.NegativeInfinity;
 		protected float _initialTimeScale = 1f;
 		
-		/// <summary>
-		/// Statics initialization to support enter play modes
-		/// </summary>
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		protected static void InitializeStatics()
-		{
-			_instance = null;
-		}
-
 		/// <summary>
 		/// A method used from the inspector to test the system
 		/// </summary>
@@ -391,8 +382,12 @@ namespace MoreMountains.Feedbacks
 		/// When getting a freeze frame event we stop the time
 		/// </summary>
 		/// <param name="freezeFrameEvent">Freeze frame event.</param>
-		public virtual void OnMMFreezeFrameEvent(float duration)
+		public virtual void OnMMFreezeFrameEvent(float duration, float minimumTimescaleThreshold)
 		{
+			if (Time.timeScale < minimumTimescaleThreshold)
+			{
+				return;
+			}
 			TimeScaleProperties properties = new TimeScaleProperties();
 			properties.Duration = duration;
 			properties.TimeScaleLerp = false;

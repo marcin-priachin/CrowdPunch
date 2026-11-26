@@ -24,9 +24,11 @@ namespace MoreMountains.Feedbacks
 		public float ToDestinationLevel;
 	}
     
-	public abstract class MMF_FeedbackBase : MMF_Feedback
+	[Serializable]
+	public abstract partial class MMF_FeedbackBase : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		
 		/// the possible modes for this feedback

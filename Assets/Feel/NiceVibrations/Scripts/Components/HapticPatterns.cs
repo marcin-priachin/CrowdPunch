@@ -20,11 +20,15 @@ namespace Lofelt.NiceVibrations
     /// After playback has finished, the loaded clips in this class will remain
     /// loaded in HapticController.
 
-    public static class HapticPatterns
+    public static partial class HapticPatterns
     {
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         static String emphasisTemplate;
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         static String constantTemplate;
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         static NumberFormatInfo numberFormat;
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         static private float[] constantPatternTime = new float[] { 0.0f, 0.0f };
 
         /// <summary>
@@ -49,11 +53,12 @@ namespace Lofelt.NiceVibrations
         /// </summary>
         ///
         /// \ref time values have be incremental to be compatible with Preset.
-        struct Pattern
+        partial struct Pattern
         {
             public float[] time;
             public float[] amplitude;
 
+            [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
             static String clipJsonTemplate;
 
             static Pattern()
@@ -174,46 +179,55 @@ namespace Lofelt.NiceVibrations
         /// <summary>
         /// Predefined Preset that represents a "Selection" haptic preset
         /// </summary>
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         internal static Preset Selection;
 
         /// <summary>
         /// Predefined Preset that represents a "Light" haptic preset
         /// </summary>
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         internal static Preset Light;
 
         /// <summary>
         /// Predefined Preset that represents a "Medium" haptic preset
         /// </summary>
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         internal static Preset Medium;
 
         /// <summary>
         /// Predefined Preset that represents a "Heavy" haptic preset
         /// </summary>
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         internal static Preset Heavy;
 
         /// <summary>
         /// Predefined Preset that represents a "Rigid" haptic preset
         /// </summary>
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         internal static Preset Rigid;
 
         /// <summary>
         /// Predefined Preset that represents a "Soft" haptic preset
         /// </summary>
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         internal static Preset Soft;
 
         /// <summary>
         /// Predefined Preset that represents a "Success" haptic preset
         /// </summary>
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         internal static Preset Success;
 
         /// <summary>
         /// Predefined Preset that represents a "Failure" haptic preset
         /// </summary>
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         internal static Preset Failure;
 
         /// <summary>
         /// Predefined Preset that represents a "Warning" haptic preset
         /// </summary>
+        [Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
         internal static Preset Warning;
 
         static HapticPatterns()

@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.MMTools")]
 	[System.Serializable]
 	[FeedbackPath("Debug/Break")]
-	public class MMF_DebugBreak : MMF_Feedback
+	public partial class MMF_DebugBreak : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// the duration of this feedback is 0
 		public override float FeedbackDuration { get { return 0f; } }

@@ -216,7 +216,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 		/// </summary>
 		public virtual void RestoreInitialValues()
 		{
-			_volume.weight = _initial;
+			if (_volume != null)
+			{
+				_volume.weight = _initial;	
+			}
 		}
 
 		#endif
@@ -308,8 +311,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 	/// <summary>
 	/// An event used to trigger vignette shakes
 	/// </summary>
-	public struct MMPostProcessingVolumeAutoBlendShakeEvent
+	public partial struct MMPostProcessingVolumeAutoBlendShakeEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMPostProcessingVolumeAutoBlendShakeEvent e;
 		
 		public MMChannelData ChannelData;

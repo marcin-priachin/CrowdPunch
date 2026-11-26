@@ -16,9 +16,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackPath("PostProcess/Global PP Volume Auto Blend URP")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.URP")]
-	public class MMF_GlobalPPVolumeAutoBlend_URP : MMF_Feedback
+	public partial class MMF_GlobalPPVolumeAutoBlend_URP : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// the possible modes for this feedback :
 		/// - default : will let you trigger Blend() and BlendBack() on the blender

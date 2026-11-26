@@ -29,7 +29,7 @@ namespace Lofelt.NiceVibrations
     /// <c>HapticSourceInspector</c> provides a custom editor for HapticSource for the
     /// Inspector.
     [AddComponentMenu("Nice Vibrations/Haptic Source")]
-    public class HapticSource : MonoBehaviour
+    public partial class HapticSource : MonoBehaviour
     {
         const int DEFAULT_PRIORITY = 128;
 
@@ -138,6 +138,7 @@ namespace Lofelt.NiceVibrations
         /// The HapticSource that is currently loaded into HapticController.
         /// This can be null if nothing was ever loaded, or if HapticController::Load()
         /// was called directly, bypassing HapticSource.
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static HapticSource loadedHapticSource = null;
 
         /// The HapticSource that was last played.
@@ -145,6 +146,7 @@ namespace Lofelt.NiceVibrations
         /// was called directly, bypassing HapticSource.
         /// The lastPlayedHapticSource isn't necessarily playing now, lastPlayedHapticSource
         /// will remain set even if playback has finished or was stopped.
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static HapticSource lastPlayedHapticSource = null;
 
         static HapticSource()
@@ -152,6 +154,7 @@ namespace Lofelt.NiceVibrations
             // When HapticController::Load() or HapticController::Play() is
             // called directly, bypassing HapticSource, reset loadedHapticSource
             // and lastPlayedHapticSource.
+            #pragma warning disable UAL0015 
             HapticController.LoadedClipChanged += () =>
             {
                 loadedHapticSource = null;
@@ -160,6 +163,7 @@ namespace Lofelt.NiceVibrations
             {
                 lastPlayedHapticSource = null;
             };
+            #pragma warning restore UAL0015
         }
 
         /// <summary>

@@ -30,9 +30,10 @@ namespace MoreMountains.Tools
 	/// It'll output the time spent between the StartTest and the EndTest calls
 	/// Make sure to use a unique ID for both calls
 	/// </summary>
-	public static class MMSpeedTest 
+	public static partial class MMSpeedTest 
 	{
-		private static readonly Dictionary<string, MMSpeedTestItem> _speedTests = new Dictionary<string, MMSpeedTestItem>();
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
+		private static Dictionary<string, MMSpeedTestItem> _speedTests = new Dictionary<string, MMSpeedTestItem>();
 
 		/// <summary>
 		/// Starts a speed test of the specified ID

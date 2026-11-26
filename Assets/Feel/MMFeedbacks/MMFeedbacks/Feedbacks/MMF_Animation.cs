@@ -13,9 +13,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Animation/Animation Parameter")]
-	public class MMF_Animation : MMF_Feedback 
+	public partial class MMF_Animation : MMF_Feedback 
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
         
 		/// the possible modes that pilot triggers        
@@ -37,6 +38,8 @@ namespace MoreMountains.Feedbacks
 		public override bool HasRandomness => true;
 		public override bool HasAutomatedTargetAcquisition => true;
 		protected override void AutomateTargetAcquisition() => BoundAnimator = FindAutomatedTarget<Animator>();
+		public override bool HasAutomatedMultipleTargetAcquisition => true;
+		protected override void AutomateMultipleTargetAcquisition() => ExtraBoundAnimators = FindAutomatedTargets<Animator>(ExtraBoundAnimators, BoundAnimator);
 
 		[MMFInspectorGroup("Animation", true, 12, true)]
 		/// the animator whose parameters you want to update
@@ -181,6 +184,11 @@ namespace MoreMountains.Feedbacks
 		{
 			base.CustomInitialization(owner);
 			
+			if (!TargetExists(BoundAnimator, nameof(BoundAnimator)))
+			{
+				return;
+			}
+			
 			_triggerParameter = Animator.StringToHash(TriggerParameterName);
 			_boolParameter = Animator.StringToHash(BoolParameterName);
 			_intParameter = Animator.StringToHash(IntParameterName);
@@ -226,10 +234,10 @@ namespace MoreMountains.Feedbacks
 			{
 				return;
 			}
+			
 
 			if (BoundAnimator == null)
 			{
-				Debug.LogWarning("[Animation Feedback] The animation feedback on "+Owner.name+" doesn't have a BoundAnimator, it won't work. You need to specify one in its inspector.");
 				return;
 			}
 

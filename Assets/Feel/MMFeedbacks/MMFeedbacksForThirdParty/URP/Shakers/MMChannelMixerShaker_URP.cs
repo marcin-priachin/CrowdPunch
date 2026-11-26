@@ -23,6 +23,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public bool RelativeValues = true;
 
 		[MMInspectorGroup("Red", true, 43)]
+		/// whether or not this shaker should modify the red channel
+		[Tooltip("whether or not this shaker should modify the red channel")]
+		public bool ModifyRed = true;
 		/// the curve used to animate the red value on
 		[Tooltip("the curve used to animate the red value on")]
 		public AnimationCurve ShakeRed = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -36,6 +39,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public float RemapRedOne = 200f;
 
 		[MMInspectorGroup("Green", true, 44)]
+		/// whether or not this shaker should modify the green channel
+		[Tooltip("whether or not this shaker should modify the green channel")]
+		public bool ModifyGreen = true;
 		/// the curve used to animate the green value on
 		[Tooltip("the curve used to animate the green value on")]
 		public AnimationCurve ShakeGreen = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -49,6 +55,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public float RemapGreenOne = 200f;
 
 		[MMInspectorGroup("Blue", true, 45)]
+		/// whether or not this shaker should modify the blue channel
+		[Tooltip("whether or not this shaker should modify the blue channel")]
+		public bool ModifyBlue = true;
 		/// the curve used to animate the blue value on
 		[Tooltip("the curve used to animate the blue value on")]
 		public AnimationCurve ShakeBlue = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -81,6 +90,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		protected AnimationCurve _originalShakeBlue;
 		protected float _originalRemapBlueZero;
 		protected float _originalRemapBlueOne;
+		protected bool _originalModifyRed;
+		protected bool _originalModifyGreen;
+		protected bool _originalModifyBlue;
 
 		/// <summary>
 		/// On init we initialize our values
@@ -105,12 +117,21 @@ namespace MoreMountains.FeedbacksForThirdParty
 		/// </summary>
 		protected override void Shake()
 		{
-			float newRed = ShakeFloat(ShakeRed, RemapRedZero, RemapRedOne, RelativeValues, _initialRed);
-			_channelMixer.redOutRedIn.Override(newRed);
-			float newGreen = ShakeFloat(ShakeGreen, RemapGreenZero, RemapGreenOne, RelativeValues, _initialGreen);
-			_channelMixer.greenOutGreenIn.Override(newGreen);
-			float newBlue = ShakeFloat(ShakeBlue, RemapBlueZero, RemapBlueOne, RelativeValues, _initialBlue);
-			_channelMixer.blueOutBlueIn.Override(newBlue);
+			if (ModifyRed)
+			{
+				float newRed = ShakeFloat(ShakeRed, RemapRedZero, RemapRedOne, RelativeValues, _initialRed);
+				_channelMixer.redOutRedIn.Override(newRed);
+			}
+			if (ModifyGreen)
+			{
+				float newGreen = ShakeFloat(ShakeGreen, RemapGreenZero, RemapGreenOne, RelativeValues, _initialGreen);
+				_channelMixer.greenOutGreenIn.Override(newGreen);
+			}
+			if (ModifyBlue)
+			{
+				float newBlue = ShakeFloat(ShakeBlue, RemapBlueZero, RemapBlueOne, RelativeValues, _initialBlue);
+				_channelMixer.blueOutBlueIn.Override(newBlue);
+			}
 		}
 
 		/// <summary>
@@ -137,7 +158,8 @@ namespace MoreMountains.FeedbacksForThirdParty
 			AnimationCurve shakeBlue, float remapBlueZero, float remapBlueOne,
 			float duration, bool relativeValues = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true, 
-			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false)
+			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
+			bool modifyRed = true, bool modifyGreen = true, bool modifyBlue = true)
 		{
 			if (!CheckEventAllowed(channelData) || (!Interruptible && Shaking))
 			{
@@ -172,6 +194,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 				_originalShakeBlue = ShakeBlue;
 				_originalRemapBlueZero = RemapBlueZero;
 				_originalRemapBlueOne = RemapBlueOne;
+				_originalModifyRed = ModifyRed;
+				_originalModifyGreen = ModifyGreen;
+				_originalModifyBlue = ModifyBlue;
 			}
 
 			if (!OnlyUseShakerValues)
@@ -188,6 +213,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 				ShakeBlue = shakeBlue;
 				RemapBlueZero = remapBlueZero;
 				RemapBlueOne = remapBlueOne;
+				ModifyRed = modifyRed;
+				ModifyGreen = modifyGreen;
+				ModifyBlue = modifyBlue;
 				ForwardDirection = forwardDirection;
 			}
 
@@ -200,9 +228,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		protected override void ResetTargetValues()
 		{
 			base.ResetTargetValues();
-			_channelMixer.redOutRedIn.Override(_initialRed);
-			_channelMixer.greenOutGreenIn.Override(_initialGreen);
-			_channelMixer.blueOutBlueIn.Override(_initialBlue);
+			if (ModifyRed) { _channelMixer.redOutRedIn.Override(_initialRed); }
+			if (ModifyGreen) { _channelMixer.greenOutGreenIn.Override(_initialGreen); }
+			if (ModifyBlue) { _channelMixer.blueOutBlueIn.Override(_initialBlue); }
 		}
 
 		/// <summary>
@@ -222,6 +250,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 			ShakeBlue = _originalShakeBlue;
 			RemapBlueZero = _originalRemapBlueZero;
 			RemapBlueOne = _originalRemapBlueOne;
+			ModifyRed = _originalModifyRed;
+			ModifyGreen = _originalModifyGreen;
+			ModifyBlue = _originalModifyBlue;
 		}
 
 		/// <summary>
@@ -247,10 +278,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	/// <summary>
 	/// An event used to trigger vignette shakes
 	/// </summary>
-	public struct MMChannelMixerShakeEvent_URP
+	public partial struct MMChannelMixerShakeEvent_URP
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -260,7 +291,8 @@ namespace MoreMountains.FeedbacksForThirdParty
 			AnimationCurve shakeBlue, float remapBlueZero, float remapBlueOne,
 			float duration, bool relativeValues = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true,
-			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false);
+			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
+			bool modifyRed = true, bool modifyGreen = true, bool modifyBlue = true);
 
 		static public void Trigger(
 			AnimationCurve shakeRed, float remapRedZero, float remapRedOne,
@@ -268,12 +300,14 @@ namespace MoreMountains.FeedbacksForThirdParty
 			AnimationCurve shakeBlue, float remapBlueZero, float remapBlueOne,
 			float duration, bool relativeValues = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true,
-			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false)
+			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
+			bool modifyRed = true, bool modifyGreen = true, bool modifyBlue = true)
 		{
 			OnEvent?.Invoke(shakeRed, remapRedZero, remapRedOne,
 				shakeGreen, remapGreenZero, remapGreenOne,
 				shakeBlue, remapBlueZero, remapBlueOne,
-				duration, relativeValues, attenuation, channelData, resetShakerValuesAfterShake, resetTargetValuesAfterShake, forwardDirection, timescaleMode, stop, restore);
+				duration, relativeValues, attenuation, channelData, resetShakerValuesAfterShake, resetTargetValuesAfterShake, forwardDirection, timescaleMode, stop, restore,
+				modifyRed, modifyGreen, modifyBlue);
 		}
 	}
 }

@@ -16,9 +16,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Renderer/Flicker")]
-	public class MMF_Flicker : MMF_Feedback
+	public partial class MMF_Flicker : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -29,6 +30,8 @@ namespace MoreMountains.Feedbacks
 		#endif
 		public override bool HasAutomatedTargetAcquisition => true;
 		protected override void AutomateTargetAcquisition() => BoundRenderer = FindAutomatedTarget<Renderer>();
+		public override bool HasAutomatedMultipleTargetAcquisition => true;
+		protected override void AutomateMultipleTargetAcquisition() => ExtraBoundRenderers = FindAutomatedTargets<Renderer>(ExtraBoundRenderers, BoundRenderer);
 
 		/// the possible modes
 		/// Color : will control material.color
@@ -171,6 +174,18 @@ namespace MoreMountains.Feedbacks
 			}
 		}
 
+		/// <summary>
+		/// When forcing target acquisition after initialization, we initialize again if our extra renderers may have changed, to keep our caches in sync
+		/// </summary>
+		public override void ForceAutomateTargetAcquisition()
+		{
+			base.ForceAutomateTargetAcquisition();
+			if (_initialized && AutomatedMultipleTargetAcquisitionActive)
+			{
+				CustomInitialization(Owner);
+			}
+		}
+
 		protected virtual void AcquireRenderers(MMF_Player owner)
 		{
 			if (Active && (BoundRenderer == null) && (owner != null))
@@ -184,23 +199,18 @@ namespace MoreMountains.Feedbacks
 					BoundRenderer = owner.GetComponentInChildren<Renderer>();
 				}
 			}
-			if (BoundRenderer == null)
+			if (!TargetExists(BoundRenderer, nameof(BoundRenderer)))
 			{
-				Debug.LogWarning("[Flicker Feedback] The flicker feedback on "+Owner.name+" doesn't have a bound renderer, it won't work. You need to specify a renderer to flicker in its inspector.");
+				_spriteRendererIsNull = true;
+				return;
 			}
-
-			if (BoundRenderer != null)
-			{
-				_spriteRenderer = BoundRenderer.GetComponent<SpriteRenderer>();	
-			}
+			_spriteRenderer = BoundRenderer.GetComponent<SpriteRenderer>();	
 			
+			// we keep this list in sync with ExtraBoundRenderers, storing null for renderers that aren't sprite renderers
 			_spriteRenderers = new List<SpriteRenderer>();
 			foreach (Renderer renderer in ExtraBoundRenderers)
 			{
-				if (renderer.GetComponent<SpriteRenderer>() != null)
-				{
-					_spriteRenderers.Add(renderer.GetComponent<SpriteRenderer>());
-				}
+				_spriteRenderers.Add(renderer as SpriteRenderer);
 			}
 			_spriteRendererIsNull = _spriteRenderer == null;
 		}
@@ -211,11 +221,12 @@ namespace MoreMountains.Feedbacks
 			{
 				return;
 			}
-			_spriteRendererTexture = _spriteRenderer.sprite.texture;
+			_spriteRendererTexture = (_spriteRenderer.sprite != null) ? _spriteRenderer.sprite.texture : null;
 			_spriteRendererTextures = new List<Texture2D>();
 			for (var index = 0; index < ExtraBoundRenderers.Count; index++)
 			{
-				_spriteRendererTextures.Add(_spriteRenderers[index].sprite.texture);
+				SpriteRenderer extraSpriteRenderer = (index < _spriteRenderers.Count) ? _spriteRenderers[index] : null;
+				_spriteRendererTextures.Add(((extraSpriteRenderer != null) && (extraSpriteRenderer.sprite != null)) ? extraSpriteRenderer.sprite.texture : null);
 			}
 		}
 
@@ -279,11 +290,18 @@ namespace MoreMountains.Feedbacks
 
 			if (renderer == BoundRenderer)
 			{
-				block.SetTexture(SpriteRendererTextureProperty, _spriteRendererTexture);	
+				if (_spriteRendererTexture != null)
+				{
+					block.SetTexture(SpriteRendererTextureProperty, _spriteRendererTexture);
+				}
 			}
 			else
 			{
-				block.SetTexture(SpriteRendererTextureProperty, _spriteRendererTextures[ExtraBoundRenderers.IndexOf(renderer)]);
+				int index = ExtraBoundRenderers.IndexOf(renderer);
+				if ((index >= 0) && (index < _spriteRendererTextures.Count) && (_spriteRendererTextures[index] != null))
+				{
+					block.SetTexture(SpriteRendererTextureProperty, _spriteRendererTextures[index]);
+				}
 			}
 		}
 

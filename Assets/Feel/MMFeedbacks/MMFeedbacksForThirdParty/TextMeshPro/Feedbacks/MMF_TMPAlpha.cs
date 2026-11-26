@@ -18,7 +18,7 @@ namespace MoreMountains.Feedbacks
 	[FeedbackPath("TextMesh Pro/TMP Alpha")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.TextMeshPro")]
-	public class MMF_TMPAlpha : MMF_Feedback
+	public partial class MMF_TMPAlpha : MMF_Feedback
 	{
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -31,6 +31,7 @@ namespace MoreMountains.Feedbacks
 		#endif
         
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		public enum AlphaModes { Instant, Interpolate, ToDestination }
 

@@ -23,6 +23,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public bool RelativeValues = true;
 
 		[MMInspectorGroup("Focus Distance", true, 51)]
+		/// whether or not this shaker should modify focus distance
+		[Tooltip("whether or not this shaker should modify focus distance")]
+		public bool ModifyFocusDistance = true;
 		/// the curve used to animate the focus distance value on
 		[Tooltip("the curve used to animate the focus distance value on")]
 		public AnimationCurve ShakeFocusDistance = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -34,6 +37,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public float RemapFocusDistanceOne = 3f;
 
 		[MMInspectorGroup("Aperture", true, 52)]
+		/// whether or not this shaker should modify aperture
+		[Tooltip("whether or not this shaker should modify aperture")]
+		public bool ModifyAperture = true;
 		/// the curve used to animate the aperture value on
 		[Tooltip("the curve used to animate the aperture value on")]
 		public AnimationCurve ShakeAperture = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -47,6 +53,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public float RemapApertureOne = 0f;
 
 		[MMInspectorGroup("Focal Length", true, 53)]
+		/// whether or not this shaker should modify focal length
+		[Tooltip("whether or not this shaker should modify focal length")]
+		public bool ModifyFocalLength = true;
 		/// the curve used to animate the focal length value on
 		[Tooltip("the curve used to animate the focal length value on")]
 		public AnimationCurve ShakeFocalLength = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -76,6 +85,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		protected AnimationCurve _originalShakeFocalLength;
 		protected float _originalRemapFocalLengthZero;
 		protected float _originalRemapFocalLengthOne;
+		protected bool _originalModifyFocusDistance;
+		protected bool _originalModifyAperture;
+		protected bool _originalModifyFocalLength;
 
 		/// <summary>
 		/// On init we initialize our values
@@ -92,12 +104,21 @@ namespace MoreMountains.FeedbacksForThirdParty
 		/// </summary>
 		protected override void Shake()
 		{
-			float newFocusDistance = ShakeFloat(ShakeFocusDistance, RemapFocusDistanceZero, RemapFocusDistanceOne, RelativeValues, _initialFocusDistance);
-			_depthOfField.focusDistance.Override(newFocusDistance);
-			float newAperture = ShakeFloat(ShakeAperture, RemapApertureZero, RemapApertureOne, RelativeValues, _initialAperture);
-			_depthOfField.aperture.Override(newAperture);
-			float newFocalLength = ShakeFloat(ShakeFocalLength, RemapFocalLengthZero, RemapFocalLengthOne, RelativeValues, _initialFocalLength);
-			_depthOfField.focalLength.Override(newFocalLength);
+			if (ModifyFocusDistance)
+			{
+				float newFocusDistance = ShakeFloat(ShakeFocusDistance, RemapFocusDistanceZero, RemapFocusDistanceOne, RelativeValues, _initialFocusDistance);
+				_depthOfField.focusDistance.Override(newFocusDistance);
+			}
+			if (ModifyAperture)
+			{
+				float newAperture = ShakeFloat(ShakeAperture, RemapApertureZero, RemapApertureOne, RelativeValues, _initialAperture);
+				_depthOfField.aperture.Override(newAperture);
+			}
+			if (ModifyFocalLength)
+			{
+				float newFocalLength = ShakeFloat(ShakeFocalLength, RemapFocalLengthZero, RemapFocalLengthOne, RelativeValues, _initialFocalLength);
+				_depthOfField.focalLength.Override(newFocalLength);
+			}
 		}
 
 		/// <summary>
@@ -132,7 +153,8 @@ namespace MoreMountains.FeedbacksForThirdParty
 			AnimationCurve focalLength, float remapFocalLengthMin, float remapFocalLengthMax,
 			bool relativeValues = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true, 
-			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false)
+			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
+			bool modifyFocusDistance = true, bool modifyAperture = true, bool modifyFocalLength = true)
 		{
 			if (!CheckEventAllowed(channelData) || (!Interruptible && Shaking))
 			{
@@ -167,6 +189,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 				_originalShakeFocalLength = ShakeFocalLength;
 				_originalRemapFocalLengthZero = RemapFocalLengthZero;
 				_originalRemapFocalLengthOne = RemapFocalLengthOne;
+				_originalModifyFocusDistance = ModifyFocusDistance;
+				_originalModifyAperture = ModifyAperture;
+				_originalModifyFocalLength = ModifyFocalLength;
 			}
 
 			if (!OnlyUseShakerValues)
@@ -183,6 +208,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 				ShakeFocalLength = focalLength;
 				RemapFocalLengthZero = remapFocalLengthMin;
 				RemapFocalLengthOne = remapFocalLengthMax;
+				ModifyFocusDistance = modifyFocusDistance;
+				ModifyAperture = modifyAperture;
+				ModifyFocalLength = modifyFocalLength;
 				ForwardDirection = forwardDirection;
 			}
 
@@ -195,9 +223,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		protected override void ResetTargetValues()
 		{
 			base.ResetTargetValues();
-			_depthOfField.focusDistance.Override(_initialFocusDistance);
-			_depthOfField.aperture.Override(_initialAperture);
-			_depthOfField.focalLength.Override(_initialFocalLength);
+			if (ModifyFocusDistance) { _depthOfField.focusDistance.Override(_initialFocusDistance); }
+			if (ModifyAperture) { _depthOfField.aperture.Override(_initialAperture); }
+			if (ModifyFocalLength) { _depthOfField.focalLength.Override(_initialFocalLength); }
 		}
 
 		/// <summary>
@@ -217,6 +245,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 			ShakeFocalLength = _originalShakeFocalLength;
 			RemapFocalLengthZero = _originalRemapFocalLengthZero;
 			RemapFocalLengthOne = _originalRemapFocalLengthOne;
+			ModifyFocusDistance = _originalModifyFocusDistance;
+			ModifyAperture = _originalModifyAperture;
+			ModifyFocalLength = _originalModifyFocalLength;
 		}
 
 		/// <summary>
@@ -242,10 +273,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	/// <summary>
 	/// An event used to trigger vignette shakes
 	/// </summary>
-	public struct MMDepthOfFieldShakeEvent_URP
+	public partial struct MMDepthOfFieldShakeEvent_URP
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -254,19 +285,22 @@ namespace MoreMountains.FeedbacksForThirdParty
 			AnimationCurve focalLength, float remapFocalLengthMin, float remapFocalLengthMax,
 			bool relativeValues = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true, 
-			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false);
+			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
+			bool modifyFocusDistance = true, bool modifyAperture = true, bool modifyFocalLength = true);
 
 		static public void Trigger(AnimationCurve focusDistance, float duration, float remapFocusDistanceMin, float remapFocusDistanceMax,
 			AnimationCurve aperture, float remapApertureMin, float remapApertureMax,
 			AnimationCurve focalLength, float remapFocalLengthMin, float remapFocalLengthMax,
 			bool relativeValues = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true, 
-			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false)
+			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
+			bool modifyFocusDistance = true, bool modifyAperture = true, bool modifyFocalLength = true)
 		{
 			OnEvent?.Invoke(focusDistance, duration, remapFocusDistanceMin, remapFocusDistanceMax,
 				aperture, remapApertureMin, remapApertureMax,
 				focalLength, remapFocalLengthMin, remapFocalLengthMax, relativeValues,
-				attenuation, channelData, resetShakerValuesAfterShake, resetTargetValuesAfterShake, forwardDirection, timescaleMode, stop, restore);
+				attenuation, channelData, resetShakerValuesAfterShake, resetTargetValuesAfterShake, forwardDirection, timescaleMode, stop, restore,
+				modifyFocusDistance, modifyAperture, modifyFocalLength);
 		}
 	}
 }

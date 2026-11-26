@@ -11,11 +11,11 @@ namespace MoreMountains.Tools
 	/// Example : MMSoundManagerSoundPlayEvent.Trigger(ExplosionSfx, MMSoundManager.MMSoundManagerTracks.Sfx, this.transform.position);
 	/// will play a clip (here ours is called ExplosionSfx) on the SFX track, at the position of the object calling it
 	/// </summary>
-	public struct MMSoundManagerSoundPlayEvent
+	public partial struct MMSoundManagerSoundPlayEvent
 	{
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		
 		public delegate AudioSource Delegate(AudioClip clip, MMSoundManagerPlayOptions options); 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
 
 		static public void Register(Delegate callback)

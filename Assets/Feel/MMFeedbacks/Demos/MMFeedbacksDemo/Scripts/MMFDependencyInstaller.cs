@@ -12,13 +12,17 @@ namespace MoreMountains.Feedbacks
 	/// <summary>
 	/// This class is used to automatically install optional dependencies used in MMFeedbacks
 	/// </summary>
-	public static class MMFDependencyInstaller 
+	public static partial class MMFDependencyInstaller 
 	{
 		#if UNITY_EDITOR
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static ListRequest _listRequest;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static AddRequest _addRequest;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static int _currentIndex;
         
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static string[] _packages = new string[] 
 		{"com.unity.cinemachine", 
 			"com.unity.postprocessing", 
@@ -64,7 +68,7 @@ namespace MoreMountains.Feedbacks
 		/// </summary>
 		public static void ClearConsole()
 		{
-			var logEntries = System.Type.GetType("UnityEditor.LogEntries, UnityEditor.dll");
+			var logEntries = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.LogEntries");
 			if (logEntries != null)
 			{
 				var clearMethod = logEntries.GetMethod("Clear", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);

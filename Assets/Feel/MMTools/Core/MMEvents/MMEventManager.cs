@@ -15,8 +15,9 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// MMGameEvents are used throughout the game for general game events (game started, game ended, life lost, etc.)
 	/// </summary>
-	public struct MMGameEvent
+	public partial struct MMGameEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMGameEvent e;
 		
 		public string EventName;
@@ -76,21 +77,11 @@ namespace MoreMountains.Tools
 	/// will catch all events of type MMGameEvent emitted from anywhere in the game, and do something if it's named GameOver
 	/// </summary>
 	[ExecuteAlways]
-	public static class MMEventManager 
+	public static partial class MMEventManager 
 	{
-		private static Dictionary<Type, List<MMEventListenerBase>> _subscribersList;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
+		private static Dictionary<Type, List<MMEventListenerBase>> _subscribersList = new Dictionary<Type, List<MMEventListenerBase>>();
 		
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		static void InitializeStatics()
-		{
-			_subscribersList = new Dictionary<Type, List<MMEventListenerBase>>();
-		}
-
-		static MMEventManager()
-		{
-			_subscribersList = new Dictionary<Type, List<MMEventListenerBase>>();
-		}
-
 		/// <summary>
 		/// Adds a new subscriber to a certain event.
 		/// </summary>
@@ -250,7 +241,9 @@ namespace MoreMountains.Tools
 		{
 			_owner = owner;
 			_callback = callback;
+			#pragma warning disable UAL0015 
 			RegisterCallbacks(true);
+			#pragma warning restore UAL0015
 		}
 
 		public void Dispose()

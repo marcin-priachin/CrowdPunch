@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[System.Serializable]
 	[FeedbackPath("Audio/AudioSource Pitch")]
 	[FeedbackHelp("This feedback lets you control the pitch of a target AudioSource over time.")]
-	public class MMF_AudioSourcePitch : MMF_Feedback
+	public partial class MMF_AudioSourcePitch : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

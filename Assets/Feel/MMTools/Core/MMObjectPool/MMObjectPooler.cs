@@ -9,9 +9,10 @@ namespace MoreMountains.Tools
 	/// Still handles common stuff like singleton and initialization on start().
 	/// DO NOT add this class to a prefab, nothing would happen. Instead, add SimpleObjectPooler or MultipleObjectPooler.
 	/// </summary>
-	public abstract class MMObjectPooler : MonoBehaviour
+	public abstract partial class MMObjectPooler : MonoBehaviour
 	{
 		/// singleton pattern
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static MMObjectPooler Instance;
 		/// if this is true, the pool will try not to create a new waiting pool if it finds one with the same name.
 		public bool MutualizeWaitingPools = false;
@@ -27,14 +28,9 @@ namespace MoreMountains.Tools
 		protected const int _initialPoolsListCapacity = 5;
 		protected bool _onSceneLoadedRegistered = false;
         
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static List<MMObjectPool> _pools = new List<MMObjectPool>(_initialPoolsListCapacity);
 		
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		protected static void InitializeStatics()
-		{
-			Instance = null;
-		}
-
 		/// <summary>
 		/// Adds a pooler to the static list if needed
 		/// </summary>
@@ -120,7 +116,7 @@ namespace MoreMountains.Tools
 			}
 			if (_pools.Count == 0)
 			{
-				var pools = FindObjectsByType<MMObjectPool>(FindObjectsSortMode.None);
+				var pools = FindObjectsByType<MMObjectPool>();
 				if (pools.Length > 0)
 				{
 					_pools.AddRange(pools);
@@ -191,7 +187,8 @@ namespace MoreMountains.Tools
 		{
 			if (!_onSceneLoadedRegistered)
 			{
-				SceneManager.sceneLoaded += OnSceneLoaded;    
+				SceneManager.sceneLoaded += OnSceneLoaded;
+				_onSceneLoadedRegistered = true;
 			}
 		}
 

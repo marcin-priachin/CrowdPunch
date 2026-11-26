@@ -13,14 +13,15 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Transform/Rotation")]
-	public class MMF_Rotation : MMF_Feedback
+	public partial class MMF_Rotation : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// the possible modes for this feedback (Absolute : always follow the curve from start to finish, Additive : add to the values found when this feedback gets played)
 		public enum Modes { Absolute, Additive, ToDestination }
 		/// whether to animate the scale over time or at a fixed speed
-		public enum MovementModes { Duration, Speed }
+		public enum MovementModes { Duration, Speed, Instant }
 
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -264,6 +265,19 @@ namespace MoreMountains.Feedbacks
 			IsPlaying = true;
 			
 			float duration = HandleSpeedMode(_initialRotation, _destinationRotation, FeedbackDuration);
+			
+			if (MovementMode == MovementModes.Instant)
+			{
+				if (ToDestinationSpace == Space.Self)
+				{
+					AnimateRotationTarget.transform.localRotation = Quaternion.Euler(destinationAngles);
+				}
+				else
+				{
+					AnimateRotationTarget.transform.rotation = Quaternion.Euler(destinationAngles);
+				}
+				yield break;
+			}
             
 			while ((journey >= 0) && (journey <= duration) && (duration > 0))
 			{

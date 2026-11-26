@@ -6,7 +6,7 @@ namespace MoreMountains.Feedbacks
 	/// <summary>
 	/// A class used to regroup most of the styling options for the MMFeedback editors
 	/// </summary>
-	public static class MMFeedbackStyling
+	public static partial class MMFeedbackStyling
 	{
 		public static readonly GUIStyle SmallTickbox = new GUIStyle("ShurikenToggle");
 
@@ -35,6 +35,7 @@ namespace MoreMountains.Feedbacks
 			_paneoptionsiconlight = (Texture2D)EditorGUIUtility.Load("Builtin Skins/LightSkin/Images/pane options.png");
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static GUIStyle _timingStyle = new GUIStyle();
 
 		/// <summary>
@@ -251,17 +252,12 @@ namespace MoreMountains.Feedbacks
 				if (timing.NumberOfRepeats != 0)
 				{
 					float delayBetweenRepeats = host.ApplyTimeMultiplier(timing.DelayBetweenRepeats); 
-                    
+					string repeatedTerm = timing.IgnoreFeedbackDurationForRepeats
+						? delayBetweenRepeats + "s"
+						: duration + "s" + ((timing.DelayBetweenRepeats > 0) ? " + " + host.ApplyTimeMultiplier(timing.DelayBetweenRepeats) + "s" : "");
+                     
 					timingInfo += " + "+ timing.NumberOfRepeats.ToString() + " x ";
-					if (timing.DelayBetweenRepeats > 0)
-					{
-						timingInfo += "(";
-					}
-					timingInfo += duration + "s";
-					if (timing.DelayBetweenRepeats > 0)
-					{
-						timingInfo += " + " + host.ApplyTimeMultiplier(timing.DelayBetweenRepeats) + "s )";
-					}
+					timingInfo += "(" + repeatedTerm + ")";
 					displayTotal = true;
 				}
 

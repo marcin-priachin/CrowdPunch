@@ -11,9 +11,11 @@ namespace MoreMountains.Feedbacks
 	/// That's already done when installing MMFeedbacks.
 	/// </summary>
 	[CreateAssetMenu(menuName = "MoreMountains/MMFeedbacks/Configuration", fileName = "MMFeedbacksConfiguration")]
-	public class MMF_PlayerConfiguration : ScriptableObject
+	public partial class MMF_PlayerConfiguration : ScriptableObject
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static MMF_PlayerConfiguration _instance;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static bool _instantiated;
         
 		/// <summary>

@@ -13,9 +13,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Renderer/Texture Scale")]
-	public class MMF_TextureScale : MMF_Feedback
+	public partial class MMF_TextureScale : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -95,9 +96,8 @@ namespace MoreMountains.Feedbacks
 		{
 			base.CustomInitialization(owner);
 			
-			if (TargetRenderer == null)
+			if (!TargetExists(TargetRenderer, nameof(TargetRenderer)))
 			{
-				Debug.LogWarning("[Texture Scale Feedback] The texture scale feedback on "+Owner.name+" doesn't have a target renderer, it won't work. You need to specify a renderer in its inspector.");
 				return;
 			}
 			

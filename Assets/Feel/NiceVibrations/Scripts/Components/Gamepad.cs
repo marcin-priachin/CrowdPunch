@@ -95,7 +95,7 @@ namespace Lofelt.NiceVibrations
     /// This is a low-level class that normally doesn't need to be used directly. Instead,
     /// you can use HapticSource and HapticController to play back haptic clips, as those
     /// classes support gamepads by using GamepadRumbler internally.
-    public static class GamepadRumbler
+    public static partial class GamepadRumbler
     {
 #if ((!UNITY_ANDROID && !UNITY_IOS) || UNITY_EDITOR) && NICE_VIBRATIONS_INPUTSYSTEM_INSTALLED && ENABLE_INPUT_SYSTEM && !NICE_VIBRATIONS_DISABLE_GAMEPAD_SUPPORT
         // Per-gamepad state tracking
@@ -144,7 +144,9 @@ namespace Lofelt.NiceVibrations
             }
         }
 
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static Dictionary<int, GamepadState> gamepadStates = new Dictionary<int, GamepadState>();
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static int currentGamepadID = -1;
 
         /// <summary>

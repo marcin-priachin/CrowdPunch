@@ -5,7 +5,7 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// Persistent singleton.
 	/// </summary>
-	public class MMPersistentSingleton<T> : MonoBehaviour	where T : Component
+	public partial class MMPersistentSingleton<T> : MonoBehaviour	where T : Component
 	{
 		[Header("Persistent Singleton")]
 		/// if this is true, this singleton will auto detach if it finds itself parented on awake
@@ -15,6 +15,7 @@ namespace MoreMountains.Tools
 		public static bool HasInstance => _instance != null;
 		public static T Current => _instance;
 		
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		protected static T _instance;
 		protected bool _enabled;
 

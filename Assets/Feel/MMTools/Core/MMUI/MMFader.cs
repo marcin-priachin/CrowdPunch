@@ -11,7 +11,7 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// An event used to stop fades
 	/// </summary>
-	public struct MMFadeStopEvent
+	public partial struct MMFadeStopEvent
 	{
 		/// an ID that has to match the one on the fader
 		public int ID;
@@ -22,6 +22,7 @@ namespace MoreMountains.Tools
 			Restore = restore;
 			ID = id;
 		}
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMFadeStopEvent e;
 		public static void Trigger(int id = 0, bool restore = false)
 		{
@@ -34,7 +35,7 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// Events used to trigger faders on or off
 	/// </summary>
-	public struct MMFadeEvent
+	public partial struct MMFadeEvent
 	{
 		/// an ID that has to match the one on the fader
 		public int ID;
@@ -65,6 +66,7 @@ namespace MoreMountains.Tools
 			IgnoreTimeScale = ignoreTimeScale;
 			WorldPosition = worldPosition;
 		}
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMFadeEvent e;
 		public static void Trigger(float duration, float targetAlpha)
 		{
@@ -83,7 +85,7 @@ namespace MoreMountains.Tools
 		}
 	}
      
-	public struct MMFadeInEvent
+	public partial struct MMFadeInEvent
 	{
 		/// an ID that has to match the one on the fader
 		public int ID;
@@ -109,6 +111,7 @@ namespace MoreMountains.Tools
 			IgnoreTimeScale = ignoreTimeScale;
 			WorldPosition = worldPosition;
 		}
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMFadeInEvent e;
 		public static void Trigger(float duration, MMTweenType tween, int id = 0, 
 			bool ignoreTimeScale = true, Vector3 worldPosition = new Vector3())
@@ -122,7 +125,7 @@ namespace MoreMountains.Tools
 		}
 	}
 
-	public struct MMFadeOutEvent
+	public partial struct MMFadeOutEvent
 	{
 		/// an ID that has to match the one on the fader
 		public int ID;
@@ -149,6 +152,7 @@ namespace MoreMountains.Tools
 			WorldPosition = worldPosition;
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMFadeOutEvent e;
 		public static void Trigger(float duration, MMTweenType tween, int id = 0, 
 			bool ignoreTimeScale = true, Vector3 worldPosition = new Vector3())

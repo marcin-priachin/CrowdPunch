@@ -17,10 +17,11 @@ namespace MoreMountains.FeedbacksForThirdParty
 	#endif 
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.NiceVibrations")]
 	[FeedbackHelp("Use this feedback to play an Emphasis haptics, short haptic bursts whose amplitude and frequency can be controlled in real time, also called Transients in CoreHaptics/iOS")]
-	public class MMF_NVEmphasis : MMF_Feedback
+	public partial class MMF_NVEmphasis : MMF_Feedback
 	{
 		#if MOREMOUNTAINS_NICEVIBRATIONS_INSTALLED
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		#if UNITY_EDITOR
 		public override bool HasCustomInspectors => true;

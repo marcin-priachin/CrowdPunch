@@ -17,10 +17,11 @@ namespace MoreMountains.FeedbacksForThirdParty
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.NiceVibrations")]
 	[FeedbackHelp("Add this feedback to interact with haptics at a global level, stopping them all, enabling or disabling them, adjusting their global level or initializing/release the haptic engine.")]
-	public class MMF_NVControl : MMF_Feedback
+	public partial class MMF_NVControl : MMF_Feedback
 	{
 		#if MOREMOUNTAINS_NICEVIBRATIONS_INSTALLED
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		#if UNITY_EDITOR
 		public override Color FeedbackColor { get { return MMFeedbacksInspectorColors.HapticsColor; } }

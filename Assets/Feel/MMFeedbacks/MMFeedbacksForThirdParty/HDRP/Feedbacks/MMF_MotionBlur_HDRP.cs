@@ -21,9 +21,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackHelp("This feedback allows you to control motion blur intensity over time. " +
 	              "It requires you have in your scene an object with a Volume " +
 	              "with MotionBlur active, and a MMMotionBlurShaker_HDRP component.")]
-	public class MMF_MotionBlur_HDRP : MMF_Feedback
+	public partial class MMF_MotionBlur_HDRP : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

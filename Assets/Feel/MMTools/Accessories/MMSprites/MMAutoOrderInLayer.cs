@@ -8,8 +8,9 @@ namespace MoreMountains.Tools
 	/// Add this component to an object to have it pick a new order in layer on start, useful to have unique sorting layer numbers
 	/// </summary>
 	[AddComponentMenu("More Mountains/Tools/Sprites/MM Auto Order In Layer")]
-	public class MMAutoOrderInLayer : MonoBehaviour 
+	public partial class MMAutoOrderInLayer : MonoBehaviour 
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static int CurrentMaxCharacterOrderInLayer = 0;
 
 		[Header("Global Counter")]

@@ -338,8 +338,9 @@ namespace MoreMountains.Feedbacks
 		public TmpAttribute(string header) => this.header = header;
 	}
 
-	public static class MMFeedbackStaticMethods
+	public static partial class MMFeedbackStaticMethods
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static List<Component> m_ComponentCache = new List<Component>();
 
 		/// <summary>
@@ -358,7 +359,7 @@ namespace MoreMountains.Feedbacks
         
 		public static Type MMFGetTypeByName(string name)
 		{
-			foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+			foreach (Assembly assembly in UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies())
 			{
 				foreach (Type type in assembly.GetTypes())
 				{
@@ -514,8 +515,9 @@ namespace MoreMountains.Feedbacks
 		}
 	}
     
-	public static class MMF_FieldInfo
+	public static partial class MMF_FieldInfo
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static Dictionary<int, List<FieldInfo>> FieldInfoList = new Dictionary<int, List<FieldInfo>>();
 
         

@@ -5,10 +5,10 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// An event used to broadcast checkbox events from a MMDebugMenu
 	/// </summary>
-	public struct MMDebugMenuCheckboxEvent
+	public partial struct MMDebugMenuCheckboxEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 

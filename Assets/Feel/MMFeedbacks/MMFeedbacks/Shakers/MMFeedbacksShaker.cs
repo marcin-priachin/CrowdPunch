@@ -59,10 +59,10 @@ namespace MoreMountains.Feedbacks
 		}
 	}
 
-	public struct MMFeedbacksShakeEvent
+	public partial struct MMFeedbacksShakeEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 

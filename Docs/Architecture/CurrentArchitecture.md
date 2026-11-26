@@ -2035,7 +2035,6 @@ All game code is under `Assets/CrowdPunch/Scripts`:
 - `Components` â€” data-only ECS state and requests.
 - `Systems` â€” initialization, bridge, AI, movement, combat, physics, lifetime, and presentation.
 - `Groups` â€” explicit update phases.
-- `Aspects` â€” one legacy learning aspect; new code should prefer direct component/query APIs.
 - `Editor` â€” arena authoring inspector support.
 
 There are currently no game-specific assembly definitions; scripts compile into Unity's generated assemblies.
@@ -2150,6 +2149,13 @@ editor bounds sampling does not depend on the selected quality tier.
 Runtime enemies need only bone deformation, avoiding the GPU blend-shape path that produced
 intermittent out-of-range vertices on the current Direct3D12 setup. Proportions are fixed;
 future animated facial/body morphs would require a separately validated runtime path.
+With Unity 6.6, INFO-004 enemy renderers use a runtime mesh ID before Entities Graphics
+deformation. The package's baked mesh lookup skips negative shared-component indices.
+`EnemyAnimationVisualBakingSystem` marks the additional skinned renderers for registration.
+`EnemyDeformationMeshRegistrationSystem` processes each renderer on its first visible update,
+retains its baked material and submesh, and reuses one mesh registration per asset per world.
+[Unity issue UUM-146932](https://issuetracker.unity.com/issues/23375/skinneddeformed-entities-render-incorrectly-or-become-invisible-when-viewed-in-the-game-and-scene-views)
+
 This uses the installed Entities Graphics experimental deformation path; GPU work and mesh
 cost still need profiling against the unresolved crowd/hardware targets in OQ-001.
 

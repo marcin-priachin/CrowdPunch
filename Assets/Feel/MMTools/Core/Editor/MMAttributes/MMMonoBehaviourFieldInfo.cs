@@ -8,8 +8,9 @@ using Object = UnityEngine.Object;
 
 namespace MoreMountains.Tools
 {
-	static class MMMonoBehaviourFieldInfo
+	static partial class MMMonoBehaviourFieldInfo
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static Dictionary<int, List<FieldInfo>> FieldInfoList = new Dictionary<int, List<FieldInfo>>();
 
 		public static int GetFieldInfo(Object target, out List<FieldInfo> fieldInfoList)

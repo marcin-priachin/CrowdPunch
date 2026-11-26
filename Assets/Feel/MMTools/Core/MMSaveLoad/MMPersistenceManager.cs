@@ -14,7 +14,7 @@ namespace MoreMountains.Tools
 	/// It will save their transform data (position, rotation, scale) and their active state
 	/// Triggering save and load is done via events, and the manager also emits events every time data is loaded or saved
 	/// </summary>
-	public class MMPersistenceManager : MMPersistentSingleton<MMPersistenceManager>, MMEventListener<MMGameEvent>
+	public partial class MMPersistenceManager : MMPersistentSingleton<MMPersistenceManager>, MMEventListener<MMGameEvent>
 	{
 		[Header("Persistence")]
 		/// A persistence ID used to identify the data associated to this manager.
@@ -63,21 +63,16 @@ namespace MoreMountains.Tools
 
 		public DictionaryStringSceneData SceneDatas;
 		
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static string _resourceItemPath = "Persistence/";
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static string _saveFolderName = "MMTools/";
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static string _saveFileExtension = ".persistence";
 
 		protected string _currentSceneName;
 
 		#region INITIALIZATION
-			/// <summary>
-			/// Statics initialization to support enter play modes
-			/// </summary>
-			[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-			protected static void InitializeStatics()
-			{
-				_instance = null;
-			}
 		
 			/// <summary>
 			/// On Awake we initialize our dictionary
@@ -253,7 +248,7 @@ namespace MoreMountains.Tools
 			/// <returns></returns>
 			protected virtual IMMPersistent[] FindAllPersistentObjects()
 			{
-				return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<IMMPersistent>().ToArray();
+				return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include).OfType<IMMPersistent>().ToArray();
 			}
 
 			/// <summary>
@@ -328,4 +323,3 @@ namespace MoreMountains.Tools
 		#endregion
 	}	
 }
-

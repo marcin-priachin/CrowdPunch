@@ -15,9 +15,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Lights/Light")]
-	public class MMF_Light : MMF_Feedback
+	public partial class MMF_Light : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -33,6 +34,8 @@ namespace MoreMountains.Feedbacks
 		public override bool HasRandomness => true;
 		public override bool HasAutomatedTargetAcquisition => true;
 		protected override void AutomateTargetAcquisition() => BoundLight = FindAutomatedTarget<Light>();
+		public override bool HasAutomatedMultipleTargetAcquisition => true;
+		protected override void AutomateMultipleTargetAcquisition() => ExtraLights = FindAutomatedTargets<Light>(ExtraLights, BoundLight);
 
 		/// the possible modes for this feedback
 		public enum Modes { OverTime, Instant, ShakerEvent, ToDestination }

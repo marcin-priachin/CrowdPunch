@@ -21,9 +21,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackHelp("This feedback allows you to control channel mixer's red, green and blue over time." +
 	              "It requires you have in your scene an object with a Volume" +
 	              "with Channel Mixer active, and a MM Channel Mixer HDRP component.")]
-	public class MMF_ChannelMixer_HDRP : MMF_Feedback	
+	public partial class MMF_ChannelMixer_HDRP : MMF_Feedback	
 	{	
 		/// a static bool used to disable all feedbacks of this type at once	
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;	
 		/// sets the inspector color for this feedback	
 		#if UNITY_EDITOR	

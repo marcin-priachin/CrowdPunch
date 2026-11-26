@@ -31,8 +31,9 @@ namespace MoreMountains.Tools
 	}
 
 	// using WeakReference to let GC collect those once Engine does not use them anymore
-	public struct MMReferenceHolder<T> : IDisposable where T : class
+	public partial struct MMReferenceHolder<T> : IDisposable where T : class
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static List<WeakReference<T>> _instances = new List<WeakReference<T>>(2);
 
 		private WeakReference<T> _instance;

@@ -440,7 +440,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: v5.9.1
+  m_Text: v6.4
 --- !u!1 &8516721323258378253
 GameObject:
   m_ObjectHideFlags: 0
@@ -502,6 +502,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -590,7 +591,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8516721323668150474}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
   m_Name: 
@@ -603,6 +604,7 @@ MonoBehaviour:
   AutoChangeDirectionOnEnd: 0
   AutoPlayOnStart: 0
   AutoPlayOnEnable: 0
+  LogMissingTargets: 1
   ForceTimescaleMode: 0
   ForcedTimescaleMode: 1
   DurationMultiplier: 1
@@ -689,14 +691,18 @@ MonoBehaviour:
   - rid: 4503284173417480195
   - rid: 4503284173417480196
   - rid: 4503284173417480197
+  PlayMode: 0
+  SequentialDelay: 0
   KeepPlayModeChanges: 0
   PerformanceMode: 0
   RestoreInitialValuesOnDisable: 0
   StopFeedbacksOnDisable: 0
   PlayCount: 0
+  InPreviewMode: 0
   MMF_ChannelMode: 0
   MMF_Channel: 0
   MMF_ChannelDefinition: {fileID: 0}
+  RunFirstOnEnableOnlyAfterStart: 0
   references:
     version: 2
     RefIds:
@@ -706,7 +712,7 @@ MonoBehaviour:
         Active: 1
         UniqueID: -632043938
         Label: Load Scene
-        OriginalLabel: 
+        OriginalLabel: Load Scene
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -721,6 +727,7 @@ MonoBehaviour:
           NumberOfRepeats: 0
           RepeatForever: 0
           DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
           PlayCount: 0
           LimitPlayCount: 0
           MaxPlayCount: 3
@@ -782,6 +789,7 @@ MonoBehaviour:
         UnloadMethod: 2
         AntiSpillSceneName: 
         DebugMode: 0
+        EditorMode: 1
         BeforeEntryFadeDelay: 0
         EntryFadeDuration: 0.2
         AfterEntryFadeDelay: 0
@@ -860,7 +868,7 @@ MonoBehaviour:
         Active: 1
         UniqueID: -1425550496
         Label: MMSoundManager Sound
-        OriginalLabel: 
+        OriginalLabel: MMSoundManager Sound
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -875,6 +883,7 @@ MonoBehaviour:
           NumberOfRepeats: 0
           RepeatForever: 0
           DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
           PlayCount: 0
           LimitPlayCount: 0
           MaxPlayCount: 3
@@ -942,6 +951,7 @@ MonoBehaviour:
         MinPitch: 1
         MaxPitch: 1
         MmSoundManagerTrack: 0
+        CustomTrack: {fileID: 0}
         ID: 0
         AudioGroup: {fileID: 0}
         RecycleAudioSource: {fileID: 0}
@@ -1079,7 +1089,7 @@ MonoBehaviour:
         Active: 1
         UniqueID: 1879286882
         Label: Haptic Preset
-        OriginalLabel: 
+        OriginalLabel: Haptic Preset
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -1094,6 +1104,7 @@ MonoBehaviour:
           NumberOfRepeats: 0
           RepeatForever: 0
           DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
           PlayCount: 0
           LimitPlayCount: 0
           MaxPlayCount: 3

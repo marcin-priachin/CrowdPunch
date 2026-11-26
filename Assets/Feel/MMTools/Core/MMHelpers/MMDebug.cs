@@ -16,20 +16,25 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// Debug helpers
 	/// </summary>
-	public static class MMDebug 
+	public static partial class MMDebug 
 	{
 		#region Commands
 
 		// the cached list of debug log commands
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static MethodInfo[] _commands;
 		// the max length of the log
 		private static readonly int _logHistoryMaxLength = 256;
 
 		#if UNITY_EDITOR
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static bool _debugDrawEnabledSet = false;
 		#endif
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static bool _debugDrawEnabled = false;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static bool _debugLogEnabled = false;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static bool _debugLogEnabledSet = false;
 
 		/// <summary>
@@ -41,7 +46,7 @@ namespace MoreMountains.Tools
 			{
 				if (_commands == null)
 				{
-					_commands = AppDomain.CurrentDomain.GetAssemblies()
+					_commands = UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies()
 						.SelectMany(
 							m => m.GetTypes().SelectMany(
 								n => n.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
@@ -118,7 +123,7 @@ namespace MoreMountains.Tools
 			}
 
 			LogCommand(command, "#FFC400");
-			methods[0].Invoke(null, parameters);
+			commandInfo.Invoke(null, parameters);
 		}
 
 		/// <summary>
@@ -163,6 +168,7 @@ namespace MoreMountains.Tools
 		/// <summary>
 		/// A list of all the debug logs (up to DebugLogMaxLength entries)
 		/// </summary>
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static List<DebugLogItem> LogHistory = new List<DebugLogItem>(_logHistoryMaxLength);
 
 		/// <summary>
@@ -292,10 +298,10 @@ namespace MoreMountains.Tools
 		/// <summary>
 		/// An event used to broadcast debug logs
 		/// </summary>
-		public struct MMDebugLogEvent
+		public partial struct MMDebugLogEvent
 		{
+			[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 			static private event Delegate OnEvent;
-			[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 			static public void Register(Delegate callback) { OnEvent += callback; }
 			static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -533,6 +539,7 @@ namespace MoreMountains.Tools
         
 		#if MM_UI
 		//public static MMConsole _console;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static MMDebugOnScreenConsole _console;
 		private const string _debugConsolePrefabPath = "MMDebugOnScreenConsole";
                 
@@ -1114,15 +1121,17 @@ namespace MoreMountains.Tools
         
 		public static void ClearConsole()
 		{
-			Type logEntries = System.Type.GetType("UnityEditor.LogEntries, UnityEditor.dll");
+			#if UNITY_EDITOR
+			Type logEntries = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.LogEntries");
 			if (logEntries != null)
 			{
 				MethodInfo clearMethod = logEntries.GetMethod("Clear", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
 				if (clearMethod != null)
 				{
-					clearMethod.Invoke(null, null);    
+					clearMethod.Invoke(null, null);
 				}
 			}
+			#endif
 		}
         
 		#endregion

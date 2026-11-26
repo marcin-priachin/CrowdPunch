@@ -7,7 +7,7 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// An event type used to broadcast the fact that an achievement has been unlocked
 	/// </summary>
-	public struct MMAchievementUnlockedEvent
+	public partial struct MMAchievementUnlockedEvent
 	{
 		/// the achievement that has been unlocked
 		public MMAchievement Achievement;
@@ -21,6 +21,7 @@ namespace MoreMountains.Tools
 			Achievement = newAchievement;
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMAchievementUnlockedEvent e;
 		public static void Trigger(MMAchievement newAchievement)
 		{
@@ -29,7 +30,7 @@ namespace MoreMountains.Tools
 		}
 	}
 	
-	public struct MMAchievementChangedEvent
+	public partial struct MMAchievementChangedEvent
 	{
 		/// the achievement that has been unlocked
 		public MMAchievement Achievement;
@@ -43,6 +44,7 @@ namespace MoreMountains.Tools
 			Achievement = newAchievement;
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMAchievementChangedEvent e;
 		public static void Trigger(MMAchievement newAchievement)
 		{

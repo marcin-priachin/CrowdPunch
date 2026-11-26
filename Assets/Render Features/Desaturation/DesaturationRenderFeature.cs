@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -52,8 +52,10 @@ namespace RenderFeatures
         /// </summary>
         public override void Create()
         {
+            m_DesaturationRenderPass?.Dispose();
+            m_DesaturationRenderPass = null;
             // We can only proceed if we have a valid fullscreen pass, the override shader is optional.
-            if (Settings.FullscreenShader == null) return;
+            if (Settings == null || Settings.FullscreenShader == null) return;
 
             m_DesaturationRenderPass = new DesaturationRenderPass(Settings)
             {
@@ -69,7 +71,7 @@ namespace RenderFeatures
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
             // Remove the feature from preview rendering.
-            if (renderingData.cameraData.cameraType <= CameraType.SceneView)
+            if (m_DesaturationRenderPass != null && renderingData.cameraData.cameraType <= CameraType.SceneView)
                 renderer.EnqueuePass(m_DesaturationRenderPass);
         }
 
@@ -79,7 +81,7 @@ namespace RenderFeatures
         protected override void Dispose(bool disposing)
         {
             // Make sure we dispose all used resources from the pass.
-            m_DesaturationRenderPass.Dispose();
+            m_DesaturationRenderPass?.Dispose();
         }
     }
 }

@@ -23,6 +23,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public bool RelativeValues = true;
 
 		[MMInspectorGroup("Post Exposure", true, 43)]
+		/// whether or not this shaker should modify post exposure
+		[Tooltip("whether or not this shaker should modify post exposure")]
+		public bool ModifyPostExposure = true;
 		/// the curve used to animate the focus distance value on
 		[Tooltip("the curve used to animate the focus distance value on")]
 		public AnimationCurve ShakePostExposure = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -34,6 +37,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public float RemapPostExposureOne = 1f;
 
 		[MMInspectorGroup("Hue Shift", true, 44)]
+		/// whether or not this shaker should modify hue shift
+		[Tooltip("whether or not this shaker should modify hue shift")]
+		public bool ModifyHueShift = true;
 		/// the curve used to animate the aperture value on
 		[Tooltip("the curve used to animate the aperture value on")]
 		public AnimationCurve ShakeHueShift = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -47,6 +53,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public float RemapHueShiftOne = 180f;
 
 		[MMInspectorGroup("Saturation", true, 45)]
+		/// whether or not this shaker should modify saturation
+		[Tooltip("whether or not this shaker should modify saturation")]
+		public bool ModifySaturation = true;
 		/// the curve used to animate the focal length value on
 		[Tooltip("the curve used to animate the focal length value on")]
 		public AnimationCurve ShakeSaturation = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -60,6 +69,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public float RemapSaturationOne = 100f;
 
 		[MMInspectorGroup("Contrast", true, 47)]
+		/// whether or not this shaker should modify contrast
+		[Tooltip("whether or not this shaker should modify contrast")]
+		public bool ModifyContrast = true;
 		/// the curve used to animate the focal length value on
 		[Tooltip("the curve used to animate the focal length value on")]
 		public AnimationCurve ShakeContrast = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -118,6 +130,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 		protected Gradient _originalColorFilterGradient;
 		protected Color _originalColorFilterDestination;
 		protected AnimationCurve _originalColorFilterCurve;  
+		protected bool _originalModifyPostExposure;
+		protected bool _originalModifyHueShift;
+		protected bool _originalModifySaturation;
+		protected bool _originalModifyContrast;
 
 		/// <summary>
 		/// On init we initialize our values
@@ -142,14 +158,26 @@ namespace MoreMountains.FeedbacksForThirdParty
 		/// </summary>
 		protected override void Shake()
 		{
-			float newPostExposure = ShakeFloat(ShakePostExposure, RemapPostExposureZero, RemapPostExposureOne, RelativeValues, _initialPostExposure);
-			_colorAdjustments.postExposure.Override(newPostExposure);
-			float newHueShift = ShakeFloat(ShakeHueShift, RemapHueShiftZero, RemapHueShiftOne, RelativeValues, _initialHueShift);
-			_colorAdjustments.hueShift.Override(newHueShift);
-			float newSaturation = ShakeFloat(ShakeSaturation, RemapSaturationZero, RemapSaturationOne, RelativeValues, _initialSaturation);
-			_colorAdjustments.saturation.Override(newSaturation);
-			float newContrast = ShakeFloat(ShakeContrast, RemapContrastZero, RemapContrastOne, RelativeValues, _initialContrast);
-			_colorAdjustments.contrast.Override(newContrast);
+			if (ModifyPostExposure)
+			{
+				float newPostExposure = ShakeFloat(ShakePostExposure, RemapPostExposureZero, RemapPostExposureOne, RelativeValues, _initialPostExposure);
+				_colorAdjustments.postExposure.Override(newPostExposure);
+			}
+			if (ModifyHueShift)
+			{
+				float newHueShift = ShakeFloat(ShakeHueShift, RemapHueShiftZero, RemapHueShiftOne, RelativeValues, _initialHueShift);
+				_colorAdjustments.hueShift.Override(newHueShift);
+			}
+			if (ModifySaturation)
+			{
+				float newSaturation = ShakeFloat(ShakeSaturation, RemapSaturationZero, RemapSaturationOne, RelativeValues, _initialSaturation);
+				_colorAdjustments.saturation.Override(newSaturation);
+			}
+			if (ModifyContrast)
+			{
+				float newContrast = ShakeFloat(ShakeContrast, RemapContrastZero, RemapContrastOne, RelativeValues, _initialContrast);
+				_colorAdjustments.contrast.Override(newContrast);
+			}
 
 			_remappedTimeSinceStart = MMFeedbacksHelpers.Remap(Time.time - _shakeStartedTimestamp, 0f, ShakeDuration, 0f, 1f);
 	            
@@ -185,6 +213,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 		/// <param name="relativeIntensity"></param>
 		/// <param name="attenuation"></param>
 		/// <param name="channel"></param>
+		/// <param name="modifyPostExposure">whether or not to modify post exposure</param>
+		/// <param name="modifyHueShift">whether or not to modify hue shift</param>
+		/// <param name="modifySaturation">whether or not to modify saturation</param>
+		/// <param name="modifyContrast">whether or not to modify contrast</param>
 		public virtual void OnMMColorGradingShakeEvent(AnimationCurve shakePostExposure, float remapPostExposureZero, float remapPostExposureOne,
 			AnimationCurve shakeHueShift, float remapHueShiftZero, float remapHueShiftOne,
 			AnimationCurve shakeSaturation, float remapSaturationZero, float remapSaturationOne,
@@ -192,7 +224,8 @@ namespace MoreMountains.FeedbacksForThirdParty
 			ColorFilterModes colorFilterMode, Gradient colorFilterGradient, Color colorFilterDestination,AnimationCurve colorFilterCurve,  
 			float duration, bool relativeValues = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true,
-			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false)
+			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
+			bool modifyPostExposure = true, bool modifyHueShift = true, bool modifySaturation = true, bool modifyContrast = true)
 		{
 			if (!CheckEventAllowed(channelData) || (!Interruptible && Shaking))
 			{
@@ -234,6 +267,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 				_originalColorFilterGradient = ColorFilterGradient;
 				_originalColorFilterDestination = ColorFilterDestination;
 				_originalColorFilterCurve = ColorFilterCurve;
+				_originalModifyPostExposure = ModifyPostExposure;
+				_originalModifyHueShift = ModifyHueShift;
+				_originalModifySaturation = ModifySaturation;
+				_originalModifyContrast = ModifyContrast;
 			}
 
 			if (!OnlyUseShakerValues)
@@ -257,6 +294,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 				ColorFilterGradient = colorFilterGradient;
 				ColorFilterDestination = colorFilterDestination;
 				ColorFilterCurve = colorFilterCurve;
+				ModifyPostExposure = modifyPostExposure;
+				ModifyHueShift = modifyHueShift;
+				ModifySaturation = modifySaturation;
+				ModifyContrast = modifyContrast;
 				ForwardDirection = forwardDirection;
 			}
 
@@ -269,10 +310,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 		protected override void ResetTargetValues()
 		{
 			base.ResetTargetValues();
-			_colorAdjustments.postExposure.Override(_initialPostExposure);
-			_colorAdjustments.hueShift.Override(_initialHueShift);
-			_colorAdjustments.saturation.Override(_initialSaturation);
-			_colorAdjustments.contrast.Override(_initialContrast);
+			if (ModifyPostExposure) { _colorAdjustments.postExposure.Override(_initialPostExposure); }
+			if (ModifyHueShift) { _colorAdjustments.hueShift.Override(_initialHueShift); }
+			if (ModifySaturation) { _colorAdjustments.saturation.Override(_initialSaturation); }
+			if (ModifyContrast) { _colorAdjustments.contrast.Override(_initialContrast); }
 			_colorAdjustments.colorFilter.Override(_initialColorFilterColor);
 		}
 
@@ -300,6 +341,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 			ColorFilterGradient = _originalColorFilterGradient;
 			ColorFilterDestination = _originalColorFilterDestination;
 			ColorFilterCurve = _originalColorFilterCurve;
+			ModifyPostExposure = _originalModifyPostExposure;
+			ModifyHueShift = _originalModifyHueShift;
+			ModifySaturation = _originalModifySaturation;
+			ModifyContrast = _originalModifyContrast;
 		}
 
 		/// <summary>
@@ -325,10 +370,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	/// <summary>
 	/// An event used to trigger vignette shakes
 	/// </summary>
-	public struct MMColorAdjustmentsShakeEvent_URP
+	public partial struct MMColorAdjustmentsShakeEvent_URP
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -339,7 +384,8 @@ namespace MoreMountains.FeedbacksForThirdParty
 			MMColorAdjustmentsShaker_URP.ColorFilterModes colorFilterMode, Gradient colorFilterGradient, Color colorFilterDestination,AnimationCurve colorFilterCurve,  
 			float duration, bool relativeValues = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true, 
-			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false);
+			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
+			bool modifyPostExposure = true, bool modifyHueShift = true, bool modifySaturation = true, bool modifyContrast = true);
 
 		static public void Trigger(AnimationCurve shakePostExposure, float remapPostExposureZero, float remapPostExposureOne,
 			AnimationCurve shakeHueShift, float remapHueShiftZero, float remapHueShiftOne,
@@ -348,14 +394,16 @@ namespace MoreMountains.FeedbacksForThirdParty
 			MMColorAdjustmentsShaker_URP.ColorFilterModes colorFilterMode, Gradient colorFilterGradient, Color colorFilterDestination,AnimationCurve colorFilterCurve,  
 			float duration, bool relativeValues = false,
 			float attenuation = 1.0f, MMChannelData channelData = null, bool resetShakerValuesAfterShake = true, bool resetTargetValuesAfterShake = true, 
-			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false)
+			bool forwardDirection = true, TimescaleModes timescaleMode = TimescaleModes.Scaled, bool stop = false, bool restore = false,
+			bool modifyPostExposure = true, bool modifyHueShift = true, bool modifySaturation = true, bool modifyContrast = true)
 		{
 			OnEvent?.Invoke(shakePostExposure, remapPostExposureZero, remapPostExposureOne,
 				shakeHueShift, remapHueShiftZero, remapHueShiftOne,
 				shakeSaturation, remapSaturationZero, remapSaturationOne,
 				shakeContrast, remapContrastZero, remapContrastOne,
 				colorFilterMode, colorFilterGradient, colorFilterDestination, colorFilterCurve,
-				duration, relativeValues, attenuation, channelData, resetShakerValuesAfterShake, resetTargetValuesAfterShake, forwardDirection, timescaleMode, stop, restore);
+				duration, relativeValues, attenuation, channelData, resetShakerValuesAfterShake, resetTargetValuesAfterShake, forwardDirection, timescaleMode, stop, restore,
+				modifyPostExposure, modifyHueShift, modifySaturation, modifyContrast);
 		}
 	}
 }

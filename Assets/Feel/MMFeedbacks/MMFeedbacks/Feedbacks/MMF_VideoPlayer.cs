@@ -4,6 +4,7 @@ using UnityEngine.Scripting.APIUpdating;
 
 namespace MoreMountains.Feedbacks
 {
+	#if !UNITY_WEBGL
 	/// <summary>
 	/// This feedback lets you control video players in all sorts of ways (Play, Pause, Toggle, Stop, Prepare, StepForward, StepBackward, SetPlaybackSpeed, SetDirectAudioVolume, SetDirectAudioMute, GoToFrame, ToggleLoop)
 	/// </summary>
@@ -12,9 +13,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("UI/Video Player")]
-	public class MMF_VideoPlayer : MMF_Feedback
+	public partial class MMF_VideoPlayer : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		public enum VideoActions { Play, Pause, Toggle, Stop, Prepare, StepForward, StepBackward, SetPlaybackSpeed, SetDirectAudioVolume, SetDirectAudioMute, GoToFrame, ToggleLoop  }
 
@@ -123,4 +125,5 @@ namespace MoreMountains.Feedbacks
 
 		}
 	}
+	#endif
 }

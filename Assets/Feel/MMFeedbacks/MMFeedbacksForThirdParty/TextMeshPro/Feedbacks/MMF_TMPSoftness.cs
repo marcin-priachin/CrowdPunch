@@ -18,9 +18,10 @@ namespace MoreMountains.Feedbacks
 	[FeedbackPath("TextMesh Pro/TMP Softness")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.TextMeshPro")]
-	public class MMF_TMPSoftness : MMF_Feedback
+	public partial class MMF_TMPSoftness : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		
 		/// sets the inspector color for this feedback
@@ -93,9 +94,8 @@ namespace MoreMountains.Feedbacks
 				return;
 			}
 			#if MM_UGUI2
-			if (TargetTMPText == null)
+			if (!TargetExists(TargetTMPText, nameof(TargetTMPText)))
 			{
-				Debug.LogWarning("[TMP Softness Feedback] The TMP Softness feedback on "+Owner.name+" doesn't have a TargetTMPText, it won't work. You need to specify one in its inspector.");
 				return;
 			}
 			_initialSoftness = TargetTMPText.fontMaterial.GetFloat(ShaderUtilities.ID_OutlineSoftness);

@@ -18,7 +18,7 @@ namespace MoreMountains.Tools
 	/// Example : MMSoundManagerEvent.Trigger(MMSoundManagerEventTypes.SaveSettings);
 	/// will save settings. 
 	/// </summary>
-	public struct MMSoundManagerEvent
+	public partial struct MMSoundManagerEvent
 	{
 		public MMSoundManagerEventTypes EventType;
         
@@ -27,6 +27,7 @@ namespace MoreMountains.Tools
 			EventType = eventType;
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMSoundManagerEvent e;
 		public static void Trigger(MMSoundManagerEventTypes eventType)
 		{

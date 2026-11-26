@@ -13,9 +13,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("GameObject/Instantiate Object")]
-	public class MMF_InstantiateObject : MMF_Feedback
+	public partial class MMF_InstantiateObject : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// the different ways to position the instantiated object :
 		/// - FeedbackPosition : object will be instantiated at the position of the feedback, plus an optional offset

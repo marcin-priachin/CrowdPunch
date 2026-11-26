@@ -25,10 +25,11 @@ namespace MoreMountains.FeedbacksForThirdParty
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.NiceVibrations")]
 	[FeedbackHelp("This feedback will let you play a haptic clip, and randomize its level and frequency.")]
-	public class MMF_NVClip : MMF_Feedback
+	public partial class MMF_NVClip : MMF_Feedback
 	{
 		#if MOREMOUNTAINS_NICEVIBRATIONS_INSTALLED
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		#if UNITY_EDITOR
 		public override bool HasCustomInspectors => true;

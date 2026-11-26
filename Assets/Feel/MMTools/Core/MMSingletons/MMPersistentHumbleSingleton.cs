@@ -6,12 +6,13 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// Persistent humble singleton, basically a classic singleton but will destroy any other older components of the same type it finds on awake
 	/// </summary>
-	public class MMPersistentHumbleSingleton<T> : MonoBehaviour	where T : Component
+	public partial class MMPersistentHumbleSingleton<T> : MonoBehaviour	where T : Component
 	{
 		/// whether or not this singleton already has an instance 
 		public static bool HasInstance => _instance != null;
 		public static T Current => _instance;
 		
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		protected static T _instance;
 		
 		/// the timestamp at which this singleton got initialized
@@ -63,7 +64,7 @@ namespace MoreMountains.Tools
 
 			DontDestroyOnLoad (this.gameObject);
 			// we check for existing objects of the same type
-			T[] check = FindObjectsByType<T>(FindObjectsSortMode.None);
+			T[] check = FindObjectsByType<T>();
 			foreach (T searched in check)
 			{
 				if (searched!=this)

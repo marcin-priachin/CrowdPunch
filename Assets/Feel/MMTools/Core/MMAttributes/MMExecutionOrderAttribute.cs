@@ -13,15 +13,19 @@ namespace MoreMountains.Tools
 	/// Add this attribute to a class and its Execution Order will be changed to the value specified in parameters
 	/// Usage : [ExecutionOrder(66)]
 	/// </summary>
-	public class MMExecutionOrderAttribute : Attribute
+	public partial class MMExecutionOrderAttribute : Attribute
 	{
 		#if UNITY_EDITOR
 		/// the execution order you want for the class this attribute is applied to 
 		public int ExecutionOrder = 0;
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		protected static Dictionary<MonoScript, MMExecutionOrderAttribute> _monoScripts;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		protected static Type _executionOrderAttributeType;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		protected static Assembly _typeAssembly;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		protected static Type[] _assemblyTypes;
 
 		/// <summary>

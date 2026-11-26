@@ -21,9 +21,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackHelp("This feedback allows you to control vignette intensity over time. " +
 	              "It requires you have in your scene an object with a Volume " +
 	              "with Vignette active, and a MMVignetteShaker_URP component.")]
-	public class MMF_Vignette_URP : MMF_Feedback
+	public partial class MMF_Vignette_URP : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -49,6 +50,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public bool ResetTargetValuesAfterShake = true;
 
 		[MMFInspectorGroup("Intensity", true, 29)]
+		/// whether or not this feedback should modify intensity
+		[Tooltip("whether or not this feedback should modify intensity")]
+		public bool ModifyIntensity = true;
 		/// the curve to animate the intensity on
 		[Tooltip("the curve to animate the intensity on")]
 		public AnimationCurve Intensity = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));        
@@ -98,7 +102,8 @@ namespace MoreMountains.FeedbacksForThirdParty
 			float intensityMultiplier = ComputeIntensity(feedbacksIntensity, position);
 			MMVignetteShakeEvent_URP.Trigger(Intensity, FeedbackDuration, RemapIntensityZero, RemapIntensityOne, RelativeIntensity, intensityMultiplier,
 				ChannelData, ResetShakerValuesAfterShake, ResetTargetValuesAfterShake, NormalPlayDirection, ComputedTimescaleMode, false, false, InterpolateColor,
-				ColorCurve, RemapColorZero, RemapColorOne, TargetColor);
+				ColorCurve, RemapColorZero, RemapColorOne, TargetColor,
+				modifyIntensity: ModifyIntensity);
             
 		}
         

@@ -54,6 +54,9 @@ namespace CrowdPunch.Systems.Presentation
                 {
                     Entity entity = child.Value;
                     if (!SystemAPI.HasComponent<RenderBounds>(entity)) continue;
+#if UNITY_6000_6
+                    commands.AddComponent<EnemyDeformationMeshPending>(entity);
+#endif
                     if (SystemAPI.HasComponent<EnemyAnimationGrounding>(animationEntity))
                         commands.AddComponent(entity, new EnemyGroundingVisual
                         {

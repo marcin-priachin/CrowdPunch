@@ -16,9 +16,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.Cinemachine")]
 	[FeedbackHelp("This feedback lets you trigger a Cinemachine Impulse clear, stopping instantly any impulse that may be playing.")]
-	public class MMF_CinemachineImpulseClear : MMF_Feedback
+	public partial class MMF_CinemachineImpulseClear : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

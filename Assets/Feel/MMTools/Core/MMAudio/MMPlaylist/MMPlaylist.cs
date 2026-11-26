@@ -8,10 +8,10 @@ namespace MoreMountains.Tools
 	/// This class stores all the info related to items in a playlist
 	/// </summary>
 
-	public struct MMPlaylistPlayEvent
+	public partial struct MMPlaylistPlayEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -22,10 +22,10 @@ namespace MoreMountains.Tools
 		}
 	}
 	
-	public struct MMPlaylistStopEvent
+	public partial struct MMPlaylistStopEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -36,10 +36,10 @@ namespace MoreMountains.Tools
 		}
 	}
 	
-	public struct MMPlaylistPauseEvent
+	public partial struct MMPlaylistPauseEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -50,10 +50,10 @@ namespace MoreMountains.Tools
 		}
 	}
 	
-	public struct MMPlaylistPlayNextEvent
+	public partial struct MMPlaylistPlayNextEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -64,10 +64,10 @@ namespace MoreMountains.Tools
 		}
 	}
 	
-	public struct MMPlaylistPlayPreviousEvent
+	public partial struct MMPlaylistPlayPreviousEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -78,10 +78,10 @@ namespace MoreMountains.Tools
 		}
 	}
 
-	public struct MMPlaylistPlayIndexEvent
+	public partial struct MMPlaylistPlayIndexEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -92,10 +92,10 @@ namespace MoreMountains.Tools
 		}
 	}
 
-	public struct MMPlaylistVolumeMultiplierEvent
+	public partial struct MMPlaylistVolumeMultiplierEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -106,10 +106,10 @@ namespace MoreMountains.Tools
 		}
 	}
 
-	public struct MMPlaylistPitchMultiplierEvent
+	public partial struct MMPlaylistPitchMultiplierEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -120,10 +120,10 @@ namespace MoreMountains.Tools
 		}
 	}
 	
-	public struct MMPlaylistChangeEvent
+	public partial struct MMPlaylistChangeEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -134,10 +134,10 @@ namespace MoreMountains.Tools
 		}
 	}
 	
-	public struct MMPlaylistNewSongStartedEvent
+	public partial struct MMPlaylistNewSongStartedEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 		static public void Register(Delegate callback) { OnEvent += callback; }
 		static public void Unregister(Delegate callback) { OnEvent -= callback; }
 
@@ -206,7 +206,7 @@ namespace MoreMountains.Tools
 	/// </summary>
 	[AddComponentMenu("More Mountains/Tools/Audio/MM Playlist")]
 	[MMRequiresConstantRepaint]
-	public class MMPlaylist : MMMonoBehaviour
+	public partial class MMPlaylist : MMMonoBehaviour
 	{
 		/// the possible states this playlist can be in
 		public enum PlaylistStates
@@ -272,6 +272,7 @@ namespace MoreMountains.Tools
 		public string CurrentSongName;
 		/// the current state of this playlist
 		[MMReadOnly]
+		[System.NonSerialized]
 		public MMStateMachine<MMPlaylist.PlaylistStates> PlaylistState;
 
 		[MMInspectorGroup("Tests", true, 15)]
@@ -310,10 +311,11 @@ namespace MoreMountains.Tools
 		protected bool _shouldResumeOnApplicationPause = false;
 		public static bool HasInstance => _instance != null;
 		public static MMPlaylist Current => _instance;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		protected static MMPlaylist _instance;
 		protected bool _enabled;
 		protected int _queuedSong = -1;
-		
+
 		/// <summary>
 		/// Singleton design pattern
 		/// </summary>

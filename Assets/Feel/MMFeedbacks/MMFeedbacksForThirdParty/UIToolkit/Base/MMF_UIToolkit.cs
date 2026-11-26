@@ -12,10 +12,12 @@ namespace MoreMountains.FeedbacksForThirdParty
 	/// This feedback is a base for UI Toolkit feedbacks
 	/// </summary>
 	[AddComponentMenu("")]
+	[Serializable]
 	[FeedbackHelp("This feedback is a base for UI Toolkit feedbacks")]
-	public class MMF_UIToolkit : MMF_Feedback
+	public partial class MMF_UIToolkit : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -64,11 +66,11 @@ namespace MoreMountains.FeedbacksForThirdParty
 		/// </summary>
 		protected virtual void PerformQuery()
 		{
-			if (TargetDocument == null)
+			if (!TargetExists(TargetDocument, nameof(TargetDocument)))
 			{
-				Debug.LogWarning("[UI Toolkit] The UI Toolkit feedback on "+Owner.name+" doesn't have a TargetDocument, it won't work. You need to specify one in its inspector.");
 				return;
 			}
+			
 			switch (QueryMode)
 			{
 				case QueryModes.Name:

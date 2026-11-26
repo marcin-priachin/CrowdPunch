@@ -5,8 +5,9 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// Singleton pattern.
 	/// </summary>
-	public class MMSingleton<T> : MonoBehaviour	where T : Component
+	public partial class MMSingleton<T> : MonoBehaviour	where T : Component
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		protected static T _instance;
 		public static bool HasInstance => _instance != null;
 		public static T TryGetInstance() => HasInstance ? _instance : null;

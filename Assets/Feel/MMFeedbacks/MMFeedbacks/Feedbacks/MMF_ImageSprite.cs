@@ -15,9 +15,10 @@ namespace MoreMountains.Feedbacks
 	[FeedbackHelp("This feedback will let you change the sprite of a target Image.")]
 	[System.Serializable]
 	[FeedbackPath("UI/Image Sprite")]
-	public class MMF_ImageSprite : MMF_Feedback
+	public partial class MMF_ImageSprite : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -58,9 +59,9 @@ namespace MoreMountains.Feedbacks
 
 			if (Active)
 			{
-				if (BoundImage == null)
+				if (!TargetExists(BoundImage, nameof(BoundImage)))
 				{
-					Debug.LogWarning("[Image Sprite Feedback] The Image Sprite feedback on "+Owner.name+" doesn't have a BoundImage, it won't work. You need to specify an Image in its inspector.");
+					return;
 				}
 				else
 				{

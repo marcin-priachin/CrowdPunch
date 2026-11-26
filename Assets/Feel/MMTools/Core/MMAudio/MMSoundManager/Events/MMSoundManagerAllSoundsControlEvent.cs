@@ -15,7 +15,7 @@ namespace MoreMountains.Tools
 	/// Example : MMSoundManagerAllSoundsControlEvent.Trigger(MMSoundManagerAllSoundsControlEventTypes.Stop);
 	/// will stop all sounds playing at once
 	/// </summary>
-	public struct MMSoundManagerAllSoundsControlEvent
+	public partial struct MMSoundManagerAllSoundsControlEvent
 	{
 		public MMSoundManagerAllSoundsControlEventTypes EventType;
         
@@ -24,6 +24,7 @@ namespace MoreMountains.Tools
 			EventType = eventType;
 		}
 
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMSoundManagerAllSoundsControlEvent e;
 		public static void Trigger(MMSoundManagerAllSoundsControlEventTypes eventType)
 		{

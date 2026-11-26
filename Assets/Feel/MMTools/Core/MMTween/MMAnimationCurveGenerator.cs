@@ -39,7 +39,14 @@ namespace MoreMountains.Tools
 		public virtual void GenerateAnimationCurvesAsset()
 		{
 			// we get the method to add to our object
-			_scriptableObjectType = Type.GetType("UnityEditor.CurvePresetLibrary, UnityEditor");
+			#if UNITY_EDITOR
+			_scriptableObjectType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.CurvePresetLibrary");
+			#endif
+			if (_scriptableObjectType == null)
+			{
+				Debug.LogWarning("MMAnimationCurveGenerator : couldn't find Unity's curve preset library type, curves can only be generated in the editor.");
+				return;
+			}
 			_addMethodInfo = _scriptableObjectType.GetMethod("Add");
 
 			// we create a new instance of our curve asset

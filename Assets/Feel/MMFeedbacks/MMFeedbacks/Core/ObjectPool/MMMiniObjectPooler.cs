@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace MoreMountains.Feedbacks
 {
-	public class MMMiniObjectPooler : MonoBehaviour
+	public partial class MMMiniObjectPooler : MonoBehaviour
 	{
 		/// the game object we'll instantiate 
 		public GameObject GameObjectToPool;
@@ -23,6 +23,7 @@ namespace MoreMountains.Feedbacks
 		protected MMMiniObjectPool _objectPool;
 		protected const int _initialPoolsListCapacity = 5;
         
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static List<MMMiniObjectPool> _pools = new List<MMMiniObjectPool>(_initialPoolsListCapacity);
 
 		/// <summary>
@@ -83,7 +84,7 @@ namespace MoreMountains.Feedbacks
             
 			if (_pools.Count == 0)
 			{
-				var pools = FindObjectsByType<MMMiniObjectPool>(FindObjectsSortMode.None);
+				var pools = FindObjectsByType<MMMiniObjectPool>();
 				if (pools.Length > 0)
 				{
 					_pools.AddRange(pools);

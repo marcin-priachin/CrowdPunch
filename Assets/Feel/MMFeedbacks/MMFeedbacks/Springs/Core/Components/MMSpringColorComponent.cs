@@ -8,8 +8,9 @@ namespace MoreMountains.Feedbacks
 	/// <summary>
 	/// An event used to pilot a MMSpringColor component
 	/// </summary>
-	public struct MMSpringColorEvent
+	public partial struct MMSpringColorEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static MMSpringColorEvent e;
 		
 		public MMChannelData ChannelData;

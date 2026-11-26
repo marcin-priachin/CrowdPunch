@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("UI/Graphic")]
-	public class MMF_Graphic : MMF_Feedback
+	public partial class MMF_Graphic : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -87,9 +88,9 @@ namespace MoreMountains.Feedbacks
 					Turn(false);
 				}
 
-				if (TargetGraphic == null)
+				if (!TargetExists(TargetGraphic, nameof(TargetGraphic)))
 				{
-					Debug.LogWarning("[Graphic Feedback] The graphic feedback on "+Owner.name+" doesn't have a Target Graphic, it won't work. You need to specify a graphic in its inspector.");
+					return;
 				}
 				else
 				{

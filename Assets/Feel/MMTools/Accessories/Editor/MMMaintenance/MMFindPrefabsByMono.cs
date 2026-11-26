@@ -10,7 +10,7 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// As static class that lets you look for missing scripts on any prefab in your project, or for prefabs equipped with a certain type of MonoBehaviour
 	/// </summary>
-	public class MMFindPrefabsByMono : EditorWindow
+	public partial class MMFindPrefabsByMono : EditorWindow
 	{
 		protected Vector2 _scrollView;
 		protected string[] _tabs = new string[] { "Find prefabs with missing components", "Find prefabs by MonoBehaviour" };
@@ -21,11 +21,17 @@ namespace MoreMountains.Tools
 		protected string _searchedMonoBehaviourName = "";
 		protected List<string> _resultsList;
 
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		static GUIStyle _padded;
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		static GUIStyle _horizontalPadded;
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		static int _horizontalPadding = 20;
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		static int _verticalPadding = 20;
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		static RectOffset _padding;
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		static RectOffset _horizontalPaddingOnly;
 
 		/// <summary>

@@ -16,7 +16,7 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackPath("PostProcess/Global PP Volume Auto Blend")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.PostProcessing")]
-	public class MMF_GlobalPPVolumeAutoBlend : MMF_Feedback
+	public partial class MMF_GlobalPPVolumeAutoBlend : MMF_Feedback
 	{
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -29,6 +29,7 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public override bool HasChannel => true;
         
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// the possible modes for this feedback :
 		/// - default : will let you trigger Blend() and BlendBack() on the blender

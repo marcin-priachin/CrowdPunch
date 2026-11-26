@@ -12,15 +12,16 @@ namespace MoreMountains.FeedbacksForThirdParty
 	/// </summary>
 	[AddComponentMenu("")]
 	[System.Serializable]
-	[FeedbackHelp("This feedback allows you to control bloom intensity and threshold over time. It requires you have in your scene an object with a Volume " +
-	              "with Bloom active, and a MMBloomShaker_URP component.")]
+	[FeedbackHelp("This feedback allows you to control the channel mixer's red, green and blue channels over time. It requires you have in your scene an object with a Volume " +
+	              "with Channel Mixer active, and a MMChannelMixerShaker_URP component.")]
 	#if MM_URP
 	[FeedbackPath("PostProcess/Channel Mixer URP")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.URP")]
-	public class MMF_ChannelMixer_URP : MMF_Feedback 
+	public partial class MMF_ChannelMixer_URP : MMF_Feedback 
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -49,6 +50,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public bool ResetTargetValuesAfterShake = true;
         
 		[MMFInspectorGroup("Red", true, 42)]
+		/// whether or not this feedback should modify the red channel
+		[Tooltip("whether or not this feedback should modify the red channel")]
+		public bool ModifyRed = true;
 		/// the curve used to animate the red value on
 		[Tooltip("the curve used to animate the red value on")]
 		public AnimationCurve ShakeRed = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -62,6 +66,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public float RemapRedOne = -200f;
 
 		[MMFInspectorGroup("Green", true, 43)]
+		/// whether or not this feedback should modify the green channel
+		[Tooltip("whether or not this feedback should modify the green channel")]
+		public bool ModifyGreen = true;
 		/// the curve used to animate the green value on
 		[Tooltip("the curve used to animate the green value on")]
 		public AnimationCurve ShakeGreen = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -75,6 +82,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public float RemapGreenOne = 200f;
 
 		[MMFInspectorGroup("Blue", true, 44)]
+		/// whether or not this feedback should modify the blue channel
+		[Tooltip("whether or not this feedback should modify the blue channel")]
+		public bool ModifyBlue = true;
 		/// the curve used to animate the blue value on
 		[Tooltip("the curve used to animate the blue value on")]
 		public AnimationCurve ShakeBlue = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -103,7 +113,8 @@ namespace MoreMountains.FeedbacksForThirdParty
 				ShakeGreen, RemapGreenZero, RemapGreenOne,
 				ShakeBlue, RemapBlueZero, RemapBlueOne,
 				FeedbackDuration,
-				RelativeIntensity, intensityMultiplier, ChannelData, ResetShakerValuesAfterShake, ResetTargetValuesAfterShake, NormalPlayDirection, ComputedTimescaleMode);
+				RelativeIntensity, intensityMultiplier, ChannelData, ResetShakerValuesAfterShake, ResetTargetValuesAfterShake, NormalPlayDirection, ComputedTimescaleMode,
+				modifyRed: ModifyRed, modifyGreen: ModifyGreen, modifyBlue: ModifyBlue);
             
 		}
         

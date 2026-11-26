@@ -21,9 +21,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackHelp("This feedback allows you to control color grading post exposure, hue shift, saturation and contrast over time. " +
 	              "It requires you have in your scene an object with a PostProcessVolume " +
 	              "with Color Grading active, and a MMColorGradingShaker component.")]
-	public class MMF_ColorGrading : MMF_Feedback
+	public partial class MMF_ColorGrading : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

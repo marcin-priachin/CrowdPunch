@@ -36,18 +36,27 @@ namespace Lofelt.NiceVibrations
     public static class LofeltHaptics
     {
 #if (UNITY_ANDROID && !UNITY_EDITOR)
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static AndroidJavaObject lofeltHaptics;
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static AndroidJavaObject hapticPatterns;
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static long nativeController;
 
         // Cache the most commonly used JNI method IDs during initialization.
         // Calling a Java method via its method ID is faster and uses less allocations than
         // calling a method by string, like e.g. 'lofeltHaptics.Call("play")'.
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static IntPtr playMethodId = IntPtr.Zero;
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static IntPtr stopMethodId = IntPtr.Zero;
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static IntPtr seekMethodId = IntPtr.Zero;
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static IntPtr loopMethodId = IntPtr.Zero;
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static IntPtr setAmplitudeMultiplicationMethodId = IntPtr.Zero;
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static IntPtr playMaximumAmplitudePattern = IntPtr.Zero;
 
         [DllImport("lofelt_sdk")]
@@ -98,8 +107,10 @@ namespace Lofelt.NiceVibrations
         [DllImport("__Internal")]
         private static extern bool lofeltHapticsSystemHapticsReleaseBinding();
 
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static IntPtr controller = IntPtr.Zero;
 
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static bool systemHapticsInitialized = false;
 #endif
 

@@ -7,7 +7,7 @@ namespace MoreMountains.Tools
 	/// The formulas described here are (loosely) based on Robert Penner's easing equations http://robertpenner.com/easing/
 	/// </summary>
 
-	public class MMTween : MonoBehaviour
+	public partial class MMTween : MonoBehaviour
 	{
 		/// <summary>
 		/// A list of all the possible curves you can tween a value along
@@ -28,6 +28,7 @@ namespace MoreMountains.Tools
 			AntiLinearTween,    AlmostIdentity
 		}
 		
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static TweenDelegate[] TweenDelegateArray = new TweenDelegate[]
 		{
 			LinearTween,        

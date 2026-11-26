@@ -31,7 +31,7 @@ namespace MoreMountains.Tools
 		[Header("Save settings")]
 		/// the chosen save method (json, encrypted json, binary, encrypted binary)
 		[Tooltip("the chosen save method (json, encrypted json, binary, encrypted binary)")]
-		public MMSaveLoadManagerMethods SaveLoadMethod = MMSaveLoadManagerMethods.Binary;
+		public MMSaveLoadManagerMethods SaveLoadMethod = MMSaveLoadManagerMethods.Json;
 		/// the name of the file to save
 		[Tooltip("the name of the file to save")]
 		public string FileName = "TestObject";

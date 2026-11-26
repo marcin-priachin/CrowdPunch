@@ -11,6 +11,7 @@ namespace MoreMountains.Tools
 	public class MMObservableDemoSubject : MonoBehaviour
 	{
 		/// a public float we expose, outputting the x position of our object
+		[System.NonSerialized]
 		public MMObservable<float> PositionX = new MMObservable<float>();
 
 		/// <summary>

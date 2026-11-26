@@ -11,9 +11,11 @@ namespace MoreMountains.Feedbacks
 	/// That's already done when installing MMFeedbacks.
 	/// </summary>
 	[CreateAssetMenu(menuName = "MoreMountains/MMFeedbacks/Configuration", fileName = "MMFeedbacksConfiguration")]
-	public class MMFeedbacksConfiguration : ScriptableObject
+	public partial class MMFeedbacksConfiguration : ScriptableObject
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static MMFeedbacksConfiguration _instance;
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		private static bool _instantiated;
         
 		/// <summary>

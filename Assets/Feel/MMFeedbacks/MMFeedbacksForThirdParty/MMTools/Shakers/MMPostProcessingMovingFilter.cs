@@ -6,15 +6,10 @@ namespace MoreMountains.Tools
 	/// <summary>
 	/// An event used to move filters on and off a camera
 	/// </summary>
-	public struct MMPostProcessingMovingFilterEvent
+	public partial struct MMPostProcessingMovingFilterEvent
 	{
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		static private event Delegate OnEvent;
-
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		private static void RuntimeInitialization()
-		{
-			OnEvent = null;
-		}
 
 		static public void Register(Delegate callback)
 		{

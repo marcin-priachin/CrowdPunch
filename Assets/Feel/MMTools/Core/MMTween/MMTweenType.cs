@@ -9,8 +9,9 @@ namespace MoreMountains.Tools
 	public enum MMTweenDefinitionTypes { MMTween, AnimationCurve }
 
 	[Serializable]
-	public class MMTweenType
+	public partial class MMTweenType
 	{
+		[Unity.Scripting.LifecycleManagement.NoAutoStaticsCleanup]
 		public static MMTweenType DefaultEaseInCubic { get; } = new MMTweenType(MMTween.MMTweenCurve.EaseInCubic);
 		public MMTweenDefinitionTypes MMTweenDefinitionType = MMTweenDefinitionTypes.MMTween;
 		public MMTween.MMTweenCurve MMTweenCurve = MMTween.MMTweenCurve.EaseInCubic;

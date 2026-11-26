@@ -14,9 +14,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Time/Freeze Frame")]
-	public class MMF_FreezeFrame : MMF_Feedback
+	public partial class MMF_FreezeFrame : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -53,7 +54,7 @@ namespace MoreMountains.Feedbacks
 				return;
 			}
             
-			MMFreezeFrameEvent.Trigger(FeedbackDuration);
+			MMFreezeFrameEvent.Trigger(FeedbackDuration, MinimumTimescaleThreshold);
 		}
 		
 		/// <summary>

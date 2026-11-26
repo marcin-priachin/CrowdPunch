@@ -30,6 +30,7 @@ namespace Lofelt.NiceVibrations
         // The array for the JNI arguments is created here, so that it doesn't need to be created
         // for every call. This saves the allocation in each call.
         // The array supports only methods with 0 or 1 argument, but that covers our needs.
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         static jvalue[] jniArgs = new jvalue[1];
 
         // Returns an exception message and stack trace for the given Java exception

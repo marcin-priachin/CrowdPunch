@@ -13,9 +13,10 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("GameObject/Destroy")]
-	public class MMF_Destroy : MMF_Feedback
+	public partial class MMF_Destroy : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -26,6 +27,8 @@ namespace MoreMountains.Feedbacks
 		#endif
 		public override bool HasAutomatedTargetAcquisition => true;
 		protected override void AutomateTargetAcquisition() => TargetGameObject = FindAutomatedTargetGameObject();
+		public override bool HasAutomatedMultipleTargetAcquisition => true;
+		protected override void AutomateMultipleTargetAcquisition() => ExtraTargetGameObjects = FindAutomatedTargetGameObjects(ExtraTargetGameObjects, TargetGameObject);
 
 		/// the possible ways to destroy an object
 		public enum Modes { Destroy, DestroyImmediate, Disable }
@@ -56,9 +59,12 @@ namespace MoreMountains.Feedbacks
 				return;
 			}
 			ProceedWithDestruction(TargetGameObject);
-			foreach (GameObject go in ExtraTargetGameObjects)
+			if (ExtraTargetGameObjects != null)
 			{
-				ProceedWithDestruction(go);
+				foreach (GameObject go in ExtraTargetGameObjects)
+				{
+					ProceedWithDestruction(go);
+				}	
 			}
 		}
         

@@ -8,7 +8,7 @@ namespace MoreMountains.Feedbacks
 	/// <summary>
 	/// Add this to an object and it'll be able to listen for MMFLookAtShakeEvents, and when one is received, it will rotate its associated transform accordingly
 	/// </summary>
-	public class MMLookAtShaker : MMShaker
+	public partial class MMLookAtShaker : MMShaker
 	{
 		[MMInspectorGroup("Look at settings", true, 37)]
 		/// the duration of this shake, in seconds
@@ -58,10 +58,10 @@ namespace MoreMountains.Feedbacks
 		/// <summary>
 		/// An event used to trigger a look at shake 
 		/// </summary>
-		public struct MMLookAtShakeEvent
+		public partial struct MMLookAtShakeEvent
 		{
+			[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 			static private event Delegate OnEvent;
-			[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void RuntimeInitialization() { OnEvent = null; }
 			static public void Register(Delegate callback) { OnEvent += callback; }
 			static public void Unregister(Delegate callback) { OnEvent -= callback; }
 

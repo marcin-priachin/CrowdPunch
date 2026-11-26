@@ -12,10 +12,11 @@ namespace MoreMountains.Feedbacks
 	[FeedbackHelp("This feedback will let you apply forces and torques (relative or not) to a Rigidbody.")]
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
-	[FeedbackPath("GameObject/Rigidbody")]
-	public class MMF_Rigidbody : MMF_Feedback
+	[FeedbackPath("Physics/Rigidbody")]
+	public partial class MMF_Rigidbody : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -25,8 +26,11 @@ namespace MoreMountains.Feedbacks
 		public override string RequiresSetupText { get { return "This feedback requires that a TargetRigidbody be set to be able to work properly. You can set one below."; } }
 		#endif
 		public enum Modes { AddForce, AddRelativeForce, AddTorque, AddRelativeTorque }
+		public enum Spaces { World, Local }
 		public override bool HasAutomatedTargetAcquisition => true;
 		protected override void AutomateTargetAcquisition() => TargetRigidbody = FindAutomatedTarget<Rigidbody>();
+		public override bool HasAutomatedMultipleTargetAcquisition => true;
+		protected override void AutomateMultipleTargetAcquisition() => ExtraTargetRigidbodies = FindAutomatedTargets<Rigidbody>(ExtraTargetRigidbodies, TargetRigidbody);
 
 		[MMFInspectorGroup("Rigidbody", true, 61, true)]
 		/// the rigidbody to target on play
@@ -38,6 +42,9 @@ namespace MoreMountains.Feedbacks
 		/// the selected mode for this feedback
 		[Tooltip("the selected mode for this feedback")]
 		public Modes Mode = Modes.AddForce;
+		/// the selected space for this feedback
+		[Tooltip("the selected space for this feedback")]
+		public Spaces Space = Spaces.World;
 		/// the min force or torque to apply
 		[Tooltip("the min force or torque to apply")]
 		public Vector3 MinForce;
@@ -109,6 +116,11 @@ namespace MoreMountains.Feedbacks
 			if (ForwardForce)
 			{
 				_force = _force.magnitude * rb.transform.forward;
+			}
+
+			if (Space == Spaces.Local)
+			{
+				_force = rb.transform.TransformDirection(_force);
 			}
 			
 			switch (Mode)

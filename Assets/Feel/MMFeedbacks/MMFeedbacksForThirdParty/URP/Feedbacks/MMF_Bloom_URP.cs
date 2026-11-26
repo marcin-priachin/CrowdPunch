@@ -18,9 +18,10 @@ namespace MoreMountains.FeedbacksForThirdParty
 	[FeedbackPath("PostProcess/Bloom URP")]
 	#endif
 	[MovedFrom(false, null, "MoreMountains.Feedbacks.URP")]
-	public class MMF_Bloom_URP : MMF_Feedback 
+	public partial class MMF_Bloom_URP : MMF_Feedback 
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -49,6 +50,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public bool RelativeValues = true;
 
 		[MMFInspectorGroup("Intensity", true, 42)]
+		/// whether or not this feedback should modify intensity
+		[Tooltip("whether or not this feedback should modify intensity")]
+		public bool ModifyIntensity = true;
 		/// the curve to animate the intensity on
 		[Tooltip("the curve to animate the intensity on")]
 		public AnimationCurve ShakeIntensity = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -60,6 +64,9 @@ namespace MoreMountains.FeedbacksForThirdParty
 		public float RemapIntensityOne = 1f;
         
 		[MMFInspectorGroup("Threshold", true, 43)]
+		/// whether or not this feedback should modify threshold
+		[Tooltip("whether or not this feedback should modify threshold")]
+		public bool ModifyThreshold = true;
 		/// the curve to animate the threshold on
 		[Tooltip("the curve to animate the threshold on")]
 		public AnimationCurve ShakeThreshold = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
@@ -85,7 +92,8 @@ namespace MoreMountains.FeedbacksForThirdParty
 			attenuation  = ComputeIntensity(attenuation, position);
 			
 			MMBloomShakeEvent_URP.Trigger(ShakeIntensity, FeedbackDuration, RemapIntensityZero, RemapIntensityOne, ShakeThreshold, RemapThresholdZero, RemapThresholdOne,
-				RelativeValues, attenuation, ChannelData, ResetShakerValuesAfterShake, ResetTargetValuesAfterShake, NormalPlayDirection, ComputedTimescaleMode);
+				RelativeValues, attenuation, ChannelData, ResetShakerValuesAfterShake, ResetTargetValuesAfterShake, NormalPlayDirection, ComputedTimescaleMode,
+				modifyIntensity: ModifyIntensity, modifyThreshold: ModifyThreshold);
             
 		}
         

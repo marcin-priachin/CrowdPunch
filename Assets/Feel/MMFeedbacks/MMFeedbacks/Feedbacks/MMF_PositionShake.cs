@@ -13,9 +13,10 @@ namespace MoreMountains.Feedbacks
 	[FeedbackPath("Transform/Position Shake")]
 	[FeedbackHelp("This feedback lets you emit a PositionShake event. This will be caught by MMPositionShakers (on the specified channel)." +
 	              " Position shakers, as the name suggests, are used to shake the position of a transform, along a direction, with optional noise and other fine control options.")]
-	public class MMF_PositionShake : MMF_Feedback
+	public partial class MMF_PositionShake : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

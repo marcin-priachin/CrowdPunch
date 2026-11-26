@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using System.Threading.Tasks;
+﻿using UnityEngine;
 using MoreMountains.Tools;
-using UnityEngine.Audio;
 using UnityEngine.Scripting.APIUpdating;
 
 namespace MoreMountains.Feedbacks
@@ -17,9 +12,10 @@ namespace MoreMountains.Feedbacks
 	[System.Serializable]
 	[FeedbackPath("Audio/MMSoundManager Track Fade")]
 	[FeedbackHelp("This feedback will let you fade all the sounds on a specific track at once. You will need a MMSoundManager in your scene for this to work.")]
-	public class MMF_MMSoundManagerTrackFade : MMF_Feedback
+	public partial class MMF_MMSoundManagerTrackFade : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -34,6 +30,10 @@ namespace MoreMountains.Feedbacks
 		/// the track to fade the volume on
 		[Tooltip("the track to fade the volume on")]
 		public MMSoundManager.MMSoundManagerTracks Track;
+		/// if Track is set to Other, the custom track SO to target
+		[Tooltip("if Track is set to Other, the custom track SO to target")]
+		[MMFEnumCondition("Track", (int)MMSoundManager.MMSoundManagerTracks.Other)]
+		public MMSoundManagerCustomTrackSO CustomTrack;
 		/// the duration of the fade, in seconds
 		[Tooltip("the duration of the fade, in seconds")]
 		public float FadeDuration = 1f;
@@ -57,7 +57,7 @@ namespace MoreMountains.Feedbacks
 				return;
 			}
             
-			MMSoundManagerTrackFadeEvent.Trigger(MMSoundManagerTrackFadeEvent.Modes.PlayFade, Track, FadeDuration, FinalVolume, FadeTween);
+			MMSoundManagerTrackFadeEvent.Trigger(MMSoundManagerTrackFadeEvent.Modes.PlayFade, Track, FadeDuration, FinalVolume, FadeTween, CustomTrack);
 		}
         
 		/// <summary>
@@ -72,7 +72,7 @@ namespace MoreMountains.Feedbacks
 				return;
 			}
             
-			MMSoundManagerTrackFadeEvent.Trigger(MMSoundManagerTrackFadeEvent.Modes.StopFade, Track, FadeDuration, FinalVolume, FadeTween);
+			MMSoundManagerTrackFadeEvent.Trigger(MMSoundManagerTrackFadeEvent.Modes.StopFade, Track, FadeDuration, FinalVolume, FadeTween, CustomTrack);
 		}
 	}
 }

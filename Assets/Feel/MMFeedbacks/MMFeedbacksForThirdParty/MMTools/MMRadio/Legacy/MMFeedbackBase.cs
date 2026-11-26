@@ -22,9 +22,10 @@ namespace MoreMountains.Feedbacks
 		public float InitialLevel;
 	}
 
-	public abstract class MMFeedbackBase : MMFeedback
+	public abstract partial class MMFeedbackBase : MMFeedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		
 		/// the possible modes for this feedback

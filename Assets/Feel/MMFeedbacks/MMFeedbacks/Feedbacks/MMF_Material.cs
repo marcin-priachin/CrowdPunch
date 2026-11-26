@@ -12,7 +12,7 @@ namespace MoreMountains.Feedbacks
 	[MovedFrom(false, null, "MoreMountains.Feedbacks")]
 	[System.Serializable]
 	[FeedbackPath("Renderer/Material")]
-	public class MMF_Material : MMF_Feedback
+	public partial class MMF_Material : MMF_Feedback
 	{
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR
@@ -25,6 +25,7 @@ namespace MoreMountains.Feedbacks
 		protected override void AutomateTargetAcquisition() => TargetRenderer = FindAutomatedTarget<Renderer>();
         
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// the duration of this feedback is the duration of the shake
 		public override float FeedbackDuration { get { return (InterpolateTransition) ? TransitionDuration : 0f; } set { if (InterpolateTransition) { TransitionDuration = value; } } }
@@ -78,6 +79,33 @@ namespace MoreMountains.Feedbacks
 		protected Material[] _initialMaterials;
 
 		/// <summary>
+		/// Returns renderer.sharedMaterials in edit mode (to avoid leaking instantiated materials) or renderer.materials in play mode (which returns safe per-instance copies).
+		/// </summary>
+		protected virtual Material[] GetRendererMaterials()
+		{
+			#if UNITY_EDITOR
+			if (!Application.isPlaying)
+				return TargetRenderer.sharedMaterials;
+			#endif
+			return TargetRenderer.materials;
+		}
+
+		/// <summary>
+		/// Sets renderer.sharedMaterials in edit mode or renderer.materials in play mode.
+		/// </summary>
+		protected virtual void SetRendererMaterials(Material[] materials)
+		{
+			#if UNITY_EDITOR
+			if (!Application.isPlaying)
+			{
+				TargetRenderer.sharedMaterials = materials;
+				return;
+			}
+			#endif
+			TargetRenderer.materials = materials;
+		}
+
+		/// <summary>
 		/// On init, grabs the current index
 		/// </summary>
 		/// <param name="owner"></param>
@@ -98,11 +126,12 @@ namespace MoreMountains.Feedbacks
 				return;
 			}
 			_currentIndex = InitialIndex;
-			_tempMaterials = new Material[TargetRenderer.materials.Length];
-			_initialMaterials = new Material[TargetRenderer.materials.Length];
+			Material[] currentMaterials = GetRendererMaterials();
+			_tempMaterials = new Material[currentMaterials.Length];
+			_initialMaterials = new Material[currentMaterials.Length];
 			for (int i = 0; i < _initialMaterials.Length; i++)
 			{
-				_initialMaterials[i] = new Material(TargetRenderer.materials[i]);
+				_initialMaterials[i] = new Material(currentMaterials[i]);
 			}
 			
 			if (RendererMaterialIndexes == null)
@@ -115,6 +144,13 @@ namespace MoreMountains.Feedbacks
 				RendererMaterialIndexes[0] = 0;
 			}
 			_coroutines = new Coroutine[RendererMaterialIndexes.Length];
+			
+            
+			if (Materials.Count == 0)
+			{
+				Debug.LogWarning("[Material Feedback] The material feedback on "+Owner.name+" has an empty Materials array.");
+				return;
+			}
 		}
 
 		/// <summary>
@@ -131,7 +167,6 @@ namespace MoreMountains.Feedbacks
             
 			if (Materials.Count == 0)
 			{
-				Debug.LogWarning("[Material Feedback] The material feedback on "+Owner.name+" has an empty Materials array.");
 				return;
 			}
 
@@ -145,10 +180,11 @@ namespace MoreMountains.Feedbacks
 
 			if (InterpolateTransition)
 			{
+				Material[] rendererMats = GetRendererMaterials();
 				for (int i = 0; i < RendererMaterialIndexes.Length; i++)
 				{
 					if (_coroutines[i] != null) { Owner.StopCoroutine(_coroutines[i]); }
-					_coroutines[i] = Owner.StartCoroutine(TransitionMaterial(TargetRenderer.materials[RendererMaterialIndexes[i]], Materials[newIndex], RendererMaterialIndexes[i]));
+					_coroutines[i] = Owner.StartCoroutine(TransitionMaterial(rendererMats[RendererMaterialIndexes[i]], Materials[newIndex], RendererMaterialIndexes[i]));
 				}
 			}
 			else
@@ -163,12 +199,12 @@ namespace MoreMountains.Feedbacks
 		/// <param name="material"></param>
 		protected virtual void ApplyMaterial(Material material)
 		{
-			_tempMaterials = TargetRenderer.materials;
+			_tempMaterials = GetRendererMaterials();
 			for (int i = 0; i < RendererMaterialIndexes.Length; i++)
 			{
 				_tempMaterials[RendererMaterialIndexes[i]] = material;
 			}
-			TargetRenderer.materials = _tempMaterials;
+			SetRendererMaterials(_tempMaterials);
 		}
 
 		/// <summary>
@@ -180,12 +216,12 @@ namespace MoreMountains.Feedbacks
 		/// <param name="materialIndex"></param>
 		protected virtual void LerpMaterial(Material fromMaterial, Material toMaterial, float t, int materialIndex)
 		{
-			_tempMaterials = TargetRenderer.materials;
+			_tempMaterials = GetRendererMaterials();
 			for (int i = 0; i < RendererMaterialIndexes.Length; i++)
 			{
 				_tempMaterials[materialIndex].Lerp(fromMaterial, toMaterial, t);
 			}
-			TargetRenderer.materials = _tempMaterials;
+			SetRendererMaterials(_tempMaterials);
 		}
         
 		/// <summary>
@@ -274,7 +310,7 @@ namespace MoreMountains.Feedbacks
 				return;
 			}
 
-			TargetRenderer.materials = _initialMaterials;
+			SetRendererMaterials(_initialMaterials);
 			InitializeMaterials();
 		}
 	}

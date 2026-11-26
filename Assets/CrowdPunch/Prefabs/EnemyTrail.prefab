@@ -97,6 +97,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 782062cc258f12f469043c785a7c84b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAuthoring
+  ShotSource: {fileID: 0}
 --- !u!1001 &8797010270125167052
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -363,15 +364,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8635593851415205964, guid: 2056c8582b3854c48bca7598129c6b88, type: 3}
       propertyPath: m_AABB.m_Center.x
-      value: -0.105992734
+      value: -0.105992764
       objectReference: {fileID: 0}
     - target: {fileID: 8635593851415205964, guid: 2056c8582b3854c48bca7598129c6b88, type: 3}
       propertyPath: m_AABB.m_Center.y
-      value: 0.16410542
+      value: 0.16410553
       objectReference: {fileID: 0}
     - target: {fileID: 8635593851415205964, guid: 2056c8582b3854c48bca7598129c6b88, type: 3}
       propertyPath: m_AABB.m_Center.z
-      value: -0.021140099
+      value: -0.021140069
       objectReference: {fileID: 0}
     - target: {fileID: 8635593851415205964, guid: 2056c8582b3854c48bca7598129c6b88, type: 3}
       propertyPath: m_AABB.m_Extent.x
@@ -383,7 +384,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8635593851415205964, guid: 2056c8582b3854c48bca7598129c6b88, type: 3}
       propertyPath: m_AABB.m_Extent.z
-      value: 0.44921544
+      value: 0.44921547
       objectReference: {fileID: 0}
     - target: {fileID: 8635593851415205964, guid: 2056c8582b3854c48bca7598129c6b88, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -436,7 +437,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CrowdPunch.Authoring.EnemyAnimationAuthoring
   Samples: {fileID: 4900000, guid: 3a6a1efb14c794a46be99d6b414f908f, type: 3}
+  ProjectileOrigin: {fileID: 0}
   JogSamples: {fileID: 0}
+  StandingTurnSamples: {fileID: 0}
+  StandingTurnMinimumAngle: 10
+  StandingTurnMinimumSpeed: 15
+  StandingTurnBlendInDuration: 0.2
+  StandingTurnBlendOutDuration: 0.08
+  StandingTurnStopDelay: 0.06
   MaxLegAnimationSpeed: 2
   JogCycleDistances: []
   Profile: 12

@@ -21,9 +21,10 @@ namespace MoreMountains.Feedbacks
 	[FeedbackHelp("This feedback allows you to play a random Unity Event, out of a weighted list. To use it, add items to its WeightedEvents list. For each of them, you'll need to specify a weight (the higher the weight, the more likely it'll be picked) and the event to trigger. For an event in that list to have a chance to be picked, the weights can't be zero.")]
 	[System.Serializable]
 	[FeedbackPath("Events/Random Unity Events")]
-	public class MMF_RandomEvents : MMF_Feedback
+	public partial class MMF_RandomEvents : MMF_Feedback
 	{
 		/// a static bool used to disable all feedbacks of this type at once
+		[Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
 		#if UNITY_EDITOR

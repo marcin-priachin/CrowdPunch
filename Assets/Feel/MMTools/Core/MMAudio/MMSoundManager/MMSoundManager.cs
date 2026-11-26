@@ -20,6 +20,7 @@ namespace MoreMountains.Tools
 	/// - Stop/pause/resume/free entire tracks
 	/// - Stop/pause/resume/free all sounds at once
 	/// - Mute / set volume entire tracks
+	/// - Set / fade the pitch of entire tracks (multiplies each sound's own pitch)
 	/// - Save and load settings, with auto save / auto load mechanics built-in
 	/// - Fade in/out sounds
 	/// - Fade in/out tracks
@@ -37,16 +38,9 @@ namespace MoreMountains.Tools
 		MMEventListener<MMSoundManagerSoundControlEvent>,
 		MMEventListener<MMSoundManagerSoundFadeEvent>,
 		MMEventListener<MMSoundManagerAllSoundsControlEvent>,
-		MMEventListener<MMSoundManagerTrackFadeEvent>
+		MMEventListener<MMSoundManagerTrackFadeEvent>,
+		MMEventListener<MMSoundManagerTrackPitchFadeEvent>
 	{
-		/// <summary>
-		/// Statics initialization to support enter play modes
-		/// </summary>
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		protected static void InitializeStatics()
-		{
-			_instance = null;
-		}
 		
 		/// the possible ways to manage a track
 		public enum MMSoundManagerTracks { Sfx, Music, UI, Master, Other}
@@ -73,6 +67,13 @@ namespace MoreMountains.Tools
 		protected Dictionary<AudioSource, Coroutine> _fadeOutSoundCoroutines;
 		protected Dictionary<MMSoundManagerTracks, Coroutine> _fadeTrackCoroutines;
 		protected Dictionary<MMSoundManagerTracks, bool> _pausedTracks = new Dictionary<MMSoundManagerTracks, bool>();
+		protected Dictionary<MMSoundManagerCustomTrackSO, Coroutine> _fadeCustomTrackCoroutines;
+		protected Dictionary<MMSoundManagerTracks, float> _trackPitches = new Dictionary<MMSoundManagerTracks, float>();
+		protected Dictionary<MMSoundManagerCustomTrackSO, float> _customTrackPitches = new Dictionary<MMSoundManagerCustomTrackSO, float>();
+		protected Dictionary<MMSoundManagerTracks, Coroutine> _fadeTrackPitchCoroutines = new Dictionary<MMSoundManagerTracks, Coroutine>();
+		protected Dictionary<MMSoundManagerCustomTrackSO, Coroutine> _fadeCustomTrackPitchCoroutines = new Dictionary<MMSoundManagerCustomTrackSO, Coroutine>();
+		protected List<MMSoundManagerCustomTrackSO> _tempCustomTracks = new List<MMSoundManagerCustomTrackSO>();
+		protected MMSoundManagerCustomTrackSO _playSoundCustomTrack;
 
 		#region Initialization
 
@@ -111,6 +112,11 @@ namespace MoreMountains.Tools
 			_fadeInSoundCoroutines = new Dictionary<AudioSource, Coroutine>();
 			_fadeOutSoundCoroutines = new Dictionary<AudioSource, Coroutine>();
 			_fadeTrackCoroutines = new Dictionary<MMSoundManagerTracks, Coroutine>();
+			_fadeCustomTrackCoroutines = new Dictionary<MMSoundManagerCustomTrackSO, Coroutine>();
+			_trackPitches.Clear();
+			_customTrackPitches.Clear();
+			_fadeTrackPitchCoroutines.Clear();
+			_fadeCustomTrackPitchCoroutines.Clear();
 		}
         
 		#endregion
@@ -125,7 +131,18 @@ namespace MoreMountains.Tools
 		/// <returns></returns>
 		public virtual AudioSource PlaySound(AudioClip audioClip, MMSoundManagerPlayOptions options)
 		{
-			return PlaySound(audioClip, options.MmSoundManagerTrack, options.Location,
+			if (options.MmSoundManagerTrack == MMSoundManagerTracks.Other 
+			    && options.CustomTrack != null 
+			    && options.AudioGroup == null 
+			    && options.CustomTrack.AudioMixerGroup != null)
+			{
+				options.AudioGroup = options.CustomTrack.AudioMixerGroup;
+			}
+			
+			// we store the custom track so that the main PlaySound signature can apply its pitch multiplier
+			_playSoundCustomTrack = options.CustomTrack;
+
+			AudioSource source = PlaySound(audioClip, options.MmSoundManagerTrack, options.Location,
 				options.Loop, options.Volume, options.ID,
 				options.Fade, options.FadeInitialVolume, options.FadeDuration, options.FadeTween,
 				options.Persistent,
@@ -140,6 +157,25 @@ namespace MoreMountains.Tools
 				options.UseSpatialBlendCurve, options.SpatialBlendCurve, options.UseReverbZoneMixCurve, options.ReverbZoneMixCurve, 
 				options.AudioResourceToPlay, options.InitialDelay
 			);
+
+			_playSoundCustomTrack = null;
+
+			// if a custom track was specified, update the stored sound's CustomTrack reference
+			if (source != null && options.CustomTrack != null)
+			{
+				for (int i = 0; i < _sounds.Count; i++)
+				{
+					if (_sounds[i].Source == source)
+					{
+						MMSoundManagerSound updatedSound = _sounds[i];
+						updatedSound.CustomTrack = options.CustomTrack;
+						_sounds[i] = updatedSound;
+						break;
+					}
+				}
+			}
+			
+			return source;
 		}
 
 		/// <summary>
@@ -192,7 +228,10 @@ namespace MoreMountains.Tools
 		{
 			if (this == null) { return null; }
 			if (!audioClip && !audioResourceToPlay) { return null; }
-            
+
+			// the final pitch is the requested pitch, multiplied by the pitch of the track(s) this sound plays on
+			float effectivePitch = pitch * GetTrackPitchMultiplier(mmSoundManagerTrack, _playSoundCustomTrack);
+
 			// audio source setup ---------------------------------------------------------------------------------
             
 			// we reuse an audiosource if one is passed in parameters
@@ -207,12 +246,15 @@ namespace MoreMountains.Tools
 					Debug.LogError("There are no available audiosources, this sound won't play. You should probably consider a bigger pool size, or let your pool expand by setting PoolCanExpand to true on your MM Sound Manager.");
 					return null;
 				}
+				StopFadeSound(audioSource);
 				audioSource.clip = audioClip;
 				if ((audioSource) && (!loop))
 				{
 					recycleAudioSource = audioSource;
 					// we destroy the host after the clip has played (if it is not tagged for reusability.
-					float duration = (audioClip != null) ? audioClip.length / Mathf.Abs(pitch) : 1f;
+					float duration = (audioClip != null) ? 
+						initialDelay + audioClip.length / Mathf.Abs(effectivePitch) 
+						: initialDelay + 1f;
 					StartCoroutine(_pool.AutoDisableAudioSource(duration, audioSource, audioClip, doNotAutoRecycleIfNotDonePlaying, playbackTime, playbackDuration));
 				}
 			}
@@ -236,7 +278,7 @@ namespace MoreMountains.Tools
 			{
 				audioSource.resource = audioResourceToPlay;
 			}
-			audioSource.pitch = pitch;
+			audioSource.pitch = effectivePitch;
 			audioSource.spatialBlend = spatialBlend;
 			audioSource.panStereo = panStereo;
 			audioSource.loop = loop;
@@ -297,6 +339,8 @@ namespace MoreMountains.Tools
 					case MMSoundManagerTracks.UI:
 						audioSource.outputAudioMixerGroup = settingsSo.UIAudioMixerGroup;
 						break;
+					case MMSoundManagerTracks.Other:
+						break;
 				}
 			}
 			if (audioGroup) { audioSource.outputAudioMixerGroup = audioGroup; }
@@ -305,6 +349,7 @@ namespace MoreMountains.Tools
 			// we start playing the sound
 			if (initialDelay > 0f)
 			{
+				audioSource.Stop();
 				audioSource.PlayDelayed(initialDelay);	
 			}
 			else
@@ -352,6 +397,7 @@ namespace MoreMountains.Tools
 			_sound.Persistent = persistent;
 			_sound.PlaybackTime = playbackTime;
 			_sound.PlaybackDuration = playbackDuration;
+			_sound.BasePitch = pitch;
 
 			// we check if that audiosource is already being tracked in _sounds
 			bool alreadyIn = false;
@@ -410,6 +456,7 @@ namespace MoreMountains.Tools
 		/// <param name="source"></param>
 		public virtual void FreeSound(AudioSource source)
 		{
+			StopFadeSound(source);
 			source.Stop();
 			if (!_pool.FreeSound(source))
 			{
@@ -744,7 +791,566 @@ namespace MoreMountains.Tools
 				settingsSo.SaveSoundSettings();
 			}
 		}
+		
+		/// <summary>
+		/// Mutes a custom track
+		/// </summary>
+		public virtual void MuteTrack(MMSoundManagerCustomTrackSO customTrack)
+		{
+			ControlTrack(customTrack, ControlTrackModes.Mute, 0f);
+		}
+
+		/// <summary>
+		/// Unmutes a custom track
+		/// </summary>
+		public virtual void UnmuteTrack(MMSoundManagerCustomTrackSO customTrack)
+		{
+			ControlTrack(customTrack, ControlTrackModes.Unmute, 0f);
+		}
+
+		/// <summary>
+		/// Sets the volume of a custom track
+		/// </summary>
+		public virtual void SetTrackVolume(MMSoundManagerCustomTrackSO customTrack, float volume)
+		{
+			ControlTrack(customTrack, ControlTrackModes.SetVolume, volume);
+		}
+
+		/// <summary>
+		/// Returns the current volume of a custom track
+		/// </summary>
+		public virtual float GetTrackVolume(MMSoundManagerCustomTrackSO customTrack, bool mutedVolume)
+		{
+			if (customTrack == null || settingsSo == null) { return 1f; }
+			MMSoundManagerCustomTrackState state = settingsSo.Settings.GetOrCreateCustomTrackState(customTrack);
+			if (mutedVolume)
+			{
+				return state.MutedVolume;
+			}
+			return state.Volume;
+		}
+
+		/// <summary>
+		/// Returns true if the specified custom track is muted
+		/// </summary>
+		public virtual bool IsMuted(MMSoundManagerCustomTrackSO customTrack)
+		{
+			if (customTrack == null || settingsSo == null) { return false; }
+			MMSoundManagerCustomTrackState state = settingsSo.Settings.GetOrCreateCustomTrackState(customTrack);
+			return !state.On;
+		}
+
+		/// <summary>
+		/// Controls a custom track (mute, unmute, set volume)
+		/// </summary>
+		protected virtual void ControlTrack(MMSoundManagerCustomTrackSO customTrack, ControlTrackModes trackMode, float volume = 0.5f)
+		{
+			if (customTrack == null || settingsSo == null) { return; }
+			
+			MMSoundManagerCustomTrackState state = settingsSo.Settings.GetOrCreateCustomTrackState(customTrack);
+			float savedVolume = 0f;
+			
+			if (trackMode == ControlTrackModes.Mute)
+			{
+				state.MutedVolume = settingsSo.NormalizedToMixerVolume(state.Volume);
+				state.On = false;
+			}
+			else if (trackMode == ControlTrackModes.Unmute)
+			{
+				savedVolume = state.MutedVolume;
+				state.On = true;
+			}
+			
+			switch (trackMode)
+			{
+				case ControlTrackModes.Mute:
+					settingsSo.SetTrackVolume(customTrack, 0f);
+					break;
+				case ControlTrackModes.Unmute:
+					settingsSo.SetTrackVolume(customTrack, settingsSo.MixerVolumeToNormalized(savedVolume));
+					break;
+				case ControlTrackModes.SetVolume:
+					settingsSo.SetTrackVolume(customTrack, volume);
+					break;
+			}
+			
+			settingsSo.GetTrackVolumes();
+			
+			if (settingsSo.Settings.AutoSave)
+			{
+				settingsSo.SaveSoundSettings();
+			}
+		}
+		
+		/// <summary>
+		/// Pauses all sounds on a custom track
+		/// </summary>
+		public virtual void PauseTrack(MMSoundManagerCustomTrackSO customTrack)
+		{
+			if (customTrack == null) { return; }
+			foreach (MMSoundManagerSound sound in _sounds)
+			{
+				if (sound.Track == MMSoundManagerTracks.Other && sound.CustomTrack == customTrack)
+				{
+					sound.Source.Pause();
+				}
+			}
+		}
+
+		/// <summary>
+		/// Plays or resumes all sounds on a custom track
+		/// </summary>
+		public virtual void PlayTrack(MMSoundManagerCustomTrackSO customTrack)
+		{
+			if (customTrack == null) { return; }
+			foreach (MMSoundManagerSound sound in _sounds)
+			{
+				if (sound.Track == MMSoundManagerTracks.Other && sound.CustomTrack == customTrack)
+				{
+					sound.Source.Play();
+				}
+			}
+		}
+
+		/// <summary>
+		/// Stops all sounds on a custom track
+		/// </summary>
+		public virtual void StopTrack(MMSoundManagerCustomTrackSO customTrack)
+		{
+			if (customTrack == null) { return; }
+			foreach (MMSoundManagerSound sound in _sounds)
+			{
+				if (sound.Track == MMSoundManagerTracks.Other && sound.CustomTrack == customTrack)
+				{
+					sound.Source.Stop();
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns true if sounds are currently playing on a custom track
+		/// </summary>
+		public virtual bool HasSoundsPlaying(MMSoundManagerCustomTrackSO customTrack)
+		{
+			if (customTrack == null) { return false; }
+			foreach (MMSoundManagerSound sound in _sounds)
+			{
+				if (sound.Track == MMSoundManagerTracks.Other && sound.CustomTrack == customTrack && sound.Source.isPlaying)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Returns a list of sounds playing on a custom track
+		/// </summary>
+		public virtual List<MMSoundManagerSound> GetSoundsPlaying(MMSoundManagerCustomTrackSO customTrack)
+		{
+			List<MMSoundManagerSound> soundsPlaying = new List<MMSoundManagerSound>();
+			if (customTrack == null) { return soundsPlaying; }
+			foreach (MMSoundManagerSound sound in _sounds)
+			{
+				if (sound.Track == MMSoundManagerTracks.Other && sound.CustomTrack == customTrack && sound.Source.isPlaying)
+				{
+					soundsPlaying.Add(sound);
+				}
+			}
+			return soundsPlaying;
+		}
+
+		/// <summary>
+		/// Stops all sounds on a custom track and returns them to the pool
+		/// </summary>
+		public virtual void FreeTrack(MMSoundManagerCustomTrackSO customTrack)
+		{
+			if (customTrack == null) { return; }
+			foreach (MMSoundManagerSound sound in _sounds)
+			{
+				if (sound.Track == MMSoundManagerTracks.Other && sound.CustomTrack == customTrack)
+				{
+					sound.Source.Stop();
+					sound.Source.gameObject.SetActive(false);
+				}
+			}
+		}
         
+		#endregion
+
+		#region TrackPitch
+
+		/// <summary>
+		/// Sets the pitch multiplier of an entire track. This multiplier gets applied to every sound currently playing on that track,
+		/// as well as to every sound played on it later, on top of each sound's own pitch (final pitch = sound pitch * track pitch).
+		/// The Master track's pitch multiplies the pitch of all sounds, regardless of their track.
+		/// Track pitch is runtime only : it's not saved with the sound settings, and resets to 1 when the MMSoundManager initializes.
+		/// Calling this will stop any pitch fade currently running on that track.
+		/// </summary>
+		/// <param name="track">the track to set the pitch of</param>
+		/// <param name="pitch">the pitch multiplier to apply (1 is the normal pitch), clamped between MMSoundManagerSettings._minimalTrackPitch and _maxTrackPitch</param>
+		public virtual void SetTrackPitch(MMSoundManagerTracks track, float pitch)
+		{
+			StopFadeTrackPitch(track);
+			SetTrackPitchInternal(track, pitch);
+		}
+
+		/// <summary>
+		/// Returns the current pitch multiplier of the specified track (1 if it was never set)
+		/// </summary>
+		/// <param name="track">the track to get the pitch of</param>
+		/// <returns></returns>
+		public virtual float GetTrackPitch(MMSoundManagerTracks track)
+		{
+			if (_trackPitches.TryGetValue(track, out float pitch))
+			{
+				return pitch;
+			}
+			return MMSoundManagerSettings._defaultTrackPitch;
+		}
+
+		/// <summary>
+		/// Resets the pitch multiplier of the specified track to 1, stopping any pitch fade on it
+		/// </summary>
+		/// <param name="track">the track to reset the pitch of</param>
+		public virtual void ResetTrackPitch(MMSoundManagerTracks track)
+		{
+			SetTrackPitch(track, MMSoundManagerSettings._defaultTrackPitch);
+		}
+
+		/// <summary>
+		/// Sets the pitch multiplier of a custom track. It gets applied to all sounds playing on that custom track (and later ones),
+		/// on top of the Other and Master track pitches, and of each sound's own pitch.
+		/// Calling this will stop any pitch fade currently running on that custom track.
+		/// </summary>
+		/// <param name="customTrack">the custom track to set the pitch of</param>
+		/// <param name="pitch">the pitch multiplier to apply (1 is the normal pitch)</param>
+		public virtual void SetTrackPitch(MMSoundManagerCustomTrackSO customTrack, float pitch)
+		{
+			if (customTrack == null) { return; }
+			StopFadeTrackPitch(customTrack);
+			SetTrackPitchInternal(customTrack, pitch);
+		}
+
+		/// <summary>
+		/// Returns the current pitch multiplier of the specified custom track (1 if it was never set)
+		/// </summary>
+		/// <param name="customTrack">the custom track to get the pitch of</param>
+		/// <returns></returns>
+		public virtual float GetTrackPitch(MMSoundManagerCustomTrackSO customTrack)
+		{
+			if ((customTrack != null) && _customTrackPitches.TryGetValue(customTrack, out float pitch))
+			{
+				return pitch;
+			}
+			return MMSoundManagerSettings._defaultTrackPitch;
+		}
+
+		/// <summary>
+		/// Resets the pitch multiplier of the specified custom track to 1, stopping any pitch fade on it
+		/// </summary>
+		/// <param name="customTrack">the custom track to reset the pitch of</param>
+		public virtual void ResetTrackPitch(MMSoundManagerCustomTrackSO customTrack)
+		{
+			SetTrackPitch(customTrack, MMSoundManagerSettings._defaultTrackPitch);
+		}
+
+		/// <summary>
+		/// Stops all track pitch fades, resets the pitch multiplier of every track (built-in and custom) to 1,
+		/// and restores the base pitch of all sounds
+		/// </summary>
+		public virtual void ResetAllTrackPitches()
+		{
+			foreach (MMSoundManagerTracks track in Enum.GetValues(typeof(MMSoundManagerTracks)))
+			{
+				StopFadeTrackPitch(track);
+			}
+			_tempCustomTracks.Clear();
+			_tempCustomTracks.AddRange(_fadeCustomTrackPitchCoroutines.Keys);
+			foreach (MMSoundManagerCustomTrackSO customTrack in _tempCustomTracks)
+			{
+				StopFadeTrackPitch(customTrack);
+			}
+			_trackPitches.Clear();
+			_customTrackPitches.Clear();
+			// the master track impacts all sounds, so this reapplies pitch on every sound
+			ApplyTrackPitch(MMSoundManagerTracks.Master);
+		}
+
+		/// <summary>
+		/// Returns the total pitch multiplier that applies to a sound played on the specified track (and optional custom track) :
+		/// Master pitch * track pitch (* custom track pitch if the track is Other and a custom track is specified)
+		/// </summary>
+		/// <param name="track">the track the sound plays on</param>
+		/// <param name="customTrack">if track is Other, the optional custom track the sound plays on</param>
+		/// <returns></returns>
+		public virtual float GetTrackPitchMultiplier(MMSoundManagerTracks track, MMSoundManagerCustomTrackSO customTrack = null)
+		{
+			float multiplier = GetTrackPitch(MMSoundManagerTracks.Master);
+			if (track != MMSoundManagerTracks.Master)
+			{
+				multiplier *= GetTrackPitch(track);
+			}
+			if ((track == MMSoundManagerTracks.Other) && (customTrack != null))
+			{
+				multiplier *= GetTrackPitch(customTrack);
+			}
+			return multiplier;
+		}
+
+		/// <summary>
+		/// Changes the pitch of a sound played by the MMSoundManager, while preserving its track pitch multiplier.
+		/// Use this rather than setting AudioSource.pitch directly on a managed sound, as track pitch changes
+		/// recompute the source's pitch from its stored base pitch.
+		/// If the source isn't managed by this MMSoundManager, its pitch is simply set to the specified value.
+		/// </summary>
+		/// <param name="source">the audio source to change the pitch of</param>
+		/// <param name="basePitch">the new pitch of the sound, before track multipliers</param>
+		public virtual void SetSoundPitch(AudioSource source, float basePitch)
+		{
+			if (source == null) { return; }
+
+			for (int i = 0; i < _sounds.Count; i++)
+			{
+				if (_sounds[i].Source == source)
+				{
+					MMSoundManagerSound updatedSound = _sounds[i];
+					updatedSound.BasePitch = basePitch;
+					_sounds[i] = updatedSound;
+					source.pitch = basePitch * GetTrackPitchMultiplier(updatedSound.Track, updatedSound.CustomTrack);
+					return;
+				}
+			}
+
+			source.pitch = basePitch;
+		}
+
+		/// <summary>
+		/// Sets the pitch of the Music track to the specified value, QoL method, ready to bind to a UnityEvent
+		/// </summary>
+		public virtual void SetPitchMusic(float newPitch) { SetTrackPitch(MMSoundManagerTracks.Music, newPitch);}
+		/// <summary>
+		/// Sets the pitch of the SFX track to the specified value, QoL method, ready to bind to a UnityEvent
+		/// </summary>
+		public virtual void SetPitchSfx(float newPitch) { SetTrackPitch(MMSoundManagerTracks.Sfx, newPitch);}
+		/// <summary>
+		/// Sets the pitch of the UI track to the specified value, QoL method, ready to bind to a UnityEvent
+		/// </summary>
+		public virtual void SetPitchUI(float newPitch) { SetTrackPitch(MMSoundManagerTracks.UI, newPitch);}
+		/// <summary>
+		/// Sets the pitch of the Master track to the specified value, QoL method, ready to bind to a UnityEvent
+		/// </summary>
+		public virtual void SetPitchMaster(float newPitch) { SetTrackPitch(MMSoundManagerTracks.Master, newPitch);}
+
+		/// <summary>
+		/// Fades the pitch multiplier of an entire track over the specified duration, from initialPitch to finalPitch.
+		/// Any pitch fade already running on that track gets stopped first. A duration of 0 (or less) sets the final pitch instantly.
+		/// </summary>
+		/// <param name="track">the track to fade the pitch of</param>
+		/// <param name="duration">the duration of the fade, in (unscaled) seconds</param>
+		/// <param name="initialPitch">the pitch multiplier to start the fade from</param>
+		/// <param name="finalPitch">the pitch multiplier to reach at the end of the fade</param>
+		/// <param name="tweenType">the tween to use, EaseInOutQuartic if left null</param>
+		public virtual void FadeTrackPitch(MMSoundManagerTracks track, float duration, float initialPitch = 1f, float finalPitch = 1f, MMTweenType tweenType = null)
+		{
+			StopFadeTrackPitch(track);
+			if (duration <= 0f)
+			{
+				SetTrackPitchInternal(track, finalPitch);
+				return;
+			}
+			Coroutine coroutine = StartCoroutine(FadeTrackPitchCoroutine(track, duration, initialPitch, finalPitch, tweenType));
+			_fadeTrackPitchCoroutines[track] = coroutine;
+		}
+
+		/// <summary>
+		/// Fades the pitch multiplier of a custom track over the specified duration, from initialPitch to finalPitch.
+		/// Any pitch fade already running on that custom track gets stopped first. A duration of 0 (or less) sets the final pitch instantly.
+		/// </summary>
+		/// <param name="customTrack">the custom track to fade the pitch of</param>
+		/// <param name="duration">the duration of the fade, in (unscaled) seconds</param>
+		/// <param name="initialPitch">the pitch multiplier to start the fade from</param>
+		/// <param name="finalPitch">the pitch multiplier to reach at the end of the fade</param>
+		/// <param name="tweenType">the tween to use, EaseInOutQuartic if left null</param>
+		public virtual void FadeTrackPitch(MMSoundManagerCustomTrackSO customTrack, float duration, float initialPitch = 1f, float finalPitch = 1f, MMTweenType tweenType = null)
+		{
+			if (customTrack == null) { return; }
+			StopFadeTrackPitch(customTrack);
+			if (duration <= 0f)
+			{
+				SetTrackPitchInternal(customTrack, finalPitch);
+				return;
+			}
+			Coroutine coroutine = StartCoroutine(FadeCustomTrackPitchCoroutine(customTrack, duration, initialPitch, finalPitch, tweenType));
+			_fadeCustomTrackPitchCoroutines[customTrack] = coroutine;
+		}
+
+		/// <summary>
+		/// Stops any pitch fade currently happening on the specified track, leaving its pitch where it currently is
+		/// </summary>
+		/// <param name="track">the track to stop the pitch fade on</param>
+		public virtual void StopFadeTrackPitch(MMSoundManagerTracks track)
+		{
+			if (_fadeTrackPitchCoroutines.TryGetValue(track, out Coroutine outCoroutine))
+			{
+				if (outCoroutine != null)
+				{
+					StopCoroutine(outCoroutine);
+				}
+				_fadeTrackPitchCoroutines.Remove(track);
+			}
+		}
+
+		/// <summary>
+		/// Stops any pitch fade currently happening on the specified custom track, leaving its pitch where it currently is
+		/// </summary>
+		/// <param name="customTrack">the custom track to stop the pitch fade on</param>
+		public virtual void StopFadeTrackPitch(MMSoundManagerCustomTrackSO customTrack)
+		{
+			if (customTrack == null) { return; }
+			if (_fadeCustomTrackPitchCoroutines.TryGetValue(customTrack, out Coroutine outCoroutine))
+			{
+				if (outCoroutine != null)
+				{
+					StopCoroutine(outCoroutine);
+				}
+				_fadeCustomTrackPitchCoroutines.Remove(customTrack);
+			}
+		}
+
+		/// <summary>
+		/// Returns true if a pitch fade is currently running on the specified track
+		/// </summary>
+		/// <param name="track"></param>
+		/// <returns></returns>
+		public virtual bool TrackPitchIsFading(MMSoundManagerTracks track)
+		{
+			return _fadeTrackPitchCoroutines.TryGetValue(track, out Coroutine coroutine) && (coroutine != null);
+		}
+
+		/// <summary>
+		/// Stores the clamped pitch multiplier for the specified track and applies it to the affected sounds, without stopping fades
+		/// </summary>
+		/// <param name="track"></param>
+		/// <param name="pitch"></param>
+		protected virtual void SetTrackPitchInternal(MMSoundManagerTracks track, float pitch)
+		{
+			_trackPitches[track] = ClampTrackPitch(pitch);
+			ApplyTrackPitch(track);
+		}
+
+		/// <summary>
+		/// Stores the clamped pitch multiplier for the specified custom track and applies it to the affected sounds, without stopping fades
+		/// </summary>
+		/// <param name="customTrack"></param>
+		/// <param name="pitch"></param>
+		protected virtual void SetTrackPitchInternal(MMSoundManagerCustomTrackSO customTrack, float pitch)
+		{
+			if (customTrack == null) { return; }
+			_customTrackPitches[customTrack] = ClampTrackPitch(pitch);
+			ApplyTrackPitch(customTrack);
+		}
+
+		/// <summary>
+		/// Clamps a track pitch multiplier to the allowed range
+		/// </summary>
+		/// <param name="pitch"></param>
+		/// <returns></returns>
+		protected virtual float ClampTrackPitch(float pitch)
+		{
+			return Mathf.Clamp(pitch, MMSoundManagerSettings._minimalTrackPitch, MMSoundManagerSettings._maxTrackPitch);
+		}
+
+		/// <summary>
+		/// Recomputes the pitch of every sound impacted by the specified track (all sounds if the track is Master)
+		/// from their base pitch and current track multipliers
+		/// </summary>
+		/// <param name="track"></param>
+		protected virtual void ApplyTrackPitch(MMSoundManagerTracks track)
+		{
+			for (int i = 0; i < _sounds.Count; i++)
+			{
+				MMSoundManagerSound sound = _sounds[i];
+				if (sound.Source == null) { continue; }
+				if ((track == MMSoundManagerTracks.Master) || (sound.Track == track))
+				{
+					sound.Source.pitch = sound.BasePitch * GetTrackPitchMultiplier(sound.Track, sound.CustomTrack);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Recomputes the pitch of every sound playing on the specified custom track
+		/// from their base pitch and current track multipliers
+		/// </summary>
+		/// <param name="customTrack"></param>
+		protected virtual void ApplyTrackPitch(MMSoundManagerCustomTrackSO customTrack)
+		{
+			for (int i = 0; i < _sounds.Count; i++)
+			{
+				MMSoundManagerSound sound = _sounds[i];
+				if (sound.Source == null) { continue; }
+				if ((sound.Track == MMSoundManagerTracks.Other) && (sound.CustomTrack == customTrack))
+				{
+					sound.Source.pitch = sound.BasePitch * GetTrackPitchMultiplier(sound.Track, sound.CustomTrack);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Fades a track's pitch multiplier over time
+		/// </summary>
+		/// <param name="track"></param>
+		/// <param name="duration"></param>
+		/// <param name="initialPitch"></param>
+		/// <param name="finalPitch"></param>
+		/// <param name="tweenType"></param>
+		/// <returns></returns>
+		protected virtual IEnumerator FadeTrackPitchCoroutine(MMSoundManagerTracks track, float duration, float initialPitch, float finalPitch, MMTweenType tweenType)
+		{
+			float startedAt = Time.unscaledTime;
+			if (tweenType == null)
+			{
+				tweenType = new MMTweenType(MMTween.MMTweenCurve.EaseInOutQuartic);
+			}
+			while (Time.unscaledTime - startedAt <= duration)
+			{
+				float elapsedTime = Time.unscaledTime - startedAt;
+				float newPitch = MMTween.Tween(elapsedTime, 0f, duration, initialPitch, finalPitch, tweenType);
+				SetTrackPitchInternal(track, newPitch);
+				yield return null;
+			}
+			SetTrackPitchInternal(track, finalPitch);
+			_fadeTrackPitchCoroutines.Remove(track);
+		}
+
+		/// <summary>
+		/// Fades a custom track's pitch multiplier over time
+		/// </summary>
+		/// <param name="customTrack"></param>
+		/// <param name="duration"></param>
+		/// <param name="initialPitch"></param>
+		/// <param name="finalPitch"></param>
+		/// <param name="tweenType"></param>
+		/// <returns></returns>
+		protected virtual IEnumerator FadeCustomTrackPitchCoroutine(MMSoundManagerCustomTrackSO customTrack, float duration, float initialPitch, float finalPitch, MMTweenType tweenType)
+		{
+			float startedAt = Time.unscaledTime;
+			if (tweenType == null)
+			{
+				tweenType = new MMTweenType(MMTween.MMTweenCurve.EaseInOutQuartic);
+			}
+			while (Time.unscaledTime - startedAt <= duration)
+			{
+				float elapsedTime = Time.unscaledTime - startedAt;
+				float newPitch = MMTween.Tween(elapsedTime, 0f, duration, initialPitch, finalPitch, tweenType);
+				SetTrackPitchInternal(customTrack, newPitch);
+				yield return null;
+			}
+			SetTrackPitchInternal(customTrack, finalPitch);
+			_fadeCustomTrackPitchCoroutines.Remove(customTrack);
+		}
+
 		#endregion
 
 		#region Fades
@@ -761,6 +1367,16 @@ namespace MoreMountains.Tools
 		{
 			Coroutine coroutine = StartCoroutine(FadeTrackCoroutine(track, duration, initialVolume, finalVolume, tweenType));
 			_fadeTrackCoroutines[track] = coroutine;
+		}
+		
+		/// <summary>
+		/// Fades a custom track over the specified duration towards the desired finalVolume
+		/// </summary>
+		public virtual void FadeTrack(MMSoundManagerCustomTrackSO customTrack, float duration, float initialVolume = 0f, float finalVolume = 1f, MMTweenType tweenType = null)
+		{
+			if (customTrack == null) { return; }
+			Coroutine coroutine = StartCoroutine(FadeCustomTrackCoroutine(customTrack, duration, initialVolume, finalVolume, tweenType));
+			_fadeCustomTrackCoroutines[customTrack] = coroutine;
 		}
         
 		/// <summary>
@@ -827,6 +1443,20 @@ namespace MoreMountains.Tools
 				_fadeTrackCoroutines.Remove(track);
 			}
 		}
+		
+		/// <summary>
+		/// Stops any fade currently happening on the specified custom track
+		/// </summary>
+		public virtual void StopFadeTrack(MMSoundManagerCustomTrackSO customTrack)
+		{
+			if (customTrack == null) { return; }
+			Coroutine outCoroutine;
+			if (_fadeCustomTrackCoroutines.TryGetValue(customTrack, out outCoroutine))
+			{
+				StopCoroutine(outCoroutine);
+				_fadeCustomTrackCoroutines.Remove(customTrack);
+			}
+		}
 
 		/// <summary>
 		/// Stops any fade currently happening on the specified sound
@@ -877,6 +1507,26 @@ namespace MoreMountains.Tools
 				yield return null;
 			}
 			settingsSo.SetTrackVolume(track, finalVolume);
+		}
+		
+		/// <summary>
+		/// Fades a custom track over time
+		/// </summary>
+		protected virtual IEnumerator FadeCustomTrackCoroutine(MMSoundManagerCustomTrackSO customTrack, float duration, float initialVolume, float finalVolume, MMTweenType tweenType)
+		{
+			float startedAt = Time.unscaledTime;
+			if (tweenType == null)
+			{
+				tweenType = new MMTweenType(MMTween.MMTweenCurve.EaseInOutQuartic);
+			}
+			while (Time.unscaledTime - startedAt <= duration)
+			{
+				float elapsedTime = Time.unscaledTime - startedAt;
+				float newVolume = MMTween.Tween(elapsedTime, 0f, duration, initialVolume, finalVolume, tweenType);
+				settingsSo.SetTrackVolume(customTrack, newVolume);
+				yield return null;
+			}
+			settingsSo.SetTrackVolume(customTrack, finalVolume);
 		}
 
 		/// <summary>
@@ -1139,6 +1789,39 @@ namespace MoreMountains.Tools
 
 		public virtual void OnMMEvent(MMSoundManagerTrackEvent soundManagerTrackEvent)
 		{
+			// if this is a custom track event (Other track with a CustomTrack SO), route to custom track overloads
+			if (soundManagerTrackEvent.Track == MMSoundManagerTracks.Other && soundManagerTrackEvent.CustomTrack != null)
+			{
+				switch (soundManagerTrackEvent.TrackEventType)
+				{
+					case MMSoundManagerTrackEventTypes.MuteTrack:
+						MuteTrack(soundManagerTrackEvent.CustomTrack);
+						break;
+					case MMSoundManagerTrackEventTypes.UnmuteTrack:
+						UnmuteTrack(soundManagerTrackEvent.CustomTrack);
+						break;
+					case MMSoundManagerTrackEventTypes.SetVolumeTrack:
+						SetTrackVolume(soundManagerTrackEvent.CustomTrack, soundManagerTrackEvent.Volume);
+						break;
+					case MMSoundManagerTrackEventTypes.PlayTrack:
+						PlayTrack(soundManagerTrackEvent.CustomTrack);
+						break;
+					case MMSoundManagerTrackEventTypes.PauseTrack:
+						PauseTrack(soundManagerTrackEvent.CustomTrack);
+						break;
+					case MMSoundManagerTrackEventTypes.StopTrack:
+						StopTrack(soundManagerTrackEvent.CustomTrack);
+						break;
+					case MMSoundManagerTrackEventTypes.FreeTrack:
+						FreeTrack(soundManagerTrackEvent.CustomTrack);
+						break;
+					case MMSoundManagerTrackEventTypes.SetPitchTrack:
+						SetTrackPitch(soundManagerTrackEvent.CustomTrack, soundManagerTrackEvent.Pitch);
+						break;
+				}
+				return;
+			}
+			
 			switch (soundManagerTrackEvent.TrackEventType)
 			{
 				case MMSoundManagerTrackEventTypes.MuteTrack:
@@ -1161,6 +1844,9 @@ namespace MoreMountains.Tools
 					break;
 				case MMSoundManagerTrackEventTypes.FreeTrack:
 					FreeTrack(soundManagerTrackEvent.Track);
+					break;
+				case MMSoundManagerTrackEventTypes.SetPitchTrack:
+					SetTrackPitch(soundManagerTrackEvent.Track, soundManagerTrackEvent.Pitch);
 					break;
 			}
 		}
@@ -1238,6 +1924,21 @@ namespace MoreMountains.Tools
         
 		public virtual void OnMMEvent(MMSoundManagerTrackFadeEvent trackFadeEvent)
 		{
+			// if this is a custom track fade event
+			if (trackFadeEvent.Track == MMSoundManagerTracks.Other && trackFadeEvent.CustomTrack != null)
+			{
+				switch (trackFadeEvent.Mode)
+				{
+					case MMSoundManagerTrackFadeEvent.Modes.PlayFade:
+						FadeTrack(trackFadeEvent.CustomTrack, trackFadeEvent.FadeDuration, settingsSo.GetTrackVolume(trackFadeEvent.CustomTrack), trackFadeEvent.FinalVolume, trackFadeEvent.FadeTween);
+						break;
+					case MMSoundManagerTrackFadeEvent.Modes.StopFade:
+						StopFadeTrack(trackFadeEvent.CustomTrack);
+						break;
+				}
+				return;
+			}
+			
 			switch (trackFadeEvent.Mode)
 			{
 				case MMSoundManagerTrackFadeEvent.Modes.PlayFade:
@@ -1248,7 +1949,39 @@ namespace MoreMountains.Tools
 					break;
 			}
 		}
-        
+
+		/// <summary>
+		/// When getting a track pitch fade event, we fade (or stop fading) the pitch of the target track, from its current pitch
+		/// </summary>
+		/// <param name="trackPitchFadeEvent"></param>
+		public virtual void OnMMEvent(MMSoundManagerTrackPitchFadeEvent trackPitchFadeEvent)
+		{
+			// if this is a custom track pitch fade event
+			if (trackPitchFadeEvent.Track == MMSoundManagerTracks.Other && trackPitchFadeEvent.CustomTrack != null)
+			{
+				switch (trackPitchFadeEvent.Mode)
+				{
+					case MMSoundManagerTrackPitchFadeEvent.Modes.PlayFade:
+						FadeTrackPitch(trackPitchFadeEvent.CustomTrack, trackPitchFadeEvent.FadeDuration, GetTrackPitch(trackPitchFadeEvent.CustomTrack), trackPitchFadeEvent.FinalPitch, trackPitchFadeEvent.FadeTween);
+						break;
+					case MMSoundManagerTrackPitchFadeEvent.Modes.StopFade:
+						StopFadeTrackPitch(trackPitchFadeEvent.CustomTrack);
+						break;
+				}
+				return;
+			}
+
+			switch (trackPitchFadeEvent.Mode)
+			{
+				case MMSoundManagerTrackPitchFadeEvent.Modes.PlayFade:
+					FadeTrackPitch(trackPitchFadeEvent.Track, trackPitchFadeEvent.FadeDuration, GetTrackPitch(trackPitchFadeEvent.Track), trackPitchFadeEvent.FinalPitch, trackPitchFadeEvent.FadeTween);
+					break;
+				case MMSoundManagerTrackPitchFadeEvent.Modes.StopFade:
+					StopFadeTrackPitch(trackPitchFadeEvent.Track);
+					break;
+			}
+		}
+
 		public virtual void OnMMEvent(MMSoundManagerSoundFadeEvent soundFadeEvent)
 		{
 			_tempAudioSource = FindByID(soundFadeEvent.SoundID);
@@ -1327,6 +2060,7 @@ namespace MoreMountains.Tools
 				this.MMEventStartListening<MMSoundManagerTrackEvent>();
 				this.MMEventStartListening<MMSoundManagerSoundControlEvent>();
 				this.MMEventStartListening<MMSoundManagerTrackFadeEvent>();
+				this.MMEventStartListening<MMSoundManagerTrackPitchFadeEvent>();
 				this.MMEventStartListening<MMSoundManagerSoundFadeEvent>();
 				this.MMEventStartListening<MMSoundManagerAllSoundsControlEvent>();
 	            
@@ -1347,6 +2081,7 @@ namespace MoreMountains.Tools
 				this.MMEventStopListening<MMSoundManagerTrackEvent>();
 				this.MMEventStopListening<MMSoundManagerSoundControlEvent>();
 				this.MMEventStopListening<MMSoundManagerTrackFadeEvent>();
+				this.MMEventStopListening<MMSoundManagerTrackPitchFadeEvent>();
 				this.MMEventStopListening<MMSoundManagerSoundFadeEvent>();
 				this.MMEventStopListening<MMSoundManagerAllSoundsControlEvent>();
             

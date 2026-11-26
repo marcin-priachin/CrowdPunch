@@ -14,7 +14,7 @@ namespace Lofelt.NiceVibrations
     /// </summary>
     ///
     /// The inspector lets you link a HapticSource to a HapticClip.
-    public class HapticSourceInspector : Editor
+    public partial class HapticSourceInspector : Editor
     {
         string hapticsDirectory;
 
@@ -25,8 +25,11 @@ namespace Lofelt.NiceVibrations
         SerializedProperty loop;
         SerializedProperty fallbackPreset;
 
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         public static GUIContent hapticClipLabel = EditorGUIUtility.TrTextContent("Haptic Clip", "The HapticClip asset played by the HapticSource.");
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         public static GUIContent fallbackPresetLabel = EditorGUIUtility.TrTextContent("Haptic Preset fallback", "Set the haptic preset to play in case the device doesn't support playback of haptic clips");
+        [Unity.Scripting.LifecycleManagement.AutoStaticsCleanup]
         public static GUIContent loopLabel = EditorGUIUtility.TrTextContent("Loop", "Set the haptic source to loop playback of the haptic clip");
 
         void OnEnable()
